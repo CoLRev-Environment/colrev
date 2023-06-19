@@ -27,24 +27,42 @@ class Dashboard():
         data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
 
         for title in data:
-            if title != "title" and title != "author" and title != "year" and title != "url":
+            if title != "title" and title != "author" and title != "year":
                 data.pop(title)
 
         app = Dash(__name__)                                # initializing the dashboard app
 
         app.layout = html.Div(                              # defining th content
-            children=
-                html.Div(childern=[html.H1(children="currently synthesized records")]),     
+            children=[
+                html.Div(
+                children=[
+                    html.Img(src="assets/favicon.ico", className="logo"), 
+                    html.H1(children="DASHBOARD", className= "header-title")], className="header"),
+
+                html.Div(children=[    
+                    html.H1(children="CURRENTLY SYNTHESIZED RECORDS", className="table-header"),
+
+                    html.Div(children=[
+                        html.Div(children="sort by ", className="menu-title"),
+                        dcc.Dropdown(
+                            id="sortby",
+                            options=["index","year", "author (alphabetically)"],
+                        )])
+                        ], className="flexboxtable"),
                 html.Div(children=[
                     html.Div(children="search: ", className="search for: "),
                     dcc.Input(
                         type="text",
                     ),   
-                    html.Button(id='submit-button', children='search!
+                    html.Button(id="submit-button", children="search")
                 ]),                      
-                        html.Table([html.Th(col) for col in data.columns] + 
-                        [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))]),  
+                        html.Table(
+                            [html.Tr([html.Th(col) for col in data.columns])] + 
+                            [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
+                            className="styled-table"),  
+                        
             ])
+
 
         return app
 
