@@ -482,6 +482,8 @@ class Dataset:
 
         parser = bibtex.Parser()
         if load_str:
+            # Fix missing comma after fields
+            load_str = re.sub(r"(.)}\n", r"\g<1>},\n", load_str)
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 

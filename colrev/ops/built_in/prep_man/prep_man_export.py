@@ -201,17 +201,18 @@ class ExportManPrep(JsonSchemaMixin):
     def __update_original_record_based_on_man_prepped(
         self, *, original_record: colrev.record.Record, man_prepped_record_dict: dict
     ) -> None:
+        dropped_keys = [
+            k
+            for k in original_record.data
+            if (k not in man_prepped_record_dict) and k in self.__FIELDS_TO_KEEP
+        ]
+
         if original_record.data["ENTRYTYPE"] != man_prepped_record_dict["ENTRYTYPE"]:
             original_record.change_entrytype(
                 new_entrytype=man_prepped_record_dict["ENTRYTYPE"],
                 qm=self.quality_model,
             )
 
-        dropped_keys = [
-            k
-            for k in original_record.data
-            if k in self.__FIELDS_TO_KEEP and k not in man_prepped_record_dict
-        ]
         if man_prepped_record_dict["ENTRYTYPE"] != original_record.data["ENTRYTYPE"]:
             original_record.data["ENTRYTYPE"] = man_prepped_record_dict["ENTRYTYPE"]
             original_record.update_masterdata_provenance(qm=self.quality_model)
@@ -219,7 +220,7 @@ class ExportManPrep(JsonSchemaMixin):
         for key, value in man_prepped_record_dict.items():
             if key in ["colrev_status"]:
                 continue
-            if value != original_record.data.get(key, ""):
+            if value != original_record.data.get(key, "") and value != "UNKNOWN":
                 original_record.update_field(
                     key=key, value=value, source="man_prep", append_edit=False
                 )
@@ -284,11 +285,19 @@ class ExportManPrep(JsonSchemaMixin):
         self.__drop_unnecessary_provenance_fiels(record=original_record)
         if (
             man_prepped_record_dict["colrev_status"]
-            != colrev.record.RecordState.rev_prescreen_excluded
+            == colrev.record.RecordState.rev_prescreen_excluded
         ):
+            original_record.data[
+                "colrev_status"
+            ] = (
+                colrev.record.RecordState.rev_prescreen_excluded
+            )  # pylint: disable=direct-status-assign
+
+        else:
             original_record.update_masterdata_provenance(
                 qm=self.quality_model, set_prepared=True
             )
+
         if override:
             original_record.set_status(
                 target_state=colrev.record.RecordState.md_prepared, force=True
@@ -312,8 +321,8 @@ class ExportManPrep(JsonSchemaMixin):
         for record_id, record_dict in records.items():
             if (
                 record_dict["colrev_status"]
-                == colrev.record.RecordState.md_needs_manual_preparation
-                and record_id not in man_prep_recs
+                == colrev.record.RecordState.rev_prescreen_excluded
+                # or record_id not in man_prep_recs
             ):
                 records[record_id][  # pylint: disable=direct-status-assign
                     "colrev_status"
