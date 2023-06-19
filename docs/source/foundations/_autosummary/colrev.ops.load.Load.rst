@@ -30,5 +30,6 @@ colrev.ops.load.Load
    .. autosummary::
 
       ~Load.supported_extensions
+      ~Load.load_conversion_packages
       ~Load.force_mode
       ~Load.type
