@@ -703,6 +703,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         *,
         search_operation: colrev.ops.search.Search,
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -738,7 +739,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 record_dict=retrieved_record.data,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
-                update_time_variant_fields=True,
+                update_time_variant_fields=rerun,
             )
             if changed:
                 crossref_feed.nr_changed += 1
@@ -842,6 +843,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.__run_md_search_update(
                     search_operation=search_operation,
                     crossref_feed=crossref_feed,
+                    rerun=rerun,
                 )
 
             else:
