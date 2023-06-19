@@ -725,6 +725,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
             ):
                 continue
 
+            self.__prep_crossref_record(record=retrieved_record, prep_main_record=False)
+
             prev_record_dict_version = {}
             if retrieved_record.data["ID"] in crossref_feed.feed_records:
                 prev_record_dict_version = crossref_feed.feed_records[
