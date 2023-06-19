@@ -2172,6 +2172,11 @@ def settings(
     help="Add a sync pre-commit hook",
 )
 @click.option(
+    "-src",
+    type=click.Path(exists=True),
+    help="Sync selected citations from source file.",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -2189,6 +2194,7 @@ def settings(
 def sync(
     ctx: click.core.Context,
     add_hook: bool,
+    src: Path,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -2222,6 +2228,11 @@ def sync(
         files: 'records.bib|paper.md'"""
             )
         print("Added pre-commit hook for colrev sync.")
+        return
+    if src:
+        sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
+        sync_operation.get_cited_papers_from_source(src=Path(src))
+        sync_operation.add_to_bib()
         return
 
     sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()

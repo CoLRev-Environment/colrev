@@ -93,6 +93,32 @@ class Sync:
             print("Not found paper.md or *.rst")
         return citation_keys
 
+    def get_cited_papers_from_source(self, *, src: Path) -> None:
+        citation_keys = self.__get_cited_papers_citation_keys()
+
+        ids_in_bib = self.__get_ids_in_paper()
+        self.logger.info("References in bib: %s", len(ids_in_bib))
+
+        if src.suffix == ".bib":
+            parser = bibtex.Parser()
+            bib_data = parser.parse_file(str(src))
+            refs_in_src = colrev.dataset.Dataset.parse_records_dict(
+                records_dict=bib_data.entries
+            )
+        else:
+            print("Format not supported")
+            return
+
+        for citation_key in citation_keys:
+            if citation_key in ids_in_bib:
+                continue
+            if citation_key not in refs_in_src:
+                print(f"{citation_key} not in {src}")
+                continue
+            self.records_to_import.append(
+                colrev.record.Record(data=refs_in_src[citation_key])
+            )
+
     def get_cited_papers(self) -> None:
         """Get the cited papers"""
 
