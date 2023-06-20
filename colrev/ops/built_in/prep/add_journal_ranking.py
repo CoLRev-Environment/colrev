@@ -12,6 +12,7 @@ import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
 import colrev.ops.built_in.search_sources.local_index as local_index_connector
+import colrev.env.local_index
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -53,10 +54,8 @@ class AddJournalRanking(JsonSchemaMixin):
         """variable to compare journals in metadata with the rankings in the sqlite_database"""
         journal = record.data["journal"]
 
-        """local variable for testing only"""
-        ranking = "is in ranking"
-
-        ranking = self.search_in_database(journal)
+        LocalIndex = colrev.env.local_index.LocalIndex()
+        ranking = LocalIndex.search_in_database(journal)
 
         """adds the ranking to record.data as well as masterdata_provenence"""
         record.update_field(
