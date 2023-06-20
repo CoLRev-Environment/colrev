@@ -385,7 +385,7 @@ class Load(colrev.operation.Operation):
         search_sources = self.__load_search_sources()
         self.load_conversion_packages = self.__load_conversion_packages()
         self.supported_extensions = self.__load_supported_extensions()
-        print(self.supported_extensions)
+
         new_sources = []
         for sfp in new_search_files:
             try:
