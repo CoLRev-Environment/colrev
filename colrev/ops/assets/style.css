@@ -16,24 +16,21 @@ body {
     max-width: 20%;
 }
 
-.header-title {
-
-}
 
 .flexboxtable{
     display: flex;
-    align-items: center;
+    
     background-color: var(--white-background);
 }
 
 .dash-dropdown{
-    align-self: right;
-    width: 30%;
+    position:relative;
+    left: 63vw;
+    width:300px;
+    text-transform:uppercase;
     color:#A4CE4A;
 }
 
-.menu-title{
-}
 
 .table-header{
     font-size: medium;
@@ -47,12 +44,14 @@ body {
     font-family: sans-serif;
     min-width: 400px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    
 }
 
-.styled-table thead tr {
-    background-color: #009879;
+.styled-table tr th {
+    background-color: #A4CE4A;
     color: #ffffff;
     text-align: left;
+    text-transform:uppercase;
 }
 
 .styled-table tr {
@@ -63,6 +62,7 @@ body {
 .styled-table th,
 .styled-table td {
     padding: 8px 11px;
+    
 }
 
 .styled-table tbody tr {

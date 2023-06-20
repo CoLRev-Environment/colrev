@@ -9,6 +9,11 @@ import bibtexparser
 
 
 class Dashboard():
+    
+    def filteringData ():
+        data = (pd.read_csv("./data/records.csv").query("colrev_status == 'rev_synthesized'"))
+        data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
+        return data
 
     def makeTable(self):
         with open(
@@ -20,11 +25,8 @@ class Dashboard():
         df = pd.DataFrame(bib_database.entries)
         df.to_csv("./data/records.csv", index = True)
 
-        data = (                                            # the data we want to use later
-            pd.read_csv("./data/records.csv")
-            .query("colrev_status == 'rev_synthesized'")
-        )
-        data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
+        data= Dashboard.filteringData()
+        
 
         for title in data:
             if title != "title" and title != "author" and title != "year":
@@ -43,14 +45,13 @@ class Dashboard():
                     html.H1(children="CURRENTLY SYNTHESIZED RECORDS", className="table-header"),
 
                     html.Div(children=[
-                        html.Div(children="sort by ", className="menu-title"),
                         dcc.Dropdown(
                             id="sortby",
                             options=["index","year", "author (alphabetically)"],
                         )])
                         ], className="flexboxtable"),
                 html.Div(children=[
-                    html.Div(children="search: ", className="search for: "),
+                    html.Div(children="search: ", className="search-box"),
                     dcc.Input(
                         type="text",
                     ),   
@@ -62,9 +63,11 @@ class Dashboard():
                             className="styled-table"),  
                         
             ])
-
-
         return app
+
+
+    
+
 
 
 
