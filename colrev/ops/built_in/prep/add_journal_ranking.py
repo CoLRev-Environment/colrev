@@ -56,6 +56,8 @@ class AddJournalRanking(JsonSchemaMixin):
         """local variable for testing only"""
         ranking = "is in ranking"
 
+        ranking = self.search_in_database(journal)
+
         """adds the ranking to record.data as well as masterdata_provenence"""
         record.update_field(
             key="journal_ranking", value=ranking, source="add_journal_ranking", note=""
