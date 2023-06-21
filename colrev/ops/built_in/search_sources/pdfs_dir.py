@@ -7,6 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -292,7 +293,7 @@ class PDFSearchSource(JsonSchemaMixin):
             tei = self.review_manager.get_tei(
                 pdf_path=pdf_path,
             )
-        except FileNotFoundError:
+        except (FileNotFoundError, requests.exceptions.ReadTimeout):
             return record_dict
 
         for key, val in tei.get_metadata().items():
