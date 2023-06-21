@@ -70,6 +70,7 @@ colrev.exceptions
       RepoSetupError
       ReviewManagerNotNofiedError
       ServiceNotAvailableException
+      SourceHeuristicsException
       StatusFieldValueError
       StatusTransitionError
       TEIException
