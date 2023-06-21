@@ -145,7 +145,6 @@ class ERICSearchSource(JsonSchemaMixin):
               'institution', 'isbn', 'issn', 'language', 'publicationtype',
               'publisher', 'sourceid', 'sponsor', 'url']
 
-
         url = 'https://api.ies.ed.gov/eric/'
         params = self.search_source.search_parameters
         query = params['query']
