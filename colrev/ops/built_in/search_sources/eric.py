@@ -146,7 +146,6 @@ class ERICSearchSource(JsonSchemaMixin):
               'publisher', 'sourceid', 'sponsor', 'url']
 
 
-        #Field Source (z.B. author: 'xy') implementieren? Siehe ERIC API Besipeiel auf deren Website
         url = 'https://api.ies.ed.gov/eric/'
         params = self.search_source.search_parameters
         query = params['query']
