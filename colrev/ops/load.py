@@ -923,7 +923,7 @@ class Load(colrev.operation.Operation):
         records = set_incremental_ids(records=records)
         records = drop_empty_fields(records=records)
         records = drop_fields(records=records)
-
+        records = dict(sorted(records.items()))
         self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=corresponding_bib_file
         )
