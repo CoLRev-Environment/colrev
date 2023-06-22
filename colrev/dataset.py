@@ -550,6 +550,9 @@ class Dataset:
                 "number",
                 "pages",
                 "editor",
+                "publisher",
+                "url",
+                "abstract",
             ]
 
             record = colrev.record.Record(data=record_dict)
@@ -563,11 +566,11 @@ class Dataset:
                         ordered_field, record_dict[ordered_field]
                     )
 
-            for key, value in record_dict.items():
+            for key in sorted(record_dict.keys()):
                 if key in field_order + ["ID", "ENTRYTYPE"]:
                     continue
 
-                bibtex_str += format_field(key, value)
+                bibtex_str += format_field(key, record_dict[key])
 
             bibtex_str += ",\n}\n"
 
