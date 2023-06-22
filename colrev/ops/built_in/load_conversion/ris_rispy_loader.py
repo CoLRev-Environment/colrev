@@ -2,25 +2,25 @@
 """Load conversion of bib files using rispy"""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import rispy
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from rispy import BaseParser
+from rispy.config import LIST_TYPE_TAGS
+from rispy.config import TAG_KEY_MAPPING
 
 import colrev.env.package_manager
 
 if TYPE_CHECKING:
     import colrev.ops.load
 
-import re
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
-
-from rispy import BaseParser
-from rispy.config import TAG_KEY_MAPPING, WOK_LIST_TYPE_TAGS
 
 
 class DefaultRISParser(BaseParser):
@@ -30,10 +30,10 @@ class DefaultRISParser(BaseParser):
     IGNORE = ["FN", "VR", "EF"]
     PATTERN = r"^[A-Z][A-Z0-9] |^ER\s?|^EF\s?"
     DEFAULT_MAPPING = TAG_KEY_MAPPING
-    DEFAULT_LIST_TAGS = WOK_LIST_TYPE_TAGS
+    DEFAULT_LIST_TAGS = LIST_TYPE_TAGS
 
     def get_content(self, line: str) -> str:
-        return line[2:].strip()
+        return line[line.find(" - ") + 2 :].strip()
 
     def is_header(self, line: str) -> bool:
         return not re.match("[A-Z0-9]+  - ", line)
@@ -152,7 +152,7 @@ class RisRispyLoader(JsonSchemaMixin):
         if len(authors) >= 3:
             authors = authors[:3]
         three_author = "".join([author.rsplit(",")[0].strip() for author in authors])
-        _id = f"{three_author.lower()}{year}"
+        _id = f"{three_author.lower()}{year}".replace(" ", "_").strip(".")
         return _id
 
     def __add_entry(self, _entry: dict, key: str, record: dict) -> None:
