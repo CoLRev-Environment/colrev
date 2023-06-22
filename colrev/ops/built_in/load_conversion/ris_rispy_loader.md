@@ -22,7 +22,7 @@ Supported File type: `ris`
 
 For all reference types, Author is required.
 
-| Type or Reference      | Mapped to                        | Fields Required             |
+| Type or Reference      | Mapped to                        | RIS Fields Required         |
 |:-----------------------|:---------------------------------|:----------------------------|
 | JOUR, JFULL            | article                          | A1/A2/A3/AU,T1/TI/T2        |
 | CONF                   | inproceedings                    | IS,T2                       |
