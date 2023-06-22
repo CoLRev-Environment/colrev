@@ -195,4 +195,5 @@ class RisRispyLoader(JsonSchemaMixin):
                 record["journal"] = new_val
             self.fix_fields_by_entry_type(entry, entry_type, record)
             records[_id] = record
+        records = dict(sorted(records.items()))
         return records
