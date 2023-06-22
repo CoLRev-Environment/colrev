@@ -2,7 +2,6 @@
 """Load conversion of bib files using rispy"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -43,8 +42,7 @@ class RisRispyLoader(JsonSchemaMixin):
         "doi",
         "publisher",
         "number",
-        "edition"
-        "editor"
+        "edition" "editor",
     }
     replace_with = {
         "primary_title": "title",
@@ -53,32 +51,35 @@ class RisRispyLoader(JsonSchemaMixin):
         "publication_year": "year",
     }
     reference_types = {
-        'JOUR': 'article',
-        'JFULL': 'article',
-        'CONF': 'inproceedings',
-        'THES': 'phdthesis',
-        'REPT': 'techreport',
-        'CHAP': 'inbook',
-        'BOOK': 'book'
+        "JOUR": "article",
+        "JFULL": "article",
+        "CONF": "inproceedings",
+        "THES": "phdthesis",
+        "REPT": "techreport",
+        "CHAP": "inbook",
+        "BOOK": "book",
     }
 
     entry_fixes = {
-        'article': {
-            'booktitle': ['primary_title', 'secondary_title', 'title'],
+        "article": {
+            "booktitle": ["primary_title", "secondary_title", "title"],
+        },
+        "misc": {
+            "booktitle": ["primary_title", "secondary_title", "title"],
         },
     }
 
     def __init__(
-            self,
-            *,
-            load_operation: colrev.ops.load.Load,
-            settings: dict,
+        self,
+        *,
+        load_operation: colrev.ops.load.Load,
+        settings: dict,
     ) -> None:
         self.entries = None
         self.settings = self.settings_class.load_settings(data=settings)
 
     def load(
-            self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
+        self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
         """Load records from the source"""
         records: dict = {}
@@ -102,7 +103,7 @@ class RisRispyLoader(JsonSchemaMixin):
 
     def get_authors(self, entry: dict) -> list[str]:
         """Get authors"""
-        keys = ["first_authors", "secondary_authors", 'tertiary_authors']
+        keys = ["first_authors", "secondary_authors", "tertiary_authors"]
         authors = []
         for key in keys:
             try:
@@ -138,20 +139,22 @@ class RisRispyLoader(JsonSchemaMixin):
         try:
             return self.reference_types[type_of_reference]
         except KeyError:
-            'misc'
+            return "misc"
 
-    def fix_fields_by_entry_type(self, entry: dict, entry_type: str, record: dict
-                                 ) -> None:
-        """ Fixes some fields by entry type"""
+    def fix_fields_by_entry_type(
+        self, entry: dict, entry_type: str, record: dict
+    ) -> None:
+        """Fixes some fields by entry type"""
         try:
-            for (key, value) in self.entry_fixes[entry_type].items():
+            for key, value in self.entry_fixes[entry_type].items():
                 new_val = self.fix_field(entry, value)
                 if key not in record:
                     record[key] = new_val
         except KeyError:
-            return
+            pass
+        return None
 
-    def fix_field(self, entry: dict, value: list[str]):
+    def fix_field(self, entry: dict, value: list[str]) -> str | None:
         new_val = None
         for field in value:
             try:
@@ -167,13 +170,12 @@ class RisRispyLoader(JsonSchemaMixin):
         records = {}
         for entry in self.entries:
             entry = dict(sorted(entry.items()))
-            print(entry)
             # colrev uses first 3 auther + year format
             authors = self.get_authors(entry)
             year = self.get_year(entry)
             _id = self.__get_entry_id(authors, year)
 
-            entry_type = self.__get_entry_type(entry['type_of_reference'])
+            entry_type = self.__get_entry_type(entry["type_of_reference"])
             record = {
                 "ID": _id,
                 "author": " and ".join(authors),
@@ -186,9 +188,11 @@ class RisRispyLoader(JsonSchemaMixin):
                 record["pages"] = f"{entry['starting_page']}--{entry['final_page']}"
             elif "starting_page" in entry:
                 record["pages"] = f"{entry['starting_page']}--"
-            if 'journal' not in record:
-                new_val = self.fix_field(entry, ['secondary_title', 'primary_title', 'title'])
-                record['journal'] = new_val
+            if "journal" not in record:
+                new_val = self.fix_field(
+                    entry, ["secondary_title", "primary_title", "title"]
+                )
+                record["journal"] = new_val
             self.fix_fields_by_entry_type(entry, entry_type, record)
             records[_id] = record
         return records
