@@ -47,3 +47,33 @@ M1  - 1228150341
 L2  - http://example2.com
 UR  - http://example_url.com
 ER  -
+
+3.
+TY  - BOOK
+A3  - Kolb, Vera M
+AD  - Department of Chemistry, University of Wisconsin-Parkside, USA
+TI  - Handbook of Astrobiology
+T2  - Series in Astrobiology
+SP  - 866
+PY  - 2019
+DA  - 2019/1/8
+PB  - CRC Press
+CY  - London, England
+SN  - 9781138065123
+VL  - 1
+IS  - 1
+ER  -
+
+4.
+TY  - BOOK
+AU  - Bell, Mike
+TI  - The fundamentals of teaching the fundamentals of teaching
+SP  - 164
+PY  - 2020
+DA  - 2020/10/13
+PB  - Routledge
+CY  - London, England
+SN  - 9780367358655
+VL  - 1
+IS  - 1
+ER  -
