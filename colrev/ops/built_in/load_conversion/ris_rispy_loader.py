@@ -42,7 +42,7 @@ class RisRispyLoader(JsonSchemaMixin):
         "doi",
         "publisher",
         "number",
-        "edition" "editor",
+        "edition",
     }
     replace_with = {
         "primary_title": "title",
@@ -147,14 +147,13 @@ class RisRispyLoader(JsonSchemaMixin):
         """Fixes some fields by entry type"""
         try:
             for key, value in self.entry_fixes[entry_type].items():
-                new_val = self.fix_field(entry, value)
+                new_val = self.__fix_field(entry, value)
                 if key not in record:
                     record[key] = new_val
         except KeyError:
             pass
-        return None
 
-    def fix_field(self, entry: dict, value: list[str]) -> str | None:
+    def __fix_field(self, entry: dict, value: list[str]) -> str | None:
         new_val = None
         for field in value:
             try:
@@ -189,7 +188,7 @@ class RisRispyLoader(JsonSchemaMixin):
             elif "starting_page" in entry:
                 record["pages"] = f"{entry['starting_page']}--"
             if "journal" not in record:
-                new_val = self.fix_field(
+                new_val = self.__fix_field(
                     entry, ["secondary_title", "primary_title", "title"]
                 )
                 record["journal"] = new_val
