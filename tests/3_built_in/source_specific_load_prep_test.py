@@ -144,7 +144,7 @@ def test_source(  # type: ignore
     # Run load and test the heuristics
     load_operation = base_repo_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
-    if source_filepath.suffix == ".ris":
+    if source_filepath.suffix == ".ris" or source_filepath == "ais.txt":
         new_sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
     load_operation.main(new_sources=new_sources)
     if custom_source:
