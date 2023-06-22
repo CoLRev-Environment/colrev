@@ -10,14 +10,13 @@ Supported File type: `ris`
 | A1,A2,A3 | author, also used to generate ID |
 | Y1,PY    | year, also used to generate ID   |
 | SP,EP    | pages (SP--EP)                   |
-| IS       | Number                           |
 | N2       | abstract                         |
 | N1       | Note                             |
 | T1,TI,T2 | Title                            |
 | VL       | Volume                           |
 | DO       | Doi                              |
 | PB       | Publisher                        |
-| IS       | Issue Number                     |
+| IS       | Number                           |
 
 
 For all reference types, Author is required.
