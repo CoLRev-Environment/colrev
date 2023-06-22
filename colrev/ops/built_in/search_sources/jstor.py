@@ -78,6 +78,8 @@ class JSTORSearchSource(JsonSchemaMixin):
         if "www.jstor.org:" in data:
             if data.count("www.jstor.org") > data.count("\n@"):
                 result["confidence"] = 1.0
+        if data.startswith("Provider: JSTOR http://www.jstor.org"):
+            result["confidence"] = 1.0
 
         return result
 

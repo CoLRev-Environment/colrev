@@ -13,6 +13,8 @@ import colrev.settings
 # pylint: disable=line-too-long
 # pylint: disable=too-many-arguments
 
+NO_CUSTOM_SOURCE = None
+
 
 # To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
 # and create the source_filepath in tests/data/built_in_search_sources.
@@ -20,42 +22,54 @@ import colrev.settings
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, custom_source, expected_file",
     [
-        # (Path("ais.txt"), "colrev.ais_library", Path("ais_result.bib")),
         # (Path("pubmed.csv"), "colrev.pubmed", Path("pubmed_result.bib")),
-        (Path("dblp.bib"), "colrev.dblp", None, Path("dblp_result.bib")),
+        # (Path("springer.csv"), "colrev.springer_link", Path("springer_result.bib")),
+        # https://pypi.org/project/nbib/
+        # (Path("eric.nbib"), "colrev.eric", Path("eric_result.bib")),
+        (
+            Path("ais.txt"),
+            "colrev.ais_library",
+            NO_CUSTOM_SOURCE,
+            Path("ais_result.bib"),
+        ),
+        (Path("dblp.bib"), "colrev.dblp", NO_CUSTOM_SOURCE, Path("dblp_result.bib")),
         (
             Path("europe_pmc.bib"),
             "colrev.europe_pmc",
-            None,
+            NO_CUSTOM_SOURCE,
             Path("europe_pmc_result.bib"),
         ),
-        (Path("acm.bib"), "colrev.acm_digital_library", None, Path("acm_result.bib")),
-        # (Path("eric.nbib"), "colrev.eric", Path("eric_result.bib")),
-        # (Path("ieee.ris"), "colrev.ieee",True, Path("ieee_result.bib")),
-        # (Path("jstor.ris"), "colrev.jstor",False, Path("jstor_result.bib")),
+        (
+            Path("acm.bib"),
+            "colrev.acm_digital_library",
+            NO_CUSTOM_SOURCE,
+            Path("acm_result.bib"),
+        ),
         (
             Path("abi_inform_proquest.bib"),
             "colrev.abi_inform_proquest",
-            None,
+            NO_CUSTOM_SOURCE,
             Path("abi_inform_proquest_result.bib"),
         ),
-        (Path("scopus.bib"), "colrev.scopus", None, Path("scopus_result.bib")),
-        # (Path("psycinfo.ris"), "colrev.psycinfo", Path("psycinfo_result.bib")),
-        # (Path("springer.csv"), "colrev.springer_link", Path("springer_result.bib")),
+        (
+            Path("scopus.bib"),
+            "colrev.scopus",
+            NO_CUSTOM_SOURCE,
+            Path("scopus_result.bib"),
+        ),
         (
             Path("taylor_and_francis.bib"),
             "colrev.taylor_and_francis",
-            None,
+            NO_CUSTOM_SOURCE,
             Path("taylor_and_francis_result.bib"),
         ),
-        # (Path("trid.ris"), "colrev.trid", Path("trid_result.bib")),
         (
             Path("web_of_science.bib"),
             "colrev.web_of_science",
-            None,
+            NO_CUSTOM_SOURCE,
             Path("web_of_science_result.bib"),
         ),
-        (Path("wiley.bib"), "colrev.wiley", None, Path("wiley_result.bib")),
+        (Path("wiley.bib"), "colrev.wiley", NO_CUSTOM_SOURCE, Path("wiley_result.bib")),
         (
             Path("pdfs_dir.bib"),
             "colrev.pdfs_dir",
@@ -70,10 +84,25 @@ import colrev.settings
             Path("pdfs_dir_result.bib"),
         ),
         (
-            Path("unknown_source_ris.ris"),
-            "colrev.unknown_source",
-            None,
-            Path("unknown_source_ris_result.bib"),
+            Path("ieee.ris"),
+            "colrev.ieee",
+            colrev.settings.SearchSource(
+                endpoint="colrev.ieee",
+                filename=Path("data/search/ieee.bib"),
+                search_type=colrev.settings.SearchType.OTHER,
+                search_parameters={"scope": {"path": "test"}},
+                load_conversion_package_endpoint={"endpoint": ""},
+                comment="",
+            ),
+            Path("ieee_result.bib"),
+        ),
+        (Path("jstor.ris"), "colrev.jstor", NO_CUSTOM_SOURCE, Path("jstor_result.bib")),
+        (Path("trid.ris"), "colrev.trid", NO_CUSTOM_SOURCE, Path("trid_result.bib")),
+        (
+            Path("psycinfo.ris"),
+            "colrev.psycinfo",
+            NO_CUSTOM_SOURCE,
+            Path("psycinfo_result.bib"),
         ),
     ],
 )
