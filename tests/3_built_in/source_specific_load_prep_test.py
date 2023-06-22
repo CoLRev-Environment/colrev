@@ -70,10 +70,10 @@ import colrev.settings
             Path("pdfs_dir_result.bib"),
         ),
         (
-            Path("lorem_ipsum.ris"),
+            Path("unknown_source_ris.ris"),
             "colrev.unknown_source",
             None,
-            Path("lorem_ipsum_result.bib"),
+            Path("unknown_source_ris_result.bib"),
         ),
     ],
 )
