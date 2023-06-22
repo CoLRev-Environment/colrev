@@ -33,9 +33,11 @@ class DefaultRISParser(BaseParser):
     DEFAULT_LIST_TAGS = LIST_TYPE_TAGS
 
     def get_content(self, line: str) -> str:
+        "Get the content from a line."
         return line[line.find(" - ") + 2 :].strip()
 
     def is_header(self, line: str) -> bool:
+        "Check whether the line is a header element"
         return not re.match("[A-Z0-9]+  - ", line)
 
 
