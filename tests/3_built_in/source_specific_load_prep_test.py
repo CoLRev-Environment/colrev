@@ -115,14 +115,14 @@ def test_source(  # type: ignore
     # Run load and test the heuristics
     load_operation = base_repo_review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
+    if source_filepath.suffix == ".ris":
+        new_sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
     load_operation.main(new_sources=new_sources)
     if custom_source:
         base_repo_review_manager.settings.sources = [custom_source]
     actual_source_identifier = base_repo_review_manager.settings.sources[0].endpoint
     # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
-    if source_filepath.suffix == ".ris":
-        base_repo_review_manager.settings.sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
 
     prep_operation = base_repo_review_manager.get_prep_operation()
     prep_operation.main()
