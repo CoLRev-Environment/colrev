@@ -77,6 +77,11 @@ class PsycINFOSearchSource(JsonSchemaMixin):
 
         # Note : no features in bib file for identification
 
+        if data.startswith(
+            "Provider: American Psychological Association\nDatabase: PsycINFO"
+        ):
+            result["confidence"] = 1.0
+
         return result
 
     @classmethod

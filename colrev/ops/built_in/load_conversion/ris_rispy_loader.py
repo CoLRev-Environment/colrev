@@ -14,9 +14,29 @@ import colrev.env.package_manager
 if TYPE_CHECKING:
     import colrev.ops.load
 
+import re
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
+
+from rispy import BaseParser
+from rispy.config import TAG_KEY_MAPPING, WOK_LIST_TYPE_TAGS
+
+
+class DefaultRISParser(BaseParser):
+    """Default parser for RIS files."""
+
+    START_TAG = "TY"
+    IGNORE = ["FN", "VR", "EF"]
+    PATTERN = r"^[A-Z][A-Z0-9] |^ER\s?|^EF\s?"
+    DEFAULT_MAPPING = TAG_KEY_MAPPING
+    DEFAULT_LIST_TAGS = WOK_LIST_TYPE_TAGS
+
+    def get_content(self, line: str) -> str:
+        return line[2:].strip()
+
+    def is_header(self, line: str) -> bool:
+        return not re.match("[A-Z0-9]+  - ", line)
 
 
 @zope.interface.implementer(
@@ -82,13 +102,6 @@ class RisRispyLoader(JsonSchemaMixin):
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
         """Load records from the source"""
-        records: dict = {}
-        if source.filename.is_file():
-            with open(source.filename, encoding="utf-8") as ris_file:
-                self.entries = rispy.load(file=ris_file)
-            if self.entries:
-                records = self.__parse_ris_file()
-
         endpoint_dict = load_operation.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
             selected_packages=[source.get_dict()],
@@ -96,6 +109,19 @@ class RisRispyLoader(JsonSchemaMixin):
             ignore_not_available=False,
         )
         endpoint = endpoint_dict[source.endpoint]
+
+        records: dict = {}
+        if source.filename.is_file():
+            # Note : depending on the source, a specific ris_parser implementation may be selected.
+            ris_parser = DefaultRISParser
+            if hasattr(endpoint, "ris_parser"):
+                ris_parser = endpoint.ris_parser
+            with open(source.filename, encoding="utf-8") as ris_file:
+                self.entries = rispy.load(file=ris_file, implementation=ris_parser)
+
+            if self.entries:
+                records = self.__parse_ris_file()
+
         records = endpoint.load_fixes(  # type: ignore
             load_operation, source=source, records=records
         )
@@ -110,7 +136,7 @@ class RisRispyLoader(JsonSchemaMixin):
                 authors.extend(entry[key])
             except KeyError:
                 continue
-        if not authors:
+        if not authors and "authors" in entry:
             return entry["authors"]
         return authors
 

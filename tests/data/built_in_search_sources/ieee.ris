@@ -1,0 +1,41 @@
+TY  - CONF
+TI  - Title of a conference paper
+T2  - Secondary Title (journal title, if applicable) 
+SP  - 183
+EP  - 186
+AU  - A. Author-One
+AU  - B. Author-Two
+AU  - C. Author-Three
+AU  - D. Author-Four
+AU  - E. Author-Five
+PY  - 2020
+DO  - 10.1234/Random-name55555.2020.00050
+JO  - Secondary Title (journal title, if applicable) 
+IS  - 
+SN  - 1111-3333
+VO  - 
+VL  - 
+JA  - Secondary Title (journal title, if applicable) 
+Y1  - 4-8 Aug. 2020
+ER  - 
+
+
+TY  - JOUR
+TI  - Title of a journal paper
+T2  - Secondary Title (journal title, if applicable) 
+SP  - 14
+EP  - 25
+AU  - A. Author-One
+AU  - B. Author-Two
+AU  - C. Author-Three
+PY  - 2017
+DO  - 10.1111/MC.2017.66
+JO  - Secondary Title (journal title, if applicable) 
+IS  - 3
+SN  - 1111-2222
+VO  - 50
+VL  - 50
+JA  - Secondary Title (journal title, if applicable) 
+Y1  - Mar. 2017
+ER  - 
+

@@ -1,0 +1,34 @@
+Provider: American Psychological Association
+Database: PsycINFO
+Content: application/x-research-info-systems
+
+TY  - JOUR
+PMID  - 33355555
+ID  - 2020-55555-005
+T1  - Primary Title
+JF  - Journal/Periodical name: full format
+A1  - Author-One, Matthias
+A1  - Author-Two, Martin
+A1  - Author-Three, Hans E.
+A1  - Author-Four, Bob
+A1  - Author-Five, David B.
+VL  - 34
+SP  - 1023
+EP  - 1095
+Y1  - 2020
+CY  - US
+AD  - Author-One, Matthias: Department of Something, Top University, 1234 Knight Way, Stanford, CA, US, 94305, authormatthias@top.edu
+PB  - Publisher 
+SN  - 1999-7777(Electronic),0222-6666(Print)
+N2  - Abstract. This is a free text field and can contain alphanumeric characters. There is no practical length limit to this field. 
+KW  - *Keyword one
+KW  - *Keyword two
+KW  - *Keyword three
+KW  - *Keyword four
+KW  - *Keyword five
+KW  - Keyword six without asterisk
+KW  - Keyword seven without asterisk
+KW  - Keyword eight without asterisk
+M3  - doi:10.1011/hea0004444
+DO  - 10.1011/hea0004444
+ER  -

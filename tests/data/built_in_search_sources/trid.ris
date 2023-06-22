@@ -1,0 +1,72 @@
+TY  - ABST
+AN  - 01611111
+TI  - Title of this citation
+PY  - Start date: 20170812
+AB  - This is the abstract
+KW  - Keyword one
+KW  - Keyword two
+KW  - Keyword three
+UR  - http://www.wmich.edu/something/xyz
+UR  - https://wmich.edu/sites/default/files/attachments/33333/2019/a_pdf_file.pdf
+UR  - https://trid.trb.org/view/8888888
+ER  - 
+
+TY  - CPAPER
+AN  - 01722222
+JO  - Journalname
+PB  - Publishername
+AU  - Author-One, A
+AU  - Author-Two, B
+TI  - Title of this citation
+PY  - 2019
+VL  - 43
+SP  - pp 278-298
+AB  - This is the abstract
+U1  - User definable 1. This is an alphanumeric field and there is no practical limit to the length of this field. 
+KW  - Keyword one
+KW  - Keyword two
+KW  - Keyword three
+M3  - Web
+DO  - https://doi.org/10.1333/hello.2019.12.012
+UR  - http://www.sciencedirect.com/science/article/pii/S9999999997777777
+UR  - https://trid.trb.org/view/1666666
+ER  - 
+
+TY  - JOUR
+AN  - 01633333
+JO  - Journalname
+PB  - Publishername
+AU  - Author-One, A
+AU  - Author-Two, B
+TI  - Title of this citation
+PY  - 2018/04
+VL  - 78
+SP  - pp 37-64
+AB  - This is the abstract
+KW  - Keyword one
+KW  - Keyword two
+KW  - Keyword three
+M3  - Web
+DO  - https://doi.org/10.1444/j.hello.2018.05.005
+UR  - http://www.sciencedirect.com/science/article/pii/S0006666667777777
+UR  - https://trid.trb.org/view/1777777
+ER  - 
+
+TY  - RPRT
+AN  - 01744444
+AU  - Author-One, A
+AU  - Author-Two, B
+AU  - Name of a Research Center
+AU  - Name of a University
+TI  - Title of this citation
+PY  - 2019/08/23
+ET  - Final Report
+SP  - 146p
+AB  - This is the abstract
+KW  - Keyword one
+KW  - Keyword two
+KW  - Keyword three
+M3  - Web
+UR  - https://wmich.edu/sites/default/files/attachments/u22222/2019/name-of-a.pdf
+UR  - https://rosap.ntl.bts.gov/view/dot/9999999
+UR  - https://trid.trb.org/view/1224444
