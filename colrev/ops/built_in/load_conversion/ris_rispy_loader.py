@@ -132,7 +132,9 @@ class RisRispyLoader(JsonSchemaMixin):
     def __add_entry(self, _entry: dict, key: str, record: dict) -> None:
         if key in _entry:
             val = _entry[key]
-            target_key = key if key not in self.__replace_with else self.__replace_with[key]
+            target_key = (
+                key if key not in self.__replace_with else self.__replace_with[key]
+            )
             record[target_key] = val
 
     def __get_entry_type(self, type_of_reference: str) -> str:
