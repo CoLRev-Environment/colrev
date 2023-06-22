@@ -4,7 +4,6 @@ Supported File type: `ris`
 
 ## Supported fields:
 
-
 | RIS      | Mapped to                        |
 |:---------|:---------------------------------|
 | T2       | journal                          |
@@ -14,13 +13,26 @@ Supported File type: `ris`
 | IS       | Number                           |
 | N2       | abstract                         |
 | N1       | Note                             |
-| T1,TI    | Title                            |
+| T1,TI,T2 | Title                            |
+| VL       | Volume                           |
+| DO       | Doi                              |
+| PB       | Publisher                        |
+| IS       | Issue Number                     |
+
+
+For all reference types, Author is required.
+
+| Type or Reference      | Mapped to                        | Fields Required             |
+|:-----------------------|:---------------------------------|:----------------------------|
+| JOUR, JFULL            | article                          | A1/A2/A3/AU,T1/TI/T2        |
+| CONF                   | inproceedings                    | IS,T2                       |
+| THES                   | pdhthesis                        | VL,IS,T2,TI                 |
+| CHAP                   | inbook                           | T2/TI                       |
+| BOOK                   | book                             | VL,IS,T2/TI/T2              |
 
 * Check Wiki for more details about available fields, right now only the fields
 mentioned here are available.
 
-Following fields are taken just as it is:
-"TI", "VL", "DO", "PB", "IS"
 
 ## Links
 * [rispy](https://pypi.org/project/rispy)
