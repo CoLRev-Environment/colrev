@@ -32,7 +32,7 @@ class RisRispyLoader(JsonSchemaMixin):
 
     ci_supported: bool = True
 
-    fields_to_check = {
+    __fields_to_check = {
         "title",
         "primary_title",
         "secondary_title",
@@ -44,13 +44,13 @@ class RisRispyLoader(JsonSchemaMixin):
         "number",
         "edition",
     }
-    replace_with = {
+    __replace_with = {
         "primary_title": "title",
         "notes_abstract": "abstract",
         "secondary_title": "journal",
         "publication_year": "year",
     }
-    reference_types = {
+    __reference_types = {
         "JOUR": "article",
         "JFULL": "article",
         "CONF": "inproceedings",
@@ -60,7 +60,7 @@ class RisRispyLoader(JsonSchemaMixin):
         "BOOK": "book",
     }
 
-    entry_fixes = {
+    __entry_fixes = {
         "article": {
             "booktitle": ["primary_title", "secondary_title", "title"],
         },
@@ -101,7 +101,7 @@ class RisRispyLoader(JsonSchemaMixin):
         )
         return records
 
-    def get_authors(self, entry: dict) -> list[str]:
+    def __get_authors(self, entry: dict) -> list[str]:
         """Get authors"""
         keys = ["first_authors", "secondary_authors", "tertiary_authors"]
         authors = []
@@ -114,7 +114,7 @@ class RisRispyLoader(JsonSchemaMixin):
             return entry["authors"]
         return authors
 
-    def get_year(self, entry: dict) -> str:
+    def __get_year(self, entry: dict) -> str:
         """Get year"""
         try:
             return entry["year"].strip("/")
@@ -132,12 +132,12 @@ class RisRispyLoader(JsonSchemaMixin):
     def __add_entry(self, _entry: dict, key: str, record: dict) -> None:
         if key in _entry:
             val = _entry[key]
-            target_key = key if key not in self.replace_with else self.replace_with[key]
+            target_key = key if key not in self.__replace_with else self.__replace_with[key]
             record[target_key] = val
 
     def __get_entry_type(self, type_of_reference: str) -> str:
         try:
-            return self.reference_types[type_of_reference]
+            return self.__reference_types[type_of_reference]
         except KeyError:
             return "misc"
 
@@ -146,7 +146,7 @@ class RisRispyLoader(JsonSchemaMixin):
     ) -> None:
         """Fixes some fields by entry type"""
         try:
-            for key, value in self.entry_fixes[entry_type].items():
+            for key, value in self.__entry_fixes[entry_type].items():
                 new_val = self.__fix_field(entry, value)
                 if key not in record:
                     record[key] = new_val
@@ -170,8 +170,8 @@ class RisRispyLoader(JsonSchemaMixin):
         for entry in self.entries:
             entry = dict(sorted(entry.items()))
             # colrev uses first 3 auther + year format
-            authors = self.get_authors(entry)
-            year = self.get_year(entry)
+            authors = self.__get_authors(entry)
+            year = self.__get_year(entry)
             _id = self.__get_entry_id(authors, year)
 
             entry_type = self.__get_entry_type(entry["type_of_reference"])
@@ -181,7 +181,7 @@ class RisRispyLoader(JsonSchemaMixin):
                 "ENTRYTYPE": entry_type,
                 "year": year,
             }
-            for field in self.fields_to_check:
+            for field in self.__fields_to_check:
                 self.__add_entry(entry, field, record)
             if "starting_page" in entry and "final_page" in entry:
                 record["pages"] = f"{entry['starting_page']}--{entry['final_page']}"
