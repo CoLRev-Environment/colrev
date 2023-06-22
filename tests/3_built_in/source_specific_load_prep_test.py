@@ -98,7 +98,7 @@ def test_source(  # type: ignore
         target=Path("data/search/") / source_filepath,
     )
     if platform.system() not in ["Linux"]:
-        if source_filepath.suffix not in [".bib", ".csv"]:
+        if source_filepath.suffix not in [".bib", ".ris", ".csv"]:
             return
 
     base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
@@ -121,6 +121,8 @@ def test_source(  # type: ignore
     actual_source_identifier = base_repo_review_manager.settings.sources[0].endpoint
     # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
+    if source_filepath.suffix == ".ris":
+        base_repo_review_manager.settings.sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
 
     prep_operation = base_repo_review_manager.get_prep_operation()
     prep_operation.main()
