@@ -87,6 +87,15 @@ class ERICSearchSource(JsonSchemaMixin):
         # Note : no features in bib file for identification
 
         return result
+    
+
+    def search_split (search) -> str:
+        search_parts = search.split(':')
+        field = search_parts[0].strip()
+        value = search_parts[1].strip().strip("'")
+        field_value = f'{field}%3A%22{urllib.parse.quote(value)}%22'
+        return field_value
+    
 
     
     @classmethod
@@ -105,11 +114,7 @@ class ERICSearchSource(JsonSchemaMixin):
             #Ist der : okay um zwischen normaler search und field search zu differenzieren?
             #Wichtig für Doku: Field search immer mit ' machen. Z.B. author:'Creamer, Don'
             if ':' in search:
-                search_parts = search.split(':')
-                field = search_parts[0].strip()
-                value = search_parts[1].strip().strip("'")
-                field_value = f'{field}%3A%22{urllib.parse.quote(value)}%22'
-                search = field_value
+                search = ERICSearchSource.search_split(search)
             print(search)
             filename = search_operation.get_unique_filename(
                 file_path_string=f"eric_{search}"
@@ -126,7 +131,9 @@ class ERICSearchSource(JsonSchemaMixin):
 
         return None
 
-   
+    
+
+
     def run_search(self, search_operation, rerun):
         eric_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
