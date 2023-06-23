@@ -254,9 +254,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self.criteria_available = len(self.screening_criteria.keys())
 
         for record_dict in screen_data["items"]:
-            if len(split) > 0:
-                if record_dict["ID"] not in split:
-                    continue
+            if record_dict["ID"] not in split:
+                continue
 
             ret = self.__screen_record(
                 screen_operation=screen_operation, record_dict=record_dict
@@ -274,7 +273,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
         screen_operation.review_manager.dataset.add_record_changes()
 
-        if self.__i < self.__stat_len:  # if records remain for screening
+        if self.__i < self.__stat_len and split:  # if records remain for screening
             if input("Create commit (y/n)?") != "y":
                 return records
 

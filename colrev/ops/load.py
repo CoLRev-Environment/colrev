@@ -652,7 +652,7 @@ class Load(colrev.operation.Operation):
                     record.data["url"].find("login?url=https") + 10 :
                 ]
 
-    def __import_record(self, *, record_dict: dict) -> dict:
+    def __import_record(self, *, record_dict: dict, include: bool) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
@@ -681,7 +681,8 @@ class Load(colrev.operation.Operation):
                 f"{colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{colors.END}"
             )
-
+        if include:
+            record.data["include_flag"] = "1"
         return record.get_data()
 
     def __prep_records_for_import(
@@ -777,7 +778,7 @@ class Load(colrev.operation.Operation):
         return search_records
 
     def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool, include: bool
     ) -> None:
         search_records = self.__get_search_records(source=source)
 
@@ -797,7 +798,9 @@ class Load(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
-            source_record = self.__import_record(record_dict=source_record)
+            source_record = self.__import_record(
+                record_dict=source_record, include=include
+            )
 
             # Make sure IDs are unique / do not replace existing records
             order = 0
@@ -946,7 +949,7 @@ class Load(colrev.operation.Operation):
         *,
         new_sources: typing.List[colrev.settings.SearchSource],
         keep_ids: bool = False,
-        combine_commits: bool = False,
+        include: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
 
@@ -993,7 +996,9 @@ class Load(colrev.operation.Operation):
                 self.__resolve_non_unique_ids(source=source)
 
                 # 3. load and add records to data/records.bib
-                self.__load_source_records(source=source, keep_ids=keep_ids)
+                self.__load_source_records(
+                    source=source, keep_ids=keep_ids, include=include
+                )
                 if (
                     0 == getattr(source, "to_import", 0)
                     and not self.review_manager.high_level_operation
@@ -1003,26 +1008,20 @@ class Load(colrev.operation.Operation):
                 # 4. validate load
                 self.__validate_load(source=source)
 
-                stashed = "No local changes to save" != git_repo.git.stash(
-                    "push", "--keep-index"
-                )
+                stashed = self.review_manager.dataset.stash_unstaged_changes()
 
-                if not combine_commits:
-                    self.review_manager.exact_call = (
-                        f"{part_exact_call} -s {source.filename.name}"
-                    )
-                    self.review_manager.create_commit(
-                        msg=f"Load {source.filename.name}",
-                    )
+                self.review_manager.exact_call = (
+                    f"{part_exact_call} -s {source.filename.name}"
+                )
+                self.review_manager.create_commit(
+                    msg=f"Load {source.filename.name}",
+                )
                 if stashed:
                     git_repo.git.stash("pop")
                 if not self.review_manager.high_level_operation:
                     print()
             except colrev_exceptions.ImportException as exc:
                 print(exc)
-
-        if combine_commits and self.review_manager.dataset.has_changes():
-            self.review_manager.create_commit(msg="Load (multiple)")
 
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed load operation{colors.END}"

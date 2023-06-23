@@ -12,7 +12,7 @@ def test_pdf_prep(  # type: ignore
         review_manager=base_repo_review_manager, commit="pdf_get_commit"
     )
     # pdf_prep_operation = base_repo_review_manager.get_pdf_prep_operation(reprocess=False)
-    # pdf_prep_operation.main(batch_size=0)
+    # pdf_prep_operation.main()
 
 
 def test_pdf_discard(  # type: ignore

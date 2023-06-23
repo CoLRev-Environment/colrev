@@ -313,7 +313,7 @@ def retrieve(
     load_operation = review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
-    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
+    load_operation.main(new_sources=new_sources, keep_ids=False)
 
     print()
     review_manager.exact_call = "colrev prep"
@@ -439,18 +439,18 @@ def search(
     help="Do not change the record IDs. Useful when importing an existing sample.",
 )
 @click.option(
-    "-c",
-    "--combine_commits",
-    is_flag=True,
-    default=False,
-    help="Combine load of multiple sources in one commit.",
-)
-@click.option(
     "-sq",
     "--skip_query",
     is_flag=True,
     default=False,
     help="Skip entering the search query (if applicable)",
+)
+@click.option(
+    "-i",
+    "--include",
+    is_flag=True,
+    default=False,
+    help="Automatically include papers from the new sources.",
 )
 @click.option(
     "-v",
@@ -471,8 +471,8 @@ def search(
 def load(
     ctx: click.core.Context,
     keep_ids: bool,
-    combine_commits: bool,
     skip_query: bool,
+    include: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -481,20 +481,38 @@ def load(
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
     )
-    # already start LocalIndex (for set_ids)
     load_operation = review_manager.get_load_operation()
-
     new_sources = load_operation.get_new_sources(skip_query=skip_query)
-
-    if combine_commits:
-        logging.info("Combine mode: all search sources will be loaded in one commit")
-
+    if include:
+        print()
+        review_manager.logger.info(
+            f"{colors.GREEN}Automatically include records from "
+            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
+        )
     # Note : reinitialize to load new scripts:
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
 
-    load_operation.main(
-        new_sources=new_sources, keep_ids=keep_ids, combine_commits=combine_commits
-    )
+    load_operation.main(new_sources=new_sources, keep_ids=keep_ids, include=include)
+
+    if include:
+        print()
+        prep_operation = review_manager.get_prep_operation()
+        prep_operation.main()
+        print()
+        dedupe_operation = review_manager.get_dedupe_operation()
+        dedupe_operation.main()
+        print()
+        prescreen_operation = review_manager.get_prescreen_operation()
+        prescreen_operation.main()
+        print()
+        pdf_get_operation = review_manager.get_pdf_get_operation()
+        pdf_get_operation.main()
+        print()
+        pdf_prep_operation = review_manager.get_pdf_prep_operation()
+        pdf_prep_operation.main()
+        print()
+        screen_operation = review_manager.get_screen_operation()
+        screen_operation.main()
 
 
 @main.command(help_priority=6)
@@ -1125,7 +1143,7 @@ def pdfs(
     print()
 
     pdf_prep_operation = review_manager.get_pdf_prep_operation()
-    pdf_prep_operation.main(batch_size=0)
+    pdf_prep_operation.main()
 
 
 @main.command(help_priority=12)

@@ -1148,3 +1148,9 @@ class Dataset:
             if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
+
+    def stash_unstaged_changes(self) -> bool:
+        """Stash unstaged changes"""
+        return "No local changes to save" != self.__git_repo.git.stash(
+            "push", "--keep-index"
+        )

@@ -375,7 +375,7 @@ class PDFPrep(colrev.operation.Operation):
         self,
         *,
         reprocess: bool = False,
-        batch_size: int,
+        batch_size: int = 0,
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 

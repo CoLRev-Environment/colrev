@@ -183,9 +183,7 @@ class Service:
             load_operation = self.review_manager.get_load_operation()
             new_sources = load_operation.get_new_sources(skip_query=True)
             load_operation = self.review_manager.get_load_operation()
-            load_operation.main(
-                new_sources=new_sources, keep_ids=False, combine_commits=False
-            )
+            load_operation.main(new_sources=new_sources, keep_ids=False)
 
             prep_operation = self.review_manager.get_prep_operation()
             prep_operation.main()
@@ -205,9 +203,7 @@ class Service:
                 print()
 
                 new_sources = load_operation.get_new_sources(skip_query=True)
-                load_operation.main(
-                    new_sources=new_sources, keep_ids=False, combine_commits=False
-                )
+                load_operation.main(new_sources=new_sources, keep_ids=False)
             else:
                 self.service_queue.task_done()
                 return
