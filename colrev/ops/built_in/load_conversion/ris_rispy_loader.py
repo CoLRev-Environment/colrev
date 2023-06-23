@@ -14,6 +14,7 @@ from rispy.config import LIST_TYPE_TAGS
 from rispy.config import TAG_KEY_MAPPING
 
 import colrev.env.package_manager
+import colrev.ops.built_in.load_conversion.utils
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -104,6 +105,11 @@ class RisRispyLoader(JsonSchemaMixin):
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
     ) -> dict:
         """Load records from the source"""
+
+        colrev.ops.built_in.load_conversion.utils.apply_ris_fixes(
+            filename=source.filename
+        )
+
         endpoint_dict = load_operation.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
             selected_packages=[source.get_dict()],
@@ -144,17 +150,19 @@ class RisRispyLoader(JsonSchemaMixin):
 
     def __get_year(self, entry: dict) -> str:
         """Get year"""
-        try:
+        if "year" in entry:
             return entry["year"].strip("/")
-        except KeyError:
+        if "publication_year" in entry:
             return entry["publication_year"].strip("/")
+        return ""
 
     def __get_entry_id(self, authors: list[str], year: str) -> str:
         """Get entry id, CoLRev uses 3 auther + year as ID"""
         if len(authors) >= 3:
             authors = authors[:3]
         three_author = "".join([author.rsplit(",")[0].strip() for author in authors])
-        _id = f"{three_author.lower()}{year}".replace(" ", "_").strip(".")
+        _id = f"{three_author}{year}"
+        _id = re.sub("[^0-9a-zA-Z]+", "", _id)
         return _id
 
     def __add_entry(self, _entry: dict, key: str, record: dict) -> None:
@@ -203,6 +211,16 @@ class RisRispyLoader(JsonSchemaMixin):
             authors = self.__get_authors(entry)
             year = self.__get_year(entry)
             _id = self.__get_entry_id(authors, year)
+
+            if _id.lower() in [k.lower() for k in records]:
+                new_key = _id
+                i = 0
+                while True:
+                    i += 1
+                    new_key = f"{_id}_{i}"
+                    if new_key.lower() not in [k.lower() for k in records]:
+                        _id = new_key
+                        break
 
             entry_type = self.__get_entry_type(entry["type_of_reference"])
             record = {
