@@ -82,46 +82,58 @@ class Dashboard():
         df.to_csv("./data/records.csv", index = True)
 
         data= Dashboard.filteringData()
-        helperData = data
+        # helperData = data
 
-        helperData.drop(["author"], axis=1)
-        # helperData.groupby('year')
+        # helperData.pop("author")
+        # # helperData.groupby('year')
 
-        data2 = pd.DataFrame({'year': [helperData.groupby("year")],
-                            'papers published': [helperData.groupby("year")["title"].count()]})
+        # data2 = pd.DataFrame({'year': [helperData.groupby("year")],
+        #                     'papers published': [helperData.groupby("year")["title"].count()]})
         
-        self.app.layout = html.Div(
+
+        # data2 = pdDataframe({'year':})
+
+        data.pop('author')
+        data.pop('title')
+
+        data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
         
-            children=[dcc.Graph(
+        fig = px.bar(data2, x='year', y='count')
+        # fig.show()
 
-                id="papers-published-over-time",
+        self.app.layout = html.Div([
+            dcc.Graph(figure=fig)
+        ])
 
-                config={"displayModeBar": False},
+        # self.app.layout = html.Div(
 
-                figure={
+        #     children=[html.H1(
+        #         children="HAllo")])
+        
+        #  children=[dcc.Graph(
 
-                    "data2": [
+        #         id="papers-published-over-time",
 
-                        {
+        #         config={"displayModeBar": False},
 
-                            "x": data2["year"],
+        #         figure={
 
-                            "y": data2["papers published"],
+        #             "data2": [
 
-                            "type": "bar",
+        #                 {
 
-                            "hovertemplate": (
+        #                     "x": data2["year"],
 
-                                "$%{y:.2f}<extra></extra>"
+        #                     "y": data2["papers published"],
 
-                            ),
+        #                     "type": "bar",
                         
-                        }
-                    ]
+        #                 }
+        #             ]
                   
-                }
-            )]
-        )
+        #         }
+        #     )] 
+        # )
 
 
 
@@ -141,7 +153,7 @@ def main() -> None:
     dashboard = Dashboard()
 
     try:
-        #dashboard.makeTable()
+        dashboard.makeTable()
         dashboard.visualization()
         # app = dashboard.makeTable()
         dashboard.app.run_server(debug=True)
