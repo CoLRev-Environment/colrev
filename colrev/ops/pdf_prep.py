@@ -453,6 +453,7 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
 
         self.review_manager.create_commit(msg="Prepare PDFs")
+        self.conclude()
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-prep operation{colors.END}"
         )

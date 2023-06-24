@@ -17,6 +17,7 @@ colrev.ops.remove.Remove
       :nosignatures:
 
       ~Remove.check_precondition
+      ~Remove.conclude
       ~Remove.remove_records
 
 

@@ -45,6 +45,9 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
             self.zotero_translation_service = (
                 load_operation.review_manager.get_zotero_translation_service()
             )
+            load_operation.docker_images_to_stop.append(
+                self.zotero_translation_service.IMAGE_NAME
+            )
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource

@@ -17,6 +17,7 @@ colrev.ops.repare.Repare
       :nosignatures:
 
       ~Repare.check_precondition
+      ~Repare.conclude
       ~Repare.main
 
 

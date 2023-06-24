@@ -17,6 +17,7 @@ colrev.operation.Operation
       :nosignatures:
 
       ~Operation.check_precondition
+      ~Operation.conclude
 
 
 

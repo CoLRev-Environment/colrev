@@ -17,6 +17,7 @@ colrev.ops.prescreen.Prescreen
       :nosignatures:
 
       ~Prescreen.check_precondition
+      ~Prescreen.conclude
       ~Prescreen.create_prescreen_split
       ~Prescreen.exclude_records
       ~Prescreen.export_table

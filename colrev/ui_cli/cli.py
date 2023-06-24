@@ -1916,7 +1916,6 @@ def __print_environment_status(
     "-s", "--status", is_flag=True, default=False, help="Print environment status"
 )
 @click.option("--start", is_flag=True, default=False, help="Start environment services")
-@click.option("--stop", is_flag=True, default=False, help="Stop environment services")
 @click.option(
     "-r",
     "--register",
@@ -1958,7 +1957,6 @@ def env(
     pull: bool,
     status: bool,
     start: bool,
-    stop: bool,
     register: bool,
     unregister: bool,
     update_package_list: bool,
@@ -2000,11 +1998,6 @@ def env(
 
     if status:
         __print_environment_status(review_manager)
-        return
-
-    if stop:
-        environment_manager = review_manager.get_environment_manager()
-        environment_manager.stop_docker_services()
         return
 
     if register:

@@ -17,6 +17,7 @@ colrev.ops.validate.Validate
       :nosignatures:
 
       ~Validate.check_precondition
+      ~Validate.conclude
       ~Validate.load_changed_records
       ~Validate.main
       ~Validate.validate_dedupe_changes

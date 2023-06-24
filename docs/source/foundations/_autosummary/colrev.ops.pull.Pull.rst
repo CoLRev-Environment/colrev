@@ -17,6 +17,7 @@ colrev.ops.pull.Pull
       :nosignatures:
 
       ~Pull.check_precondition
+      ~Pull.conclude
       ~Pull.main
 
 

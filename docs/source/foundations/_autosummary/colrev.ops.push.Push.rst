@@ -17,6 +17,7 @@ colrev.ops.push.Push
       :nosignatures:
 
       ~Push.check_precondition
+      ~Push.conclude
       ~Push.main
 
 

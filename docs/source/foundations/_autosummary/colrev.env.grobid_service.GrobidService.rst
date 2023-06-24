@@ -27,4 +27,5 @@ colrev.env.grobid\_service.GrobidService
 
    .. autosummary::
 
+      ~GrobidService.GROBID_IMAGE
       ~GrobidService.GROBID_URL

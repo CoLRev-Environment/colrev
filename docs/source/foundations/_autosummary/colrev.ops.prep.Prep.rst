@@ -17,6 +17,7 @@ colrev.ops.prep.Prep
       :nosignatures:
 
       ~Prep.check_precondition
+      ~Prep.conclude
       ~Prep.main
       ~Prep.prepare
       ~Prep.reset_ids

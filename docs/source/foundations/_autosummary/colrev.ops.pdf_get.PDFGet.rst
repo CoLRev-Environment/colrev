@@ -18,6 +18,7 @@ colrev.ops.pdf\_get.PDFGet
 
       ~PDFGet.check_existing_unlinked_pdfs
       ~PDFGet.check_precondition
+      ~PDFGet.conclude
       ~PDFGet.copy_pdfs_to_repo
       ~PDFGet.get_pdf
       ~PDFGet.get_target_filepath

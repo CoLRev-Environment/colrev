@@ -17,6 +17,7 @@ colrev.ops.upgrade.Upgrade
       :nosignatures:
 
       ~Upgrade.check_precondition
+      ~Upgrade.conclude
       ~Upgrade.main
 
 

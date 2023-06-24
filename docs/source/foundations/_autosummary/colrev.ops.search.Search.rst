@@ -18,6 +18,7 @@ colrev.ops.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
+      ~Search.conclude
       ~Search.get_unique_filename
       ~Search.main
       ~Search.setup_custom_script

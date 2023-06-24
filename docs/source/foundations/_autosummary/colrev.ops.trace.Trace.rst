@@ -17,6 +17,7 @@ colrev.ops.trace.Trace
       :nosignatures:
 
       ~Trace.check_precondition
+      ~Trace.conclude
       ~Trace.main
 
 

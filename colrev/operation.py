@@ -2,12 +2,15 @@
 """Types and model of CoLRev operations."""
 from __future__ import annotations
 
+import typing
 from enum import auto
 from enum import Enum
 from typing import Optional
 from typing import TYPE_CHECKING
 
+import docker
 import git
+from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
@@ -68,6 +71,8 @@ class Operation:
             self.review_manager.notify(operation=self, state_transition=False)
 
         self.cpus = 4
+
+        self.docker_images_to_stop: typing.List[str] = []
 
         # Note: the following call seems to block the flow (if debug is enabled)
         # self.review_manager.logger.debug(f"Created {self.type} operation")
@@ -190,6 +195,16 @@ class Operation:
             self.__check_record_state_model_precondition()
 
         # ie., implicit pass for format, explore, check, pdf_prep_man
+
+    def conclude(self) -> None:
+        """Conclude the operation (stop Docker containers)"""
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if any(x in container.image.tags for x in self.docker_images_to_stop):
+                    container.stop()
+        except DockerException:
+            pass
 
 
 class FormatOperation(Operation):

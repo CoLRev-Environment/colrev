@@ -17,6 +17,7 @@ colrev.ops.prep\_man.PrepMan
       :nosignatures:
 
       ~PrepMan.check_precondition
+      ~PrepMan.conclude
       ~PrepMan.get_data
       ~PrepMan.main
       ~PrepMan.prep_man_langs

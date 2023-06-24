@@ -38,7 +38,6 @@ class EnvironmentManager:
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
         self.__registered_ports: typing.List[str] = []
-        self.__registered_services: typing.List[str] = []
 
     def register_ports(self, *, ports: typing.List[str]) -> None:
         """Register a localhost port to avoid conflicts"""
@@ -48,24 +47,6 @@ class EnvironmentManager:
                     f"Port {port_to_register} already registered"
                 )
             self.__registered_ports.append(port_to_register)
-
-    def register_docker_service(self, *, imagename: str) -> None:
-        """Register a docker service"""
-        self.__registered_services.append(imagename)
-
-    def stop_docker_services(self) -> None:
-        """Stop registered docker services"""
-
-        try:
-            client = docker.from_env()
-            for container in client.containers.list():
-                if any(x in str(container.image) for x in self.__registered_services):
-                    container.stop()
-                    print(f"Stopped container {container.name} ({container.image})")
-        except DockerException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Docker service not available ({exc}). Please install/start Docker."
-            ) from exc
 
     def load_environment_registry(self) -> dict:
         """Load the local registry"""
