@@ -14,12 +14,7 @@ class Dashboard():
 
     app = Dash(__name__) 
     
-    def filteringData ():
-        data = (pd.read_csv("./data/records.csv").query("colrev_status == 'rev_synthesized'"))
-        data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
-        return data
-
-    def makeTable(self) -> None:
+    def filteringData():
         with open( 
             "./data/records.bib"
         ) as bibtex_file:  # changing file format to csv for pandas
@@ -28,17 +23,18 @@ class Dashboard():
                 raise Exception("Die Datei 'records.bib' ist leer.") # throwing Exception 
         df = pd.DataFrame(bib_database.entries)
         df.to_csv("./data/records.csv", index = True)
+        data = (pd.read_csv("./data/records.csv").query("colrev_status == 'rev_synthesized'"))
+        data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
+        return data
 
-        data= Dashboard.filteringData()
+    def makeDashboard(self):
+        data=Dashboard.filteringData()
         
-
         for title in data:
             if title != "title" and title != "author" and title != "year":
                 data.pop(title)
 
-        # app = Dash(__name__)                                # initializing the dashboard app
-
-        self.app.layout = html.Div(                              # defining th content
+        self.app.layout = html.Div(                     #defining the content
             children=[
                 html.Div(
                 children=[
@@ -61,91 +57,20 @@ class Dashboard():
                     ),   
                     html.Button(id="submit-button", children="search")
                 ]),                      
-                        html.Table(
-                            [html.Tr([html.Th(col) for col in data.columns])] +
-                            [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
-                            className="styled-table"),  
-                        
-            ])
-        # return self.app
+                html.Table(
+                    [html.Tr([html.Th(col) for col in data.columns])] +
+                    [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
+                    className="styled-table"),
+                html.Div([dcc.Graph(figure=Dashboard.visualization(data))])    # Including the graph    
+            ]) 
 
-
-    def visualization(self) -> None:
-
-        with open( 
-            "./data/records.bib"
-        ) as bibtex_file:  # changing file format to csv for pandas
-            bib_database = bibtexparser.load(bibtex_file)
-            if not bib_database.entries:  # checking if bib_database file is empty
-                raise Exception("Die Datei 'records.bib' ist leer.") # throwing Exception 
-        df = pd.DataFrame(bib_database.entries)
-        df.to_csv("./data/records.csv", index = True)
-
-        data= Dashboard.filteringData()
-        # helperData = data
-
-        # helperData.pop("author")
-        # # helperData.groupby('year')
-
-        # data2 = pd.DataFrame({'year': [helperData.groupby("year")],
-        #                     'papers published': [helperData.groupby("year")["title"].count()]})
+    def visualization(data) -> None:
         
-
-        # data2 = pdDataframe({'year':})
-
         data.pop('author')
         data.pop('title')
-
         data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
-        
         fig = px.bar(data2, x='year', y='count')
-        # fig.show()
-
-        self.app.layout = html.Div([
-            dcc.Graph(figure=fig)
-        ])
-
-        # self.app.layout = html.Div(
-
-        #     children=[html.H1(
-        #         children="HAllo")])
-        
-        #  children=[dcc.Graph(
-
-        #         id="papers-published-over-time",
-
-        #         config={"displayModeBar": False},
-
-        #         figure={
-
-        #             "data2": [
-
-        #                 {
-
-        #                     "x": data2["year"],
-
-        #                     "y": data2["papers published"],
-
-        #                     "type": "bar",
-                        
-        #                 }
-        #             ]
-                  
-        #         }
-        #     )] 
-        # )
-
-
-
-        # fig1 = px.bar(data2, x='year', y='papers published')
-        #print("hi")
-        #fig1.show()'
-
-
-
-
-
-
+        return fig
 
 
 def main() -> None:
@@ -153,9 +78,7 @@ def main() -> None:
     dashboard = Dashboard()
 
     try:
-        dashboard.makeTable()
-        dashboard.visualization()
-        # app = dashboard.makeTable()
+        dashboard.makeDashboard()
         dashboard.app.run_server(debug=True)
     except Exception as e: # catching Exception
         print("Fehler:", str(e)) # print error
