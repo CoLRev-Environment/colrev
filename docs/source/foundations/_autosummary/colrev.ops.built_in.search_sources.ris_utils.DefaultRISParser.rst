@@ -1,7 +1,7 @@
-colrev.ops.built\_in.load\_conversion.ris\_rispy\_loader.DefaultRISParser
-=========================================================================
+colrev.ops.built\_in.search\_sources.ris\_utils.DefaultRISParser
+================================================================
 
-.. currentmodule:: colrev.ops.built_in.load_conversion.ris_rispy_loader
+.. currentmodule:: colrev.ops.built_in.search_sources.ris_utils
 
 .. autoclass:: DefaultRISParser
    :members:

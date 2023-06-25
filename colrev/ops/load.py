@@ -917,7 +917,7 @@ class Load(colrev.operation.Operation):
                 }
             return records
 
-        if len(records) == 0:
+        if not records:
             self.review_manager.report_logger.debug("No records loaded")
             self.review_manager.logger.debug("No records loaded")
             return
@@ -960,6 +960,8 @@ class Load(colrev.operation.Operation):
         for source in self.__load_active_sources(new_sources=new_sources):
             try:
                 self.review_manager.logger.info(f"Load {source.filename}")
+                if not source.filename.is_file():
+                    continue
 
                 # Add to settings (if new filename)
                 if source.filename not in [

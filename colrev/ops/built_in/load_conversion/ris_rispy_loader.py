@@ -2,19 +2,14 @@
 """Load conversion of bib files using rispy"""
 from __future__ import annotations
 
-import re
+import typing
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import rispy
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from rispy import BaseParser
-from rispy.config import LIST_TYPE_TAGS
-from rispy.config import TAG_KEY_MAPPING
 
 import colrev.env.package_manager
-import colrev.ops.built_in.load_conversion.utils
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -22,24 +17,6 @@ if TYPE_CHECKING:
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
-
-
-class DefaultRISParser(BaseParser):
-    """Default parser for RIS files."""
-
-    START_TAG = "TY"
-    IGNORE = ["FN", "VR", "EF"]
-    PATTERN = r"^[A-Z][A-Z0-9] |^ER\s?|^EF\s?"
-    DEFAULT_MAPPING = TAG_KEY_MAPPING
-    DEFAULT_LIST_TAGS = LIST_TYPE_TAGS
-
-    def get_content(self, line: str) -> str:
-        "Get the content from a line."
-        return line[line.find(" - ") + 2 :].strip()
-
-    def is_header(self, line: str) -> bool:
-        "Check whether the line is a header element"
-        return not re.match("[A-Z0-9]+  - ", line)
 
 
 @zope.interface.implementer(
@@ -55,43 +32,6 @@ class RisRispyLoader(JsonSchemaMixin):
 
     ci_supported: bool = True
 
-    __fields_to_check = {
-        "title",
-        "primary_title",
-        "secondary_title",
-        "notes_abstract",
-        "note",
-        "volume",
-        "doi",
-        "publisher",
-        "number",
-        "edition",
-    }
-    __replace_with = {
-        "primary_title": "title",
-        "notes_abstract": "abstract",
-        "secondary_title": "journal",
-        "publication_year": "year",
-    }
-    __reference_types = {
-        "JOUR": "article",
-        "JFULL": "article",
-        "CONF": "inproceedings",
-        "THES": "phdthesis",
-        "REPT": "techreport",
-        "CHAP": "inbook",
-        "BOOK": "book",
-    }
-
-    __entry_fixes = {
-        "article": {
-            "booktitle": ["primary_title", "secondary_title", "title"],
-        },
-        "misc": {
-            "booktitle": ["primary_title", "secondary_title", "title"],
-        },
-    }
-
     def __init__(
         self,
         *,
@@ -100,16 +40,14 @@ class RisRispyLoader(JsonSchemaMixin):
     ) -> None:
         self.entries = None
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = load_operation.review_manager
 
-    def load(
-        self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ) -> dict:
-        """Load records from the source"""
-
-        colrev.ops.built_in.load_conversion.utils.apply_ris_fixes(
-            filename=source.filename
-        )
-
+    def __get_endpoint(
+        self,
+        *,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+    ) -> typing.Dict[str, typing.Any]:
         endpoint_dict = load_operation.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
             selected_packages=[source.get_dict()],
@@ -117,129 +55,22 @@ class RisRispyLoader(JsonSchemaMixin):
             ignore_not_available=False,
         )
         endpoint = endpoint_dict[source.endpoint]
+        return endpoint
+
+    def load(
+        self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
+    ) -> dict:
+        """Load records from the source"""
 
         records: dict = {}
-        if source.filename.is_file():
-            # Note : depending on the source, a specific ris_parser implementation may be selected.
-            ris_parser = DefaultRISParser
-            if hasattr(endpoint, "ris_parser"):
-                ris_parser = endpoint.ris_parser
-            with open(source.filename, encoding="utf-8") as ris_file:
-                self.entries = rispy.load(file=ris_file, implementation=ris_parser)
 
-            if self.entries:
-                records = self.__parse_ris_file()
-
-        records = endpoint.load_fixes(  # type: ignore
-            load_operation, source=source, records=records
-        )
-        return records
-
-    def __get_authors(self, entry: dict) -> list[str]:
-        """Get authors"""
-        keys = ["first_authors", "secondary_authors", "tertiary_authors"]
-        authors = []
-        for key in keys:
-            try:
-                authors.extend(entry[key])
-            except KeyError:
-                continue
-        if not authors and "authors" in entry:
-            return entry["authors"]
-        return authors
-
-    def __get_year(self, entry: dict) -> str:
-        """Get year"""
-        if "year" in entry:
-            return entry["year"].strip("/")
-        if "publication_year" in entry:
-            return entry["publication_year"].strip("/")
-        return ""
-
-    def __get_entry_id(self, authors: list[str], year: str) -> str:
-        """Get entry id, CoLRev uses 3 auther + year as ID"""
-        if len(authors) >= 3:
-            authors = authors[:3]
-        three_author = "".join([author.rsplit(",")[0].strip() for author in authors])
-        _id = f"{three_author}{year}"
-        _id = re.sub("[^0-9a-zA-Z]+", "", _id)
-        return _id
-
-    def __add_entry(self, _entry: dict, key: str, record: dict) -> None:
-        if key in _entry:
-            val = _entry[key]
-            target_key = (
-                key if key not in self.__replace_with else self.__replace_with[key]
-            )
-            record[target_key] = val
-
-    def __get_entry_type(self, type_of_reference: str) -> str:
-        try:
-            return self.__reference_types[type_of_reference]
-        except KeyError:
-            return "misc"
-
-    def fix_fields_by_entry_type(
-        self, entry: dict, entry_type: str, record: dict
-    ) -> None:
-        """Fixes some fields by entry type"""
-        try:
-            for key, value in self.__entry_fixes[entry_type].items():
-                new_val = self.__fix_field(entry, value)
-                if key not in record:
-                    record[key] = new_val
-        except KeyError:
-            pass
-
-    def __fix_field(self, entry: dict, value: list[str]) -> str | None:
-        new_val = None
-        for field in value:
-            try:
-                new_val = entry[field]
-            except KeyError:
-                continue
-        return new_val
-
-    def __parse_ris_file(self) -> dict | None:
-        """Parses given ris file with rispy and convert it to bib record"""
-        if not self.entries:
-            return None
-        records = {}
-        for entry in self.entries:
-            entry = dict(sorted(entry.items()))
-            # colrev uses first 3 auther + year format
-            authors = self.__get_authors(entry)
-            year = self.__get_year(entry)
-            _id = self.__get_entry_id(authors, year)
-
-            if _id.lower() in [k.lower() for k in records]:
-                new_key = _id
-                i = 0
-                while True:
-                    i += 1
-                    new_key = f"{_id}_{i}"
-                    if new_key.lower() not in [k.lower() for k in records]:
-                        _id = new_key
-                        break
-
-            entry_type = self.__get_entry_type(entry["type_of_reference"])
-            record = {
-                "ID": _id,
-                "author": " and ".join(authors),
-                "ENTRYTYPE": entry_type,
-                "year": year,
-            }
-            for field in self.__fields_to_check:
-                self.__add_entry(entry, field, record)
-            if "starting_page" in entry and "final_page" in entry:
-                record["pages"] = f"{entry['starting_page']}--{entry['final_page']}"
-            elif "starting_page" in entry:
-                record["pages"] = f"{entry['starting_page']}--"
-            if "journal" not in record:
-                new_val = self.__fix_field(
-                    entry, ["secondary_title", "primary_title", "title"]
-                )
-                record["journal"] = new_val
-            self.fix_fields_by_entry_type(entry, entry_type, record)
-            records[_id] = record
-        return records
+        # TODO:
+        # ultimately, the load operation should call load scripts in the search sources
+        # which are then responsible for the whole parsing/fixing steps (in one place)
+        # once we replace the load-package-endpoints, we should call the corresponding
+        # load method of the searchsources
+        endpoint = self.__get_endpoint(load_operation=load_operation, source=source)
+        if hasattr(endpoint, "load"):
+            records = endpoint.load(load_operation=load_operation)
+            return records
+        raise NotImplementedError

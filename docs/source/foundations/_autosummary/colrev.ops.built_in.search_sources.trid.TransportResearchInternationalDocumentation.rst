@@ -25,6 +25,7 @@ colrev.ops.built\_in.search\_sources.trid.TransportResearchInternationalDocument
       ~TransportResearchInternationalDocumentation.get_masterdata
       ~TransportResearchInternationalDocumentation.heuristic
       ~TransportResearchInternationalDocumentation.json_schema
+      ~TransportResearchInternationalDocumentation.load
       ~TransportResearchInternationalDocumentation.load_fixes
       ~TransportResearchInternationalDocumentation.prepare
       ~TransportResearchInternationalDocumentation.register_field_encoders

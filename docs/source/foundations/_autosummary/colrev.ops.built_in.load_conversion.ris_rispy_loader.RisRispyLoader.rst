@@ -18,7 +18,6 @@ colrev.ops.built\_in.load\_conversion.ris\_rispy\_loader.RisRispyLoader
 
       ~RisRispyLoader.all_json_schemas
       ~RisRispyLoader.field_mapping
-      ~RisRispyLoader.fix_fields_by_entry_type
       ~RisRispyLoader.from_dict
       ~RisRispyLoader.from_json
       ~RisRispyLoader.from_object

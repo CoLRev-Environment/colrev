@@ -17,9 +17,9 @@ from thefuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ris_utils
 import colrev.ops.search
 import colrev.record
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -111,6 +111,24 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Not implemented"""
         return record
+
+    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+        if self.search_source.filename.suffix == ".ris":
+            colrev.ops.built_in.search_sources.ris_utils.apply_ris_fixes(
+                filename=self.search_source.filename
+            )
+            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+                filename=self.search_source.filename
+            )
+            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
+                ris_entries
+            )
+            return records
+
+        # TODO : cases: bib/ ...
+
+        raise NotImplementedError
 
     def load_fixes(
         self,

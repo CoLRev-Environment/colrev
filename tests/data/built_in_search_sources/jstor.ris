@@ -60,8 +60,8 @@ Content: text/plain; charset="UTF-8"
 TY  - CHAP
 TI  - This title is of type CHAP
 AU  - Chapwriter-One, Phoebe
-A2  - Chapwriter-Two, Davide
-A2  - Chapwriter-Two, Laureen
+A2  - Editor, Davide
+A2  - Editor, Laureen
 AB  - This is the abstract of this CHAP
 DB  - JSTOR
 EP  - 354
@@ -69,7 +69,7 @@ PB  - University of Somewhere Press
 PY  - 2019
 SN  - 9777777777779
 SP  - 125
-T2  - Secondary Title (journal title, if applicable)
+T2  - Secondary Title
 T3  - Tertiary Title
 UR  - http://www.jstor.org/stable/j.abcxyz.1234
 Y2  - 2023/04/17/

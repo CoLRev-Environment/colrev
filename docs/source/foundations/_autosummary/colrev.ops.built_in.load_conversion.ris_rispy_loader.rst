@@ -20,5 +20,4 @@ colrev.ops.built\_in.load\_conversion.ris\_rispy\_loader
       :template: custom-class-template.rst
       :nosignatures:
 
-      DefaultRISParser
       RisRispyLoader

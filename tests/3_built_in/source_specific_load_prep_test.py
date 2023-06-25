@@ -78,7 +78,7 @@ NO_CUSTOM_SOURCE = None
                 filename=Path("data/search/pdfs_dir.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
-                load_conversion_package_endpoint={"endpoint": ""},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             ),
             Path("pdfs_dir_result.bib"),
@@ -88,10 +88,10 @@ NO_CUSTOM_SOURCE = None
             "colrev.ieee",
             colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
-                filename=Path("data/search/ieee.bib"),
+                filename=Path("data/search/ieee.ris"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
-                load_conversion_package_endpoint={"endpoint": ""},
+                load_conversion_package_endpoint={"endpoint": "colrev.rispy"},
                 comment="",
             ),
             Path("ieee_result.bib"),
@@ -109,8 +109,8 @@ NO_CUSTOM_SOURCE = None
 def test_source(  # type: ignore
     source_filepath: Path,
     expected_source_identifier: str,
-    expected_file: Path,
     custom_source: colrev.settings.SearchSource,
+    expected_file: Path,
     base_repo_review_manager: colrev.review_manager.ReviewManager,
     helpers,
 ) -> None:
@@ -146,9 +146,12 @@ def test_source(  # type: ignore
     new_sources = load_operation.get_new_sources(skip_query=True)
     if source_filepath.suffix == ".ris" or source_filepath == "ais.txt":
         new_sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
-    load_operation.main(new_sources=new_sources)
     if custom_source:
+        new_sources = [custom_source]
         base_repo_review_manager.settings.sources = [custom_source]
+
+    load_operation.main(new_sources=new_sources)
+
     actual_source_identifier = base_repo_review_manager.settings.sources[0].endpoint
     # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file
     assert expected_source_identifier == actual_source_identifier
