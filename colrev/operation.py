@@ -5,8 +5,11 @@ from __future__ import annotations
 import typing
 from enum import auto
 from enum import Enum
+from typing import Any
+from typing import Callable
 from typing import Optional
 from typing import TYPE_CHECKING
+from typing import TypeVar
 
 import docker
 import git
@@ -17,6 +20,8 @@ import colrev.record
 
 if TYPE_CHECKING:
     import colrev.review_manager
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class OperationsType(Enum):
@@ -79,6 +84,25 @@ class Operation:
 
         # Note: we call review_manager.notify() in the subclasses
         # to make sure that the review_manager calls the right check_preconditions()
+
+    # pylint: disable=too-many-nested-blocks
+    @classmethod
+    def decorate(cls) -> Callable:
+        """Decorator for operations"""
+
+        def decorator_func(func: F) -> Callable:
+            def wrapper_func(self, *args, **kwargs) -> Any:  # type: ignore
+                # Invoke the wrapped function
+                retval = func(self, *args, **kwargs)
+                # Conclude the operation
+                self.conclude()
+                if self.review_manager.in_ci_environment():
+                    print("\n\n")
+                return retval
+
+            return wrapper_func
+
+        return decorator_func
 
     def __check_record_state_model_precondition(self) -> None:
         colrev.record.RecordStateModel.check_operation_precondition(operation=self)

@@ -29,6 +29,7 @@ class Remove(colrev.operation.Operation):
             notify_state_transition_operation=False,
         )
 
+    @colrev.operation.Operation.decorate()
     def remove_records(self, *, ids: str) -> None:
         """Remove records from CoLRev project."""
 

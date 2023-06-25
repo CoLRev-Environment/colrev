@@ -355,6 +355,7 @@ class Search(colrev.operation.Operation):
 
         return changed
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -432,9 +433,6 @@ class Search(colrev.operation.Operation):
                 self.review_manager.dataset.add_changes(path=source.filename)
                 if not skip_commit:
                     self.review_manager.create_commit(msg="Run search")
-
-        if self.review_manager.in_ci_environment():
-            print("\n\n")
 
     def setup_custom_script(self) -> None:
         """Setup a custom search script"""

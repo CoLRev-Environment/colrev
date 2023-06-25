@@ -946,6 +946,7 @@ class Load(colrev.operation.Operation):
                 sources.append(source)
         return sources
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -1030,6 +1031,3 @@ class Load(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed load operation{colors.END}"
         )
-        self.conclude()
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

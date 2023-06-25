@@ -514,6 +514,7 @@ class Validate(colrev.operation.Operation):
 
         return target_commit
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,

@@ -77,6 +77,7 @@ class Prescreen(colrev.operation.Operation):
             return False
         return True
 
+    @colrev.operation.Operation.decorate()
     def include_all_in_prescreen(self, *, persist: bool) -> None:
         """Include all records in the prescreen"""
 
@@ -329,6 +330,7 @@ class Prescreen(colrev.operation.Operation):
             )
         return selected_auto_include_ids
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:
         """Prescreen records (main entrypoint)"""
 
@@ -393,5 +395,3 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.logger.info(
             "%sCompleted prescreen operation%s", colors.GREEN, colors.END
         )
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

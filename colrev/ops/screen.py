@@ -402,6 +402,7 @@ class Screen(colrev.operation.Operation):
         )
         return selected_auto_include_ids
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:
         """Screen records for inclusion (main entrypoint)"""
 
@@ -473,5 +474,3 @@ class Screen(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed screen operation{colors.END}"
         )
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

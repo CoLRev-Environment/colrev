@@ -325,6 +325,7 @@ class PDFPrepMan(colrev.operation.Operation):
             path=self.review_manager.dataset.RECORDS_FILE_RELATIVE
         )
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""
 

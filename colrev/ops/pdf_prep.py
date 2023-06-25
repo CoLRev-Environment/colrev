@@ -371,6 +371,7 @@ class PDFPrep(colrev.operation.Operation):
             except colrev_exceptions.TEIException:
                 self.review_manager.logger.error("Eror generating TEI")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -453,7 +454,6 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
 
         self.review_manager.create_commit(msg="Prepare PDFs")
-        self.conclude()
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-prep operation{colors.END}"
         )

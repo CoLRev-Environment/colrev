@@ -84,6 +84,7 @@ class Merge(colrev.operation.Operation):
 
         return non_status_changes
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, branch: str) -> None:
         """Merge branches of a CoLRev project (main entrypoint)"""
 
