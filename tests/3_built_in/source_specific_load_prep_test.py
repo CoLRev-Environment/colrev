@@ -136,6 +136,7 @@ def test_source(  # type: ignore
     base_repo_review_manager.settings.prep.defects_to_ignore = [
         "inconsistent-with-url-metadata",
         "inconsistent-with-doi-metadata",
+        "language-unknown",
     ]
     base_repo_review_manager.settings.sources = []
 

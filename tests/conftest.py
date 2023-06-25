@@ -396,5 +396,6 @@ def fixture_v_t_record() -> colrev.record.Record:
             "year": "2022",
             "volume": "37",
             "number": "2",
+            "language": "eng",
         }
     )
