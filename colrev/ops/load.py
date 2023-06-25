@@ -110,6 +110,8 @@ class Load(colrev.operation.Operation):
         self, *, filepath: Path, load_conversion: dict
     ) -> dict:
         filetype = filepath.suffix.replace(".", "")
+        if filetype == "ris":
+            return {"endpoint": "colrev.rispy"}
 
         for (
             package_identifier,
