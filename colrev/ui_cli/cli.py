@@ -485,7 +485,7 @@ def load(
     new_sources = load_operation.get_new_sources(skip_query=skip_query)
     if include:
         print()
-        review_manager.logger.info(
+        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
             f"{colors.GREEN}Automatically include records from "
             f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
         )
