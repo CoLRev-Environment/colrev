@@ -16,6 +16,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 
+import configparser
+
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
@@ -127,3 +129,11 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Source-specific preparation for IEEEXplore"""
 
         return record
+
+    #TODO: Ablageort für Key abstimmen
+    def get_apikey():
+        config = configparser.ConfigParser()
+        config.read('/home/ubuntu/config.ini')   
+        api_key = config.get('API Key', 'key')
+
+        return api_key
