@@ -94,6 +94,8 @@ class Sync:
         return citation_keys
 
     def get_cited_papers_from_source(self, *, src: Path) -> None:
+        """Get the cited papers from a source file"""
+
         citation_keys = self.__get_cited_papers_citation_keys()
 
         ids_in_bib = self.__get_ids_in_paper()
