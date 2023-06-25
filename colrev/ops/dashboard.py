@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """CoLRev dashboard operation: to track project progress through dashboard"""
 from __future__ import annotations
+from curses import color_pair
 
 
 import pandas as pd
@@ -31,7 +32,7 @@ class Dashboard():
         data=Dashboard.filteringData()
         
         for title in data:
-            if title != "title" and title != "author" and title != "year":
+            if title != "title" and title != "author" and title != "year"and title != "journal":
                 data.pop(title)
 
         self.app.layout = html.Div(                     #defining the content
@@ -61,17 +62,25 @@ class Dashboard():
                     [html.Tr([html.Th(col) for col in data.columns])] +
                     [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
                     className="styled-table"),
-                html.Div([dcc.Graph(figure=Dashboard.visualization(data))])    # Including the graph    
+                html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))]),    # Including the graph    
+                html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))]) 
             ]) 
 
-    def visualization(data) -> None:
-        
-        data.pop('author')
-        data.pop('title')
+    def visualizationTime(data):
         data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
-        fig = px.bar(data2, x='year', y='count')
+        fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
+        return fig
+    
+    def visualizationMagazines(data):
+        data2 = data.groupby(['journal'])['journal'].count().reset_index(name='count')
+        fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Profile of papers published over time")
         return fig
 
+    def analytics():
+        #data=Status.get_analytics()
+        #print(data)
+
+        return
 
 def main() -> None:
 
