@@ -18,6 +18,8 @@ import colrev.record
 
 import configparser
 
+from xplore.xploreapi import XPLORE
+
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
