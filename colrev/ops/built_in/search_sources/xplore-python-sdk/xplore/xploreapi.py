@@ -1,6 +1,6 @@
 import math
 import urllib
-import urllib2
+import urllib.request
 import xml.etree.ElementTree as ET
 import json
 
@@ -434,7 +434,7 @@ class XPLORE:
     # return string: Results from API
     def queryAPI(self, url):
 
-        content = urllib2.urlopen(url).read()
+        content = urllib.request.urlopen(url).read()
         return content
 
 
