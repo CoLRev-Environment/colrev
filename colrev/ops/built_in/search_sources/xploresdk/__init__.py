@@ -1,1 +1,1 @@
-from xplore.xploreapi import XPLORE
+from xploresdk.xploreapi import XPLORE
