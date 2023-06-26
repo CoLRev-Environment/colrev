@@ -133,10 +133,9 @@ class LocalIndex:
         # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
 
     def load_journal_rankings(self) -> None:
-        vpath = Path(
-            "/home/ubuntu/Git Repository/colrev/colrev/template/ops/journal_rankings.csv"
-        )  # For test purposes use relative part on your machine
+         # For test purposes use relative part on your machine
         # for integration use the following string "/home/ubuntu/colrev/colrev/template/ops/journal_rankings.csv" or Path.home().joinpath("colrev") / colrev/template/ops/journal_rankings.csv
+        rankings_csv_path = str(Path(__file__).parents)[1] / Path("template") /Path("ops") / Path("journal_ranking.csv")
         conn = sqlite3.connect(self.SQLITE_PATH)  # connects to db
         df = pd.read_csv(vpath, encoding="cp850")  # creates data frame
         df.to_sql(
