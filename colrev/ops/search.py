@@ -127,45 +127,6 @@ class Search(colrev.operation.Operation):
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
-    def __have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
-        # To ignore changes introduced by saving/loading the feed-records,
-        # we parse and load them in the following.
-        record_a = deepcopy(record_a_orig)
-        record_b = deepcopy(record_b_orig)
-
-        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_a["ID"]: record_a}
-        )
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(bibtex_str)
-        record_a = list(
-            self.review_manager.dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            ).values()
-        )[0]
-
-        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_b["ID"]: record_b}
-        )
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(bibtex_str)
-        record_b = list(
-            self.review_manager.dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            ).values()
-        )[0]
-
-        # Note : record_a can have more keys (that's ok)
-        changed = False
-        for key, value in record_b.items():
-            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
-                continue
-            if key not in record_a:
-                return True
-            if record_a[key] != value:
-                return True
-        return changed
-
     def __get_record_based_on_origin(self, origin: str, records: dict) -> dict:
         for main_record_dict in records.values():
             if origin in main_record_dict["colrev_origin"]:
@@ -226,7 +187,8 @@ class Search(colrev.operation.Operation):
         update_time_variant_fields: bool,
         origin: str,
         source: colrev.settings.SearchSource,
-    ) -> None:
+    ) -> bool:
+        changed = False
         for key, value in record_dict.items():
             if (
                 not update_time_variant_fields
@@ -234,10 +196,7 @@ class Search(colrev.operation.Operation):
             ):
                 continue
 
-            if key in ["curation_ID"]:
-                continue
-
-            if key in colrev.record.Record.provenance_keys + ["ID"]:
+            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
                 continue
 
             if main_record_dict.get(key, "UNKNOWN") == "UNKNOWN":
@@ -259,6 +218,7 @@ class Search(colrev.operation.Operation):
                     keep_source_if_equal=True,
                     append_edit=False,
                 )
+                changed = True
             else:
                 if source.get_origin_prefix() != "md_curated.bib":
                     if prev_record_dict_version.get(key, "NA") != main_record_dict.get(
@@ -272,6 +232,8 @@ class Search(colrev.operation.Operation):
                     continue
                 if key == "url" and "dblp.org" in value and key in main_record.data:
                     continue
+                if value == main_record.data[key]:
+                    continue
                 main_record.update_field(
                     key=key,
                     value=value,
@@ -279,6 +241,8 @@ class Search(colrev.operation.Operation):
                     keep_source_if_equal=True,
                     append_edit=False,
                 )
+                changed = True
+        return changed
 
     def update_existing_record(
         self,
@@ -324,7 +288,7 @@ class Search(colrev.operation.Operation):
             other_record=colrev.record.Record(data=prev_record_dict_version)
         )
 
-        self.__update_existing_record_fields(
+        changed = self.__update_existing_record_fields(
             record_dict=record_dict,
             main_record_dict=main_record_dict,
             prev_record_dict_version=prev_record_dict_version,
@@ -333,12 +297,7 @@ class Search(colrev.operation.Operation):
             source=source,
         )
 
-        if self.__have_changed(
-            record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
-        ) or self.__have_changed(  # Note : not (yet) in the main records but changed
-            record_a_orig=record_dict, record_b_orig=prev_record_dict_version
-        ):
-            changed = True
+        if changed:
             if self.__forthcoming_published(
                 record_dict=record_dict, prev_record=prev_record_dict_version
             ):
