@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import json
 import time
-from copy import deepcopy
 from pathlib import Path
 from random import randint
 from typing import Optional
-
-from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -164,12 +161,13 @@ class Search(colrev.operation.Operation):
     def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
         if record_dict["ENTRYTYPE"] == "article":
             return False
+        # pylint: disable=too-many-boolean-expressions
         # Forthcoming paper published if volume and number are assigned
         # i.e., no longer UNKNOWN
         if (
             prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
             and record_dict.get("volume", "") != "UNKNOWN"
-            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+            and prev_record.get("number", "UNKNOWN") == "UNKNOWN"
             and record_dict.get("number", "") != "UNKNOWN"
         ) and (  # at least one of volume/number has to change.
             prev_record.get("volume", "") != record_dict.get("volume", "")
