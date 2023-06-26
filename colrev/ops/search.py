@@ -201,13 +201,18 @@ class Search(colrev.operation.Operation):
             record = colrev.record.PrepRecord(data=main_record_dict)
 
     def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
+        if record_dict["ENTRYTYPE"] == "article":
+            return False
         # Forthcoming paper published if volume and number are assigned
         # i.e., no longer UNKNOWN
         if (
-            record_dict.get("volume", "") != "UNKNOWN"
+            prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+            and record_dict.get("volume", "") != "UNKNOWN"
             and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
             and record_dict.get("number", "") != "UNKNOWN"
-            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+        ) and (  # at least one of volume/number has to change.
+            prev_record.get("volume", "") != record_dict.get("volume", "")
+            or prev_record.get("number", "") != record_dict.get("number", "")
         ):
             return True
         return False
