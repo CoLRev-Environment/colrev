@@ -114,6 +114,12 @@ NO_CUSTOM_SOURCE = None
             NO_CUSTOM_SOURCE,
             Path("psycinfo_result.bib"),
         ),
+        (
+            Path("unknown_source.bib"),
+            "colrev.unknown_source",
+            NO_CUSTOM_SOURCE,
+            Path("unknown_source_result.bib"),
+        ),
     ],
 )
 def test_source(  # type: ignore
