@@ -329,10 +329,6 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.asreview_prescreen",
-            "status": "EXPERIMENTAL"
-        },
-        {
             "package_endpoint_identifier": "colrev.conditional_prescreen",
             "status": "MATURING"
         },

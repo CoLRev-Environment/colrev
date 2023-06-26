@@ -629,14 +629,6 @@
     ],
     "prescreen": [
         {
-            "package_endpoint_identifier": "colrev.asreview_prescreen",
-            "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/asreview.md>`_)",
-            "ci_supported": false
-        },
-        {
             "package_endpoint_identifier": "colrev.colrev_cli_prescreen",
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen",
             "status": "|MATURING|",
