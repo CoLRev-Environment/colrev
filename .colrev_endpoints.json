@@ -130,9 +130,6 @@
             {"package_endpoint_identifier": "colrev.colrev_cli_prescreen",
              "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen"
             },
-            {"package_endpoint_identifier": "colrev.asreview_prescreen",
-             "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen"
-            },
             {"package_endpoint_identifier": "colrev.conditional_prescreen",
              "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen"
             },
