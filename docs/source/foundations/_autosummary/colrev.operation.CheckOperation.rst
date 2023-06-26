@@ -18,6 +18,7 @@ colrev.operation.CheckOperation
 
       ~CheckOperation.check_precondition
       ~CheckOperation.conclude
+      ~CheckOperation.decorate
 
 
 

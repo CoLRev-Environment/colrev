@@ -18,6 +18,7 @@ colrev.ops.distribute.Distribute
 
       ~Distribute.check_precondition
       ~Distribute.conclude
+      ~Distribute.decorate
       ~Distribute.get_environment_registry
       ~Distribute.main
 

@@ -18,6 +18,7 @@ colrev.ops.remove.Remove
 
       ~Remove.check_precondition
       ~Remove.conclude
+      ~Remove.decorate
       ~Remove.remove_records
 
 

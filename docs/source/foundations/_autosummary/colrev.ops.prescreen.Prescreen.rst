@@ -19,6 +19,7 @@ colrev.ops.prescreen.Prescreen
       ~Prescreen.check_precondition
       ~Prescreen.conclude
       ~Prescreen.create_prescreen_split
+      ~Prescreen.decorate
       ~Prescreen.exclude_records
       ~Prescreen.export_table
       ~Prescreen.get_data

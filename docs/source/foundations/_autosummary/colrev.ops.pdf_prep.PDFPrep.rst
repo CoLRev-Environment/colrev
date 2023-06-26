@@ -18,6 +18,7 @@ colrev.ops.pdf\_prep.PDFPrep
 
       ~PDFPrep.check_precondition
       ~PDFPrep.conclude
+      ~PDFPrep.decorate
       ~PDFPrep.generate_tei
       ~PDFPrep.main
       ~PDFPrep.prepare_pdf

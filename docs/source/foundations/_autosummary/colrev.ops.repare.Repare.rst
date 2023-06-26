@@ -18,6 +18,7 @@ colrev.ops.repare.Repare
 
       ~Repare.check_precondition
       ~Repare.conclude
+      ~Repare.decorate
       ~Repare.main
 
 

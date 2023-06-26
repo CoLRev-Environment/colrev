@@ -19,6 +19,7 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.apply_merges
       ~Dedupe.check_precondition
       ~Dedupe.conclude
+      ~Dedupe.decorate
       ~Dedupe.fix_errors
       ~Dedupe.get_info
       ~Dedupe.main

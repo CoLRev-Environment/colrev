@@ -18,6 +18,7 @@ colrev.operation.FormatOperation
 
       ~FormatOperation.check_precondition
       ~FormatOperation.conclude
+      ~FormatOperation.decorate
 
 
 

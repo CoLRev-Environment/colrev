@@ -18,6 +18,7 @@ colrev.operation.Operation
 
       ~Operation.check_precondition
       ~Operation.conclude
+      ~Operation.decorate
 
 
 

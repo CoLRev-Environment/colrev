@@ -20,6 +20,7 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.check_precondition
       ~PDFGet.conclude
       ~PDFGet.copy_pdfs_to_repo
+      ~PDFGet.decorate
       ~PDFGet.get_pdf
       ~PDFGet.get_target_filepath
       ~PDFGet.import_file

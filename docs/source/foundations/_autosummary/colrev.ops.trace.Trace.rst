@@ -18,6 +18,7 @@ colrev.ops.trace.Trace
 
       ~Trace.check_precondition
       ~Trace.conclude
+      ~Trace.decorate
       ~Trace.main
 
 

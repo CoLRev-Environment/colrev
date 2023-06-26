@@ -18,6 +18,7 @@ colrev.ops.push.Push
 
       ~Push.check_precondition
       ~Push.conclude
+      ~Push.decorate
       ~Push.main
 
 

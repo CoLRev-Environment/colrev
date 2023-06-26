@@ -18,6 +18,7 @@ colrev.ops.validate.Validate
 
       ~Validate.check_precondition
       ~Validate.conclude
+      ~Validate.decorate
       ~Validate.load_changed_records
       ~Validate.main
       ~Validate.validate_dedupe_changes

@@ -18,6 +18,7 @@ colrev.ops.upgrade.Upgrade
 
       ~Upgrade.check_precondition
       ~Upgrade.conclude
+      ~Upgrade.decorate
       ~Upgrade.main
 
 

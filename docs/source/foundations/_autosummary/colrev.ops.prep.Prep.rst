@@ -18,6 +18,7 @@ colrev.ops.prep.Prep
 
       ~Prep.check_precondition
       ~Prep.conclude
+      ~Prep.decorate
       ~Prep.main
       ~Prep.prepare
       ~Prep.reset_ids

@@ -19,6 +19,7 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
       ~PDFPrepMan.apply_pdf_prep_man
       ~PDFPrepMan.check_precondition
       ~PDFPrepMan.conclude
+      ~PDFPrepMan.decorate
       ~PDFPrepMan.discard
       ~PDFPrepMan.extract_coverpage
       ~PDFPrepMan.extract_lastpage

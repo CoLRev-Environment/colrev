@@ -18,6 +18,7 @@ colrev.ops.merge.Merge
 
       ~Merge.check_precondition
       ~Merge.conclude
+      ~Merge.decorate
       ~Merge.main
 
 

@@ -18,6 +18,7 @@ colrev.ops.pull.Pull
 
       ~Pull.check_precondition
       ~Pull.conclude
+      ~Pull.decorate
       ~Pull.main
 
 
