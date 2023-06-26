@@ -1931,6 +1931,12 @@ class PrepRecord(Record):
             .replace(" -- ", "--")
             .rstrip(".")
         )
+        if re.match(r"^\d+\-\-\d+$", self.data["pages"]):
+            from_page, to_page = re.findall(r"(\d+)", self.data["pages"])
+            if int(from_page) > int(to_page) and len(from_page) > len(to_page):
+                self.data[
+                    "pages"
+                ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
 
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""
