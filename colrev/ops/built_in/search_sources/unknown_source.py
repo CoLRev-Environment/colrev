@@ -135,7 +135,8 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
             return records
 
-        # TODO : cases: bib/ ...
+        # if self.search_source.filename.suffix == ".bib":
+        # ...
 
         raise NotImplementedError
 
