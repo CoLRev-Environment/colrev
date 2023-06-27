@@ -147,7 +147,7 @@ class LocalIndex:
 
     def search_in_database(self, journal) -> str:
         cur = self.__get_sqlite_cursor(init=False)
-        cur.execute("SELECT * FROM rankings WHERE 'journal name' = ?", (journal))
+        cur.execute("SELECT * FROM rankings WHERE 'journal name' = ? AND ranking = 'AIS'", (journal,))
         content = cur.fetchall()
         if content is None:
             return "Journal is not included in any ranking"
