@@ -17,16 +17,10 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 
-<<<<<<< HEAD
-import xplore
-import configparser
-
-=======
 import configparser
 
 from xploresdk import xploreapi
 
->>>>>>> origin/Albert/Freddy/Malou
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
