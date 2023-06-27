@@ -551,6 +551,24 @@ files = [
 ]
 
 [[package]]
+name = "colrev-asreview"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = ">=3.8, <4"
+files = []
+develop = false
+
+[package.dependencies]
+colrev = {git = "https://tmahmood@github.com/tmahmood/colrev.git", rev = "asreview_refactor"}
+
+[package.source]
+type = "git"
+url = "https://tmahmood@github.com/tmahmood/colrev-asreview"
+reference = "HEAD"
+resolved_reference = "a8d6c1dd820c00fdcc64b789e771e127fe08de27"
+
+[[package]]
 name = "coverage"
 version = "6.5.0"
 description = "Code coverage measurement for Python"
@@ -4198,4 +4216,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "4b4912aa6321eacf6dcb7cb9e746ffe7c443d97db219bf6c31957aa872150692"
+content-hash = "fa42ddf8f772b8a79fc4d956af12bddf98389c1f29ed955e76b95d0c8aadd09b"
