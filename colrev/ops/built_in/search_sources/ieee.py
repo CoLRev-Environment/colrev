@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import typing
+import requests
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,9 +17,16 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 
+<<<<<<< HEAD
 import xplore
 import configparser
 
+=======
+import configparser
+
+from xploresdk import xploreapi
+
+>>>>>>> origin/Albert/Freddy/Malou
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
@@ -131,10 +139,17 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         return record
 
+<<<<<<< HEAD
+=======
+    #TODO: Ablageort für Key abstimmen
+>>>>>>> origin/Albert/Freddy/Malou
     def get_apikey():
         config = configparser.ConfigParser()
         config.read('/home/ubuntu/config.ini')   
         api_key = config.get('API Key', 'key')
 
         return api_key
+<<<<<<< HEAD
     
+=======
+>>>>>>> origin/Albert/Freddy/Malou
