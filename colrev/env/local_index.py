@@ -147,12 +147,15 @@ class LocalIndex:
 
     def search_in_database(self, journal) -> str:
         cur = self.__get_sqlite_cursor(init=False)
-        cur.execute("SELECT * FROM rankings WHERE 'journal name' = ? AND ranking = 'AIS'", (journal,))
+        cur.execute("SELECT journalname FROM rankings WHERE ranking = 'AIS'")
         content = cur.fetchall()
-        if content is None:
-            return "Journal is not included in any ranking"
-        else:
-            return "Journal is ranked"
+        print(journal)
+        ranking = "not in ranking"
+        for journalname in content:
+            print(journalname)
+            if journal in journalname.values():
+                ranking = "AIS"
+        return ranking
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
