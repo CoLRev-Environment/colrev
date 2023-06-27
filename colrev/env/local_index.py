@@ -133,6 +133,7 @@ class LocalIndex:
         # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
 
     def load_journal_rankings(self) -> None:
+        #testcomment
         vpath = Path(
             "/home/ubuntu/Git Repository/colrev/colrev/template/ops/journal_rankings.csv"
         )  # For test purposes use relative part on your machine
