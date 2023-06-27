@@ -4,7 +4,7 @@
         "url": "https://github.com/tmahmood/colrev"
     },
     {
-        "module": "asreview_prescreen",
+        "module": "colrev_asreview",
         "url": "https://github.com/tmahmood/colrev-asreview"
     }
 ]
