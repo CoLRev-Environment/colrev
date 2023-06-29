@@ -878,6 +878,14 @@ def dedupe(
     required=False,
 )
 @click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev prescreen -a colrev.scope_prescreen:"TimeScopeFrom=2010"
+""",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -910,6 +918,7 @@ def prescreen(
     split: str,
     include: str,
     exclude: str,
+    add: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -945,7 +954,8 @@ def prescreen(
     elif setup_custom_script:
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
-
+    elif add:
+        prescreen_operation.add(add=add)
     else:
         review_manager.logger.info("Prescreen")
         review_manager.logger.info(
