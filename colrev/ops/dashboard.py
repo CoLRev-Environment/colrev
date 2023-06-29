@@ -3,6 +3,7 @@
 from __future__ import annotations
 from curses import color_pair
 
+import colrev.review_manager
 
 import pandas as pd
 from dash import Dash, dcc, html
@@ -63,7 +64,8 @@ class Dashboard():
                     [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
                     className="styled-table"),
                 html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))]),    # Including the graph    
-                html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))]) 
+                html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))]),
+                html.Div([dcc.Graph(figure=Dashboard.analytics(data))]) 
             ]) 
 
     def visualizationTime(data):
@@ -76,17 +78,32 @@ class Dashboard():
         fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Profile of papers published over time")
         return fig
 
-    def analytics():
+    def analytics(self):
         #data=Status.get_analytics()
         #print(data)
 
-        return
+        review_manager = colrev.review_manager.ReviewManager(
+            # force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+        )
+        status_operation = review_manager.get_status_operation()
+
+        
+        analytic_results = status_operation.get_analytics()
+
+        analytics_df1 = pd.DataFrame(analytic_results)
+        analytics_df2 = analytics_df1.transpose()
+
+        fig = px.line(analytics_df2, x= 'committed_date', y='search', template="simple_white", title="Burnout -> NOCH ÄNDERN")
+        return fig
+
+
 
 def main() -> None:
 
     dashboard = Dashboard()
 
     try:
+        # dashboard.analytics()
         dashboard.makeDashboard()
         dashboard.app.run_server(debug=True)
     except Exception as e: # catching Exception
