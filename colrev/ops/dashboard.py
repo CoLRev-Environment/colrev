@@ -3,14 +3,13 @@
 from __future__ import annotations
 from curses import color_pair
 
-import colrev.review_manager
-
 import pandas as pd
 from dash import Dash, dcc, html
 import bibtexparser
 import plotly.express as px
 
-
+import colrev.review_manager
+from datetime import datetime
 
 class Dashboard():
 
@@ -71,11 +70,13 @@ class Dashboard():
     def visualizationTime(data):
         data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
         fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
+        fig.update_traces(marker_color = '#fcb61a')
         return fig
     
     def visualizationMagazines(data):
         data2 = data.groupby(['journal'])['journal'].count().reset_index(name='count')
         fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Profile of papers published over time")
+        fig.update_traces(marker_color = '#fcb61a')
         return fig
 
     def analytics(self):
@@ -93,8 +94,33 @@ class Dashboard():
         analytics_df1 = pd.DataFrame(analytic_results)
         analytics_df2 = analytics_df1.transpose()
 
-        fig = px.line(analytics_df2, x= 'committed_date', y='search', template="simple_white", title="Burnout -> NOCH ÄNDERN")
+        analytics_df2['committed_date'] = analytics_df2['committed_date'].apply(timestampToDate)
+
+        scaled_y_lab = max(analytics_df2['search'])
+
+        print(scaled_y_lab) # to be continued with scaling ...
+
+        fig = px.line(analytics_df2, x= 'committed_date', y='search', template="simple_white", title="BurnOut-Chart")
         return fig
+    
+
+# helper functions for analytics
+def timestampToDate(timestamp) -> datetime:
+
+    # convert the timestamp to a datetime object in the local timezone
+    date = datetime.fromtimestamp(timestamp)
+
+    return date
+
+def scaleSearch(max, search):
+
+    return search
+
+
+
+def scaleIncluded(included):
+    return included
+
 
 
 
