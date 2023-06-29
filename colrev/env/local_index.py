@@ -144,13 +144,13 @@ class LocalIndex:
 
     def search_in_database(self, journal) -> str:
         cur = self.__get_sqlite_cursor(init=False)
-        cur.execute("SELECT journalname FROM rankings WHERE ranking = 'AIS'")
+        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'AIS'")
         content = cur.fetchall()
         print(journal)
         ranking = "not in ranking"
-        for journalname in content:
-            print(journalname)
-            if journal in journalname.values():
+        for journal_name in content:
+            print(journal_name)
+            if journal in journal_name.values():
                 ranking = "AIS"
         return ranking
 
