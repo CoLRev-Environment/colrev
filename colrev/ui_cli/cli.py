@@ -333,7 +333,7 @@ def retrieve(
     "--add",
     type=str,
     help="""
-Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
+Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
 """,
 )
 @click.option("-v", "--view", is_flag=True, default=False, help="View search sources")
