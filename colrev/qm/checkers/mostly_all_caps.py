@@ -24,6 +24,13 @@ class MostlyAllCapsFieldChecker:
             if record.data[key] == "UNKNOWN":
                 continue
             if (
+                record.data["ENTRYTYPE"] == "online"
+                and key == "title"
+                and len(record.data["title"]) < 10
+            ):
+                # Online sources/software can be short/have caps
+                continue
+            if (
                 colrev.env.utils.percent_upper_chars(
                     record.data[key].replace(" and ", "")
                 )
