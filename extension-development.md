@@ -1,8 +1,8 @@
 # Extension development
 
 Extensions can be added to extend any of CoLRev's process. Following process are possible to customize. Extensions
-are referred through its respective endpoints, these endpoints can be enabled in `settings.json` of a project. 
-For an extension to be available, it must be registered to CoLRev's package list. 
+are referred through its respective endpoints, these endpoints can be enabled in `settings.json` of a project.
+For an extension to be available, it must be registered to CoLRev's package list.
 
 ~~NOTE: Need to add explanation of each process~~
 __NOTE: Added better explanation of each process__
@@ -48,7 +48,7 @@ Therefore, following steps might be a good starting point.
 
 1. Fork and clone CoLRev
 2. Setup a virtualenv
-3. Install the cloned CoLRev using pip command 
+3. Install the cloned CoLRev using pip command
    ```pip install -e /path/to/cloned/colrev```
    `-e` allows editable installation. Any changes made in the clone will be available immediately
 4. Create the extension repository
@@ -77,7 +77,7 @@ Therefore, following steps might be a good starting point.
    |...... .pre-commit-config.yaml
    |...... a_prescreen_extension
    |......   __init__.py
-   |......   extension.py  
+   |......   extension.py
    |......   .colrev_endpoints.json
   """
 6. Use the same virtualenv setup while developing the extension
@@ -89,14 +89,14 @@ Therefore, following steps might be a good starting point.
    * Add the `colrev-extension` topic tag on GitHub to allow others to find and use your work.
 9. Register the extension to the cloned CoLRev by editing the `colrev/template/packages.json` file, commit the change
 10. Run `colrev env --update_package_list` command, this should update `package_endpoints.json` and
-   the `package_status.json`. 
+   the `package_status.json`.
 11. In case of error, `package_endpoints.json` file will be deleted. Fix the error, and
    restore the file from repo, repeat step `10` until CoLRev successfully register the extension without error
 12. Tests should be implemented in the extension level first
 13. Once the development is completed
     1. Remove any development code
     2. Do a pre-commit test
-    3. Push the changes to GitHub 
+    3. Push the changes to GitHub
     4. Make a PR to original repo
 
 
