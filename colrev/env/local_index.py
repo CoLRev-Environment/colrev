@@ -150,8 +150,8 @@ class LocalIndex:
         content2 = cur.fetchall()
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'FT-50'")
         content3 = cur.fetchall()
-        ## ranking = "not in ranking"
         ranking = ""
+        in_ranking_included = False
         for journal_name in content1:
             if journal in journal_name.values():
                 cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?", (journal,))
@@ -160,8 +160,10 @@ class LocalIndex:
                     impact_factor1 = ergebnis['impact_factor']
                     if impact_factor1 is None:
                         ranking += "Senior Scholars' List of Premier Journals; "
+                        in_ranking_included = True
                     else:
                         ranking += "Senior Scholars' List of Premier Journals " + str(impact_factor1) + "; "
+                        in_ranking_included = True
         for journal_name in content2:
             if journal in journal_name.values():
                 cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?", (journal,))
@@ -170,8 +172,10 @@ class LocalIndex:
                     impact_factor2 = ergebnis['impact_factor']
                     if impact_factor2 is None:
                         ranking += "VHB-JOULQUAL3; "
+                        in_ranking_included = True
                     else:
                         ranking += "VHB-JOURQUAL3 " + str(impact_factor2) + "; "
+                        in_ranking_included = True
         for journal_name in content3:
             if journal in journal_name.values():
                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'FT-50' AND journal_name = ?", (journal,))
@@ -180,8 +184,12 @@ class LocalIndex:
                     impact_factor3 = ergebnis['impact_factor']
                     if impact_factor3 is None:
                         ranking += "FT50"
+                        in_ranking_included = True
                     else:
                         ranking += "FT50 " + str(impact_factor3)
+                        in_ranking_included = True
+        if in_ranking_included == False:
+            ranking = "not included in a ranking"
         return ranking.strip()
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
