@@ -178,16 +178,8 @@ class LocalIndex:
                         in_ranking_included = True
         for journal_name in content3:
             if journal in journal_name.values():
-               cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'FT-50' AND journal_name = ?", (journal,))
-               ergebnisse3 = cur.fetchall()
-               for ergebnis in ergebnisse3:
-                    impact_factor3 = ergebnis['impact_factor']
-                    if impact_factor3 is None:
-                        ranking += "FT50"
-                        in_ranking_included = True
-                    else:
-                        ranking += "FT50 " + str(impact_factor3)
-                        in_ranking_included = True
+                ranking += "FT50"
+                in_ranking_included = True
         if in_ranking_included == False:
             ranking = "not included in a ranking"
         return ranking.strip()
