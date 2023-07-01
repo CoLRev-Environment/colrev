@@ -38,7 +38,7 @@ Therefore, following steps might be a good starting point.
 2. Setup a virtualenv
 3. Install the cloned CoLRev using pip command
    ```pip install -e /path/to/cloned/colrev```
-   
+
    `-e` allows editable installation. Any changes made in the clone will be available immediately
 5. Create the extension repository
 6. Add `.colrev_endpoints.json` file, and add the new extensions information, e.g.
