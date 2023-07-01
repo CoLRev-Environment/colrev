@@ -145,20 +145,44 @@ class LocalIndex:
     def search_in_database(self, journal) -> str:
         cur = self.__get_sqlite_cursor(init=False)
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'AIS'")
-        content = cur.fetchall()
-        print(journal)
-        ranking = "not in ranking"
-        for journal_name in content:
+        content1 = cur.fetchall()
+        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'VHB'")
+        content2 = cur.fetchall()
+        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'FT-50'")
+        content3 = cur.fetchall()
+        ## ranking = "not in ranking"
+        ranking = ""
+        for journal_name in content1:
             if journal in journal_name.values():
                 cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?", (journal,))
-                ergebnisse = cur.fetchall()
-                for ergebnis in ergebnisse:
-                    impact_factor = ergebnis['impact_factor']
-                    if impact_factor is None:
-                        ranking = "AIS"
+                ergebnisse1 = cur.fetchall()
+                for ergebnis in ergebnisse1:
+                    impact_factor1 = ergebnis['impact_factor']
+                    if impact_factor1 is None:
+                        ranking += "Senior Scholars' List of Premier Journals; "
                     else:
-                        ranking = "AIS " + str(impact_factor)
-        return ranking
+                        ranking += "Senior Scholars' List of Premier Journals " + str(impact_factor1) + "; "
+        for journal_name in content2:
+            if journal in journal_name.values():
+                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?", (journal,))
+                ergebnisse2 = cur.fetchall()
+                for ergebnis in ergebnisse2:
+                    impact_factor2 = ergebnis['impact_factor']
+                    if impact_factor2 is None:
+                        ranking += "VHB-JOULQUAL3; "
+                    else:
+                        ranking += "VHB-JOURQUAL3 " + str(impact_factor2) + "; "
+        for journal_name in content3:
+            if journal in journal_name.values():
+               cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'FT-50' AND journal_name = ?", (journal,))
+               ergebnisse3 = cur.fetchall()
+               for ergebnis in ergebnisse3:
+                    impact_factor3 = ergebnis['impact_factor']
+                    if impact_factor3 is None:
+                        ranking += "FT50"
+                    else:
+                        ranking += "FT50 " + str(impact_factor3)
+        return ranking.strip()
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
