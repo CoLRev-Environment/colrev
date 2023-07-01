@@ -149,9 +149,15 @@ class LocalIndex:
         print(journal)
         ranking = "not in ranking"
         for journal_name in content:
-            print(journal_name)
             if journal in journal_name.values():
-                ranking = "AIS"
+                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?", (journal,))
+                ergebnisse = cur.fetchall()
+                for ergebnis in ergebnisse:
+                    impact_factor = ergebnis['impact_factor']
+                    if impact_factor is None:
+                        ranking = "AIS"
+                    else:
+                        ranking = "AIS " + str(impact_factor)
         return ranking
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
