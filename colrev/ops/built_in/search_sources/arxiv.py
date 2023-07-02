@@ -48,7 +48,7 @@ class ArXivSource():
     api_search_supported = True
     ci_supported: bool = True
    # heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
-    short_name = "arXiv"
+    short_name = "arXiv"      # ist es eig. eagal wie der Name ist?
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/arxiv.md"
@@ -251,7 +251,7 @@ class ArXivSource():
         retrieved_record_dict.update(title=cls.__get_title_string(root=root))
         retrieved_record_dict.update(author=cls.__get_author_string(root=root))
 
-        journal_path = "/ArXivArticleSet/ArXivArticle/Citation/Article/Journal"
+        journal_path = "/ArXivArticleSet/ArXivArticle/Citation/Article/Journal" #Citation? reicht das als Ersatz?
         journal_name = root.xpath(journal_path + "/ISOAbbreviation")
         if journal_name:
             retrieved_record_dict.update(ENTRYTYPE="article")
@@ -272,7 +272,7 @@ class ArXivSource():
         retrieved_record_dict.update(volume=cls.__get_abstract_string(root=root))
 
         article_id_list = root.xpath(
-            "/ArXivArticleSet/ArXivArticle/ArXivData/ArticleIdList"
+            "/ArXivArticleSet/ArXivArticle/ArXivData/ArticleIdList" # wie kammst du auf die Bennenung?
         )
         for article_id in article_id_list[0]:
             id_type = article_id.attrib.get("IdType")
@@ -321,7 +321,7 @@ class ArXivSource():
     ) -> dict:
         """Retrieve records from ArXiv based on a query"""
 
-        # Query using ID List prefix
+        # Query using ID List prefix ?? - wo hast du das gefunden?
         try:
             prefix = "id_list"
             url = (
