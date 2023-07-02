@@ -21,7 +21,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.lxml import fromstring
 
 # added import for arXiv API
-import urllib, urllib.requests
+import urllib, urllib.request
+import time
+import feedparser
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -54,6 +56,10 @@ class ArXivSource():
         + "colrev/ops/built_in/search_sources/arxiv.md"
     )
     __arxiv_md_filename = Path("data/search/md_arxiv.bib")
+
+    # Added RN: expose metadata if in arXiv namespace
+    feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+    feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
     def __init__(
         self,
@@ -130,7 +136,7 @@ class ArXivSource():
                 + query
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.aexiv",
+                endpoint="colrev.arxiv",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
@@ -195,48 +201,98 @@ class ArXivSource():
             if not source_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("ArXiv") from exc
 
+    # RN
     @classmethod
-    def __get_author_string_from_node(cls, *, author_node: Element) -> str:
-        authors_string = ""
-        author_last_name_node = author_node.find("LastName")
-        if author_last_name_node is not None:
-            if author_last_name_node.text is not None:
-                authors_string += author_last_name_node.text
-        author_fore_name_node = author_node.find("ForeName")
-        if author_fore_name_node is not None:
-            if author_fore_name_node.text is not None:
-                authors_string += ", "
-                authors_string += author_fore_name_node.text
-        return authors_string
+    def feed_parsing(query):
+        # Added to expose metadata in arXiv namespace
+        feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+        feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
-    @classmethod
-    def __get_author_string(cls, *, root) -> str:  # type: ignore
-        authors_list = []
-        for author_node in root.xpath(
-            "/ArXivArticleSet/ArXivArticle/Citation/Article/AuthorList/Author"
-        ):
-            authors_list.append(
-                cls.__get_author_string_from_node(author_node=author_node)
-            )
-        return " and ".join(authors_list)
+        # Get request
+        response = urllib.urloben(query).read()
 
+        feed = feedparser.parse(response)
+
+         # Run through each entry, and print out information
+        for entry in feed.entries:
+            print ('e-print metadata')
+            print ('arxiv-id: %s' % entry.id.split('/abs/')[-1])
+            print ('Published: %s' % entry.published)
+            print ('Title:  %s' % entry.title)
+            
+            # feedparser v4.1 only grabs the first author
+            author_string = entry.author
+            
+            # grab the affiliation in <arxiv:affiliation> if present
+            # - this will only grab the first affiliation encountered
+            #   (the first affiliation for the first author)
+            # Please email the list with a way to get all of this information!
+            try:
+                author_string += ' (%s)' % entry.arxiv_affiliation
+            except AttributeError:
+                pass
+
+            # feedparser v5.0.1 correctly handles multiple authors, print them all
+            try:
+                print ('Authors:  %s' % ', '.join(author.name for author in entry.authors))
+            except AttributeError:
+                pass
+
+    # RN
     @classmethod
-    def __get_title_string(cls, *, root) -> str:  # type: ignore
-        title = root.xpath(
-            "/ArXivArticleSet/ArXivArticle/Citation/Article/ArticleTitle"
-        )
-        if title:
-            title = title[0].text.strip().rstrip(".")
+    def __get_author_string(query):
+        author = ArXivSource.feed_parsing(query).author_string
+        return author
+
+    #RN
+    @classmethod
+    def __get_title_string(query):
+        title = ArXivSource.feed_parsing(query).entry_title
         return title
 
-    @classmethod
-    def __get_abstract_string(cls, *, root) -> str:  # type: ignore
-        abstract = root.xpath(
-            "/ArXivArticleSet/ArXivArticle/Citation/Article/Abstract"
-        )
-        if abstract:
-            return ElementTree.tostring(abstract[0], encoding="unicode")
-        return ""
+
+    #@classmethod
+    #def __get_author_string_from_node(cls, *, author_node: Element) -> str:
+    #    authors_string = ""
+    #    author_last_name_node = author_node.find("LastName")
+    #    if author_last_name_node is not None:
+    #        if author_last_name_node.text is not None:
+    #            authors_string += author_last_name_node.text
+    #    author_fore_name_node = author_node.find("ForeName")
+    #    if author_fore_name_node is not None:
+    #        if author_fore_name_node.text is not None:
+    #            authors_string += ", "
+    #            authors_string += author_fore_name_node.text
+    #    return authors_string
+
+    #@classmethod
+    #def __get_author_string(cls, *, root) -> str:  # type: ignore
+    #    authors_list = []
+    #    for author_node in root.xpath(
+    #        "/ArXivArticleSet/ArXivArticle/Citation/Article/AuthorList/Author"
+    #    ):
+    #        authors_list.append(
+    #            cls.__get_author_string_from_node(author_node=author_node)
+    #        )
+    #    return " and ".join(authors_list)
+
+    #@classmethod
+    #def __get_title_string(cls, *, root) -> str:  # type: ignore
+    #    title = root.xpath(
+    #        "/ArXivArticleSet/ArXivArticle/Citation/Article/ArticleTitle"
+    #    )
+    #    if title:
+    #        title = title[0].text.strip().rstrip(".")
+    #    return title
+
+    #@classmethod
+    #def __get_abstract_string(cls, *, root) -> str:  # type: ignore
+    #    abstract = root.xpath(
+    #        "/ArXivArticleSet/ArXivArticle/Citation/Article/Abstract"
+    #    )
+    #    if abstract:
+    #        return ElementTree.tostring(abstract[0], encoding="unicode")
+    #    return ""
 
     @classmethod
     def __arxiv_xml_to_record(cls, *, root) -> dict:  # type: ignore
@@ -294,9 +350,16 @@ class ArXivSource():
         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
 
-        ret = session.request(
-            "GET", query + f"&retstart={retstart}", headers=headers, timeout=30
-        )
+        # added RN
+        url = query + " "
+
+        # change this to api call?
+        #ret = session.request(
+        #    "GET", query + f"&retstart={retstart}", headers=headers, timeout=30
+        #)
+        
+        ret = urllib.urloben(url)
+
 
         ret.raise_for_status()
         if ret.status_code != 200:
