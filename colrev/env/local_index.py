@@ -180,14 +180,15 @@ class LocalIndex:
                         in_ranking_included = True
         for journal_name in content3:
             if journal in journal_name.values():
-                ranking += "FT50"
+                ranking += "FT50  "
                 in_ranking_included = True
         for journal_name in content4:
             if journal in journal_name.values():
-                ranking = "Predatory Journal: Do not include!"
+                ranking = "Predatory Journal: Do not include!  "
                 in_ranking_included = True 
         if in_ranking_included == False:
-            ranking = "not included in a ranking"
+            ranking = "not included in a ranking  "
+        ranking = ranking[:-2]
         return ranking.strip()
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
