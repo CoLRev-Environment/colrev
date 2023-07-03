@@ -855,6 +855,7 @@ class PackageManager:
     def __add_package_endpoints(
         self,
         *,
+        selected_package: str,
         package_endpoints_json: dict,
         package_endpoints: dict,
         package_status: dict,
@@ -869,6 +870,11 @@ class PackageManager:
             )
             print(f" load {endpoint_type}: \n -  {package_list}")
             for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
+                if (
+                    not endpoint_item["package_endpoint_identifier"].split(".")[0]
+                    == selected_package
+                ):
+                    continue
                 self.packages[PackageEndpointType[endpoint_type]][
                     endpoint_item["package_endpoint_identifier"]
                 ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
@@ -930,7 +936,11 @@ class PackageManager:
                     endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
                 )
 
-            endpoint_list += package_endpoints["endpoints"][endpoint_type]
+            endpoint_list += [
+                x
+                for x in package_endpoints["endpoints"][endpoint_type]
+                if x["package_endpoint_identifier"].split(".")[0] == selected_package
+            ]
 
     def __load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
@@ -985,11 +995,11 @@ class PackageManager:
                 continue
 
             self.__add_package_endpoints(
+                selected_package=package["module"],
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
                 package_status=package_status,
             )
-
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(
                 package_endpoints_json[key],

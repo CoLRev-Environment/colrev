@@ -335,6 +335,10 @@
         {
             "package_endpoint_identifier": "colrev.prescreen_table",
             "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
+            "status": "MATURING"
         }
     ],
     "pdf_get": [
