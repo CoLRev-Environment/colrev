@@ -876,31 +876,29 @@ class Load(colrev.operation.Operation):
                     f"{source.to_import - imported} records too much{colors.END}"
                 )
 
-    def __save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
-        def fix_keys(*, records: dict) -> dict:
+    def __save_records(
+        self, *, records: dict, source: colrev.settings.SearchSource
+    ) -> None:
+        def fix_keys(*, records: dict) -> None:
             for record in records.values():
                 record = {
                     re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
                     for k, v in record.items()
                 }
-            return records
 
-        def set_incremental_ids(*, records: dict) -> dict:
+        def set_incremental_ids(*, records: dict) -> bool:
+            changed = False
             # if IDs to set for some records
             if 0 != len([r for r in records if "ID" not in r]):
                 i = 1
                 for record in records.values():
                     if "ID" not in record:
-                        if "UT_(Unique_WOS_ID)" in record:
-                            record["ID"] = record["UT_(Unique_WOS_ID)"].replace(
-                                ":", "_"
-                            )
-                        else:
-                            record["ID"] = f"{i+1}".rjust(10, "0")
+                        record["ID"] = f"{i+1}".rjust(10, "0")
                         i += 1
-            return records
+                        changed = True
+            return changed
 
-        def drop_empty_fields(*, records: dict) -> dict:
+        def drop_empty_fields(*, records: dict) -> None:
             for record_id in records:
                 records[record_id] = {
                     k: v for k, v in records[record_id].items() if v is not None
@@ -908,30 +906,31 @@ class Load(colrev.operation.Operation):
                 records[record_id] = {
                     k: v for k, v in records[record_id].items() if v != "nan"
                 }
-            return records
 
-        def drop_fields(*, records: dict) -> dict:
+        def drop_fields(*, records: dict) -> None:
             for record_id in records:
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
                     if k not in ["colrev_status", "colrev_masterdata_provenance"]
                 }
-            return records
 
         if not records:
             self.review_manager.report_logger.debug("No records loaded")
             self.review_manager.logger.debug("No records loaded")
             return
 
-        records = fix_keys(records=records)
-        records = set_incremental_ids(records=records)
-        records = drop_empty_fields(records=records)
-        records = drop_fields(records=records)
-        records = dict(sorted(records.items()))
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=corresponding_bib_file
-        )
+        fix_keys(records=records)
+        changed = set_incremental_ids(records=records)
+        print(f"changed: {changed}")
+        drop_empty_fields(records=records)
+        drop_fields(records=records)
+
+        # Only save if ids were changed
+        if changed:
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=records, save_path=source.get_corresponding_bib_file()
+            )
 
     def __load_active_sources(
         self, *, new_sources: typing.List[colrev.settings.SearchSource]
@@ -991,10 +990,11 @@ class Load(colrev.operation.Operation):
                         source.load_conversion_package_endpoint["endpoint"]
                     ]
                 )
+
                 records = load_conversion_package_endpoint.load(self, source)  # type: ignore
                 self.__save_records(
                     records=records,
-                    corresponding_bib_file=source.get_corresponding_bib_file(),
+                    source=source,
                 )
 
                 # 2. resolve non-unique IDs (if any)
