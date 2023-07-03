@@ -209,7 +209,7 @@ class ScopePrescreen(JsonSchemaMixin):
         self.__conditional_prescreen_timescope(record=record)
         self.__conditional_prescreen_complementary_materials(record=record)
         
-        if include_unranked_journals == True:
+        if include_unranked_journals is True:
             self.__conditional_presecreen_not_in_ranking(record=record)
         
         if (
@@ -233,7 +233,7 @@ class ScopePrescreen(JsonSchemaMixin):
 
         repeat_input_question = True
         include_unranked_journals = False
-        while repeat_input_question == True:
+        while repeat_input_question is True:
             print("Include Journals that are not included in any ranking?")
             choice = input("Y/N\n")
             if choice == "N":

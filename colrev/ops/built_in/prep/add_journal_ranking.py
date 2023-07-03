@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""adds journal rankings to metadata"""
+"""Adding of journal rankings to metadata"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,7 +24,7 @@ if False:  # pylint: disable=using-constant-test
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
-    # wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
+    """Class for add _journal_ranking"""
     settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
@@ -42,10 +42,6 @@ class AddJournalRanking(JsonSchemaMixin):
             source_operation=prep_operation
         )
 
-        self.local_index_source = local_index_connector.LocalIndexSearchSource(
-            source_operation=prep_operation
-        )
-
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
@@ -55,8 +51,8 @@ class AddJournalRanking(JsonSchemaMixin):
         journal = record.data.get("journal")
 
         if(journal != ""):
-            LocalIndex = colrev.env.local_index.LocalIndex()
-            ranking = LocalIndex.search_in_database(journal)
+            local_Index = colrev.env.local_index.LocalIndex()
+            ranking = local_Index.search_in_database(journal)
 
             """adds the ranking to record.data as well as masterdata_provenence"""
             record.update_field(

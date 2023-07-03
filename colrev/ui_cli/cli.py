@@ -934,8 +934,8 @@ def prescreen(
             prescreen_operation.main(split_str=split)
             
         repeat_input_question = True
-        while repeat_input_question == True:
-            print("Include Journals that are not included in any ranking")
+        while repeat_input_question is True:
+            print("Include Journals that are not included in any ranking?")
             choice = input("Y/N")
             if choice == "Y":
                 repeat_input_question = False
