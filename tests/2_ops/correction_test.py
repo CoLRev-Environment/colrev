@@ -7,10 +7,10 @@ import colrev.settings
 
 
 def test_corrections(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the corrections"""
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
+
     base_repo_review_manager.get_validate_operation()
 
     base_repo_review_manager.settings.sources[0].endpoint = "colrev.local_index"

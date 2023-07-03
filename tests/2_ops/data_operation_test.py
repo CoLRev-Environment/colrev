@@ -8,12 +8,14 @@ def test_data(  # type: ignore
 ) -> None:
     """Test the date operation"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
     data_operation = base_repo_review_manager.get_data_operation()
     data_operation.profile()
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
-    data_operation.setup_custom_script()
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
-    base_repo_review_manager.load_settings()
+def test_data_custom_script(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> None:
+    """Test the date setup custom script"""
+
+    data_operation = base_repo_review_manager.get_data_operation()
+    data_operation.setup_custom_script()

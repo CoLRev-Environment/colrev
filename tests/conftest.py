@@ -43,12 +43,19 @@ class Helpers:
 
     @staticmethod
     def reset_commit(
-        *, review_manager: colrev.review_manager.ReviewManager, commit: str
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        commit: str = "",
+        commit_sha: str = "",
     ) -> None:
         """Reset to the selected commit"""
+        assert commit == "" or commit_sha == ""
         os.chdir(str(review_manager.path))
         repo = git.Repo(review_manager.path)
-        commit_id = getattr(review_manager, commit)
+        if commit_sha != "":
+            commit_id = commit_sha
+        elif commit:
+            commit_id = getattr(review_manager, commit)
         repo.head.reset(commit_id, index=True, working_tree=True)
 
 
@@ -56,6 +63,18 @@ class Helpers:
 def get_helpers():  # type: ignore
     """Fixture returning Helpers"""
     return Helpers
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> typing.Generator:
+    yield
+    # post test code here
+    os.chdir(str(base_repo_review_manager.path))
+    repo = git.Repo(base_repo_review_manager.path)
+    repo.git.clean("-df")
+    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
 
 
 @pytest.fixture(scope="session", name="test_local_index_dir")
@@ -380,6 +399,37 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
         "registry",
         test_json_path,
     )
+
+
+@pytest.fixture(name="search_feed")
+def fixture_search_feed(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> typing.Generator:
+    """General search feed"""
+
+    search_operation = base_repo_review_manager.get_search_operation()
+    search_operation
+
+    source = colrev.settings.SearchSource(
+        endpoint="colrev.crossref",
+        filename=Path("data/search/test.bib"),
+        search_type=colrev.settings.SearchType.DB,
+        search_parameters={"query": "query"},
+        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+        comment="",
+    )
+
+    feed = source.get_feed(
+        review_manager=base_repo_review_manager,
+        source_identifier="doi",
+        update_only=False,
+    )
+
+    prev_sources = base_repo_review_manager.settings.sources
+
+    yield feed
+
+    base_repo_review_manager.settings.sources = prev_sources
 
 
 @pytest.fixture(name="v_t_record")
