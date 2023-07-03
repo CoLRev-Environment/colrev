@@ -150,7 +150,7 @@ class LocalIndex:
         content2 = cur.fetchall()
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'FT-50'")
         content3 = cur.fetchall()
-        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'Beall's Predatory Journals'")
+        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'Beall`s Predatory Journals'")
         content4 = cur.fetchall()
         ranking = ""
         in_ranking_included = False
