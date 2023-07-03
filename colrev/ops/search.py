@@ -78,24 +78,29 @@ class Search(colrev.operation.Operation):
             msg=f"Add search source {fname}",
         )
 
-    def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
+    def __format_source_file(self, *, source: colrev.settings.SearchSource) -> None:
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
 
-            record_list = list(records.values())
-            before = len(record_list)
-            record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
-            changed = len(record_list) - before
-            if changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Removed {changed} forthcoming{colors.END}"
-                )
-            else:
-                self.review_manager.logger.info(f"Removed {changed} forthcoming")
+            if not self.review_manager.settings.search.retrieve_forthcoming:
+                record_list = list(records.values())
 
-            records = {r["ID"]: r for r in record_list}
+                before = len(record_list)
+                record_list = [
+                    r for r in record_list if "forthcoming" != r.get("year", "")
+                ]
+                changed = len(record_list) - before
+                if changed > 0:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Removed {changed} forthcoming{colors.END}"
+                    )
+                else:
+                    self.review_manager.logger.info(f"Removed {changed} forthcoming")
+
+                records = {r["ID"]: r for r in record_list}
+                records = dict(sorted(records.items()))
 
             self.review_manager.dataset.save_records_dict_to_file(
                 records=records, save_path=source.get_corresponding_bib_file()
@@ -387,8 +392,7 @@ class Search(colrev.operation.Operation):
                 self.review_manager.logger.warning("ServiceNotAvailableException")
 
             if source.filename.is_file():
-                if not self.review_manager.settings.search.retrieve_forthcoming:
-                    self.__remove_forthcoming(source=source)
+                self.__format_source_file(source=source)
 
                 self.review_manager.dataset.format_records_file()
                 self.review_manager.dataset.add_record_changes()
@@ -493,7 +497,7 @@ class GeneralOriginFeed:
                 + 1
             )
 
-    def set_id(self, *, record_dict: dict) -> dict:
+    def set_id(self, *, record_dict: dict) -> None:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
@@ -509,8 +513,6 @@ class GeneralOriginFeed:
             ]
         else:
             record_dict["ID"] = str(self.__max_id).rjust(6, "0")
-
-        return record_dict
 
     def add_record(self, *, record: colrev.record.Record) -> bool:
         """Add a record to the feed and set its colrev_origin"""
