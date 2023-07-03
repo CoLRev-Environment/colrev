@@ -81,10 +81,6 @@ def test_settings_load() -> None:
         "prescreen": {
             "explanation": "",
             "prescreen_package_endpoints": [
-                {
-                    "endpoint": "colrev.scope_prescreen",
-                    "LanguageScope": ["eng"],
-                },
                 {"endpoint": "colrev.colrev_cli_prescreen"},
             ],
         },
