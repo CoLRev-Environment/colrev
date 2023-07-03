@@ -722,7 +722,7 @@ class PackageManager:
             packages_dict[package_identifier]["settings"] = selected_package
 
             # 1. Load built-in packages
-            if package_identifier.split(".")[0] == "colrev":
+            if not Path(package_identifier + ".py").is_file():
                 if package_identifier not in self.packages[package_type]:
                     raise colrev_exceptions.MissingDependencyError(
                         "Built-in dependency "
@@ -741,29 +741,19 @@ class PackageManager:
                     package_type=package_type, package_identifier=package_identifier
                 )
 
-            # 2. Load module packages
-            elif not Path(package_identifier + ".py").is_file():
-                try:
-                    packages_dict[package_identifier]["settings"] = selected_package
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = importlib.import_module(package_identifier)
-                    packages_dict[package_identifier][
-                        "custom_flag"
-                    ] = True  # pragma: no cover
-                except ModuleNotFoundError as exc:
-                    if ignore_not_available:
-                        print(f"Could not load {selected_package}")
-                        del packages_dict[package_identifier]
-                        continue
-                    raise colrev_exceptions.MissingDependencyError(
-                        "Dependency "
-                        f"{package_identifier} ({package_type}) not installed. "
-                        "Please install it\n  pip install "
-                        f"{package_identifier.split('.')[0]}"
-                    ) from exc
+            #     except ModuleNotFoundError as exc:
+            #         if ignore_not_available:
+            #             print(f"Could not load {selected_package}")
+            #             del packages_dict[package_identifier]
+            #             continue
+            #         raise colrev_exceptions.MissingDependencyError(
+            #             "Dependency "
+            #             f"{package_identifier} ({package_type}) not installed. "
+            #             "Please install it\n  pip install "
+            #             f"{package_identifier.split('.')[0]}"
+            #         ) from exc
 
-            # 3. Load custom packages in the directory
+            # 2. Load custom packages in the directory
             elif Path(package_identifier + ".py").is_file():
                 try:
                     # to import custom packages from the project dir
