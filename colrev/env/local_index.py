@@ -132,12 +132,15 @@ class LocalIndex:
         return self.sqlite_connection.cursor()
 
     def load_journal_rankings(self) -> None:
-        rankings_csv_path = str(Path(__file__).parents[1]) / Path("template") /Path("ops") / Path("journal_rankings.csv")
-        conn = sqlite3.connect(self.SQLITE_PATH)  
-        data_frame = pd.read_csv(rankings_csv_path, encoding="cp850")  
-        data_frame.to_sql(
-            "rankings", conn, if_exists="replace", index=False
+        rankings_csv_path = (
+            str(Path(__file__).parents[1])
+            / Path("template")
+            / Path("ops")
+            / Path("journal_rankings.csv")
         )
+        conn = sqlite3.connect(self.SQLITE_PATH)
+        data_frame = pd.read_csv(rankings_csv_path, encoding="cp850")
+        data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
         conn.commit()
         conn.close()
 
@@ -197,7 +200,7 @@ class LocalIndex:
         for journal_name in content4:
             if journal in journal_name.values():
                 ranking = "Predatory Journal: Do not include!  "
-                in_ranking_included = True 
+                in_ranking_included = True
         if in_ranking_included == False:
             ranking = "not included in a ranking  "
         ranking = ranking[:-2]

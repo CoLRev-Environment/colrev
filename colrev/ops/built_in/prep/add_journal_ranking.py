@@ -24,6 +24,7 @@ if False:  # pylint: disable=using-constant-test
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
     """Class for add _journal_ranking"""
+
     settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"

@@ -212,7 +212,7 @@ class ScopePrescreen(JsonSchemaMixin):
         self.__conditional_prescreen_outlets_exclusion(record=record)
         self.__conditional_prescreen_timescope(record=record)
         self.__conditional_prescreen_complementary_materials(record=record)
-        
+
         if include_unranked_journals is True:
             self.__conditional_presecreen_not_in_ranking(record=record)
 
