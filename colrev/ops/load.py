@@ -876,18 +876,15 @@ class Load(colrev.operation.Operation):
                     f"{source.to_import - imported} records too much{colors.END}"
                 )
 
-    def __save_records(
-        self, *, records: dict, source: colrev.settings.SearchSource
-    ) -> None:
+    def __save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
         def fix_keys(*, records: dict) -> None:
-            for record in records.values():
-                record = {
-                    re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
+            for record_id, record in records.items():
+                records[record_id] = {
+                    re.sub("[^0-9a-zA-Z-_]+", "", k.replace(" ", "_")): v
                     for k, v in record.items()
                 }
 
-        def set_incremental_ids(*, records: dict) -> bool:
-            changed = False
+        def set_incremental_ids(*, records: dict) -> None:
             # if IDs to set for some records
             if 0 != len([r for r in records if "ID" not in r]):
                 i = 1
@@ -895,8 +892,6 @@ class Load(colrev.operation.Operation):
                     if "ID" not in record:
                         record["ID"] = f"{i+1}".rjust(10, "0")
                         i += 1
-                        changed = True
-            return changed
 
         def drop_empty_fields(*, records: dict) -> None:
             for record_id in records:
@@ -921,16 +916,13 @@ class Load(colrev.operation.Operation):
             return
 
         fix_keys(records=records)
-        changed = set_incremental_ids(records=records)
-        print(f"changed: {changed}")
+        set_incremental_ids(records=records)
         drop_empty_fields(records=records)
         drop_fields(records=records)
-
-        # Only save if ids were changed
-        if changed:
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=source.get_corresponding_bib_file()
-            )
+        records = dict(sorted(records.items()))
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records, save_path=corresponding_bib_file
+        )
 
     def __load_active_sources(
         self, *, new_sources: typing.List[colrev.settings.SearchSource]
@@ -990,11 +982,10 @@ class Load(colrev.operation.Operation):
                         source.load_conversion_package_endpoint["endpoint"]
                     ]
                 )
-
                 records = load_conversion_package_endpoint.load(self, source)  # type: ignore
                 self.__save_records(
                     records=records,
-                    source=source,
+                    corresponding_bib_file=source.get_corresponding_bib_file(),
                 )
 
                 # 2. resolve non-unique IDs (if any)
