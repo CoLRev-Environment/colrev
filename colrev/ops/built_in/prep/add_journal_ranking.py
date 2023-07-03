@@ -7,12 +7,11 @@ from dataclasses import dataclass
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
-import colrev.ops.built_in.search_sources.local_index as local_index_connector
-import colrev.env.local_index
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -54,13 +53,16 @@ class AddJournalRanking(JsonSchemaMixin):
         """variable to compare journals in metadata with the rankings in the sqlite_database"""
         journal = record.data.get("journal")
 
-        if(journal != ""):
+        if journal != "":
             LocalIndex = colrev.env.local_index.LocalIndex()
             ranking = LocalIndex.search_in_database(journal)
 
             """adds the ranking to record.data as well as masterdata_provenence"""
             record.update_field(
-                key="journal_ranking", value=ranking, source="add_journal_ranking", note=""
+                key="journal_ranking",
+                value=ranking,
+                source="add_journal_ranking",
+                note="",
             )
 
         return record
