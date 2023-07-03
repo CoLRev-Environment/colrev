@@ -132,6 +132,7 @@ class LocalIndex:
         return self.sqlite_connection.cursor()
 
     def load_journal_rankings(self) -> None:
+        """loads journal rankings in database"""
         rankings_csv_path = str(Path(__file__).parents[1]) / Path("template") /Path("ops") / Path("journal_rankings.csv")
         conn = sqlite3.connect(self.SQLITE_PATH)  
         data_frame = pd.read_csv(rankings_csv_path, encoding="cp850")  
