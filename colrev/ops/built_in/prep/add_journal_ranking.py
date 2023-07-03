@@ -54,13 +54,14 @@ class AddJournalRanking(JsonSchemaMixin):
         """variable to compare journals in metadata with the rankings in the sqlite_database"""
         journal = record.data.get("journal")
 
-        LocalIndex = colrev.env.local_index.LocalIndex()
-        ranking = LocalIndex.search_in_database(journal)
+        if(journal != ""):
+            LocalIndex = colrev.env.local_index.LocalIndex()
+            ranking = LocalIndex.search_in_database(journal)
 
-        """adds the ranking to record.data as well as masterdata_provenence"""
-        record.update_field(
-            key="journal_ranking", value=ranking, source="add_journal_ranking", note=""
-        )
+            """adds the ranking to record.data as well as masterdata_provenence"""
+            record.update_field(
+                key="journal_ranking", value=ranking, source="add_journal_ranking", note=""
+            )
 
         return record
 
