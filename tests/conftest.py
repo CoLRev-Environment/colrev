@@ -69,6 +69,8 @@ def get_helpers():  # type: ignore
 def run_around_tests(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> typing.Generator:
+    """Fixture to clean up after tests"""
+
     yield
     # post test code here
     os.chdir(str(base_repo_review_manager.path))
@@ -406,9 +408,6 @@ def fixture_search_feed(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> typing.Generator:
     """General search feed"""
-
-    search_operation = base_repo_review_manager.get_search_operation()
-    search_operation
 
     source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
