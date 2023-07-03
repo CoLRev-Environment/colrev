@@ -49,7 +49,7 @@ class AddJournalRanking(JsonSchemaMixin):
 
         journal = record.data.get("journal")
 
-        if(journal != ""):
+        if journal != "":
             local_index = colrev.env.local_index.LocalIndex()
             ranking = local_index.search_in_database(journal)
 
