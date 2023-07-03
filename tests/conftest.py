@@ -421,7 +421,7 @@ def fixture_search_feed(
     feed = source.get_feed(
         review_manager=base_repo_review_manager,
         source_identifier="doi",
-        update_only=False,
+        update_only=True,
     )
 
     prev_sources = base_repo_review_manager.settings.sources

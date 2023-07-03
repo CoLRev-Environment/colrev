@@ -20,8 +20,17 @@ def test_search_feed(  # type: ignore
 
     record_dict["doi"] = "10.111/2222"
     search_feed.set_id(record_dict=record_dict)
+    search_feed.set_id(record_dict=record_dict)
 
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
+    record_dict["colrev_masterdata_provenance"] = {}
+    record_dict["colrev_data_provenance"] = {}
+    record_dict["colrev_status"] = "content"
+    record_dict["cited_by"] = 10
+    search_feed.add_record(record=colrev.record.Record(data=record_dict))
+    record_dict["cited_by"] = 12
+    search_feed.add_record(record=colrev.record.Record(data=record_dict))
+    assert len(search_feed.feed_records) == 1
 
     search_feed.print_post_run_search_infos(records={})
     search_feed.save_feed_file()
