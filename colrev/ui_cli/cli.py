@@ -790,7 +790,7 @@ def dedupe(
         if view:
             __view_dedupe_details(dedupe_operation)
             return
-            
+
         dedupe_operation.main()
 
     except colrev_exceptions.CoLRevException as exc:
@@ -932,21 +932,21 @@ def prescreen(
             )
 
             prescreen_operation.main(split_str=split)
-            
+
         repeat_input_question = True
         while repeat_input_question is True:
             print("Include Journals that are not included in any ranking?")
             choice = input("Y/N")
             if choice == "Y":
                 repeat_input_question = False
-                
+
             if choice == "N":
                 repeat_input_question = False
 
         # hier methodenaufruf für unserenn spas
-        #print (alle jounrals ohne ranking kicken ja nein?)
-        #switch chase
-            #input c
+        # print (alle jounrals ohne ranking kicken ja nein?)
+        # switch chase
+        # input c
 
     except colrev_exceptions.CoLRevException as exc:
         if verbose:

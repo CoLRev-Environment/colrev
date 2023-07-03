@@ -183,18 +183,22 @@ class ScopePrescreen(JsonSchemaMixin):
                     record.data["title"].lower()
                     in self.title_complementary_materials_keywords
                 ):
-                    record.prescreen_exclude(reason="complementary material")      
-    
-    
+                    record.prescreen_exclude(reason="complementary material")
+
     def __conditional_presecreen_not_in_ranking(
         self, record: colrev.record.Record
     ) -> None:
-                if record.data["journal_ranking"] == "not included in a ranking":
-                    record.set_status(target_state=colrev.record.RecordState.rev_prescreen_excluded)        
-          
-    
+        if record.data["journal_ranking"] == "not included in a ranking":
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_excluded
+            )
+
     def __conditional_prescreen(
-        self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, record_dict: dict, include_unranked_journals : bool
+        self,
+        *,
+        prescreen_operation: colrev.ops.prescreen.Prescreen,
+        record_dict: dict,
+        include_unranked_journals: bool,
     ) -> None:
         if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
             return
@@ -211,7 +215,7 @@ class ScopePrescreen(JsonSchemaMixin):
         
         if include_unranked_journals is True:
             self.__conditional_presecreen_not_in_ranking(record=record)
-        
+
         if (
             record.data["colrev_status"]
             == colrev.record.RecordState.rev_prescreen_excluded
@@ -220,8 +224,6 @@ class ScopePrescreen(JsonSchemaMixin):
                 f' {record.data["ID"]}'.ljust(50, " ")
                 + "Prescreen excluded (automatically)"
             )
-            
-  
 
     def run_prescreen(
         self,
@@ -241,10 +243,12 @@ class ScopePrescreen(JsonSchemaMixin):
                 repeat_input_question = False
             if choice == "Y":
                 break
-            
+
         for record_dict in records.values():
             self.__conditional_prescreen(
-                prescreen_operation=prescreen_operation, record_dict=record_dict, include_unranked_journals=include_unranked_journals
+                prescreen_operation=prescreen_operation,
+                record_dict=record_dict,
+                include_unranked_journals=include_unranked_journals,
             )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records=records)
