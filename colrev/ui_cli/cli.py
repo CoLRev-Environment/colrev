@@ -938,13 +938,9 @@ def prescreen(
             print("Include Journals that are not included in any ranking")
             choice = input("Y/N")
             if choice == "Y":
-                #Methodenaufruf 1
-                print("Bananen sind blau")
                 repeat_input_question = False
                 
             if choice == "N":
-                #Methodenaufruf 2
-                print("Robert hat nen kleinen")
                 repeat_input_question = False
 
         # hier methodenaufruf für unserenn spas
