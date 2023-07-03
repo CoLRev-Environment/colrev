@@ -201,7 +201,7 @@ class LocalIndex:
             if journal in journal_name.values():
                 ranking = "Predatory Journal: Do not include!  "
                 in_ranking_included = True
-        if in_ranking_included == False:
+        if in_ranking_included is False:
             ranking = "not included in a ranking  "
         ranking = ranking[:-2]
         return ranking.strip()
