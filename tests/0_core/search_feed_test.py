@@ -23,15 +23,17 @@ def test_search_feed(  # type: ignore
     search_feed.set_id(record_dict=record_dict)
 
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
-    record_dict["colrev_masterdata_provenance"] = {}
-    record_dict["colrev_data_provenance"] = {}
+    record_dict["colrev_masterdata_provenance"] = {}  # type: ignore
+    record_dict["colrev_data_provenance"] = {}  # type: ignore
     record_dict["colrev_status"] = "content"
-    record_dict["cited_by"] = 10
+    record_dict["cited_by"] = 10  # type: ignore
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
-    record_dict["cited_by"] = 12
+    record_dict["cited_by"] = 12  # type: ignore
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
     assert len(search_feed.feed_records) == 1
 
     search_feed.print_post_run_search_infos(records={})
     search_feed.save_feed_file()
     base_repo_review_manager.create_commit(msg="test")
+
+    # TODO : integrate crossref_feed.nr_added += 1 into feed (including update_existing_record())
