@@ -144,7 +144,7 @@ class LocalIndex:
         conn.commit()
         conn.close()
 
-    def search_in_database(self, journal) -> str:
+    def search_in_database(self, journal: str) -> str:
         """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'AIS'")

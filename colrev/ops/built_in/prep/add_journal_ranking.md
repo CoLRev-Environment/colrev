@@ -17,9 +17,8 @@ Should the journal be in the Beall's Predatory Journal list, then the record wil
 Example:
 journal_ranking = {Predatory Journal: Do not include!},
 
-The journal ranking will also be used in the colrev prescreen method and allows the user to decide if the record should be marked as 'exclude' or 'include'. 
+The journal ranking will also be used in the colrev prescreen method and allows the user to decide if the record should be marked as 'exclude' or 'include'.
 
 For further information see:
 
 ## colrev/ops/built_in/prescreen/scope_prescreen.md
-
