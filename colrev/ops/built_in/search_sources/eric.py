@@ -181,11 +181,10 @@ class ERICSearchSource(JsonSchemaMixin):
                             if field == 'publicationtype':
                                 record_dict['ENTRYTYPE'] = field_value
                             else:
-                                #Ist es okay die immer als String abzuspeiechern oder soll difierenziert werden ob es eine Liste, String, etc. ist?
                                 record_dict[field] = str(field_value)
 
-                    record = colrev.record.Record(data=record_dict)
-
+                    updated_record_dict = ERICSearchSource.update_record_fields(record_dict)
+                    record = colrev.record.Record(data=updated_record_dict)
                     added = eric_feed.add_record(record=record)
 
                     if added:
@@ -214,9 +213,28 @@ class ERICSearchSource(JsonSchemaMixin):
             search_operation.review_manager.logger.error(
                 f"Failed to fetch data from ERIC API. Status code: {response.status_code}"
             )
-
-
-
+            
+    ###subject und peerreviewed erforderlich in den records?
+    def update_record_fields(
+        record_dict: dict
+    ) -> dict:
+        if "publicationdateyear" in record_dict:
+            record_dict["year"] = record_dict.pop("publicationdateyear")
+        if "publicationtype" in record_dict:
+            record_dict["howpublished"] = record_dict.pop("publicationtype")
+        if "source" in record_dict:
+            record_dict["journal"] = record_dict.pop("source")
+        if "sourceid" in record_dict:
+            record_dict["volume"] = record_dict.pop("sourceid")
+        if "authorxlink" in record_dict:
+            record_dict["address"] = record_dict.pop("authorxlink")
+        if "description" in record_dict:
+            record_dict["abstract"] = record_dict.pop("description")
+        if "sponsor" in record_dict:
+            record_dict["organization"] = record_dict.pop("sponsor")
+        if "id" in record_dict:
+            record_dict["doi"] = record_dict.pop("id")
+        return record_dict
 
     def get_masterdata(
         self,
