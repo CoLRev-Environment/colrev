@@ -130,19 +130,22 @@ class LocalIndex:
         self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH, timeout=90)
         self.sqlite_connection.row_factory = self.__dict_factory
         return self.sqlite_connection.cursor()
-        # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
 
     def load_journal_rankings(self) -> None:
-        rankings_csv_path = str(Path(__file__).parents[1]) / Path("template") /Path("ops") / Path("journal_rankings.csv")
-        conn = sqlite3.connect(self.SQLITE_PATH)  # connects to db
-        df = pd.read_csv(rankings_csv_path, encoding="cp850")  # creates data frame
-        df.to_sql(
-            "rankings", conn, if_exists="replace", index=False
+        rankings_csv_path = (
+            str(Path(__file__).parents[1])
+            / Path("template")
+            / Path("ops")
+            / Path("journal_rankings.csv")
         )
+        conn = sqlite3.connect(self.SQLITE_PATH)
+        data_frame = pd.read_csv(rankings_csv_path, encoding="cp850")
+        data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
         conn.commit()
-        conn.close() 
+        conn.close()
 
     def search_in_database(self, journal) -> str:
+        """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'AIS'")
         content1 = cur.fetchall()
@@ -150,28 +153,40 @@ class LocalIndex:
         content2 = cur.fetchall()
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'FT-50'")
         content3 = cur.fetchall()
-        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'Beall`s Predatory Journals'")
+        cur.execute(
+            "SELECT journal_name FROM rankings WHERE ranking = 'Beall`s Predatory Journals'"
+        )
         content4 = cur.fetchall()
         ranking = ""
         in_ranking_included = False
         for journal_name in content1:
             if journal in journal_name.values():
-                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?", (journal,))
+                cur.execute(
+                    "SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?",
+                    (journal,),
+                )
                 ergebnisse1 = cur.fetchall()
                 for ergebnis in ergebnisse1:
-                    impact_factor1 = ergebnis['impact_factor']
+                    impact_factor1 = ergebnis["impact_factor"]
                     if impact_factor1 is None:
                         ranking += "Senior Scholars' List of Premier Journals; "
                         in_ranking_included = True
                     else:
-                        ranking += "Senior Scholars' List of Premier Journals " + str(impact_factor1) + "; "
+                        ranking += (
+                            "Senior Scholars' List of Premier Journals "
+                            + str(impact_factor1)
+                            + "; "
+                        )
                         in_ranking_included = True
         for journal_name in content2:
             if journal in journal_name.values():
-                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?", (journal,))
+                cur.execute(
+                    "SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?",
+                    (journal,),
+                )
                 ergebnisse2 = cur.fetchall()
                 for ergebnis in ergebnisse2:
-                    impact_factor2 = ergebnis['impact_factor']
+                    impact_factor2 = ergebnis["impact_factor"]
                     if impact_factor2 is None:
                         ranking += "VHB-JOULQUAL3; "
                         in_ranking_included = True
@@ -185,8 +200,8 @@ class LocalIndex:
         for journal_name in content4:
             if journal in journal_name.values():
                 ranking = "Predatory Journal: Do not include!  "
-                in_ranking_included = True 
-        if in_ranking_included == False:
+                in_ranking_included = True
+        if in_ranking_included is False:
             ranking = "not included in a ranking  "
         ranking = ranking[:-2]
         return ranking.strip()

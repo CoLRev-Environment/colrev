@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""adds journal rankings to metadata"""
+"""Adding of journal rankings to metadata"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,12 +7,11 @@ from dataclasses import dataclass
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
-import colrev.ops.built_in.search_sources.local_index as local_index_connector
-import colrev.env.local_index
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -24,7 +23,8 @@ if False:  # pylint: disable=using-constant-test
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
 @dataclass
 class AddJournalRanking(JsonSchemaMixin):
-    # wenn man an bestimmten Settings interessiert ist evtl. für Abfrage
+    """Class for add _journal_ranking"""
+
     settings_class = colrev.env.package_manager.DefaultSettings
 
     source_correction_hint = "check with the developer"
@@ -42,25 +42,22 @@ class AddJournalRanking(JsonSchemaMixin):
             source_operation=prep_operation
         )
 
-        self.local_index_source = local_index_connector.LocalIndexSearchSource(
-            source_operation=prep_operation
-        )
-
     def prepare(
         self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
     ) -> colrev.record.Record:
         """Add Journalranking to Metadata"""
 
-        """variable to compare journals in metadata with the rankings in the sqlite_database"""
         journal = record.data.get("journal")
 
-        if(journal != ""):
-            LocalIndex = colrev.env.local_index.LocalIndex()
-            ranking = LocalIndex.search_in_database(journal)
+        if journal != "":
+            local_index = colrev.env.local_index.LocalIndex()
+            ranking = local_index.search_in_database(journal)
 
-            """adds the ranking to record.data as well as masterdata_provenence"""
             record.update_field(
-                key="journal_ranking", value=ranking, source="add_journal_ranking", note=""
+                key="journal_ranking",
+                value=ranking,
+                source="add_journal_ranking",
+                note="",
             )
 
         return record
