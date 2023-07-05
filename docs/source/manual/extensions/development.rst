@@ -126,4 +126,3 @@ Testing
 =======
 
 **TODO: add how to implement test in the extension**
-
