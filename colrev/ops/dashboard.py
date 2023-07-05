@@ -4,7 +4,7 @@ from __future__ import annotations
 from curses import color_pair
 
 import pandas as pd
-from dash import Dash, dcc, html
+from dash import Dash, dcc, html, Input, Output, dash_table, State
 import bibtexparser
 import plotly.express as px
 
@@ -13,7 +13,7 @@ from datetime import datetime
 
 class Dashboard():
 
-    app = Dash(__name__) 
+    
     
     def filteringData():
         with open( 
@@ -29,43 +29,67 @@ class Dashboard():
         return data
 
     def makeDashboard(self):
+        app = Dash(__name__) 
         data=Dashboard.filteringData()
         
         for title in data:
             if title != "title" and title != "author" and title != "year"and title != "journal":
                 data.pop(title)
 
-        self.app.layout = html.Div(                     #defining the content
+        app.layout = html.Div(                              # defining th content
             children=[
-                html.Div(
-                children=[
+                html.Div(children=[
                     html.Img(src="assets/favicon.ico", className="logo"), 
                     html.H1(children="DASHBOARD", className= "header-title")], className="header"),
 
-                html.Div(children=[    
-                    html.H1(children="CURRENTLY SYNTHESIZED RECORDS", className="table-header"),
-
-                    html.Div(children=[
-                        dcc.Dropdown(
-                            id="sortby",
-                            options=["index","year", "author (alphabetically)"],
-                        )])
-                        ], className="flexboxtable"),
-                html.Div(children=[
-                    html.Div(children="search: ", className="search-box"),
-                    dcc.Input(
-                        type="text",
-                    ),   
-                    html.Button(id="submit-button", children="search")
-                ]),                      
-                html.Table(
-                    [html.Tr([html.Th(col) for col in data.columns])] +
-                    [html.Tr([html.Td(data.iloc[i][col]) for col in data.columns]) for i in range(len(data))],
-                    className="styled-table"),
+                html.Div(className = "options", children=[
+                    dcc.Dropdown(
+                        id="sortby",
+                        options=["index","year", "author (alphabetically)"], 
+                        placeholder="Sort by..."
+                    ),
+                    dcc.Input(type="text", id="search", value="", placeholder="  Search for..."),
+                ]),
+                html.H1(children="currently synthesized records:", id="headline"),                   
+                html.Div([
+                    dash_table.DataTable(data = data.to_dict('records'),id = "table", 
+                    style_cell = {'font-family': 'Lato, sans-serif','font-size': '20px','text-align': 'left'},
+                    style_header = {'font-weight': 'bold'})
+                ]),
+                html.Div(id="table_empty", children= []) ,
+                        
+            
                 html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))]),    # Including the graph    
                 html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))]),
                 html.Div([dcc.Graph(figure=Dashboard.analytics(data))]) 
             ]) 
+        @app.callback(
+        Output("table", "data"),
+        Output("table_empty", "children"),
+        Input("search", "value"),
+        )
+        def update_table(value):
+            
+            
+            data2 = data.copy(deep = True).to_dict('records')
+
+            output = ""
+
+            for row in data.to_dict('records'):
+                found = False
+                for key in row:
+                    if value.lower().strip() in str(row[key]).lower():
+                        found = True
+                
+                if found is False:  
+                    data2.remove(row)
+                
+                if not data2:
+                    output = "no records found for your search"
+                    
+            return data2, output
+            
+        return app
 
     def visualizationTime(data):
         data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
@@ -142,8 +166,8 @@ def main() -> None:
 
     try:
         # dashboard.analytics()
-        dashboard.makeDashboard()
-        dashboard.app.run_server(debug=True)
+        app = dashboard.makeDashboard()
+        app.run_server(debug=True)
     except Exception as e: # catching Exception
         print("Fehler:", str(e)) # print error
 
