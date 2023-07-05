@@ -91,17 +91,36 @@ class Dashboard():
         
         analytic_results = status_operation.get_analytics()
 
-        analytics_df1 = pd.DataFrame(analytic_results)
-        analytics_df2 = analytics_df1.transpose()
+        analytics_df = pd.DataFrame(analytic_results)
+        analytics_df = analytics_df.transpose()
 
-        analytics_df2['committed_date'] = analytics_df2['committed_date'].apply(timestampToDate)
+        # print(analytics_df2)
 
-        scaled_y_lab = max(analytics_df2['search'])
+        analytics_df['committed_date'] = analytics_df['committed_date'].apply(timestampToDate)
 
-        print(scaled_y_lab) # to be continued with scaling ...
+        max_y_lab = max(analytics_df['atomic_steps'])
 
-        fig = px.line(analytics_df2, x= 'committed_date', y='search', template="simple_white", title="BurnOut-Chart")
+        # print(max_y_lab) 
+
+        scaled_y_lab = max_y_lab / max_y_lab * 100
+
+        analytics_df['scaled_progress'] = analytics_df['completed_atomic_steps'].apply(scaleCompletedAtomicSteps,max = max_y_lab)
+
+        # print(analytics_df2)
+        analytics_df2= analytics_df.iloc[::-1]
+        # print(analytics_df3)
+
+
+        fig = px.line(analytics_df2, x= 'committed_date', y='scaled_progress', template="simple_white", title="BurnOut-Chart")
+        fig.update_xaxes(type='category')
+        fig.update_xaxes(title_text='Date of Commit', 
+                         type='category'
+                         #title_font: {"size": 20},
+                         )
+        fig.update_yaxes(title_text='Atomic Steps Completed in %')
+
         return fig
+    
     
 
 # helper functions for analytics
@@ -109,12 +128,13 @@ def timestampToDate(timestamp) -> datetime:
 
     # convert the timestamp to a datetime object in the local timezone
     date = datetime.fromtimestamp(timestamp)
-
     return date
 
-def scaleSearch(max, search):
+def scaleCompletedAtomicSteps(steps, max):
 
-    return search
+    steps = 100 - (steps / max) * 100
+
+    return steps
 
 
 
