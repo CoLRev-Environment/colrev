@@ -80,15 +80,8 @@ class Dashboard():
         return fig
 
     def analytics(self):
-        #data=Status.get_analytics()
-        #print(data)
-
-        review_manager = colrev.review_manager.ReviewManager(
-            # force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
-        )
+        review_manager = colrev.review_manager.ReviewManager()
         status_operation = review_manager.get_status_operation()
-
-        
         analytic_results = status_operation.get_analytics()
 
         analytics_df = pd.DataFrame(analytic_results)
@@ -102,7 +95,7 @@ class Dashboard():
 
         # print(max_y_lab) 
 
-        scaled_y_lab = max_y_lab / max_y_lab * 100
+        # scaled_y_lab = max_y_lab / max_y_lab * 100
 
         analytics_df['scaled_progress'] = analytics_df['completed_atomic_steps'].apply(scaleCompletedAtomicSteps,max = max_y_lab)
 
@@ -111,8 +104,7 @@ class Dashboard():
         # print(analytics_df3)
 
 
-        fig = px.line(analytics_df2, x= 'committed_date', y='scaled_progress', template="simple_white", title="BurnOut-Chart")
-        fig.update_xaxes(type='category')
+        fig = px.line(analytics_df2, x= 'committed_date', y='scaled_progress', template="simple_white", title="Burn-Down Chart")
         fig.update_xaxes(title_text='Date of Commit', 
                          type='category'
                          #title_font: {"size": 20},
