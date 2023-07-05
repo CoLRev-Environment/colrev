@@ -3,41 +3,7 @@ Extension Development Process
 
 Extensions are referred through its respective endpoints, these endpoints can be enabled in ``settings.json`` of a project. The interfaces for the extension endpoints are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
 
-Following process are possible to extend through extensions.
-
-+---------------+------------------------------------------------------+
-| Process       | Explanation                                          |
-+===============+======================================================+
-| Review Type   | Perform Review operation                             |
-+---------------+------------------------------------------------------+
-| Search Source | Tries to find out source of the provided literature  |
-+---------------+------------------------------------------------------+
-| Load          | Converts document to record                          |
-| Conversion    |                                                      |
-+---------------+------------------------------------------------------+
-| Prep          | Prepares records based on different metadata         |
-+---------------+------------------------------------------------------+
-| Prep Man      | Manual preparation of record                         |
-+---------------+------------------------------------------------------+
-| Dedupe        | Dedups records using different sources               |
-+---------------+------------------------------------------------------+
-| Prescreen     | Prescreen the records                                |
-+---------------+------------------------------------------------------+
-| PDF Get       | Retrieves PDF from different sources                 |
-+---------------+------------------------------------------------------+
-| PDF Get Man   | Manually get PDF                                     |
-+---------------+------------------------------------------------------+
-| PDF Prep      | Preps PDF, validates for completeness                |
-+---------------+------------------------------------------------------+
-| PDF Prep Man  | Manual preparation [Not yet implemented]             |
-+---------------+------------------------------------------------------+
-| Screen        | Screen records                                       |
-| Package       |                                                      |
-+---------------+------------------------------------------------------+
-| Data Package  | Export records that are not in all sources for       |
-|               | analyses                                             |
-+---------------+------------------------------------------------------+
-
+TODO: Built-in (colrev/ops/built_in/* directory) vs external extensions (explained in the following - using the "colrev-asreview" example)
 
 For development and testing purpose it’s convenient to fork the CoLRev repository, setup a venv with the forked repository, and work on the extension. Once the extension is developed, and working as expected, you can make a pull request to original repository to register your extension
 
@@ -79,10 +45,10 @@ Following steps might be a good starting point.
        │   ├── pyproject.toml
        │   ├── mypy.ini
        │   ├── .pre-commit-config.yaml
+       │   ├── .colrev_endpoints.json
        │   ├── a_prescreen_extension
        │   │   ├── __init__.py
        │   │   ├── extension.py
-       │   │   ├── .colrev_endpoints.json
     ...
 
    .. note::
@@ -126,3 +92,8 @@ Testing
 =======
 
 **TODO: add how to implement test in the extension**
+
+Examples
+=======
+
+- [colrev-asreview](https://github.com/CoLRev-Environment/colrev-asreview)

@@ -72,7 +72,6 @@ pylint = "^2.17.2"
 pymupdf = "^1.22.0"
 imagehash = "^4.3.1"
 defusedxml = "^0.7.1"
-asreview = "^1.2"
 requests-mock = "^1.10.0"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
 pyalex = "^0.10"

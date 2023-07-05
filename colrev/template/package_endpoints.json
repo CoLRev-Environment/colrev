@@ -665,7 +665,7 @@
             "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev_asreview/colrev_asreview.md>`_)",
+            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev-asreview>`_)",
             "ci_supported": false
         }
     ],
