@@ -43,9 +43,10 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = source_operation.review_manager.get_qm()
 
     def validate_source(
         self,
@@ -77,10 +78,10 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Springer Link"""
 
-        result = {"confidence": 0.1}
+        result = {"confidence": 0.0}
 
         if filename.suffix == ".csv":
-            if data.count("http://link.springer.com") == data.count("\n"):
+            if data.count("http://link.springer.com") > data.count("\n") - 2:
                 result["confidence"] = 1.0
                 return result
 
@@ -91,9 +92,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -131,20 +132,24 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     if "publication_title" in record_dict:
                         record_dict["journal"] = record_dict["publication_title"]
                         del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="article")
+                    record.change_entrytype(
+                        new_entrytype="article", qm=self.quality_model
+                    )
 
                 if record_dict["content_type"] == "Book":
                     if "publication_title" in record_dict:
                         record_dict["series"] = record_dict["publication_title"]
                         del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="book")
+                    record.change_entrytype(new_entrytype="book", qm=self.quality_model)
 
                 if record_dict["content_type"] == "Chapter":
                     record_dict["chapter"] = record_dict["title"]
                     if "publication_title" in record_dict:
                         record_dict["title"] = record_dict["publication_title"]
                         del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="inbook")
+                    record.change_entrytype(
+                        new_entrytype="inbook", qm=self.quality_model
+                    )
 
                 del record_dict["content_type"]
 
@@ -175,7 +180,3 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Springer Link"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

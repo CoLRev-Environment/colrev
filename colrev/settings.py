@@ -10,6 +10,7 @@ from dataclasses import asdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import dacite
 from dacite import from_dict
@@ -21,11 +22,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -303,6 +301,8 @@ class PrepSettings(JsonSchemaMixin):
     prep_rounds: typing.List[PrepRound]
 
     prep_man_package_endpoints: list
+
+    defects_to_ignore: list
 
     def __str__(self) -> str:
         return (
@@ -681,7 +681,3 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
     with open("settings.json", "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
     review_manager.dataset.add_changes(path=Path("settings.json"))
-
-
-if __name__ == "__main__":
-    pass

@@ -282,6 +282,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.TEIException,
                 AttributeError,
+                FileNotFoundError,
                 colrev_exceptions.ServiceNotAvailableException,
             ):  # pragma: no cover
                 pass
@@ -295,11 +296,9 @@ class LocalIndex:
 
         layered_fields = []
         cur.execute(self.SELECT_LAYERD_FIELDS_QUERY, (item["id"],))
-        for row in cur.fetchall():
-            if row["layered_fields"]:
-                layered_fields = json.loads(row["layered_fields"])
-
-            break
+        row = cur.fetchone()
+        if row["layered_fields"]:
+            layered_fields = json.loads(row["layered_fields"])
         for curated_field in curated_fields:
             if curated_field not in record_dict:
                 continue
@@ -367,15 +366,8 @@ class LocalIndex:
 
         return fields_to_remove
 
-    def __get_index_toc(self, *, record_dict: dict) -> typing.Tuple[str, str]:
-        toc_key = colrev.record.Record(data=record_dict).get_toc_key()
-        record_dict["colrev_id"] = colrev.record.Record(
-            data=record_dict
-        ).create_colrev_id()
-        return toc_key, record_dict["colrev_id"]
-
     def __add_index_toc(self, *, toc_to_index: dict) -> None:
-        list_to_add = list(toc_to_index.items())
+        list_to_add = list((k, v) for k, v in toc_to_index.items() if v != "DROPPED")
         if not self.sqlite_connection:
             return
         cur = self.sqlite_connection.cursor()
@@ -540,7 +532,7 @@ class LocalIndex:
         if "colrev_id" in record.data:
             cid_to_retrieve = record.get_colrev_id()
         else:
-            cid_to_retrieve = [record.create_colrev_id()]
+            cid_to_retrieve = [record.create_colrev_id(assume_complete=True)]
 
         retrieved_record = self.__retrieve_based_on_colrev_id(
             cids_to_retrieve=cid_to_retrieve
@@ -580,13 +572,11 @@ class LocalIndex:
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex
-        if "file" in record_dict:
-            if not Path(record_dict["file"]).is_file():
-                del record_dict["file"]
+        if "file" in record_dict and not Path(record_dict["file"]).is_file():
+            del record_dict["file"]
 
         if not include_colrev_ids and "colrev_id" in record_dict:
-            if "colrev_id" in record_dict:
-                del record_dict["colrev_id"]
+            del record_dict["colrev_id"]
 
         if include_file:
             if fulltext_backup != "NA":
@@ -707,10 +697,9 @@ class LocalIndex:
         else:
             raise colrev_exceptions.RecordNotIndexableException()
 
-        if "language" in record_dict:
-            if len(record_dict["language"]) != 3:
-                print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
-                del record_dict["language"]
+        if "language" in record_dict and len(record_dict["language"]) != 3:
+            print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
+            del record_dict["language"]
 
     def __adjust_provenance_for_indexint(self, *, record_dict: dict) -> None:
         # Provenance should point to the original repository path.
@@ -808,6 +797,37 @@ class LocalIndex:
 
         return record_dict
 
+    def __update_toc_index(
+        self, *, toc_to_index: dict, copy_for_toc_index: dict, curated_masterdata: bool
+    ) -> None:
+        if not curated_masterdata or copy_for_toc_index.get("ENTRYTYPE", "") not in [
+            "article",
+            "inproceedings",
+        ]:
+            return
+
+        toc_item = colrev.record.Record(data=copy_for_toc_index).get_toc_key()
+        # Note : drop (do not index) tocs where records are missing
+        # otherwise, record-not-in-toc will be triggered erroneously.
+        drop_toc = copy_for_toc_index[
+            "colrev_status"
+        ] not in colrev.record.RecordState.get_post_x_states(
+            state=colrev.record.RecordState.md_processed
+        )
+        try:
+            colrev_id = colrev.record.Record(data=copy_for_toc_index).create_colrev_id(
+                assume_complete=True
+            )
+        except colrev_exceptions.NotEnoughDataToIdentifyException:
+            drop_toc = True
+        if drop_toc:
+            toc_to_index[toc_item] = "DROPPED"
+        elif toc_to_index.get("toc_item", "") != "DROPPED":
+            if toc_item in toc_to_index:
+                toc_to_index[toc_item] += f";{colrev_id}"
+            else:
+                toc_to_index[toc_item] = colrev_id
+
     def index_records(
         self,
         *,
@@ -822,9 +842,8 @@ class LocalIndex:
         recs_to_index = []
         toc_to_index: typing.Dict[str, str] = {}
         for record_dict in tqdm(records.values()):
+            copy_for_toc_index = deepcopy(record_dict)
             try:
-                copy_for_toc_index = deepcopy(record_dict)
-
                 # Add metadata_source_repository_paths : list of repositories from which
                 # the record was integrated. Important for is_duplicate(...)
                 record_dict.update(
@@ -852,26 +871,20 @@ class LocalIndex:
                 record_dict = self.__get_index_record(record_dict=record_dict)
                 recs_to_index.append(record_dict)
 
-                if curated_masterdata and record_dict.get("ENTRYTYPE", "") in [
-                    "article",
-                    "inproceedings",
-                ]:
-                    toc_item, colrev_id = self.__get_index_toc(
-                        record_dict=copy_for_toc_index
-                    )
-                    if toc_item in toc_to_index:
-                        toc_to_index[toc_item] += f";{colrev_id}"
-                    else:
-                        toc_to_index[toc_item] = colrev_id
-
             except (
                 colrev_exceptions.RecordNotIndexableException,
                 colrev_exceptions.NotTOCIdentifiableException,
+                colrev_exceptions.NotEnoughDataToIdentifyException,
             ) as exc:
                 if self.verbose_mode:
                     print(exc)
                     print(record_dict)
-
+            finally:
+                self.__update_toc_index(
+                    toc_to_index=toc_to_index,
+                    copy_for_toc_index=copy_for_toc_index,
+                    curated_masterdata=curated_masterdata,
+                )
         # Select fields and insert into index (sqlite)
         self.__index_tei_document(recs_to_index=recs_to_index)
         self.__add_index_records(
@@ -1003,8 +1016,7 @@ class LocalIndex:
         self.reinitialize_sqlite_db()
 
         repo_source_paths = [
-            x["repo_source_path"]
-            for x in self.environment_manager.load_environment_registry()
+            x["repo_source_path"] for x in self.environment_manager.local_repos()
         ]
         if not repo_source_paths:
             env_resources = colrev.env.resources.Resources()
@@ -1016,8 +1028,7 @@ class LocalIndex:
                 )
 
             repo_source_paths = [
-                x["repo_source_path"]
-                for x in self.environment_manager.load_environment_registry()
+                x["repo_source_path"] for x in self.environment_manager.local_repos()
             ]
 
         for repo_source_path in repo_source_paths:
@@ -1187,7 +1198,7 @@ class LocalIndex:
 
         except (
             colrev_exceptions.NotEnoughDataToIdentifyException,
-            KeyError,
+            colrev_exceptions.NotTOCIdentifiableException,
         ):
             pass
 
@@ -1433,7 +1444,3 @@ class LocalIndex:
             pass
 
         return "unknown"
-
-
-if __name__ == "__main__":
-    pass

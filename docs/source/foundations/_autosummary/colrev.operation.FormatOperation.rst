@@ -17,6 +17,8 @@ colrev.operation.FormatOperation
       :nosignatures:
 
       ~FormatOperation.check_precondition
+      ~FormatOperation.conclude
+      ~FormatOperation.decorate
 
 
 

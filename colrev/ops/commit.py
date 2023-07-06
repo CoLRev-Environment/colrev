@@ -10,17 +10,15 @@ import tempfile
 from importlib.metadata import version
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import git
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Commit:
@@ -247,7 +245,3 @@ class Commit:
         report = self.__get_commit_report()
         with open(msg_file, "a", encoding="utf8") as file:
             file.write(report)
-
-
-if __name__ == "__main__":
-    pass

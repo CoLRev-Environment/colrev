@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 def setup_logger(
@@ -85,8 +83,9 @@ def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) 
         review_manager.report_logger.removeHandler(report_handler)
         report_handler.close()
 
-    with open(review_manager.report_path, "r+", encoding="utf8") as file:
-        file.truncate(0)
+    if review_manager.report_path.is_file():
+        with open(review_manager.report_path, "r+", encoding="utf8") as file:
+            file.truncate(0)
 
     file_handler = logging.FileHandler(review_manager.report_path, mode="a")
     file_handler.setLevel(logging.INFO)
@@ -95,7 +94,3 @@ def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) 
     )
     file_handler.setFormatter(formatter)
     review_manager.report_logger.addHandler(file_handler)
-
-
-if __name__ == "__main__":
-    pass

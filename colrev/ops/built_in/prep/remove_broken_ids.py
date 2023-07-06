@@ -2,10 +2,9 @@
 """Removal of broken IDs as a prep operation"""
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -13,11 +12,8 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -52,27 +48,17 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
             return record
 
         if "doi" in record.data:
-            # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-            doi_match = re.match(r"^10.\d{4,9}\/", record.data["doi"])
-            if not doi_match:
-                record.remove_field(key="doi")
+            if "doi" in record.data.get("colrev_masterdata_provenance", {}):
+                if "doi-not-matching-pattern" in record.data[
+                    "colrev_masterdata_provenance"
+                ]["doi"]["note"].split(","):
+                    record.remove_field(key="doi")
+
         if "isbn" in record.data:
-            try:
-                session = prep_operation.review_manager.get_cached_session()
+            if "isbn" in record.data.get("colrev_masterdata_provenance", {}):
+                if "isbn-not-matching-pattern" in record.data[
+                    "colrev_masterdata_provenance"
+                ]["isbn"]["note"].split(","):
+                    record.remove_field(key="isbn")
 
-                isbn = record.data["isbn"].replace("-", "").replace(" ", "")
-                url = f"https://openlibrary.org/isbn/{isbn}.json"
-                ret = session.request(
-                    "GET",
-                    url,
-                    headers=prep_operation.requests_headers,
-                    timeout=prep_operation.timeout,
-                )
-                ret.raise_for_status()
-            except requests.exceptions.RequestException:
-                record.remove_field(key="isbn")
         return record
-
-
-if __name__ == "__main__":
-    pass

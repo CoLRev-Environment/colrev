@@ -40,7 +40,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
@@ -64,9 +64,9 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -149,7 +149,3 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
             record.remove_field(key="abstract")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

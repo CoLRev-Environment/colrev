@@ -2,21 +2,50 @@
 """SearchSource: PsycINFO"""
 from __future__ import annotations
 
+import re
 import typing
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from rispy import BaseParser
+from rispy.config import LIST_TYPE_TAGS
+from rispy.config import TAG_KEY_MAPPING
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ris_utils
 import colrev.ops.search
 import colrev.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
+
+
+class PsycInfoRISParser(BaseParser):
+    """Parser for Psycinfo RIS files."""
+
+    START_TAG = "TY"
+    IGNORE = ["FN", "VR", "EF"]
+    PATTERN = r"^[A-Z][A-Z0-9]+ |^ER\s?|^EF\s?"
+    mapping = deepcopy(TAG_KEY_MAPPING)
+    # mapping["A1"] = "authors"
+    mapping["PM"] = "pubmedid"
+    # mapping["T1"] = "primary_title"
+    # mapping["JF"] = "secondary_title"
+    DEFAULT_MAPPING = mapping
+    DEFAULT_LIST_TAGS = LIST_TYPE_TAGS
+
+    def get_content(self, line: str) -> str:
+        "Get the content from a line."
+        return line[line.find(" - ") + 2 :].strip()
+
+    def is_header(self, line: str) -> bool:
+        "Check whether the line is a header element"
+        return not re.match("[A-Z0-9]+  - ", line)
 
 
 @zope.interface.implementer(
@@ -39,7 +68,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
@@ -77,14 +106,19 @@ class PsycINFOSearchSource(JsonSchemaMixin):
 
         # Note : no features in bib file for identification
 
+        if data.startswith(
+            "Provider: American Psychological Association\nDatabase: PsycINFO"
+        ):
+            result["confidence"] = 1.0
+
         return result
 
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -100,6 +134,30 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Not implemented"""
         return record
+
+    def __ris_fixes(self, *, entries: dict) -> None:
+        for entry in entries:
+            if "alternate_title3" in entry and entry["type_of_reference"] in ["JOUR"]:
+                entry["secondary_title"] = entry.pop("alternate_title3")
+            if "publication_year" in entry:
+                entry["year"] = entry.pop("publication_year")
+            if "first_authors" in entry and "authors" not in entry:
+                entry["authors"] = entry.pop("first_authors")
+
+    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".ris":
+            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+                filename=self.search_source.filename, ris_parser=PsycInfoRISParser
+            )
+            self.__ris_fixes(entries=ris_entries)
+            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
+                ris_entries
+            )
+            return records
+
+        raise NotImplementedError
 
     def load_fixes(
         self,
@@ -117,7 +175,3 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Source-specific preparation for PsycINFO"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import os
 import subprocess  # nosec
+from typing import TYPE_CHECKING
 
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.status
+if TYPE_CHECKING:
+    import colrev.ops.status
 
 # pylint: disable=duplicate-code
 keys = [
@@ -216,7 +214,3 @@ def validate(
 
     if validate_operation.review_manager.dataset.records_changed():
         validate_operation.review_manager.create_commit(msg="validate")
-
-
-if __name__ == "__main__":
-    pass

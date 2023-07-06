@@ -2,6 +2,7 @@
 """SearchSource: Taylor and Francis"""
 from __future__ import annotations
 
+import re
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,7 +39,7 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
@@ -57,9 +58,9 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -101,9 +102,9 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         # remove eprint and URL fields (they only have dois...)
         record.remove_field(key="url")
         record.remove_field(key="eprint")
+        if "note" in record.data and re.match(r"PMID: \d*", record.data["note"]):
+            record.rename_field(key="note", new_key="pmid")
+            record.data["pmid"] = record.data["pmid"][6:]
+        record.remove_field(key="publisher")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -13,12 +14,8 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.data
+if TYPE_CHECKING:
+    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -51,6 +48,9 @@ class Obsidian(JsonSchemaMixin):
         "data/obsidian/.obsidian/core-plugins.json",
         "data/obsidian/.obsidian/workspace.json",
         "data/obsidian/.obsidian/core-plugins-migration.json",
+        "data/obsidian/.obsidian/app.json",
+        "data/obsidian/.obsidian/hotkeys.json",
+        "data/obsidian/.obsidian/appearance.json",
     ]
 
     def __init__(
@@ -131,19 +131,20 @@ class Obsidian(JsonSchemaMixin):
                 )
             return
 
-        # inbox_text = ""
-        # if self.endpoint_inbox_path.is_file():
-        #     inbox_text = self.endpoint_inbox_path.read_text()
-
-        # if not self.endpoint_inbox_path.is_file():
-        #     with open(self.endpoint_inbox_path, "w", encoding="utf-8") as inbox_file:
-        #         inbox_file.write("Papers to synthesize:\n\n")
+        inbox_text = ""
+        if self.endpoint_inbox_path.is_file():
+            inbox_text = self.endpoint_inbox_path.read_text()
+        self.endpoint_inbox_path.parent.mkdir(exist_ok=True)
+        if not self.endpoint_inbox_path.is_file():
+            with open(self.endpoint_inbox_path, "w", encoding="utf-8") as inbox_file:
+                inbox_file.write("Papers to synthesize:\n\n")
 
         missing_record_entities = {}
-        # with open(self.endpoint_inbox_path, "a", encoding="utf-8") as inbox_file:
+        with open(self.endpoint_inbox_path, "a", encoding="utf-8") as inbox_file:
+            for missing_record in missing_records:
+                if missing_record not in inbox_text:
+                    inbox_file.write(f"- [[{missing_record}]]\n")
         for missing_record in missing_records:
-            # if missing_record not in inbox_text:
-            #     inbox_file.write(f"- [[{missing_record}]]\n")
             paper_summary_path = self.endpoint_paper_path / Path(f"{missing_record}.md")
 
             missing_record_entities[paper_summary_path] = {
@@ -184,22 +185,22 @@ class Obsidian(JsonSchemaMixin):
             ]
         ]
 
-        for (
-            paper_summary_path,
-            missing_record_entity,
-        ) in missing_record_entities.items():
-            if not paper_summary_path.is_file():
-                paper_summary_path.parent.mkdir(exist_ok=True, parents=True)
-                with open(paper_summary_path, "w", encoding="utf-8") as paper_summary:
-                    selected_keywords = [
-                        x
-                        for x in missing_record_entity["keywords"]
-                        if x in frequent_keywords and x not in ["highly_cited"]
-                    ]
-                    # paper_summary.write(f"#paper {' #'.join(selected_keywords)} #todo\n\n")
-                    paper_summary.write(f"#{' #'.join(selected_keywords)}\n\n")
-                    if "highly_cited" in missing_record_entity["keywords"]:
-                        paper_summary.write("highly_cited")
+        # for (
+        #     paper_summary_path,
+        #     missing_record_entity,
+        # ) in missing_record_entities.items():
+        #     if not paper_summary_path.is_file():
+        #         paper_summary_path.parent.mkdir(exist_ok=True, parents=True)
+        #         with open(paper_summary_path, "w", encoding="utf-8") as paper_summary:
+        #             selected_keywords = [
+        #                 x
+        #                 for x in missing_record_entity["keywords"]
+        #                 if x in frequent_keywords and x not in ["highly_cited"]
+        #             ]
+        #             # paper_summary.write(f"#paper {' #'.join(selected_keywords)} #todo\n\n")
+        #             paper_summary.write(f"#{' #'.join(selected_keywords)}\n\n")
+        #             if "highly_cited" in missing_record_entity["keywords"]:
+        #                 paper_summary.write("highly_cited")
 
         # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
@@ -254,7 +255,3 @@ class Obsidian(JsonSchemaMixin):
             "detailed_msg": "TODO",
         }
         return advice
-
-
-if __name__ == "__main__":
-    pass

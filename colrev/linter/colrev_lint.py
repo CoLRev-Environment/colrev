@@ -2,16 +2,15 @@
 """Linter for CoLRev"""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from astroid import nodes
 from pylint import checkers
 from pylint import interfaces
 from pylint.checkers.utils import only_required_for_messages
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        from pylint.lint import PyLinter
+if TYPE_CHECKING:
+    from pylint.lint import PyLinter
 
 
 class DirectStatusAssignmentChecker(checkers.BaseChecker):

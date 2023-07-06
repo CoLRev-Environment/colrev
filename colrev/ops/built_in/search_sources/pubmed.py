@@ -24,7 +24,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 defusedxml.defuse_stdlib()
 
@@ -86,6 +85,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             self.pubmed_lock = Lock()
 
         self.review_manager = source_operation.review_manager
+        self.quality_model = self.review_manager.get_qm()
         _, self.email = source_operation.review_manager.get_committer()
 
     @classmethod
@@ -111,7 +111,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         host = urlparse(query).hostname
@@ -136,7 +136,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -284,6 +284,11 @@ class PubMedSearchSource(JsonSchemaMixin):
         retrieved_record_dict = {
             k: v for k, v in retrieved_record_dict.items() if v != ""
         }
+        if (
+            retrieved_record_dict.get("pii", "pii").lower()
+            == retrieved_record_dict.get("doi", "doi").lower()
+        ):
+            del retrieved_record_dict["pii"]
 
         return retrieved_record_dict
 
@@ -378,7 +383,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                 )
 
             if not retrieved_record_dict:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="Pubmed: no records retrieved"
+                )
 
             retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
@@ -414,7 +421,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 )
 
                 record.set_masterdata_complete(
-                    source=retrieved_record.data["colrev_origin"][0]
+                    source=retrieved_record.data["colrev_origin"][0],
+                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
                 if save_feed:
@@ -482,28 +490,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retstart += 20
 
-    def __print_post_run_search_infos(
-        self, *, pubmed_feed: colrev.ops.search.GeneralOriginFeed, records: dict
-    ) -> None:
-        if pubmed_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {pubmed_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if pubmed_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {pubmed_feed.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
-
     def __run_parameter_search(
         self,
         *,
@@ -567,8 +553,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     # deposit papers chronologically
                     break
 
-            self.__print_post_run_search_infos(pubmed_feed=pubmed_feed, records=records)
-
+            pubmed_feed.print_post_run_search_infos(records=records)
             pubmed_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
@@ -628,18 +613,8 @@ class PubMedSearchSource(JsonSchemaMixin):
             if changed:
                 pubmed_feed.nr_changed += 1
 
-        if pubmed_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {pubmed_feed.nr_changed} "
-                f"records based on Pubmed{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date with Pubmed{colors.END}"
-                )
-
         pubmed_feed.save_feed_file()
+        pubmed_feed.print_post_run_search_infos(records=records)
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
 
@@ -667,6 +642,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                 rerun=rerun,
             )
 
+    # def load()...
+    # TODO : csv: parse volume/number/pages from citation field
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,
@@ -676,19 +654,15 @@ class PubMedSearchSource(JsonSchemaMixin):
         """Load fixes for Pubmed"""
 
         for record in records.values():
-            if "author" in record:
-                if record["author"].count(",") >= 1:
-                    # if 0 == record["author"].count(" and "):
-                    author_list = record["author"].split(", ")
-                    for i, author_part in enumerate(author_list):
-                        author_field_parts = author_part.split(" ")
-                        author_list[i] = (
-                            author_field_parts[0]
-                            + ", "
-                            + " ".join(author_field_parts[1:])
-                        )
+            if "author" in record and record["author"].count(",") >= 1:
+                author_list = record["author"].split(", ")
+                for i, author_part in enumerate(author_list):
+                    author_field_parts = author_part.split(" ")
+                    author_list[i] = (
+                        author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
+                    )
 
-                    record["author"] = " and ".join(author_list)
+                record["author"] = " and ".join(author_list)
             if "first_author" in record:
                 del record["first_author"]
             if "citation" in record:
@@ -726,11 +700,6 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
         # TBD: how to distinguish other types?
-        record.change_entrytype(new_entrytype="article")
-        # record.import_provenance(review_manager=self.review_manager)
+        record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

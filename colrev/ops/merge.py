@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 from git.exc import GitCommandError
@@ -11,11 +12,8 @@ import colrev.env.utils
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -86,6 +84,7 @@ class Merge(colrev.operation.Operation):
 
         return non_status_changes
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, branch: str) -> None:
         """Merge branches of a CoLRev project (main entrypoint)"""
 
@@ -249,7 +248,3 @@ class Merge(colrev.operation.Operation):
         # Note : cannot add/create commit yet - not yet supported by gitpython:
         # https://github.com/gitpython-developers/GitPython/issues/1185
         # our_index.write(ignore_extension_data=True)
-
-
-if __name__ == "__main__":
-    pass

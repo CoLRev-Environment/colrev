@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -16,11 +17,8 @@ import colrev.ops.built_in.pdf_prep.metadata_validation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.dedupe
+if TYPE_CHECKING:
+    import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -657,7 +655,3 @@ class CurationDedupe(JsonSchemaMixin):
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",
         )
-
-
-if __name__ == "__main__":
-    pass

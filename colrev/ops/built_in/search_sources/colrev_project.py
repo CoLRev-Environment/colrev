@@ -2,6 +2,8 @@
 """SearchSource: CoLRev project"""
 from __future__ import annotations
 
+import shutil
+import tempfile
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +13,7 @@ import pandasql as ps
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from git import Repo
 from pandasql.sqldf import PandaSQLException
 from tqdm import tqdm
 
@@ -18,8 +21,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -33,7 +34,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     """Performs a search in a CoLRev project"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "colrev_project"
+    source_identifier = "colrev_project_identifier"
     search_type = colrev.settings.SearchType.OTHER
     api_search_supported = True
     ci_supported: bool = True
@@ -45,7 +46,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
@@ -77,9 +78,50 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        if query.startswith("url="):
+            filename = search_operation.get_unique_filename(
+                file_path_string=query.split("/")[-1]
+            )
+            return colrev.settings.SearchSource(
+                endpoint="colrev.colrev_project",
+                filename=filename,
+                search_type=colrev.settings.SearchType.OTHER,
+                search_parameters={"scope": {"url": query[4:]}},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+
+        raise NotImplementedError
+
+    def __load_records_to_import(self, *, project_url: str, project_name: str) -> dict:
+        temp_path = tempfile.gettempdir() / Path(project_name)
+        temp_path.mkdir()
+        Repo.clone_from(project_url, temp_path, depth=1)
+
+        try:
+            project_review_manager = self.review_manager.get_connecting_review_manager(
+                path_str=str(temp_path)
+            )
+        except colrev_exceptions.RepoSetupError as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Error retrieving records from colrev project {project_url} ({exc})"
+            ) from exc
+
+        # remote_url = project_review_manager.dataset.get_remote_url()
+        # if remote_url != "NA":
+        #     project_identifier = remote_url.rstrip(".git")
+
+        project_review_manager.get_load_operation(
+            notify_state_transition_operation=False,
+        )
+        self.review_manager.logger.info(
+            f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
+        )
+        records_to_import = project_review_manager.dataset.load_records_dict()
+        shutil.rmtree(temp_path)
+        return records_to_import
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -87,37 +129,19 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
-
-        pdf_get_operation = search_operation.review_manager.get_pdf_get_operation()
+        # pdf_get_operation =
+        # self.review_manager.get_pdf_get_operation(notify_state_transition_operation=False)
 
         colrev_project_search_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-
-        project_identifier = self.search_source.search_parameters["scope"]["url"]
-        try:
-            project_review_manager = search_operation.review_manager.get_review_manager(
-                path_str=project_identifier
-            )
-        except colrev_exceptions.RepoSetupError as exc:
-            search_operation.review_manager.logger.error(
-                f"Error retrieving records from colrev project {project_identifier} ({exc})"
-            )
-            return
-
-        remote_url = project_review_manager.dataset.get_remote_url()
-        if remote_url != "NA":
-            project_identifier = remote_url.rstrip(".git")
-
-        project_review_manager.get_load_operation(
-            notify_state_transition_operation=False,
+        project_url = self.search_source.search_parameters["scope"]["url"]
+        project_name = project_url.split("/")[-1].rstrip(".git")
+        records_to_import = self.__load_records_to_import(
+            project_url=project_url, project_name=project_name
         )
-        search_operation.review_manager.logger.info(
-            f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
-        )
-        records_to_import = project_review_manager.dataset.load_records_dict()
 
         keys_to_drop = [
             "colrev_masterdata_provenance",
@@ -130,6 +154,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         ]
 
         search_operation.review_manager.logger.info("Importing selected records")
+        records = search_operation.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
@@ -152,19 +177,22 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 if len(res) == 0:
                     continue
 
-            if "file" in record_to_import:
-                record_to_import["file"] = (
-                    Path(self.search_source.search_parameters["scope"]["url"])
-                    / record_to_import["file"]
-                )
+            # Note : we need local paths for the PDFs
+            # to get local_paths, we need to lookup in the registry.json
+            # otherwise, we may also consider retrieving PDFs from local_index automatically
+            # if "file" in record_to_import:
+            #     record_to_import["file"] = (
+            #         Path(self.search_source.search_parameters["scope"]["url"])
+            #         / record_to_import["file"]
+            #     )
 
-                pdf_get_operation.import_file(
-                    record=colrev.record.Record(data=record_to_import)
-                )
+            #     pdf_get_operation.import_file(
+            #         record=colrev.record.Record(data=record_to_import)
+            #     )
 
-            record_to_import["colrev_project_identifier"] = (
-                project_identifier + record_to_import["ID"]
-            )
+            record_to_import[
+                "colrev_project_identifier"
+            ] = f"{project_url}#{record_to_import['ID']}"
             record_to_import = {
                 k: v for k, v in record_to_import.items() if k not in keys_to_drop
             }
@@ -177,13 +205,11 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 if added:
                     colrev_project_search_feed.nr_added += 1
             except colrev_exceptions.NotFeedIdentifiableException:
+                print("not identifiable")
                 continue
 
+        colrev_project_search_feed.print_post_run_search_infos(records=records)
         colrev_project_search_feed.save_feed_file()
-        self.review_manager.logger.info(
-            f"{colors.GREEN}Retrieved {colrev_project_search_feed.nr_added} "
-            f"new records {colors.END}"
-        )
 
     def get_masterdata(
         self,
@@ -221,7 +247,3 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         """Source-specific preparation for CoLRev projects"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

@@ -58,6 +58,23 @@ def add_search_source(
     search_operation.add_source(add_source=add_source)
 
 
+def __extend_data_short_forms(*, add: str) -> str:
+    # pylint: disable=too-many-return-statements
+    if add == "endnote":
+        return "colrev.bibliography_export:bib_format=endnote"
+    if add == "zotero":
+        return "colrev.bibliography_export:bib_format=zotero"
+    if add == "jabref":
+        return "colrev.bibliography_export:bib_format=jabref"
+    if add == "mendeley":
+        return "colrev.bibliography_export:bib_format=mendeley"
+    if add == "citavi":
+        return "colrev.bibliography_export:bib_format=citavi"
+    if add == "rdf_bibliontology":
+        return "colrev.bibliography_export:bib_format=rdf_bibliontology"
+    return add
+
+
 def add_data(
     *,
     data_operation: colrev.ops.data.Data,
@@ -65,10 +82,14 @@ def add_data(
 ) -> None:
     """Add a data package_endpoint"""
 
+    # pylint: disable=too-many-locals
+
     package_manager = data_operation.review_manager.get_package_manager()
     available_data_endpoints = package_manager.discover_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.data
     )
+    add = __extend_data_short_forms(add=add)
+    add, params = add.split(":")
     data_operation.review_manager.logger.info(f"Add {add} data endpoint")
     if add in available_data_endpoints:
         package_endpoints = package_manager.load_packages(
@@ -79,6 +100,9 @@ def add_data(
         endpoint = package_endpoints[add]
 
         default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
+        for item in params.split(";"):
+            key, value = item.split("=")
+            default_endpoint_conf[key] = value
 
         if add == "colrev.paper_md":
             if input("Select a custom word template (y/n)?") == "y":
@@ -115,22 +139,6 @@ def add_data(
             script_call="colrev data",
         )
 
-    elif add in [
-        e.value for e in colrev.ops.built_in.data.bibliography_export.BibFormats
-    ]:
-        package_endpoints = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.data,
-            selected_packages=[{"endpoint": "colrev.bibliography_export"}],
-            operation=data_operation,
-        )
-        endpoint = package_endpoints["colrev.bibliography_export"]
-        default_endpoint_conf = endpoint.get_default_setup()  # type: ignore
-        default_endpoint_conf["bib_format"] = add
-        data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
-        data_operation.review_manager.create_commit(
-            msg=f"Add {add} data endpoint",
-            script_call="colrev data",
-        )
     else:
         print("Data format not available")
         return
@@ -143,7 +151,3 @@ def add_data(
     data_operation.review_manager.logger.info(
         f"{colors.GREEN}Successfully added {add} data endpoint{colors.END}"
     )
-
-
-if __name__ == "__main__":
-    pass

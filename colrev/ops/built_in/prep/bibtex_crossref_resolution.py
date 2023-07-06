@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -14,12 +15,9 @@ import colrev.record
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
-        import colrev.env.local_index
+if TYPE_CHECKING:
+    import colrev.ops.prep
+    import colrev.env.local_index
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
@@ -36,39 +34,37 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = prep_operation.review_manager
 
-    def __get_crossref_record(
-        self, *, prep_operation: colrev.ops.prep.Prep, record_dict: dict
-    ) -> dict:
+    def __get_crossref_record(self, *, record: colrev.record.PrepRecord) -> dict:
         """Get the record linked through the BiBTex crossref field"""
 
         # Note : the ID of the crossrefed record_dict may have changed.
         # we need to trace based on the colrev_origin
-        crossref_origin = record_dict["colrev_origin"]
-        crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
-        crossref_origin = crossref_origin + "/" + record_dict["crossref"]
-        for (
-            candidate_record_dict
-        ) in prep_operation.review_manager.dataset.read_next_record():
-            if crossref_origin in candidate_record_dict["colrev_origin"]:
-                return candidate_record_dict
+        for crossref_origin in record.data["colrev_origin"]:
+            crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
+            crossref_origin = crossref_origin + "/" + record.data["crossref"]
+            for candidate_record_dict in self.review_manager.dataset.read_next_record():
+                if crossref_origin in candidate_record_dict["colrev_origin"]:
+                    return candidate_record_dict
         return {}
 
     def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
+        self,
+        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the record by resolving BiBTex crossref links (proceedings)"""
 
         if "crossref" not in record.data:
             return record
 
-        crossref_record = self.__get_crossref_record(
-            prep_operation=prep_operation, record_dict=record.data
-        )
+        crossref_record = self.__get_crossref_record(record=record)
+
         if not crossref_record:
             return record
 
@@ -80,9 +76,6 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
                     source="crossref_resolution",
                     append_edit=False,
                 )
+        del record.data["crossref"]
 
         return record
-
-
-if __name__ == "__main__":
-    pass

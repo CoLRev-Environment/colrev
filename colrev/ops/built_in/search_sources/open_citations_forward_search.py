@@ -17,7 +17,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -45,7 +44,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
@@ -53,6 +52,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
                 source_operation=source_operation
             )
+        )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=self.review_manager
         )
 
     @classmethod
@@ -101,16 +103,18 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         if "doi" not in record:
             return False
 
-        # rev_included/rev_synthesized
-        if "colrev_status" in self.search_source.search_parameters["scope"]:
-            if (
-                self.search_source.search_parameters["scope"]["colrev_status"]
-                == "rev_included|rev_synthesized"
-            ) and record["colrev_status"] not in [
+        # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
+        if (
+            "colrev_status" in self.search_source.search_parameters["scope"]
+            and self.search_source.search_parameters["scope"]["colrev_status"]
+            == "rev_included|rev_synthesized"
+            and record["colrev_status"]
+            not in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
-            ]:
-                return False
+            ]
+        ):
+            return False
 
         return True
 
@@ -126,7 +130,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             items = json.loads(ret.text)
 
             for doi in [x["citing"] for x in items]:
-                retrieved_record = self.crossref_connector.query_doi(doi=doi)
+                retrieved_record = self.crossref_connector.query_doi(
+                    doi=doi, etiquette=self.__etiquette
+                )
                 # if not crossref_query_return:
                 #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
                 retrieved_record.data["ID"] = retrieved_record.data["doi"]
@@ -137,33 +143,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             )
 
         return forward_citations
-
-    def __print_post_run_search_infos(
-        self,
-        *,
-        forward_search_feed: colrev.ops.search.GeneralOriginFeed,
-        records: dict,
-        rerun: bool,
-    ) -> None:
-        if forward_search_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {forward_search_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if rerun:
-            if forward_search_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {forward_search_feed.nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -228,11 +207,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                     )
                     if changed:
                         forward_search_feed.nr_changed += 1
-        forward_search_feed.save_feed_file()
 
-        self.__print_post_run_search_infos(
-            forward_search_feed=forward_search_feed, records=records, rerun=rerun
-        )
+        forward_search_feed.save_feed_file()
+        forward_search_feed.print_post_run_search_infos(records=records)
 
         if search_operation.review_manager.dataset.has_changes():
             search_operation.review_manager.create_commit(
@@ -250,13 +227,10 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if query.replace("_", "").replace("-", "") == "forwardsearch":
-            return cls.get_default_source()
-
-        return None
+        return cls.get_default_source()
 
     def get_masterdata(
         self,
@@ -283,7 +257,3 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record
-
-
-if __name__ == "__main__":
-    pass

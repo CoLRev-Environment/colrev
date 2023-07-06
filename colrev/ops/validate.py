@@ -32,9 +32,7 @@ class Validate(colrev.operation.Operation):
         revlist = (
             (
                 commit.hexsha,
-                (
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                ).data_stream.read(),
+                (commit.tree / "data" / "records.bib").data_stream.read(),
             )
             for commit in git_repo.iter_commits(
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
@@ -104,7 +102,8 @@ class Validate(colrev.operation.Operation):
         return change_diff
 
     def __export_merge_candidates_file(self, *, records: list[dict]) -> None:
-        merge_candidates_file = Path("merge_candidates_file.txt")
+        merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
+        merge_candidates_file.parent.mkdir(exist_ok=True, parents=True)
 
         with open(merge_candidates_file, "w", encoding="utf-8") as file:
             for ref_rec_dict in tqdm(records):
@@ -515,6 +514,7 @@ class Validate(colrev.operation.Operation):
 
         return target_commit
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -578,7 +578,3 @@ class Validate(colrev.operation.Operation):
             validation_details["merge"] = self.validate_merge_changes()
 
         return validation_details
-
-
-if __name__ == "__main__":
-    pass

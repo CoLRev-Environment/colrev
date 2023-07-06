@@ -8,6 +8,7 @@ import sys
 import typing
 from importlib.metadata import version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 from git.exc import InvalidGitRepositoryError
@@ -16,12 +17,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.exit_codes import ExitCodes
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Checker:
@@ -406,6 +403,7 @@ class Checker:
             ".report.log",
             ".pre-commit-config.yaml",
             "data/search",
+            "records.bib",
         ]
 
         text_formats = [".txt", ".csv", ".md", ".bib", ".yaml"]
@@ -667,10 +665,6 @@ class Checker:
                 "script": environment_manager.check_git_installed,
                 "params": [],
             },
-            {
-                "script": environment_manager.check_docker_installed,
-                "params": [],
-            },
             {"script": self.__check_git_conflicts, "params": []},
             {"script": self.check_repository_setup, "params": []},
             {"script": self.__check_software, "params": []},
@@ -769,7 +763,3 @@ class Checker:
         if failure_items:
             return {"status": ExitCodes.FAIL, "msg": "  " + "\n  ".join(failure_items)}
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
-
-
-if __name__ == "__main__":
-    pass

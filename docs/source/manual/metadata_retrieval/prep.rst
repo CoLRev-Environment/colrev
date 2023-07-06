@@ -68,7 +68,10 @@ Before starting the ``colrev prep-man`` operation, it is recommended to check th
     Note: after preparing the records, simply run ``colrev status``, which will update the status field and formatting according to the CoLRev standard.
 
 
-In addition, ``colrev prep-man`` provides an interactive convenience function.
+In addition, ``colrev prep-man`` provides convenience functions to prepare records manually (addressing the quality defects listed for each field).
+
+Users can decide to set the `colrev_status` field to `md_prepared` and override existing quality defect codes (which may be false positives).
+The `colrev_status` field is not changed in the following operations unless new quality defect codes are discovered and added (e.g., in `colrev prep --polish`).
 
 .. code:: bash
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -12,11 +13,8 @@ import colrev.ops.built_in.search_sources.open_library as open_library_connector
 import colrev.ops.search_sources
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -65,7 +63,3 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
         )
 
         return record
-
-
-if __name__ == "__main__":
-    pass

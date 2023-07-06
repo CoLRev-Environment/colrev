@@ -125,7 +125,7 @@ Projects that power CoLRev:
    * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
      - Cross-disciplinary
      - > 30,000,000
-   * - Retrievel of PDFs from local (indexed) repositories
+   * - Retrieval of PDFs from local (indexed) repositories
      - varies
      - varies
 

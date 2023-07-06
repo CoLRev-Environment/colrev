@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -12,11 +13,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.load
+if TYPE_CHECKING:
+    import colrev.ops.load
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=unused-argument
@@ -259,7 +257,3 @@ class ExcelLoader:
             load_operation, source=source, records=records
         )
         return records
-
-
-if __name__ == "__main__":
-    pass

@@ -7,3 +7,15 @@ omit =
     *crossrefapi/crossref/*
     colrev/env/grobid_service.py
     /tmp/*
+    tests/*
+
+[report]
+omit =
+    # omit reference implementation
+    colrev/ops/built_in/*
+    # omit everything in /usr
+    /usr/*
+    *crossrefapi/crossref/*
+    colrev/env/grobid_service.py
+    /tmp/*
+    tests/*

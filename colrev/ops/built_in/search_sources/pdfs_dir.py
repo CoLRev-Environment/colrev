@@ -7,7 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-import timeout_decorator
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -20,6 +20,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.ops.search
+import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -53,7 +54,7 @@ class PDFSearchSource(JsonSchemaMixin):
     __batch_size = 20
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
@@ -89,6 +90,9 @@ class PDFSearchSource(JsonSchemaMixin):
             colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
                 source_operation=source_operation
             )
+        )
+        self.__etiquette = self.crossref_connector.get_etiquette(
+            review_manager=self.review_manager
         )
 
     def __update_if_pdf_renamed(
@@ -250,28 +254,8 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
-    # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
-    # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-    def __get_record_from_pdf_grobid(
-        self, *, search_operation: colrev.ops.search.Search, record_dict: dict
-    ) -> dict:
-        if colrev.record.RecordState.md_prepared == record_dict.get(
-            "colrev_status", "NA"
-        ):
-            return record_dict
-
-        pdf_path = search_operation.review_manager.path / Path(record_dict["file"])
-        tei = search_operation.review_manager.get_tei(
-            pdf_path=pdf_path,
-        )
-
-        extracted_record = tei.get_metadata()
-
-        for key, val in extracted_record.items():
-            if val:
-                record_dict[key] = str(val)
-
+    def __get_missing_fields_from_doc_info(self, *, record_dict: dict) -> None:
+        pdf_path = self.review_manager.path / Path(record_dict["file"])
         with open(pdf_path, "rb") as file:
             parser = PDFParser(file)
             doc = PDFDocument(parser)
@@ -295,29 +279,46 @@ class PDFSearchSource(JsonSchemaMixin):
                     except UnicodeDecodeError:
                         pass
 
-            if "abstract" in record_dict:
-                del record_dict["abstract"]
-            if "keywords" in record_dict:
-                del record_dict["keywords"]
-
-            # to allow users to update/reindex with newer version:
-            record_dict["grobid-version"] = (
-                "lfoppiano/grobid:" + tei.get_grobid_version()
-            )
-
+    # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
+    # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
+    # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
+    def __get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
+        if colrev.record.RecordState.md_prepared == record_dict.get(
+            "colrev_status", "NA"
+        ):
             return record_dict
 
-    def __get_grobid_metadata(
-        self, *, search_operation: colrev.ops.search.Search, pdf_path: Path
-    ) -> dict:
+        pdf_path = self.review_manager.path / Path(record_dict["file"])
+        try:
+            tei = self.review_manager.get_tei(
+                pdf_path=pdf_path,
+            )
+        except (FileNotFoundError, requests.exceptions.ReadTimeout):
+            return record_dict
+
+        for key, val in tei.get_metadata().items():
+            if val:
+                record_dict[key] = str(val)
+
+        self.__get_missing_fields_from_doc_info(record_dict=record_dict)
+
+        if "abstract" in record_dict:
+            del record_dict["abstract"]
+        if "keywords" in record_dict:
+            del record_dict["keywords"]
+
+        # to allow users to update/reindex with newer version:
+        record_dict["grobid-version"] = "lfoppiano/grobid:" + tei.get_grobid_version()
+
+        return record_dict
+
+    def __get_grobid_metadata(self, *, pdf_path: Path) -> dict:
         record_dict: typing.Dict[str, typing.Any] = {
             "file": str(pdf_path),
             "ENTRYTYPE": "misc",
         }
         try:
-            record_dict = self.__get_record_from_pdf_grobid(
-                search_operation=search_operation, record_dict=record_dict
-            )
+            record_dict = self.__get_record_from_pdf_grobid(record_dict=record_dict)
 
             with open(pdf_path, "rb") as file:
                 parser = PDFParser(file)
@@ -325,9 +326,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_text_from_pdf(
-                        project_path=search_operation.review_manager.path
-                    )
+                    record.set_text_from_pdf(project_path=self.review_manager.path)
                     record_dict = record.get_data()
                     if "text_from_pdf" in record_dict:
                         text: str = record_dict["text_from_pdf"]
@@ -456,7 +455,6 @@ class PDFSearchSource(JsonSchemaMixin):
         self,
         *,
         pdf_path: Path,
-        search_operation: colrev.ops.search.Search,
         pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed,
         linked_pdf_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
@@ -466,10 +464,7 @@ class PDFSearchSource(JsonSchemaMixin):
         if self.__is_broken_filepath(pdf_path=pdf_path):
             return new_record
 
-        if search_operation.review_manager.force_mode:
-            # i.e., reindex all
-            pass
-        else:
+        if not self.review_manager.force_mode:
             # note: for curations, we want all pdfs indexed/merged separately,
             # in other projects, it is generally sufficient if the pdf is linked
             if not self.review_manager.settings.is_curated_masterdata_repo():
@@ -483,6 +478,7 @@ class PDFSearchSource(JsonSchemaMixin):
                 if "file" in r
             ]:
                 return new_record
+        # otherwise: reindex all
 
         self.review_manager.logger.info(f" extract metadata from {pdf_path}")
         try:
@@ -501,17 +497,15 @@ class PDFSearchSource(JsonSchemaMixin):
                 # is to just add the curation_ID
                 # (and retrieve the curated metadata separately/non-redundantly)
             else:
-                new_record = self.__get_grobid_metadata(
-                    search_operation=search_operation, pdf_path=pdf_path
-                )
+                new_record = self.__get_grobid_metadata(pdf_path=pdf_path)
+        except FileNotFoundError:
+            return {}
         except (
             colrev_exceptions.PDFHashError,
             colrev_exceptions.RecordNotInIndexException,
         ):
             # otherwise, get metadata from grobid (indexing)
-            new_record = self.__get_grobid_metadata(
-                search_operation=search_operation, pdf_path=pdf_path
-            )
+            new_record = self.__get_grobid_metadata(pdf_path=pdf_path)
 
         new_record = self.__add_md_string(record_dict=new_record)
 
@@ -528,36 +522,12 @@ class PDFSearchSource(JsonSchemaMixin):
                 f"{new_record['file']} {colors.END} "
                 f"({','.join([r['file'] for r in potential_duplicates])})"
             )
-            return new_record
-
-        try:
-            pdfs_dir_feed.set_id(record_dict=new_record)
-        except colrev_exceptions.NotFeedIdentifiableException:
-            return new_record
-        return new_record
-
-    def __print_run_search_stats(
-        self, *, records: dict, pdfs_dir_feed: colrev.ops.search.GeneralOriginFeed
-    ) -> None:
-        if pdfs_dir_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {pdfs_dir_feed.nr_added} records{colors.END}"
-            )
         else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if self.review_manager.force_mode:
-            if pdfs_dir_feed.nr_changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Updated {pdfs_dir_feed.nr_changed} records{colors.END}"
-                )
-            else:
-                if records:
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                    )
+            try:
+                pdfs_dir_feed.set_id(record_dict=new_record)
+            except colrev_exceptions.NotFeedIdentifiableException:
+                pass
+        return new_record
 
     def __get_pdf_batches(self) -> list:
         pdfs_to_index = [
@@ -590,7 +560,6 @@ class PDFSearchSource(JsonSchemaMixin):
             for pdf_path in pdf_batch:
                 new_record = self.__index_pdf(
                     pdf_path=pdf_path,
-                    search_operation=search_operation,
                     pdfs_dir_feed=pdfs_dir_feed,
                     linked_pdf_paths=linked_pdf_paths,
                     local_index=local_index,
@@ -625,7 +594,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
             pdfs_dir_feed.save_feed_file()
 
-        self.__print_run_search_stats(records=records, pdfs_dir_feed=pdfs_dir_feed)
+        pdfs_dir_feed.print_post_run_search_infos(records=records)
 
     def __add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
         if "doi" in record_dict:
@@ -697,29 +666,38 @@ class PDFSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if query == "pdfs":
-            filename = search_operation.get_unique_filename(file_path_string="pdfs")
-            # pylint: disable=no-value-for-parameter
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.pdfs_dir",
-                filename=filename,
-                search_type=colrev.settings.SearchType.PDFS,
-                search_parameters={"scope": {"path": "data/pdfs"}},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
-                comment="",
-            )
-            return add_source
-
-        return None
+        filename = search_operation.get_unique_filename(file_path_string="pdfs")
+        # pylint: disable=no-value-for-parameter
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev.pdfs_dir",
+            filename=filename,
+            search_type=colrev.settings.SearchType.PDFS,
+            search_parameters={"scope": {"path": "data/pdfs"}},
+            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+            comment="",
+        )
+        return add_source
 
     def __update_based_on_doi(self, *, record_dict: dict) -> None:
         if "doi" not in record_dict:
             return
         try:
-            retrieved_record = self.crossref_connector.query_doi(doi=record_dict["doi"])
+            retrieved_record = self.crossref_connector.query_doi(
+                doi=record_dict["doi"], etiquette=self.__etiquette
+            )
+            if (
+                colrev.record.PrepRecord.get_retrieval_similarity(
+                    record_original=colrev.record.Record(data=record_dict),
+                    retrieved_record_original=retrieved_record,
+                    same_record_type_required=True,
+                )
+                < 0.8
+            ):
+                del record_dict["doi"]
+                return
 
             for key in [
                 "journal",
@@ -731,10 +709,7 @@ class PDFSearchSource(JsonSchemaMixin):
             ]:
                 if key in retrieved_record.data:
                     record_dict[key] = retrieved_record.data[key]
-        except (
-            colrev_exceptions.RecordNotFoundInPrepSourceException,
-            timeout_decorator.timeout_decorator.TimeoutError,
-        ):
+        except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
     def load_fixes(
@@ -745,18 +720,102 @@ class PDFSearchSource(JsonSchemaMixin):
     ) -> dict:
         """Load fixes for PDF directories (GROBID)"""
 
+        missing_field_checker = colrev.qm.checkers.missing_field.MissingFieldChecker(
+            quality_model=load_operation.review_manager.get_qm()
+        )
+
         for record_dict in records.values():
             if "grobid-version" in record_dict:
                 del record_dict["grobid-version"]
 
             self.__update_based_on_doi(record_dict=record_dict)
 
+            # Rerun restrictions and __update_fields_based_on_pdf_dirs
+            # because the restrictions/subdir-pattern may change
+            record_dict = self.__update_fields_based_on_pdf_dirs(
+                record_dict=record_dict, params=self.search_source.search_parameters
+            )
+            record = colrev.record.Record(data=record_dict)
+            missing_field_checker.apply_curation_restrictions(record=record)
+
         return records
 
+    def __fix_special_chars(self, *, record: colrev.record.Record) -> None:
+        # TODO : extract to separate scripts and also apply upon loading tei content
+        if "title" in record.data:
+            record.data["title"] = (
+                record.data["title"]
+                .replace("n ˜", "ñ")
+                .replace("u ´", "ú")
+                .replace("ı ´", "í")
+                .replace("a ´", "á")
+                .replace("o ´", "ó")
+                .replace("e ´", "é")
+                .replace("c ¸", "ç")
+                .replace("a ˜", "ã")
+            )
+
+        if "author" in record.data:
+            record.data["author"] = (
+                record.data["author"]
+                .replace("n ˜", "ñ")
+                .replace("u ´", "ú")
+                .replace("ı ´", "í")
+                .replace("a ´", "á")
+                .replace("o ´", "ó")
+                .replace("e ´", "é")
+                .replace("c ¸", "ç")
+                .replace("a ˜", "ã")
+            )
+
+    def __fix_title_suffix(self, *, record: colrev.record.Record) -> None:
+        if "title" not in record.data:
+            return
+        if record.data["title"].endswith("Formula 1"):
+            return
+        if re.match(r"\d{4}$", record.data["title"]):
+            return
+        if record.data.get("title", "").endswith(" 1"):
+            record.data["title"] = record.data["title"][:-2]
+
+    def __fix_special_outlets(self, *, record: colrev.record.Record) -> None:
+        # Erroneous suffixes in IS conferences
+        if record.data.get("booktitle", "") in [
+            "Americas Conference on Information Systems",
+            "International Conference on Information Systems",
+            "European Conference on Information Systems",
+            "Pacific Asia Conference on Information Systems",
+        ]:
+            for suffix in [
+                "completed research paper",
+                "completed research",
+                "complete research",
+                "full research paper",
+                "research in progress",
+                "(research in progress)",
+            ]:
+                if record.data["title"].lower().endswith(suffix):
+                    record.data["title"] = record.data["title"][: -len(suffix)].rstrip(
+                        " -:"
+                    )
+        # elif ...
+
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF directories (GROBID)"""
+
+        record.format_if_mostly_upper(key="title", case="sentence")
+        record.format_if_mostly_upper(key="journal", case="title")
+        record.format_if_mostly_upper(key="booktitle", case="title")
+        record.format_if_mostly_upper(key="author", case="title")
+
+        if "author" in record.data:
+            record.data["author"] = (
+                record.data["author"]
+                .replace(" and T I C L E I N F O, A. R", "")
+                .replace(" and Quarterly, Mis", "")
+            )
 
         # Typical error in old papers: title fields are equal to journal/booktitle fields
         if record.data.get("title", "no_title").lower() == record.data.get(
@@ -773,9 +832,8 @@ class PDFSearchSource(JsonSchemaMixin):
             record.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
+        self.__fix_title_suffix(record=record)
+        self.__fix_special_chars(record=record)
+        self.__fix_special_outlets(record=record)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

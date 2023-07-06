@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 # pylint: disable=too-few-public-methods
 
@@ -222,7 +220,3 @@ class Corrections:
                         original_record=prior_r,
                         corrected_record=corrected_record,
                     )
-
-
-if __name__ == "__main__":
-    pass

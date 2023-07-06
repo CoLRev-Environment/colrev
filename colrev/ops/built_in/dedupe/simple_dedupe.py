@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -14,11 +15,8 @@ import colrev.ops.built_in.dedupe.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.dedupe
+if TYPE_CHECKING:
+    import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -207,9 +205,9 @@ class SimpleDedupe(JsonSchemaMixin):
                 dedupe_operation.review_manager.logger.warning(
                     "Simple duplicate identification selected despite sufficient sample size.\n"
                     "Active learning algorithms may perform better:\n"
-                    f"{colors.ORANGE}   colrev settings -m 'dedupe.scripts="
-                    '[{"endpoint": "active_learning_training"},'
-                    f'{{"endpoint": "active_learning_automated"}}]\'{colors.END}'
+                    f"{colors.ORANGE}   colrev settings -m 'dedupe.dedupe_package_endpoints="
+                    '[{"endpoint": "colrev.active_learning_training"},'
+                    f'{{"endpoint": "colrev.active_learning_automated"}}]\'{colors.END}'
                 )
                 raise colrev_exceptions.CoLRevException(
                     "To use simple duplicate identification, use\n"
@@ -372,7 +370,3 @@ class SimpleDedupe(JsonSchemaMixin):
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,
         )
-
-
-if __name__ == "__main__":
-    pass

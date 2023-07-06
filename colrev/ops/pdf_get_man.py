@@ -185,6 +185,7 @@ class PDFGetMan(colrev.operation.Operation):
         )
         self.review_manager.dataset.add_record_changes()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""
 
@@ -213,7 +214,3 @@ class PDFGetMan(colrev.operation.Operation):
             ]
 
             records = endpoint.pdf_get_man(self, records)  # type: ignore
-
-
-if __name__ == "__main__":
-    pass

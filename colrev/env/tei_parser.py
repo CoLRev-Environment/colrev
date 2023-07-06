@@ -64,10 +64,8 @@ class TEIParser:
                 pdf_path = pdf_path.resolve()
         self.pdf_path = pdf_path
         self.tei_path = tei_path
-        if pdf_path is not None:
-            assert pdf_path.is_file()
-        else:
-            assert tei_path.is_file()  # type: ignore
+        if pdf_path is not None and not pdf_path.is_file():
+            raise FileNotFoundError
 
         load_from_tei = False
         if tei_path is not None:
@@ -489,11 +487,6 @@ class TEIParser:
 
     # (individual) bibliography-reference elements  ----------------------------
 
-    def __get_reference_bibliography_id(self, *, reference: Element) -> str:
-        if "ID" in reference.attrib:
-            return reference.attrib["ID"]
-        return ""
-
     def __get_reference_bibliography_tei_id(self, *, reference: Element) -> str:
         return reference.attrib[self.ns["w3"] + "id"]
 
@@ -718,9 +711,6 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "reference_bibliography_id": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -748,9 +738,6 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "reference_bibliography_id": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -766,9 +753,6 @@ class TEIParser:
                             "ID": tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "reference_bibliography_id": self.__get_reference_bibliography_id(
-                                reference=reference
-                            ),
                             "author": self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -851,7 +835,3 @@ class TEIParser:
             tree.write(str(self.tei_path))
 
         return self.root
-
-
-if __name__ == "__main__":
-    pass

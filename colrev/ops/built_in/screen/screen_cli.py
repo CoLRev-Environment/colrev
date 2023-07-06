@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -15,11 +16,8 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.screen
+if TYPE_CHECKING:
+    import colrev.ops.screen
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -256,9 +254,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self.criteria_available = len(self.screening_criteria.keys())
 
         for record_dict in screen_data["items"]:
-            if len(split) > 0:
-                if record_dict["ID"] not in split:
-                    continue
+            if record_dict["ID"] not in split:
+                continue
 
             ret = self.__screen_record(
                 screen_operation=screen_operation, record_dict=record_dict
@@ -276,7 +273,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
         screen_operation.review_manager.dataset.add_record_changes()
 
-        if self.__i < self.__stat_len:  # if records remain for screening
+        if self.__i < self.__stat_len and split:  # if records remain for screening
             if input("Create commit (y/n)?") != "y":
                 return records
 
@@ -293,7 +290,3 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         records = self.__screen_cli(screen_operation, split)
 
         return records
-
-
-if __name__ == "__main__":
-    pass

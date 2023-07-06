@@ -5,6 +5,7 @@ from __future__ import annotations
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -12,12 +13,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.pdf_get
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.pdf_get_man
+if TYPE_CHECKING:
+    import colrev.ops.pdf_get_man
 
 
 # pylint: disable=too-few-public-methods
@@ -54,7 +53,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         title = record.data.get("title", "no title")
         title = urllib.parse.quote_plus(title)
-        url = f"https://www.google.com/search?q={title}+filetype%3Apdf"
+        url = f"  google:   https://www.google.com/search?q={title}+filetype%3Apdf"
         # webbrowser.open_new_tab(url)
         print(url)
         return record
@@ -194,6 +193,33 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             / Path(f"{record.data['ID']}.pdf")
         )
 
+    def print_record(self, *, record_dict: dict) -> None:
+        """Print the record for pdf-get-man (cli)"""
+
+        ret_str = f"  ID:       {record_dict['ID']} ({record_dict['ENTRYTYPE']})"
+        ret_str += (
+            f"\n  title:    {colors.GREEN}{record_dict.get('title', 'no title')}{colors.END}"
+            f"\n  author:   {record_dict.get('author', 'no-author')}"
+        )
+        if record_dict["ENTRYTYPE"] == "article":
+            ret_str += (
+                f"\n  outlet: {record_dict.get('journal', 'no-journal')} "
+                f"({record_dict.get('year', 'no-year')}) "
+                f"{record_dict.get('volume', 'no-volume')}"
+                f"({record_dict.get('number', '')})"
+            )
+        elif record_dict["ENTRYTYPE"] == "inproceedings":
+            ret_str += f"\n  {record_dict.get('booktitle', 'no-booktitle')}"
+        if "fulltext" in record_dict:
+            ret_str += (
+                f"\n  fulltext: {colors.ORANGE}{record_dict['fulltext']}{colors.END}"
+            )
+
+        if "url" in record_dict:
+            ret_str += f"\n  url:      {record_dict['url']}"
+
+        print(ret_str)
+
     def __pdf_get_man_record_cli(
         self,
         *,
@@ -205,7 +231,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         # )
 
         # to print only the essential information
-        colrev.record.Record(data=record.get_data()).print_prescreen_record()
+        self.print_record(record_dict=record.get_data())
 
         if (
             colrev.record.RecordState.pdf_needs_manual_retrieval
@@ -222,10 +248,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         filepath = self.__get_filepath(
             pdf_get_man_operation=pdf_get_man_operation, record=record
         )
-        for (
-            script_name,  # pylint: disable=unused-variable
-            retrieval_script,
-        ) in retrieval_scripts.items():
+        for retrieval_script in retrieval_scripts.values():
             # pdf_get_man_operation.review_manager.logger.debug(
             #     f'{script_name}({record.data["ID"]}) called'
             # )
@@ -314,7 +337,3 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
 
         return records
-
-
-if __name__ == "__main__":
-    pass

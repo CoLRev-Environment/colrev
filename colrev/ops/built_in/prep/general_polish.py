@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -12,12 +13,9 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
-        import colrev.env.local_index
+if TYPE_CHECKING:
+    import colrev.ops.prep
+    import colrev.env.local_index
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -82,7 +80,3 @@ class GeneralPolishPrep(JsonSchemaMixin):
                 )
 
         return record
-
-
-if __name__ == "__main__":
-    pass

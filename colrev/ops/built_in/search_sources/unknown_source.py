@@ -17,9 +17,9 @@ from thefuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ris_utils
 import colrev.ops.search
 import colrev.record
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -49,7 +49,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     __padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         converters = {Path: Path, Enum: Enum}
         self.search_source = from_dict(
@@ -64,16 +64,16 @@ class UnknownSearchSource(JsonSchemaMixin):
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for unknown sources"""
 
-        result = {"confidence": 0.0}
+        result = {"confidence": 0.1}
 
         return result
 
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -112,6 +112,34 @@ class UnknownSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def __ris_fixes(self, *, entries: dict) -> None:
+        for entry in entries:
+            if "title" in entry and "primary_title" not in entry:
+                entry["primary_title"] = entry.pop("title")
+
+            if "publication_year" in entry and "year" not in entry:
+                entry["year"] = entry.pop("publication_year")
+
+    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+        if self.search_source.filename.suffix == ".ris":
+            colrev.ops.built_in.search_sources.ris_utils.apply_ris_fixes(
+                filename=self.search_source.filename
+            )
+            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+                filename=self.search_source.filename
+            )
+            self.__ris_fixes(entries=ris_entries)
+            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
+                ris_entries
+            )
+            return records
+
+        # if self.search_source.filename.suffix == ".bib":
+        # ...
+
+        raise NotImplementedError
+
     def load_fixes(
         self,
         load_operation: colrev.ops.load.Load,
@@ -129,22 +157,20 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         # Journal articles should not have booktitles/series set.
         if record.data["ENTRYTYPE"] == "article":
-            if "booktitle" in record.data:
-                if "journal" not in record.data:
-                    record.update_field(
-                        key="journal",
-                        value=record.data["booktitle"],
-                        source="unkown_source_prep",
-                    )
-                    record.remove_field(key="booktitle")
-            if "series" in record.data:
-                if "journal" not in record.data:
-                    record.update_field(
-                        key="journal",
-                        value=record.data["series"],
-                        source="unkown_source_prep",
-                    )
-                    record.remove_field(key="series")
+            if "booktitle" in record.data and "journal" not in record.data:
+                record.update_field(
+                    key="journal",
+                    value=record.data["booktitle"],
+                    source="unkown_source_prep",
+                )
+                record.remove_field(key="booktitle")
+            if "series" in record.data and "journal" not in record.data:
+                record.update_field(
+                    key="journal",
+                    value=record.data["series"],
+                    source="unkown_source_prep",
+                )
+                record.remove_field(key="series")
 
         if source_identifier == "colrev.md_to_bib":
             if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
@@ -205,6 +231,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __format_inproceedings(self, *, record: colrev.record.PrepRecord) -> None:
         if record.data.get("booktitle", "UNKNOWN") == "UNKNOWN":
             return
+
         if (
             "UNKNOWN" != record.data["booktitle"]
             and "inbook" != record.data["ENTRYTYPE"]
@@ -229,9 +256,12 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
 
     def __format_article(self, record: colrev.record.PrepRecord) -> None:
-        if record.data.get("journal", "UNKNOWN") != "UNKNOWN":
-            if len(record.data["journal"]) > 10 and "UNKNOWN" != record.data["journal"]:
-                record.format_if_mostly_upper(key="journal", case="title")
+        if (
+            record.data.get("journal", "UNKNOWN") != "UNKNOWN"
+            and len(record.data["journal"]) > 10
+            and "UNKNOWN" != record.data["journal"]
+        ):
+            record.format_if_mostly_upper(key="journal", case="title")
 
         if record.data.get("volume", "UNKNOWN") != "UNKNOWN":
             record.update_field(
@@ -244,9 +274,9 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         """Format fields"""
 
-        if record.data.get("entrytype", "") == "inproceedings":
+        if record.data.get("ENTRYTYPE", "") == "inproceedings":
             self.__format_inproceedings(record=record)
-        elif record.data.get("entrytype", "") == "article":
+        elif record.data.get("ENTRYTYPE", "") == "article":
             self.__format_article(record=record)
 
         if record.data.get("author", "UNKNOWN") != "UNKNOWN":
@@ -281,9 +311,12 @@ class UnknownSearchSource(JsonSchemaMixin):
                     + f'Unusual pages: {record.data["pages"]}'
                 )
 
-        if "url" in record.data and "fulltext" in record.data:
-            if record.data["url"] == record.data["fulltext"]:
-                record.remove_field(key="fulltext")
+        if (
+            "url" in record.data
+            and "fulltext" in record.data
+            and record.data["url"] == record.data["fulltext"]
+        ):
+            record.remove_field(key="fulltext")
 
         if "language" in record.data:
             try:
@@ -298,24 +331,30 @@ class UnknownSearchSource(JsonSchemaMixin):
                 del record.data["language"]
 
     def __remove_redundant_fields(self, *, record: colrev.record.PrepRecord) -> None:
-        if record.data["ENTRYTYPE"] == "article":
-            if "journal" in record.data and "booktitle" in record.data:
-                similarity_journal_booktitle = fuzz.partial_ratio(
-                    record.data["journal"].lower(), record.data["booktitle"].lower()
-                )
-                if similarity_journal_booktitle / 100 > 0.9:
-                    record.remove_field(key="booktitle")
+        if (
+            record.data["ENTRYTYPE"] == "article"
+            and "journal" in record.data
+            and "booktitle" in record.data
+        ):
+            similarity_journal_booktitle = fuzz.partial_ratio(
+                record.data["journal"].lower(), record.data["booktitle"].lower()
+            )
+            if similarity_journal_booktitle / 100 > 0.9:
+                record.remove_field(key="booktitle")
 
         if record.data.get("publisher", "") in ["researchgate.net"]:
             record.remove_field(key="publisher")
 
-        if record.data["ENTRYTYPE"] == "inproceedings":
-            if "journal" in record.data and "booktitle" in record.data:
-                similarity_journal_booktitle = fuzz.partial_ratio(
-                    record.data["journal"].lower(), record.data["booktitle"].lower()
-                )
-                if similarity_journal_booktitle / 100 > 0.9:
-                    record.remove_field(key="journal")
+        if (
+            record.data["ENTRYTYPE"] == "inproceedings"
+            and "journal" in record.data
+            and "booktitle" in record.data
+        ):
+            similarity_journal_booktitle = fuzz.partial_ratio(
+                record.data["journal"].lower(), record.data["booktitle"].lower()
+            )
+            if similarity_journal_booktitle / 100 > 0.9:
+                record.remove_field(key="journal")
 
     def __impute_missing_fields(self, *, record: colrev.record.PrepRecord) -> None:
         if "date" in record.data and "year" not in record.data:
@@ -347,7 +386,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for unknown sources"""
 
-        if not record.has_inconsistent_fields() or record.masterdata_is_curated():
+        if not record.has_quality_defects() or record.masterdata_is_curated():
             return record
 
         self.__heuristically_fix_entrytypes(
@@ -364,7 +403,3 @@ class UnknownSearchSource(JsonSchemaMixin):
         self.__unify_special_characters(record=record)
 
         return record
-
-
-if __name__ == "__main__":
-    pass

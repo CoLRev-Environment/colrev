@@ -44,12 +44,11 @@ To export the bibliography in different formats, run any of the following:
 
 .. code:: bash
 
-    colrev data --add colrev.endnote
-    colrev data --add colrev.zotero
-    colrev data --add colrev.jabref
-    colrev data --add colrev.mendeley
-    colrev data --add colrev.citavi
-    colrev data --add colrev.rdf_bibliontology
+    colrev data --add endnote
+    colrev data --add zotero
+    colrev data --add jabref
+    colrev data --add mendeley
+    colrev data --add citavi
 
 
 The following options for ``data`` are available:

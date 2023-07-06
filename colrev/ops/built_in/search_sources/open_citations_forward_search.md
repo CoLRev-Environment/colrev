@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: OpenCitations forward search
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -11,7 +11,7 @@ Note: This document is currently under development. It will contain the followin
 ## Add the search source
 
 ```
-colrev search -a XXX
+colrev search -a colrev.open_citations_forward_search:default
 ```
 
 ## Links

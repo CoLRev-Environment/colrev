@@ -40,15 +40,17 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.ieee
    colrev.ops.built_in.search_sources.jstor
    colrev.ops.built_in.search_sources.local_index
+   colrev.ops.built_in.search_sources.open_alex
    colrev.ops.built_in.search_sources.open_citations_forward_search
    colrev.ops.built_in.search_sources.open_library
    colrev.ops.built_in.search_sources.pdf_backward_search
    colrev.ops.built_in.search_sources.pdfs_dir
    colrev.ops.built_in.search_sources.psycinfo
    colrev.ops.built_in.search_sources.pubmed
+   colrev.ops.built_in.search_sources.ris_utils
    colrev.ops.built_in.search_sources.scopus
    colrev.ops.built_in.search_sources.springer_link
-   colrev.ops.built_in.search_sources.systematic_review_datasets
+   colrev.ops.built_in.search_sources.synergy_datasets
    colrev.ops.built_in.search_sources.taylor_and_francis
    colrev.ops.built_in.search_sources.trid
    colrev.ops.built_in.search_sources.unknown_source

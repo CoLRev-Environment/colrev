@@ -20,6 +20,7 @@ class Push(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.check,
         )
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -154,7 +155,3 @@ class Push(colrev.operation.Operation):
             for change_item in change_list:
                 if Path(change_item["file"]).is_file():
                     Path(change_item["file"]).unlink()
-
-
-if __name__ == "__main__":
-    pass

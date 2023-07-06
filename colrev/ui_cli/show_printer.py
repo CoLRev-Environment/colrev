@@ -70,7 +70,3 @@ def print_venv_notes() -> None:
             "Platform not detected... "
             "cannot provide infos in how to activate virtualenv"
         )
-
-
-if __name__ == "__main__":
-    pass

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Tests for the colrev package manager"""
+import importlib.util
+import os
 from pathlib import Path
 
 import pytest
@@ -365,6 +367,7 @@ def test_data_package_interfaces(
         package_type=colrev.env.package_manager.PackageEndpointType.data,
         installed_only=True,
     )
+
     package_manager.load_packages(
         package_type=colrev.env.package_manager.PackageEndpointType.data,
         selected_packages=[
@@ -391,3 +394,35 @@ def test_data_package_interfaces(
         operation=data_operation,
         instantiate_objects=True,
     )
+
+
+def test_get_package_details(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test get_package_details()"""
+
+    package_manager = base_repo_review_manager.get_package_manager()
+    expected = {
+        "type": "object",
+        "required": ["endpoint"],
+        "properties": {"endpoint": {"type": "string"}},
+        "description": "Endpoint settings",
+        "$schema": "http://json-schema.org/draft-06/schema#",
+    }
+    actual = package_manager.get_package_details(
+        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        package_identifier="colrev.curation_prep",
+    )
+    print(actual)
+    assert expected == actual
+
+
+def test_update_package_list(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test update_package_list()"""
+    package_manager = base_repo_review_manager.get_package_manager()
+    colrev_spec = importlib.util.find_spec("colrev")
+
+    os.chdir(Path(colrev_spec.origin).parents[1])  # type: ignore
+    package_manager.update_package_list()

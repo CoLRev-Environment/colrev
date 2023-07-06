@@ -41,7 +41,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
@@ -50,10 +50,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         """Source heuristic for ACM dDigital Library"""
 
         result = {"confidence": 0.0}
-
         # Simple heuristic:
         if "publisher = {Association for Computing Machinery}," in data:
             result["confidence"] = 0.7
+            print(data)
             return result
         # We may also check whether the ID=doi=url
         return result
@@ -61,9 +61,9 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -120,9 +120,11 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for ACM Digital Library"""
+        record.remove_field(key="url")
+        record.remove_field(key="numpages")
+        record.remove_field(key="issue_date")
+        record.remove_field(key="publisher")
+        record.remove_field(key="address")
+        record.remove_field(key="month")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

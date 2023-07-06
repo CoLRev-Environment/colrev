@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -12,11 +13,8 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.pdf_prep
+if TYPE_CHECKING:
+    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -193,7 +191,3 @@ class PDFCompletenessValidation(JsonSchemaMixin):
                 )
 
         return record.data
-
-
-if __name__ == "__main__":
-    pass

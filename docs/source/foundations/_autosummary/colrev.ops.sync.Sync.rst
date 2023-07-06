@@ -19,6 +19,7 @@ colrev.ops.sync.Sync
       ~Sync.add_to_bib
       ~Sync.add_to_records_to_import
       ~Sync.get_cited_papers
+      ~Sync.get_cited_papers_from_source
 
 
 

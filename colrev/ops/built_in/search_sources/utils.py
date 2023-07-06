@@ -9,6 +9,8 @@ import colrev.exceptions as colrev_exceptions
 
 # pylint: disable=duplicate-code
 
+TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
+
 
 def __get_year(*, item: dict) -> str:
     try:
@@ -103,31 +105,32 @@ def __flag_retracts(*, record_dict: dict) -> dict:
 def __format_fields(*, record_dict: dict) -> dict:
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")
+        # Note : some dois (and their provenance) contain html entities
         if key in ["colrev_masterdata_provenance", "colrev_data_provenance", "doi"]:
             continue
-        # Note : some dois (and their provenance) contain html entities
         if not isinstance(value, str):
             continue
         value = value.replace("<scp>", "{")
         value = value.replace("</scp>", "}")
         value = html.unescape(value)
-        value = re.sub("<[^<>]+>", " ", value)
+        value = re.sub(TAG_RE, " ", value)
         value = value.replace("\n", " ")
-        value = re.sub(r"\s+", " ", value).rstrip().lstrip().lstrip("▪ ")
+        value = re.sub(r"\s+", " ", value).rstrip().lstrip("▪ ")
         if key == "abstract":
-            value = value.lstrip("Abstract ")
-        record_dict[key] = value
+            if value.startswith("Abstract "):
+                value = value[8:]
+        record_dict[key] = value.lstrip().rstrip()
 
     return record_dict
 
 
 def __set_forthcoming(*, record_dict: dict) -> dict:
-    if (
-        not any(x in record_dict for x in ["published-print", "published"])
-        and "year" in record_dict
+    if not any(x in record_dict for x in ["published-print", "published"]) or not any(
+        x in record_dict for x in ["volume", "number"]
     ):
-        record_dict.update(published_online=record_dict["year"])
         record_dict.update(year="forthcoming")
+        if "year" in record_dict:
+            record_dict.update(published_online=record_dict["year"])
     return record_dict
 
 
@@ -167,10 +170,8 @@ def json_to_record(*, item: dict) -> dict:
         record_dict = __format_fields(record_dict=record_dict)
         record_dict = __remove_fields(record_dict=record_dict)
     except (IndexError, KeyError) as exc:
-        raise colrev_exceptions.RecordNotParsableException(str(exc)) from exc
+        raise colrev_exceptions.RecordNotParsableException(
+            f"RecordNotParsableException: {exc}"
+        ) from exc
 
     return record_dict
-
-
-if __name__ == "__main__":
-    pass

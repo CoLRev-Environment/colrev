@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -17,11 +18,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -194,11 +192,15 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                         + record.data.get("editor", "NA").split(",")[0]
                     )
             if base_url not in url:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: base_url not in url"
+                )
 
             title = record.data.get("title", record.data.get("booktitle", "NA"))
             if len(title) < 10:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: len(title) < 10"
+                )
             if ":" in title:
                 title = title[: title.find(":")]  # To catch sub-titles
             url = url + "&title=" + title.replace(" ", "+")
@@ -213,12 +215,16 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
             # if we have an exact match, we don't need to check the similarity
             if '"numFoundExact": true,' not in ret.text:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: numFoundExact true missing"
+                )
 
             data = json.loads(ret.text)
             items = data["docs"]
             if not items:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="OpenLibrary: no items"
+                )
             item = items[0]
 
         retrieved_record = self.__open_library_json_to_record(item=item, url=url)
@@ -236,8 +242,9 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -316,7 +323,3 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         """Source-specific preparation for OpenLibrary"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

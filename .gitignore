@@ -77,3 +77,5 @@ analysis/__pycache__/*
 
 \# unignore the web build
 !/colrev/ui\_web/build
+/.pre-commit-config-local.yaml
+/.run/

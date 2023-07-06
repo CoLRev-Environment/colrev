@@ -7,6 +7,7 @@ import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 from tqdm import tqdm
@@ -16,11 +17,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -84,9 +82,6 @@ class Upgrade(colrev.operation.Operation):
             settings_version = CoLRevVersion("0.7.0")
         installed_colrev_version = CoLRevVersion(version("colrev"))
 
-        if installed_colrev_version == settings_version:
-            return
-
         # version: indicates from which version on the migration should be applied
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
@@ -120,6 +115,18 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_2,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.8.3"),
+                "target_version": CoLRevVersion("0.8.4"),
+                "script": self.__migrate_0_8_3,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.8.4"),
+                "target_version": CoLRevVersion("0.9.0"),
+                "script": self.__migrate_0_8_4,
+                "released": True,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -137,6 +144,9 @@ class Upgrade(colrev.operation.Operation):
                 run_migration = True
             if not run_migration:
                 continue
+
+            if installed_colrev_version == settings_version and migrator["released"]:
+                return
 
             migration_script = migrator["script"]
             self.review_manager.logger.info(
@@ -293,6 +303,88 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
+    def __migrate_0_8_3(self) -> bool:
+        # pylint: disable=too-many-branches
+        settings = self.__load_settings_dict()
+        settings["prep"]["defects_to_ignore"] = []
+        if "curated_metadata" in str(self.review_manager.path):
+            settings["prep"]["defects_to_ignore"] = [
+                "record-not-in-toc",
+                "inconsistent-with-url-metadata",
+            ]
+        else:
+            settings["prep"]["defects_to_ignore"] = ["inconsistent-with-url-metadata"]
+
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.global_ids_consistency_check"
+            ]
+        self.__save_settings(settings)
+        self.review_manager = colrev.review_manager.ReviewManager(
+            path_str=str(self.review_manager.path), force_mode=True
+        )
+        self.review_manager.load_settings()
+        self.review_manager.get_load_operation()
+        records = self.review_manager.dataset.load_records_dict()
+        quality_model = self.review_manager.get_qm()
+
+        # delete the masterdata provenance notes and apply the new quality model
+        # replace not_missing > not-missing
+        for record_dict in tqdm(records.values()):
+            if "colrev_masterdata_provenance" not in record_dict:
+                continue
+            not_missing_fields = []
+            for key, prov in record_dict["colrev_masterdata_provenance"].items():
+                if "not_missing" in prov["note"]:
+                    not_missing_fields.append(key)
+                prov["note"] = ""
+            for key in not_missing_fields:
+                record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+            if "cited_by_file" in record_dict:
+                del record_dict["cited_by_file"]
+            if "cited_by_id" in record_dict:
+                del record_dict["cited_by_id"]
+            if "tei_id" in record_dict:
+                del record_dict["tei_id"]
+            if "colrev_data_provenance" in record_dict:
+                if "cited_by_file" in record_dict["colrev_data_provenance"]:
+                    del record_dict["colrev_data_provenance"]["cited_by_file"]
+                if "cited_by_id" in record_dict["colrev_data_provenance"]:
+                    del record_dict["colrev_data_provenance"]["cited_by_id"]
+                if "tei_id" in record_dict["colrev_data_provenance"]:
+                    del record_dict["colrev_data_provenance"]["tei_id"]
+
+            record = colrev.record.Record(data=record_dict)
+            prior_state = record.data["colrev_status"]
+            record.update_masterdata_provenance(qm=quality_model)
+            if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
+                record.data[  # pylint: disable=direct-status-assign
+                    "colrev_status"
+                ] = colrev.record.RecordState.rev_prescreen_excluded
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+        return self.repo.is_dirty()
+
+    def __migrate_0_8_4(self) -> bool:
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if "editor" not in record.get("colrev_data_provenance", {}):
+                continue
+            ed_val = record["colrev_data_provenance"]["editor"]
+            del record["colrev_data_provenance"]["editor"]
+            record["colrev_masterdata_provenance"]["editor"] = ed_val
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
+        return self.repo.is_dirty()
+
+
+# Note: we can ask users to make decisions (when defaults are not clear)
+# via input() or simply cancel the process (raise a CoLrevException)
+
 
 class CoLRevVersion:
     """Class for handling the CoLRev version"""
@@ -321,7 +413,3 @@ class CoLRevVersion:
 
     def __str__(self) -> str:
         return f"{self.major}.{self.minor}.{self.patch}"
-
-
-if __name__ == "__main__":
-    pass

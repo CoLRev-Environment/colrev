@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from alphabet_detector import AlphabetDetector
@@ -13,11 +14,9 @@ import colrev.ops.search_sources
 import colrev.record
 
 # pylint: disable=duplicate-code
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
 
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 
@@ -52,6 +51,11 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             colrev.env.utils.load_complementary_material_strings()
         )
 
+        # for prefixes:
+        self.complementary_material_prefixes = (
+            colrev.env.utils.load_complementary_material_prefixes()
+        )
+
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
@@ -59,17 +63,20 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the records by excluding complementary materials"""
 
-        if any(
-            complementary_materials_keyword in record.data.get("title", "").lower()
-            for complementary_materials_keyword in self.complementary_materials_keywords
-        ) or any(
-            complementary_materials_string == record.data.get("title", "").lower()
-            for complementary_materials_string in self.complementary_materials_strings
+        if (
+            any(
+                complementary_materials_keyword in record.data.get("title", "").lower()
+                for complementary_materials_keyword in self.complementary_materials_keywords
+            )
+            or any(
+                complementary_materials_string == record.data.get("title", "").lower()
+                for complementary_materials_string in self.complementary_materials_strings
+            )
+            or any(
+                record.data.get("title", "").lower().startswith(prefix)
+                for prefix in self.complementary_material_prefixes
+            )
         ):
             record.prescreen_exclude(reason="complementary material")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

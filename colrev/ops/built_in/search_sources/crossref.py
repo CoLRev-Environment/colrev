@@ -13,9 +13,9 @@ from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import requests
-import timeout_decorator
 import zope.interface
 from crossref.restful import Etiquette
 from crossref.restful import Journals
@@ -31,12 +31,9 @@ import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.search
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.search
+    import colrev.ops.prep
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -106,15 +103,22 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
 
-        _, self.email = source_operation.review_manager.get_committer()
+        self.review_manager = source_operation.review_manager
+        self.etiquette = self.get_etiquette(review_manager=self.review_manager)
+        self.email = self.review_manager.get_committer()
 
-        self.etiquette = Etiquette(
+    @classmethod
+    def get_etiquette(
+        cls, *, review_manager: colrev.review_manager.ReviewManager
+    ) -> Etiquette:
+        """Get the etiquette for the crossref api"""
+        _, email = review_manager.get_committer()
+        return Etiquette(
             "CoLRev",
             version("colrev"),
             "https://github.com/CoLRev-Environment/colrev",
-            self.email,
+            email,
         )
-        self.review_manager = source_operation.review_manager
 
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
@@ -134,7 +138,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 "ENTRYTYPE": "article",
             }
             returned_record = self.crossref_query(
-                review_manager=source_operation.review_manager,
                 record_input=colrev.record.PrepRecord(data=test_rec),
                 jour_vol_iss_list=False,
                 timeout=20,
@@ -163,28 +166,33 @@ class CrossrefSearchSource(JsonSchemaMixin):
         # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
 
         crossref_query_return = works.query(**kwargs).sort("deposited").order("desc")
-        for item in crossref_query_return:
-            yield connector_utils.json_to_record(item=item)
+        yield from crossref_query_return
 
-    def query_doi(self, *, doi: str) -> colrev.record.PrepRecord:
+    @classmethod
+    def query_doi(cls, *, doi: str, etiquette: Etiquette) -> colrev.record.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
-        works = Works(etiquette=self.etiquette)
         try:
+            works = Works(etiquette=etiquette)
             crossref_query_return = works.doi(doi)
+            if crossref_query_return is None:
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="Record not found in crossref (based on doi)"
+                )
+
+            retrieved_record_dict = connector_utils.json_to_record(
+                item=crossref_query_return
+            )
+            retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+            return retrieved_record
+
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.ConnectTimeout,
         ) as exc:
-            raise colrev_exceptions.RecordNotFoundInPrepSourceException() from exc
-        if crossref_query_return is None:
-            raise colrev_exceptions.RecordNotFoundInPrepSourceException()
-        retrieved_record_dict = connector_utils.json_to_record(
-            item=crossref_query_return
-        )
-        retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
-
-        return retrieved_record
+            raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                msg="Record not found in crossref (based on doi)"
+            ) from exc
 
     def __query_journal(
         self, *, journal_issn: str, rerun: bool
@@ -203,8 +211,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 journals.works(journal_issn).query().sort("deposited").order("desc")
             )
 
-        for item in crossref_query_return:
-            yield connector_utils.json_to_record(item=item)
+        yield from crossref_query_return
 
     def __create_query_url(
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool
@@ -288,7 +295,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         record: colrev.record.Record,
         prep_main_record: bool = True,
         crossref_source: str = "",
-    ) -> colrev.record.Record:
+    ) -> None:
         if "language" in record.data:
             try:
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
@@ -307,7 +314,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if not prep_main_record:
             # Skip steps for feed records
-            return record
+            return
 
         if "retracted" in record.data.get(
             "warning", ""
@@ -316,37 +323,22 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record.remove_field(key="warning")
         else:
             assert "" != crossref_source
-            record.set_masterdata_complete(source=crossref_source)
+            record.set_masterdata_complete(
+                source=crossref_source,
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
-        return record
-
-    def crossref_query(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        record_input: colrev.record.Record,
-        jour_vol_iss_list: bool = False,
-        timeout: int = 40,
+    def __get_crossref_query_items(
+        self, *, record: colrev.record.Record, jour_vol_iss_list: bool, timeout: int
     ) -> list:
-        """Retrieve records from Crossref based on a query"""
-
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-locals
-
         # Note : only returning a multiple-item list for jour_vol_iss_list
-
-        record_list = []
-        most_similar, most_similar_record = 0.0, {}
         try:
-            record = record_input.copy_prep_rec()
-
             url = self.__create_query_url(
                 record=record, jour_vol_iss_list=jour_vol_iss_list
             )
             headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
-            session = review_manager.get_cached_session()
+            session = self.review_manager.get_cached_session()
 
             # review_manager.logger.debug(url)
             ret = session.request("GET", url, headers=headers, timeout=timeout)
@@ -358,16 +350,41 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 return []
 
             data = json.loads(ret.text)
-            for item in data["message"]["items"]:
-                if "title" not in item:
-                    continue
 
+        # pylint: disable=duplicate-code
+        except OperationalError as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            ) from exc
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            json.decoder.JSONDecodeError,
+            requests.exceptions.RequestException,
+        ):
+            return []
+
+        return data["message"].get("items", [])
+
+    def crossref_query(
+        self,
+        *,
+        record_input: colrev.record.Record,
+        jour_vol_iss_list: bool = False,
+        timeout: int = 40,
+    ) -> list:
+        """Retrieve records from Crossref based on a query"""
+
+        record = record_input.copy_prep_rec()
+        record_list, most_similar, most_similar_record = [], 0.0, {}
+        for item in self.__get_crossref_query_items(
+            record=record, jour_vol_iss_list=jour_vol_iss_list, timeout=timeout
+        ):
+            try:
                 retrieved_record_dict = connector_utils.json_to_record(item=item)
-
                 similarity = self.__get_similarity(
                     record=record, retrieved_record_dict=retrieved_record_dict
                 )
-
                 retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
                 # source = (
@@ -382,18 +399,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 elif most_similar < similarity:
                     most_similar = similarity
                     most_similar_record = retrieved_record.get_data()
-        except (
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-            json.decoder.JSONDecodeError,
-            requests.exceptions.RequestException,
-        ):
-            pass
-        # pylint: disable=duplicate-code
-        except OperationalError as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "sqlite, required for requests CachedSession "
-                "(possibly caused by concurrent operations)"
-            ) from exc
+            except colrev_exceptions.RecordNotParsableException:
+                pass
 
         if not jour_vol_iss_list:
             if most_similar_record:
@@ -437,10 +444,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         try:
             if "doi" in record.data:
-                retrieved_record = self.query_doi(doi=record.data["doi"])
+                retrieved_record = self.query_doi(
+                    doi=record.data["doi"], etiquette=self.etiquette
+                )
             else:
                 retrieved_records = self.crossref_query(
-                    review_manager=self.review_manager,
                     record_input=record,
                     jour_vol_iss_list=False,
                     timeout=timeout,
@@ -455,7 +463,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     retries += 1
 
                     retrieved_records = self.crossref_query(
-                        review_manager=self.review_manager,
                         record_input=record,
                         jour_vol_iss_list=False,
                         timeout=timeout,
@@ -463,7 +470,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     retrieved_record = retrieved_records.pop()
 
             if 0 == len(retrieved_record.data) or "doi" not in retrieved_record.data:
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException()
+                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+                    msg="Record not found in crossref"
+                )
 
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
@@ -481,7 +490,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 return record
 
             try:
-                self.crossref_lock.acquire(timeout=60)
+                self.crossref_lock.acquire(timeout=120)
 
                 # Note : need to reload file because the object is not shared between processes
                 crossref_feed = self.search_source.get_feed(
@@ -498,27 +507,33 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     default_source=retrieved_record.data["colrev_origin"][0],
                 )
 
-                record = self.__prep_crossref_record(
+                self.__prep_crossref_record(
                     record=record,
                     crossref_source=retrieved_record.data["colrev_origin"][0],
                 )
 
                 if save_feed:
                     crossref_feed.save_feed_file()
-                self.crossref_lock.release()
-                return record
+
             except (
                 colrev_exceptions.InvalidMerge,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
-                self.crossref_lock.release()
-                return record
+                pass
+            finally:
+                try:
+                    self.crossref_lock.release()
+                except ValueError:
+                    pass
+
+            return record
 
         except (
             requests.exceptions.RequestException,
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
         ) as exc:
             if prep_operation.review_manager.verbose_mode:
                 print(exc)
@@ -529,7 +544,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
         try:
-            retrieved_record = self.query_doi(doi=record.data["doi"])
+            retrieved_record = self.query_doi(
+                doi=record.data["doi"], etiquette=self.etiquette
+            )
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
@@ -549,6 +566,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
         ):
             pass
 
@@ -665,11 +683,27 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 # )
                 yield from self.__query(**crossref_query)
 
+    def __restore_url(
+        self,
+        *,
+        record: colrev.record.Record,
+        feed: colrev.ops.search.GeneralOriginFeed,
+    ) -> None:
+        """Restore the url from the feed if it exists
+        (url-resolution is not always available)"""
+        if record.data["ID"] not in feed.feed_records:
+            return
+        prev_url = feed.feed_records[record.data["ID"]].get("url", None)
+        if prev_url is None:
+            return
+        record.data["url"] = prev_url
+
     def __run_md_search_update(
         self,
         *,
         search_operation: colrev.ops.search.Search,
         crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        rerun: bool,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -677,7 +711,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
-                retrieved_record = self.query_doi(doi=feed_record_dict["doi"])
+                retrieved_record = self.query_doi(
+                    doi=feed_record_dict["doi"], etiquette=self.etiquette
+                )
 
                 if retrieved_record.data["doi"] != feed_record.data["doi"]:
                     continue
@@ -689,12 +725,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
             ):
                 continue
 
+            self.__prep_crossref_record(record=retrieved_record, prep_main_record=False)
+
             prev_record_dict_version = {}
             if retrieved_record.data["ID"] in crossref_feed.feed_records:
                 prev_record_dict_version = crossref_feed.feed_records[
                     retrieved_record.data["ID"]
                 ]
 
+            self.__restore_url(record=retrieved_record, feed=crossref_feed)
             crossref_feed.add_record(record=retrieved_record)
 
             changed = search_operation.update_existing_record(
@@ -702,7 +741,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 record_dict=retrieved_record.data,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
-                update_time_variant_fields=True,
+                update_time_variant_fields=rerun,
             )
             if changed:
                 crossref_feed.nr_changed += 1
@@ -722,32 +761,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
 
-    def __print_post_run_search_infos(
-        self,
-        *,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
-        records: dict,
-    ) -> None:
-        if crossref_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {crossref_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if crossref_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {crossref_feed.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
-
-    @timeout_decorator.timeout(500, use_signals=False)
     def __run_parameter_search(
         self,
         *,
@@ -761,40 +774,34 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
 
         records = search_operation.review_manager.dataset.load_records_dict()
-        try:
-            for record_dict in self.__get_crossref_query_return(rerun=rerun):
-                # Note : discard "empty" records
-                if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
-                ):
-                    continue
-                try:
-                    crossref_feed.set_id(record_dict=record_dict)
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    continue
-
+        for item in self.__get_crossref_query_return(rerun=rerun):
+            try:
+                retrieved_record_dict = connector_utils.json_to_record(item=item)
+                crossref_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
-                if record_dict["ID"] in crossref_feed.feed_records:
+                if retrieved_record_dict["ID"] in crossref_feed.feed_records:
                     prev_record_dict_version = deepcopy(
-                        crossref_feed.feed_records[record_dict["ID"]]
+                        crossref_feed.feed_records[retrieved_record_dict["ID"]]
                     )
 
-                prep_record = colrev.record.Record(data=record_dict)
-                prep_record = self.__prep_crossref_record(
-                    record=prep_record, prep_main_record=False
+                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                self.__prep_crossref_record(
+                    record=retrieved_record, prep_main_record=False
                 )
 
-                added = crossref_feed.add_record(record=prep_record)
+                self.__restore_url(record=retrieved_record, feed=crossref_feed)
+
+                added = crossref_feed.add_record(record=retrieved_record)
 
                 if added:
                     search_operation.review_manager.logger.info(
-                        " retrieve " + prep_record.data["doi"]
+                        " retrieve " + retrieved_record.data["doi"]
                     )
                     crossref_feed.nr_added += 1
                 else:
                     changed = search_operation.update_existing_record(
                         records=records,
-                        record_dict=prep_record.data,
+                        record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
@@ -807,15 +814,46 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     # problem: some publishers don't necessarily
                     # deposit papers chronologically
                     break
+            except (
+                colrev_exceptions.RecordNotParsableException,
+                colrev_exceptions.NotFeedIdentifiableException,
+            ):
+                pass
 
-            self.__print_post_run_search_infos(
-                crossref_feed=crossref_feed, records=records
-            )
+        crossref_feed.print_post_run_search_infos(records=records)
 
-            crossref_feed.save_feed_file()
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
+        crossref_feed.save_feed_file()
+        search_operation.review_manager.dataset.save_records_dict(records=records)
+        search_operation.review_manager.dataset.add_record_changes()
 
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, rerun: bool
+    ) -> None:
+        """Run a search of Crossref"""
+
+        crossref_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        try:
+            if (
+                self.search_source.is_md_source()
+                or self.search_source.is_quasi_md_source()
+            ):
+                self.__run_md_search_update(
+                    search_operation=search_operation,
+                    crossref_feed=crossref_feed,
+                    rerun=rerun,
+                )
+
+            else:
+                self.__run_parameter_search(
+                    search_operation=search_operation,
+                    crossref_feed=crossref_feed,
+                    rerun=rerun,
+                )
         except (
             requests.exceptions.Timeout,
             requests.exceptions.JSONDecodeError,
@@ -830,30 +868,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.__availability_exception_message
             )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
-        """Run a search of Crossref"""
-
-        crossref_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                crossref_feed=crossref_feed,
-            )
-
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
-                crossref_feed=crossref_feed,
-                rerun=rerun,
-            )
-
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Crossref"""
@@ -865,7 +879,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if "https://search.crossref.org/?q=" in query:
@@ -887,11 +901,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 comment="",
             )
             return add_source
-        if "crossref:jissn=" in query.replace("colrev.", ""):
-            query = query.replace("crossref:jissn=", "").replace("colrev.", "")
 
+        if query.startswith("issn="):
+            query = query.replace("issn=", "")
             filename = search_operation.get_unique_filename(
-                file_path_string=f"crossref_jissn_{query}"
+                file_path_string=f"crossref_issn_{query}"
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
@@ -903,7 +917,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise colrev_exceptions.PackageParameterError(
+            f"Cannot add crossref endpoint with query {query}"
+        )
 
     def load_fixes(
         self,
@@ -926,10 +942,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             if str(source.filename).replace("data/search/", "") in x
         ]
         if source_item:
-            record.set_masterdata_complete(source=source_item[0])
+            record.set_masterdata_complete(
+                source=source_item[0],
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
 
         return record
-
-
-if __name__ == "__main__":
-    pass

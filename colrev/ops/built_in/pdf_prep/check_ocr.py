@@ -5,9 +5,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import docker
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -16,11 +16,8 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.pdf_prep
+if TYPE_CHECKING:
+    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -52,7 +49,6 @@ class PDFCheckOCR(JsonSchemaMixin):
     def __text_is_english(self, *, text: str) -> bool:
         return "eng" == self.language_service.compute_language(text=text)
 
-    @timeout_decorator.timeout(300, use_signals=False)
     def __apply_ocr(
         self,
         *,
@@ -79,7 +75,7 @@ class PDFCheckOCR(JsonSchemaMixin):
             f"{str(docker_home_path / pdf_path.name)}"
         )
 
-        client = docker.from_env()
+        client = docker.from_env(timeout=120)
         client.containers.run(
             image=self.ocrmypdf_image,
             command=args,
@@ -130,7 +126,3 @@ class PDFCheckOCR(JsonSchemaMixin):
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )
         return record.data
-
-
-if __name__ == "__main__":
-    pass

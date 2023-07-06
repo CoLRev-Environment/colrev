@@ -9,6 +9,7 @@ import statistics
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import dedupe as dedupe_io
 import pandas as pd
@@ -25,11 +26,8 @@ import colrev.ops.built_in.dedupe.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.dedupe
+if TYPE_CHECKING:
+    import colrev.ops.dedupe
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-lines
@@ -1136,7 +1134,3 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             dedupe_operation.review_manager.logger.info(
                 "\nNo same-origin merges detected."
             )
-
-
-if __name__ == "__main__":
-    pass

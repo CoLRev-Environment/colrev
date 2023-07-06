@@ -21,6 +21,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
 import colrev.operation
+import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
@@ -148,11 +149,10 @@ class ReviewManager:
                         + f"{colors.ORANGE}git switch main{colors.END}"
                     )
 
-            if force_mode:
-                if debug_mode:
-                    self.logger.debug(exc)
-            else:
+            if not force_mode:
                 raise exc
+            if debug_mode:
+                self.logger.debug(exc)
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
@@ -375,6 +375,11 @@ class ReviewManager:
         """Get a checker object"""
 
         return colrev.checker.Checker(review_manager=self)
+
+    def get_qm(self) -> colrev.qm.quality_model.QualityModel:
+        """Get the quality model"""
+
+        return colrev.qm.quality_model.QualityModel(review_manager=self)
 
     def get_status_stats(
         self, *, records: Optional[dict] = None
@@ -697,14 +702,14 @@ class ReviewManager:
             review_manager=self, review_type=review_type
         )
 
-    def get_review_manager(
+    def get_connecting_review_manager(
         self,
         *,
         path_str: Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
     ) -> ReviewManager:
-        """Get a ReviewManager object"""
+        """Get a (connecting) ReviewManager object for another CoLRev repository"""
         return type(self)(
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
         )
@@ -748,7 +753,3 @@ def get_init_operation(
         target_path=target_path,
         exact_call=exact_call,
     )
-
-
-if __name__ == "__main__":
-    pass

@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import time
+from typing import TYPE_CHECKING
 
 import dictdiffer
 
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import git.objects.commit
+if TYPE_CHECKING:
+    import git.objects.commit
 
 
 class Trace(colrev.operation.Operation):
@@ -86,6 +84,7 @@ class Trace(colrev.operation.Operation):
         prev_record = record
         return prev_record
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, record_id: str) -> None:
         """Trace a record (main entrypoint)"""
 
@@ -95,25 +94,20 @@ class Trace(colrev.operation.Operation):
 
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
-            try:
-                filecontents = (
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                ).data_stream.read()
+            filecontents = (commit.tree / "data" / "records.bib").data_stream.read()
 
-                commit_message_first_line = str(commit.message).partition("\n")[0]
+            commit_message_first_line = str(commit.message).partition("\n")[0]
 
-                if self.review_manager.verbose_mode:
-                    print(
-                        "\n\n"
-                        + time.strftime(
-                            "%Y-%m-%d %H:%M",
-                            time.gmtime(commit.committed_date),
-                        )
-                        + f" {commit} ".ljust(40, " ")
-                        + f" {commit_message_first_line} (by {commit.author.name})"
+            if self.review_manager.verbose_mode:
+                print(
+                    "\n\n"
+                    + time.strftime(
+                        "%Y-%m-%d %H:%M",
+                        time.gmtime(commit.committed_date),
                     )
-            except KeyError:
-                continue
+                    + f" {commit} ".ljust(40, " ")
+                    + f" {commit_message_first_line} (by {commit.author.name})"
+                )
 
             records_dict = self.review_manager.dataset.load_records_dict(
                 load_str=filecontents.decode("utf-8")
@@ -130,7 +124,3 @@ class Trace(colrev.operation.Operation):
                 record_id=record_id,
                 prev_record=prev_record,
             )
-
-
-if __name__ == "__main__":
-    pass

@@ -50,5 +50,3 @@ def test_pdf_hash(  # type: ignore
             pdf_path=target_path, page_nr=1, hash_size=32
         )
         assert expected_result == actual
-
-    target_path.unlink()

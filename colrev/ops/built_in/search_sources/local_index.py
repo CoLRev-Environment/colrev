@@ -5,7 +5,6 @@ from __future__ import annotations
 import difflib
 import typing
 import webbrowser
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -208,18 +207,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if changed:
                 local_index_feed.nr_changed += 1
 
-        if local_index_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
-                f"records based on LocalIndex{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) "
-                    f"up-to-date with LocalIndex{colors.END}"
-                )
-
+        local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
@@ -262,24 +250,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if changed:
                     local_index_feed.nr_changed += 1
 
+        local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
-
-        if local_index_feed.nr_added > 0:
-            search_operation.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {local_index_feed.nr_added} records {colors.END}"
-            )
-
-        if local_index_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {local_index_feed.nr_changed} "
-                f"records based on LocalIndex{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) "
-                    f"up-to-date with LocalIndex{colors.END}"
-                )
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -318,28 +290,21 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if query.startswith("local_index:"):
-            query = query.replace("local_index:", "")
-
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"local_index_{query}".replace("%", "").replace(
-                    "'", ""
-                )
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.local_index",
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
-                comment="",
-            )
-            return add_source
-
-        return None
+        filename = search_operation.get_unique_filename(
+            file_path_string=f"local_index_{query}".replace("%", "").replace("'", "")
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev.local_index",
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": query},
+            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+            comment="",
+        )
+        return add_source
 
     def load_fixes(
         self,
@@ -348,18 +313,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         records: typing.Dict,
     ) -> dict:
         """Load fixes for local-index"""
-
-        # Note : to avoid modifying the feed-records
-        records = deepcopy(records)
-
-        for record_dict in records.values():
-            curation_url = record_dict["curation_ID"].split("#")[0]
-            record_dict["colrev_masterdata_provenance"] = {
-                "CURATED": {"source": curation_url, "note": ""}
-            }
-            record = colrev.record.Record(data=record_dict)
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            del curation_url
 
         return records
 
@@ -386,21 +339,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     pass
         return False
 
-    def __set_not_in_toc_info(
-        self, *, record: colrev.record.Record, toc_key: str
-    ) -> None:
-        record.set_status(
-            target_state=colrev.record.RecordState.md_needs_manual_preparation
-        )
-        if "journal" in record.data:
-            record.add_masterdata_provenance_note(
-                key="journal", note=f"record_not_in_toc {toc_key}"
-            )
-        elif "booktitle" in record.data:
-            record.add_masterdata_provenance_note(
-                key="booktitle", note=f"record_not_in_toc {toc_key}"
-            )
-
     def __retrieve_record_from_local_index(
         self,
         *,
@@ -426,8 +364,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     similarity_threshold=retrieval_similarity,
                     include_file=False,
                 )
-            except colrev_exceptions.RecordNotInTOCException as exc:
-                self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
+            except colrev_exceptions.RecordNotInTOCException:
                 return record
 
             except colrev_exceptions.RecordNotInIndexException:
@@ -439,10 +376,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         include_file=False,
                         search_across_tocs=True,
                     )
-                except colrev_exceptions.RecordNotInTOCException as exc:
-                    self.__set_not_in_toc_info(record=record, toc_key=exc.toc_key)
-                    return record
-                except (colrev_exceptions.RecordNotInIndexException,):
+                except (
+                    colrev_exceptions.RecordNotInIndexException,
+                    colrev_exceptions.RecordNotInTOCException,
+                ):
                     return record
             except colrev_exceptions.NotTOCIdentifiableException:
                 return record
@@ -567,13 +504,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 base_repos.append(repo_path)
 
         base_repos = list(set(base_repos))
-
         environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
         local_base_repos = {
             x["repo_source_url"]: x["repo_source_path"]
-            for x in environment_manager.load_environment_registry()
-            if x["repo_source_url"] in base_repos
+            for x in environment_manager.local_repos()
+            if x.get("repo_source_url", "NA") in base_repos
         }
         return local_base_repos
 
@@ -648,9 +583,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
 
-        for local_base_repo in local_base_repos:
+        for local_base_repo_url, local_base_repo_path in local_base_repos.items():
             selected_changes = self.__print_changes(
-                local_base_repo=local_base_repo, change_itemsets=change_itemsets
+                local_base_repo=local_base_repo_url, change_itemsets=change_itemsets
             )
 
             response = ""
@@ -661,7 +596,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             if response == "y":
                 self.__apply_correction(
-                    source_url=local_base_repo,
+                    source_url=local_base_repo_path,
                     change_list=selected_changes,
                 )
             elif response == "n":
@@ -943,7 +878,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        check_review_manager = self.review_manager.get_review_manager(
+        check_review_manager = self.review_manager.get_connecting_review_manager(
             path_str=source_url
         )
         check_operation = colrev.operation.CheckOperation(
@@ -983,7 +918,3 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 f"\n{colors.GREEN}Thank you for supporting other researchers "
                 f"by sharing your corrections ❤{colors.END}\n"
             )
-
-
-if __name__ == "__main__":
-    pass

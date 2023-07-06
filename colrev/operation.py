@@ -2,20 +2,26 @@
 """Types and model of CoLRev operations."""
 from __future__ import annotations
 
+import typing
 from enum import auto
 from enum import Enum
+from typing import Any
+from typing import Callable
 from typing import Optional
+from typing import TYPE_CHECKING
+from typing import TypeVar
 
+import docker
 import git
+from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import colrev.review_manager
 
-    if TYPE_CHECKING:
-        import colrev.review_manager
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class OperationsType(Enum):
@@ -71,11 +77,32 @@ class Operation:
 
         self.cpus = 4
 
+        self.docker_images_to_stop: typing.List[str] = []
+
         # Note: the following call seems to block the flow (if debug is enabled)
         # self.review_manager.logger.debug(f"Created {self.type} operation")
 
         # Note: we call review_manager.notify() in the subclasses
         # to make sure that the review_manager calls the right check_preconditions()
+
+    # pylint: disable=too-many-nested-blocks
+    @classmethod
+    def decorate(cls) -> Callable:
+        """Decorator for operations"""
+
+        def decorator_func(func: F) -> Callable:
+            def wrapper_func(self, *args, **kwargs) -> Any:  # type: ignore
+                # Invoke the wrapped function
+                retval = func(self, *args, **kwargs)
+                # Conclude the operation
+                self.conclude()
+                if self.review_manager.in_ci_environment():
+                    print("\n\n")
+                return retval
+
+            return wrapper_func
+
+        return decorator_func
 
     def __check_record_state_model_precondition(self) -> None:
         colrev.record.RecordStateModel.check_operation_precondition(operation=self)
@@ -193,6 +220,16 @@ class Operation:
 
         # ie., implicit pass for format, explore, check, pdf_prep_man
 
+    def conclude(self) -> None:
+        """Conclude the operation (stop Docker containers)"""
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if any(x in container.image.tags for x in self.docker_images_to_stop):
+                    container.stop()
+        except DockerException:
+            pass
+
 
 class FormatOperation(Operation):
     """A dummy operation that is expected to introduce formatting changes only"""
@@ -223,7 +260,3 @@ class CheckOperation(Operation):
             operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
-
-
-if __name__ == "__main__":
-    pass

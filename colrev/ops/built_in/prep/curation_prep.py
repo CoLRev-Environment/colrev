@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -11,11 +12,8 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -39,7 +37,7 @@ class CurationPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-
+        self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation
 
     def prepare(
@@ -68,27 +66,8 @@ class CurationPrep(JsonSchemaMixin):
             )
             return record
 
-        applicable_restrictions = (
-            prep_operation.review_manager.dataset.get_applicable_restrictions(
-                record_dict=record.data,
-            )
+        colrev.record.Record(data=record.data).update_masterdata_provenance(
+            qm=self.quality_model
         )
 
-        colrev.record.Record(data=record.data).apply_restrictions(
-            restrictions=applicable_restrictions
-        )
-        if any(
-            "missing" in note
-            for note in [
-                x["note"]
-                for x in record.data.get("colrev_masterdata_provenance", {}).values()
-            ]
-        ):
-            colrev.record.Record(data=record.data).set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
         return record
-
-
-if __name__ == "__main__":
-    pass

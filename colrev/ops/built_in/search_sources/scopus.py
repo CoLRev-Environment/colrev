@@ -39,9 +39,10 @@ class ScopusSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = source_operation.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -61,9 +62,9 @@ class ScopusSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def validate_source(
         self,
@@ -121,15 +122,24 @@ class ScopusSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Scopus"""
 
+        if "book" == record.data["ENTRYTYPE"]:
+            if "journal" in record.data and "booktitle" not in record.data:
+                record.rename_field(key="title", new_key="booktitle")
+                record.rename_field(key="journal", new_key="title")
+
         if "document_type" in record.data:
             if record.data["document_type"] == "Conference Paper":
-                record.change_entrytype(new_entrytype="inproceedings")
+                record.change_entrytype(
+                    new_entrytype="inproceedings", qm=self.quality_model
+                )
 
             elif record.data["document_type"] == "Conference Review":
-                record.change_entrytype(new_entrytype="proceedings")
+                record.change_entrytype(
+                    new_entrytype="proceedings", qm=self.quality_model
+                )
 
             elif record.data["document_type"] == "Article":
-                record.change_entrytype(new_entrytype="article")
+                record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
             record.remove_field(key="document_type")
 
@@ -152,12 +162,7 @@ class ScopusSearchSource(JsonSchemaMixin):
         if "author" in record.data:
             record.data["author"] = record.data["author"].replace("; ", " and ")
 
-        drop = ["source"]
-        for field_to_drop in drop:
-            record.remove_field(key=field_to_drop)
+        record.remove_field(key="source")
+        record.remove_field(key="art_number")
 
         return record
-
-
-if __name__ == "__main__":
-    pass

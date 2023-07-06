@@ -27,6 +27,7 @@ import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=too-many-lines
+# pylint: disable=too-many-ancestors
 
 
 # Inspiration for package descriptions:
@@ -67,8 +68,20 @@ class PackageEndpointType(Enum):
 
 
 # pylint: disable=too-few-public-methods
+class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    """The General Interface for all package endpoints
+
+    Each package endpoint must implement the following attributes (methods)"""
+
+    ci_supported = zope.interface.Attribute(
+        """Flag indicating whether the extension can be run in
+        continuous integration environments (e.g. GitHub Actions)"""
+    )
+
+
+# pylint: disable=too-few-public-methods
 class ReviewTypePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for ReviewTypes"""
 
@@ -92,7 +105,7 @@ class SearchSourceHeuristicStatus(Enum):
 
 
 class SearchSourcePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for SearchSources"""
 
@@ -159,7 +172,7 @@ class SearchSourcePackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class LoadConversionPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for loading (different filetypes)"""
 
@@ -175,7 +188,7 @@ class LoadConversionPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrepPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep operations"""
 
@@ -196,7 +209,7 @@ class PrepPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrepManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep-man operations"""
 
@@ -211,7 +224,7 @@ class PrepManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class DedupePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for dedupe operations"""
 
@@ -224,7 +237,7 @@ class DedupePackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrescreenPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prescreen operations"""
 
@@ -239,7 +252,7 @@ class PrescreenPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFGetPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get operations"""
 
@@ -253,7 +266,7 @@ class PDFGetPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFGetManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get-man operations"""
 
@@ -269,7 +282,7 @@ class PDFGetManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFPrepPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep operations"""
 
@@ -288,7 +301,7 @@ class PDFPrepPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFPrepManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep-man operations"""
 
@@ -304,7 +317,7 @@ class PDFPrepManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class ScreenPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for screen operations"""
 
@@ -318,7 +331,7 @@ class ScreenPackageEndpointInterface(
 
 
 class DataPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for data operations"""
 
@@ -707,23 +720,26 @@ class PackageManager:
             packages_dict[package_identifier] = {}
 
             packages_dict[package_identifier]["settings"] = selected_package
-            # 1. Load built-in packages
-            # if package_identifier in cls.packages[package_type]
-            if package_identifier in self.packages[package_type]:
-                if not self.packages[package_type][package_identifier]["installed"]:
-                    raise colrev_exceptions.MissingDependencyError(
-                        "Dependency "
-                        + f"{package_identifier} ({package_type}) not found. "
-                        "Please install it\n  pip install "
-                        f"{package_identifier.split('.')[0]}"
-                    )
 
-                if self.packages[package_type][package_identifier]["installed"]:
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = self.load_package_endpoint(
-                        package_type=package_type, package_identifier=package_identifier
+            # 1. Load built-in packages
+            if package_identifier.split(".")[0] == "colrev":
+                if package_identifier not in self.packages[package_type]:
+                    raise colrev_exceptions.MissingDependencyError(
+                        "Built-in dependency "
+                        + f"{package_identifier} ({package_type}) not in package_endpoints.json. "
                     )
+                if not self.packages[package_type][package_identifier][
+                    "installed"
+                ]:  # pragma: no cover
+                    raise colrev_exceptions.MissingDependencyError(
+                        f"Dependency {package_identifier} ({package_type}) not found. "
+                        f"Please install it\n  pip install {package_identifier.split('.')[0]}"
+                    )
+                packages_dict[package_identifier][
+                    "endpoint"
+                ] = self.load_package_endpoint(
+                    package_type=package_type, package_identifier=package_identifier
+                )
 
             # 2. Load module packages
             elif not Path(package_identifier + ".py").is_file():
@@ -732,9 +748,34 @@ class PackageManager:
                     packages_dict[package_identifier][
                         "endpoint"
                     ] = importlib.import_module(package_identifier)
-                    packages_dict[package_identifier]["custom_flag"] = True
+                    packages_dict[package_identifier][
+                        "custom_flag"
+                    ] = True  # pragma: no cover
                 except ModuleNotFoundError as exc:
                     if ignore_not_available:
+                        print(f"Could not load {selected_package}")
+                        del packages_dict[package_identifier]
+                        continue
+                    raise colrev_exceptions.MissingDependencyError(
+                        "Dependency "
+                        f"{package_identifier} ({package_type}) not installed. "
+                        "Please install it\n  pip install "
+                        f"{package_identifier.split('.')[0]}"
+                    ) from exc
+
+            # 3. Load custom packages in the directory
+            elif Path(package_identifier + ".py").is_file():
+                try:
+                    # to import custom packages from the project dir
+                    sys.path.append(".")
+                    packages_dict[package_identifier]["settings"] = selected_package
+                    packages_dict[package_identifier][
+                        "endpoint"
+                    ] = importlib.import_module(package_identifier, ".")
+                    packages_dict[package_identifier]["custom_flag"] = True
+                except ModuleNotFoundError as exc:  # pragma: no cover
+                    if ignore_not_available:
+                        print(f"Could not load {selected_package}")
                         del packages_dict[package_identifier]
                         continue
                     raise colrev_exceptions.MissingDependencyError(
@@ -743,21 +784,6 @@ class PackageManager:
                         "Please install it\n  pip install "
                         f"{package_identifier.split('.')[0]}"
                     ) from exc
-            # 3. Load custom packages in the directory
-            elif Path(package_identifier + ".py").is_file():
-                sys.path.append(".")  # to import custom packages from the project dir
-                packages_dict[package_identifier]["settings"] = selected_package
-                packages_dict[package_identifier]["endpoint"] = importlib.import_module(
-                    package_identifier, "."
-                )
-                packages_dict[package_identifier]["custom_flag"] = True
-            elif ignore_not_available:
-                raise colrev_exceptions.MissingDependencyError(
-                    f"Dependency {package_identifier} not available."
-                )
-            else:
-                print(f"Could not load {selected_package}")
-                continue
 
         return packages_dict
 
@@ -773,24 +799,11 @@ class PackageManager:
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         """Load the packages for a particular package_type"""
 
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=unnecessary-dict-index-lookup
-        # pylint: disable=too-many-locals
-
-        # Note : when iterating over packages_dict.items(),
-        # changes to the values (or del k) would not persist
-
-        if package_type not in self.package_type_overview:
-            raise colrev_exceptions.MissingDependencyError(
-                f"package_type {package_type} not available"
-            )
-
         packages_dict = self.__get_packages_dict(
             selected_packages=selected_packages,
             package_type=package_type,
             ignore_not_available=ignore_not_available,
         )
-
         self.__drop_broken_packages(
             packages_dict=packages_dict,
             package_type=package_type,
@@ -835,8 +848,7 @@ class PackageManager:
             else:
                 packages_dict[package_identifier] = package_class["endpoint"]
 
-        for i_to_remove in to_remove:
-            del packages_dict[i_to_remove]
+        packages_dict = {k: v for k, v in packages_dict.items() if k not in to_remove}
 
         return packages_dict
 
@@ -995,7 +1007,3 @@ class PackageManager:
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
-
-
-if __name__ == "__main__":
-    pass

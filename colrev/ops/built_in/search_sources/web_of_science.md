@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: Web of Science
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -10,8 +10,6 @@ Note: This document is currently under development. It will contain the followin
 
 ## Add the search source
 
-```
-colrev search -a XXX
-```
+Download search results and store in `data/search/` directory. API-access not yet available.
 
 ## Links

@@ -14,12 +14,6 @@ from git.exc import NoSuchPathError
 
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager.ReviewManager
-
 
 class Advisor:
     """The CoLRev advisor guides users through the review process"""
@@ -655,10 +649,10 @@ class Advisor:
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
-                if line.lstrip()[:7] == "journal":
+                if line.lstrip()[:8] == "journal ":
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
-                if line.lstrip()[:9] == "booktitle":
+                if line.lstrip()[:10] == "booktitle ":
                     booktitle = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(booktitle)
 
@@ -677,7 +671,7 @@ class Advisor:
             selected_journals = [
                 (candidate, freq)
                 for candidate, freq in selected
-                if candidate not in curated_outlets
+                if candidate not in curated_outlets + ["", "UNKNOWN"]
             ]
 
             journals = "\n   - " + "\n   - ".join(
@@ -712,8 +706,8 @@ class Advisor:
                 environment_instructions=environment_instructions,
             )
 
-        environment_registry = environment_manager.load_environment_registry()
-        registered_paths = [Path(x["repo_source_path"]) for x in environment_registry]
+        local_repos = environment_manager.local_repos()
+        registered_paths = [Path(x["repo_source_path"]) for x in local_repos]
         # Note : we can use many parallel processes
         # because __append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity
@@ -774,7 +768,3 @@ class Advisor:
             ]
         )
         return {"msg": msgs, "status": status_code}
-
-
-if __name__ == "__main__":
-    pass

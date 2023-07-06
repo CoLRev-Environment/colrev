@@ -18,7 +18,9 @@ colrev.ops.screen.Screen
 
       ~Screen.add_criterion
       ~Screen.check_precondition
+      ~Screen.conclude
       ~Screen.create_screen_split
+      ~Screen.decorate
       ~Screen.delete_criterion
       ~Screen.get_data
       ~Screen.get_screening_criteria

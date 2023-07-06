@@ -60,7 +60,8 @@ Ready to contribute? Here's how to set up `colrev` for local development.
     ```
     mkvirtualenv colrev
     cd colrev/
-    pip3 install -e .
+    pip3 install poetry
+    poetry install
     ```
 
 4. Create a branch for local development:
@@ -89,6 +90,30 @@ Ready to contribute? Here's how to set up `colrev` for local development.
 
 7. Submit a pull request through the GitHub website.
 
+## Troubleshooting
+
+### If you get error regarding mock being not available
+
+Install `pytest-mock`
+
+```
+pip install pytest-mock
+```
+
+### If you get invalid cross-device link error
+
+It is because the `/tmp` folder is not in same drive as your home drive. Use `pytest --basetemp=<a_path_inside_your_home_folder>`
+
+Beware, everything inside the folder will be deleted, so make sure you use the folder only for test.
+
+### Iterative testing
+
+To test and develop code, it may be helpful to use an example dataset (CoLRev repository) with chained commands, which automatically reset to the previous version and repeat the operation. For example, such a command could look like this:
+
+```
+git reset --hard faaf5d7f5e6 && colrev prep && gitk
+```
+
 ## Pull Request Guidelines
 
 Before you submit a pull request, check that it meets these guidelines:
@@ -100,6 +125,17 @@ Before you submit a pull request, check that it meets these guidelines:
 3. The pull request should work for Python 3.5, 3.6, 3.7 and 3.8, and for PyPy. Check
    https://travis-ci.com/CoLRev-Ecosystem/colrev/pull_requests
    and make sure that the tests pass for all supported Python versions.
+
+## Add yourself as Contributor
+
+Colrev uses `@all-contributors` to add contributors. You can add yourself as contributor by commenting on an Issue or
+Pull Request, by asking @all-contributors:
+
+```
+@all-contributors please add @<username> for <contributions>
+```
+
+[Bot usage](https://allcontributors.org/docs/en/bot/usage)
 
 ## Coding standards
 

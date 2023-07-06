@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import typing
 from time import sleep
+from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
@@ -12,12 +13,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ui_cli.cli_colors as colors
 from colrev.exit_codes import ExitCodes
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.status
+if TYPE_CHECKING:
+    import colrev.ops.status
 
 
 def print_review_instructions(review_instructions: dict) -> None:
@@ -266,7 +263,3 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         )
     else:
         print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")
-
-
-if __name__ == "__main__":
-    pass

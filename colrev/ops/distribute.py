@@ -5,15 +5,13 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.operation
 import colrev.settings
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Distribute(colrev.operation.Operation):
@@ -31,13 +29,13 @@ class Distribute(colrev.operation.Operation):
     def get_environment_registry(self) -> list:
         """Get the environment registry (excluding curated_metadata)"""
         environment_manager = self.review_manager.get_environment_manager()
-        environment_registry = environment_manager.load_environment_registry()
         return [
             x
-            for x in environment_registry
+            for x in environment_manager.local_repos()
             if "curated_metadata/" not in x["repo_source_path"]
         ]
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
         """Distribute records to other CoLRev repositories (main entrypoint)"""
 
@@ -122,7 +120,3 @@ class Distribute(colrev.operation.Operation):
                 )
 
                 self.review_manager.dataset.add_changes(path=target_bib_file)
-
-
-if __name__ == "__main__":
-    pass

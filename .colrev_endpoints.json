@@ -4,6 +4,9 @@
     "colrev_version": ">=0.6.0",
     "endpoints": {
         "load_conversion": [
+            {"package_endpoint_identifier": "colrev.rispy",
+              "endpoint": "colrev.ops.built_in.load_conversion.ris_rispy_loader.RisRispyLoader"
+            },
             {"package_endpoint_identifier": "colrev.bibtex",
              "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader"
             },
@@ -24,6 +27,9 @@
             }
         ],
         "prep": [
+            {"package_endpoint_identifier": "colrev.open_alex_prep",
+             "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep"
+            },
             {"package_endpoint_identifier": "colrev.source_specific_prep",
              "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep"
             },
@@ -44,9 +50,6 @@
             },
             {"package_endpoint_identifier": "colrev.remove_broken_ids",
              "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep"
-            },
-            {"package_endpoint_identifier": "colrev.global_ids_consistency_check",
-             "endpoint": "colrev.ops.built_in.prep.global_id_consistency.GlobalIDConsistencyPrep"
             },
             {"package_endpoint_identifier": "colrev.resolve_crossrefs",
              "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep"
@@ -213,6 +216,9 @@
             }
         ],
         "search_source": [
+            {"package_endpoint_identifier": "colrev.open_alex",
+             "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource"
+            },
             {"package_endpoint_identifier": "colrev.open_library",
              "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource"
             },
@@ -222,8 +228,8 @@
             {"package_endpoint_identifier": "colrev.abi_inform_proquest",
             "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource"
             },
-            {"package_endpoint_identifier": "colrev.systematic_review_datasets",
-            "endpoint": "colrev.ops.built_in.search_sources.systematic_review_datasets.SystematicReviewDatasetsSearchSource"
+            {"package_endpoint_identifier": "colrev.synergy_datasets",
+            "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource"
             },
             {"package_endpoint_identifier": "colrev.taylor_and_francis",
             "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource"

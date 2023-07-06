@@ -2,15 +2,14 @@
 """Screening utilities"""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import colrev.env.package_manager
 import colrev.record
 import colrev.settings
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.screen
+if TYPE_CHECKING:
+    import colrev.ops.screen
 
 
 __FULL_SCREEN_EXPLANATION = (

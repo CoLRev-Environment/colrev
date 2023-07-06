@@ -9,7 +9,6 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import requests
-import timeout_decorator
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -160,7 +159,6 @@ class PDFPrep(colrev.operation.Operation):
                 record.add_data_provenance_note(key="file", note="pdf-hash-error")
 
             except (
-                timeout_decorator.timeout_decorator.TimeoutError,
                 colrev_exceptions.InvalidPDFException,
                 colrev_exceptions.TEIException,
                 requests.exceptions.ReadTimeout,
@@ -183,8 +181,9 @@ class PDFPrep(colrev.operation.Operation):
                 msg_str = msg_str.replace("colrev.", "")
                 detailed_msgs.append(f"{colors.ORANGE}{msg_str}{colors.END}")
 
-            if failed:
-                break
+            # Note: if we break, the teis will not be generated.
+            # if failed:
+            #     break
 
         # Each pdf_prep_package_endpoint can create a new file
         # previous/temporary pdfs are deleted when the process is successful
@@ -372,11 +371,12 @@ class PDFPrep(colrev.operation.Operation):
             except colrev_exceptions.TEIException:
                 self.review_manager.logger.error("Eror generating TEI")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
         reprocess: bool = False,
-        batch_size: int,
+        batch_size: int = 0,
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
@@ -457,7 +457,3 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-prep operation{colors.END}"
         )
-
-
-if __name__ == "__main__":
-    pass

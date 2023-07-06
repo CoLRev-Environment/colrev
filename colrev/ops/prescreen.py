@@ -57,6 +57,27 @@ class Prescreen(colrev.operation.Operation):
             import_table_path=import_table_path,
         )
 
+    def __include_all_in_prescreen_precondition(self, *, records: dict) -> bool:
+        if not [
+            r
+            for r in records.values()
+            if r["colrev_status"] == colrev.record.RecordState.md_processed
+        ]:
+            if [
+                r
+                for r in records.values()
+                if r["colrev_status"] == colrev.record.RecordState.pdf_prepared
+            ]:
+                self.review_manager.logger.warning(
+                    "No records to prescreen. Use "
+                    f"{colors.ORANGE}colrev screen --include_all{colors.END} instead"
+                )
+            else:
+                self.review_manager.logger.warning("No records to prescreen.")
+            return False
+        return True
+
+    @colrev.operation.Operation.decorate()
     def include_all_in_prescreen(self, *, persist: bool) -> None:
         """Include all records in the prescreen"""
 
@@ -64,13 +85,23 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.settings.prescreen.prescreen_package_endpoints = []
             self.review_manager.save_settings()
 
+        records = self.review_manager.dataset.load_records_dict()
+        if not self.__include_all_in_prescreen_precondition(records=records):
+            return
+
+        selected_record_ids = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.md_processed == r["colrev_status"]
+        ]
+
         endpoint = (
             colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
                 prescreen_operation=self, settings={"endpoint": "include_all"}
             )
         )
-        records = self.review_manager.dataset.load_records_dict()
         endpoint.run_prescreen(self, records, [])
+        self.__print_stats(selected_record_ids=selected_record_ids)
 
     def include_records(self, *, ids: str) -> None:
         """Include records in the prescreen"""
@@ -134,7 +165,9 @@ class Prescreen(colrev.operation.Operation):
                 if colrev.record.RecordState.md_processed == x["colrev_status"]
             ]
         )
-        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
+        pad = 0
+        if record_header_list:
+            pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
         items = self.review_manager.dataset.read_next_record(
             conditions=[{"colrev_status": colrev.record.RecordState.md_processed}]
         )
@@ -155,10 +188,11 @@ class Prescreen(colrev.operation.Operation):
             f"({nrecs} each)"
         )
 
-        added: list[str] = []
-        while len(added) < nrecs:
-            added.append(next(data["items"])["ID"])
-        prescreen_splits.append("colrev prescreen --split " + ",".join(added))
+        for _ in range(0, create_split):
+            added: list[str] = []
+            while len(added) < nrecs:
+                added.append(next(data["items"])["ID"])
+            prescreen_splits.append("colrev prescreen --split " + ",".join(added))
 
         return prescreen_splits
 
@@ -275,14 +309,69 @@ class Prescreen(colrev.operation.Operation):
 
         self.review_manager.dataset.add_record_changes()
 
-    def main(self, *, split_str: str) -> None:
+    def __auto_include(self, *, records: dict) -> list:
+        selected_auto_include_ids = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.md_processed == r["colrev_status"]
+            and r.get("include_flag", "0") == "1"
+        ]
+        if not selected_auto_include_ids:
+            return selected_auto_include_ids
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Automatically including records with include_flag{colors.END}"
+        )
+        for record_dict in records.values():
+            if record_dict["ID"] not in selected_auto_include_ids:
+                continue
+            self.prescreen(
+                record=colrev.record.Record(data=record_dict),
+                prescreen_inclusion=True,
+            )
+        return selected_auto_include_ids
+
+    def add(self, *, add: str) -> None:
+        """Add a prescreen endpoint"""
+
+        package_identifier, params_str = add.split(":")
+        package_identifier = package_identifier.lower()
+        params = {}
+        for p_el in params_str.split(";"):
+            key, value = p_el.split("=")
+            params[key] = value
+
+        p_dict = {**{"endpoint": package_identifier}, **params}
+        package_manager = self.review_manager.get_package_manager()
+        endpoint_dict = package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+            selected_packages=[p_dict],
+            operation=self,
+        )
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Add prescreen endpoint{colors.END}"
+        )
+
+        if not hasattr(endpoint_dict[package_identifier], "add_endpoint"):
+            self.review_manager.logger.info(
+                'Cannot add endpoint (mising "add_endpoint" method)'
+            )
+            return
+        endpoint_dict[package_identifier].add_endpoint(params=params)  # type: ignore
+        self.review_manager.save_settings()
+        self.review_manager.create_commit(
+            msg=f"Add prescreen endpoint ({package_identifier})",
+        )
+
+    @colrev.operation.Operation.decorate()
+    def main(self, *, split_str: str = "NA") -> None:
         """Prescreen records (main entrypoint)"""
 
         # pylint: disable=duplicate-code
         split = []
         if split_str != "NA":
             split = split_str.split(",")
-            split.remove("")
+            if "" in split:
+                split.remove("")
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -325,17 +414,16 @@ class Prescreen(colrev.operation.Operation):
                 r["ID"]
                 for r in records.values()
                 if colrev.record.RecordState.md_processed == r["colrev_status"]
+                and not r.get("include_flag", "0") == "1"
             ]
             endpoint.run_prescreen(self, records, split)  # type: ignore
 
-            self.__print_stats(selected_record_ids=selected_record_ids)
+            selected_auto_include_ids = self.__auto_include(records=records)
+
+            self.__print_stats(
+                selected_record_ids=selected_record_ids + selected_auto_include_ids
+            )
 
         self.review_manager.logger.info(
             "%sCompleted prescreen operation%s", colors.GREEN, colors.END
         )
-        if self.review_manager.in_ci_environment():
-            print("\n\n")
-
-
-if __name__ == "__main__":
-    pass

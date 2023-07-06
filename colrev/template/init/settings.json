@@ -27,6 +27,7 @@
     "load": {},
     "prep": {
         "fields_to_keep": [],
+        "defects_to_ignore": ["inconsistent-with-url-metadata"],
         "prep_rounds": [
             {
                 "name": "prep",
@@ -58,9 +59,6 @@
                     },
                     {
                         "endpoint": "colrev.remove_broken_ids"
-                    },
-                    {
-                        "endpoint": "colrev.global_ids_consistency_check"
                     },
                     {
                         "endpoint": "colrev.get_doi_from_urls"
@@ -106,10 +104,6 @@
     "prescreen": {
         "explanation": "",
         "prescreen_package_endpoints": [
-            {
-                "endpoint": "colrev.scope_prescreen",
-                "LanguageScope": ["eng"]
-            },
             {
                 "endpoint": "colrev.colrev_cli_prescreen"
             }

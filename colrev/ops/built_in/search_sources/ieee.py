@@ -13,8 +13,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ris_utils
 import colrev.ops.search
 import colrev.record
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -40,7 +42,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
@@ -82,15 +84,19 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         if "INPROCEEDINGS" in data:
             if len(re.findall(r"@[A-Z]*\{[0-9]*,\n", data)) >= data.count("\n@"):
                 result["confidence"] = 1.0
+        if all(
+            x in data.splitlines()[0] for x in ["Date Added To Xplore", "IEEE Terms"]
+        ):
+            result["confidence"] = 1.0
 
         return result
 
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -106,6 +112,29 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Not implemented"""
         return record
+
+    def __ris_fixes(self, *, entries: dict) -> None:
+        for entry in entries:
+            if entry["type_of_reference"] in ["CONF", "JOUR"]:
+                if "title" in entry and "primary_title" not in entry:
+                    entry["primary_title"] = entry.pop("title")
+            if "publication_year" in entry and "year" not in entry:
+                entry["year"] = entry.pop("publication_year")
+
+    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".ris":
+            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+                filename=self.search_source.filename
+            )
+            self.__ris_fixes(entries=ris_entries)
+            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
+                ris_entries
+            )
+            return records
+
+        raise NotImplementedError
 
     def load_fixes(
         self,
@@ -123,7 +152,3 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Source-specific preparation for IEEEXplore"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

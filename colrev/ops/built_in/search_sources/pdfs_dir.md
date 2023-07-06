@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: PDFs directory
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -11,7 +11,7 @@ based on [GROBID](https://github.com/kermitt2/grobid)
 ## Add the search source
 
 ```
-colrev search -a XXX
+colrev search -a colrev.pdfs_dir
 ```
 
 ## Links

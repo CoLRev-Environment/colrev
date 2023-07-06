@@ -24,7 +24,6 @@ colrev.dataset.Dataset
       ~Dataset.file_in_history
       ~Dataset.format_records_file
       ~Dataset.generate_next_unique_id
-      ~Dataset.get_applicable_restrictions
       ~Dataset.get_changed_records
       ~Dataset.get_commit_message
       ~Dataset.get_committed_origin_state_dict
@@ -53,6 +52,7 @@ colrev.dataset.Dataset
       ~Dataset.save_records_dict
       ~Dataset.save_records_dict_to_file
       ~Dataset.set_ids
+      ~Dataset.stash_unstaged_changes
       ~Dataset.update_gitignore
 
 

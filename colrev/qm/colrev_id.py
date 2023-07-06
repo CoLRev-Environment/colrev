@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 from nameparser import HumanName
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record  # pylint: disable=cyclic-import
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 def __format_author_field_for_cid(input_string: str) -> str:
@@ -181,7 +179,3 @@ def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> 
         )
 
     return srep
-
-
-if __name__ == "__main__":
-    pass

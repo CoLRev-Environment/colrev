@@ -13,7 +13,7 @@ from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-from typing import Set
+from typing import TYPE_CHECKING
 
 import dictdiffer
 import pandas as pd
@@ -34,15 +34,14 @@ from thefuzz import fuzz
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.prep.utils as prep_utils
 import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.qm.quality_model
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods
@@ -62,42 +61,9 @@ class Record:
         "volume",
         "number",
         "pages",
-        "journal_ranking",
+        "editor",
     ]
     """Keys of identifying fields considered for masterdata provenance"""
-
-    # Based on https://en.wikipedia.org/wiki/BibTeX
-    record_field_requirements = {
-        "article": ["author", "title", "journal", "year", "volume", "number"],
-        "inproceedings": ["author", "title", "booktitle", "year"],
-        "incollection": ["author", "title", "booktitle", "publisher", "year"],
-        "inbook": ["author", "title", "chapter", "publisher", "year"],
-        "proceedings": ["booktitle", "editor"],
-        "book": ["author", "title", "publisher", "year"],
-        "phdthesis": ["author", "title", "school", "year"],
-        "masterthesis": ["author", "title", "school", "year"],
-        "techreport": ["author", "title", "institution", "year"],
-        "unpublished": ["title", "author", "year"],
-        "misc": ["author", "title", "year"],
-        "software": ["author", "title", "url"],
-        "other": ["author", "title", "year"],
-    }
-    """Fields requirements for respective ENTRYTYPE"""
-
-    # book, inbook: author <- editor
-
-    record_field_inconsistencies: dict[str, list[str]] = {
-        "article": ["booktitle"],
-        "inproceedings": ["issue", "number", "journal"],
-        "incollection": [],
-        "inbook": ["journal"],
-        "book": ["volume", "issue", "number", "journal"],
-        "phdthesis": ["volume", "issue", "number", "journal", "booktitle"],
-        "masterthesis": ["volume", "issue", "number", "journal", "booktitle"],
-        "techreport": ["volume", "issue", "number", "journal", "booktitle"],
-        "unpublished": ["volume", "issue", "number", "journal", "booktitle"],
-    }
-    """Fields considered inconsistent with the respective ENTRYTYPE"""
 
     provenance_keys = [
         "colrev_masterdata_provenance",
@@ -282,13 +248,9 @@ class Record:
         """Check whether the record masterdata is curated"""
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
 
-    def set_status(self, *, target_state: RecordState) -> None:
+    def set_status(self, *, target_state: RecordState, force: bool = False) -> None:
         """Set the record status"""
-        if RecordState.md_prepared == target_state:
-            # Note : must be after import provenance
-            # masterdata_is_complete() relies on "missing" notes/"UNKNOWN" fields
-            if not self.masterdata_is_complete():
-                target_state = RecordState.md_needs_manual_preparation
+        if RecordState.md_prepared == target_state and not force:
             if self.has_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
         # pylint: disable=direct-status-assign
@@ -340,7 +302,7 @@ class Record:
         value: str,
         source: str,
         note: str = "",
-        keep_source_if_equal: bool = False,
+        keep_source_if_equal: bool = True,
         append_edit: bool = True,
     ) -> None:
         """Update a record field (including provenance information)"""
@@ -376,13 +338,23 @@ class Record:
 
     def rename_field(self, *, key: str, new_key: str) -> None:
         """Rename a field"""
+        if key not in self.data:
+            return
         value = self.data[key]
         self.data[new_key] = value
 
         if key in self.identifying_field_keys:
-            value_provenance = self.data["colrev_masterdata_provenance"][key]
-            if "source" in value_provenance:
-                value_provenance["source"] += f"|rename-from:{key}"
+            if "colrev_masterdata_provenance" not in self.data:
+                self.data["colrev_masterdata_provenance"] = {}
+            if key in self.data["colrev_masterdata_provenance"]:
+                value_provenance = self.data["colrev_masterdata_provenance"][key]
+                if "source" in value_provenance:
+                    value_provenance["source"] += f"|rename-from:{key}"
+            else:
+                value_provenance = {
+                    "source": f"|rename-from:{key}",
+                    "note": "",
+                }
             self.data["colrev_masterdata_provenance"][new_key] = value_provenance
         else:
             if "colrev_data_provenance" not in self.data:
@@ -397,11 +369,22 @@ class Record:
 
         self.remove_field(key=key)
 
-    def change_entrytype(self, *, new_entrytype: str) -> None:
+    def change_entrytype(
+        self,
+        *,
+        new_entrytype: str,
+        qm: colrev.qm.quality_model.QualityModel,
+    ) -> None:
         """Change the ENTRYTYPE"""
         for value in self.data.get("colrev_masterdata_provenance", {}).values():
-            if "inconsistent with entrytype" in value["note"]:
+            if "inconsistent-with-entrytype" in value["note"]:
                 value["note"] = ""
+            if "missing" in value["note"]:
+                value["note"] = ""
+        missing_fields = [k for k, v in self.data.items() if v == "UNKNOWN"]
+        for missing_field in missing_fields:
+            self.remove_field(key=missing_field)
+
         self.data["ENTRYTYPE"] = new_entrytype
         if new_entrytype in ["inproceedings", "proceedings"]:
             if self.data.get("volume", "") == "UNKNOWN":
@@ -413,20 +396,27 @@ class Record:
         elif new_entrytype == "article":
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
+        elif new_entrytype in [
+            "inbook",
+            "book",
+            "incollection",
+            "phdthesis",
+            "thesis",
+            "masterthesis",
+            "bachelorthesis",
+            "techreport",
+            "unpublished",
+            "misc",
+            "software",
+            "online",
+        ]:
+            pass
         else:
             raise colrev_exceptions.MissingRecordQualityRuleSpecification(
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.apply_fields_keys_requirements()
-        missing_fields = set()
-        # Note: MissingRecordQualityRuleSpecification already raised before.
-        missing_fields = self.get_missing_fields()
-
-        if self.has_quality_defects() or missing_fields:
-            self.set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
+        self.update_masterdata_provenance(qm=qm)
 
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source: str = ""
@@ -436,55 +426,32 @@ class Record:
         if key in self.data:
             del self.data[key]
 
+        if "colrev_masterdata_provenance" not in self.data:
+            self.data["colrev_masterdata_provenance"] = {}
+
         if not_missing_note and key in self.identifying_field_keys:
             # Example: journal without number
             # we should keep that information that a particular masterdata
             # field is not required
             if key not in self.data["colrev_masterdata_provenance"]:
                 self.data["colrev_masterdata_provenance"][key] = {}
-            self.data["colrev_masterdata_provenance"][key]["note"] = "not_missing"
+            self.data["colrev_masterdata_provenance"][key]["note"] = "not-missing"
             if source != "":
                 self.data["colrev_masterdata_provenance"][key]["source"] = source
         else:
             if key in self.identifying_field_keys:
-                if key in self.data.get("colrev_masterdata_provenance", ""):
+                if key in self.data.get("colrev_masterdata_provenance", {}):
                     del self.data["colrev_masterdata_provenance"][key]
             else:
-                if key in self.data.get("colrev_data_provenance", ""):
+                if key in self.data.get("colrev_data_provenance", {}):
                     del self.data["colrev_data_provenance"][key]
 
-    def masterdata_is_complete(self) -> bool:
-        """Check if the masterdata is complete"""
-        if self.masterdata_is_curated():
-            return True
-
-        if not any(
-            v == "UNKNOWN"
-            for k, v in self.data.items()
-            if k in self.identifying_field_keys
-        ):
-            for k in self.identifying_field_keys:
-                if k in self.data.get("colrev_masterdata_provenance", {}):
-                    if (
-                        "not_missing"
-                        in self.data["colrev_masterdata_provenance"][k]["note"]
-                    ):
-                        continue
-                    if (
-                        "missing"
-                        in self.data["colrev_masterdata_provenance"][k]["note"]
-                    ):
-                        return False
-            return True
-
-        return False
-
     def set_masterdata_complete(
-        self, *, source: str, replace_source: bool = True
+        self, *, source: str, masterdata_repository: bool, replace_source: bool = True
     ) -> None:
         """Set the masterdata to complete"""
         # pylint: disable=too-many-branches
-        if self.masterdata_is_curated():
+        if self.masterdata_is_curated() or masterdata_repository:
             return
 
         if "colrev_masterdata_provenance" not in self.data:
@@ -498,7 +465,7 @@ class Record:
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if "missing" in note and "not_missing" not in note:
+                if "missing" in note and "not-missing" not in note:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
                         "missing", ""
                     )
@@ -508,7 +475,7 @@ class Record:
                 if "volume" in self.data["colrev_masterdata_provenance"]:
                     self.data["colrev_masterdata_provenance"]["volume"][
                         "note"
-                    ] = "not_missing"
+                    ] = "not-missing"
                     if replace_source:
                         self.data["colrev_masterdata_provenance"]["volume"][
                             "source"
@@ -516,14 +483,14 @@ class Record:
                 else:
                     self.data["colrev_masterdata_provenance"]["volume"] = {
                         "source": source,
-                        "note": "not_missing",
+                        "note": "not-missing",
                     }
 
             if "number" not in self.data:
                 if "number" in self.data["colrev_masterdata_provenance"]:
                     self.data["colrev_masterdata_provenance"]["number"][
                         "note"
-                    ] = "not_missing"
+                    ] = "not-missing"
                     if replace_source:
                         self.data["colrev_masterdata_provenance"]["number"][
                             "source"
@@ -531,7 +498,7 @@ class Record:
                 else:
                     self.data["colrev_masterdata_provenance"]["number"] = {
                         "source": source,
-                        "note": "not_missing",
+                        "note": "not-missing",
                     }
 
     def set_masterdata_consistent(self) -> None:
@@ -543,29 +510,10 @@ class Record:
         for identifying_field_key in self.identifying_field_keys:
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if "inconsistent with ENTRYTYPE" in note:
+                if "inconsistent-with-entrytype" in note:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
-                        "inconsistent with ENTRYTYPE", ""
+                        "inconsistent-with-entrytype", ""
                     )
-
-    def set_fields_complete(self) -> None:
-        """Set fields to complete"""
-        for identifying_field_key in self.identifying_field_keys:
-            if identifying_field_key in self.data.get(
-                "colrev_masterdata_provenance", {}
-            ):
-                note = self.data["colrev_masterdata_provenance"][identifying_field_key][
-                    "note"
-                ]
-                if (
-                    "incomplete"
-                    in self.data["colrev_masterdata_provenance"][identifying_field_key][
-                        "note"
-                    ]
-                ):
-                    self.data["colrev_masterdata_provenance"][identifying_field_key][
-                        "note"
-                    ] = note.replace("incomplete", "")
 
     def reset_pdf_provenance_notes(self) -> None:
         """Reset the PDF (file) provenance notes"""
@@ -579,51 +527,6 @@ class Record:
                     "source": "NA",
                     "note": "",
                 }
-
-    def get_missing_fields(self) -> set:
-        """Get the missing fields"""
-        missing_field_keys = set()
-        if self.data["ENTRYTYPE"] in Record.record_field_requirements:
-            reqs = Record.record_field_requirements[self.data["ENTRYTYPE"]]
-            missing_field_keys = {
-                x
-                for x in reqs
-                if x not in self.data.keys()
-                or "" == self.data[x]
-                or "UNKNOWN" == self.data[x]
-            }
-            return missing_field_keys
-        raise colrev_exceptions.MissingRecordQualityRuleSpecification(
-            msg=f"Missing record_field_requirements for {self.data['ENTRYTYPE']}"
-        )
-
-    def get_inconsistencies(self) -> set:
-        """Get inconsistencies (between fields)"""
-        inconsistent_field_keys = set()
-        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies:
-            incons_fields = Record.record_field_inconsistencies[self.data["ENTRYTYPE"]]
-            inconsistent_field_keys = {x for x in incons_fields if x in self.data}
-        # Note: a thesis should be single-authored
-        if "thesis" in self.data["ENTRYTYPE"] and " and " in self.data.get(
-            "author", ""
-        ):
-            inconsistent_field_keys.add("author")
-        return inconsistent_field_keys
-
-    def has_inconsistent_fields(self) -> bool:
-        """Check whether the record has inconsistent fields"""
-        found_inconsistencies = False
-        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies:
-            inconsistencies = self.get_inconsistencies()
-            if inconsistencies:
-                found_inconsistencies = True
-        return found_inconsistencies
-
-    def has_incomplete_fields(self) -> bool:
-        """Check whether the record has incomplete fields"""
-        if len(self.get_incomplete_fields()) > 0:
-            return True
-        return False
 
     def __merge_origins(self, *, merging_record: Record) -> None:
         """Merge the origins with those of the merging_record"""
@@ -774,6 +677,8 @@ class Record:
             # Part 2: other fields
             else:
                 # keep existing values per default
+                if key in self.data:
+                    continue
                 self.update_field(
                     key=key,
                     value=str(val),
@@ -1219,6 +1124,19 @@ class Record:
 
         return {"source": source, "note": note}
 
+    def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
+        """Remove a masterdata provenance note"""
+        if "colrev_masterdata_provenance" not in self.data:
+            return
+        if key not in self.data["colrev_masterdata_provenance"]:
+            return
+        notes = self.data["colrev_masterdata_provenance"][key]["note"].split(",")
+        if note not in notes:
+            return
+        self.data["colrev_masterdata_provenance"][key]["note"] = ",".join(
+            n for n in notes if n != note
+        )
+
     def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Add a masterdata provenance note (based on a key)"""
         if "colrev_masterdata_provenance" not in self.data:
@@ -1275,7 +1193,7 @@ class Record:
         if key in md_p_dict:
             if md_p_dict[key]["note"] == "" or "" == note:
                 md_p_dict[key]["note"] = note
-            elif "missing" == note and "not_missing" in md_p_dict[key]["note"].split(
+            elif "missing" == note and "not-missing" in md_p_dict[key]["note"].split(
                 ","
             ):
                 md_p_dict[key]["note"] = "missing"
@@ -1350,125 +1268,13 @@ class Record:
 
         return True
 
-    def get_incomplete_fields(self) -> set:
-        """Get the list of incomplete fields"""
-        incomplete_field_keys = set()
-        for key in self.data.keys():
-            if key in ["title", "journal", "booktitle", "author"]:
-                if self.data[key].endswith("...") or self.data[key].endswith("…"):
-                    incomplete_field_keys.add(key)
-
-            if key == "author":
-                if (
-                    self.data[key].endswith("and others")
-                    or self.data[key].endswith("et al.")
-                    # heuristics for missing first names:
-                    or ", and " in self.data[key]
-                    or self.data[key].rstrip().endswith(",")
-                ):
-                    incomplete_field_keys.add(key)
-
-        return incomplete_field_keys
-
-    def __get_author_quality_defects(self, *, defect_field_keys: list) -> None:
-        sanitized_authors = re.sub(
-            "[^a-zA-Z, ;1]+",
-            "",
-            colrev.env.utils.remove_accents(input_str=self.data["author"]),
-        ).split(" and ")
-        if not all(
-            re.findall(
-                r"^[\w .'’-]*, [\w .'’-]*$",
-                sanitized_author,
-                re.UNICODE,
-            )
-            for sanitized_author in sanitized_authors
-        ):
-            defect_field_keys.append("author")
-        # At least two capital letters per name
-        elif not all(
-            re.findall(
-                r"[A-Z]+",
-                author_part,
-                re.UNICODE,
-            )
-            for sanitized_author in sanitized_authors
-            for author_part in sanitized_author.split(",")
-        ):
-            defect_field_keys.append("author")
-
-        # Note : patterns like "I N T R O D U C T I O N"
-        # that may result from grobid imports
-        elif re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data["author"]):
-            defect_field_keys.append("author")
-        elif len(self.data["author"]) < 5:
-            defect_field_keys.append("author")
-        elif any(
-            x in str(self.data["author"]) for x in ["�", "http", "University", "™"]
-        ):
-            defect_field_keys.append("author")
-
-    def __get_title_quality_defects(self, *, defect_field_keys: list) -> None:
-        # Note : titles that have no space and special characters
-        # like _ . or digits.
-        if " " not in self.data["title"] and (
-            any(x in self.data["title"] for x in ["_", "."])
-            or any(char.isdigit() for char in self.data["title"])
-        ):
-            defect_field_keys.append("title")
-        if "�" in str(self.data["title"]):
-            defect_field_keys.append("title")
-
-    def __get_general_quality_defects(
-        self, *, key: str, defect_field_keys: list
-    ) -> None:
-        if key in ["title", "author", "journal", "booktitle"]:
-            if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
-                defect_field_keys.append(key)
-            if "�" in str(self.data[key]):
-                defect_field_keys.append(key)
-
-    def get_quality_defects(self) -> list:
-        """Get the fields (keys) with quality defects"""
-
-        defect_field_keys: typing.List[str] = []
-        for key in self.data.keys():
-            if self.data[key] == "UNKNOWN":
-                continue
-
-            if key == "author":
-                self.__get_author_quality_defects(defect_field_keys=defect_field_keys)
-
-            if key == "title":
-                self.__get_title_quality_defects(defect_field_keys=defect_field_keys)
-
-            self.__get_general_quality_defects(
-                key=key, defect_field_keys=defect_field_keys
-            )
-
-        if "colrev_masterdata_provenance" in self.data:
-            for field, provenance in self.data["colrev_masterdata_provenance"].items():
-                if any(
-                    n.lstrip().startswith(x)
-                    for n in provenance["note"].split(",")
-                    for x in ["disagreement", "missing"]
-                ):
-                    defect_field_keys.append(field)
-        return list(set(defect_field_keys))
-
     def has_quality_defects(self) -> bool:
         """Check whether a record has quality defects"""
-        return len(self.get_quality_defects()) > 0
-
-    def remove_quality_defect_notes(self) -> None:
-        """Remove the quality defect notes"""
-        for key in self.data.keys():
-            if key in self.data.get("colrev_masterdata_provenance", {}):
-                note = self.data["colrev_masterdata_provenance"][key]["note"]
-                if "quality_defect" in note:
-                    self.data["colrev_masterdata_provenance"][key][
-                        "note"
-                    ] = note.replace("quality_defect", "")
+        return any(
+            x["note"] != ""
+            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+            if not any(y == x["note"] for y in ["not-missing"])
+        )
 
     def get_container_title(self) -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
@@ -1628,24 +1434,6 @@ class Record:
 
         return colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
 
-    def apply_fields_keys_requirements(self) -> None:
-        """Apply the field key requirements"""
-
-        required_fields_keys = self.record_field_requirements["other"]
-        if self.data["ENTRYTYPE"] in self.record_field_requirements:
-            required_fields_keys = self.record_field_requirements[
-                self.data["ENTRYTYPE"]
-            ]
-        for required_fields_key in required_fields_keys:
-            if self.data.get(required_fields_key, "UNKNOWN") == "UNKNOWN":
-                self.update_field(
-                    key=required_fields_key,
-                    value="UNKNOWN",
-                    source="generic_field_requirements",
-                    note="missing",
-                    append_edit=False,
-                )
-
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
 
@@ -1763,163 +1551,24 @@ class Record:
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
 
-    def apply_restrictions(self, *, restrictions: dict) -> None:
-        """Apply masterdata restrictions to the record"""
-
-        for required_field in ["author", "title", "year"]:
-            if required_field in self.data:
-                continue
-            self.set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
-            colrev.record.Record(data=self.data).add_masterdata_provenance(
-                key=required_field,
-                source="colrev_curation.masterdata_restrictions",
-                note="missing",
-            )
-
-        for exact_match in ["ENTRYTYPE", "journal", "booktitle"]:
-            if exact_match in restrictions:
-                if restrictions[exact_match] != self.data.get(exact_match, ""):
-                    self.data[exact_match] = restrictions[exact_match]
-
-        if "volume" in restrictions:
-            if restrictions["volume"] and "volume" not in self.data:
-                self.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                colrev.record.Record(data=self.data).add_masterdata_provenance(
-                    key="volume",
-                    source="colrev_curation.masterdata_restrictions",
-                    note="missing",
-                )
-
-        if "number" in restrictions:
-            if restrictions["number"] and "number" not in self.data:
-                self.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
-                colrev.record.Record(data=self.data).add_masterdata_provenance(
-                    key="number",
-                    source="colrev_curation.masterdata_restrictions",
-                    note="missing",
-                )
-            elif not restrictions["number"] and "number" in self.data:
-                self.remove_field(
-                    key="number",
-                    not_missing_note=True,
-                    source="colrev_curation.masterdata_restrictions",
-                )
-
-    def __check_missing_fiels(self) -> set:
-        missing_fields: Set[str] = set()
-        try:
-            missing_fields = self.get_missing_fields()
-            not_missing_fields = []
-            for missing_field in missing_fields:
-                if missing_field in self.data["colrev_masterdata_provenance"]:
-                    if (
-                        "not_missing"
-                        in self.data["colrev_masterdata_provenance"][missing_field][
-                            "note"
-                        ]
-                    ):
-                        not_missing_fields.append(missing_field)
-                        continue
-                self.add_masterdata_provenance_note(key=missing_field, note="missing")
-
-            for not_missing_field in not_missing_fields:
-                missing_fields.remove(not_missing_field)
-        except colrev_exceptions.MissingRecordQualityRuleSpecification:
-            pass
-        return missing_fields
-
-    def __check_forthcoming(self, *, missing_fields: set) -> None:
-        if self.data.get("year", "") != "forthcoming":
-            return
-        source = "NA"
-        if "year" in self.data["colrev_masterdata_provenance"]:
-            source = self.data["colrev_masterdata_provenance"]["year"]["source"]
-        if "volume" in missing_fields:
-            missing_fields.remove("volume")
-            self.data["colrev_masterdata_provenance"]["volume"] = {
-                "source": source,
-                "note": "not_missing",
-            }
-        if "number" in missing_fields:
-            missing_fields.remove("number")
-            self.data["colrev_masterdata_provenance"]["number"] = {
-                "source": source,
-                "note": "not_missing",
-            }
-
-    def __check_inconsistencies(self) -> set:
-        inconsistencies = self.get_inconsistencies()
-        if inconsistencies:
-            for inconsistency in inconsistencies:
-                self.add_masterdata_provenance_note(
-                    key=inconsistency,
-                    note="inconsistent with ENTRYTYPE",
-                )
-        else:
-            self.set_masterdata_consistent()
-        return inconsistencies
-
-    def __check_defect_fields(self) -> list:
-        defect_fields = self.get_quality_defects()
-        if defect_fields:
-            for defect_field in defect_fields:
-                self.add_masterdata_provenance_note(
-                    key=defect_field, note="quality_defect"
-                )
-        else:
-            self.remove_quality_defect_notes()
-        return defect_fields
-
-    def __check_incomplete_fields(self) -> set:
-        incomplete_fields = self.get_incomplete_fields()
-        if incomplete_fields:
-            for incomplete_field in incomplete_fields:
-                self.add_masterdata_provenance_note(
-                    key=incomplete_field, note="incomplete"
-                )
-        else:
-            self.set_fields_complete()
-        return incomplete_fields
-
     def update_masterdata_provenance(
-        self, *, masterdata_restrictions: Optional[dict] = None
+        self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False
     ) -> None:
         """Update the masterdata provenance"""
-
-        if masterdata_restrictions is None:
-            masterdata_restrictions = {}
-
-        if self.masterdata_is_curated():
-            return
 
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
 
-        missing_fields = self.__check_missing_fiels()
+        if self.masterdata_is_curated():
+            return
 
-        if masterdata_restrictions:
-            self.apply_restrictions(restrictions=masterdata_restrictions)
+        # Apply the checkers (including field key requirements etc.)
+        qm.run(record=self)
 
-        self.__check_forthcoming(missing_fields=missing_fields)
-
-        if not missing_fields:
-            self.set_masterdata_complete(
-                source="update_masterdata_provenance",
-                replace_source=False,
-            )
-
-        inconsistencies = self.__check_inconsistencies()
-        incomplete_fields = self.__check_incomplete_fields()
-        defect_fields = self.__check_defect_fields()
-
-        if missing_fields or inconsistencies or incomplete_fields or defect_fields:
+        if self.has_quality_defects():
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
+        elif set_prepared:
+            self.set_status(target_state=RecordState.md_prepared)
 
     def check_potential_retracts(self) -> bool:
         """Check for potential retracts"""
@@ -2232,37 +1881,38 @@ class PrepRecord(Record):
         similarity = Record.get_record_similarity(
             record_a=record, record_b=retrieved_record
         )
-
         return similarity
 
-    def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
+    def format_if_mostly_upper(self, *, key: str, case: str = "sentence") -> None:
         """Format the field if it is mostly in upper case"""
-        # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
-        #     return
+
+        if key not in self.data or self.data[key] == "UNKNOWN":
+            return
+
+        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.6:
+            return
+
+        # Note: the truecase package is not very reliable (yet)
 
         self.data[key] = self.data[key].replace("\n", " ")
 
-        if colrev.env.utils.percent_upper_chars(self.data[key]) > 0.8:
-            if case == "capitalize":
-                self.data[key] = self.data[key].capitalize()
-            if case == "title":
-                self.data[key] = (
-                    self.data[key]
-                    .title()
-                    .replace(" Of ", " of ")
-                    .replace(" For ", " for ")
-                    .replace(" The ", " the ")
-                    .replace("Ieee", "IEEE")
-                    .replace("Acm", "ACM")
-                    .replace(" And ", " and ")
-                )
+        if case == "sentence":
+            self.data[key] = self.data[key].capitalize()
+        elif case == "title":
+            self.data[key] = self.data[key].title()
+        else:
+            raise colrev_exceptions.ParameterError(
+                parameter="case", value=case, options=["sentence", "title"]
+            )
 
-            if key in self.data.get("colrev_masterdata_provenance", {}):
-                note = self.data["colrev_masterdata_provenance"][key]["note"]
-                if "quality_defect" in note:
-                    self.data["colrev_masterdata_provenance"][key][
-                        "note"
-                    ] = note.replace("quality_defect", "")
+        self.data[key] = prep_utils.capitalize_entities(self.data[key])
+
+        if key in self.data.get("colrev_masterdata_provenance", {}):
+            note = self.data["colrev_masterdata_provenance"][key]["note"]
+            if "quality_defect" in note:
+                self.data["colrev_masterdata_provenance"][key]["note"] = note.replace(
+                    "quality_defect", ""
+                )
 
     def rename_fields_based_on_mapping(self, *, mapping: dict) -> None:
         """Convenience function for the prep scripts (to rename fields)"""
@@ -2289,6 +1939,12 @@ class PrepRecord(Record):
             .replace(" -- ", "--")
             .rstrip(".")
         )
+        if re.match(r"^\d+\-\-\d+$", self.data["pages"]):
+            from_page, to_page = re.findall(r"(\d+)", self.data["pages"])
+            if int(from_page) > int(to_page) and len(from_page) > len(to_page):
+                self.data[
+                    "pages"
+                ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
 
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""
@@ -2353,15 +2009,10 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
             return
 
-        if (
-            self.masterdata_is_complete()
-            and not self.has_incomplete_fields()
-            and not self.has_inconsistent_fields()
-            and not self.has_quality_defects()
-        ):
-            self.set_status(target_state=RecordState.md_prepared)
-        else:
+        if self.has_quality_defects():
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
+        else:
+            self.set_status(target_state=RecordState.md_prepared)
 
 
 class RecordState(Enum):
@@ -2685,7 +2336,3 @@ class RecordStateModel:
                 raise colrev_exceptions.ProcessOrderViolation(
                     operation.type.name, str(state), list(intersection)
                 )
-
-
-if __name__ == "__main__":
-    pass

@@ -59,7 +59,7 @@
             "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.systematic_review_datasets",
+            "package_endpoint_identifier": "colrev.synergy_datasets",
             "status": "EXPERIMENTAL"
         },
         {
@@ -157,6 +157,10 @@
         {
             "package_endpoint_identifier": "colrev.trid",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex",
+            "status": "EXPERIMENTAL"
         }
     ],
     "load_conversion": [
@@ -182,6 +186,10 @@
         },
         {
             "package_endpoint_identifier": "colrev.bibutils",
+            "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev.rispy",
             "status": "MATURING"
         }
     ],
@@ -212,10 +220,6 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_broken_ids",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.global_ids_consistency_check",
             "status": "MATURING"
         },
         {
@@ -281,7 +285,11 @@
         {
             "package_endpoint_identifier": "colrev.add_journal_ranking",
             "status": "RED"
-        }
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex_prep",
+            "status": "EXPERIMENTAL"
+      }
     ],
     "prep_man": [
         {

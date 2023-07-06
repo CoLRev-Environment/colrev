@@ -247,9 +247,12 @@ class PrepMan(colrev.operation.Operation):
         """Set data in the prep_man operation"""
 
         record = colrev.record.PrepRecord(data=record_dict)
-        record.set_masterdata_complete(source="prep_man")
+        record.set_masterdata_complete(
+            source="prep_man",
+            masterdata_repository=self.review_manager.settings.is_curated_repo(),
+        )
         record.set_masterdata_consistent()
-        record.set_fields_complete()
+        # record.set_fields_complete()
         record.set_status(target_state=colrev.record.RecordState.md_prepared)
         record_dict = record.get_data()
 
@@ -258,6 +261,7 @@ class PrepMan(colrev.operation.Operation):
         )
         self.review_manager.dataset.add_record_changes()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
 
@@ -281,7 +285,3 @@ class PrepMan(colrev.operation.Operation):
             )
             endpoint = endpoint_dict[prep_man_package_endpoint["endpoint"]]
             records = endpoint.prepare_manual(self, records)  # type: ignore
-
-
-if __name__ == "__main__":
-    pass

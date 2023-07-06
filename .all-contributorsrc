@@ -1,0 +1,65 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "geritwagner",
+      "name": "Gerit Wagner",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3872815?v=4",
+      "profile": "https://github.com/geritwagner",
+      "contributions": [
+        "code",
+        "doc",
+        "data",
+        "content",
+        "example"
+      ]
+    },
+    {
+      "login": "julianprester",
+      "name": "Julian Prester",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4706870?v=4",
+      "profile": "https://julianprester.com",
+      "contributions": [
+        "code",
+        "doc",
+        "data",
+        "content",
+        "bug",
+        "ideas"
+      ]
+    },
+    {
+      "login": "tmahmood",
+      "name": "Tarin Mahmood",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34904?v=4",
+      "profile": "https://github.com/tmahmood",
+      "contributions": [
+        "code",
+        "test",
+        "doc"
+      ]
+    },
+    {
+      "login": "dengdenglele",
+      "name": "dengdenglele",
+      "avatar_url": "https://avatars.githubusercontent.com/u/28404427?v=4",
+      "profile": "https://github.com/dengdenglele",
+      "contributions": [
+        "data",
+        "doc",
+        "test"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "colrev",
+  "projectOwner": "CoLRev-Environment"
+}

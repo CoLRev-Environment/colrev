@@ -40,6 +40,7 @@ colrev.exceptions
       InvalidMerge
       InvalidPDFException
       InvalidQueryException
+      InvalidRegistryKeyException
       InvalidSettingsError
       MissingDependencyError
       MissingRecordQualityRuleSpecification
@@ -52,6 +53,8 @@ colrev.exceptions
       NotTOCIdentifiableException
       OriginError
       PDFHashError
+      PackageParameterError
+      PackageSettingMustStartWithPackagesException
       ParameterError
       PortAlreadyRegisteredException
       PreparationBreak
@@ -67,6 +70,7 @@ colrev.exceptions
       RepoSetupError
       ReviewManagerNotNofiedError
       ServiceNotAvailableException
+      SourceHeuristicsException
       StatusFieldValueError
       StatusTransitionError
       TEIException

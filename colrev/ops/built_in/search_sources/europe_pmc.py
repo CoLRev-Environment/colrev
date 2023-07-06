@@ -27,7 +27,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
 
 # defuse std xml lib
 defusedxml.defuse_stdlib()
@@ -56,6 +55,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/europe_pmc.md"
     )
     __europe_pmc_md_filename = Path("data/search/md_europe_pmc.bib")
+    __SOURCE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
+    __next_page_url: str = ""
 
     @dataclass
     class EuropePMCSearchSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
@@ -178,10 +179,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
         # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
-        source = (
-            "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-            f"{record.data['europe_pmc_id']}"
-        )
+        source = f"{cls.__SOURCE_URL}{record.data['europe_pmc_id']}"
 
         record.add_provenance_all(source=source)
         return record
@@ -204,26 +202,38 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         weights = [0.6, 0.4]
         similarities = [title_similarity, container_similarity]
-
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
-        # logger.debug(f'record: {pp.pformat(record)}')
-        # logger.debug(f'similarities: {similarities}')
-        # logger.debug(f'similarity: {similarity}')
-        # pp.pprint(retrieved_record_dict)
         return similarity
 
-    @classmethod
-    def europe_pmc_query(
-        cls,
+    def __get_europe_pmc_items(self, *, url: str, timeout: int) -> list:
+        _, email = self.review_manager.get_committer()
+        headers = {"user-agent": f"{__name__} (mailto:{email})"}
+        session = self.review_manager.get_cached_session()
+        self.review_manager.logger.debug(url)
+        ret = session.request("GET", url, headers=headers, timeout=timeout)
+        ret.raise_for_status()
+        if ret.status_code != 200:
+            return []
+
+        root = fromstring(str.encode(ret.text))
+        result_list = root.findall("resultList")[0]
+
+        self.__next_page_url = "END"
+        next_page_url_node = root.find("nextPageUrl")
+        if next_page_url_node is not None:
+            if next_page_url_node.text is not None:
+                self.__next_page_url = next_page_url_node.text
+
+        return result_list.findall("result")
+
+    def __europe_pmc_query(
+        self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record_input: colrev.record.Record,
         most_similar_only: bool = True,
         timeout: int = 60,
     ) -> list:
         """Retrieve records from Europe PMC based on a query"""
-        # pylint: disable=too-many-locals
-        # pylint: disable=too-many-branches
 
         try:
             record = record_input.copy_prep_rec()
@@ -232,41 +242,28 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
                 + quote(record.data["title"])
             )
-            _, email = review_manager.get_committer()
 
-            headers = {"user-agent": f"{__name__} (mailto:{email})"}
             record_list = []
-            session = review_manager.get_cached_session()
-
-            while url != "END":
-                review_manager.logger.debug(url)
-                ret = session.request("GET", url, headers=headers, timeout=timeout)
-                ret.raise_for_status()
-                if ret.status_code != 200:
-                    # review_manager.logger.debug(
-                    #     f"europe_pmc failed with status {ret.status_code}"
-                    # )
-                    return []
-
+            while True:
+                result_list = self.__get_europe_pmc_items(url=url, timeout=timeout)
                 most_similar, most_similar_record = 0.0, {}
-                root = fromstring(str.encode(ret.text))
-                result_list = root.findall("resultList")[0]
-
-                for result_item in result_list.findall("result"):
-                    retrieved_record = cls.__europe_pmc_xml_to_record(item=result_item)
+                for result_item in result_list:
+                    retrieved_record = self.__europe_pmc_xml_to_record(item=result_item)
 
                     if "title" not in retrieved_record.data:
                         continue
 
-                    similarity = cls.__get_similarity(
+                    similarity = self.__get_similarity(
                         record=record, retrieved_record=retrieved_record
                     )
 
                     source = (
-                        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-                        f"{retrieved_record.data['europe_pmc_id']}"
+                        f"{self.__SOURCE_URL}{retrieved_record.data['europe_pmc_id']}"
                     )
-                    retrieved_record.set_masterdata_complete(source=source)
+                    retrieved_record.set_masterdata_complete(
+                        source=source,
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                    )
 
                     if not most_similar_only:
                         record_list.append(retrieved_record)
@@ -277,14 +274,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
                 url = "END"
                 if not most_similar_only:
-                    next_page_url_node = root.find("nextPageUrl")
-                    if next_page_url_node is not None:
-                        if next_page_url_node.text is not None:
-                            url = next_page_url_node.text
+                    url = self.__next_page_url
 
-        except json.decoder.JSONDecodeError:
-            pass
-        except requests.exceptions.RequestException:
+                if url == "END":
+                    break
+
+        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             return []
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -316,8 +311,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 while retries < prep_operation.max_retries_on_error:
                     retries += 1
 
-                    retrieved_records = self.europe_pmc_query(
-                        review_manager=prep_operation.review_manager,
+                    retrieved_records = self.__europe_pmc_query(
                         record_input=record,
                         timeout=timeout,
                     )
@@ -335,12 +329,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 )
 
                 if similarity > prep_operation.retrieval_similarity:
-                    # prep_operation.review_manager.logger.debug("Found matching record")
-                    # prep_operation.review_manager.logger.debug(
-                    #     f"europe_pmc similarity: {similarity} "
-                    #     f"(>{prep_operation.retrieval_similarity})"
-                    # )
-
                     self.europe_pmc_lock.acquire(timeout=60)
 
                     # Note : need to reload file because the object is not shared between processes
@@ -363,7 +351,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     )
 
                     record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0]
+                        source=retrieved_record.data["colrev_origin"][0],
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
@@ -479,10 +468,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         continue
 
                     source = (
-                        "https://www.ebi.ac.uk/europepmc/webservices/rest/article/"
-                        f"{retrieved_record.data['europe_pmc_id']}"
+                        f"{self.__SOURCE_URL}{retrieved_record.data['europe_pmc_id']}"
                     )
-                    retrieved_record.set_masterdata_complete(source=source)
+                    retrieved_record.set_masterdata_complete(
+                        source=source,
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                    )
 
                     europe_pmc_feed.set_id(record_dict=retrieved_record.data)
                     added = europe_pmc_feed.add_record(record=retrieved_record)
@@ -510,12 +501,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     if next_page_url_node.text is not None:
                         url = next_page_url_node.text
 
-            self.__print_post_run_search_infos(
-                europe_pmc_feed=europe_pmc_feed, records=records
-            )
-        except json.decoder.JSONDecodeError:
-            pass
-        except requests.exceptions.RequestException:
+            europe_pmc_feed.print_post_run_search_infos(records=records)
+        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -525,28 +512,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         finally:
             europe_pmc_feed.save_feed_file()
 
-    def __print_post_run_search_infos(
-        self, *, europe_pmc_feed: colrev.ops.search.GeneralOriginFeed, records: dict
-    ) -> None:
-        if europe_pmc_feed.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {europe_pmc_feed.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if europe_pmc_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {europe_pmc_feed.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
-
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Europe PMC"""
@@ -555,12 +520,16 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         if "europe_pmc_id" in data:
             result["confidence"] = 1.0
 
+        if "https://europepmc.org" in data:  # nosec
+            if data.count("https://europepmc.org") >= data.count("\n@"):
+                result["confidence"] = 1.0
+
         return result
 
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         host = urlparse(query).hostname
@@ -584,7 +553,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        return None
+        raise NotImplementedError
 
     def load_fixes(
         self,
@@ -603,7 +572,3 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         record.data["author"].rstrip(".")
         record.data["title"].rstrip(".")
         return record
-
-
-if __name__ == "__main__":
-    pass

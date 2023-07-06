@@ -1,0 +1,95 @@
+Provider: JSTOR http://www.jstor.org
+Database: JSTOR
+Content: text/plain; charset="UTF-8"
+
+
+TY  - JOUR
+TI  - This is the title - charset UTF-8 used
+AU  - Lastname, Firstname
+AB  - [This is the abstract.]
+C1  - Full publication date: July-August 2016
+DB  - JSTOR
+EP  - 33
+IS  - 4
+PB  - Random Technology Publications, Inc.
+PY  - 2016
+SN  - 00155555
+SP  - 30
+T2  - Random Technology
+UR  - http://www.jstor.org/stable/44443331
+VL  - 56
+Y2  - 2023/04/17/
+ER  - 
+
+
+
+
+Provider: JSTOR http://www.jstor.org
+Database: JSTOR
+Content: text/plain; charset="us-ascii"
+
+
+TY  - JOUR
+AB  - This is another abstract.
+AU  - First-Author, Tim
+AU  - Second-Author, James A.
+C1  - Full publication date: Winter 2014
+DB  - JSTOR
+DO  - 10.1111/something.2014.3.4.56
+EP  - 87
+IS  - 4
+PB  - University  Press
+PY  - 2014
+SN  - 21111112, 2777777X
+SP  - 80
+T1  - Primary Title
+T2  - Secondary Title (journal title, if applicable)
+UR  - http://www.jstor.org/stable/10.1111/something.2014.3.4.56
+VL  - 4
+Y2  - 2023/04/17/
+ER  - 
+
+
+
+
+Provider: JSTOR http://www.jstor.org
+Database: JSTOR
+Content: text/plain; charset="UTF-8"
+
+
+TY  - CHAP
+TI  - This title is of type CHAP
+AU  - Chapwriter-One, Phoebe
+A2  - Editor, Davide
+A2  - Editor, Laureen
+AB  - This is the abstract of this CHAP
+DB  - JSTOR
+EP  - 354
+PB  - University of Somewhere Press
+PY  - 2019
+SN  - 9777777777779
+SP  - 125
+T2  - Secondary Title
+T3  - Tertiary Title
+UR  - http://www.jstor.org/stable/j.abcxyz.1234
+Y2  - 2023/04/17/
+ER  - 
+
+
+
+
+Provider: JSTOR http://www.jstor.org
+Database: JSTOR
+Content: text/plain; charset="UTF-8"
+
+
+TY  - RPRT
+TI  - This title is of type RPRT
+AU  - Writer-One, Stefan
+AU  - Writer-Two, Stephanie
+DB  - JSTOR
+PB  - American Dummy Project
+PY  - 2018
+UR  - http://www.jstor.org/stable/abcdef19999
+Y2  - 2023/04/17/
+ER  - 

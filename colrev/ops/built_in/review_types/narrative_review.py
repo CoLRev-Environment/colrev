@@ -45,7 +45,3 @@ class NarrativeReview(JsonSchemaMixin):
             }
         ]
         return settings
-
-
-if __name__ == "__main__":
-    pass

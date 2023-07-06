@@ -7,6 +7,7 @@ import os
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -17,12 +18,8 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.data
+if TYPE_CHECKING:
+    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -162,6 +159,17 @@ class ColrevCuration(JsonSchemaMixin):
         output += "\n" + sub_header_lines
         ordered_stats = collections.OrderedDict(sorted(stats.items(), reverse=True))
 
+        output += self.__get_stats_markdown_table_cell(
+            ordered_stats=ordered_stats, sources=sources, cell_width=cell_width
+        )
+
+        output += "\n\nLegend: *md_imported*, md_processed, **pdf_prepared**"
+        return output
+
+    def __get_stats_markdown_table_cell(
+        self, *, ordered_stats: collections.OrderedDict, sources: list, cell_width: int
+    ) -> str:
+        output = ""
         for key, row in ordered_stats.items():
             output += f"\n|{key}".ljust(cell_width, " ") + "|"
             for source in sources:
@@ -169,19 +177,23 @@ class ColrevCuration(JsonSchemaMixin):
                     if source in row:
                         cell_text = ""
                         if "md_imported" in row[source]:
-                            cell_text += f"*{row[source]['md_imported']}*"
+                            cell_text += f"*{row[source]['md_imported']}*,"
+                        else:
+                            cell_text += "-,"
                         if "md_processed" in row[source]:
                             cell_text += f"{row[source]['md_processed']}"
+                        else:
+                            cell_text += "-"
                         if "pdf_prepared" in row[source]:
-                            cell_text += f"**{row[source]['pdf_prepared']}**"
+                            cell_text += f",**{row[source]['pdf_prepared']}**"
+                        else:
+                            cell_text += ",-"
 
                         output += cell_text.rjust(cell_width, " ") + "|"
                     else:
                         output += "-".rjust(cell_width, " ") + "|"
                 else:
                     output += row.get("all_merged", "").rjust(cell_width, " ") + "|"
-
-        output += "\n\nLegend: *md_imported*, md_processed, **pdf_prepared**"
         return output
 
     def __update_table_in_readme(
@@ -390,7 +402,3 @@ class ColrevCuration(JsonSchemaMixin):
             }
 
         return advice
-
-
-if __name__ == "__main__":
-    pass

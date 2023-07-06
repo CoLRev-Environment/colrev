@@ -15,6 +15,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.9.0 - 2023-06-01
+
+### Added
+
+- The `quality_model` was created to check for quality defects
+- The `auto_upgrade` flag allows users to enable/disable automated upgrades
+- All-contributors bot to acknowledge contributions to CoLRev
+- Implemented OpenLibrary as a SearchSource
+- Pylint check for direct assignment of colrev_status
+- Test battery for built-in SearchSources (heuristics, load, prep)
+- Backward-search comparison with OpenCitations data
+
+### Changed
+
+- Refactored `language_service`
+- Refactored the tests (`conftest.py` now provides the `base_repo_review_manager` fixture)
+- Changed pdf-hash (pdf to image) from poppler to mupdf for cross-platform compatibility (`cpid1` -> `cpid2`)
+- Local settings changed from yaml to json
+- Quality defects (colrev_masterdata_provenance notes) change
+- The `colrev.global_ids_consistency_check` prep-endpoint is removed (integrated into the quality model)
+- Individual quality checks can be disabled through the `prep/defects_to_ignore` settings
+- Update the Github action workflows in CoLRev repositories
+
+### Removed
+
+- `timeout-decorator` dependency (for better compatibility with MacOS)
+- Docker image `pdf-hash-service` (replaced by mupdf)
+- Redundant fields for the backward search are removed (`cited_by_file` and `cited_by_id`)
+
+### Fixed
+
+- Documentation: typos and inconsistencies
+- Codacy issues and refactored complex files [1](https://app.codacy.com/gh/CoLRev-Environment/colrev/dashboard)
+- Windows paths in `iter_commit` (git history)
+
+## 0.8.4 - 2023-05-19
+
+### Changed
+
+- Implemented new quality model
+- Quality defects (colrev_masterdata_provenance notes) change
+- The `colrev.global_ids_consistency_check` prep-endpoint is removed (integrated into the quality model)
+- Individual quality checks can be disabled through the `prep/defects_to_ignore` settings
+
+### Removed
+
+- Redundant fields for the backward search are removed (`cited_by_file` and `cited_by_id`)
+
 ## 0.8.3 - 2023-04-22
 
 ### Changed

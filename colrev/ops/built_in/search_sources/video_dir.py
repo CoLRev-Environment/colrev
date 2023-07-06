@@ -44,7 +44,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
@@ -60,7 +60,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
         self.prep_operation = self.review_manager.get_prep_operation()
         self.url_connector = website_connector.WebsiteConnector(
-            source_operation=self.prep_operation
+            review_manager=self.review_manager
         )
         self.zotero_lock = Lock()
 
@@ -142,9 +142,9 @@ class VideoDirSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def get_masterdata(
         self,
@@ -174,9 +174,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
         if "url" in record.data:
             self.zotero_lock = Lock()
             url_record = record.copy_prep_rec()
-            self.url_connector.retrieve_md_from_website(
-                record=url_record, prep_operation=self.prep_operation
-            )
+            self.url_connector.retrieve_md_from_website(record=url_record)
             if url_record.data.get("author", "") != "":
                 record.update_field(
                     key="author", value=url_record.data["author"], source="website"
@@ -188,7 +186,3 @@ class VideoDirSearchSource(JsonSchemaMixin):
             self.zotero_lock.release()
 
         return record
-
-
-if __name__ == "__main__":
-    pass

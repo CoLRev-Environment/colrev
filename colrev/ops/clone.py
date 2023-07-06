@@ -41,7 +41,3 @@ class Clone:
         local_index = review_manager.get_local_index()
 
         local_index.index_colrev_project(repo_source_path=self.local_path)
-
-
-if __name__ == "__main__":
-    pass

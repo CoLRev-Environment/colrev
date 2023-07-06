@@ -18,3 +18,13 @@ colrev.env.zotero\_translation\_service.ZoteroTranslationService
 
       ~ZoteroTranslationService.start
       ~ZoteroTranslationService.stop
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ZoteroTranslationService.IMAGE_NAME

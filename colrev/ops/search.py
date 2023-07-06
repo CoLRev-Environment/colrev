@@ -4,14 +4,9 @@ from __future__ import annotations
 
 import json
 import time
-from copy import deepcopy
 from pathlib import Path
 from random import randint
 from typing import Optional
-
-import requests
-import timeout_decorator
-from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -59,9 +54,6 @@ class Search(colrev.operation.Operation):
     def add_source(self, *, add_source: colrev.settings.SearchSource) -> None:
         """Add a new source"""
 
-        # pylint: disable=too-many-statements
-        # pylint: disable=too-many-branches
-
         package_manager = self.review_manager.get_package_manager()
         endpoint_dict = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
@@ -79,28 +71,36 @@ class Search(colrev.operation.Operation):
         print()
 
         self.main(selection_str=str(add_source.filename), rerun=False, skip_commit=True)
+        fname = add_source.filename
+        if fname.is_absolute():
+            fname = add_source.filename.relative_to(self.review_manager.path)
         self.review_manager.create_commit(
-            msg=f"Add search source {add_source.filename.relative_to(self.review_manager.path)}",
+            msg=f"Add search source {fname}",
         )
 
-    def __remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
+    def __format_source_file(self, *, source: colrev.settings.SearchSource) -> None:
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
 
-            record_list = list(records.values())
-            before = len(record_list)
-            record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
-            changed = len(record_list) - before
-            if changed > 0:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Removed {changed} forthcoming{colors.END}"
-                )
-            else:
-                self.review_manager.logger.info(f"Removed {changed} forthcoming")
+            if not self.review_manager.settings.search.retrieve_forthcoming:
+                record_list = list(records.values())
 
-            records = {r["ID"]: r for r in record_list}
+                before = len(record_list)
+                record_list = [
+                    r for r in record_list if "forthcoming" != r.get("year", "")
+                ]
+                changed = len(record_list) - before
+                if changed > 0:
+                    self.review_manager.logger.info(
+                        f"{colors.GREEN}Removed {changed} forthcoming{colors.END}"
+                    )
+                else:
+                    self.review_manager.logger.info(f"Removed {changed} forthcoming")
+
+                records = {r["ID"]: r for r in record_list}
+                records = dict(sorted(records.items()))
 
             self.review_manager.dataset.save_records_dict_to_file(
                 records=records, save_path=source.get_corresponding_bib_file()
@@ -128,45 +128,6 @@ class Search(colrev.operation.Operation):
         for source in sources_selected:
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
-
-    def __have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
-        # To ignore changes introduced by saving/loading the feed-records,
-        # we parse and load them in the following.
-        record_a = deepcopy(record_a_orig)
-        record_b = deepcopy(record_b_orig)
-
-        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_a["ID"]: record_a}
-        )
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(bibtex_str)
-        record_a = list(
-            self.review_manager.dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            ).values()
-        )[0]
-
-        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_b["ID"]: record_b}
-        )
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(bibtex_str)
-        record_b = list(
-            self.review_manager.dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            ).values()
-        )[0]
-
-        # Note : record_a can have more keys (that's ok)
-        changed = False
-        for key, value in record_b.items():
-            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
-                continue
-            if key not in record_a:
-                return True
-            if record_a[key] != value:
-                return True
-        return changed
 
     def __get_record_based_on_origin(self, origin: str, records: dict) -> dict:
         for main_record_dict in records.values():
@@ -202,6 +163,24 @@ class Search(colrev.operation.Operation):
             main_record_dict["year"] = record.data["year"]
             record = colrev.record.PrepRecord(data=main_record_dict)
 
+    def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
+        if record_dict["ENTRYTYPE"] == "article":
+            return False
+        # pylint: disable=too-many-boolean-expressions
+        # Forthcoming paper published if volume and number are assigned
+        # i.e., no longer UNKNOWN
+        if (
+            prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+            and record_dict.get("volume", "") != "UNKNOWN"
+            and prev_record.get("number", "UNKNOWN") == "UNKNOWN"
+            and record_dict.get("number", "") != "UNKNOWN"
+        ) and (  # at least one of volume/number has to change.
+            prev_record.get("volume", "") != record_dict.get("volume", "")
+            or prev_record.get("number", "") != record_dict.get("number", "")
+        ):
+            return True
+        return False
+
     def __update_existing_record_fields(
         self,
         *,
@@ -211,7 +190,8 @@ class Search(colrev.operation.Operation):
         update_time_variant_fields: bool,
         origin: str,
         source: colrev.settings.SearchSource,
-    ) -> None:
+    ) -> bool:
+        changed = False
         for key, value in record_dict.items():
             if (
                 not update_time_variant_fields
@@ -219,13 +199,10 @@ class Search(colrev.operation.Operation):
             ):
                 continue
 
-            if key in ["curation_ID"]:
+            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
                 continue
 
-            if key in colrev.record.Record.provenance_keys + ["ID"]:
-                continue
-
-            if key not in main_record_dict:
+            if main_record_dict.get(key, "UNKNOWN") == "UNKNOWN":
                 if key in main_record_dict.get("colrev_masterdata_provenance", {}):
                     if (
                         main_record_dict["colrev_masterdata_provenance"][key]["source"]
@@ -233,7 +210,7 @@ class Search(colrev.operation.Operation):
                         and main_record_dict["colrev_masterdata_provenance"][key][
                             "note"
                         ]
-                        == "not_missing"
+                        == "not-missing"
                     ):
                         continue
                 main_record = colrev.record.Record(data=main_record_dict)
@@ -244,6 +221,7 @@ class Search(colrev.operation.Operation):
                     keep_source_if_equal=True,
                     append_edit=False,
                 )
+                changed = True
             else:
                 if source.get_origin_prefix() != "md_curated.bib":
                     if prev_record_dict_version.get(key, "NA") != main_record_dict.get(
@@ -255,6 +233,10 @@ class Search(colrev.operation.Operation):
                     " - ", ": "
                 ):
                     continue
+                if key == "url" and "dblp.org" in value and key in main_record.data:
+                    continue
+                if value == main_record.data[key]:
+                    continue
                 main_record.update_field(
                     key=key,
                     value=value,
@@ -262,6 +244,8 @@ class Search(colrev.operation.Operation):
                     keep_source_if_equal=True,
                     append_edit=False,
                 )
+                changed = True
+        return changed
 
     def update_existing_record(
         self,
@@ -307,7 +291,7 @@ class Search(colrev.operation.Operation):
             other_record=colrev.record.Record(data=prev_record_dict_version)
         )
 
-        self.__update_existing_record_fields(
+        changed = self.__update_existing_record_fields(
             record_dict=record_dict,
             main_record_dict=main_record_dict,
             prev_record_dict_version=prev_record_dict_version,
@@ -316,13 +300,16 @@ class Search(colrev.operation.Operation):
             source=source,
         )
 
-        if self.__have_changed(
-            record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
-        ) or self.__have_changed(  # Note : not (yet) in the main records but changed
-            record_a_orig=record_dict, record_b_orig=prev_record_dict_version
-        ):
-            changed = True
-            if similarity_score > 0.98:
+        if changed:
+            if self.__forthcoming_published(
+                record_dict=record_dict, prev_record=prev_record_dict_version
+            ):
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}"
+                    f"forthcoming paper published: {main_record_dict['ID']}"
+                    f"{colors.END}"
+                )
+            elif similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {origin}")
             else:
                 self.review_manager.logger.info(
@@ -335,6 +322,7 @@ class Search(colrev.operation.Operation):
 
         return changed
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -356,7 +344,8 @@ class Search(colrev.operation.Operation):
                     ],
                 )
 
-        self.review_manager.logger.info("Search")
+        rerun_flag = "" if not rerun else f" ({colors.GREEN}rerun{colors.END})"
+        self.review_manager.logger.info(f"Search{rerun_flag}")
         self.review_manager.logger.info(
             "Retrieve new records from an API or files (search sources)."
         )
@@ -394,26 +383,22 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
-            except (
-                requests.exceptions.ConnectionError,
-                timeout_decorator.timeout_decorator.TimeoutError,
-            ) as exc:
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    source.endpoint
-                ) from exc
+            except colrev.exceptions.ServiceNotAvailableException as exc:
+                # requests.exceptions.ConnectionError,
+                if not self.review_manager.force_mode:
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        source.endpoint
+                    ) from exc
+                self.review_manager.logger.warning("ServiceNotAvailableException")
 
             if source.filename.is_file():
-                if not self.review_manager.settings.search.retrieve_forthcoming:
-                    self.__remove_forthcoming(source=source)
+                self.__format_source_file(source=source)
 
                 self.review_manager.dataset.format_records_file()
                 self.review_manager.dataset.add_record_changes()
                 self.review_manager.dataset.add_changes(path=source.filename)
                 if not skip_commit:
                     self.review_manager.create_commit(msg="Run search")
-
-        if self.review_manager.in_ci_environment():
-            print("\n\n")
 
     def setup_custom_script(self) -> None:
         """Setup a custom search script"""
@@ -512,6 +497,89 @@ class GeneralOriginFeed:
                 + 1
             )
 
+    def set_id(self, *, record_dict: dict) -> None:
+        """Set incremental record ID
+        If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
+        """
+
+        if self.source_identifier not in record_dict:
+            raise colrev_exceptions.NotFeedIdentifiableException(
+                f"Not feed-identifiable ({self.source_identifier} in record)"
+            )
+
+        if record_dict[self.source_identifier] in self.__available_ids:
+            record_dict["ID"] = self.__available_ids[
+                record_dict[self.source_identifier]
+            ]
+        else:
+            record_dict["ID"] = str(self.__max_id).rjust(6, "0")
+
+    def add_record(self, *, record: colrev.record.Record) -> bool:
+        """Add a record to the feed and set its colrev_origin"""
+
+        # Feed:
+        feed_record_dict = record.data.copy()
+        added_new = True
+        if feed_record_dict[self.source_identifier] in self.__available_ids:
+            added_new = False
+        else:
+            self.__max_id += 1
+
+        if "colrev_data_provenance" in feed_record_dict:
+            del feed_record_dict["colrev_data_provenance"]
+        if "colrev_masterdata_provenance" in feed_record_dict:
+            del feed_record_dict["colrev_masterdata_provenance"]
+        if "colrev_status" in feed_record_dict:
+            del feed_record_dict["colrev_status"]
+
+        self.__available_ids[
+            feed_record_dict[self.source_identifier]
+        ] = feed_record_dict["ID"]
+
+        if self.update_only:
+            # ignore time_variant_fields
+            # (otherwise, fields in recent records would be more up-to-date)
+            for key in colrev.record.Record.time_variant_fields:
+                if feed_record_dict["ID"] not in self.feed_records:
+                    continue
+                if key in self.feed_records[feed_record_dict["ID"]]:
+                    feed_record_dict[key] = self.feed_records[feed_record_dict["ID"]][
+                        key
+                    ]
+                else:
+                    if key in feed_record_dict:
+                        del feed_record_dict[key]
+
+        self.feed_records[feed_record_dict["ID"]] = feed_record_dict
+
+        # Original record
+        colrev_origin = f"{self.origin_prefix}/{record.data['ID']}"
+        record.data["colrev_origin"] = [colrev_origin]
+        record.add_provenance_all(source=colrev_origin)
+
+        return added_new
+
+    def print_post_run_search_infos(self, *, records: dict) -> None:
+        """Print the search infos (after running the search)"""
+        if self.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {self.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if self.nr_changed > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {self.nr_changed} records{colors.END}"
+            )
+        else:
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                )
+
     def save_feed_file(self) -> None:
         """Save the feed file"""
 
@@ -541,68 +609,3 @@ class GeneralOriginFeed:
                 except (FileExistsError, OSError, json.decoder.JSONDecodeError):
                     search_operation.review_manager.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))  # nosec
-
-    def set_id(self, *, record_dict: dict) -> dict:
-        """Set incremental record ID
-        If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
-        """
-
-        if self.source_identifier not in record_dict:
-            raise colrev_exceptions.NotFeedIdentifiableException()
-
-        if record_dict[self.source_identifier] in self.__available_ids:
-            record_dict["ID"] = self.__available_ids[
-                record_dict[self.source_identifier]
-            ]
-        else:
-            record_dict["ID"] = str(self.__max_id).rjust(6, "0")
-
-        return record_dict
-
-    def add_record(self, *, record: colrev.record.Record) -> bool:
-        """Add a record to the feed and set its colrev_origin"""
-
-        # Feed:
-        feed_record_dict = record.data.copy()
-        added_new = True
-        if feed_record_dict[self.source_identifier] in self.__available_ids:
-            added_new = False
-        else:
-            self.__max_id += 1
-
-        if "colrev_data_provenance" in feed_record_dict:
-            del feed_record_dict["colrev_data_provenance"]
-        if "colrev_masterdata_provenance" in feed_record_dict:
-            del feed_record_dict["colrev_masterdata_provenance"]
-        if "colrev_status" in feed_record_dict:
-            del feed_record_dict["colrev_status"]
-
-        self.__available_ids[
-            feed_record_dict[self.source_identifier]
-        ] = feed_record_dict["ID"]
-
-        if self.update_only:
-            # ignore time_variant_fields
-            # (otherwise, fields in recent records would be more up-to-date)
-            for key in colrev.record.Record.time_variant_fields:
-                if feed_record_dict["ID"] in self.feed_records:
-                    if key in self.feed_records[feed_record_dict["ID"]]:
-                        feed_record_dict[key] = self.feed_records[
-                            feed_record_dict["ID"]
-                        ][key]
-                    else:
-                        if key in feed_record_dict:
-                            del feed_record_dict[key]
-
-        self.feed_records[feed_record_dict["ID"]] = feed_record_dict
-
-        # Original record
-        colrev_origin = f"{self.origin_prefix}/{record.data['ID']}"
-        record.data["colrev_origin"] = [colrev_origin]
-        record.add_provenance_all(source=colrev_origin)
-
-        return added_new
-
-
-if __name__ == "__main__":
-    pass

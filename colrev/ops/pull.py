@@ -20,6 +20,7 @@ class Pull(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.format,
         )
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Pull the CoLRev project and records (main entrypoint)"""
 
@@ -52,7 +53,3 @@ class Pull(colrev.operation.Operation):
                 f"{colors.RED}Returned flag {res[0].flags}{colors.END}"
             )
         print()
-
-
-if __name__ == "__main__":
-    pass

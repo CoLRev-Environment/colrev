@@ -1,4 +1,4 @@
-# SearchSource: Enter SearchSource
+# SearchSource: EBSCOHost
 
 Note: This document is currently under development. It will contain the following elements.
 
@@ -6,12 +6,11 @@ Note: This document is currently under development. It will contain the followin
 - coverage (disciplines, types of work)
 - supported (details): search updates, get_masterdata, run_search, load_fixes, prep
 
-[EBScoHost](https://search.ebscohost.com/)
+[EBSCOHost](https://search.ebscohost.com/)
+[EBSCOHost APIs](https://developer.ebsco.com/getting-started/available-apis)
 
 ## Add the search source
 
-```
-colrev search -a XXX
-```
+Download search results and store in `data/search/` directory. API-access not yet available.
 
 ## Links

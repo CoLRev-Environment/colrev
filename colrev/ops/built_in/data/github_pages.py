@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 import zope.interface
@@ -14,12 +15,8 @@ import colrev.env.utils
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.data
+if TYPE_CHECKING:
+    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -367,7 +364,3 @@ class GithubPages(JsonSchemaMixin):
             ] += "\n    - The page is updated automatically (gh-pages branch)"
 
         return advice
-
-
-if __name__ == "__main__":
-    pass

@@ -2,9 +2,6 @@
 """Hook to format CoLRev repositories"""
 import colrev.review_manager
 
-PASS = 0
-FAIL = 1
-
 
 def main() -> int:
     """Main entrypoint for the formating"""

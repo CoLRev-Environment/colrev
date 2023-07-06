@@ -11,7 +11,9 @@ import time
 import typing
 from copy import deepcopy
 from pathlib import Path
+from random import randint
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import git
 import pybtex.errors
@@ -28,11 +30,8 @@ import colrev.operation
 import colrev.record
 import colrev.settings
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-lines
@@ -85,7 +84,6 @@ class Dataset:
             temp_f = io.StringIO()
             pybtex.io.stderr = temp_f
 
-        self.masterdata_restrictions = self.__get_masterdata_restrictions()
         self.update_gitignore(
             add=self.DEFAULT_GIT_IGNORE_ITEMS, remove=self.DEPRECATED_GIT_IGNORE_ITEMS
         )
@@ -191,7 +189,7 @@ class Dataset:
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
+                (commit.tree / "data" / "records.bib").data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
@@ -484,6 +482,8 @@ class Dataset:
 
         parser = bibtex.Parser()
         if load_str:
+            # Fix missing comma after fields
+            load_str = re.sub(r"(.)}\n", r"\g<1>},\n", load_str)
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
@@ -550,6 +550,9 @@ class Dataset:
                 "number",
                 "pages",
                 "editor",
+                "publisher",
+                "url",
+                "abstract",
             ]
 
             record = colrev.record.Record(data=record_dict)
@@ -563,11 +566,11 @@ class Dataset:
                         ordered_field, record_dict[ordered_field]
                     )
 
-            for key, value in record_dict.items():
+            for key in sorted(record_dict.keys()):
                 if key in field_order + ["ID", "ENTRYTYPE"]:
                     continue
 
-                bibtex_str += format_field(key, value)
+                bibtex_str += format_field(key, record_dict[key])
 
             bibtex_str += ",\n}\n"
 
@@ -676,7 +679,7 @@ class Dataset:
 
     def format_records_file(self) -> bool:
         """Format the records file"""
-
+        quality_model = self.review_manager.get_qm()
         records = self.load_records_dict()
         for record_dict in records.values():
             if "colrev_status" not in record_dict:
@@ -687,11 +690,7 @@ class Dataset:
             if record_dict["colrev_status"] in [
                 colrev.record.RecordState.md_needs_manual_preparation,
             ]:
-                record.update_masterdata_provenance(
-                    masterdata_restrictions=self.get_applicable_restrictions(
-                        record_dict=record_dict
-                    )
-                )
+                record.update_masterdata_provenance(qm=quality_model)
                 record.update_metadata_status()
 
             if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
@@ -871,44 +870,51 @@ class Dataset:
         id_list = list(records.keys())
 
         for record_id in tqdm(list(records.keys())):
-            record_dict = records[record_id]
-            if selected_ids is not None:
-                if record_id not in selected_ids:
+            try:
+                record_dict = records[record_id]
+                if selected_ids is not None:
+                    if record_id not in selected_ids:
+                        continue
+                if (
+                    record_dict["colrev_status"]
+                    not in [
+                        colrev.record.RecordState.md_imported,
+                        colrev.record.RecordState.md_prepared,
+                    ]
+                    and not self.review_manager.force_mode
+                ):
                     continue
-            if (
-                record_dict["colrev_status"]
-                not in [
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.md_prepared,
-                ]
-                and not self.review_manager.force_mode
-            ):
-                continue
-            old_id = record_id
+                old_id = record_id
 
-            temp_stat = record_dict["colrev_status"]
-            if selected_ids:
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            new_id = self.__generate_id(
-                local_index=local_index,
-                record_dict=record_dict,
-                existing_ids=[x for x in id_list if x != record_id],
-            )
-            if selected_ids:
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=temp_stat)
+                temp_stat = record_dict["colrev_status"]
+                if selected_ids:
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+                new_id = self.__generate_id(
+                    local_index=local_index,
+                    record_dict=record_dict,
+                    existing_ids=[x for x in id_list if x != record_id],
+                )
+                if selected_ids:
+                    record = colrev.record.Record(data=record_dict)
+                    record.set_status(target_state=temp_stat)
 
-            id_list.append(new_id)
-            if old_id != new_id:
-                # We need to insert the a new element into records
-                # to make sure that the IDs are actually saved
-                record_dict.update(ID=new_id)
-                records[new_id] = record_dict
-                del records[old_id]
-                self.review_manager.report_logger.info(f"set_ids({old_id}) to {new_id}")
-                if old_id in id_list:
-                    id_list.remove(old_id)
+                id_list.append(new_id)
+                if old_id != new_id:
+                    # We need to insert the a new element into records
+                    # to make sure that the IDs are actually saved
+                    record_dict.update(ID=new_id)
+                    records[new_id] = record_dict
+                    del records[old_id]
+                    self.review_manager.report_logger.info(
+                        f"set_ids({old_id}) to {new_id}"
+                    )
+                    if old_id in id_list:
+                        id_list.remove(old_id)
+            except colrev_exceptions.PropagatedIDChange as exc:
+                print(exc)
 
         self.save_records_dict(records=records)
         self.add_record_changes()
@@ -928,43 +934,6 @@ class Dataset:
                     line = file.readline()
         max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
         return max_id
-
-    def __get_masterdata_restrictions(self) -> dict:
-        masterdata_restrictions = {}
-        curated_endpoints = [
-            x
-            for x in self.review_manager.settings.data.data_package_endpoints
-            if x["endpoint"] == "colrev.colrev_curation"
-        ]
-        if curated_endpoints:
-            curated_endpoint = curated_endpoints[0]
-            masterdata_restrictions = curated_endpoint.get(
-                "masterdata_restrictions", {}
-            )
-        return masterdata_restrictions
-
-    def get_applicable_restrictions(self, *, record_dict: dict) -> dict:
-        """Get the applicable masterdata restrictions"""
-
-        if not str(record_dict.get("year", "NA")).isdigit():
-            return {}
-
-        start_year_values = list(self.masterdata_restrictions.keys())
-
-        year_index_diffs = [
-            int(record_dict["year"]) - int(x) for x in start_year_values
-        ]
-        year_index_diffs = [x if x >= 0 else 2000 for x in year_index_diffs]
-
-        if not year_index_diffs:
-            return {}
-
-        index_min = min(range(len(year_index_diffs)), key=year_index_diffs.__getitem__)
-        applicable_restrictions = self.masterdata_restrictions[
-            start_year_values[index_min]
-        ]
-
-        return applicable_restrictions
 
     # GIT operations -----------------------------------------------
 
@@ -1009,7 +978,7 @@ class Dataset:
             path = path.relative_to(self.review_manager.path)
 
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(0.5)
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
         try:
@@ -1029,7 +998,7 @@ class Dataset:
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(self.RECORDS_FILE_RELATIVE)).data_stream.read(),
+                (commit.tree / "data" / "records.bib").data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
@@ -1081,14 +1050,14 @@ class Dataset:
     def add_record_changes(self) -> None:
         """Add changes in records to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(0.5)
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
         self.__git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(0.5)
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
         self.__git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
@@ -1180,6 +1149,8 @@ class Dataset:
                 remote_url = remote.url
         return remote_url
 
-
-if __name__ == "__main__":
-    pass
+    def stash_unstaged_changes(self) -> bool:
+        """Stash unstaged changes"""
+        return "No local changes to save" != self.__git_repo.git.stash(
+            "push", "--keep-index"
+        )

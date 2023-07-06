@@ -1,6 +1,17 @@
-# Prescreen: endpoint: colrev.scope_prescreen
+# Prescreen: Scope Prescreen
 
-# Method: __conditional_presecreen_not_in_ranking()
+This package uses a predefined scope to apply prescreening decisions automatically. For example, papers can be excluded based on the date of publication or their language. There are two use main use cases:
+
+1. The Scope Prescreen runs before a manual prescreen. In this case, papers are either marked as `rev_prescreen_excluded`, or remain `md_processed`. Afterwards, all papers in `md_processed` are prescreened manually based on their topic.
+2. The Scope Prescreen is the only prescreen package activated in the settings. In this case, papers are marked as `rev_prescreen_excluded` or `rev_prescreen_included`. Fully automated prescreening may not be appropriate for all types of reviews.
+
+The Scope Prescreen can be added as follows:
+
+```
+colrev prescreen --add colrev.scope_prescreen:"TimeScopeFrom=2010"
+```
+
+## Method: __conditional_presecreen_not_in_ranking()
 
 Prerequesite:
 
@@ -9,8 +20,3 @@ The endpoint colrev.add_journal_ranking in the settings of prep must be installe
 
 Description:
 Use case: User is able to decide whether journals, which are not included in any ranking, will be marked as "rev_prescreen_included" or as "rev_prescreen_excluded".
-This will lead to an exclusion in prescreen.
-Example: "colrev_status = {rev_prescreen_excluded}" leads to exclusion in prescreen process
-
-
-## Links

@@ -6,6 +6,7 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -16,11 +17,8 @@ import colrev.ops.built_in.screen.utils as util_cli_screen
 import colrev.record
 import colrev.settings
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.screen
+if TYPE_CHECKING:
+    import colrev.ops.screen
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -238,7 +236,3 @@ class TableScreen(JsonSchemaMixin):
                     msg="Screen", manual_author=True
                 )
         return records
-
-
-if __name__ == "__main__":
-    pass

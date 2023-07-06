@@ -4,21 +4,19 @@ from __future__ import annotations
 
 import json
 from sqlite3 import OperationalError
+from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 import requests
 from bs4 import BeautifulSoup
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -77,14 +75,17 @@ class DOIConnector:
             retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
             retrieved_record.add_provenance_all(source=url)
             record.merge(merging_record=retrieved_record, default_source=url)
-            record.set_masterdata_complete(source=url)
+            record.set_masterdata_complete(
+                source=url,
+                masterdata_repository=review_manager.settings.is_curated_repo(),
+            )
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
             if "retracted" in record.data.get("warning", ""):
                 record.prescreen_exclude(reason="retracted")
                 record.remove_field(key="warning")
 
             if "title" in record.data:
-                record.format_if_mostly_upper(key="title")
+                record.format_if_mostly_upper(key="title", case="sentence")
 
         except (
             requests.exceptions.RequestException,
@@ -171,7 +172,3 @@ class DOIConnector:
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
             ) from exc
-
-
-if __name__ == "__main__":
-    pass

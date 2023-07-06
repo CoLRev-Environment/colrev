@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import timeout_decorator
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -13,11 +13,8 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.pdf_prep
+if TYPE_CHECKING:
+    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 
@@ -43,8 +40,8 @@ class TEIPDFPrep(JsonSchemaMixin):
                 pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
             )
             self.tei_path.mkdir(exist_ok=True, parents=True)
+            pdf_prep_operation.docker_images_to_stop.append(grobid_service.GROBID_IMAGE)
 
-    @timeout_decorator.timeout(360, use_signals=False)
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
@@ -66,7 +63,3 @@ class TEIPDFPrep(JsonSchemaMixin):
             )
 
         return record.data
-
-
-if __name__ == "__main__":
-    pass

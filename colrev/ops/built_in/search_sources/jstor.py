@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ris_utils
 import colrev.ops.search
 import colrev.record
 
@@ -39,7 +40,7 @@ class JSTORSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.CheckOperation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
 
@@ -78,15 +79,17 @@ class JSTORSearchSource(JsonSchemaMixin):
         if "www.jstor.org:" in data:
             if data.count("www.jstor.org") > data.count("\n@"):
                 result["confidence"] = 1.0
+        if data.startswith("Provider: JSTOR http://www.jstor.org"):
+            result["confidence"] = 1.0
 
         return result
 
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> typing.Optional[colrev.settings.SearchSource]:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        return None
+        raise NotImplementedError
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -102,6 +105,26 @@ class JSTORSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Not implemented"""
         return record
+
+    def __ris_fixes(self, *, entries: dict) -> None:
+        for entry in entries:
+            if "title" in entry and "primary_title" not in entry:
+                entry["primary_title"] = entry.pop("title")
+
+    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".ris":
+            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+                filename=self.search_source.filename
+            )
+            self.__ris_fixes(entries=ris_entries)
+            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
+                ris_entries
+            )
+            return records
+
+        raise NotImplementedError
 
     def load_fixes(
         self,
@@ -119,7 +142,3 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Source-specific preparation for JSTOR"""
 
         return record
-
-
-if __name__ == "__main__":
-    pass

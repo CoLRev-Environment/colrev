@@ -132,6 +132,7 @@ class Data(colrev.operation.Operation):
                     colrev.record.RecordState.rev_synthesized,
                     colrev.record.RecordState.rev_included,
                 ]
+                and record.get("year", "UNKNOWN").isdigit()
             ]
             observations = prepared_records_df[
                 prepared_records_df["ID"].isin(included_papers)
@@ -316,6 +317,7 @@ class Data(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -399,7 +401,3 @@ class Data(colrev.operation.Operation):
             "ask_to_commit": self.review_manager.dataset.has_changes(),
             "no_endpoints_registered": no_endpoints_registered,
         }
-
-
-if __name__ == "__main__":
-    pass
