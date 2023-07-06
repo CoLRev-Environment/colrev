@@ -50,16 +50,19 @@ class Dashboard():
                     ),
                     dcc.Input(type="text", id="search", value="", placeholder="  Search for..."),
                 ]),
-                html.H1(children="currently synthesized records:", id="headline"),                   
+                html.H1(children="Currently Synthesized Records", id="headline", style={'fontSize': 30}),                   
                 html.Div([
                     dash_table.DataTable(data = data.to_dict('records'),id = "table", 
-                    style_cell = {'font-family': 'Lato, sans-serif','font-size': '20px','text-align': 'left'},
-                    style_header = {'font-weight': 'bold'})
+                    style_cell = {'font-family': 'Lato, sans-serif',
+                                  'font-size': '20px',
+                                  'text-align': 'left'},
+                    style_header = {'font-weight': 'bold', 
+                                    'backgroundColor': '#a4ce4a'})
                 ]),
                 html.Div(id="table_empty", children= []) ,
                         
             
-                html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))]),    # Including the graph    
+                html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))]),    # Including the graphs    
                 html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))]),
                 html.Div([dcc.Graph(figure=Dashboard.analytics(data))]) 
             ]) 
@@ -91,16 +94,52 @@ class Dashboard():
             
         return app
 
+
     def visualizationTime(data):
         data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
         fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
         fig.update_traces(marker_color = '#fcb61a')
+
+        fig.update_layout(title=dict(text="<b>Profile of papers published over time</b>", font=dict(size=30), automargin=True)
+                          #yaxis = dict( tickfont = dict(size=20)),
+                          #xaxis = dict( tickfont = dict(size=20))
+                          )
+        fig.update_xaxes(title_text='Year', 
+                         type='category',
+                         title_font= {"size": 20},
+                         tickfont = dict(size=20)
+                         )
+        fig.update_yaxes(title_text='Count',
+                         title_font= {"size": 20},
+                         tickfont = dict(size=20)
+                         )
+
+
         return fig
     
     def visualizationMagazines(data):
         data2 = data.groupby(['journal'])['journal'].count().reset_index(name='count')
-        fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Profile of papers published over time")
+        fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Papers Published per Journal")
         fig.update_traces(marker_color = '#fcb61a')
+
+        fig.update_layout(title=dict(text="<b>Papers Published per Journal</b>", font=dict(size=30), automargin=True)
+                          #yaxis = dict( tickfont = dict(size=20)),
+                          #xaxis = dict( tickfont = dict(size=20))
+                          )
+        fig.update_xaxes(title_text='Journal', 
+                         type='category',
+                         title_font= {"size": 20},
+                         tickfont = dict(size=20)
+                         )
+        fig.update_yaxes(title_text='Count',
+                         title_font= {"size": 20},
+                         tickfont = dict(size=20)
+                         )
+
+
+
+
+
         return fig
 
     def analytics(self):
@@ -128,35 +167,39 @@ class Dashboard():
         # print(analytics_df3)
 
 
-        fig = px.line(analytics_df2, x= 'committed_date', y='scaled_progress', template="simple_white", title="Burn-Down Chart")
+        fig = px.line(analytics_df2, x= 'committed_date', y='scaled_progress', template="simple_white", title="Burn-Out Chart")
+        fig.update_layout(title=dict(text="<b>Burn-Down Chart</b>", font=dict(size=30), automargin=True)
+                          #yaxis = dict( tickfont = dict(size=20)),
+                          #xaxis = dict( tickfont = dict(size=20))
+                          )
         fig.update_xaxes(title_text='Date of Commit', 
-                         type='category'
-                         #title_font: {"size": 20},
+                         type='category',
+                         title_font= {"size": 20},
+                         tickangle = 25,
+                         tickfont = dict(size=20)
                          )
-        fig.update_yaxes(title_text='Atomic Steps Completed in %')
+        fig.update_yaxes(title_text='Atomic Steps Completed in %',
+                         title_font= {"size": 20},
+                         tickfont = dict(size=20)
+                         )
 
         return fig
     
     
 
-# helper functions for analytics
+# helper functions for analytics:
 def timestampToDate(timestamp) -> datetime:
 
     # convert the timestamp to a datetime object in the local timezone
     date = datetime.fromtimestamp(timestamp)
     return date
 
+
 def scaleCompletedAtomicSteps(steps, max):
 
     steps = 100 - (steps / max) * 100
 
     return steps
-
-
-
-def scaleIncluded(included):
-    return included
-
 
 
 
