@@ -132,6 +132,7 @@ class LocalIndex:
         return self.sqlite_connection.cursor()
 
     def load_journal_rankings(self) -> None:
+        """Loadsd journal rankings into sqlite database"""
         rankings_csv_path = (
             str(Path(__file__).parents[1])
             / Path("template")
@@ -144,7 +145,7 @@ class LocalIndex:
         conn.commit()
         conn.close()
 
-    def search_in_database(self, journal: str) -> str:
+    def search_in_database(self, journal: typing.Optional[typing.Any]) -> str:
         """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
         cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'AIS'")
