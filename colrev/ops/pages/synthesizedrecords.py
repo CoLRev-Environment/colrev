@@ -46,10 +46,6 @@ def visualizationMagazines(data):
 
 layout = html.Div(                              # defining th content
     children=[
-        html.Div(children=[
-            html.Img(src="assets/favicon.ico", className="logo"), 
-            html.H1(children="DASHBOARD", className= "header-title")], className="header"),
-
         html.Div(className = "options", children=[
             dcc.Dropdown(
                 id="sortby",
@@ -68,12 +64,19 @@ layout = html.Div(                              # defining th content
         html.Div(id="table_empty", children= []) ,
                 
     
-        html.Div([dcc.Graph(figure=visualizationTime(data))]),    # Including the graph    
-        html.Div([dcc.Graph(figure=visualizationMagazines(data))]),
+        html.Div([dcc.Graph(id="time",figure=visualizationTime(data))]),    # Including the graph    
+        html.Div([dcc.Graph(id="magazines",figure=visualizationMagazines(data))]),
+        
+        html.Div(className="navigation-button",children=
+            [html.A(html.Button("back to Burn-Down Chart"), href="http://127.0.0.1:8050/")
+        ])
     ])
+    
 @callback(
     Output("table", "data"),
     Output("table_empty", "children"),
+    Output("time", "figure"),
+    Output("magazines", "figure"),
     Input("search", "value"),
     )
 def update_table(value):
@@ -94,5 +97,7 @@ def update_table(value):
         
         if not data2:
             output = "no records found for your search"
+
+       
             
-    return data2, output
+    return data2, output, visualizationTime(pd.DataFrame.from_dict(data2)), visualizationMagazines(pd.DataFrame.from_dict(data2))

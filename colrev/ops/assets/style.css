@@ -5,6 +5,32 @@ body {
     font-family: "Lato", sans-serif;
 }
 
+button{
+    text-align:center;
+    height:10vh;
+    width: 20vw;
+    font-size: 20px;
+    background-color: #bbe5fa;
+    border-radius: 10px;
+    margin-bottom: 40px;
+    font-weight: bold;
+    color:#10ad3a;
+    margin-top: 40px;
+}
+
+.navigation-button{
+    position:relative;
+    text-align:center;
+}
+
+button:hover {
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+  }
+
+.navigation-button{
+    align-items: center;
+    position:relative;
+}
 
 .header{
     display: flex;
@@ -69,7 +95,6 @@ body {
     min-width: 400px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     font-family: "Lato", sans-serif;
-    
 }
 
 

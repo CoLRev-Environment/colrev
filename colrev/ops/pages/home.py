@@ -58,4 +58,5 @@ def scaleIncluded(included):
     return included
 
 
-layout = html.Div([dcc.Graph(figure=analytics())])
+layout = html.Div([dcc.Graph(figure=analytics())]), html.Div(className="navigation-button", children=[html.A(html.Button("detailed information on synthesized records"), href="http://127.0.0.1:8050/synthesizedrecords")])
+        
