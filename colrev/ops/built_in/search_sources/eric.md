@@ -34,7 +34,7 @@ If several strings are to be searched for in different fields, the AND operator 
 colrev search -a colrev.eric:"https://api.ies.ed.gov/eric/?search=author:Creamer, Don AND title: Alternative"
 
 ```
-This command returns all records by author Don Creamer that have the string "Alternative" in the title
+This command returns all records by author Don Creamer that have the string "Alternative" in the title.
 
 In addition, the start parameter the starting record number for the returned results set can be determined and the rows parameter can be used to determine how many records are to be returned (by default start hat the value 0 and rows the value 2000):
 
