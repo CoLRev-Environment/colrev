@@ -1167,7 +1167,7 @@ class Prep(colrev.operation.Operation):
                     prepared_records = []
                     for item in preparation_data:
                         record = self.prepare(item)
-
+                        prepared_records.append(record)
                 else:
                     pool = self.__get_prep_pool(prep_round=prep_round)
                     prepared_records = pool.map(self.prepare, preparation_data)
