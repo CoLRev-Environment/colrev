@@ -1100,9 +1100,9 @@ def pdf(
     while ret in ["c", "h", ""]:
         ret = input("Option (c: remove cover page, h: show hashes, q: quit)")
         if ret == "c":
-            __extract_coverpage(cover=path)
+            __extract_coverpage(cover=Path(path))
         elif ret == "h":
-            __print_pdf_hashes(pdf_path=path)
+            __print_pdf_hashes(pdf_path=Path(path))
         # elif ret == "o":
         #     print("TODO : ocr")
         # elif ret == "r":
