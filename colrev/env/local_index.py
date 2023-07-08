@@ -158,37 +158,35 @@ class LocalIndex:
                 ranking = "Predatory Journal: Do not include!  "
                 in_ranking_included = True
             if "AIS" in rankings.values():
-                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?", 
+                cur.execute(
+                    "SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?",
                     (journal,),
                 )
                 impact_factor1 = cur.fetchone()
-                impact_factor1 = impact_factor1['impact_factor']
+                impact_factor1 = impact_factor1["impact_factor"]
                 if impact_factor1 is None:
                     ranking += "Senior Scholar's List of Premier Journals; "
                     in_ranking_included = True
                 else:
                     ranking += (
-                    "Senior Scholar's List of Premier Journals " 
-                    + str(impact_factor1) 
-                    + "; "
-                )
+                        "Senior Scholar's List of Premier Journals "
+                        + str(impact_factor1)
+                        + "; "
+                    )
                     in_ranking_included = True
             if "VHB" in rankings.values():
-                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?", 
+                cur.execute(
+                    "SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?",
                     (journal,),
                 )
                 impact_factor2 = cur.fetchone()
                 print(impact_factor2)
-                impact_factor2 = impact_factor2['impact_factor']
+                impact_factor2 = impact_factor2["impact_factor"]
                 if impact_factor2 is None:
                     ranking += "VHB-JOURQUAL3; "
                     in_ranking_included = True
                 else:
-                    ranking += (
-                    "VHB-JOURQUAL3 " 
-                    + str(impact_factor2) 
-                    + "; "
-                )
+                    ranking += "VHB-JOURQUAL3 " + str(impact_factor2) + "; "
                     in_ranking_included = True
             if "FT-50" in rankings.values():
                 ranking += "FT50  "
