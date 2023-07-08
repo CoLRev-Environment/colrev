@@ -5,13 +5,13 @@ from __future__ import annotations
 import collections
 import hashlib
 import json
-from operator import contains
 import os
 import sqlite3
 import typing
 from copy import deepcopy
 from datetime import timedelta
 from multiprocessing import Lock
+from operator import contains
 from pathlib import Path
 from threading import Timer
 
@@ -149,7 +149,7 @@ class LocalIndex:
     def search_in_database(self, journal: typing.Optional[typing.Any]) -> str:
         """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
-        cur.execute("SELECT ranking FROM rankings WHERE journal_name = ?", (journal, ))
+        cur.execute("SELECT ranking FROM rankings WHERE journal_name = ?", (journal,))
         content = cur.fetchall()
         ranking = ""
         in_ranking_included = False
@@ -196,7 +196,7 @@ class LocalIndex:
         if in_ranking_included is False:
             ranking = "not included in a ranking  "
         ranking = ranking[:-2]
-        return ranking.strip()  
+        return ranking.strip()
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
