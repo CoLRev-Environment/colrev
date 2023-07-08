@@ -40,7 +40,7 @@ class Dashboard():
             children=[
                 html.Div(children=[
                     html.Img(src="assets/favicon.ico", className="logo"), 
-                    html.H1(children="DASHBOARD", className= "header-title")], className="header"),
+                    html.H1(children="-   Dashboard", className= "header-title")], className="header"),
 
                 html.Div(className = "options", children=[
                     dcc.Dropdown(
@@ -50,9 +50,10 @@ class Dashboard():
                     ),
                     dcc.Input(type="text", id="search", value="", placeholder="  Search for..."),
                 ]),
-                html.H1(children="Currently Synthesized Records", id="headline", style={'fontSize': 30}),                   
+                                 
                 html.Div([
-                    dash_table.DataTable(data = data.to_dict('records'),id = "table", 
+                    html.Label("Currently Synthesized Records", style={'fontSize': 40, 'font-weight': 'bold'}),  
+                    dash_table.DataTable(data = data.to_dict('records'),id = "table",
                     style_cell = {'font-family': 'Lato, sans-serif',
                                   'font-size': '20px',
                                   'text-align': 'left'},
@@ -62,9 +63,12 @@ class Dashboard():
                 html.Div(id="table_empty", children= []) ,
                         
             
-                html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))]),    # Including the graphs    
-                html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))]),
-                html.Div([dcc.Graph(figure=Dashboard.analytics(data))]) 
+                html.Div([dcc.Graph(figure=Dashboard.visualizationTime(data))], # Including the graphs  
+                         style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}),   
+                html.Div([dcc.Graph(figure=Dashboard.visualizationMagazines(data))],
+                         style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}),
+                html.Div([dcc.Graph(figure=Dashboard.analytics(data))],
+                        style={'margin': 'auto'}) 
             ]) 
         @app.callback(
         Output("table", "data"),
@@ -100,7 +104,7 @@ class Dashboard():
         fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
         fig.update_traces(marker_color = '#fcb61a')
 
-        fig.update_layout(title=dict(text="<b>Profile of papers published over time</b>", font=dict(size=30), automargin=True)
+        fig.update_layout(title=dict(text="<b>Profile of papers published over time</b>", font=dict(size=30), automargin=True, x=0.5)
                           #yaxis = dict( tickfont = dict(size=20)),
                           #xaxis = dict( tickfont = dict(size=20))
                           )
@@ -122,7 +126,7 @@ class Dashboard():
         fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Papers Published per Journal")
         fig.update_traces(marker_color = '#fcb61a')
 
-        fig.update_layout(title=dict(text="<b>Papers Published per Journal</b>", font=dict(size=30), automargin=True)
+        fig.update_layout(title=dict(text="<b>Papers Published per Journal</b>", font=dict(size=30), automargin=True, x=0.5)
                           #yaxis = dict( tickfont = dict(size=20)),
                           #xaxis = dict( tickfont = dict(size=20))
                           )
@@ -136,11 +140,8 @@ class Dashboard():
                          tickfont = dict(size=20)
                          )
 
-
-
-
-
         return fig
+    
 
     def analytics(self):
         review_manager = colrev.review_manager.ReviewManager()
@@ -168,7 +169,8 @@ class Dashboard():
 
 
         fig = px.line(analytics_df2, x= 'committed_date', y='scaled_progress', template="simple_white", title="Burn-Out Chart")
-        fig.update_layout(title=dict(text="<b>Burn-Down Chart</b>", font=dict(size=30), automargin=True)
+        fig.update_traces(marker_color = '#2596be')
+        fig.update_layout(title=dict(text="<b>Burn-Down Chart</b>", font=dict(size=30), automargin=True, x=0.5)
                           #yaxis = dict( tickfont = dict(size=20)),
                           #xaxis = dict( tickfont = dict(size=20))
                           )
