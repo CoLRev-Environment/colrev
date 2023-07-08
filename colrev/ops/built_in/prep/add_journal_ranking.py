@@ -47,7 +47,7 @@ class AddJournalRanking(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Add Journalranking to Metadata"""
 
-        journal = record.data.get("journal")
+        journal = record.data.get("journal", "")
 
         if journal != "":
             local_index = colrev.env.local_index.LocalIndex()

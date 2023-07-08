@@ -132,7 +132,7 @@ class LocalIndex:
         return self.sqlite_connection.cursor()
 
     def load_journal_rankings(self) -> None:
-        """Loadsd journal rankings into sqlite database"""
+        """Loads journal rankings into sqlite database"""
         rankings_csv_path = (
             str(Path(__file__).parents[1])
             / Path("template")

@@ -270,7 +270,6 @@ class ScopePrescreen(JsonSchemaMixin):
         """Prescreen records based on the scope parameters"""
 
         repeat_input_question = True
-        include_unranked_journals = False
         while repeat_input_question is True:
             print("Include Journals that are not included in any ranking?")
             choice = input("Y/N\n")
