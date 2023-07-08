@@ -99,6 +99,23 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        if "https:"https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter" in query:
+            query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter", "").lstrip("&")
+            )
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"ieee_{query}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.ieee",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+            return add_source
+          
         raise NotImplementedError
 
     def run_search(
