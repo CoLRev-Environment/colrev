@@ -5,6 +5,7 @@ from __future__ import annotations
 import collections
 import hashlib
 import json
+from operator import contains
 import os
 import sqlite3
 import typing
@@ -148,64 +149,53 @@ class LocalIndex:
     def search_in_database(self, journal: typing.Optional[typing.Any]) -> str:
         """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
-        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'AIS'")
-        content1 = cur.fetchall()
-        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'VHB'")
-        content2 = cur.fetchall()
-        cur.execute("SELECT journal_name FROM rankings WHERE ranking = 'FT-50'")
-        content3 = cur.fetchall()
-        cur.execute(
-            "SELECT journal_name FROM rankings WHERE ranking = 'Beall`s Predatory Journals'"
-        )
-        content4 = cur.fetchall()
+        cur.execute("SELECT ranking FROM rankings WHERE journal_name = ?", (journal, ))
+        content = cur.fetchall()
         ranking = ""
         in_ranking_included = False
-        for journal_name in content1:
-            if journal in journal_name.values():
-                cur.execute(
-                    "SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?",
-                    (journal,),
-                )
-                ergebnisse1 = cur.fetchall()
-                for ergebnis in ergebnisse1:
-                    impact_factor1 = ergebnis["impact_factor"]
-                    if impact_factor1 is None:
-                        ranking += "Senior Scholars' List of Premier Journals; "
-                        in_ranking_included = True
-                    else:
-                        ranking += (
-                            "Senior Scholars' List of Premier Journals "
-                            + str(impact_factor1)
-                            + "; "
-                        )
-                        in_ranking_included = True
-        for journal_name in content2:
-            if journal in journal_name.values():
-                cur.execute(
-                    "SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?",
-                    (journal,),
-                )
-                ergebnisse2 = cur.fetchall()
-                for ergebnis in ergebnisse2:
-                    impact_factor2 = ergebnis["impact_factor"]
-                    if impact_factor2 is None:
-                        ranking += "VHB-JOULQUAL3; "
-                        in_ranking_included = True
-                    else:
-                        ranking += "VHB-JOURQUAL3 " + str(impact_factor2) + "; "
-                        in_ranking_included = True
-        for journal_name in content3:
-            if journal in journal_name.values():
-                ranking += "FT50  "
-                in_ranking_included = True
-        for journal_name in content4:
-            if journal in journal_name.values():
+        for rankings in content:
+            if "Beall´s Predatory Journals" in rankings.values():
                 ranking = "Predatory Journal: Do not include!  "
+                in_ranking_included = True
+            if "AIS" in rankings.values():
+                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?",
+                    (journal,)
+                )
+                impact_factor1 = cur.fetchone()
+                if impact_factor1 is None:
+                    ranking += "Senior Scholars' List of Premier Journals; "
+                    in_ranking_included = True
+                else:
+                    impact_factor1 = impact_factor1['impact_factor']
+                    ranking += (
+                        "Senior Scholars' List of Premier Journals "
+                        + str(impact_factor1)
+                        + "; "
+                    )
+                    in_ranking_included = True
+            if "VHB" in rankings.values():
+                cur.execute("SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?", 
+                    (journal,)
+                )
+                impact_factor2 = cur.fetchone()
+                if impact_factor2 is None:
+                    ranking += "VHB-JOURQUAL3; "
+                    in_ranking_included = True
+                else:
+                    impact_factor2 = impact_factor2['impact_factor']
+                    ranking += (
+                    "VHB-JOURQUAL3 " 
+                    + str(impact_factor2) 
+                    + "; "
+                )
+                    in_ranking_included = True
+            if "FT-50" in rankings.values():
+                ranking += "FT50  "
                 in_ranking_included = True
         if in_ranking_included is False:
             ranking = "not included in a ranking  "
         ranking = ranking[:-2]
-        return ranking.strip()
+        return ranking.strip()  
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
