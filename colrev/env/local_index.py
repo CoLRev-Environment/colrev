@@ -180,7 +180,6 @@ class LocalIndex:
                     (journal,),
                 )
                 impact_factor2 = cur.fetchone()
-                print(impact_factor2)
                 impact_factor2 = impact_factor2["impact_factor"]
                 if impact_factor2 is None:
                     ranking += "VHB-JOURQUAL3; "
