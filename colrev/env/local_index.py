@@ -11,7 +11,6 @@ import typing
 from copy import deepcopy
 from datetime import timedelta
 from multiprocessing import Lock
-from operator import contains
 from pathlib import Path
 from threading import Timer
 
