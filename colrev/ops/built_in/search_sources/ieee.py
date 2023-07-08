@@ -150,17 +150,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         return record
 
-<<<<<<< HEAD
-=======
+
     #TODO: Ablageort für Key abstimmen
->>>>>>> origin/Albert/Freddy/Malou
     def get_apikey():
         config = configparser.ConfigParser()
         config.read('/home/ubuntu/config.ini')   
         api_key = config.get('API Key', 'key')
 
         return api_key
-<<<<<<< HEAD
-    
-=======
->>>>>>> origin/Albert/Freddy/Malou
+
