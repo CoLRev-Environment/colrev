@@ -106,11 +106,18 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             filename = search_operation.get_unique_filename(
                 file_path_string=f"ieee_{query}"
             )
+
+            parameter_pairs = query.split("&")
+            search_parameters = {}
+            for parameter in parameter_pairs:
+                key, value = parameter.split("=")
+                search_parameters[key] = value
+            
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
+                search_parameters,
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
