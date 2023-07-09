@@ -57,8 +57,11 @@ class ArXivSource():
     )
     __arxiv_md_filename = Path("data/search/md_arxiv.bib")
 
+    classFeedparser(feedparser=FeedParserMixin)
+
+
     # Added RN: expose metadata if in arXiv namespace
-    feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+    feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch' #woher kommz mixin?
     feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
     def __init__(
