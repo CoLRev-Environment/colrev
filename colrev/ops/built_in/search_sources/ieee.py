@@ -130,6 +130,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of IEEEXplore"""
 
+        ieee_feed = self.search_source.get_feed(
+            review_manager=search_operation.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
        """TODO: Key richtig ablegen"""
         key = "ungry3gupmaxmtxkadhujj6n"
 
