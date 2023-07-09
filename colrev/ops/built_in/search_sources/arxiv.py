@@ -46,7 +46,7 @@ defusedxml.defuse_stdlib()
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 @dataclass
-class ArXivSource(XMLSchemaMixin):
+class ArXivSource():
     """SearchSource for arXiv"""
     # RN: turn search input into query
     query = colrev.search.input()
