@@ -51,6 +51,7 @@ class ExportManPrep(JsonSchemaMixin):
         "number",
         "pages",
         "doi",
+        "file",
     ]
 
     @dataclass
