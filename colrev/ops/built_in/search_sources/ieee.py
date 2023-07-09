@@ -217,7 +217,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             field_value = article.get(field)
             record_dict['ENTRYTYPE'] = 'article'
             if field_value is not None:
-                if field == 'publicationtype':
+                if field == 'content_type':
                     record_dict['ENTRYTYPE'] = field_value
                 else:
                     record_dict[field] = str(field_value)
