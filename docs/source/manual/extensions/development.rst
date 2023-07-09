@@ -49,7 +49,7 @@ Following steps might be a good starting point.
 
    .. note::
 
-      You can simply fork `this repository <https://github.com/CoLRev-Environment/colrev-asreview>`_ and develop your extension on it
+      You can simply use `this repository <https://github.com/CoLRev-Environment/colrev-asreview>`_ as the ground for your extension
 
 
 * Add ``.colrev_endpoints.json`` file to the project, and add the new extension information, e.g.
