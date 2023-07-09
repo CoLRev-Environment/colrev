@@ -130,6 +130,34 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of IEEEXplore"""
 
+       """TODO: Key richtig ablegen"""
+        key = "ungry3gupmaxmtxkadhujj6n"
+
+        query = xploreapi.XPLORE(key)
+        query.dataType('json')
+        query.dataFormat('object')
+        query.maximumResults(50000)
+        query.usingOpenAccess = False
+
+        parameter_methods = {}
+        """TODO: Weitere Suchmöglichkeiten ermöglichen?"""
+        parameter_methods["article_number"] = query.articleNumber
+        parameter_methods["doi"] = query.doi
+        parameter_methods["author"] = query.authorText
+        parameter_methods["isbn"] = query.isbn
+        parameter_methods["issn"] = query.issn
+        parameter_methods["publication_year"] = query.publicationYear
+        parameter_methods["queryText"] = query.queryText
+
+        parameters = self.search_source.search_parameters
+        for key, value in search_parameters.items():
+            if key in parameter_methods:
+                method = parameter_methods[key]
+                method(value)
+
+        data = query.callAPI()
+        
+
     def get_masterdata(
         self,
         prep_operation: colrev.ops.prep.Prep,
