@@ -207,7 +207,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                       'volume', 'insert_date']
 
         for field in api_fields:
-            field_value = doc.get(field)
+            field_value = article.get(field)
             record_dict['ENTRYTYPE'] = 'article'
             if field_value is not None:
                 if field == 'publicationtype':
