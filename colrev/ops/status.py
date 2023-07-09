@@ -55,6 +55,8 @@ class Status(colrev.operation.Operation):
 
                 data_loaded = yaml.safe_load(var_t)
                 analytics_dict[len(revlist) - ind] = {
+                    "atomic_steps": data_loaded["atomic_steps"],
+                    "completed_atomic_steps": data_loaded["completed_atomic_steps"],
                     "commit_id": commit_id,
                     "commit_author": commit_author,
                     "committed_date": committed_date,

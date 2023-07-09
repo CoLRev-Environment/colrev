@@ -35,12 +35,41 @@ def visualizationTime(data):
     data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
     fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
     fig.update_traces(marker_color = '#fcb61a')
+
+    fig.update_layout(title=dict(text="<b>Profile of papers published over time</b>", font=dict(size=30), automargin=True, x=0.5)
+                        #yaxis = dict( tickfont = dict(size=20)),
+                        #xaxis = dict( tickfont = dict(size=20))
+                        )
+    fig.update_xaxes(title_text='Year', 
+                        type='category',
+                        title_font= {"size": 20},
+                        tickfont = dict(size=20)
+                        )
+    fig.update_yaxes(title_text='Count',
+                        title_font= {"size": 20},
+                        tickfont = dict(size=20)
+                        )
     return fig
 
 def visualizationMagazines(data):
     data2 = data.groupby(['journal'])['journal'].count().reset_index(name='count')
-    fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Profile of papers published over time")
+    fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Papers Published per Journal")
     fig.update_traces(marker_color = '#fcb61a')
+
+    fig.update_layout(title=dict(text="<b>Papers Published per Journal</b>", font=dict(size=30), automargin=True, x=0.5)
+                        #yaxis = dict( tickfont = dict(size=20)),
+                        #xaxis = dict( tickfont = dict(size=20))
+                        )
+    fig.update_xaxes(title_text='Journal', 
+                        type='category',
+                        title_font= {"size": 20},
+                        tickfont = dict(size=20)
+                        )
+    fig.update_yaxes(title_text='Count',
+                        title_font= {"size": 20},
+                        tickfont = dict(size=20)
+                        )
+
     return fig
 
 
@@ -54,18 +83,23 @@ layout = html.Div(                              # defining th content
             ),
             dcc.Input(type="text", id="search", value="", placeholder="  Search for..."),
         ]),
-        html.H1(children="currently synthesized records:", id="headline"),                   
         html.Div([
-            dash_table.DataTable(data = data.to_dict('records'),id = "table", 
-            style_cell = {'font-family': 'Lato, sans-serif','font-size': '20px','text-align': 'left'},
-            style_header = {'font-weight': 'bold'})
+            html.Label("Currently Synthesized Records", style={'fontSize': 40, 'font-weight': 'bold'}),  
+            dash_table.DataTable(data = data.to_dict('records'),id = "table",
+            style_cell = {'font-family': 'Lato, sans-serif',
+                            'font-size': '20px',
+                            'text-align': 'left'},
+            style_header = {'font-weight': 'bold', 
+                            'backgroundColor': '#a4ce4a'})
         ]),
         ## Div für Ausgabe wenn keine Ergebnisse bei suche
         html.Div(id="table_empty", children= []) ,
                 
     
-        html.Div([dcc.Graph(id="time",figure=visualizationTime(data))]),    # Including the graph    
-        html.Div([dcc.Graph(id="magazines",figure=visualizationMagazines(data))]),
+        html.Div([dcc.Graph(figure=visualizationTime(data), id='time')], # Including the graphs  
+            style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}),   
+        html.Div([dcc.Graph(figure=visualizationMagazines(data), id='magazines')],
+            style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}),
         
         html.Div(className="navigation-button",children=
             [html.A(html.Button("back to Burn-Down Chart"), href="http://127.0.0.1:8050/")
