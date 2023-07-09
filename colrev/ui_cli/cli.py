@@ -16,6 +16,7 @@ from pathlib import Path
 import click
 import click_completion.core
 import pandas as pd
+from click_repl import register_repl
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
@@ -2894,3 +2895,7 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
+
+
+register_repl(main)
+

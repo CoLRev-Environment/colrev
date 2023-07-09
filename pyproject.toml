@@ -78,6 +78,7 @@ levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for the
 pyalex = "^0.10"
 rispy = "^0.7.1"
 colrev-asreview = {git = "https://github.com/CoLRev-Environment/colrev-asreview"}
+click-repl = "^0.3.0"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"
