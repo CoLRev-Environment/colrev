@@ -17,7 +17,7 @@ import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
+#from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.lxml import fromstring
 
 # added import for arXiv API
@@ -42,6 +42,8 @@ defusedxml.defuse_stdlib()
 @dataclass
 class ArXivSource():
     """SearchSource for arXiv"""
+    # RN: turn search input into query
+    query = colrev.search.input()
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "arxivid"
@@ -131,8 +133,11 @@ class ArXivSource():
             query = query.replace("https://arxiv.org/find/all/1/all:", " ")
 
             filename = search_operation.get_unique_filename(
-                file_path_string=f"arxiv_{query.replace('&sort=', '')}"#WIP: RN
+                file_path_string=f"arxiv_{query.replace('&sort=', '')}"
             )
+            
+            
+            #http://export.arxiv.org/api/{method_name}?{parameters}
             query = (
                 "https://export.arxiv.org/api/query?search_query=all:"
                 + query
