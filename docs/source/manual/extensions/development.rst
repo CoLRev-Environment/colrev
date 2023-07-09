@@ -153,4 +153,4 @@ Built-in extension development process
 Examples
 ========
 
-- [colrev-asreview](https://github.com/CoLRev-Environment/colrev-asreview)
+- `colrev-asreview <https://github.com/CoLRev-Environment/colrev-asreview>`_
