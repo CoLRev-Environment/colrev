@@ -91,18 +91,19 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in query:
             query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles?", "").lstrip("&")
-            )
-
-            
+            )            
 
             parameter_pairs = query.split("&")
             search_parameters = {}
             for parameter in parameter_pairs:
                 key, value = parameter.split("=")
-                search_parameters[key] = value  
+                search_parameters[key] = value
+
+            parameter_values = ''.join(search_parameters.values())
+            parameter_str = ''.join(str(value) for value in parameter_values)
 
             filename = search_operation.get_unique_filename(
-                file_path_string=f"ieee"
+                file_path_string=f"ieee_{parameter_str}"
             )
 
             add_source = colrev.settings.SearchSource(
@@ -170,7 +171,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         data = response.json()
         records = search_operation.review_manager.dataset.load_records_dict()
 
-        for article in data['response']['articles']:
+        for article in data['articles']:
             article_id = article['article_number']
             if article_id not in records:
                 record_dict = self.create_record_dict(article)
