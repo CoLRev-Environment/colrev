@@ -49,7 +49,7 @@ defusedxml.defuse_stdlib()
 class ArXivSource():
     """SearchSource for arXiv"""
     # RN: turn search input into query
-    query = colrev.search.input()
+    # query = colrev.search.input()
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "arxivid"
