@@ -1075,6 +1075,46 @@ def screen(
     screen_operation.main(split_str=split)
 
 
+def __extract_coverpage(*, cover: Path) -> None:
+    cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
+    cp_path.mkdir(exist_ok=True)
+
+    assert Path(cover).suffix == ".pdf"
+    record = colrev.record.Record(data={"file": cover})
+    record.extract_pages(
+        pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
+    )
+
+
+@main.command(help_priority=17)
+@click.argument("path", nargs=1, type=click.Path(exists=True))
+@click.pass_context
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
+def pdf(
+    ctx: click.core.Context,
+    path: str,
+) -> None:
+    """Process a PDF"""
+
+    ret = ""
+    while ret in ["c", "h", ""]:
+        ret = input("Option (c: remove cover page, h: show hashes, q: quit)")
+        if ret == "c":
+            __extract_coverpage(cover=Path(path))
+        elif ret == "h":
+            __print_pdf_hashes(pdf_path=Path(path))
+        # elif ret == "o":
+        #     print("TODO : ocr")
+        # elif ret == "r":
+        #     print("TODO: remove comments")
+        # elif ret == "m":
+        #     print("TODO : extract metadata")
+        # elif ret == "t":
+        #     print("TODO : create tei")
+        # elif ret == "i":
+        #     print("TODO: print infos (website / retracted /...)")
+
+
 @main.command(help_priority=11)
 @click.option(
     "--discard",
@@ -1321,17 +1361,6 @@ def pdf_get_man(
     pdf_get_man_operation.main()
 
 
-def __extract_coverpage(*, cover: Path) -> None:
-    cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
-    cp_path.mkdir(exist_ok=True)
-
-    assert Path(cover).suffix == ".pdf"
-    record = colrev.record.Record(data={"file": cover})
-    record.extract_pages(
-        pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
-    )
-
-
 def __print_pdf_hashes(*, pdf_path: Path) -> None:
     # pylint: disable=import-outside-toplevel
     from PyPDF2 import PdfFileReader
@@ -1398,17 +1427,6 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
     help="Generate TEI documents.",
 )
 @click.option(
-    "-c",
-    "--cover",
-    type=click.Path(exists=True),
-    help="Remove cover page",
-)
-@click.option(
-    "--pdf_hash",
-    type=click.Path(exists=True),
-    help="Get the PDF hash of a page",
-)
-@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -1436,18 +1454,12 @@ def pdf_prep(
     batch_size: int,
     update_colrev_pdf_ids: bool,
     reprocess: bool,
-    pdf_hash: Path,
     setup_custom_script: bool,
     tei: bool,
-    cover: Path,
     verbose: bool,
     force: bool,
 ) -> None:
     """Prepare PDFs"""
-
-    if cover:
-        __extract_coverpage(cover=cover)
-        return
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -1455,10 +1467,7 @@ def pdf_prep(
         )
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
-        if pdf_hash:
-            __print_pdf_hashes(pdf_path=pdf_hash)
-
-        elif update_colrev_pdf_ids:
+        if update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
 
         elif setup_custom_script:
