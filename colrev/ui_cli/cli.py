@@ -2898,4 +2898,3 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
 
 
 register_repl(main)
-
