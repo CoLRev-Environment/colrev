@@ -3,8 +3,6 @@ Extension Development Process
 
 Extensions are referred through its respective endpoints, these endpoints can be enabled in ``settings.json`` of a project. The interfaces for the extension endpoints are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
 
-TODO: Built-in (colrev/ops/built_in/* directory) vs external extensions (explained in the following - using the "colrev-asreview" example)
-
 Extension development base guidelines
 -------------------------------------
 
@@ -48,6 +46,12 @@ Following steps might be a good starting point.
       ``-e`` allows editable installation. Any changes made will be available immediately
 
 * Create the extension repository e.g.: https://github.com/CoLRev-Environment/colrev-asreview
+
+   .. note::
+
+      You can simply fork `this repository <https://github.com/CoLRev-Environment/colrev-asreview>`_ and develop your extension on it
+
+
 * Add ``.colrev_endpoints.json`` file to the project, and add the new extension information, e.g.
 
    ..  code-block:: json
@@ -144,12 +148,6 @@ Built-in extension development process
 * It's a good idea to commit in current state, before start working.
 * As same with external extensions, in case of error, ``package_endpoints.json`` file will be deleted. Fix the error, and restore the file from repo, continue until CoLRev successfully register the extension without error
 * Once the extension development is completed, make a PR to the CoLRev, with brief description of the extension.
-
-
-Testing
-=======
-
-TODO: add how to implement test in the extension
 
 
 Examples
