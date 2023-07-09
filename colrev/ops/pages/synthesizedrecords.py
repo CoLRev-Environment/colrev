@@ -8,6 +8,7 @@ from dash import Dash, dcc, html, Input, Output, dash_table, State, callback
 import dash
 import bibtexparser
 import plotly.express as px
+import plotly.graph_objects as go
 
 import colrev.review_manager
 from datetime import datetime
@@ -30,8 +31,19 @@ data.rename(columns={'Unnamed: 0':'index'}, inplace=True)
 for title in data:
     if title != "title" and title != "author" and title != "year"and title != "journal":
         data.pop(title)
+
+# function from StackOverflow (https://stackoverflow.com/questions/66637861/how-to-not-show-default-dcc-graph-template-in-dash)
+def empty_figure():
+    figure = go.Figure(go.Scatter(x=[], y = []))
+    figure.update_layout(template = None)
+    figure.update_xaxes(showgrid = False, showticklabels = False, zeroline=False)
+    figure.update_yaxes(showgrid = False, showticklabels = False, zeroline=False)
+    
+    return figure
         
 def visualizationTime(data):
+    if data.empty:
+        return empty_figure()
     data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
     fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
     fig.update_traces(marker_color = '#fcb61a')
@@ -52,6 +64,8 @@ def visualizationTime(data):
     return fig
 
 def visualizationMagazines(data):
+    if data.empty:
+        return empty_figure()
     data2 = data.groupby(['journal'])['journal'].count().reset_index(name='count')
     fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Papers Published per Journal")
     fig.update_traces(marker_color = '#fcb61a')
@@ -131,7 +145,5 @@ def update_table(value):
         
         if not data2:
             output = "no records found for your search"
-
-       
-            
+    
     return data2, output, visualizationTime(pd.DataFrame.from_dict(data2)), visualizationMagazines(pd.DataFrame.from_dict(data2))
