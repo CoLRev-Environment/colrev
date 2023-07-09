@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import typing
-import requests
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,8 +15,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
-
-import configparser
 
 import xploreapi
 
@@ -99,8 +96,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if "https:"https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter" in query:
-            query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter", "").lstrip("&")
+        if "https://ieeexploreapi.ieee.org/api/v1/search/articles" in query:
+            query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles", "").lstrip("&")
             )
 
             filename = search_operation.get_unique_filename(
@@ -117,7 +114,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 endpoint="colrev.ieee",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters,
+                **search_parameters,
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
@@ -136,7 +133,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-       """TODO: Key richtig ablegen"""
+        prev_record_dict_version = {}
+        
+        """TODO: Key richtig ablegen"""
         key = "ungry3gupmaxmtxkadhujj6n"
 
         query = xploreapi.XPLORE(key)
@@ -156,13 +155,92 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         parameter_methods["queryText"] = query.queryText
 
         parameters = self.search_source.search_parameters
-        for key, value in search_parameters.items():
+        for key, value in parameters.items():
             if key in parameter_methods:
                 method = parameter_methods[key]
                 method(value)
 
-        data = query.callAPI()
-        
+        response = query.callAPI()
+        data = response.json()
+        records = search_operation.review_manager.dataset.load_records_dict()
+
+        for article in data['response']['articles']:
+            article_id = article['article_number']
+            if article_id not in records:
+                record_dict = self.create_record_dict(article)
+                updated_record_dict = self.update_record_fields(record_dict)
+                record = colrev.record.Record(data=updated_record_dict)
+                added = ieee_feed.add_record(record=record)
+
+                if added:
+                    search_operation.review_manager.logger.info(
+                        " retrieve " + record.data["ID"]
+                    )
+                    ieee_feed.nr_added += 1
+                else:
+                    changed = self.update_existing_record(
+                    search_operation, records, record.data, prev_record_dict_version, rerun
+                    )
+                    if changed:
+                        search_operation.review_manager.logger.info(
+                                " update " + record.data["ID"]
+                        )
+                        ieee_feed.nr_changed += 1
+                        
+        ieee_feed.save_feed_file()       
+        search_operation.review_manager.dataset.save_records_dict(records=records)
+        search_operation.review_manager.dataset.add_record_changes()
+
+    def create_record_dict(self, article):
+        record_dict = {'ID': article['article_number']}
+
+        api_fields = ['abstract', 'abstract_url', 'author_url', 'accessType', 
+                      'article_number', 'author_order', 'author_terms', 'authors',
+                      'affiliation', 'citing_paper_count', 'citing_patent_count', 'conference_dates', 
+                      'conference_location', 'content_type','doi', 'publisher', 
+                      'pubtype', 'd-year', 'end_page', 'facet', 
+                      'full_name', 'html_url', 'index_terms', 'ieee_terms', 
+                      'is_number', 'isbn', 'issn', 'issue', 
+                      'pdf_url', 'publication_date', 'publication_year', 'publication_number', 
+                      'publication_title', 'rank', 'standard_number', 'standard_status', 
+                      'start_page', 'title', 'totalfound', 'totalsearched', 
+                      'volume', 'insert_date']
+
+        for field in api_fields:
+            field_value = doc.get(field)
+            record_dict['ENTRYTYPE'] = 'article'
+            if field_value is not None:
+                if field == 'publicationtype':
+                    record_dict['ENTRYTYPE'] = field_value
+                else:
+                    record_dict[field] = str(field_value)
+
+        return record_dict
+
+    def update_record_fields(self,
+        record_dict: dict, 
+    ) -> dict:
+        if "publication_year" in record_dict:
+            record_dict["year"] = record_dict.pop("publication_year")
+        if "content_type" in record_dict:
+            record_dict["howpublished"] = record_dict.pop("content_type")
+        if "publication_title" in record_dict:
+            record_dict["journal"] = record_dict.pop("publication_title")
+        if "author_url" in record_dict:
+            record_dict["address"] = record_dict.pop("author_url")
+        return record_dict
+
+    def update_existing_record(
+        self, search_operation, records, record_dict, prev_record_dict_version, rerun
+    ):
+        changed = search_operation.update_existing_record(
+            records=records,
+            record_dict=record_dict,
+            prev_record_dict_version=prev_record_dict_version,
+            source=self.search_source,
+            update_time_variant_fields=rerun,
+        )
+        return changed    
 
     def get_masterdata(
         self,
