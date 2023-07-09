@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import os
+import json
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,7 +18,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 
-import xploreapi
+import colrev.ops.built_in.search_sources.xploreapi
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -45,6 +47,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
@@ -60,17 +63,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        if "query_file" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
-            )
-
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
-
+        
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
         )
@@ -96,25 +89,27 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         cls, search_operation: colrev.ops.search.Search, query: str
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if "https://ieeexploreapi.ieee.org/api/v1/search/articles" in query:
-            query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles", "").lstrip("&")
+        if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in query:
+            query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles?", "").lstrip("&")
             )
 
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"ieee_{query}"
-            )
+            
 
             parameter_pairs = query.split("&")
             search_parameters = {}
             for parameter in parameter_pairs:
                 key, value = parameter.split("=")
-                search_parameters[key] = value
-            
+                search_parameters[key] = value  
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"ieee"
+            )
+
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                **search_parameters,
+                search_parameters=search_parameters,
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
@@ -134,11 +129,22 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         )
 
         prev_record_dict_version = {}
-        
-        """TODO: Key richtig ablegen"""
-        key = "ungry3gupmaxmtxkadhujj6n"
 
-        query = xploreapi.XPLORE(key)
+        user_home = os.path.expanduser("~")
+        api_key_file_path = os.path.join(user_home, "api_key.json")
+
+        try:
+            with open(api_key_file_path, 'r') as api_key_file:
+                api_key_data = json.load(api_key_file)
+                key = api_key_data['api_key']
+        except FileNotFoundError:
+            raise Exception("API key file not found.")
+        except (json.JSONDecodeError, KeyError):
+            raise Exception("Invalid API key file format.")
+        
+        #key = "ungry3gupmaxmtxkadhujj6n"
+
+        query = colrev.ops.built_in.search_sources.xploreapi.XPLORE(key)
         query.dataType('json')
         query.dataFormat('object')
         query.maximumResults(50000)
@@ -270,11 +276,4 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return record
 
 
-    #TODO: Ablageort für Key abstimmen
-    def get_apikey():
-        config = configparser.ConfigParser()
-        config.read('/home/ubuntu/config.ini')   
-        api_key = config.get('API Key', 'key')
-
-        return api_key
-
+    
