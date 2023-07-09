@@ -21,8 +21,8 @@ import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
-#from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.lxml import fromstring
+import feedparser
 
 
 # added import for arXiv API
