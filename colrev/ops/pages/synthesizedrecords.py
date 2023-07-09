@@ -92,7 +92,7 @@ layout = html.Div(                              # defining th content
         html.Div(className = "options", children=[
             dcc.Dropdown(
                 id="sortby",
-                options=["index","year", "author (alphabetically)"], 
+                options=["title","year", "author (alphabetically)"], 
                 placeholder="Sort by..."
             ),
             dcc.Input(type="text", id="search", value="", placeholder="  Search for..."),
@@ -126,18 +126,27 @@ layout = html.Div(                              # defining th content
     Output("time", "figure"),
     Output("magazines", "figure"),
     Input("search", "value"),
+    Input("sortby", "value"),
     )
-def update_table(value):
+def update_table(searchvalue, sortvalue):
     
-    
-    data2 = data.copy(deep = True).to_dict('records')
+    sorted_data = data.copy(deep=True)
 
     output = ""
 
-    for row in data.to_dict('records'):
+    if sortvalue == "year":
+        sorted_data = sorted_data.sort_values(by=["year"])  # sort by year
+    elif sortvalue == "title":
+        sorted_data = sorted_data.sort_values(by=["title"])  # sort by title
+    elif sortvalue == "author":
+        sorted_data = sorted_data.sort_values(by=["author"])  # sort by author
+
+    data2 = sorted_data.copy(deep = True).to_dict('records')
+
+    for row in sorted_data.to_dict('records'):
         found = False
         for key in row:
-            if value.lower().strip() in str(row[key]).lower():
+            if searchvalue.lower().strip() in str(row[key]).lower():
                 found = True
         
         if found is False:  
@@ -147,3 +156,4 @@ def update_table(value):
             output = "no records found for your search"
     
     return data2, output, visualizationTime(pd.DataFrame.from_dict(data2)), visualizationMagazines(pd.DataFrame.from_dict(data2))
+
