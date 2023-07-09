@@ -1,10 +1,7 @@
+Using Extension
+=====================
 
-Extensions
-==================================
-
-CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process.
-At the same time you can easily include other extensions or custom scripts (batteries are swappable).
-Everything is specified in the settings.json (simply add the extension/script name as the endpoint in the ``settings.json`` of the project):
+CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process. At the same time you can easily include other extensions or custom scripts (batteries are swappable). Everything is specified in the settings.json (simply add the extension/script name as the endpoint in the ``settings.json`` of the project):
 
 
 .. code-block:: diff
@@ -23,9 +20,7 @@ Everything is specified in the settings.json (simply add the extension/script na
 
 The interfaces for the extension endpoints are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
 
-Registered extensions are public Python packages that can be installed via PyPI.
-An extension can have different `endpoints` (see `extension interfaces <../foundations/extensions.html>`_ for the interfaces).
-Registered extensions contain a ``.colrev_endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/.colrev_endpoints.json>`_ provides an example).
+Registered extensions are public Python packages that can be installed via PyPI. An extension can have different `endpoints` (see `extension interfaces <../foundations/extensions.html>`_ for the interfaces). Registered extensions contain a ``.colrev_endpoints.json`` file in the top-level directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/.colrev_endpoints.json>`_ provides an example).
 
 To *register a new extension*:
 

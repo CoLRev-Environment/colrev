@@ -2,5 +2,9 @@
     {
         "module": "colrev",
         "url": "https://github.com/colrev/colrev"
+    },
+    {
+        "module": "colrev_asreview",
+        "url": "https://github.com/colrev/colrev-asreview"
     }
 ]
