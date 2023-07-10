@@ -160,6 +160,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         parameter_methods["publication_year"] = query.publicationYear
         parameter_methods["queryText"] = query.queryText
         parameter_methods["parameter"] = query.queryText
+        parameter_methods["booleanText"] = query.booleanText
 
         parameters = self.search_source.search_parameters
         for key, value in parameters.items():
