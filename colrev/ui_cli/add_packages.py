@@ -55,7 +55,34 @@ def add_search_source(
     )
     s_obj = search_source[package_identifier]
     add_source = s_obj.add_endpoint(search_operation, query)  # type: ignore
-    search_operation.add_source(add_source=add_source)
+
+    package_manager = search_operation.review_manager.get_package_manager()
+    endpoint_dict = package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        selected_packages=[add_source.get_dict()],
+        operation=search_operation,
+    )
+    endpoint = endpoint_dict[add_source.endpoint.lower()]
+    endpoint.validate_source(search_operation=search_operation, source=add_source)  # type: ignore
+
+    search_operation.review_manager.logger.info(
+        f"{colors.GREEN}Add source:{colors.END}"
+    )
+    print(add_source)
+    search_operation.review_manager.settings.sources.append(add_source)
+    search_operation.review_manager.save_settings()
+
+    print()
+
+    search_operation.main(
+        selection_str=str(add_source.filename), rerun=False, skip_commit=True
+    )
+    fname = add_source.filename
+    if fname.is_absolute():
+        fname = add_source.filename.relative_to(search_operation.review_manager.path)
+    search_operation.review_manager.create_commit(
+        msg=f"Add search source {fname}",
+    )
 
 
 def __extend_data_short_forms(*, add: str) -> str:

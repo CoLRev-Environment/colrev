@@ -51,33 +51,6 @@ class Search(colrev.operation.Operation):
 
         return filename
 
-    def add_source(self, *, add_source: colrev.settings.SearchSource) -> None:
-        """Add a new source"""
-
-        package_manager = self.review_manager.get_package_manager()
-        endpoint_dict = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[add_source.get_dict()],
-            operation=self,
-        )
-        endpoint = endpoint_dict[add_source.endpoint.lower()]
-        endpoint.validate_source(search_operation=self, source=add_source)  # type: ignore
-
-        self.review_manager.logger.info(f"{colors.GREEN}Add source:{colors.END}")
-        print(add_source)
-        self.review_manager.settings.sources.append(add_source)
-        self.review_manager.save_settings()
-
-        print()
-
-        self.main(selection_str=str(add_source.filename), rerun=False, skip_commit=True)
-        fname = add_source.filename
-        if fname.is_absolute():
-            fname = add_source.filename.relative_to(self.review_manager.path)
-        self.review_manager.create_commit(
-            msg=f"Add search source {fname}",
-        )
-
     def __format_source_file(self, *, source: colrev.settings.SearchSource) -> None:
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
