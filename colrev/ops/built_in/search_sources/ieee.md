@@ -10,6 +10,8 @@ Note: This document is currently under development. It will contain the followin
 
 ## Add the search source
 
+Download search results and store in `data/search/` directory.
+
 Data can be retrieved with the URL from the [https://www.ieee.org/](https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter&apikey=). Add the URL as follows:
 
 ```
