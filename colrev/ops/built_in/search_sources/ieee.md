@@ -19,16 +19,17 @@ colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/artic
 ```
 It is not necessary to pass an API key as a parameter here. In order to keep the key secret, you will be prompted to enter it through user input if it is not already stored in the settings. The api key can be requested via the IEEE Xplore API Portal [https://developer.ieee.org/member/register]. 
 
-Multiple parameters can be concatenated using the "&" symbol.
-
-```
-colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter=service&parameter=platform"
-```
 
 Specific parameters can also be searched for, such as issn, isbn, doi, article_number, author, publication_year. For each of these, append "parameter=value" to the URL.
 
 ```
 colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/articles?issn=1063-6919"
+```
+
+Multiple parameters can be concatenated using the "&" symbol.
+
+```
+colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/articles?publication_year=2019&acstract=microsourcing"
 ```
 
 If your search query includes Boolean operators, add "queryText=query" to the URL.
