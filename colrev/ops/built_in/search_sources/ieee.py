@@ -198,7 +198,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
     
-    def create_record_dict(self, article):
+    def __create_record_dict(self, article):
         record_dict = {'ID': article['article_number']}
 
         api_fields = ['abstract', 'abstract_url', 'author_url', 'accessType', 
@@ -224,7 +224,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def update_record_fields(self,
+    def __update_record_fields(self,
         record_dict: dict, 
     ) -> dict:
         if "publication_year" in record_dict:
