@@ -8,6 +8,7 @@ import json
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import zope.interface
 from dacite import from_dict
@@ -17,6 +18,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+import colrev.ops.prep
 
 import colrev.ops.built_in.search_sources.xploreapi
 
@@ -32,11 +34,11 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     """SearchSource for IEEEXplore"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "url"
+    source_identifier = "ID"
     search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
-    ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    api_search_supported = True
+    ci_supported: bool = True
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     short_name = "IEEE Xplore"
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -44,10 +46,19 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.operation.Operation, settings: Optional[dict] = None,
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.review_manager = source_operation.review_manager
+        if settings:
+            self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        else:
+            self.search_source = colrev.settings.SearchSource(
+                endpoint="colrev.ieee",
+                filename=Path("data/search/ieee.bib"),
+                search_type=colrev.settings.SearchType.OTHER,
+                search_parameters={},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
 
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
@@ -73,14 +84,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Source heuristic for IEEEXplore"""
 
         result = {"confidence": 0.1}
-
-        if "INPROCEEDINGS" in data:
-            if len(re.findall(r"@[A-Z]*\{[0-9]*,\n", data)) >= data.count("\n@"):
-                result["confidence"] = 1.0
-        if all(
-            x in data.splitlines()[0] for x in ["Date Added To Xplore", "IEEE Terms"]
-        ):
-            result["confidence"] = 1.0
 
         return result
 
@@ -160,6 +163,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         parameter_methods["issn"] = query.issn
         parameter_methods["publication_year"] = query.publicationYear
         parameter_methods["queryText"] = query.queryText
+        parameter_methods["parameter"] = query.queryText
 
         parameters = self.search_source.search_parameters
         for key, value in parameters.items():
@@ -168,10 +172,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 method(value)
 
         response = query.callAPI()
-        data = response.json()
         records = search_operation.review_manager.dataset.load_records_dict()
+        articles = response["articles"]
 
-        for article in data['articles']:
+        for article in articles:
             article_id = article['article_number']
             if article_id not in records:
                 record_dict = self.create_record_dict(article)
