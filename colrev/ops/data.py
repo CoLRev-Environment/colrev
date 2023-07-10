@@ -203,12 +203,6 @@ class Data(colrev.operation.Operation):
 
         self.review_manager.logger.info(f"Files are available in {output_dir.name}")
 
-    def add_data_endpoint(self, *, data_endpoint: dict) -> None:
-        """Add a data endpoint"""
-
-        self.review_manager.settings.data.data_package_endpoints.append(data_endpoint)
-        self.review_manager.save_settings()
-
     def setup_custom_script(self) -> None:
         """Setup a custom data script"""
 
