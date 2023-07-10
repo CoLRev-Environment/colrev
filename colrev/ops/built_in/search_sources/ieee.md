@@ -17,7 +17,7 @@ Data from the IEEE database can be retrieved with the URL from the [https://www.
 ```
 colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter=microsourcing"
 ```
-All configured metadata fields, the summary and the text of the document are queried.
+All configured metadata fields, the abstract and the document text are queried.
 
 It is not necessary to pass an API key as a parameter here. In order to keep the key secret, you will be prompted to enter it through user input if it is not already stored in the settings. The api key can be requested via the IEEE Xplore API Portal [https://developer.ieee.org/member/register]. 
 
