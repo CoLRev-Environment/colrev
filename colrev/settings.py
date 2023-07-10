@@ -2,7 +2,6 @@
 """Settings of the CoLRev project."""
 from __future__ import annotations
 
-import os
 import dataclasses
 import json
 import typing
@@ -513,7 +512,6 @@ class Settings(JsonSchemaMixin):
     pdf_prep: PDFPrepSettings
     screen: ScreenSettings
     data: DataSettings
-    
 
     def is_curated_repo(self) -> bool:
         """Check whether data is curated in this repository"""
@@ -680,7 +678,6 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
         review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
     )
 
-    with open('settings.json', 'w', encoding='utf-8') as settings_file:
-        json.dump(exported_dict, settings_file, indent=4)
-
-    review_manager.dataset.add_changes(path=Path('settings.json'))
+    with open("settings.json", "w", encoding="utf-8") as outfile:
+        json.dump(exported_dict, outfile, indent=4)
+    review_manager.dataset.add_changes(path=Path("settings.json"))
