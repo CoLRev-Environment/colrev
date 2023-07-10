@@ -220,7 +220,10 @@ def add_data(
                 path=default_endpoint_conf["word_template"]
             )
 
-        data_operation.add_data_endpoint(data_endpoint=default_endpoint_conf)
+        data_operation.review_manager.settings.data.data_package_endpoints.append(
+            default_endpoint_conf
+        )
+        data_operation.review_manager.save_settings()
         data_operation.review_manager.create_commit(
             msg="Add data endpoint",
             script_call="colrev data",
