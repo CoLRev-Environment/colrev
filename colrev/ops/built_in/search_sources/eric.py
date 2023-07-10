@@ -90,7 +90,7 @@ class ERICSearchSource(JsonSchemaMixin):
         return result
     
 
-    def search_split(search) -> str:
+    def __search_split(search) -> str:
         if ' AND ' in search:
             search_parts = search.split(' AND ')
             field_values = []
