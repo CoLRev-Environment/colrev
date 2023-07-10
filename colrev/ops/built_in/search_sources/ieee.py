@@ -48,6 +48,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             self.search_source = from_dict(data_class=self.settings_class, data=settings)
         else:
@@ -129,21 +130,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-        )
+        )   
+
+        settings=self.review_manager.environment_manager.load_environment_registry()
+        key = settings ['packages']
 
         prev_record_dict_version = {}
-
-        user_home = os.path.expanduser("~")
-        api_key_file_path = os.path.join(user_home, "api_key.json")
-
-        try:
-            with open(api_key_file_path, 'r') as api_key_file:
-                api_key_data = json.load(api_key_file)
-                key = api_key_data['api_key']
-        except FileNotFoundError:
-            raise Exception("API key file not found.")
-        except (json.JSONDecodeError, KeyError):
-            raise Exception("Invalid API key file format.")
 
         query = colrev.ops.built_in.search_sources.xploreapi.XPLORE(key)
         query.dataType('json')
@@ -160,7 +152,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         parameter_methods["publication_year"] = query.publicationYear
         parameter_methods["queryText"] = query.queryText
         parameter_methods["parameter"] = query.queryText
-        parameter_methods["booleanText"] = query.booleanText
 
         parameters = self.search_source.search_parameters
         for key, value in parameters.items():
