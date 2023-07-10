@@ -33,6 +33,7 @@ import colrev.ops.built_in.search_sources.xploreapi
 class IEEEXploreSearchSource(JsonSchemaMixin):
     """SearchSource for IEEEXplore"""
 
+    flag=True
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
     search_type = colrev.settings.SearchType.DB
@@ -49,6 +50,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
+       
+
         if settings:
             self.search_source = from_dict(data_class=self.settings_class, data=settings)
         else:
@@ -60,7 +63,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
-
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
 
@@ -131,6 +133,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )   
+        settings=self.review_manager.environment_manager.load_environment_registry()
+        #if statement is used so that the api_key does not need to be entered every time after first insertion. But is this a proper validation of the key?
+        if len(settings ['packages']) != 24:
+            api_key = input("Please enter api key: ")
+            print (len(api_key))
+            self.review_manager.environment_manager.update_registry("packages", api_key)
 
         settings=self.review_manager.environment_manager.load_environment_registry()
         key = settings ['packages']
@@ -189,7 +197,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         ieee_feed.save_feed_file()       
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
-
+    
     def create_record_dict(self, article):
         record_dict = {'ID': article['article_number']}
 

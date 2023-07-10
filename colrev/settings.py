@@ -680,20 +680,6 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
         review_manager.settings, dict_factory=colrev.env.utils.custom_asdict_factory
     )
 
-    api_key = None
-    for source in exported_dict['sources']:
-        if 'search_parameters' in source and 'apikey' in source['search_parameters']:
-            api_key = source['search_parameters'].pop('apikey')
-            break
-
-    if api_key:
-        user_home = os.path.expanduser("~")
-        api_key_file_path = os.path.join(user_home, "api_key.json")
-        print ("Your api_key will be saved in a local file on your machine at " + api_key_file_path + ". Make sure to protect it if necessary.")
-
-        with open(api_key_file_path, 'w') as api_key_file:
-            json.dump({'api_key': api_key}, api_key_file, indent=4)
-
     with open('settings.json', 'w', encoding='utf-8') as settings_file:
         json.dump(exported_dict, settings_file, indent=4)
 
