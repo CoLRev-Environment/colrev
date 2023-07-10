@@ -102,11 +102,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 key, value = parameter.split("=")
                 search_parameters[key] = value
 
-            parameter_values = ''.join(search_parameters.values())
-            parameter_str = ''.join(str(value) for value in parameter_values)
+            last_value = list(search_parameters.values())[-1]
 
             filename = search_operation.get_unique_filename(
-                file_path_string=f"ieee_{parameter_str}"
+                file_path_string=f"ieee_{last_value}"
             )
 
             add_source = colrev.settings.SearchSource(
@@ -145,8 +144,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             raise Exception("API key file not found.")
         except (json.JSONDecodeError, KeyError):
             raise Exception("Invalid API key file format.")
-        
-        #key = "ungry3gupmaxmtxkadhujj6n"
 
         query = colrev.ops.built_in.search_sources.xploreapi.XPLORE(key)
         query.dataType('json')
@@ -155,7 +152,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         query.usingOpenAccess = False
 
         parameter_methods = {}
-        """TODO: Weitere Suchmöglichkeiten ermöglichen?"""
         parameter_methods["article_number"] = query.articleNumber
         parameter_methods["doi"] = query.doi
         parameter_methods["author"] = query.authorText
