@@ -16,6 +16,7 @@ colrev.ops.prescreen.Prescreen
    .. autosummary::
       :nosignatures:
 
+      ~Prescreen.add
       ~Prescreen.check_precondition
       ~Prescreen.conclude
       ~Prescreen.create_prescreen_split
