@@ -29,7 +29,7 @@ colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/artic
 Multiple parameters can be concatenated using the "&" symbol.
 
 ```
-colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/articles?publication_year=2019&acstract=microsourcing"
+colrev search -a colrev.ieee:"https://ieeexploreapi.ieee.org/api/v1/search/articles?publication_year=2019&abstract=microsourcing"
 ```
 
 If your search query includes Boolean operators, add "queryText=query" to the URL.
