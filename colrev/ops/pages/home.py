@@ -1,14 +1,11 @@
 #! /usr/bin/env python3
 """CoLRev dashboard operation: to track project progress through dashboard"""
 from __future__ import annotations
-from curses import color_pair
 
 import pandas as pd
-from dash import Dash, dcc, html, Input, Output, dash_table, State
+from dash import dcc, html
 import dash
-import bibtexparser
 import plotly.express as px
-
 import colrev.review_manager
 from datetime import datetime
 
