@@ -374,7 +374,8 @@ class Upgrade(colrev.operation.Operation):
                 continue
             ed_val = record["colrev_data_provenance"]["editor"]
             del record["colrev_data_provenance"]["editor"]
-            record["colrev_masterdata_provenance"]["editor"] = ed_val
+            if "CURATED" not in record["colrev_masterdata_provenance"]:
+                record["colrev_masterdata_provenance"]["editor"] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
