@@ -15,7 +15,6 @@ from xml.etree import ElementTree  # nosec
 from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml
-import feedparser
 import requests
 import zope.interface
 from dacite import from_dict
@@ -25,6 +24,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+# import feedparser
+
 # added import for arXiv API
 
 defusedxml.defuse_stdlib()
