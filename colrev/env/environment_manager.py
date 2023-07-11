@@ -57,6 +57,8 @@ class EnvironmentManager:
             self.load_yaml = False
             with open(environment_registry_path, encoding="utf8") as file:
                 environment_registry = json.load(fp=file)
+            # assert "local_index" in environment_registry
+            # assert "packages" in environment_registry
         elif environment_registry_path_yaml.is_file():
             self.load_yaml = True
             backup_file = Path(str(environment_registry_path_yaml) + ".bk")
@@ -364,7 +366,7 @@ class EnvironmentManager:
 
         keys = key.split(".")
         # We don't want to allow user to replace any core settings, so check for packages key
-        if keys[0] != "packages":
+        if keys[0] != "packages" or len(keys) < 2:
             raise colrev_exceptions.PackageSettingMustStartWithPackagesException(key)
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)
