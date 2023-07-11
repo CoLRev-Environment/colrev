@@ -20,7 +20,8 @@ class Dashboard():
         app.layout = html.Div([
             html.Div([
                     html.Img(src="assets/favicon.ico", className="logo"), 
-                    html.H1(children="-   Dashboard", className= "header-title")], className="header"),
+                    html.H1(children="Dashboard", className= "header-title"),
+                    html.H2(children="make progress visible", className= "header-subtitle")], className="header"),
 
 
         dash.page_container
