@@ -2,9 +2,6 @@
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
 
-import re
-import os
-import json
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,6 +16,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.ops.prep
+import colrev.env.package_manager
 
 import colrev.ops.built_in.search_sources.xploreapi
 
@@ -45,6 +43,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/ieee.md"
     )
+    SETTINGS= {
+        "api_key": "packages.search_source.colrev.ieee.api_key",
+    }
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: Optional[dict] = None,
@@ -132,17 +133,14 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-        )   
-        settings=self.review_manager.environment_manager.load_environment_registry()
-        #if statement is used so that the api_key does not need to be entered every time after first insertion. But is this a proper validation of the key?
-        if len(settings ['packages']) != 24:
+        ) 
+        api_key = self.review_manager.environment_manager.get_settings_by_key(self.SETTINGS["api_key"])
+        if api_key is None or len(api_key) != 24:
             api_key = input("Please enter api key: ")
-            print (len(api_key))
-            self.review_manager.environment_manager.update_registry("packages", api_key)
+            self.review_manager.environment_manager.update_registry(self.SETTINGS["api_key"], api_key)
 
-        settings=self.review_manager.environment_manager.load_environment_registry()
-        key = settings ['packages']
-
+        key=self.review_manager.environment_manager.get_settings_by_key (self.SETTINGS["api_key"])
+       
         prev_record_dict_version = {}
 
         query = colrev.ops.built_in.search_sources.xploreapi.XPLORE(key)
@@ -174,8 +172,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         for article in articles:
             article_id = article['article_number']
             if article_id not in records:
-                record_dict = self.create_record_dict(article)
-                updated_record_dict = self.update_record_fields(record_dict)
+                record_dict = self.__create_record_dict(article)
+                updated_record_dict = self.__update_record_fields(record_dict)
                 record = colrev.record.Record(data=updated_record_dict)
                 added = ieee_feed.add_record(record=record)
 

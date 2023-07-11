@@ -123,7 +123,7 @@ class ERICSearchSource(JsonSchemaMixin):
             start = query.get('start', ['0'])[0]
             rows = query.get('rows', ['2000'])[0]
             if ':' in search:
-                search = ERICSearchSource.search_split(search)
+                search = ERICSearchSource.__search_split(search)
             filename = search_operation.get_unique_filename(
                 file_path_string=f"eric_{search}"
             )
@@ -280,4 +280,3 @@ class ERICSearchSource(JsonSchemaMixin):
         """Source-specific preparation for ERIC"""
 
         return record
-
