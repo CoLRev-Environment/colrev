@@ -148,7 +148,10 @@ class LocalIndex:
     def search_in_database(self, journal: typing.Optional[typing.Any]) -> str:
         """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
-        cur.execute("SELECT ranking FROM rankings WHERE journal_name = ?", (journal,),)
+        cur.execute(
+            "SELECT ranking FROM rankings WHERE journal_name = ?",
+            (journal,),
+        )
         content = cur.fetchall()
         ranking = ""
         in_ranking_included = False
@@ -164,7 +167,11 @@ class LocalIndex:
                     ranking += "Senior Scholar's List of Premier Journals; "
                     in_ranking_included = True
                 else:
-                    ranking += "Senior Scholar's List of Premier Journals "+ impact_factor1 + "; "
+                    ranking += (
+                        "Senior Scholar's List of Premier Journals "
+                        + impact_factor1
+                        + "; "
+                    )
                     in_ranking_included = True
             if "VHB" in rankings.values():
                 cur.execute(
