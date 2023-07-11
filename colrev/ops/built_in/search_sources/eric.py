@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import typing
+import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
-import urllib.parse
-import requests
 from typing import Optional
-import colrev.exceptions as colrev_exceptions
 
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -29,6 +28,7 @@ import colrev.record
 @dataclass
 class ERICSearchSource(JsonSchemaMixin):
     """SearchSource for the ERIC API"""
+
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
     search_type = colrev.settings.SearchType.DB
@@ -54,17 +54,14 @@ class ERICSearchSource(JsonSchemaMixin):
             )
         else:
             self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.eric",
-                    filename=Path("data/search/eric.bib"),
-                    search_type=colrev.settings.SearchType.OTHER,
-                    search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
-                    comment="",
-                )
+                endpoint="colrev.eric",
+                filename=Path("data/search/eric.bib"),
+                search_type=colrev.settings.SearchType.OTHER,
+                search_parameters={},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
 
-        
-
-    
     def validate_source(
         self,
         search_operation: colrev.ops.search.Search,
@@ -79,6 +76,7 @@ class ERICSearchSource(JsonSchemaMixin):
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
         )
+
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for ERIC"""
@@ -88,28 +86,25 @@ class ERICSearchSource(JsonSchemaMixin):
         # Note : no features in bib file for identification
 
         return result
-    
 
-    def __search_split(search) -> str:
-        if ' AND ' in search:
-            search_parts = search.split(' AND ')
+    def __search_split(search: str) -> str:
+        if " AND " in search:
+            search_parts = search.split(" AND ")
             field_values = []
             for part in search_parts:
-                field, value = part.split(':')
+                field, value = part.split(":")
                 field = field.strip()
                 value = value.strip().strip("'")
-                field_value = f'{field}%3A%22{urllib.parse.quote(value)}%22'
+                field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
                 field_values.append(field_value)
-            return ' AND '.join(field_values)
+            return " AND ".join(field_values)
         else:
-            field, value = search.split(':')
+            field, value = search.split(":")
             field = field.strip()
             value = value.strip().strip("'")
-            field_value = f'{field}%3A%22{urllib.parse.quote(value)}%22'
+            field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
             return field_value
-    
 
-    
     @classmethod
     def add_endpoint(
         cls, search_operation: colrev.ops.search.Search, query: str
@@ -118,11 +113,11 @@ class ERICSearchSource(JsonSchemaMixin):
 
         if "https://api.ies.ed.gov/eric/?" in query:
             url_parsed = urllib.parse.urlparse(query)
-            query = urllib.parse.parse_qs(url_parsed.query)
-            search = query.get('search', [''])[0]
-            start = query.get('start', ['0'])[0]
-            rows = query.get('rows', ['2000'])[0]
-            if ':' in search:
+            new_query = urllib.parse.parse_qs(url_parsed.query)
+            search = new_query.get("search", [""])[0]
+            start = new_query.get("start", ["0"])[0]
+            rows = new_query.get("rows", ["2000"])[0]
+            if ":" in search:
                 search = ERICSearchSource.__search_split(search)
             filename = search_operation.get_unique_filename(
                 file_path_string=f"eric_{search}"
@@ -131,7 +126,7 @@ class ERICSearchSource(JsonSchemaMixin):
                 endpoint="colrev.eric",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": search, 'start': start, 'rows': rows},
+                search_parameters={"query": search, "start": start, "rows": rows},
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
@@ -139,25 +134,24 @@ class ERICSearchSource(JsonSchemaMixin):
 
         return None
 
-    
-
-
-    def run_search(self, search_operation, rerun):
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, rerun: bool
+    ) -> None:
         eric_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-        prev_record_dict_version = {}
+        prev_record_dict_version: dict = {}
         full_url = self.build_search_url()
-    
+
         response = requests.get(full_url)
         if response.status_code == 200:
             data = response.json()
             records = search_operation.review_manager.dataset.load_records_dict()
-            
-            for doc in data['response']['docs']:
-                record_id = doc['id']
+
+            for doc in data["response"]["docs"]:
+                record_id = doc["id"]
                 if record_id not in records:
                     record_dict = self.create_record_dict(doc)
                     updated_record_dict = self.update_record_fields(record_dict)
@@ -171,62 +165,89 @@ class ERICSearchSource(JsonSchemaMixin):
                         eric_feed.nr_added += 1
                     else:
                         changed = search_operation.update_existing_record(
-                        records=records,
-                        record_dict=record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
+                            records=records,
+                            record_dict=record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
                         )
                         if changed:
                             search_operation.review_manager.logger.info(
                                 " update " + record.data["ID"]
                             )
                             eric_feed.nr_changed += 1
-                            
+
             eric_feed.save_feed_file()
             search_operation.review_manager.dataset.save_records_dict(records=records)
             search_operation.review_manager.dataset.add_record_changes()
         else:
             raise colrev_exceptions.ServiceNotAvailableException(
-                    "Could not reach API. Status Code: " + response.status_code
-                ) 
-        
-        
-    def build_search_url(self):
-        url = 'https://api.ies.ed.gov/eric/'
+                "Could not reach API. Status Code: " + response.status_code
+            )
+
+    def build_search_url(self) -> str:
+        url = "https://api.ies.ed.gov/eric/"
         params = self.search_source.search_parameters
-        query = params['query']
-        format_param = 'json'
-        start_param = params.get('start', '0')
-        rows_param = params.get('rows', '2000')
+        query = params["query"]
+        format_param = "json"
+        start_param = params.get("start", "0")
+        rows_param = params.get("rows", "2000")
         return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
-            
 
-    def create_record_dict(self, doc):
-        record_dict = {'ID': doc['id']}
+    def create_record_dict(self, doc: dict) -> dict:
+        record_dict = {"ID": doc["id"]}
 
-        api_fields = ['id', 'title', 'author', 'source', 'publicationdateyear', 'description',
-                    'subject', 'peerreviewed', 'abstractor', 'audience', 'authorxlink',
-                    'e_datemodified', 'e_fulltextauth', 'e yearadded', 'educationlevel',
-                    'identifiersgeo', 'identifierslaw', 'identifierstest', 'iescited',
-                    'iesfunded', 'iesgrantcontractnum', 'iesgrantcontractnumxlink',
-                    'ieslinkpublication', 'ieslinkwwcreviewguide', 'ieswwcreviewed',
-                    'institution', 'isbn', 'issn', 'language', 'publicationtype',
-                    'publisher', 'sourceid', 'sponsor', 'url']
+        api_fields = [
+            "id",
+            "title",
+            "author",
+            "source",
+            "publicationdateyear",
+            "description",
+            "subject",
+            "peerreviewed",
+            "abstractor",
+            "audience",
+            "authorxlink",
+            "e_datemodified",
+            "e_fulltextauth",
+            "e yearadded",
+            "educationlevel",
+            "identifiersgeo",
+            "identifierslaw",
+            "identifierstest",
+            "iescited",
+            "iesfunded",
+            "iesgrantcontractnum",
+            "iesgrantcontractnumxlink",
+            "ieslinkpublication",
+            "ieslinkwwcreviewguide",
+            "ieswwcreviewed",
+            "institution",
+            "isbn",
+            "issn",
+            "language",
+            "publicationtype",
+            "publisher",
+            "sourceid",
+            "sponsor",
+            "url",
+        ]
 
         for field in api_fields:
             field_value = doc.get(field)
-            record_dict['ENTRYTYPE'] = 'article'
+            record_dict["ENTRYTYPE"] = "article"
             if field_value is not None:
-                if field == 'publicationtype':
-                    record_dict['ENTRYTYPE'] = field_value
+                if field == "publicationtype":
+                    record_dict["ENTRYTYPE"] = field_value
                 else:
                     record_dict[field] = str(field_value)
 
-        return record_dict 
-         
-    def update_record_fields(self,
-        record_dict: dict, 
+        return record_dict
+
+    def update_record_fields(
+        self,
+        record_dict: dict,
     ) -> dict:
         if "publicationdateyear" in record_dict:
             record_dict["year"] = record_dict.pop("publicationdateyear")
@@ -245,7 +266,6 @@ class ERICSearchSource(JsonSchemaMixin):
         if "id" in record_dict:
             record_dict["doi"] = record_dict.pop("id")
         return record_dict
-    
 
     def get_masterdata(
         self,
