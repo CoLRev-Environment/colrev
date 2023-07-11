@@ -370,9 +370,7 @@ class Search(colrev.operation.Operation):
             endpoint = endpoint_dict[source.endpoint.lower()]
             endpoint.validate_source(search_operation=self, source=source)  # type: ignore
 
-            run_search_function = getattr(endpoint, "run_search", None)
-            if not callable(run_search_function):
-                # Some sources do not support automated searches (e.g., unknown sources)
+            if not endpoint.api_search_supported:  # type: ignore
                 continue
 
             if not self.review_manager.high_level_operation:
