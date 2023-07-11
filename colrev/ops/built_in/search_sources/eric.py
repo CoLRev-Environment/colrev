@@ -170,9 +170,13 @@ class ERICSearchSource(JsonSchemaMixin):
                         )
                         eric_feed.nr_added += 1
                     else:
-                        changed = self.update_existing_record(
-                        search_operation, records, record.data, prev_record_dict_version, rerun
-                    )
+                        changed = search_operation.update_existing_record(
+                        records=records,
+                        record_dict=record.data,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                        update_time_variant_fields=rerun,
+                        )
                         if changed:
                             search_operation.review_manager.logger.info(
                                 " update " + record.data["ID"]
@@ -242,17 +246,6 @@ class ERICSearchSource(JsonSchemaMixin):
             record_dict["doi"] = record_dict.pop("id")
         return record_dict
     
-    def update_existing_record(
-        self, search_operation, records, record_dict, prev_record_dict_version, rerun
-    ):
-        changed = search_operation.update_existing_record(
-            records=records,
-            record_dict=record_dict,
-            prev_record_dict_version=prev_record_dict_version,
-            source=self.search_source,
-            update_time_variant_fields=rerun,
-        )
-        return changed
 
     def get_masterdata(
         self,
