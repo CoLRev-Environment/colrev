@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing
+import urllib.request
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
@@ -14,20 +15,17 @@ from xml.etree import ElementTree  # nosec
 from xml.etree.ElementTree import Element  # nosec
 
 import defusedxml
+import feedparser
 import requests
 import zope.interface
 from dacite import from_dict
 from defusedxml.lxml import fromstring
-import feedparser
-
-# added import for arXiv API
-import urllib
-import urllib.request
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
+# added import for arXiv API
 
 defusedxml.defuse_stdlib()
 
@@ -40,8 +38,9 @@ defusedxml.defuse_stdlib()
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 @dataclass
-class ArXivSource():
+class ArXivSource:
     """SearchSource for arXiv"""
+
     # RN: turn search input into query
     # query = colrev.search.input()
 
@@ -50,20 +49,17 @@ class ArXivSource():
     search_type = colrev.settings.SearchType.DB
     api_search_supported = True
     ci_supported: bool = True
-   # heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
-    short_name = "arXiv"      # ist es eig. eagal wie der Name ist?
+    # heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    short_name = "arXiv"  # ist es eig. eagal wie der Name ist?
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/arxiv.md"
     )
     __arxiv_md_filename = Path("data/search/md_arxiv.bib")
 
-
-
-
     # Added RN: expose metadata if in arXiv namespace
-    #feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch' 
-    #feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+    # feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+    # feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
     def __init__(
         self,
@@ -101,25 +97,25 @@ class ArXivSource():
         self.quality_model = self.review_manager.get_qm()
         _, self.email = source_operation.review_manager.get_committer()
 
-#   @classmethod
-#    def heuristic(cls, filename: Path, data: str) -> dict:
-#        """Source heuristic for ArXiv"""
+    #   @classmethod
+    #    def heuristic(cls, filename: Path, data: str) -> dict:
+    #        """Source heuristic for ArXiv"""
 
-#        result = {"confidence": 0.0}
+    #        result = {"confidence": 0.0}
 
-        # Simple heuristic:
-#        if "PMID,Title,Authors,Citation,First Author,Journal/Book," in data:
-#            result["confidence"] = 1.0
-#            return result
-#        if "PMID- " in data:
-#            result["confidence"] = 0.7
-#            return result
+    # Simple heuristic:
+    #        if "PMID,Title,Authors,Citation,First Author,Journal/Book," in data:
+    #            result["confidence"] = 1.0
+    #            return result
+    #        if "PMID- " in data:
+    #            result["confidence"] = 0.7
+    #            return result
 
-#        if "pmid " in data:
-#            if data.count(" pmid ") > data.count("\n@"):
-#                result["confidence"] = 1.0
+    #        if "pmid " in data:
+    #            if data.count(" pmid ") > data.count("\n@"):
+    #                result["confidence"] = 1.0
 
- #       return result
+    #       return result
 
     @classmethod
     def add_endpoint(
@@ -135,13 +131,9 @@ class ArXivSource():
             filename = search_operation.get_unique_filename(
                 file_path_string=f"arxiv_{query.replace('&sort=', '')}"
             )
-            
-            
-            #http://export.arxiv.org/api/{method_name}?{parameters}
-            query = (
-                "https://export.arxiv.org/api/query?search_query=all:"
-                + query
-            )
+
+            # http://export.arxiv.org/api/{method_name}?{parameters}
+            query = "https://export.arxiv.org/api/query?search_query=all:" + query
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.arxiv",
                 filename=filename,
@@ -187,9 +179,9 @@ class ArXivSource():
             # pylint: disable=duplicate-code
             test_rec = {
                 "author": "Wang, R E and Demszky, D ",
-                "title": "Is ChatGPT a Good Teacher Coach?" 
+                "title": "Is ChatGPT a Good Teacher Coach?"
                 "Measuring Zero-Shot Performance For Scoring and Providing Actionable Insights on Classroom Instruction ",
-                "ENTRYTYPE": "article", #might not be needed in ArXiv
+                "ENTRYTYPE": "article",  # might not be needed in ArXiv
                 "arxivid": "arXiv:2306.03090",
             }
             returned_record_dict = self.__arxiv_query_id(
@@ -212,36 +204,38 @@ class ArXivSource():
     @classmethod
     def feed_parsing(query):
         # Added to expose metadata in arXiv namespace
-        #feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-        #feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+        # feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+        # feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
         # Get request
         response = urllib.urloben(query).read()
 
         feed = feedparser.parse(response)
 
-         # Run through each entry, and print out information
+        # Run through each entry, and print out information
         for entry in feed.entries:
-            print ('e-print metadata')
-            print ('arxiv-id: %s' % entry.id.split('/abs/')[-1])
-            print ('Published: %s' % entry.published)
-            print ('Title:  %s' % entry.title)
-            
+            print("e-print metadata")
+            print("arxiv-id: %s" % entry.id.split("/abs/")[-1])
+            print("Published: %s" % entry.published)
+            print("Title:  %s" % entry.title)
+
             # feedparser v4.1 only grabs the first author
             author_string = entry.author
-            
+
             # grab the affiliation in <arxiv:affiliation> if present
             # - this will only grab the first affiliation encountered
             #   (the first affiliation for the first author)
             # Please email the list with a way to get all of this information!
             try:
-                author_string += ' (%s)' % entry.arxiv_affiliation
+                author_string += " (%s)" % entry.arxiv_affiliation
             except AttributeError:
                 pass
 
             # feedparser v5.0.1 correctly handles multiple authors, print them all
             try:
-                print ('Authors:  %s' % ', '.join(author.name for author in entry.authors))
+                print(
+                    "Authors:  %s" % ", ".join(author.name for author in entry.authors)
+                )
             except AttributeError:
                 pass
 
@@ -251,15 +245,14 @@ class ArXivSource():
         author = ArXivSource.feed_parsing(query).author_string
         return author
 
-    #RN
+    # RN
     @classmethod
     def __get_title_string(query):
         title = ArXivSource.feed_parsing(query).entry_title
         return title
 
-
-    #@classmethod
-    #def __get_author_string_from_node(cls, *, author_node: Element) -> str:
+    # @classmethod
+    # def __get_author_string_from_node(cls, *, author_node: Element) -> str:
     #    authors_string = ""
     #    author_last_name_node = author_node.find("LastName")
     #    if author_last_name_node is not None:
@@ -272,8 +265,8 @@ class ArXivSource():
     #            authors_string += author_fore_name_node.text
     #    return authors_string
 
-    #@classmethod
-    #def __get_author_string(cls, *, root) -> str:  # type: ignore
+    # @classmethod
+    # def __get_author_string(cls, *, root) -> str:  # type: ignore
     #    authors_list = []
     #    for author_node in root.xpath(
     #        "/ArXivArticleSet/ArXivArticle/Citation/Article/AuthorList/Author"
@@ -283,8 +276,8 @@ class ArXivSource():
     #        )
     #    return " and ".join(authors_list)
 
-    #@classmethod
-    #def __get_title_string(cls, *, root) -> str:  # type: ignore
+    # @classmethod
+    # def __get_title_string(cls, *, root) -> str:  # type: ignore
     #    title = root.xpath(
     #        "/ArXivArticleSet/ArXivArticle/Citation/Article/ArticleTitle"
     #    )
@@ -292,8 +285,8 @@ class ArXivSource():
     #        title = title[0].text.strip().rstrip(".")
     #    return title
 
-    #@classmethod
-    #def __get_abstract_string(cls, *, root) -> str:  # type: ignore
+    # @classmethod
+    # def __get_abstract_string(cls, *, root) -> str:  # type: ignore
     #    abstract = root.xpath(
     #        "/ArXivArticleSet/ArXivArticle/Citation/Article/Abstract"
     #    )
@@ -314,7 +307,7 @@ class ArXivSource():
         retrieved_record_dict.update(title=cls.__get_title_string(root=root))
         retrieved_record_dict.update(author=cls.__get_author_string(root=root))
 
-        journal_path = "/ArXivArticleSet/ArXivArticle/Citation/Article/Journal" #Citation? reicht das als Ersatz?
+        journal_path = "/ArXivArticleSet/ArXivArticle/Citation/Article/Journal"  # Citation? reicht das als Ersatz?
         journal_name = root.xpath(journal_path + "/ISOAbbreviation")
         if journal_name:
             retrieved_record_dict.update(ENTRYTYPE="article")
@@ -335,7 +328,7 @@ class ArXivSource():
         retrieved_record_dict.update(volume=cls.__get_abstract_string(root=root))
 
         article_id_list = root.xpath(
-            "/ArXivArticleSet/ArXivArticle/ArXivData/ArticleIdList" # wie kammst du auf die Bennenung?
+            "/ArXivArticleSet/ArXivArticle/ArXivData/ArticleIdList"  # wie kammst du auf die Bennenung?
         )
         for article_id in article_id_list[0]:
             id_type = article_id.attrib.get("IdType")
@@ -352,7 +345,7 @@ class ArXivSource():
 
         return retrieved_record_dict
 
-## TODO
+    ## TODO
     def __get_arxiv_ids(self, query: str, retstart: int) -> typing.List[str]:
         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
@@ -361,12 +354,11 @@ class ArXivSource():
         url = query + " "
 
         # change this to api call?
-        #ret = session.request(
+        # ret = session.request(
         #    "GET", query + f"&retstart={retstart}", headers=headers, timeout=30
-        #)
-        
-        ret = urllib.urloben(url)
+        # )
 
+        ret = urllib.urloben(url)
 
         ret.raise_for_status()
         if ret.status_code != 200:
@@ -522,7 +514,6 @@ class ArXivSource():
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata fromArXiv based on similarity with the record provided"""
-
 
         if len(record.data.get("title", "")) < 35 and "arxivid" not in record.data:
             return record
