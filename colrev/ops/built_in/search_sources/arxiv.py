@@ -51,7 +51,7 @@ class ArXivSource:
     search_type = colrev.settings.SearchType.DB
     api_search_supported = True
     ci_supported: bool = True
-    # heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "arXiv"  # ist es eig. eagal wie der Name ist?
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
