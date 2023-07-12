@@ -129,7 +129,12 @@ def main(ctx: click.core.Context) -> None:
     Documentation:  https://colrev.readthedocs.io/
     """
 
-    ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
+    try:
+        ctx.obj = {
+            "review_manager": colrev.review_manager.ReviewManager()
+        }
+    except colrev.exceptions.RepoSetupError:
+        pass
 
 
 @main.command(help_priority=1)
