@@ -129,6 +129,8 @@ def main(ctx: click.core.Context) -> None:
     Documentation:  https://colrev.readthedocs.io/
     """
 
+    ctx.obj = {}
+
 
 @main.command(help_priority=1)
 @click.option(
@@ -225,11 +227,13 @@ def status(
     force: bool,
 ) -> None:
     """Show status"""
+    print(ctx.obj)
 
     try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
-        )
+        review_manager = get_review_manager(ctx, {
+            "force_mode": force, "verbose_mode": verbose, "exact_call": EXACT_CALL
+        })
+        print(ctx.obj)
         status_operation = review_manager.get_status_operation()
 
         if analytics:
@@ -307,9 +311,11 @@ def retrieve(
     https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
     """
 
-    review_manager = colrev.review_manager.ReviewManager(
-        verbose_mode=verbose, force_mode=force, high_level_operation=True
-    )
+    print(ctx.obj)
+
+    review_manager = get_review_manager(ctx, {
+        'verbose_mode': verbose, 'force_mode': force, 'high_level_operation': True
+    })
 
     if not any(review_manager.search_dir.iterdir()) and not any(
         review_manager.pdf_dir.iterdir()
@@ -2895,6 +2901,17 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
+
+
+def get_review_manager(ctx: click.core.Context, review_manager_params) -> colrev.review_manager.ReviewManager:
+    try:
+        return ctx.obj['review_manager']
+    except (TypeError, KeyError) as e:
+        print(e)
+        print("init review object ...")
+        review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
+        ctx.obj = {'review_manager': review_manager}
+        return review_manager
 
 
 register_repl(main)
