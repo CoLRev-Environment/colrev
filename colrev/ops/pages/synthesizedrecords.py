@@ -38,7 +38,7 @@ for title in data:
         data.pop(title)
 
 
-def empty_figure() -> go.Figure:
+def empty_figure() -> object:
     """creates an empty figure in case of invalid search"""
     figure = go.Figure(go.Scatter(x=[], y=[]))
     figure.update_layout(template=None)
@@ -48,7 +48,7 @@ def empty_figure() -> go.Figure:
     return figure
 
 
-def visualization_time(data) -> px.bar:
+def visualization_time(data) -> object:
     """creates graph about papers published over time"""
     if data.empty:
         return empty_figure()
@@ -86,7 +86,7 @@ def visualization_time(data) -> px.bar:
 
 
 def visualization_magazines(data) -> px.bar:
-    """creates graph about papers published per journal""""
+    """creates graph about papers published per journal"""
     if data.empty:
         return empty_figure()
     data2 = data.groupby(["journal"])["journal"].count().reset_index(name="count")
@@ -224,8 +224,8 @@ layout = html.Div(
     Input("search", "value"),
     Input("sortby", "value"),
 )
-def update_table(searchvalue, sortvalue) -> dict, str, px.bar, px.bar:
-    """callback function updating table and graphs based on search and sort""""
+def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:
+    """callback function updating table and graphs based on search and sort"""
     sorted_data = data.copy(deep=True)
 
     output = ""

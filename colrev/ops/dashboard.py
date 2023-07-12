@@ -9,8 +9,9 @@ from dash import html
 
 class Dashboard:
     """Dashboard class"""
+
     def makeDashboard(self) -> Dash:
-        """creates dashboard header and general structure""""
+        """creates dashboard header and general structure"""
         app = Dash(__name__, use_pages=True)
 
         app.layout = html.Div(
