@@ -16,7 +16,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.ops.prep
-import colrev.env.package_manager
 
 import colrev.ops.built_in.search_sources.xploreapi
 
