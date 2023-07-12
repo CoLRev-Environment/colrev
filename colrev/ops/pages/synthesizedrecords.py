@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-"""CoLRev dashboard operation: to track project progress through dashboard"""
+"""dashboard table and graphs for synthesized records"""
 from __future__ import annotations
 
 import bibtexparser
@@ -8,14 +8,11 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import callback
-from dash import Dash
 from dash import dash_table
 from dash import dcc
 from dash import html
 from dash import Input
 from dash import Output
-from dash import State
-
 
 dash.register_page(__name__)
 
@@ -41,8 +38,8 @@ for title in data:
         data.pop(title)
 
 
-# function from StackOverflow (https://stackoverflow.com/questions/66637861/how-to-not-show-default-dcc-graph-template-in-dash)
-def empty_figure():
+def empty_figure() -> go.Figure:
+    """creates an empty figure in case of invalid search"""
     figure = go.Figure(go.Scatter(x=[], y=[]))
     figure.update_layout(template=None)
     figure.update_xaxes(showgrid=False, showticklabels=False, zeroline=False)
@@ -51,7 +48,8 @@ def empty_figure():
     return figure
 
 
-def visualization_time(data):
+def visualization_time(data) -> px.bar:
+    """creates graph about papers published over time"""
     if data.empty:
         return empty_figure()
     data2 = data.groupby(["year"])["year"].count().reset_index(name="count")
@@ -72,8 +70,6 @@ def visualization_time(data):
             automargin=True,
             x=0.5,
         )
-        # yaxis = dict( tickfont = dict(size=20)),
-        # xaxis = dict( tickfont = dict(size=20))
     )
     fig.update_xaxes(
         title_text="Year",
@@ -89,7 +85,8 @@ def visualization_time(data):
     return fig
 
 
-def visualization_magazines(data):
+def visualization_magazines(data) -> px.bar:
+    """creates graph about papers published per journal""""
     if data.empty:
         return empty_figure()
     data2 = data.groupby(["journal"])["journal"].count().reset_index(name="count")
@@ -109,8 +106,6 @@ def visualization_magazines(data):
             automargin=True,
             x=0.5,
         )
-        # yaxis = dict( tickfont = dict(size=20)),
-        # xaxis = dict( tickfont = dict(size=20))
     )
     fig.update_xaxes(
         title_text="Journal",
@@ -127,57 +122,96 @@ def visualization_magazines(data):
     return fig
 
 
-layout = html.Div( # defining the content
+layout = html.Div(
     children=[
         html.Div(
-            children =[
-                html.Div(className = "options", 
+            children=[
+                html.Div(
+                    className="options",
                     children=[
                         dcc.Dropdown(
                             id="sortby",
-                            options=["index","year", "author (alphabetically)"], 
-                            placeholder="Sort by..."
-                        )]),
-                html.Div(className ="options", 
-                    children =[
-                        dcc.Input(type="text", id="search", value="", placeholder="  Search for..."
-                        )])
-            ], className="menu"),
+                            options=["index", "year", "author (alphabetically)"],
+                            placeholder="Sort by...",
+                        )
+                    ],
+                ),
+                html.Div(
+                    className="options",
+                    children=[
+                        dcc.Input(
+                            type="text",
+                            id="search",
+                            value="",
+                            placeholder="  Search for...",
+                        )
+                    ],
+                ),
+            ],
+            className="menu",
+        ),
         html.Div(
             children=[
-                html.Div([
-                html.Label("Currently Synthesized Records", style={'font-family': 'Lato, sans-serif','font-weight': 'bold', 'fontSize': 30}),  
-                dash_table.DataTable(data = data.to_dict('records'),id = "table",
-                style_cell = {'font-family': 'Lato, sans-serif',
-                                'font-size': '20px',
-                                'text-align': 'left'
+                html.Div(
+                    [
+                        html.Label(
+                            "Currently Synthesized Records",
+                            style={
+                                "font-family": "Lato, sans-serif",
+                                "font-weight": "bold",
+                                "fontSize": 30,
+                            },
+                        ),
+                        dash_table.DataTable(
+                            data=data.to_dict("records"),
+                            id="table",
+                            style_cell={
+                                "font-family": "Lato, sans-serif",
+                                "font-size": "20px",
+                                "text-align": "left",
+                            },
+                            style_cell_conditional=[
+                                {
+                                    "if": {"column_id": "year"},
+                                    "width": "7%",
+                                    "text-align": "center",
                                 },
-                style_cell_conditional=[{'if': {'column_id': 'year'},'width': '7%', 'text-align': 'center'},
-                                         {'if': {'column_id': 'title'},'width': '53%'}],
-                style_header = {'font-weight': 'bold', 
-                                'backgroundColor': '#006400',
-                                'color':'white'},
-                style_data = {'whiteSpace': 'normal',
-                                'height': 'auto',
-                                'border': '1px solid green' },
-                style_as_list_view=True,    
-                            )
-                ]),
-                ## Div für Ausgabe wenn keine Ergebnisse bei suche
-                html.Div(id="table_empty", children= []) ,
-                            
-                html.Div([dcc.Graph(figure=visualization_time(data), id='time')], # Including the graphs  
-                    # style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}
-                    ),   
-                html.Div([dcc.Graph(figure=visualization_magazines(data), id='magazines')],
-                    # style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}
-                    )
-            ], 
-        className="wrapper"),
-        
-        html.Div(className="navigation-button",children=
-            [html.A(html.Button("back to Burn-Down Chart"), href="http://127.0.0.1:8050/")
-        ])
+                                {"if": {"column_id": "title"}, "width": "53%"},
+                            ],
+                            style_header={
+                                "font-weight": "bold",
+                                "backgroundColor": "#006400",
+                                "color": "white",
+                            },
+                            style_data={
+                                "whiteSpace": "normal",
+                                "height": "auto",
+                                "border": "1px solid green",
+                            },
+                            style_as_list_view=True,
+                        ),
+                    ]
+                ),
+                # Div für Ausgabe wenn keine Ergebnisse bei Suche
+                html.Div(id="table_empty", children=[]),
+                html.Div(
+                    [dcc.Graph(figure=visualization_time(data), id="time")],
+                ),
+                html.Div(
+                    [dcc.Graph(figure=visualization_magazines(data), id="magazines")],
+                ),
+            ],
+            className="wrapper",
+        ),
+        html.Div(
+            className="navigation-button",
+            children=[
+                html.A(
+                    html.Button("back to Burn-Down Chart"),
+                    href="http://127.0.0.1:8050/",
+                )
+            ],
+        ),
     ]
 )
 
@@ -190,7 +224,8 @@ layout = html.Div( # defining the content
     Input("search", "value"),
     Input("sortby", "value"),
 )
-def update_table(searchvalue, sortvalue):
+def update_table(searchvalue, sortvalue) -> dict, str, px.bar, px.bar:
+    """callback function updating table and graphs based on search and sort""""
     sorted_data = data.copy(deep=True)
 
     output = ""
