@@ -129,9 +129,7 @@ def main(ctx: click.core.Context) -> None:
     Documentation:  https://colrev.readthedocs.io/
     """
 
-    ctx.obj = {
-        'review_manager': colrev.review_manager.ReviewManager()
-    }
+    ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
 
 
 @main.command(help_priority=1)
@@ -230,9 +228,10 @@ def status(
 ) -> None:
     """Show status"""
     try:
-        review_manager = get_review_manager(ctx, {
-            "force_mode": force, "verbose_mode": verbose, "exact_call": EXACT_CALL
-        })
+        review_manager = get_review_manager(
+            ctx,
+            {"force_mode": force, "verbose_mode": verbose, "exact_call": EXACT_CALL},
+        )
         status_operation = review_manager.get_status_operation()
 
         if analytics:
@@ -310,9 +309,10 @@ def retrieve(
     https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
     """
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'high_level_operation': True
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force, "high_level_operation": True},
+    )
 
     if not any(review_manager.search_dir.iterdir()) and not any(
         review_manager.pdf_dir.iterdir()
@@ -433,9 +433,9 @@ def search(
     # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-    })
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
+    )
 
     search_operation = review_manager.get_search_operation()
 
@@ -511,9 +511,9 @@ def load(
 ) -> None:
     """Load records"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-    })
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
+    )
     load_operation = review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=skip_query)
     if include:
@@ -650,9 +650,10 @@ def prep(
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
     try:
-        review_manager = get_review_manager(ctx, {
-            'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-        })
+        review_manager = get_review_manager(
+            ctx,
+            {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL},
+        )
         prep_operation = review_manager.get_prep_operation()
 
         if reset_records != "NA":
@@ -727,9 +728,9 @@ def prep_man(
 ) -> None:
     """Prepare records manually"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-    })
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
+    )
     prep_man_operation = review_manager.get_prep_man_operation()
     if languages:
         prep_man_operation.prep_man_langs()
@@ -807,9 +808,9 @@ def dedupe(
 ) -> None:
     """Deduplicate records"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-    })
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
+    )
     state_transition_operation = not view
     dedupe_operation = review_manager.get_dedupe_operation(
         notify_state_transition_operation=state_transition_operation
@@ -959,9 +960,9 @@ def prescreen(
     """Pre-screen exclusion based on metadata (titles and abstracts)"""
 
     # pylint: disable=too-many-locals
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-    })
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
+    )
     prescreen_operation = review_manager.get_prescreen_operation()
 
     if export_format:
@@ -1081,9 +1082,9 @@ def screen(
 ) -> None:
     """Screen based on PDFs and inclusion/exclusion criteria"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose, 'force_mode': force, 'exact_call': EXACT_CALL
-    })
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
+    )
     screen_operation = review_manager.get_screen_operation()
 
     if include_all or include_all_always:
@@ -1187,12 +1188,15 @@ def pdfs(
 ) -> None:
     """Retrieve and prepare PDFs"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-        'exact_call': EXACT_CALL,
-        'high_level_operation': True
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+            "high_level_operation": True,
+        },
+    )
 
     if dir:
         # pylint: disable=import-outside-toplevel
@@ -1284,12 +1288,14 @@ def pdf_get(
 ) -> None:
     """Get PDFs"""
 
-
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-        'exact_call': EXACT_CALL,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
 
     state_transition_operation = not relink_files and not setup_custom_script
     pdf_get_operation = review_manager.get_pdf_get_operation(
@@ -1352,11 +1358,14 @@ def pdf_get_man(
 ) -> None:
     """Get PDFs manually"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-        'exact_call': EXACT_CALL,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
     if export:
@@ -1500,11 +1509,14 @@ def pdf_prep(
     """Prepare PDFs"""
 
     try:
-        review_manager = get_review_manager(ctx, {
-            'verbose_mode': verbose,
-            'force_mode': force,
-            'exact_call': EXACT_CALL,
-        })
+        review_manager = get_review_manager(
+            ctx,
+            {
+                "verbose_mode": verbose,
+                "force_mode": force,
+                "exact_call": EXACT_CALL,
+            },
+        )
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
         if update_colrev_pdf_ids:
@@ -1604,11 +1616,14 @@ def pdf_prep_man(
 ) -> None:
     """Prepare PDFs manually"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-        'exact_call': EXACT_CALL,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
     if delete_first_page:
@@ -1686,11 +1701,14 @@ def data(
     # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': (force or profile),
-        'exact_call': EXACT_CALL,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": (force or profile),
+            "exact_call": EXACT_CALL,
+        },
+    )
     data_operation = review_manager.get_data_operation()
 
     if profile:
@@ -1794,11 +1812,14 @@ def validate(
     - a contributor name
     """
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-        'exact_call': EXACT_CALL,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
     validate_operation = review_manager.get_validate_operation()
 
     validation_details = validate_operation.main(
@@ -1847,11 +1868,14 @@ def trace(
 ) -> None:
     """Trace a record"""
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-        'exact_call': EXACT_CALL,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
     trace_operation = review_manager.get_trace_operation()
     trace_operation.main(record_id=id)
 
@@ -1897,10 +1921,13 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 
     if not path:
         path = Path.cwd()
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+        },
+    )
     distribute_operation = review_manager.get_distribute_operation()
     environment_registry = distribute_operation.get_environment_registry()
 
@@ -2037,10 +2064,13 @@ def env(
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
 
-    review_manager = get_review_manager(ctx, {
-        'verbose_mode': verbose,
-        'force_mode': force,
-    })
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+        },
+    )
 
     if install:
         env_resources = review_manager.get_resources()
@@ -2057,11 +2087,14 @@ def env(
             if "/curated_metadata/" not in curated_resource_path:
                 continue
 
-            review_manager = get_review_manager(ctx, {
-                'verbose_mode': verbose,
-                'force_mode': force,
-                'path_str': curated_resource_path,
-            })
+            review_manager = get_review_manager(
+                ctx,
+                {
+                    "verbose_mode": verbose,
+                    "force_mode": force,
+                    "path_str": curated_resource_path,
+                },
+            )
 
             review_manager.dataset.pull_if_repo_clean()
             print(f"Pulled {curated_resource_path}")
@@ -2920,15 +2953,21 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
     click.echo(f"{shell} completion installed in {path}")
 
 
-def get_review_manager(ctx: click.core.Context, review_manager_params) -> colrev.review_manager.ReviewManager:
+def get_review_manager(
+    ctx: click.core.Context, review_manager_params
+) -> colrev.review_manager.ReviewManager:
     try:
-        review_manager = ctx.obj['review_manager']
-        if 'navigate_to_home_dir' in review_manager_params \
-                or 'path_str' in review_manager_params \
-                or 'skip_upgrade' in review_manager_params:
+        review_manager = ctx.obj["review_manager"]
+        if (
+            "navigate_to_home_dir" in review_manager_params
+            or "path_str" in review_manager_params
+            or "skip_upgrade" in review_manager_params
+        ):
             print("init review manager object ...")
-            review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
-            ctx.obj['review_manager'] = review_manager
+            review_manager = colrev.review_manager.ReviewManager(
+                **review_manager_params
+            )
+            ctx.obj["review_manager"] = review_manager
         else:
             print("updating review manager object ...")
             print(review_manager_params)
@@ -2937,7 +2976,7 @@ def get_review_manager(ctx: click.core.Context, review_manager_params) -> colrev
     except (TypeError, KeyError) as e:
         print("init review object ...")
         review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
-        ctx.obj = {'review_manager': review_manager}
+        ctx.obj = {"review_manager": review_manager}
         return review_manager
 
 
