@@ -269,7 +269,7 @@ def dashboard(
         if verbose:
             raise exc
         print(exc)
-        
+
 
 @main.command(help_priority=3)
 @click.option(
