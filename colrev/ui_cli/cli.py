@@ -2959,6 +2959,7 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
 def get_review_manager(
     ctx: click.core.Context, review_manager_params
 ) -> colrev.review_manager.ReviewManager:
+    review_manager_params['exact_call'] = ctx.command_path
     try:
         review_manager = ctx.obj["review_manager"]
         if (
@@ -2973,7 +2974,6 @@ def get_review_manager(
             ctx.obj["review_manager"] = review_manager
         else:
             print("updating review manager object ...")
-            print(review_manager_params)
             review_manager.update_config(**review_manager_params)
         return review_manager
     except (TypeError, KeyError) as e:
