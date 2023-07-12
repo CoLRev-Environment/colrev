@@ -142,13 +142,13 @@ class ReviewManager:
                 self.logger.debug(exc)
 
     def update_config(
-            self,
-            *,
-            force_mode: bool = False,
-            verbose_mode: bool = False,
-            debug_mode: bool = False,
-            high_level_operation: bool = False,
-            exact_call: str = "",
+        self,
+        *,
+        force_mode: bool = False,
+        verbose_mode: bool = False,
+        debug_mode: bool = False,
+        high_level_operation: bool = False,
+        exact_call: str = "",
     ) -> None:
         self.force_mode = force_mode
         """Force mode variable (bool)"""
@@ -160,7 +160,6 @@ class ReviewManager:
         """A high-level operation was called (bool)"""
         self.exact_call = exact_call
         self.set_debug_options()
-
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
