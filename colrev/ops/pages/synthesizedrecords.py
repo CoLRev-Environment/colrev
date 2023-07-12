@@ -2,10 +2,6 @@
 """CoLRev dashboard operation: to track project progress through dashboard"""
 from __future__ import annotations
 
-
-import pandas as pd
-from dash import dcc, html, Input, Output, dash_table, callback
-import dash
 import bibtexparser
 import dash
 import pandas as pd
@@ -58,46 +54,75 @@ def empty_figure():
 def visualization_time(data):
     if data.empty:
         return empty_figure()
-    data2 = data.groupby(['year'])['year'].count().reset_index(name='count')
-    fig = px.bar(data2, x='year', y='count', template="simple_white", title="Profile of papers published over time", color="year")
-    fig.update_traces(marker_color = '#fcb61a')
+    data2 = data.groupby(["year"])["year"].count().reset_index(name="count")
+    fig = px.bar(
+        data2,
+        x="year",
+        y="count",
+        template="simple_white",
+        title="Profile of papers published over time",
+        color="year",
+    )
+    fig.update_traces(marker_color="#fcb61a")
 
-    fig.update_layout(title=dict(text="<b>Profile of papers published over time</b>", font=dict(family='Lato, sans-serif', size=30), automargin=True, x=0.5)
-                        #yaxis = dict( tickfont = dict(size=20)),
-                        #xaxis = dict( tickfont = dict(size=20))
-                        )
-    fig.update_xaxes(title_text='Year', 
-                        type='category',
-                        title_font= dict(family='Lato, sans-serif', size=20),
-                        tickfont = dict(family='Lato, sans-serif', size=20)
-                        )
-    fig.update_yaxes(title_text='Count',
-                        title_font= dict(family='Lato, sans-serif', size=20),
-                        tickfont = dict(family='Lato, sans-serif', size=20)
-                        )
+    fig.update_layout(
+        title=dict(
+            text="<b>Profile of papers published over time</b>",
+            font=dict(family="Lato, sans-serif", size=30),
+            automargin=True,
+            x=0.5,
+        )
+        # yaxis = dict( tickfont = dict(size=20)),
+        # xaxis = dict( tickfont = dict(size=20))
+    )
+    fig.update_xaxes(
+        title_text="Year",
+        type="category",
+        title_font=dict(family="Lato, sans-serif", size=20),
+        tickfont=dict(family="Lato, sans-serif", size=20),
+    )
+    fig.update_yaxes(
+        title_text="Count",
+        title_font=dict(family="Lato, sans-serif", size=20),
+        tickfont=dict(family="Lato, sans-serif", size=20),
+    )
     return fig
 
 
 def visualization_magazines(data):
     if data.empty:
         return empty_figure()
-    data2 = data.groupby(['journal'])['journal'].count().reset_index(name='count')
-    fig = px.bar(data2, x='journal', y='count', template="simple_white", title="Papers Published per Journal")
-    fig.update_traces(marker_color = '#fcb61a')
+    data2 = data.groupby(["journal"])["journal"].count().reset_index(name="count")
+    fig = px.bar(
+        data2,
+        x="journal",
+        y="count",
+        template="simple_white",
+        title="Papers Published per Journal",
+    )
+    fig.update_traces(marker_color="#fcb61a")
 
-    fig.update_layout(title=dict(text="<b>Papers Published per Journal</b>", font=dict(family='Lato, sans-serif', size=30), automargin=True, x=0.5)
-                        #yaxis = dict( tickfont = dict(size=20)),
-                        #xaxis = dict( tickfont = dict(size=20))
-                        )
-    fig.update_xaxes(title_text='Journal', 
-                        type='category',
-                        title_font= dict(family='Lato, sans-serif', size=20),
-                        tickfont = dict(family='Lato, sans-serif', size=15)
-                        )
-    fig.update_yaxes(title_text='Count',
-                        title_font= dict(family='Lato, sans-serif', size=20),
-                        tickfont = dict(family='Lato, sans-serif', size=15)
-                        )
+    fig.update_layout(
+        title=dict(
+            text="<b>Papers Published per Journal</b>",
+            font=dict(family="Lato, sans-serif", size=30),
+            automargin=True,
+            x=0.5,
+        )
+        # yaxis = dict( tickfont = dict(size=20)),
+        # xaxis = dict( tickfont = dict(size=20))
+    )
+    fig.update_xaxes(
+        title_text="Journal",
+        type="category",
+        title_font=dict(family="Lato, sans-serif", size=20),
+        tickfont=dict(family="Lato, sans-serif", size=15),
+    )
+    fig.update_yaxes(
+        title_text="Count",
+        title_font=dict(family="Lato, sans-serif", size=20),
+        tickfont=dict(family="Lato, sans-serif", size=15),
+    )
 
     return fig
 
@@ -118,7 +143,6 @@ layout = html.Div( # defining the content
                         dcc.Input(type="text", id="search", value="", placeholder="  Search for..."
                         )])
             ], className="menu"),
-
         html.Div(
             children=[
                 html.Div([
@@ -142,10 +166,10 @@ layout = html.Div( # defining the content
                 ## Div für Ausgabe wenn keine Ergebnisse bei suche
                 html.Div(id="table_empty", children= []) ,
                             
-                html.Div([dcc.Graph(figure=visualizationTime(data), id='time')], # Including the graphs  
+                html.Div([dcc.Graph(figure=visualization_time(data), id='time')], # Including the graphs  
                     # style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}
                     ),   
-                html.Div([dcc.Graph(figure=visualizationMagazines(data), id='magazines')],
+                html.Div([dcc.Graph(figure=visualization_magazines(data), id='magazines')],
                     # style={'width': '49%', 'display': 'inline-block', 'margin': 'auto'}
                     )
             ], 
@@ -156,7 +180,8 @@ layout = html.Div( # defining the content
         ])
     ]
 )
-    
+
+
 @callback(
     Output("table", "data"),
     Output("table_empty", "children"),

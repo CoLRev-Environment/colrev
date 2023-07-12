@@ -67,13 +67,6 @@ button:hover {
     max-width: 20%;
     margin: 0 auto;
 
-<<<<<<< HEAD
-.flexboxtable{
-    display: flex;
-
-    background-color: var(--white-background);
-=======
->>>>>>> 7ba80be91f0cb3e587040549592fa0dcf2a06c04
 }
 
 .menu {
@@ -112,13 +105,10 @@ button:hover {
     font-size: 16px;
     border-width: thin;
 
-<<<<<<< HEAD
-=======
-} 
+}
 
 #headline {
     font-size: 20px;
->>>>>>> 7ba80be91f0cb3e587040549592fa0dcf2a06c04
 }
 
 .wrapper {
@@ -139,8 +129,4 @@ button:hover {
     min-width: 400px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     font-family: "Lato", sans-serif;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 7ba80be91f0cb3e587040549592fa0dcf2a06c04
