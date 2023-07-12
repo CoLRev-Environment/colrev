@@ -115,22 +115,9 @@ class ReviewManager:
                 self.pdf_dir.mkdir(exist_ok=True)
                 self.output_dir.mkdir(exist_ok=True)
 
-            if self.debug_mode:
-                self.report_logger = colrev.logger.setup_report_logger(
-                    review_manager=self, level=logging.DEBUG
-                )
-                """Logger for the commit report"""
-                self.logger = colrev.logger.setup_logger(
-                    review_manager=self, level=logging.DEBUG
-                )
-                """Logger for processing information"""
-            else:
-                self.report_logger = colrev.logger.setup_report_logger(
-                    review_manager=self, level=logging.INFO
-                )
-                self.logger = colrev.logger.setup_logger(
-                    review_manager=self, level=logging.INFO
-                )
+            self.report_logger = None
+            self.logger = None
+            self.set_debug_options()
 
             self.environment_manager = self.get_environment_manager()
 
@@ -153,6 +140,27 @@ class ReviewManager:
                 raise exc
             if debug_mode:
                 self.logger.debug(exc)
+
+    def update_config(
+            self,
+            *,
+            force_mode: bool = False,
+            verbose_mode: bool = False,
+            debug_mode: bool = False,
+            high_level_operation: bool = False,
+            exact_call: str = "",
+    ) -> None:
+        self.force_mode = force_mode
+        """Force mode variable (bool)"""
+        self.verbose_mode = verbose_mode
+        """Verbose mode variable (bool)"""
+        self.debug_mode = debug_mode
+        """Debug mode variable (bool)"""
+        self.high_level_operation = high_level_operation
+        """A high-level operation was called (bool)"""
+        self.exact_call = exact_call
+        self.set_debug_options()
+
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
@@ -729,6 +737,24 @@ class ReviewManager:
         if identifier:
             identifier_list = [identifier]
         return any("true" == os.getenv(x) for x in identifier_list)
+
+    def set_debug_options(self):
+        if self.debug_mode:
+            self.report_logger = colrev.logger.setup_report_logger(
+                review_manager=self, level=logging.DEBUG
+            )
+            """Logger for the commit report"""
+            self.logger = colrev.logger.setup_logger(
+                review_manager=self, level=logging.DEBUG
+            )
+            """Logger for processing information"""
+        else:
+            self.report_logger = colrev.logger.setup_report_logger(
+                review_manager=self, level=logging.INFO
+            )
+            self.logger = colrev.logger.setup_logger(
+                review_manager=self, level=logging.INFO
+            )
 
 
 # pylint: disable=redefined-outer-name
