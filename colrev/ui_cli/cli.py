@@ -130,9 +130,7 @@ def main(ctx: click.core.Context) -> None:
     """
 
     try:
-        ctx.obj = {
-            "review_manager": colrev.review_manager.ReviewManager()
-        }
+        ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
     except colrev.exceptions.RepoSetupError:
         pass
 
