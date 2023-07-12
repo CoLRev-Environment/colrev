@@ -2959,7 +2959,7 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
 def get_review_manager(
     ctx: click.core.Context, review_manager_params
 ) -> colrev.review_manager.ReviewManager:
-    review_manager_params['exact_call'] = ctx.command_path
+    review_manager_params["exact_call"] = ctx.command_path
     try:
         review_manager = ctx.obj["review_manager"]
         if (
