@@ -2,21 +2,10 @@
 """CoLRev dashboard operation: to track project progress through dashboard"""
 from __future__ import annotations
 
-from curses import color_pair
-from datetime import datetime
-
-import bibtexparser
-import dash
 import pandas as pd
+from dash import dcc, html
+import dash
 import plotly.express as px
-from dash import Dash
-from dash import dash_table
-from dash import dcc
-from dash import html
-from dash import Input
-from dash import Output
-from dash import State
-
 import colrev.review_manager
 
 dash.register_page(__name__, path="/")
