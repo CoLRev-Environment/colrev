@@ -2,6 +2,9 @@
 Extension interfaces
 ========================================
 
+.. autointerface:: colrev.env.package_manager.GeneralInterface
+   :members:
+
 .. autointerface:: colrev.env.package_manager.ReviewTypePackageEndpointInterface
    :members:
 

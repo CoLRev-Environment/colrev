@@ -132,6 +132,7 @@ class Data(colrev.operation.Operation):
                     colrev.record.RecordState.rev_synthesized,
                     colrev.record.RecordState.rev_included,
                 ]
+                and record.get("year", "UNKNOWN").isdigit()
             ]
             observations = prepared_records_df[
                 prepared_records_df["ID"].isin(included_papers)
@@ -316,6 +317,7 @@ class Data(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,

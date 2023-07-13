@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -342,6 +340,7 @@ class Repare(colrev.operation.Operation):
             )
             self.review_manager.dataset.add_changes(path=search_source.filename)
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
 

@@ -21,6 +21,7 @@ colrev.ops.built\_in.pdf\_get.unpaywall.Unpaywall
       ~Unpaywall.from_dict
       ~Unpaywall.from_json
       ~Unpaywall.from_object
+      ~Unpaywall.get_email
       ~Unpaywall.get_pdf
       ~Unpaywall.json_schema
       ~Unpaywall.register_field_encoders
@@ -35,4 +36,5 @@ colrev.ops.built\_in.pdf\_get.unpaywall.Unpaywall
 
    .. autosummary::
 
+      ~Unpaywall.SETTINGS
       ~Unpaywall.ci_supported

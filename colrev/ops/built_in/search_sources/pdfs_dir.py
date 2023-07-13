@@ -7,6 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -292,7 +293,7 @@ class PDFSearchSource(JsonSchemaMixin):
             tei = self.review_manager.get_tei(
                 pdf_path=pdf_path,
             )
-        except FileNotFoundError:
+        except (FileNotFoundError, requests.exceptions.ReadTimeout):
             return record_dict
 
         for key, val in tei.get_metadata().items():
@@ -777,6 +778,28 @@ class PDFSearchSource(JsonSchemaMixin):
         if record.data.get("title", "").endswith(" 1"):
             record.data["title"] = record.data["title"][:-2]
 
+    def __fix_special_outlets(self, *, record: colrev.record.Record) -> None:
+        # Erroneous suffixes in IS conferences
+        if record.data.get("booktitle", "") in [
+            "Americas Conference on Information Systems",
+            "International Conference on Information Systems",
+            "European Conference on Information Systems",
+            "Pacific Asia Conference on Information Systems",
+        ]:
+            for suffix in [
+                "completed research paper",
+                "completed research",
+                "complete research",
+                "full research paper",
+                "research in progress",
+                "(research in progress)",
+            ]:
+                if record.data["title"].lower().endswith(suffix):
+                    record.data["title"] = record.data["title"][: -len(suffix)].rstrip(
+                        " -:"
+                    )
+        # elif ...
+
     def prepare(
         self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
@@ -811,5 +834,6 @@ class PDFSearchSource(JsonSchemaMixin):
             )
         self.__fix_title_suffix(record=record)
         self.__fix_special_chars(record=record)
+        self.__fix_special_outlets(record=record)
 
         return record

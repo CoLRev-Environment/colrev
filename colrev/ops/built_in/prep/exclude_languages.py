@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import statistics
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -14,11 +15,8 @@ import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
+if TYPE_CHECKING:
+    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 
@@ -82,14 +80,23 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
 
+        if record.data.get("title", "UNKNOWN") == "UNKNOWN":
+            record.remove_field(key="language")
+            return record
+
         if "language" in record.data:
-            if record.data["language"] not in self.languages_to_include:
-                record.prescreen_exclude(
-                    reason=(
-                        "language of title not in "
-                        f"[{','.join(self.languages_to_include)}]"
-                    )
-                )
+            # Note: classification of non-english titles is not reliable.
+            # Other languages should be checked in man-prep.
+            # if "eng" != language:
+            #     return record
+
+            # if record.data["language"] not in self.languages_to_include:
+            #     record.prescreen_exclude(
+            #         reason=(
+            #             "language of title not in "
+            #             f"[{','.join(self.languages_to_include)}]"
+            #         )
+            #     )
             return record
 
         # To avoid misclassifications for short titles
@@ -101,6 +108,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
 
         if not self.__title_has_multiple_languages(title=record.data.get("title", "")):
             language = self.language_service.compute_language(text=record.data["title"])
+            # Note: classification of non-english titles is not reliable.
+            # Other languages should be checked in man-prep.
+            if "eng" != language:
+                return record
             record.update_field(
                 key="language",
                 value=language,
@@ -148,8 +159,11 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return record
 
         if record.data.get("language", "") not in self.languages_to_include:
-            record.prescreen_exclude(
-                reason=f"language of title not in [{','.join(self.languages_to_include)}]"
+            record.remove_field(key="language")
+            # record.prescreen_exclude(
+            #     reason=f"language of title not in [{','.join(self.languages_to_include)}]"
+            # )
+            record.set_status(
+                target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
-
         return record

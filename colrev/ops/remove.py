@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.env.utils
 import colrev.operation
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -31,6 +29,7 @@ class Remove(colrev.operation.Operation):
             notify_state_transition_operation=False,
         )
 
+    @colrev.operation.Operation.decorate()
     def remove_records(self, *, ids: str) -> None:
         """Remove records from CoLRev project."""
 

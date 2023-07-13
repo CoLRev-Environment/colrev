@@ -1,0 +1,39 @@
+{
+    "original_record": {
+        "ID": "SrivastavaShainesh2015",
+        "ENTRYTYPE": "article",
+        "colrev_origin": [
+            "test_records.bib/Srivastava2015"
+        ],
+        "colrev_masterdata_provenance": {
+            "CURATED": {
+                "source": "url...",
+                "note": ""
+            }
+        },
+        "colrev_data_provenance": {
+            "language": {
+                "source": "test_records.bib/Srivastava2015",
+                "note": ""
+            }
+        },
+        "journal": "MIS Quarterly",
+        "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+        "year": "2015",
+        "volume": "39",
+        "number": "1",
+        "pages": "245--267",
+        "language": "eng",
+        "author": "Srivastava, Shirish C. and Shainesh, G."
+    },
+    "changes": [
+        [
+            "change",
+            "title",
+            [
+                "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+                "Changed-title"
+            ]
+        ]
+    ]
+}

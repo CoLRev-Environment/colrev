@@ -17,6 +17,8 @@ colrev.ops.distribute.Distribute
       :nosignatures:
 
       ~Distribute.check_precondition
+      ~Distribute.conclude
+      ~Distribute.decorate
       ~Distribute.get_environment_registry
       ~Distribute.main
 

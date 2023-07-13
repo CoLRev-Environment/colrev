@@ -42,6 +42,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = source_operation.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -111,14 +112,14 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 if original_record_id not in records:
                     continue
                 to_delete.append(record["ID"])
+        if to_delete:
+            for rid in to_delete:
+                load_operation.review_manager.logger.info(f" remove duplicate {rid}")
+                del records[rid]
 
-        for rid in to_delete:
-            load_operation.review_manager.logger.info(f" remove duplicate {rid}")
-            del records[rid]
-
-        load_operation.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=source.filename
-        )
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records, save_path=source.filename
+            )
 
         return records
 
@@ -126,6 +127,11 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
+
+        if record.data.get("journal", "").lower().endswith("conference proceedings."):
+            record.change_entrytype(
+                new_entrytype="inproceedings", qm=self.quality_model
+            )
 
         if "language" in record.data:
             if record.data["language"] in ["ENG", "English"]:

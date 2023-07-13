@@ -257,6 +257,7 @@ def test_change_entrytype_inproceedings(
     r1_mod.data["volume"] = "UNKNOWN"
     r1_mod.data["number"] = "UNKNOWN"
     r1_mod.data["title"] = "Editorial"
+    r1_mod.data["language"] = "eng"
     r1_mod.update_field(
         key="publisher",
         value="Elsevier",
@@ -288,6 +289,7 @@ def test_change_entrytype_inproceedings(
         "author": "Rai, Arun",
         "pages": "1--3",
         "publisher": "Elsevier",
+        "language": "eng",
     }
     actual = r1_mod.data
     assert expected == actual
@@ -325,6 +327,7 @@ def test_change_entrytype_article(
         "author": "Rai, Arun",
         "pages": "1--3",
         "publisher": "Elsevier",
+        "language": "eng",
     }
     expected = {
         "ID": "r1",
@@ -353,6 +356,7 @@ def test_change_entrytype_article(
         "journal": "MIS Quarterly",
         "volume": "UNKNOWN",
         "number": "UNKNOWN",
+        "language": "eng",
     }
     rec = colrev.record.Record(data=input_value)
     rec.change_entrytype(new_entrytype="article", qm=quality_model)
@@ -1335,12 +1339,12 @@ def test_get_retrieval_similarity() -> None:
             "sentence",
         ),
         (
-            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency aNd gender in the u.s. and india",
-            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the U.S. and india",
+            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the u.s. and india",
+            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the u.s. and india",
             "sentence",
         ),
         (
-            "Organizations like ieee, ACM operate b2B and c2c businesses",
+            "ORGANIZATIONS LIKE ieee, ACM OPERATE B2B and c2C BUSINESSES",
             "Organizations like IEEE, ACM operate B2B and C2C businesses",
             "sentence",
         ),
@@ -1451,6 +1455,7 @@ def test_update_metadata_status(
     # Retracted (crossmark)
     r1_mod = r1.copy_prep_rec()
     r1_mod.data["crossmark"] = "True"
+    r1_mod.data["language"] = "eng"
     r1_mod.update_metadata_status()
     expected = {
         "ID": "r1",
@@ -1475,6 +1480,7 @@ def test_update_metadata_status(
         "number": "1",
         "pages": "1--3",
         "prescreen_exclusion": "retracted",
+        "language": "eng",
     }
     actual = r1_mod.data
     assert expected == actual
@@ -1485,6 +1491,7 @@ def test_update_metadata_status(
         "CURATED": {"source": "http...", "note": ""}
     }
     r1_mod.data["title"] = "Editorial"
+    r1_mod.data["language"] = "eng"
     r1_mod.update_metadata_status()
     expected = {
         "ID": "r1",
@@ -1502,6 +1509,7 @@ def test_update_metadata_status(
         "volume": "45",
         "number": "1",
         "pages": "1--3",
+        "language": "eng",
     }
     actual = r1_mod.data
     assert expected == actual
@@ -1509,6 +1517,7 @@ def test_update_metadata_status(
     # Quality defect
     r1_mod = r1.copy_prep_rec()
     r1_mod.data["author"] = "Rai, Arun, ARUN"
+    r1_mod.data["language"] = "eng"
     r1_mod.update_masterdata_provenance(qm=quality_model)
     r1_mod.update_metadata_status()
     expected = {
@@ -1536,6 +1545,7 @@ def test_update_metadata_status(
         "volume": "45",
         "number": "1",
         "pages": "1--3",
+        "language": "eng",
     }
     actual = r1_mod.data
     assert expected == actual

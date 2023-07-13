@@ -7,6 +7,7 @@ import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import git
 from tqdm import tqdm
@@ -16,11 +17,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -121,6 +119,12 @@ class Upgrade(colrev.operation.Operation):
                 "version": CoLRevVersion("0.8.3"),
                 "target_version": CoLRevVersion("0.8.4"),
                 "script": self.__migrate_0_8_3,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.8.4"),
+                "target_version": CoLRevVersion("0.9.0"),
+                "script": self.__migrate_0_8_4,
                 "released": True,
             },
         ]
@@ -319,7 +323,7 @@ class Upgrade(colrev.operation.Operation):
             ]
         self.__save_settings(settings)
         self.review_manager = colrev.review_manager.ReviewManager(
-            path_str=str(self.review_manager.path)
+            path_str=str(self.review_manager.path), force_mode=True
         )
         self.review_manager.load_settings()
         self.review_manager.get_load_operation()
@@ -363,8 +367,24 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
+    def __migrate_0_8_4(self) -> bool:
+        records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if "editor" not in record.get("colrev_data_provenance", {}):
+                continue
+            ed_val = record["colrev_data_provenance"]["editor"]
+            del record["colrev_data_provenance"]["editor"]
+            if "CURATED" not in record["colrev_masterdata_provenance"]:
+                record["colrev_masterdata_provenance"]["editor"] = ed_val
 
-# TODO : move editor field to identifying_fields
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
+        return self.repo.is_dirty()
+
+
+# Note: we can ask users to make decisions (when defaults are not clear)
+# via input() or simply cancel the process (raise a CoLrevException)
 
 
 class CoLRevVersion:

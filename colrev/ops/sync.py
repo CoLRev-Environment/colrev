@@ -24,6 +24,7 @@ class Sync:
         self.non_unique_for_import: typing.List[typing.Dict] = []
 
         self.logger = self.__setup_logger(level=logging.DEBUG)
+        self.paper_md = self.__get_md_file()
 
     def __setup_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         """Setup the sync logger"""
@@ -52,19 +53,23 @@ class Sync:
 
         return logger
 
-    def __get_cited_papers_citation_keys(self) -> list:
+    def __get_md_file(self) -> Path:
+        paper_md = Path("")
         if Path("paper.md").is_file():
             paper_md = Path("paper.md")
         if Path("data/paper.md").is_file():
             paper_md = Path("data/paper.md")
         elif Path("review.md").is_file():
             paper_md = Path("review.md")
+        return paper_md
+
+    def __get_cited_papers_citation_keys(self) -> list:
         rst_files = list(Path.cwd().rglob("*.rst"))
 
         citation_keys = []
-        if paper_md.is_file():
+        if self.paper_md.is_file():
             self.logger.info("Load cited references from paper.md")
-            content = paper_md.read_text(encoding="utf-8")
+            content = self.paper_md.read_text(encoding="utf-8")
             res = re.findall(r"(^|\s|\[|;)(@[a-zA-Z0-9_]+)+", content)
             citation_keys = list({r[1].replace("@", "") for r in res})
             if "fig" in citation_keys:
@@ -87,6 +92,34 @@ class Sync:
         else:
             print("Not found paper.md or *.rst")
         return citation_keys
+
+    def get_cited_papers_from_source(self, *, src: Path) -> None:
+        """Get the cited papers from a source file"""
+
+        citation_keys = self.__get_cited_papers_citation_keys()
+
+        ids_in_bib = self.__get_ids_in_paper()
+        self.logger.info("References in bib: %s", len(ids_in_bib))
+
+        if src.suffix == ".bib":
+            parser = bibtex.Parser()
+            bib_data = parser.parse_file(str(src))
+            refs_in_src = colrev.dataset.Dataset.parse_records_dict(
+                records_dict=bib_data.entries
+            )
+        else:
+            print("Format not supported")
+            return
+
+        for citation_key in citation_keys:
+            if citation_key in ids_in_bib:
+                continue
+            if citation_key not in refs_in_src:
+                print(f"{citation_key} not in {src}")
+                continue
+            self.records_to_import.append(
+                colrev.record.Record(data=refs_in_src[citation_key])
+            )
 
     def get_cited_papers(self) -> None:
         """Get the cited papers"""
@@ -207,6 +240,30 @@ class Sync:
     def add_to_bib(self) -> None:
         """Add records to the bibliography"""
 
+        if not self.paper_md.is_file():
+            return
+
+        if self.paper_md.read_text(encoding="utf-8").startswith("---"):
+            self.__export_to_bib()
+
+        else:
+            # Append to # References if no header (mardown with linked)
+            self.__append_as_citations()
+
+    def __append_as_citations(self) -> None:
+        if "# References" in self.paper_md.read_text(encoding="utf-8"):
+            print("Already contains a reference section.")
+            return
+
+        with open(self.paper_md, "a", encoding="utf-8") as file:
+            file.write("\n# References\n\n")
+            ref_list = [
+                record_to_import.format_bib_style()
+                for record_to_import in self.records_to_import
+            ]
+            file.write("\n".join(sorted(ref_list)))
+
+    def __export_to_bib(self) -> None:
         pybtex.errors.set_strict_mode(False)
 
         references_file = Path("references.bib")

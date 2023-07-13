@@ -141,6 +141,19 @@ def load_complementary_material_strings() -> list:
     return complementary_material_keywords
 
 
+def load_complementary_material_prefixes() -> list:
+    """Load the list of prefixes identifying complementary materials"""
+
+    complementary_material_keywords = []
+    filedata = get_package_file_content(
+        file_path=Path("template/ops/complementary_material_prefixes.txt")
+    )
+    if filedata:
+        complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
+
+    return complementary_material_keywords
+
+
 def dict_keys_exists(element: dict, *keys: str) -> bool:
     """Check if *keys (nested) exists in `element` (dict)."""
     if len(keys) == 0:

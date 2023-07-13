@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
@@ -22,11 +23,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search
 import colrev.record
 import colrev.settings
-
-if False:  # pylint: disable=using-constant-test
-    import typing
-
-    # from typing import TYPE_CHECKING
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -254,6 +250,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                 x in item["ee"] for x in ["https://doi.org", "https://dblp.org"]
             ):
                 item["url"] = item["ee"]
+        if "url" in item:
+            if "https://dblp.org" in item["url"]:
+                del item["url"]
 
         item = {
             k: v
@@ -624,7 +623,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
         record.remove_field(key="bibsource")
-        record.remove_field(key="url")
+        if any(x in record.data.get("url", "") for x in ["dblp.org", "doi.org"]):
+            record.remove_field(key="url")
         record.remove_field(key="timestamp")
 
         return record

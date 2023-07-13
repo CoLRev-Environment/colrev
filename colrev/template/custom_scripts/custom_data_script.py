@@ -2,17 +2,15 @@
 """Template for a custom data PackageEndpoint"""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import zope.interface
 from dacite import from_dict
 
 import colrev.operation
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.data
+if TYPE_CHECKING:
+    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

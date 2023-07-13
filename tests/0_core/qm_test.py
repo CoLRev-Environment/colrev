@@ -11,35 +11,45 @@ import colrev.record
 @pytest.mark.parametrize(
     "author_str, defects",
     [
-        ("RAI", ["mostly-all-caps"]),
-        ("Rai, Arun and B,", ["incomplete-field"]),
-        ("Rai, Arun and B", ["name-format-separators"]),
+        ("RAI", {"mostly-all-caps", "incomplete-field"}),
+        ("Rai, Arun and B,", {"incomplete-field", "name-format-separators"}),
+        ("Rai, Arun and B", {"name-format-separators"}),
         # additional title
-        ("Rai, PhD, Arun", ["name-format-titles"]),
-        ("Rai, Phd, Arun", ["name-format-titles"]),
-        ("GuyPhD, Arun", []),  #
+        ("Rai, PhD, Arun", {"name-format-titles", "name-format-separators"}),
+        ("Rai, Phd, Arun", {"name-format-titles", "name-format-separators"}),
+        ("GuyPhD, Arun", {}),  #
         (
             "Rai, Arun; Straub, Detmar",
-            ["name-format-separators"],
+            {"name-format-separators"},
         ),
         # author without capital letters
         # NOTE: it's not a separator error, should be something more relevant
         (
             "Mathiassen, Lars and jonsson, katrin",
-            ["name-format-separators"],
+            {"name-format-separators"},
         ),
         (
             "University, Villanova and Sipior, Janice",
-            ["erroneous-term-in-field"],
+            {"erroneous-term-in-field"},
         ),
         (
             "Mourato, Inês and Dias, Álvaro and Pereira, Leandro",
-            [],
+            {},
         ),
-        ("DUTTON, JANE E. and ROBERTS, LAURA", ["mostly-all-caps"]),
-        ("Rai, Arun et al.", ["name-abbreviated"]),
-        ("Rai, Arun, and others", ["name-abbreviated"]),
-        ("Rai, and others", ["name-abbreviated"]),
+        ("DUTTON, JANE E. and ROBERTS, LAURA", {"mostly-all-caps"}),
+        ("Rai, Arun et al.", {"name-abbreviated"}),
+        (
+            "Rai, Arun, and others",
+            {"name-format-separators", "name-abbreviated", "incomplete-field"},
+        ),
+        (
+            "Rai, and others",
+            {"name-format-separators", "incomplete-field", "name-abbreviated"},
+        ),
+        (
+            "Neale, J. and Boitano, T. and Cooke, M. and Morrow, D. and et al.",
+            {"name-abbreviated", "name-format-separators"},
+        )
         # (
         #     "Þórðarson, Kristinn and Oskarsdottir, Maria",
         #     [],
@@ -48,7 +58,7 @@ import colrev.record
 )
 def test_get_quality_defects_author(
     author_str: str,
-    defects: list,
+    defects: set,
     v_t_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
@@ -60,10 +70,11 @@ def test_get_quality_defects_author(
         return
 
     assert v_t_record.has_quality_defects()
-    for defect in defects:
-        assert defect in v_t_record.data["colrev_masterdata_provenance"]["author"][
-            "note"
-        ].split(",")
+    # for defect in defects:
+    actual = set(
+        v_t_record.data["colrev_masterdata_provenance"]["author"]["note"].split(",")
+    )
+    assert defects == actual
 
 
 @pytest.mark.parametrize(

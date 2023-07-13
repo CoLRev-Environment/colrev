@@ -122,6 +122,11 @@ class ScopusSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Scopus"""
 
+        if "book" == record.data["ENTRYTYPE"]:
+            if "journal" in record.data and "booktitle" not in record.data:
+                record.rename_field(key="title", new_key="booktitle")
+                record.rename_field(key="journal", new_key="title")
+
         if "document_type" in record.data:
             if record.data["document_type"] == "Conference Paper":
                 record.change_entrytype(

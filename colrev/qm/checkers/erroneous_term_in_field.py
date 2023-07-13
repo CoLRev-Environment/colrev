@@ -19,8 +19,14 @@ class ErroneousTermInFieldChecker:
             "Harvard",
             "Conference",
             "Mrs",
+            "Hochschule",
         ],
-        "title": ["research paper", "completed research", "research in progress"],
+        "title": [
+            "research paper",
+            "completed research",
+            "research in progress",
+            "full research paper",
+        ],
     }
     msg = "erroneous-term-in-field"
 

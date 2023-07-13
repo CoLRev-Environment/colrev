@@ -18,4 +18,14 @@ It is possible to copy the url from the [search.crossref.org](https://search.cro
 colrev search -a colrev.crossref:"https://search.crossref.org/?q=+microsourcing&from_ui=yes"
 ```
 
+Whole journals can be added based on their issn:
+```
+colrev search -a colrev.crossref:"issn=1234-5678"
+```
+
+To test the metadata provided for a particular `open_alex_id` use:
+```
+https://api.crossref.org/works/DOI
+```
+
 ## Links

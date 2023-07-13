@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -14,12 +15,9 @@ import colrev.record
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep
-        import colrev.env.local_index
+if TYPE_CHECKING:
+    import colrev.ops.prep
+    import colrev.env.local_index
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)

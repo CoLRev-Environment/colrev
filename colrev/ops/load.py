@@ -26,6 +26,7 @@ class Load(colrev.operation.Operation):
     # They should be included through colrev search
 
     supported_extensions: typing.List[str]
+    load_conversion_packages: dict
 
     __LATEX_SPECIAL_CHAR_MAPPING = {
         '\\"u': "ü",
@@ -109,6 +110,8 @@ class Load(colrev.operation.Operation):
         self, *, filepath: Path, load_conversion: dict
     ) -> dict:
         filetype = filepath.suffix.replace(".", "")
+        if filetype == "ris":
+            return {"endpoint": "colrev.rispy"}
 
         for (
             package_identifier,
@@ -236,6 +239,7 @@ class Load(colrev.operation.Operation):
         return results_list
 
     def __select_source(self, *, heuristic_result_list: list, skip_query: bool) -> dict:
+        # pylint: disable=too-many-branches
         if not skip_query:
             print(f"{colors.ORANGE}Select search source{colors.END}:")
             for i, heuristic_source in enumerate(heuristic_result_list):
@@ -260,11 +264,16 @@ class Load(colrev.operation.Operation):
                         best_candidate_pos = i + 1
                         max_conf = heuristic_candidate["confidence"]
                 if not any(c["confidence"] > 0.1 for c in heuristic_result_list):
-                    return [
+                    unknown_source_l = [
                         x
                         for x in heuristic_result_list
                         if x["source_candidate"].endpoint == "colrev.unknown_source"
-                    ][0]
+                    ]
+                    if not unknown_source_l:
+                        raise colrev_exceptions.SourceHeuristicsException(
+                            "Could not identify the SearchSource"
+                        )
+                    return unknown_source_l[0]
                 selection = str(best_candidate_pos)
             else:
                 selection = input("select nr")
@@ -277,6 +286,10 @@ class Load(colrev.operation.Operation):
     def __heuristics_check(
         self, *, heuristic_result_list: list, skip_query: bool
     ) -> colrev.settings.SearchSource:
+        if 0 == len(heuristic_result_list):
+            raise colrev_exceptions.SourceHeuristicsException(
+                "Could not identify the SearchSource"
+            )
         if 1 == len(heuristic_result_list):
             heuristic_source = heuristic_result_list[0]
         else:
@@ -319,6 +332,46 @@ class Load(colrev.operation.Operation):
 
         return heuristic_source["source_candidate"]
 
+    def __load_search_sources(self) -> dict:
+        self.review_manager.logger.debug("Load available search_source endpoints...")
+
+        search_source_identifiers = self.package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            installed_only=True,
+        )
+
+        return self.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            selected_packages=[{"endpoint": p} for p in search_source_identifiers],
+            operation=self,
+            instantiate_objects=False,
+        )
+
+    def __load_conversion_packages(self) -> dict:
+        self.review_manager.logger.debug("Load available load_conversion endpoints...")
+        load_conversion_package_identifiers = self.package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+            installed_only=True,
+        )
+
+        return self.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+            selected_packages=[
+                {"endpoint": p} for p in load_conversion_package_identifiers
+            ],
+            operation=self,
+        )
+
+    def __load_supported_extensions(self) -> list:
+        return [
+            item
+            for sublist in [
+                e.supported_extensions  # type: ignore
+                for _, e in self.load_conversion_packages.items()  # type: ignore
+            ]
+            for item in sublist
+        ]
+
     def get_new_sources(
         self, *, skip_query: bool = False
     ) -> typing.List[colrev.settings.SearchSource]:
@@ -331,77 +384,33 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.info("No new search files...")
             return []
 
-        self.review_manager.logger.debug("Load available search_source endpoints...")
-
-        search_source_identifiers = self.package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            installed_only=True,
-        )
-
-        search_sources = self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[{"endpoint": p} for p in search_source_identifiers],
-            operation=self,
-            instantiate_objects=False,
-        )
-
-        self.review_manager.logger.debug("Load available load_conversion endpoints...")
-        load_conversion_package_identifiers = self.package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            installed_only=True,
-        )
-
-        load_conversion_packages = self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            selected_packages=[
-                {"endpoint": p} for p in load_conversion_package_identifiers
-            ],
-            operation=self,
-        )
-
-        self.supported_extensions = [
-            item
-            for sublist in [
-                e.supported_extensions  # type: ignore
-                for _, e in load_conversion_packages.items()
-            ]
-            for item in sublist
-        ]
+        search_sources = self.__load_search_sources()
+        self.load_conversion_packages = self.__load_conversion_packages()
+        self.supported_extensions = self.__load_supported_extensions()
 
         new_sources = []
         for sfp in new_search_files:
-            sfp_name = sfp
-            if sfp_name in [
-                str(source.filename) for source in self.review_manager.settings.sources
-            ]:
-                continue
-
-            if not self.review_manager.high_level_operation:
-                print()
-            self.review_manager.logger.info(f"Discover new source: {sfp_name}")
-
-            # Assuming that all other search types are added by query
-            # search_type_input = "NA"
-            # while search_type_input not in SearchType.get_options():
-            #     print(f"Search type options: {SearchType.get_options()}")
-            #     cmd = "Enter search type".ljust(25, " ") + ": "
-            #     search_type_input = input(cmd)
-
-            heuristic_result_list = self.__apply_source_heuristics(
-                filepath=sfp,
-                search_sources=search_sources,
-                load_conversion=load_conversion_packages,
-            )
-            # print(heuristic_result_list) #can be deleted mail?
-
-            # turn following Code into function due to too many nested block warnings
-
-        # immediatley execute code from function above
-        new_source = self.__heuristics_check(
-            heuristic_result_list=heuristic_result_list, skip_query=skip_query
-        )
-
-        new_sources.append(new_source)
+            try:
+                sfp_name = sfp
+                if not self.review_manager.high_level_operation:
+                    print()
+                self.review_manager.logger.info(f"Discover new source: {sfp_name}")
+                if sfp_name.suffix.strip(".") not in self.supported_extensions:
+                    raise colrev_exceptions.UnsupportedImportFormatError(sfp_name)
+                heuristic_result_list = self.__apply_source_heuristics(
+                    filepath=sfp,
+                    search_sources=search_sources,
+                    load_conversion=self.load_conversion_packages,
+                )
+                new_source = self.__heuristics_check(
+                    heuristic_result_list=heuristic_result_list, skip_query=skip_query
+                )
+                new_sources.append(new_source)
+            except (
+                colrev_exceptions.SourceHeuristicsException,
+                colrev_exceptions.UnsupportedImportFormatError,
+            ) as exc:
+                self.review_manager.logger.error(f"{colors.RED}{exc}{colors.END}")
 
         return new_sources
 
@@ -645,7 +654,7 @@ class Load(colrev.operation.Operation):
                     record.data["url"].find("login?url=https") + 10 :
                 ]
 
-    def __import_record(self, *, record_dict: dict) -> dict:
+    def __import_record(self, *, record_dict: dict, include: bool) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
@@ -674,7 +683,8 @@ class Load(colrev.operation.Operation):
                 f"{colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{colors.END}"
             )
-
+        if include:
+            record.data["include_flag"] = "1"
         return record.get_data()
 
     def __prep_records_for_import(
@@ -770,7 +780,7 @@ class Load(colrev.operation.Operation):
         return search_records
 
     def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool, include: bool
     ) -> None:
         search_records = self.__get_search_records(source=source)
 
@@ -790,7 +800,9 @@ class Load(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
-            source_record = self.__import_record(record_dict=source_record)
+            source_record = self.__import_record(
+                record_dict=source_record, include=include
+            )
 
             # Make sure IDs are unique / do not replace existing records
             order = 0
@@ -865,30 +877,23 @@ class Load(colrev.operation.Operation):
                 )
 
     def __save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
-        def fix_keys(*, records: dict) -> dict:
-            for record in records.values():
-                record = {
-                    re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
+        def fix_keys(*, records: dict) -> None:
+            for record_id, record in records.items():
+                records[record_id] = {
+                    re.sub("[^0-9a-zA-Z-_]+", "", k.replace(" ", "_")): v
                     for k, v in record.items()
                 }
-            return records
 
-        def set_incremental_ids(*, records: dict) -> dict:
+        def set_incremental_ids(*, records: dict) -> None:
             # if IDs to set for some records
             if 0 != len([r for r in records if "ID" not in r]):
                 i = 1
                 for record in records.values():
                     if "ID" not in record:
-                        if "UT_(Unique_WOS_ID)" in record:
-                            record["ID"] = record["UT_(Unique_WOS_ID)"].replace(
-                                ":", "_"
-                            )
-                        else:
-                            record["ID"] = f"{i+1}".rjust(10, "0")
+                        record["ID"] = f"{i+1}".rjust(10, "0")
                         i += 1
-            return records
 
-        def drop_empty_fields(*, records: dict) -> dict:
+        def drop_empty_fields(*, records: dict) -> None:
             for record_id in records:
                 records[record_id] = {
                     k: v for k, v in records[record_id].items() if v is not None
@@ -896,27 +901,25 @@ class Load(colrev.operation.Operation):
                 records[record_id] = {
                     k: v for k, v in records[record_id].items() if v != "nan"
                 }
-            return records
 
-        def drop_fields(*, records: dict) -> dict:
+        def drop_fields(*, records: dict) -> None:
             for record_id in records:
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
                     if k not in ["colrev_status", "colrev_masterdata_provenance"]
                 }
-            return records
 
-        if len(records) == 0:
+        if not records:
             self.review_manager.report_logger.debug("No records loaded")
             self.review_manager.logger.debug("No records loaded")
             return
 
-        records = fix_keys(records=records)
-        records = set_incremental_ids(records=records)
-        records = drop_empty_fields(records=records)
-        records = drop_fields(records=records)
-
+        fix_keys(records=records)
+        set_incremental_ids(records=records)
+        drop_empty_fields(records=records)
+        drop_fields(records=records)
+        records = dict(sorted(records.items()))
         self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=corresponding_bib_file
         )
@@ -934,12 +937,13 @@ class Load(colrev.operation.Operation):
                 sources.append(source)
         return sources
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
         new_sources: typing.List[colrev.settings.SearchSource],
         keep_ids: bool = False,
-        combine_commits: bool = False,
+        include: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
 
@@ -950,6 +954,8 @@ class Load(colrev.operation.Operation):
         for source in self.__load_active_sources(new_sources=new_sources):
             try:
                 self.review_manager.logger.info(f"Load {source.filename}")
+                if not source.filename.is_file():
+                    continue
 
                 # Add to settings (if new filename)
                 if source.filename not in [
@@ -986,7 +992,9 @@ class Load(colrev.operation.Operation):
                 self.__resolve_non_unique_ids(source=source)
 
                 # 3. load and add records to data/records.bib
-                self.__load_source_records(source=source, keep_ids=keep_ids)
+                self.__load_source_records(
+                    source=source, keep_ids=keep_ids, include=include
+                )
                 if (
                     0 == getattr(source, "to_import", 0)
                     and not self.review_manager.high_level_operation
@@ -996,17 +1004,14 @@ class Load(colrev.operation.Operation):
                 # 4. validate load
                 self.__validate_load(source=source)
 
-                stashed = "No local changes to save" != git_repo.git.stash(
-                    "push", "--keep-index"
-                )
+                stashed = self.review_manager.dataset.stash_unstaged_changes()
 
-                if not combine_commits:
-                    self.review_manager.exact_call = (
-                        f"{part_exact_call} -s {source.filename.name}"
-                    )
-                    self.review_manager.create_commit(
-                        msg=f"Load {source.filename.name}",
-                    )
+                self.review_manager.exact_call = (
+                    f"{part_exact_call} -s {source.filename.name}"
+                )
+                self.review_manager.create_commit(
+                    msg=f"Load {source.filename.name}",
+                )
                 if stashed:
                     git_repo.git.stash("pop")
                 if not self.review_manager.high_level_operation:
@@ -1014,11 +1019,6 @@ class Load(colrev.operation.Operation):
             except colrev_exceptions.ImportException as exc:
                 print(exc)
 
-        if combine_commits and self.review_manager.dataset.has_changes():
-            self.review_manager.create_commit(msg="Load (multiple)")
-
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed load operation{colors.END}"
         )
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

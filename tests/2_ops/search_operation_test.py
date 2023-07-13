@@ -16,11 +16,10 @@ def test_search(base_repo_review_manager: colrev.review_manager.ReviewManager) -
 
 
 def test_search_add_source(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers, mocker
+    base_repo_review_manager: colrev.review_manager.ReviewManager, mocker
 ) -> None:
     """Test the search add_source"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
     search_operation = base_repo_review_manager.get_search_operation()
     add_source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
@@ -54,11 +53,10 @@ def test_search_get_unique_filename(
     assert expected == actual
 
 
-def test_prep_setup_custom_script(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+def test_prep_setup_custom_script(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test search setup_custom_script"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
     search_operation = base_repo_review_manager.get_search_operation()
     search_operation.setup_custom_script()

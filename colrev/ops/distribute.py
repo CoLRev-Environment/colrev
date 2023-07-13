@@ -5,15 +5,13 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.operation
 import colrev.settings
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Distribute(colrev.operation.Operation):
@@ -37,6 +35,7 @@ class Distribute(colrev.operation.Operation):
             if "curated_metadata/" not in x["repo_source_path"]
         ]
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
         """Distribute records to other CoLRev repositories (main entrypoint)"""
 

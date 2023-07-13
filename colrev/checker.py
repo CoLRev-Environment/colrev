@@ -8,6 +8,7 @@ import sys
 import typing
 from importlib.metadata import version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 from git.exc import InvalidGitRepositoryError
@@ -16,12 +17,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.exit_codes import ExitCodes
 
-
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 
 class Checker:

@@ -23,13 +23,13 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.get_environment_details
       ~EnvironmentManager.get_environment_stats
       ~EnvironmentManager.get_name_mail_from_git
+      ~EnvironmentManager.get_settings_by_key
       ~EnvironmentManager.load_environment_registry
       ~EnvironmentManager.local_repos
-      ~EnvironmentManager.register_docker_service
       ~EnvironmentManager.register_ports
       ~EnvironmentManager.register_repo
       ~EnvironmentManager.save_environment_registry
-      ~EnvironmentManager.stop_docker_services
+      ~EnvironmentManager.update_registry
 
 
 

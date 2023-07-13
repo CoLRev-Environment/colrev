@@ -4,7 +4,7 @@ The CoLRev Framework
 
 The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
-.. figure:: ../../figures/framework_design_areas.svg
+.. figure:: ../../figures/framework_design_areas.png
    :align: center
    :alt: Areas
    :figwidth: 800px
@@ -89,7 +89,7 @@ Guiding principles:
    - be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced
    - efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
 
-   .. figure:: ../../figures/macro_framework.svg
+   .. figure:: ../../figures/macro_framework.png
       :alt: Macro framework
 
 
@@ -425,7 +425,7 @@ Desigining a self-explanatory, fault-tolerant, and configurable user workflow
 In its basic form, the workflow consists of iteratively calling ``colrev status`` > ``colrev [process]`` > ``Git [process]``.
 It is self-explanatory with ``colrev status`` recommending the next ``colrev [process]`` or ``Git [process]``.
 
-.. figure:: ../../figures/workflow.svg
+.. figure:: ../../figures/workflow.png
    :width: 600
    :align: center
    :alt: Workflow cycle

@@ -13,6 +13,7 @@ from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import dictdiffer
 import pandas as pd
@@ -38,12 +39,9 @@ import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
 import colrev.ui_cli.cli_colors as colors
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.review_manager
-        import colrev.qm.quality_model
+if TYPE_CHECKING:
+    import colrev.review_manager
+    import colrev.qm.quality_model
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods
@@ -340,13 +338,23 @@ class Record:
 
     def rename_field(self, *, key: str, new_key: str) -> None:
         """Rename a field"""
+        if key not in self.data:
+            return
         value = self.data[key]
         self.data[new_key] = value
 
         if key in self.identifying_field_keys:
-            value_provenance = self.data["colrev_masterdata_provenance"][key]
-            if "source" in value_provenance:
-                value_provenance["source"] += f"|rename-from:{key}"
+            if "colrev_masterdata_provenance" not in self.data:
+                self.data["colrev_masterdata_provenance"] = {}
+            if key in self.data["colrev_masterdata_provenance"]:
+                value_provenance = self.data["colrev_masterdata_provenance"][key]
+                if "source" in value_provenance:
+                    value_provenance["source"] += f"|rename-from:{key}"
+            else:
+                value_provenance = {
+                    "source": f"|rename-from:{key}",
+                    "note": "",
+                }
             self.data["colrev_masterdata_provenance"][new_key] = value_provenance
         else:
             if "colrev_data_provenance" not in self.data:
@@ -388,6 +396,21 @@ class Record:
         elif new_entrytype == "article":
             if "booktitle" in self.data:
                 self.rename_field(key="booktitle", new_key="journal")
+        elif new_entrytype in [
+            "inbook",
+            "book",
+            "incollection",
+            "phdthesis",
+            "thesis",
+            "masterthesis",
+            "bachelorthesis",
+            "techreport",
+            "unpublished",
+            "misc",
+            "software",
+            "online",
+        ]:
+            pass
         else:
             raise colrev_exceptions.MissingRecordQualityRuleSpecification(
                 f"No ENTRYTYPE specification ({new_entrytype})"
@@ -1862,22 +1885,25 @@ class PrepRecord(Record):
 
     def format_if_mostly_upper(self, *, key: str, case: str = "sentence") -> None:
         """Format the field if it is mostly in upper case"""
-        # if not re.match(r"^[a-zA-Z\"\{\} ]+$", self.data[key]):
-        #     return
+
         if key not in self.data or self.data[key] == "UNKNOWN":
             return
-        self.data[key] = self.data[key].replace("\n", " ")
 
-        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.7:
-            self.data[key] = prep_utils.capitalize_entities(self.data[key])
+        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.6:
             return
 
         # Note: the truecase package is not very reliable (yet)
 
+        self.data[key] = self.data[key].replace("\n", " ")
+
         if case == "sentence":
             self.data[key] = self.data[key].capitalize()
-        if case == "title":
+        elif case == "title":
             self.data[key] = self.data[key].title()
+        else:
+            raise colrev_exceptions.ParameterError(
+                parameter="case", value=case, options=["sentence", "title"]
+            )
 
         self.data[key] = prep_utils.capitalize_entities(self.data[key])
 
@@ -1913,6 +1939,12 @@ class PrepRecord(Record):
             .replace(" -- ", "--")
             .rstrip(".")
         )
+        if re.match(r"^\d+\-\-\d+$", self.data["pages"]):
+            from_page, to_page = re.findall(r"(\d+)", self.data["pages"])
+            if int(from_page) > int(to_page) and len(from_page) > len(to_page):
+                self.data[
+                    "pages"
+                ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
 
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""

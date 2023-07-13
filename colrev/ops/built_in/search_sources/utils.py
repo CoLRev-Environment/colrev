@@ -66,7 +66,10 @@ def __item_to_record(*, item: dict) -> dict:
     assert isinstance(item["title"], str)
 
     if isinstance(item.get("container-title", ""), list):
-        item["container-title"] = item["container-title"][0]
+        if len(item["container-title"]) > 0:
+            item["container-title"] = item["container-title"][0]
+        else:
+            item["container-title"] = ""
     assert isinstance(item.get("container-title", ""), str)
 
     item["ENTRYTYPE"] = "misc"
@@ -119,7 +122,7 @@ def __format_fields(*, record_dict: dict) -> dict:
         if key == "abstract":
             if value.startswith("Abstract "):
                 value = value[8:]
-        record_dict[key] = value
+        record_dict[key] = value.lstrip().rstrip()
 
     return record_dict
 

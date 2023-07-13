@@ -20,4 +20,12 @@ colrev search -a colrev.pdf_backward_search:default
 colrev search -a colrev.pdf_backward_search:min_intext_citations=2
 ```
 
+## Conducting a selective backward search
+
+A selective backward search for a single paper and selected references can be conducted by running
+```
+colrev search -bws record_id
+```
+References can be selected interactively for import.
+
 ## Links

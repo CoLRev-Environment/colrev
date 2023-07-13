@@ -18,6 +18,8 @@ colrev.ops.data.Data
 
       ~Data.add_data_endpoint
       ~Data.check_precondition
+      ~Data.conclude
+      ~Data.decorate
       ~Data.get_record_ids_for_synthesis
       ~Data.main
       ~Data.profile

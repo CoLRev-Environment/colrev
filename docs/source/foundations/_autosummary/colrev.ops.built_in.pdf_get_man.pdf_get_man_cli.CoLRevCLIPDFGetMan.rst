@@ -23,6 +23,7 @@ colrev.ops.built\_in.pdf\_get\_man.pdf\_get\_man\_cli.CoLRevCLIPDFGetMan
       ~CoLRevCLIPDFGetMan.from_object
       ~CoLRevCLIPDFGetMan.json_schema
       ~CoLRevCLIPDFGetMan.pdf_get_man
+      ~CoLRevCLIPDFGetMan.print_record
       ~CoLRevCLIPDFGetMan.register_field_encoders
       ~CoLRevCLIPDFGetMan.to_dict
       ~CoLRevCLIPDFGetMan.to_json

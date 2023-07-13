@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.8.4"
+version = "0.9.0"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
@@ -72,9 +72,12 @@ pylint = "^2.17.2"
 pymupdf = "^1.22.0"
 imagehash = "^4.3.1"
 defusedxml = "^0.7.1"
-asreview = "^1.2"
 requests-mock = "^1.10.0"
 dash = "^2.11.1"
+levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
+pyalex = "^0.10"
+rispy = "^0.7.1"
+colrev-asreview = {git = "https://github.com/CoLRev-Environment/colrev-asreview"}
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"

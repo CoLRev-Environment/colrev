@@ -2,9 +2,11 @@
 """Export of bib/pdfs as a prep-man operation"""
 from __future__ import annotations
 
+import platform
 import typing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -20,11 +22,8 @@ import colrev.ui_cli.cli_colors as colors
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
-if False:  # pylint: disable=using-constant-test
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        import colrev.ops.prep_man
+if TYPE_CHECKING:
+    import colrev.ops.prep_man
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
@@ -37,6 +36,7 @@ class ExportManPrep(JsonSchemaMixin):
 
     RELATIVE_PREP_MAN_PATH = Path("records_prep_man.bib")
     RELATIVE_PREP_MAN_INFO_PATH = Path("records_prep_man_info.csv")
+    RELATIVE_PREP_MAN_INFO_PATH_XLS = Path("records_prep_man_info.xlsx")
 
     __FIELDS_TO_KEEP = [
         "ENTRYTYPE",
@@ -51,6 +51,7 @@ class ExportManPrep(JsonSchemaMixin):
         "number",
         "pages",
         "doi",
+        "file",
     ]
 
     @dataclass
@@ -92,6 +93,10 @@ class ExportManPrep(JsonSchemaMixin):
             self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH
         )
 
+        self.prep_man_xlsx_path = (
+            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH_XLS
+        )
+
         self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
 
     def __copy_files_for_man_prep(self, *, records: dict) -> None:
@@ -112,7 +117,7 @@ class ExportManPrep(JsonSchemaMixin):
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)
                     if len(pdf_reader.pages) >= 1:
                         writer = PdfFileWriter()
-                        writer.addPage(pdf_reader.getPage(0))
+                        writer.addPage(pdf_reader.pages[0])
                         with open(target_path, "wb") as outfile:
                             writer.write(outfile)
 
@@ -163,7 +168,13 @@ class ExportManPrep(JsonSchemaMixin):
                     )
 
         man_prep_info_df = pd.DataFrame(man_prep_info)
-        man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
+        if platform.system() == "Windows":
+            # until https://github.com/pylint-dev/pylint/issues/3060 is resolved
+            # pylint: disable=abstract-class-instantiated
+            with pd.ExcelWriter(self.prep_man_xlsx_path) as writer:
+                man_prep_info_df.to_excel(writer, index=False)
+        else:
+            man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
     def __drop_unnecessary_provenance_fiels(
         self, *, record: colrev.record.Record
@@ -194,8 +205,15 @@ class ExportManPrep(JsonSchemaMixin):
         dropped_keys = [
             k
             for k in original_record.data
-            if k in self.__FIELDS_TO_KEEP and k not in man_prepped_record_dict
+            if (k not in man_prepped_record_dict) and k in self.__FIELDS_TO_KEEP
         ]
+
+        if original_record.data["ENTRYTYPE"] != man_prepped_record_dict["ENTRYTYPE"]:
+            original_record.change_entrytype(
+                new_entrytype=man_prepped_record_dict["ENTRYTYPE"],
+                qm=self.quality_model,
+            )
+
         if man_prepped_record_dict["ENTRYTYPE"] != original_record.data["ENTRYTYPE"]:
             original_record.data["ENTRYTYPE"] = man_prepped_record_dict["ENTRYTYPE"]
             original_record.update_masterdata_provenance(qm=self.quality_model)
@@ -203,7 +221,7 @@ class ExportManPrep(JsonSchemaMixin):
         for key, value in man_prepped_record_dict.items():
             if key in ["colrev_status"]:
                 continue
-            if value != original_record.data.get(key, ""):
+            if value != original_record.data.get(key, "") and value != "UNKNOWN":
                 original_record.update_field(
                     key=key, value=value, source="man_prep", append_edit=False
                 )
@@ -268,11 +286,18 @@ class ExportManPrep(JsonSchemaMixin):
         self.__drop_unnecessary_provenance_fiels(record=original_record)
         if (
             man_prepped_record_dict["colrev_status"]
-            != colrev.record.RecordState.rev_prescreen_excluded
+            == colrev.record.RecordState.rev_prescreen_excluded
         ):
+            original_record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_excluded,
+                force=True,
+            )
+
+        else:
             original_record.update_masterdata_provenance(
                 qm=self.quality_model, set_prepared=True
             )
+
         if override:
             original_record.set_status(
                 target_state=colrev.record.RecordState.md_prepared, force=True
@@ -296,8 +321,8 @@ class ExportManPrep(JsonSchemaMixin):
         for record_id, record_dict in records.items():
             if (
                 record_dict["colrev_status"]
-                == colrev.record.RecordState.md_needs_manual_preparation
-                and record_id not in man_prep_recs
+                == colrev.record.RecordState.rev_prescreen_excluded
+                # or record_id not in man_prep_recs
             ):
                 records[record_id][  # pylint: disable=direct-status-assign
                     "colrev_status"
@@ -330,9 +355,14 @@ class ExportManPrep(JsonSchemaMixin):
 
     def __print_export_prep_man_instructions(self) -> None:
         print("Created two files:")
-        print(
-            f" - {self.prep_man_csv_path.relative_to(self.review_manager.path)}  (CSV file)"
-        )
+        if platform.system() == "Windows":
+            print(
+                f" - {self.prep_man_xlsx_path.relative_to(self.review_manager.path)}  (EXCEL file)"
+            )
+        else:
+            print(
+                f" - {self.prep_man_csv_path.relative_to(self.review_manager.path)}  (CSV file)"
+            )
         print(
             f" - {self.prep_man_bib_path.relative_to(self.review_manager.path)}       (BIB file)"
         )
