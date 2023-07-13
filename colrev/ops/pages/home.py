@@ -1,15 +1,12 @@
 #! /usr/bin/env python3
 """Burn Down Chart is created here"""
 from __future__ import annotations
-
 from datetime import datetime
-
 import dash
 import pandas as pd
 import plotly.express as px
 from dash import dcc
 from dash import html
-
 import colrev.review_manager
 
 dash.register_page(__name__, path="/")
@@ -17,6 +14,8 @@ dash.register_page(__name__, path="/")
 
 def analytics():
     """function creating Burn Down Chart"""
+
+    # get data from get_analytics function
     review_manager = colrev.review_manager.ReviewManager()
     status_operation = review_manager.get_status_operation()
     analytic_results = status_operation.get_analytics()
@@ -24,21 +23,27 @@ def analytics():
     analytics_df = pd.DataFrame(analytic_results)
     analytics_df = analytics_df.transpose()
 
+    # change timestamp
     analytics_df["committed_date"] = analytics_df["committed_date"].apply(
         timestamp_to_date
     )
 
+    # y Achse skalieren
     max_y_lab = max(analytics_df["atomic_steps"])
 
+    # check if there are no atomic steps saved
     if max_y_lab == 0:
         raise Exception("Die Datei 'records.bib' ist leer.")
 
+    # completed atomic steps skalieren
     analytics_df["scaled_progress"] = analytics_df["completed_atomic_steps"].apply(
         scale_completed_atomic_steps, max=max_y_lab
     )
 
+    # reverse order of dataframe
     analytics_df2 = analytics_df.iloc[::-1]
 
+    # make and style the chart
     fig = px.line(
         analytics_df2,
         x="committed_date",
@@ -79,10 +84,11 @@ def scale_completed_atomic_steps(steps, max) -> int:
     steps = 100 - (steps / max) * 100
     return steps
 
-
+# html code for the burn down chart
 layout = html.Div([dcc.Graph(figure=analytics())], style={"margin": "auto"}), html.Div(
     className="navigation-button",
     children=[
+        # button to get to synthesized records
         html.A(
             html.Button("detailed information on synthesized records"),
             href="http://127.0.0.1:8050/synthesizedrecords",

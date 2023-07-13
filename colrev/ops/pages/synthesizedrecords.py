@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 """dashboard table and graphs for synthesized records"""
 from __future__ import annotations
-
 import bibtexparser
 import dash
 import pandas as pd
@@ -16,18 +15,19 @@ from dash import Output
 
 dash.register_page(__name__)
 
-
+# get data from records.bib
 with open(
     "./data/records.bib"
-) as bibtex_file:  # changing file format to csv for pandas
+) as bibtex_file: 
     bib_database = bibtexparser.load(bibtex_file)
     if not bib_database.entries:  # checking if bib_database file is empty
-        raise Exception("Die Datei 'records.bib' ist leer.")  # throwing Exception
+        raise Exception("Die Datei 'records.bib' ist leer.")  # throwing Exception if records.bib is empty
 df = pd.DataFrame(bib_database.entries)
-df.to_csv("./data/records.csv", index=True)
+df.to_csv("./data/records.csv", index=True)  # changing file format to csv for pandas
 data = pd.read_csv("./data/records.csv").query("colrev_status == 'rev_synthesized'")
 data.rename(columns={"Unnamed: 0": "index"}, inplace=True)
 
+# removing unwanted columns
 for title in data:
     if (
         title != "title"
@@ -50,9 +50,15 @@ def empty_figure() -> object:
 
 def visualization_time(data) -> object:
     """creates graph about papers published over time"""
+
+    # check for data
     if data.empty:
         return empty_figure()
+
+    # group data for the graph
     data2 = data.groupby(["year"])["year"].count().reset_index(name="count")
+
+    # make and style the graph
     fig = px.bar(
         data2,
         x="year",
@@ -71,12 +77,16 @@ def visualization_time(data) -> object:
             x=0.5,
         )
     )
+
+    # style x axis
     fig.update_xaxes(
         title_text="Year",
         type="category",
         title_font=dict(family="Lato, sans-serif", size=20),
         tickfont=dict(family="Lato, sans-serif", size=20),
     )
+
+    # style y axis
     fig.update_yaxes(
         title_text="Count",
         title_font=dict(family="Lato, sans-serif", size=20),
@@ -87,9 +97,15 @@ def visualization_time(data) -> object:
 
 def visualization_magazines(data) -> px.bar:
     """creates graph about papers published per journal"""
+
+    # check for data
     if data.empty:
         return empty_figure()
+
+    # group data for the graph
     data2 = data.groupby(["journal"])["journal"].count().reset_index(name="count")
+
+    # make and style the graph
     fig = px.bar(
         data2,
         x="journal",
@@ -107,12 +123,16 @@ def visualization_magazines(data) -> px.bar:
             x=0.5,
         )
     )
+
+    # style x axis
     fig.update_xaxes(
         title_text="Journal",
         type="category",
         title_font=dict(family="Lato, sans-serif", size=20),
         tickfont=dict(family="Lato, sans-serif", size=15),
     )
+
+    # style y axis
     fig.update_yaxes(
         title_text="Count",
         title_font=dict(family="Lato, sans-serif", size=20),
@@ -122,11 +142,13 @@ def visualization_magazines(data) -> px.bar:
     return fig
 
 
+# html layout for the synthesised records subpage
 layout = html.Div(
     children=[
         html.Div(
             children=[
                 html.Div(
+                    # sorting dropdown
                     className="options",
                     children=[
                         dcc.Dropdown(
@@ -137,6 +159,7 @@ layout = html.Div(
                     ],
                 ),
                 html.Div(
+                    # search bar
                     className="options",
                     children=[
                         dcc.Input(
@@ -162,6 +185,7 @@ layout = html.Div(
                                 "fontSize": 30,
                             },
                         ),
+                        # table with synthesized records
                         dash_table.DataTable(
                             data=data.to_dict("records"),
                             id="table",
@@ -194,15 +218,18 @@ layout = html.Div(
                 ),
                 # Div für Ausgabe wenn keine Ergebnisse bei Suche
                 html.Div(id="table_empty", children=[]),
+                # graph 1
                 html.Div(
                     [dcc.Graph(figure=visualization_time(data), id="time")],
                 ),
+                # graph 2
                 html.Div(
                     [dcc.Graph(figure=visualization_magazines(data), id="magazines")],
                 ),
             ],
             className="wrapper",
         ),
+        # button to burn down chart
         html.Div(
             className="navigation-button",
             children=[
@@ -230,6 +257,7 @@ def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:
 
     output = ""
 
+    # sort data
     if sortvalue == "year":
         sorted_data = sorted_data.sort_values(by=["year"])  # sort by year
     elif sortvalue == "title":
@@ -239,6 +267,7 @@ def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:
 
     data2 = sorted_data.copy(deep=True).to_dict("records")
 
+    # search for data
     for row in sorted_data.to_dict("records"):
         found = False
         for key in row:
@@ -248,8 +277,9 @@ def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:
         if found is False:
             data2.remove(row)
 
-        if not data2:
-            output = "no records found for your search"
+    # check if search results are empty
+    if not data2:
+        output = "no records found for your search"
 
     return (
         data2,
