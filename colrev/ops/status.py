@@ -2,7 +2,6 @@
 """CoLRev status operation: Display the project status."""
 from __future__ import annotations
 
-import csv
 import io
 import typing
 from dataclasses import dataclass
@@ -63,15 +62,14 @@ class Status(colrev.operation.Operation):
                     "search": data_loaded["overall"]["md_retrieved"],
                     "included": data_loaded["overall"]["rev_included"],
                 }
-            except (IndexError, KeyError) as exc:
-                print(exc)
+            except (IndexError, KeyError):
+                pass
 
-        keys = list(analytics_dict.values())[0].keys()
-
-        with open("analytics.csv", "w", newline="", encoding="utf8") as output_file:
-            dict_writer = csv.DictWriter(output_file, keys)
-            dict_writer.writeheader()
-            dict_writer.writerows(reversed(analytics_dict.values()))
+        # keys = list(analytics_dict.values())[0].keys()
+        # with open("analytics.csv", "w", newline="", encoding="utf8") as output_file:
+        #     dict_writer = csv.DictWriter(output_file, keys)
+        #     dict_writer.writeheader()
+        #     dict_writer.writerows(reversed(analytics_dict.values()))
 
         return analytics_dict
 
