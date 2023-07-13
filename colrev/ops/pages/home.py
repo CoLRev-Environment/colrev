@@ -55,7 +55,8 @@ def analytics():
     fig.update_layout(
         title=dict(
             text="<b>Burn-Down Chart</b>", font=dict(size=30), automargin=True, x=0.5
-        )
+        ),
+        yaxis_range=[0,100],
     )
     fig.update_xaxes(
         title_text="Date of Commit",
