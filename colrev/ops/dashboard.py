@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """CoLRev dashboard operation: track project progress through dashboard"""
 from __future__ import annotations
+
 import dash
 from dash import Dash
 from dash import html

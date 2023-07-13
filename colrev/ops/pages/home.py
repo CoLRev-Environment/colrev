@@ -1,12 +1,15 @@
 #! /usr/bin/env python3
 """Burn Down Chart is created here"""
 from __future__ import annotations
+
 from datetime import datetime
+
 import dash
 import pandas as pd
 import plotly.express as px
 from dash import dcc
 from dash import html
+
 import colrev.review_manager
 
 dash.register_page(__name__, path="/")
@@ -83,6 +86,7 @@ def scale_completed_atomic_steps(steps, max) -> int:
     """scales completed atomic steps for burn down chart"""
     steps = 100 - (steps / max) * 100
     return steps
+
 
 # html code for the burn down chart
 layout = html.Div([dcc.Graph(figure=analytics())], style={"margin": "auto"}), html.Div(
