@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """dashboard table and graphs for synthesized records"""
 from __future__ import annotations
+
 import bibtexparser
 import dash
 import pandas as pd
@@ -16,12 +17,12 @@ from dash import Output
 dash.register_page(__name__)
 
 # get data from records.bib
-with open(
-    "./data/records.bib"
-) as bibtex_file: 
+with open("./data/records.bib") as bibtex_file:
     bib_database = bibtexparser.load(bibtex_file)
     if not bib_database.entries:  # checking if bib_database file is empty
-        raise Exception("Die Datei 'records.bib' ist leer.")  # throwing Exception if records.bib is empty
+        raise Exception(
+            "Die Datei 'records.bib' ist leer."
+        )  # throwing Exception if records.bib is empty
 df = pd.DataFrame(bib_database.entries)
 df.to_csv("./data/records.csv", index=True)  # changing file format to csv for pandas
 data = pd.read_csv("./data/records.csv").query("colrev_status == 'rev_synthesized'")
