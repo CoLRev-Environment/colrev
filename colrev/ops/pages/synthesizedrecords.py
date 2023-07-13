@@ -2,7 +2,6 @@
 """dashboard table and graphs for synthesized records"""
 from __future__ import annotations
 
-import bibtexparser
 import dash
 import pandas as pd
 import plotly.express as px
@@ -14,29 +13,23 @@ from dash import html
 from dash import Input
 from dash import Output
 
+import colrev.record
+import colrev.review_manager
+
 dash.register_page(__name__)
 
-# get data from records.bib
-with open("./data/records.bib") as bibtex_file:
-    bib_database = bibtexparser.load(bibtex_file)
-    if not bib_database.entries:  # checking if bib_database file is empty
-        raise Exception(
-            "Die Datei 'records.bib' ist leer."
-        )  # throwing Exception if records.bib is empty
-df = pd.DataFrame(bib_database.entries)
-df.to_csv("./data/records.csv", index=True)  # changing file format to csv for pandas
-data = pd.read_csv("./data/records.csv").query("colrev_status == 'rev_synthesized'")
-data.rename(columns={"Unnamed: 0": "index"}, inplace=True)
+review_manager = colrev.review_manager.ReviewManager()
+status_operation = review_manager.get_status_operation()
+records = review_manager.dataset.load_records_dict()
+data = pd.DataFrame.from_records(
+    [
+        r
+        for r in records.values()
+        if r["colrev_status"] == colrev.record.RecordState.rev_synthesized
+    ]
+)
 
-# removing unwanted columns
-for title in data:
-    if (
-        title != "title"
-        and title != "author"
-        and title != "year"
-        and title != "journal"
-    ):
-        data.pop(title)
+data = data[["author", "title", "year", "journal"]]
 
 
 def empty_figure() -> object:
