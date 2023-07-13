@@ -154,7 +154,7 @@ layout = html.Div(
                     children=[
                         dcc.Dropdown(
                             id="sortby",
-                            options=["index", "year", "author (alphabetically)"],
+                            options=["title", "year", "author (alphabetically)"],
                             placeholder="Sort by...",
                         )
                     ],
