@@ -98,14 +98,16 @@ def visualization_magazines(data) -> px.bar:
 
     # group data for the graph
     data2 = data.groupby(["journal"])["journal"].count().reset_index(name="count")
+    data2 = data2[data2["count"] != 0].sort_values(by="count", ascending=True)
 
     # make and style the graph
     fig = px.bar(
         data2,
-        x="journal",
-        y="count",
+        x="count",
+        y="journal",
         template="simple_white",
         title="Papers Published per Journal",
+        orientation="h",
     )
     fig.update_traces(marker_color="#fcb61a")
 
@@ -120,15 +122,15 @@ def visualization_magazines(data) -> px.bar:
 
     # style x axis
     fig.update_xaxes(
-        title_text="Journal",
-        type="category",
+        title_text="Count",
         title_font=dict(family="Lato, sans-serif", size=20),
         tickfont=dict(family="Lato, sans-serif", size=15),
     )
 
     # style y axis
     fig.update_yaxes(
-        title_text="Count",
+        title_text="Journal",
+        type="category",
         title_font=dict(family="Lato, sans-serif", size=20),
         tickfont=dict(family="Lato, sans-serif", size=15),
     )
