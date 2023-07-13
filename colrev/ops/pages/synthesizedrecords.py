@@ -42,15 +42,15 @@ def empty_figure() -> object:
     return figure
 
 
-def visualization_time(data) -> object:
+def plot_time(data_input: pd.DataFrame) -> object:
     """creates graph about papers published over time"""
 
-    # check for data
-    if data.empty:
+    # check for data_input
+    if data_input.empty:
         return empty_figure()
 
-    # group data for the graph
-    data2 = data.groupby(["year"])["year"].count().reset_index(name="count")
+    # group data_input for the graph
+    data2 = data_input.groupby(["year"])["year"].count().reset_index(name="count")
 
     # make and style the graph
     fig = px.bar(
@@ -64,40 +64,40 @@ def visualization_time(data) -> object:
     fig.update_traces(marker_color="#fcb61a")
 
     fig.update_layout(
-        title=dict(
-            text="<b>Profile of papers published over time</b>",
-            font=dict(family="Lato, sans-serif", size=30),
-            automargin=True,
-            x=0.5,
-        )
+        title={
+            "text": "<b>Profile of papers published over time</b>",
+            "font": {"family": "Lato, sans-serif", "size": 30},
+            "automargin": True,
+            "x": 0.5,
+        }
     )
 
     # style x axis
     fig.update_xaxes(
         title_text="Year",
         type="category",
-        title_font=dict(family="Lato, sans-serif", size=20),
-        tickfont=dict(family="Lato, sans-serif", size=20),
+        title_font={"family": "Lato, sans-serif", "size": 20},
+        tickfont={"family": "Lato, sans-serif", "size": 20},
     )
 
     # style y axis
     fig.update_yaxes(
         title_text="Count",
-        title_font=dict(family="Lato, sans-serif", size=20),
-        tickfont=dict(family="Lato, sans-serif", size=20),
+        title_font={"family": "Lato, sans-serif", "size": 20},
+        tickfont={"family": "Lato, sans-serif", "size": 20},
     )
     return fig
 
 
-def visualization_magazines(data) -> px.bar:
+def plot_journals(data_input: pd.DataFrame) -> px.bar:
     """creates graph about papers published per journal"""
 
-    # check for data
-    if data.empty:
+    # check for data_input
+    if data_input.empty:
         return empty_figure()
 
     # group data for the graph
-    data2 = data.groupby(["journal"])["journal"].count().reset_index(name="count")
+    data2 = data_input.groupby(["journal"])["journal"].count().reset_index(name="count")
     data2 = data2[data2["count"] != 0].sort_values(by="count", ascending=True)
 
     # make and style the graph
@@ -112,27 +112,27 @@ def visualization_magazines(data) -> px.bar:
     fig.update_traces(marker_color="#fcb61a")
 
     fig.update_layout(
-        title=dict(
-            text="<b>Papers Published per Journal</b>",
-            font=dict(family="Lato, sans-serif", size=30),
-            automargin=True,
-            x=0.5,
-        )
+        title={
+            "text": "<b>Papers Published per Journal</b>",
+            "font": {"family": "Lato, sans-serif", "size": 30},
+            "automargin": True,
+            "x": 0.5,
+        }
     )
 
     # style x axis
     fig.update_xaxes(
         title_text="Count",
-        title_font=dict(family="Lato, sans-serif", size=20),
-        tickfont=dict(family="Lato, sans-serif", size=15),
+        title_font={"family": "Lato, sans-serif", "size": 20},
+        tickfont={"family": "Lato, sans-serif", "size": 15},
     )
 
     # style y axis
     fig.update_yaxes(
         title_text="Journal",
         type="category",
-        title_font=dict(family="Lato, sans-serif", size=20),
-        tickfont=dict(family="Lato, sans-serif", size=15),
+        title_font={"family": "Lato, sans-serif", "size": 20},
+        tickfont={"family": "Lato, sans-serif", "size": 15},
     )
 
     return fig
@@ -216,11 +216,11 @@ layout = html.Div(
                 html.Div(id="table_empty", children=[]),
                 # graph 1
                 html.Div(
-                    [dcc.Graph(figure=visualization_time(data), id="time")],
+                    [dcc.Graph(figure=plot_time(data), id="time")],
                 ),
                 # graph 2
                 html.Div(
-                    [dcc.Graph(figure=visualization_magazines(data), id="magazines")],
+                    [dcc.Graph(figure=plot_journals(data), id="magazines")],
                 ),
             ],
             className="wrapper",
@@ -247,7 +247,7 @@ layout = html.Div(
     Input("search", "value"),
     Input("sortby", "value"),
 )
-def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:
+def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:  # type: ignore
     """callback function updating table and graphs based on search and sort"""
     sorted_data = data.copy(deep=True)
 
@@ -280,6 +280,6 @@ def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:
     return (
         data2,
         output,
-        visualization_time(pd.DataFrame.from_dict(data2)),
-        visualization_magazines(pd.DataFrame.from_dict(data2)),
+        plot_time(pd.DataFrame.from_dict(data2)),
+        plot_journals(pd.DataFrame.from_dict(data2)),
     )

@@ -10,12 +10,13 @@ import plotly.express as px
 from dash import dcc
 from dash import html
 
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 
 dash.register_page(__name__, path="/")
 
 
-def analytics():
+def analytics() -> px.line:
     """function creating Burn Down Chart"""
 
     # get data from get_analytics function
@@ -36,7 +37,7 @@ def analytics():
 
     # check if there are no atomic steps saved
     if max_y_lab == 0:
-        raise Exception("Die Datei 'records.bib' ist leer.")
+        raise colrev_exceptions.NoRecordsError
 
     # completed atomic steps skalieren
     analytics_df["scaled_progress"] = analytics_df["completed_atomic_steps"].apply(
@@ -56,9 +57,12 @@ def analytics():
     )
     fig.update_traces(marker_color="#2596be")
     fig.update_layout(
-        title=dict(
-            text="<b>Burn-Down Chart</b>", font=dict(size=30), automargin=True, x=0.5
-        ),
+        title={
+            "text": "<b>Burn-Down Chart</b>",
+            "font": {"size": 30},
+            "automargin": True,
+            "x": 0.5,
+        },
         yaxis_range=[0, 100],
     )
     fig.update_xaxes(
@@ -66,27 +70,26 @@ def analytics():
         type="category",
         title_font={"size": 20},
         tickangle=25,
-        tickfont=dict(size=20),
+        tickfont={"size": 20},
     )
     fig.update_yaxes(
         title_text="Atomic Steps Completed in %",
         title_font={"size": 20},
-        tickfont=dict(size=20),
+        tickfont={"size": 20},
     )
 
     return fig
 
 
-def timestamp_to_date(timestamp) -> datetime:
+def timestamp_to_date(timestamp: float) -> datetime:
     """convert the timestamp to a datetime object in the local timezone"""
     date = datetime.fromtimestamp(timestamp)
     return date
 
 
-def scale_completed_atomic_steps(steps, max) -> int:
+def scale_completed_atomic_steps(steps: int, max_steps: int) -> float:
     """scales completed atomic steps for burn down chart"""
-    steps = 100 - (steps / max) * 100
-    return steps
+    return 100 - (steps / max_steps) * 100
 
 
 # html code for the burn down chart

@@ -265,6 +265,8 @@ def dashboard(
 
     try:
         colrev.ops.dashboard.main()
+    except colrev_exceptions.NoRecordsError:
+        print("No records imported yet.")
     except colrev_exceptions.CoLRevException as exc:
         if verbose:
             raise exc

@@ -6,11 +6,13 @@ import dash
 from dash import Dash
 from dash import html
 
+# pylint: disable=too-few-public-methods
+
 
 class Dashboard:
     """Dashboard class"""
 
-    def makeDashboard(self) -> Dash:
+    def make_dashboard(self) -> Dash:
         """creates dashboard header and general structure"""
         app = Dash(__name__, use_pages=True)
 
@@ -35,10 +37,8 @@ class Dashboard:
 
 
 def main() -> None:
-    dashboard = Dashboard()
+    """Main method for the dashboard"""
 
-    try:
-        app = dashboard.makeDashboard()
-        app.run_server(debug=True)
-    except Exception as e:  # catching Exception
-        print("Fehler:", str(e))  # print error
+    dashboard = Dashboard()
+    app = dashboard.make_dashboard()
+    app.run_server(debug=True)
