@@ -54,6 +54,15 @@
         "doc",
         "test"
       ]
+    },
+    {
+      "login": "katharinaernst",
+      "name": "katharinaernst",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131549085?v=4",
+      "profile": "https://github.com/katharinaernst",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -61,5 +70,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "colrev",
-  "projectOwner": "CoLRev-Environment"
+  "projectOwner": "CoLRev-Environment",
+  "commitType": "docs"
 }
