@@ -73,6 +73,7 @@ pymupdf = "^1.22.0"
 imagehash = "^4.3.1"
 defusedxml = "^0.7.1"
 requests-mock = "^1.10.0"
+dash = "^2.11.1"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
 pyalex = "^0.10"
 rispy = "^0.7.1"
