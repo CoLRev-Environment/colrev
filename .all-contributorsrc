@@ -54,6 +54,15 @@
         "doc",
         "test"
       ]
+    },
+    {
+      "login": "mhlbrsimon",
+      "name": "mhlbrsimon",
+      "avatar_url": "https://avatars.githubusercontent.com/u/83401831?v=4",
+      "profile": "https://github.com/mhlbrsimon",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -61,5 +70,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "colrev",
-  "projectOwner": "CoLRev-Environment"
+  "projectOwner": "CoLRev-Environment",
+  "commitType": "docs"
 }
