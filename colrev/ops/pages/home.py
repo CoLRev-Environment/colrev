@@ -41,7 +41,7 @@ def analytics() -> px.line:
 
     # completed atomic steps skalieren
     analytics_df["scaled_progress"] = analytics_df["completed_atomic_steps"].apply(
-        scale_completed_atomic_steps, max=max_y_lab
+        scale_completed_atomic_steps, max_steps=max_y_lab
     )
 
     # reverse order of dataframe

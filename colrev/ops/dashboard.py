@@ -41,4 +41,4 @@ def main() -> None:
 
     dashboard = Dashboard()
     app = dashboard.make_dashboard()
-    app.run_server(debug=True)
+    app.run_server()  # debug=True

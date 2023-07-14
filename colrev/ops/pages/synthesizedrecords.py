@@ -29,7 +29,10 @@ data = pd.DataFrame.from_records(
     ]
 )
 
-data = data[["author", "title", "year", "journal"]]
+if data.empty:
+    data = pd.DataFrame(columns=["author", "title", "year", "journal"])
+else:
+    data = data[["author", "title", "year", "journal"]]
 
 
 def empty_figure() -> object:
@@ -275,7 +278,7 @@ def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:  #
 
     # check if search results are empty
     if not data2:
-        output = "no records found for your search"
+        output = "No records included in the sample."
 
     return (
         data2,
