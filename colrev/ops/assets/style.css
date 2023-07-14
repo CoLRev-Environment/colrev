@@ -62,8 +62,6 @@ button:hover {
 
 .logo {
     display: block;
-    margin-left: auto;
-    margin-right: auto;
     max-width: 20%;
     margin: 0 auto;
 
@@ -76,7 +74,7 @@ button:hover {
     justify-content: space-evenly;
     padding-top: 30px;
     margin: -50px auto 0 auto;
-    background-color: #FFFFFF;
+    background-color: #FFF;
     box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
 }
 
