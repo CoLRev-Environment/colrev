@@ -70,6 +70,7 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/einfachjessi"><img src="https://avatars.githubusercontent.com/u/131001755?v=4?s=100" width="100px;" alt="einfachjessi"/><br /><sub><b>einfachjessi</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=einfachjessi" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RheaDoesStuff"><img src="https://avatars.githubusercontent.com/u/74066245?v=4?s=100" width="100px;" alt="RheaDoesStuff"/><br /><sub><b>RheaDoesStuff</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=RheaDoesStuff" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Cohen2000"><img src="https://avatars.githubusercontent.com/u/113113352?v=4?s=100" width="100px;" alt="Cohen2000"/><br /><sub><b>Cohen2000</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=Cohen2000" title="Code">💻</a></td>
     </tr>
   </tbody>
