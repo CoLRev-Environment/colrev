@@ -199,7 +199,6 @@ class ScopePrescreen(JsonSchemaMixin):
         *,
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         record_dict: dict,
-        include_unranked_journals: bool,
     ) -> None:
         if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
             return
@@ -213,9 +212,7 @@ class ScopePrescreen(JsonSchemaMixin):
         self.__conditional_prescreen_outlets_exclusion(record=record)
         self.__conditional_prescreen_timescope(record=record)
         self.__conditional_prescreen_complementary_materials(record=record)
-
-        if include_unranked_journals is True:
-            self.__conditional_presecreen_not_in_ranking(record=record)
+        self.__conditional_presecreen_not_in_ranking(record=record)
 
         if (
             record.data["colrev_status"]
@@ -271,21 +268,10 @@ class ScopePrescreen(JsonSchemaMixin):
     ) -> dict:
         """Prescreen records based on the scope parameters"""
 
-        repeat_input_question = True
-        while repeat_input_question is True:
-            print("Include Journals that are not included in any ranking?")
-            choice = input("Y/N\n")
-            if choice == "N":
-                include_unranked_journals = True
-                repeat_input_question = False
-            if choice == "Y":
-                break
-
         for record_dict in records.values():
             self.__conditional_prescreen(
                 prescreen_operation=prescreen_operation,
                 record_dict=record_dict,
-                include_unranked_journals=include_unranked_journals,
             )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records=records)
