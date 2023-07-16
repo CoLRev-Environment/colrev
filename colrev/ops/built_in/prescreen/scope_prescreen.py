@@ -48,7 +48,7 @@ class ScopePrescreen(JsonSchemaMixin):
         OutletInclusionScope: typing.Optional[dict]
         OutletExclusionScope: typing.Optional[dict]
         ENTRYTYPEScope: typing.Optional[list]
-        AddJournalRanking: typing.Optional[list]
+        RequireRankedJournals: typing.Optional[list]
 
         _details = {
             "TimeScopeFrom": {
@@ -188,7 +188,7 @@ class ScopePrescreen(JsonSchemaMixin):
     def __conditional_presecreen_not_in_ranking(
         self, record: colrev.record.Record
     ) -> None:
-        if self.settings.AddJournalRanking:
+        if self.settings.RequireRankedJournals:
             if record.data["journal_ranking"] == "not included in a ranking":
                 record.set_status(
                     target_state=colrev.record.RecordState.rev_prescreen_excluded
