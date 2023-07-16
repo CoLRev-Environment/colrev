@@ -270,6 +270,9 @@ class ERICSearchSource(JsonSchemaMixin):
         if "isbn" in record_dict:
             record_dict["isbn"] = record_dict["isbn"][0].lstrip("ISBN-")
 
+        if "year" in record_dict:
+            record_dict["year"] = str(record_dict["year"])
+
         record = colrev.record.Record(data=record_dict)
         if "language" in record.data:
             try:
@@ -277,7 +280,6 @@ class ERICSearchSource(JsonSchemaMixin):
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data["language"]
-
         return record
 
     def get_masterdata(
