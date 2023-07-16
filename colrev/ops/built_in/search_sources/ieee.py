@@ -12,13 +12,10 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ieee_api
+import colrev.ops.prep
 import colrev.ops.search
 import colrev.record
-import colrev.ops.prep
-import colrev.env.package_manager
-
-import colrev.ops.built_in.search_sources.xploreapi
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -31,7 +28,7 @@ import colrev.ops.built_in.search_sources.xploreapi
 class IEEEXploreSearchSource(JsonSchemaMixin):
     """SearchSource for IEEEXplore"""
 
-    flag=True
+    flag = True
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
     search_type = colrev.settings.SearchType.DB
@@ -43,18 +40,66 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/ieee.md"
     )
-    SETTINGS= {
+    SETTINGS = {
         "api_key": "packages.search_source.colrev.ieee.api_key",
     }
 
+    API_FIELDS = [
+        "abstract",
+        "author_url",
+        "accessType",
+        "article_number",
+        "author_order",
+        "author_terms",
+        "affiliation",
+        "citing_paper_count",
+        "conference_dates",
+        "conference_location",
+        "content_type",
+        "doi",
+        "publisher",
+        "pubtype",
+        "d-year",
+        "end_page",
+        "facet",
+        "full_name",
+        "html_url",
+        "ieee_terms",
+        "isbn",
+        "issn",
+        "issue",
+        "pdf_url",
+        "publication_year",
+        "publication_title",
+        "standard_number",
+        "standard_status",
+        "start_page",
+        "title",
+        "totalfound",
+        "totalsearched",
+        "volume",
+    ]
+
+    FIELD_MAPPING = {
+        "citing_paper_count": "citations",
+        "publication_year": "year",
+        "html_url": "url",
+        "pdf_url": "fulltext",
+        "issue": "number",
+    }
+
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: Optional[dict] = None,
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
-       
 
         if settings:
-            self.search_source = from_dict(data_class=self.settings_class, data=settings)
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
@@ -64,6 +109,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
+
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
 
@@ -78,7 +124,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             f"Validate SearchSource {source.filename}"
         )
 
-        
         search_operation.review_manager.logger.debug(
             f"SearchSource {source.filename} validated"
         )
@@ -97,8 +142,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in query:
-            query = (query.replace("https://ieeexploreapi.ieee.org/api/v1/search/articles?", "").lstrip("&")
-            )            
+            query = query.replace(
+                "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
+            ).lstrip("&")
 
             parameter_pairs = query.split("&")
             search_parameters = {}
@@ -121,7 +167,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 comment="",
             )
             return add_source
-          
+
         raise NotImplementedError
 
     def run_search(
@@ -129,23 +175,26 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of IEEEXplore"""
 
+        # pylint: disable=too-many-locals
+
         ieee_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-        ) 
-        api_key = self.review_manager.environment_manager.get_settings_by_key(self.SETTINGS["api_key"])
+        )
+
+        api_key = self.review_manager.environment_manager.get_settings_by_key(
+            self.SETTINGS["api_key"]
+        )
         if api_key is None or len(api_key) != 24:
             api_key = input("Please enter api key: ")
-            self.review_manager.environment_manager.update_registry(self.SETTINGS["api_key"], api_key)
+            self.review_manager.environment_manager.update_registry(
+                self.SETTINGS["api_key"], api_key
+            )
 
-        key=self.review_manager.environment_manager.get_settings_by_key (self.SETTINGS["api_key"])
-       
-        prev_record_dict_version = {}
-
-        query = colrev.ops.built_in.search_sources.xploreapi.XPLORE(key)
-        query.dataType('json')
-        query.dataFormat('object')
+        query = colrev.ops.built_in.search_sources.ieee_api.XPLORE(api_key)
+        query.dataType("json")
+        query.dataFormat("object")
         query.maximumResults(50000)
         query.usingOpenAccess = False
 
@@ -165,22 +214,20 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 method = parameter_methods[key]
                 method(value)
 
+        query.startRecord = 1
         response = query.callAPI()
-        records = search_operation.review_manager.dataset.load_records_dict()
-        articles = response["articles"]
+        while "articles" in response:
+            records = self.review_manager.dataset.load_records_dict()
+            articles = response["articles"]
 
-        for article in articles:
-            article_id = article['article_number']
-            if article_id not in records:
+            for article in articles:
+                prev_record_dict_version: dict = {}
                 record_dict = self.__create_record_dict(article)
-                updated_record_dict = self.__update_record_fields(record_dict)
-                record = colrev.record.Record(data=updated_record_dict)
+                record = colrev.record.Record(data=record_dict)
                 added = ieee_feed.add_record(record=record)
 
                 if added:
-                    search_operation.review_manager.logger.info(
-                        " retrieve " + record.data["ID"]
-                    )
+                    self.review_manager.logger.info(" retrieve " + record.data["ID"])
                     ieee_feed.nr_added += 1
                 else:
                     changed = search_operation.update_existing_record(
@@ -191,54 +238,66 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                         update_time_variant_fields=rerun,
                     )
                     if changed:
-                        search_operation.review_manager.logger.info(
-                                " update " + record.data["ID"]
-                        )
+                        self.review_manager.logger.info(" update " + record.data["ID"])
                         ieee_feed.nr_changed += 1
-                        
-        ieee_feed.save_feed_file()       
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
-    
-    def __create_record_dict(self, article):
-        record_dict = {'ID': article['article_number']}
+            query.startRecord += 200
+            response = query.callAPI()
 
-        api_fields = ['abstract', 'abstract_url', 'author_url', 'accessType', 
-                      'article_number', 'author_order', 'author_terms', 'authors',
-                      'affiliation', 'citing_paper_count', 'citing_patent_count', 'conference_dates', 
-                      'conference_location', 'content_type','doi', 'publisher', 
-                      'pubtype', 'd-year', 'end_page', 'facet', 
-                      'full_name', 'html_url', 'index_terms', 'ieee_terms', 
-                      'is_number', 'isbn', 'issn', 'issue', 
-                      'pdf_url', 'publication_date', 'publication_year', 'publication_number', 
-                      'publication_title', 'rank', 'standard_number', 'standard_status', 
-                      'start_page', 'title', 'totalfound', 'totalsearched', 
-                      'volume', 'insert_date']
+        ieee_feed.print_post_run_search_infos(records=records)
 
-        for field in api_fields:
-            field_value = article.get(field)
-            record_dict['ENTRYTYPE'] = 'article'
-            if field_value is not None:
-                if field == 'content_type':
-                    record_dict['ENTRYTYPE'] = field_value
-                else:
-                    record_dict[field] = str(field_value)
+        ieee_feed.save_feed_file()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
+    def __update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
+        if "start_page" in article:
+            record_dict["pages"] = article.pop("start_page")
+            if "end_page" in article:
+                record_dict["pages"] += "--" + article.pop("end_page")
+
+        if "authors" in article and "authors" in article["authors"]:
+            author_list = []
+            for author in article["authors"]["authors"]:
+                author_list.append(author["full_name"])
+            record_dict["author"] = colrev.record.PrepRecord.format_author_field(
+                input_string=" and ".join(author_list)
+            )
+
+        if (
+            "index_terms" in article
+            and "author_terms" in article["index_terms"]
+            and "terms" in article["index_terms"]["author_terms"]
+        ):
+            record_dict["keywords"] = ", ".join(
+                article["index_terms"]["author_terms"]["terms"]
+            )
+
+    def __create_record_dict(self, article: dict) -> dict:
+        record_dict = {"ID": article["article_number"]}
+        # self.review_manager.p_printer.pprint(article)
+
+        if article["content_type"] == "Conferences":
+            record_dict["ENTRYTYPE"] = "inproceedings"
+            if "publication_title" in article:
+                record_dict["booktitle"] = article.pop("publication_title")
+        else:
+            record_dict["ENTRYTYPE"] = "article"
+            if "publication_title" in article:
+                record_dict["journal"] = article.pop("publication_title")
+
+        for field in self.API_FIELDS:
+            if article.get(field) is None:
+                continue
+            record_dict[field] = str(article.get(field))
+
+        for api_field, rec_field in self.FIELD_MAPPING.items():
+            if api_field not in record_dict:
+                continue
+            record_dict[rec_field] = record_dict.pop(api_field)
+
+        self.__update_special_case_fields(record_dict=record_dict, article=article)
 
         return record_dict
-
-    def __update_record_fields(self,
-        record_dict: dict, 
-    ) -> dict:
-        if "publication_year" in record_dict:
-            record_dict["year"] = record_dict.pop("publication_year")
-        if "content_type" in record_dict:
-            record_dict["howpublished"] = record_dict.pop("content_type")
-        if "publication_title" in record_dict:
-            record_dict["journal"] = record_dict.pop("publication_title")
-        if "author_url" in record_dict:
-            record_dict["address"] = record_dict.pop("author_url")
-        return record_dict
-   
 
     def get_masterdata(
         self,

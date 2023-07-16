@@ -41,12 +41,49 @@ class ERICSearchSource(JsonSchemaMixin):
     )
     short_name = "ERIC"
 
+    API_FIELDS = [
+        "title",
+        "author",
+        "source",
+        "publicationdateyear",
+        "description",
+        "subject",
+        "peerreviewed",
+        "abstractor",
+        "audience",
+        "authorxlink",
+        "e_datemodified",
+        "e_fulltextauth",
+        "e yearadded",
+        "educationlevel",
+        "identifiersgeo",
+        "identifierslaw",
+        "identifierstest",
+        "iescited",
+        "iesfunded",
+        "iesgrantcontractnum",
+        "iesgrantcontractnumxlink",
+        "ieslinkpublication",
+        "ieslinkwwcreviewguide",
+        "ieswwcreviewed",
+        "institution",
+        "isbn",
+        "issn",
+        "language",
+        "publisher",
+        "sourceid",
+        "sponsor",
+        "url",
+    ]
+    FIELD_MAPPING = {"publicationdateyear": "year", "description": "abstract"}
+
     def __init__(
         self,
         *,
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # ERIC as a search_source
             self.search_source = from_dict(
@@ -61,6 +98,7 @@ class ERICSearchSource(JsonSchemaMixin):
                 load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
+        self.language_service = colrev.env.language_service.LanguageService()
 
     def validate_source(
         self,
@@ -87,7 +125,8 @@ class ERICSearchSource(JsonSchemaMixin):
 
         return result
 
-    def __search_split(search: str) -> str:
+    @classmethod
+    def __search_split(cls, search: str) -> str:
         if " AND " in search:
             search_parts = search.split(" AND ")
             field_values = []
@@ -98,12 +137,12 @@ class ERICSearchSource(JsonSchemaMixin):
                 field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
                 field_values.append(field_value)
             return " AND ".join(field_values)
-        else:
-            field, value = search.split(":")
-            field = field.strip()
-            value = value.strip().strip("'")
-            field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
-            return field_value
+
+        field, value = search.split(":")
+        field = field.strip()
+        value = value.strip().strip("'")
+        field_value = f"{field}%3A%22{urllib.parse.quote(value)}%22"
+        return field_value
 
     @classmethod
     def add_endpoint(
@@ -134,58 +173,63 @@ class ERICSearchSource(JsonSchemaMixin):
 
         return None
 
+    def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
+        """Get the records from a query"""
+        full_url = self.__build_search_url()
+
+        response = requests.get(full_url, timeout=90)
+        if response.status_code != 200:
+            return
+        with open("test.json", "wb") as file:
+            file.write(response.content)
+        data = response.json()
+
+        if "docs" not in data["response"]:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Could not reach API. Status Code: " + response.status_code
+            )
+
+        for doc in data["response"]["docs"]:
+            record = self.__create_record(doc)
+            yield record
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
+        """Run a search of ERIC"""
+
         eric_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-        prev_record_dict_version: dict = {}
-        full_url = self.build_search_url()
 
-        response = requests.get(full_url)
-        if response.status_code == 200:
-            data = response.json()
-            records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
+        for record in self.get_query_return():
+            prev_record_dict_version: dict = {}
+            added = eric_feed.add_record(record=record)
 
-            for doc in data["response"]["docs"]:
-                record_id = doc["id"]
-                if record_id not in records:
-                    record_dict = self.create_record_dict(doc)
-                    updated_record_dict = self.update_record_fields(record_dict)
-                    record = colrev.record.Record(data=updated_record_dict)
-                    added = eric_feed.add_record(record=record)
+            if added:
+                self.review_manager.logger.info(" retrieve " + record.data["ID"])
+                eric_feed.nr_added += 1
+            else:
+                changed = search_operation.update_existing_record(
+                    records=records,
+                    record_dict=record.data,
+                    prev_record_dict_version=prev_record_dict_version,
+                    source=self.search_source,
+                    update_time_variant_fields=rerun,
+                )
+                if changed:
+                    self.review_manager.logger.info(" update " + record.data["ID"])
+                    eric_feed.nr_changed += 1
 
-                    if added:
-                        search_operation.review_manager.logger.info(
-                            " retrieve " + record.data["ID"]
-                        )
-                        eric_feed.nr_added += 1
-                    else:
-                        changed = search_operation.update_existing_record(
-                            records=records,
-                            record_dict=record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
-                        if changed:
-                            search_operation.review_manager.logger.info(
-                                " update " + record.data["ID"]
-                            )
-                            eric_feed.nr_changed += 1
+        eric_feed.print_post_run_search_infos(records=records)
+        eric_feed.save_feed_file()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-            eric_feed.save_feed_file()
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
-        else:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                "Could not reach API. Status Code: " + response.status_code
-            )
-
-    def build_search_url(self) -> str:
+    def __build_search_url(self) -> str:
         url = "https://api.ies.ed.gov/eric/"
         params = self.search_source.search_parameters
         query = params["query"]
@@ -194,78 +238,47 @@ class ERICSearchSource(JsonSchemaMixin):
         rows_param = params.get("rows", "2000")
         return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
 
-    def create_record_dict(self, doc: dict) -> dict:
+    def __create_record(self, doc: dict) -> colrev.record.Record:
+        # pylint: disable=too-many-branches
         record_dict = {"ID": doc["id"]}
-
-        api_fields = [
-            "id",
-            "title",
-            "author",
-            "source",
-            "publicationdateyear",
-            "description",
-            "subject",
-            "peerreviewed",
-            "abstractor",
-            "audience",
-            "authorxlink",
-            "e_datemodified",
-            "e_fulltextauth",
-            "e yearadded",
-            "educationlevel",
-            "identifiersgeo",
-            "identifierslaw",
-            "identifierstest",
-            "iescited",
-            "iesfunded",
-            "iesgrantcontractnum",
-            "iesgrantcontractnumxlink",
-            "ieslinkpublication",
-            "ieslinkwwcreviewguide",
-            "ieswwcreviewed",
-            "institution",
-            "isbn",
-            "issn",
-            "language",
-            "publicationtype",
-            "publisher",
-            "sourceid",
-            "sponsor",
-            "url",
-        ]
-
-        for field in api_fields:
-            field_value = doc.get(field)
+        record_dict["ENTRYTYPE"] = "other"
+        if "Journal Articles" in doc["publicationtype"]:
             record_dict["ENTRYTYPE"] = "article"
+        elif "Books" in doc["publicationtype"]:
+            record_dict["ENTRYTYPE"] = "book"
+
+        for field in self.API_FIELDS:
+            field_value = doc.get(field)
             if field_value is not None:
-                if field == "publicationtype":
-                    record_dict["ENTRYTYPE"] = field_value
-                else:
-                    record_dict[field] = str(field_value)
+                record_dict[field] = field_value
 
-        return record_dict
+        for api_field, rec_field in self.FIELD_MAPPING.items():
+            if api_field not in record_dict:
+                continue
+            record_dict[rec_field] = record_dict.pop(api_field)
 
-    def update_record_fields(
-        self,
-        record_dict: dict,
-    ) -> dict:
-        if "publicationdateyear" in record_dict:
-            record_dict["year"] = record_dict.pop("publicationdateyear")
-        if "publicationtype" in record_dict:
-            record_dict["howpublished"] = record_dict.pop("publicationtype")
-        if "source" in record_dict:
-            record_dict["journal"] = record_dict.pop("source")
-        if "sourceid" in record_dict:
-            record_dict["volume"] = record_dict.pop("sourceid")
-        if "authorxlink" in record_dict:
-            record_dict["address"] = record_dict.pop("authorxlink")
-        if "description" in record_dict:
-            record_dict["abstract"] = record_dict.pop("description")
-        if "sponsor" in record_dict:
-            record_dict["organization"] = record_dict.pop("sponsor")
-        if "id" in record_dict:
-            record_dict["doi"] = record_dict.pop("id")
-        return record_dict
+        if "source" in doc:
+            record_dict["journal"] = doc.pop("source")
+
+        if "subject" in record_dict:
+            record_dict["subject"] = ", ".join(record_dict["subject"])
+
+        if "author" in record_dict:
+            record_dict["author"] = " and ".join(record_dict["author"])
+        if "issn" in record_dict:
+            record_dict["issn"] = record_dict["issn"][0].lstrip("EISSN-")
+        if "isbn" in record_dict:
+            record_dict["isbn"] = record_dict["isbn"][0].lstrip("ISBN-")
+
+        record = colrev.record.Record(data=record_dict)
+        if "language" in record.data:
+            try:
+                record.data["language"] = record.data["language"][0]
+                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+            except colrev_exceptions.InvalidLanguageCodeException:
+                del record.data["language"]
+
+        return record
 
     def get_masterdata(
         self,
