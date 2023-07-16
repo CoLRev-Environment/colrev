@@ -151,8 +151,8 @@
             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for ERIC (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_)",
-            "ci_supported": false
+            "short_description": "SearchSource for the ERIC API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_)",
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
@@ -176,7 +176,7 @@
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "SearchSource for IEEEXplore (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.md>`_)",
-            "ci_supported": false
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.jstor",

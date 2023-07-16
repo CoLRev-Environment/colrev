@@ -38,6 +38,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.europe_pmc
    colrev.ops.built_in.search_sources.google_scholar
    colrev.ops.built_in.search_sources.ieee
+   colrev.ops.built_in.search_sources.ieee_api
    colrev.ops.built_in.search_sources.jstor
    colrev.ops.built_in.search_sources.local_index
    colrev.ops.built_in.search_sources.open_alex

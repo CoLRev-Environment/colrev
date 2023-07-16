@@ -23,6 +23,7 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
       ~ERICSearchSource.from_json
       ~ERICSearchSource.from_object
       ~ERICSearchSource.get_masterdata
+      ~ERICSearchSource.get_query_return
       ~ERICSearchSource.heuristic
       ~ERICSearchSource.json_schema
       ~ERICSearchSource.load_fixes
@@ -41,6 +42,8 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
 
    .. autosummary::
 
+      ~ERICSearchSource.API_FIELDS
+      ~ERICSearchSource.FIELD_MAPPING
       ~ERICSearchSource.api_search_supported
       ~ERICSearchSource.ci_supported
       ~ERICSearchSource.heuristic_status
