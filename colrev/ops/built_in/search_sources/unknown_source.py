@@ -17,9 +17,9 @@ from thefuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.built_in.search_sources.ris_utils
 import colrev.ops.search
 import colrev.record
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -111,6 +111,34 @@ class UnknownSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Not implemented"""
         return record
+
+    def __ris_fixes(self, *, entries: dict) -> None:
+        for entry in entries:
+            if "title" in entry and "primary_title" not in entry:
+                entry["primary_title"] = entry.pop("title")
+
+            if "publication_year" in entry and "year" not in entry:
+                entry["year"] = entry.pop("publication_year")
+
+    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+        if self.search_source.filename.suffix == ".ris":
+            colrev.ops.built_in.search_sources.ris_utils.apply_ris_fixes(
+                filename=self.search_source.filename
+            )
+            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+                filename=self.search_source.filename
+            )
+            self.__ris_fixes(entries=ris_entries)
+            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
+                ris_entries
+            )
+            return records
+
+        # if self.search_source.filename.suffix == ".bib":
+        # ...
+
+        raise NotImplementedError
 
     def load_fixes(
         self,
@@ -246,9 +274,9 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         """Format fields"""
 
-        if record.data.get("entrytype", "") == "inproceedings":
+        if record.data.get("ENTRYTYPE", "") == "inproceedings":
             self.__format_inproceedings(record=record)
-        elif record.data.get("entrytype", "") == "article":
+        elif record.data.get("ENTRYTYPE", "") == "article":
             self.__format_article(record=record)
 
         if record.data.get("author", "UNKNOWN") != "UNKNOWN":

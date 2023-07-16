@@ -51,6 +51,7 @@ class ExportManPrep(JsonSchemaMixin):
         "number",
         "pages",
         "doi",
+        "file",
     ]
 
     @dataclass
@@ -287,11 +288,10 @@ class ExportManPrep(JsonSchemaMixin):
             man_prepped_record_dict["colrev_status"]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
-            original_record.data[
-                "colrev_status"
-            ] = (
-                colrev.record.RecordState.rev_prescreen_excluded
-            )  # pylint: disable=direct-status-assign
+            original_record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_excluded,
+                force=True,
+            )
 
         else:
             original_record.update_masterdata_provenance(

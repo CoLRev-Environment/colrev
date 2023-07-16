@@ -80,23 +80,23 @@ class ScopePrescreen(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
+        prescreen_operation: colrev.ops.prescreen.Prescreen,
         settings: dict,
     ) -> None:
         if "TimeScopeFrom" in settings:
+            settings["TimeScopeFrom"] = int(settings["TimeScopeFrom"])
             assert settings["TimeScopeFrom"] > 1900
-        if "TimeScopeFrom" in settings:
             assert settings["TimeScopeFrom"] < 2100
         if "TimeScopeTo" in settings:
+            settings["TimeScopeTo"] = int(settings["TimeScopeTo"])
             assert settings["TimeScopeTo"] > 1900
-        if "TimeScopeTo" in settings:
             assert settings["TimeScopeTo"] < 2100
         if "LanguageScope" in settings:
             self.language_service = colrev.env.language_service.LanguageService()
             self.language_service.validate_iso_639_3_language_codes(
                 lang_code_list=settings["LanguageScope"]
             )
-
+        self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.predatory_journals_beal = self.__load_predatory_journals_beal()
@@ -185,7 +185,10 @@ class ScopePrescreen(JsonSchemaMixin):
                     record.prescreen_exclude(reason="complementary material")
 
     def __conditional_prescreen(
-        self, *, prescreen_operation: colrev.ops.prescreen.Prescreen, record_dict: dict
+        self,
+        *,
+        prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
+        record_dict: dict,
     ) -> None:
         if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
             return
@@ -204,10 +207,47 @@ class ScopePrescreen(JsonSchemaMixin):
             record.data["colrev_status"]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
-            prescreen_operation.review_manager.report_logger.info(
+            self.review_manager.report_logger.info(
                 f' {record.data["ID"]}'.ljust(50, " ")
                 + "Prescreen excluded (automatically)"
             )
+        elif (
+            len(self.review_manager.settings.prescreen.prescreen_package_endpoints) == 1
+        ):
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_included
+            )
+            self.review_manager.report_logger.info(
+                f' {record.data["ID"]}'.ljust(50, " ")
+                + "Prescreen included (automatically)"
+            )
+
+    def add_endpoint(self, *, params: dict) -> None:
+        """Add  the scope_prescreen as an endpoint"""
+
+        for (
+            existing_scope_prescreen
+        ) in self.review_manager.settings.prescreen.prescreen_package_endpoints:
+            if existing_scope_prescreen["endpoint"] != "colrev.scope_prescreen":
+                continue
+            self.review_manager.logger.info(
+                "Integrating into existing colrev.scope_prescreen"
+            )
+            for key, value in params.items():
+                if (
+                    key in existing_scope_prescreen
+                    and existing_scope_prescreen[key] != value
+                ):
+                    self.review_manager.logger.info(
+                        f"Replacing {key} ({existing_scope_prescreen[key]} -> {value})"
+                    )
+                existing_scope_prescreen[key] = value
+            return
+
+        # Insert (if not added before)
+        self.review_manager.settings.prescreen.prescreen_package_endpoints.insert(
+            0, {**{"endpoint": "colrev.scope_prescreen"}, **params}
+        )
 
     def run_prescreen(
         self,

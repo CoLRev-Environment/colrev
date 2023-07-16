@@ -26,7 +26,11 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # Install
    pip install colrev
 
-Docker is optional but recommended. It efficiently runs containers that would otherwise require complex setup and configuration (such as GROBID, Zotero translators, Pandoc, OCRMyPDF, bibutils). To run CoLRev without this functionality, CoLRev automatically detects whether Docker is available and suggests to setup repositories with the ``light`` option (``colrev init --light``).
+Docker is optional but recommended. It efficiently runs containers that would otherwise require complex setup and configuration (such as GROBID, Zotero translators, Pandoc, OCRMyPDF, bibutils).
+
+On MacOS, it may be necessary to start the Docker Desktop Daemon manually.
+
+To run CoLRev without Docker, CoLRev automatically detects whether Docker is available and suggests to setup repositories with the ``light`` option (``colrev init --light``).
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
 On Windows, Docker must be started before using CoLRev. This can be done manually or automatically based on the settings (general/start Docker Desktop when you log in).

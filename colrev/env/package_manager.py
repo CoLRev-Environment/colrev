@@ -722,7 +722,7 @@ class PackageManager:
             packages_dict[package_identifier]["settings"] = selected_package
 
             # 1. Load built-in packages
-            if package_identifier.split(".")[0] == "colrev":
+            if not Path(package_identifier + ".py").is_file():
                 if package_identifier not in self.packages[package_type]:
                     raise colrev_exceptions.MissingDependencyError(
                         "Built-in dependency "
@@ -741,29 +741,19 @@ class PackageManager:
                     package_type=package_type, package_identifier=package_identifier
                 )
 
-            # 2. Load module packages
-            elif not Path(package_identifier + ".py").is_file():
-                try:
-                    packages_dict[package_identifier]["settings"] = selected_package
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = importlib.import_module(package_identifier)
-                    packages_dict[package_identifier][
-                        "custom_flag"
-                    ] = True  # pragma: no cover
-                except ModuleNotFoundError as exc:
-                    if ignore_not_available:
-                        print(f"Could not load {selected_package}")
-                        del packages_dict[package_identifier]
-                        continue
-                    raise colrev_exceptions.MissingDependencyError(
-                        "Dependency "
-                        f"{package_identifier} ({package_type}) not installed. "
-                        "Please install it\n  pip install "
-                        f"{package_identifier.split('.')[0]}"
-                    ) from exc
+            #     except ModuleNotFoundError as exc:
+            #         if ignore_not_available:
+            #             print(f"Could not load {selected_package}")
+            #             del packages_dict[package_identifier]
+            #             continue
+            #         raise colrev_exceptions.MissingDependencyError(
+            #             "Dependency "
+            #             f"{package_identifier} ({package_type}) not installed. "
+            #             "Please install it\n  pip install "
+            #             f"{package_identifier.split('.')[0]}"
+            #         ) from exc
 
-            # 3. Load custom packages in the directory
+            # 2. Load custom packages in the directory
             elif Path(package_identifier + ".py").is_file():
                 try:
                     # to import custom packages from the project dir
@@ -855,6 +845,7 @@ class PackageManager:
     def __add_package_endpoints(
         self,
         *,
+        selected_package: str,
         package_endpoints_json: dict,
         package_endpoints: dict,
         package_status: dict,
@@ -869,6 +860,11 @@ class PackageManager:
             )
             print(f" load {endpoint_type}: \n -  {package_list}")
             for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
+                if (
+                    not endpoint_item["package_endpoint_identifier"].split(".")[0]
+                    == selected_package
+                ):
+                    continue
                 self.packages[PackageEndpointType[endpoint_type]][
                     endpoint_item["package_endpoint_identifier"]
                 ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
@@ -930,7 +926,11 @@ class PackageManager:
                     endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
                 )
 
-            endpoint_list += package_endpoints["endpoints"][endpoint_type]
+            endpoint_list += [
+                x
+                for x in package_endpoints["endpoints"][endpoint_type]
+                if x["package_endpoint_identifier"].split(".")[0] == selected_package
+            ]
 
     def __load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
@@ -985,11 +985,11 @@ class PackageManager:
                 continue
 
             self.__add_package_endpoints(
+                selected_package=package["module"],
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
                 package_status=package_status,
             )
-
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(
                 package_endpoints_json[key],

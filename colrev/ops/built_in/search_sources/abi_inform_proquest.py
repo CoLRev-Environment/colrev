@@ -112,14 +112,14 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 if original_record_id not in records:
                     continue
                 to_delete.append(record["ID"])
+        if to_delete:
+            for rid in to_delete:
+                load_operation.review_manager.logger.info(f" remove duplicate {rid}")
+                del records[rid]
 
-        for rid in to_delete:
-            load_operation.review_manager.logger.info(f" remove duplicate {rid}")
-            del records[rid]
-
-        load_operation.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=source.filename
-        )
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records, save_path=source.filename
+            )
 
         return records
 

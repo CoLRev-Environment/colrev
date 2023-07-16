@@ -187,6 +187,10 @@
         {
             "package_endpoint_identifier": "colrev.bibutils",
             "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev.rispy",
+            "status": "MATURING"
         }
     ],
     "prep": [
@@ -325,15 +329,15 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.asreview_prescreen",
-            "status": "EXPERIMENTAL"
-        },
-        {
             "package_endpoint_identifier": "colrev.conditional_prescreen",
             "status": "MATURING"
         },
         {
             "package_endpoint_identifier": "colrev.prescreen_table",
+            "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
             "status": "MATURING"
         }
     ],

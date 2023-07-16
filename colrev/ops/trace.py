@@ -84,6 +84,7 @@ class Trace(colrev.operation.Operation):
         prev_record = record
         return prev_record
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, record_id: str) -> None:
         """Trace a record (main entrypoint)"""
 

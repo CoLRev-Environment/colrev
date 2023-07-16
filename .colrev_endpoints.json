@@ -4,6 +4,9 @@
     "colrev_version": ">=0.6.0",
     "endpoints": {
         "load_conversion": [
+            {"package_endpoint_identifier": "colrev.rispy",
+              "endpoint": "colrev.ops.built_in.load_conversion.ris_rispy_loader.RisRispyLoader"
+            },
             {"package_endpoint_identifier": "colrev.bibtex",
              "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader"
             },
@@ -126,9 +129,6 @@
             },
             {"package_endpoint_identifier": "colrev.colrev_cli_prescreen",
              "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen"
-            },
-            {"package_endpoint_identifier": "colrev.asreview_prescreen",
-             "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen"
             },
             {"package_endpoint_identifier": "colrev.conditional_prescreen",
              "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen"

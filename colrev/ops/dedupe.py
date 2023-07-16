@@ -406,9 +406,9 @@ class Dedupe(colrev.operation.Operation):
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> bool:
         gid_conflict = False
-
-        if main_record.data.get("doi", "doi") != dupe_record.data.get("doi", "doi"):
-            gid_conflict = True
+        if "doi" in main_record.data and "doi" in dupe_record.data:
+            if main_record.data.get("doi", "doi") != dupe_record.data.get("doi", "doi"):
+                gid_conflict = True
 
         return gid_conflict
 
@@ -891,6 +891,7 @@ class Dedupe(colrev.operation.Operation):
         else:
             print()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Dedupe records (main entrypoint)"""
 
@@ -966,6 +967,3 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.add_record_changes()
             self.review_manager.create_commit(msg="Skip prescreen/include all")
-
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

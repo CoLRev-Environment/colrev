@@ -17,6 +17,8 @@ colrev.ops.merge.Merge
       :nosignatures:
 
       ~Merge.check_precondition
+      ~Merge.conclude
+      ~Merge.decorate
       ~Merge.main
 
 

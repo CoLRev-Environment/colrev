@@ -340,6 +340,7 @@ class Repare(colrev.operation.Operation):
             )
             self.review_manager.dataset.add_changes(path=search_source.filename)
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
 

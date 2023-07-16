@@ -20,6 +20,7 @@ class Pull(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.format,
         )
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Pull the CoLRev project and records (main entrypoint)"""
 

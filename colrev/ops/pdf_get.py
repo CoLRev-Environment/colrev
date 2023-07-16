@@ -604,6 +604,7 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.save_settings()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
 

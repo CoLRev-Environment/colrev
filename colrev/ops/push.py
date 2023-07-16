@@ -20,6 +20,7 @@ class Push(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.check,
         )
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,

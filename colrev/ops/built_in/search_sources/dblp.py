@@ -250,6 +250,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                 x in item["ee"] for x in ["https://doi.org", "https://dblp.org"]
             ):
                 item["url"] = item["ee"]
+        if "url" in item:
+            if "https://dblp.org" in item["url"]:
+                del item["url"]
 
         item = {
             k: v

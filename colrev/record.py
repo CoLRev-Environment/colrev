@@ -344,9 +344,17 @@ class Record:
         self.data[new_key] = value
 
         if key in self.identifying_field_keys:
-            value_provenance = self.data["colrev_masterdata_provenance"][key]
-            if "source" in value_provenance:
-                value_provenance["source"] += f"|rename-from:{key}"
+            if "colrev_masterdata_provenance" not in self.data:
+                self.data["colrev_masterdata_provenance"] = {}
+            if key in self.data["colrev_masterdata_provenance"]:
+                value_provenance = self.data["colrev_masterdata_provenance"][key]
+                if "source" in value_provenance:
+                    value_provenance["source"] += f"|rename-from:{key}"
+            else:
+                value_provenance = {
+                    "source": f"|rename-from:{key}",
+                    "note": "",
+                }
             self.data["colrev_masterdata_provenance"][new_key] = value_provenance
         else:
             if "colrev_data_provenance" not in self.data:
@@ -1931,6 +1939,12 @@ class PrepRecord(Record):
             .replace(" -- ", "--")
             .rstrip(".")
         )
+        if re.match(r"^\d+\-\-\d+$", self.data["pages"]):
+            from_page, to_page = re.findall(r"(\d+)", self.data["pages"])
+            if int(from_page) > int(to_page) and len(from_page) > len(to_page):
+                self.data[
+                    "pages"
+                ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
 
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""

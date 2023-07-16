@@ -8,11 +8,9 @@ import colrev.review_manager
 
 
 def test_checks(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the checks"""
-
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
 
     checker = colrev.checker.Checker(review_manager=base_repo_review_manager)
 

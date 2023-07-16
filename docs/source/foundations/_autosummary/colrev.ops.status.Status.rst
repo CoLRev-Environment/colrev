@@ -17,6 +17,8 @@ colrev.ops.status.Status
       :nosignatures:
 
       ~Status.check_precondition
+      ~Status.conclude
+      ~Status.decorate
       ~Status.get_analytics
       ~Status.get_review_status_report
 

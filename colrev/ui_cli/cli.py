@@ -245,6 +245,34 @@ def status(
         print(exc)
 
 
+# add dashboard operation
+@main.command(help_priority=100)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.pass_context
+def dashboard(
+    ctx: click.core.Context,
+    verbose: bool,
+) -> None:
+    """Allows to track project progress through dashboard"""
+    # pylint: disable=import-outside-toplevel
+    import colrev.ops.dashboard
+
+    try:
+        colrev.ops.dashboard.main()
+    except colrev_exceptions.NoRecordsError:
+        print("No records imported yet.")
+    except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
+        print(exc)
+
+
 @main.command(help_priority=3)
 @click.option(
     "-v",
@@ -313,7 +341,7 @@ def retrieve(
     load_operation = review_manager.get_load_operation()
     new_sources = load_operation.get_new_sources(skip_query=True)
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
-    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
+    load_operation.main(new_sources=new_sources, keep_ids=False)
 
     print()
     review_manager.exact_call = "colrev prep"
@@ -333,7 +361,7 @@ def retrieve(
     "--add",
     type=str,
     help="""
-Format: RETRIEVE * FROM crossref WHERE title LIKE '%keyword%'
+Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
 """,
 )
 @click.option("-v", "--view", is_flag=True, default=False, help="View search sources")
@@ -439,18 +467,18 @@ def search(
     help="Do not change the record IDs. Useful when importing an existing sample.",
 )
 @click.option(
-    "-c",
-    "--combine_commits",
-    is_flag=True,
-    default=False,
-    help="Combine load of multiple sources in one commit.",
-)
-@click.option(
     "-sq",
     "--skip_query",
     is_flag=True,
     default=False,
     help="Skip entering the search query (if applicable)",
+)
+@click.option(
+    "-i",
+    "--include",
+    is_flag=True,
+    default=False,
+    help="Automatically include papers from the new sources.",
 )
 @click.option(
     "-v",
@@ -471,8 +499,8 @@ def search(
 def load(
     ctx: click.core.Context,
     keep_ids: bool,
-    combine_commits: bool,
     skip_query: bool,
+    include: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -481,20 +509,38 @@ def load(
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
     )
-    # already start LocalIndex (for set_ids)
     load_operation = review_manager.get_load_operation()
-
     new_sources = load_operation.get_new_sources(skip_query=skip_query)
-
-    if combine_commits:
-        logging.info("Combine mode: all search sources will be loaded in one commit")
-
+    if include:
+        print()
+        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
+            f"{colors.GREEN}Automatically include records from "
+            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
+        )
     # Note : reinitialize to load new scripts:
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
 
-    load_operation.main(
-        new_sources=new_sources, keep_ids=keep_ids, combine_commits=combine_commits
-    )
+    load_operation.main(new_sources=new_sources, keep_ids=keep_ids, include=include)
+
+    if include:
+        print()
+        prep_operation = review_manager.get_prep_operation()
+        prep_operation.main()
+        print()
+        dedupe_operation = review_manager.get_dedupe_operation()
+        dedupe_operation.main()
+        print()
+        prescreen_operation = review_manager.get_prescreen_operation()
+        prescreen_operation.main()
+        print()
+        pdf_get_operation = review_manager.get_pdf_get_operation()
+        pdf_get_operation.main()
+        print()
+        pdf_prep_operation = review_manager.get_pdf_prep_operation()
+        pdf_prep_operation.main()
+        print()
+        screen_operation = review_manager.get_screen_operation()
+        screen_operation.main()
 
 
 @main.command(help_priority=6)
@@ -860,6 +906,14 @@ def dedupe(
     required=False,
 )
 @click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev prescreen -a colrev.scope_prescreen:"TimeScopeFrom=2010"
+""",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -892,6 +946,7 @@ def prescreen(
     split: str,
     include: str,
     exclude: str,
+    add: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -927,7 +982,8 @@ def prescreen(
     elif setup_custom_script:
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
-
+    elif add:
+        prescreen_operation.add(add=add)
     else:
         review_manager.logger.info("Prescreen")
         review_manager.logger.info(
@@ -1047,6 +1103,46 @@ def screen(
     screen_operation.main(split_str=split)
 
 
+def __extract_coverpage(*, cover: Path) -> None:
+    cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
+    cp_path.mkdir(exist_ok=True)
+
+    assert Path(cover).suffix == ".pdf"
+    record = colrev.record.Record(data={"file": cover})
+    record.extract_pages(
+        pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
+    )
+
+
+@main.command(help_priority=17)
+@click.argument("path", nargs=1, type=click.Path(exists=True))
+@click.pass_context
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
+def pdf(
+    ctx: click.core.Context,
+    path: str,
+) -> None:
+    """Process a PDF"""
+
+    ret = ""
+    while ret in ["c", "h", ""]:
+        ret = input("Option (c: remove cover page, h: show hashes, q: quit)")
+        if ret == "c":
+            __extract_coverpage(cover=Path(path))
+        elif ret == "h":
+            __print_pdf_hashes(pdf_path=Path(path))
+        # elif ret == "o":
+        #     print("TODO : ocr")
+        # elif ret == "r":
+        #     print("TODO: remove comments")
+        # elif ret == "m":
+        #     print("TODO : extract metadata")
+        # elif ret == "t":
+        #     print("TODO : create tei")
+        # elif ret == "i":
+        #     print("TODO: print infos (website / retracted /...)")
+
+
 @main.command(help_priority=11)
 @click.option(
     "--discard",
@@ -1125,7 +1221,7 @@ def pdfs(
     print()
 
     pdf_prep_operation = review_manager.get_pdf_prep_operation()
-    pdf_prep_operation.main(batch_size=0)
+    pdf_prep_operation.main()
 
 
 @main.command(help_priority=12)
@@ -1293,17 +1389,6 @@ def pdf_get_man(
     pdf_get_man_operation.main()
 
 
-def __extract_coverpage(*, cover: Path) -> None:
-    cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
-    cp_path.mkdir(exist_ok=True)
-
-    assert Path(cover).suffix == ".pdf"
-    record = colrev.record.Record(data={"file": cover})
-    record.extract_pages(
-        pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
-    )
-
-
 def __print_pdf_hashes(*, pdf_path: Path) -> None:
     # pylint: disable=import-outside-toplevel
     from PyPDF2 import PdfFileReader
@@ -1370,17 +1455,6 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
     help="Generate TEI documents.",
 )
 @click.option(
-    "-c",
-    "--cover",
-    type=click.Path(exists=True),
-    help="Remove cover page",
-)
-@click.option(
-    "--pdf_hash",
-    type=click.Path(exists=True),
-    help="Get the PDF hash of a page",
-)
-@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -1408,18 +1482,12 @@ def pdf_prep(
     batch_size: int,
     update_colrev_pdf_ids: bool,
     reprocess: bool,
-    pdf_hash: Path,
     setup_custom_script: bool,
     tei: bool,
-    cover: Path,
     verbose: bool,
     force: bool,
 ) -> None:
     """Prepare PDFs"""
-
-    if cover:
-        __extract_coverpage(cover=cover)
-        return
 
     try:
         review_manager = colrev.review_manager.ReviewManager(
@@ -1427,10 +1495,7 @@ def pdf_prep(
         )
         pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
 
-        if pdf_hash:
-            __print_pdf_hashes(pdf_path=pdf_hash)
-
-        elif update_colrev_pdf_ids:
+        if update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
 
         elif setup_custom_script:
@@ -1898,7 +1963,6 @@ def __print_environment_status(
     "-s", "--status", is_flag=True, default=False, help="Print environment status"
 )
 @click.option("--start", is_flag=True, default=False, help="Start environment services")
-@click.option("--stop", is_flag=True, default=False, help="Stop environment services")
 @click.option(
     "-r",
     "--register",
@@ -1940,7 +2004,6 @@ def env(
     pull: bool,
     status: bool,
     start: bool,
-    stop: bool,
     register: bool,
     unregister: bool,
     update_package_list: bool,
@@ -1982,11 +2045,6 @@ def env(
 
     if status:
         __print_environment_status(review_manager)
-        return
-
-    if stop:
-        environment_manager = review_manager.get_environment_manager()
-        environment_manager.stop_docker_services()
         return
 
     if register:

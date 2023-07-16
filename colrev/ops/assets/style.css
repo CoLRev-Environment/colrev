@@ -1,0 +1,130 @@
+:root {
+    --white-background: white;
+    --green: #4da03f;
+    --darkgreen: #006400;
+}
+
+body {
+    font-family: "Lato", sans-serif;
+}
+
+button {
+    text-align: center;
+    height: 10vh;
+    width: 20vw;
+    font-size: 20px;
+    background-color: white;
+    border-radius: 10px;
+    margin: 40px 0 40px 0;
+    font-weight: bold;
+    color: #4da03f;
+    border: solid #4da03f 0.175vw;
+    transition: 0.2s;
+}
+
+.navigation-button {
+    position: relative;
+    text-align: center;
+}
+
+button:hover {
+    color: white;
+    background: #4da03f;
+    box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
+}
+
+.navigation-button {
+    align-items: center;
+    position: relative;
+}
+
+.header {
+    background-color: #006400;
+    height: 288px;
+    padding: 16px 0 0 0;
+}
+
+.header-title {
+    color: #FFFFFF;
+    font-size: 44px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.header-subtitle {
+    color: #FFFFFF;
+    font-size: 22px;
+    text-align: center;
+    margin: 0 auto;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.logo {
+    display: block;
+    max-width: 20%;
+    margin: 0 auto;
+
+}
+
+.menu {
+    height: 70px;
+    width: 800px;
+    display: flex;
+    justify-content: space-evenly;
+    padding-top: 30px;
+    margin: -50px auto 0 auto;
+    background-color: #FFF;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+#search {
+    border-radius: 3px;
+    height: 30px;
+    width: 300px;
+    padding: 0;
+    border: 1;
+    border-color: lightgrey;
+    color: grey;
+    text-transform: uppercase;
+    font-size: 16px;
+    border-width: thin;
+}
+
+#sortby {
+    border-radius: 3px;
+    height: 30px;
+    width: 300px;
+    padding: 0;
+    border: 1;
+    border-color: lightgrey;
+    color: grey;
+    text-transform: uppercase;
+    font-size: 16px;
+    border-width: thin;
+
+}
+
+#headline {
+    font-size: 20px;
+}
+
+.wrapper {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 70%;
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-top: 32px;
+}
+
+
+
+#table {
+    background-color: var(--white-background);
+    margin: 25px 0;
+    font-size: 0.9em;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    font-family: "Lato", sans-serif;
+}

@@ -81,7 +81,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         result = {"confidence": 0.0}
 
         if filename.suffix == ".csv":
-            if data.count("http://link.springer.com") == data.count("\n"):
+            if data.count("http://link.springer.com") > data.count("\n") - 2:
                 result["confidence"] = 1.0
                 return result
 

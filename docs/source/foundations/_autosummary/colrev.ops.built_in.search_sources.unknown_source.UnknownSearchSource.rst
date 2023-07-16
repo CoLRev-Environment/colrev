@@ -25,6 +25,7 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.get_masterdata
       ~UnknownSearchSource.heuristic
       ~UnknownSearchSource.json_schema
+      ~UnknownSearchSource.load
       ~UnknownSearchSource.load_fixes
       ~UnknownSearchSource.prepare
       ~UnknownSearchSource.register_field_encoders

@@ -17,6 +17,8 @@ colrev.operation.CheckOperation
       :nosignatures:
 
       ~CheckOperation.check_precondition
+      ~CheckOperation.conclude
+      ~CheckOperation.decorate
 
 
 

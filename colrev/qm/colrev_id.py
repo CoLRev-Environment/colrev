@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from nameparser import HumanName
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record  # pylint: disable=cyclic-import
 
 if TYPE_CHECKING:
     import colrev.review_manager

@@ -344,15 +344,24 @@ class Screen(colrev.operation.Operation):
     ) -> None:
         """Save the screen decision"""
 
-        record.data["screening_criteria"] = screening_criteria
         PAD = 40
         if screen_inclusion:
+            screening_criteria_list = self.get_screening_criteria()
+            if len(screening_criteria_list) == 0:
+                record.data.update(screening_criteria="NA")
+            else:
+                record.data.update(
+                    screening_criteria=";".join(
+                        [e + "=in" for e in screening_criteria_list]
+                    )
+                )
             record.set_status(target_state=colrev.record.RecordState.rev_included)
 
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Included in screen"
             )
         else:
+            record.data["screening_criteria"] = screening_criteria
             record.set_status(target_state=colrev.record.RecordState.rev_excluded)
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
@@ -364,7 +373,37 @@ class Screen(colrev.operation.Operation):
         )
         self.review_manager.dataset.add_record_changes()
 
-    def main(self, *, split_str: str) -> None:
+    def __auto_include(self, *, records: dict) -> list:
+        selected_auto_include_ids = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.pdf_prepared == r["colrev_status"]
+            and r.get("include_flag", "0") == "1"
+        ]
+        if not selected_auto_include_ids:
+            return selected_auto_include_ids
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Automatically including records with include_flag{colors.END}"
+        )
+
+        for record_dict in records.values():
+            if record_dict["ID"] not in selected_auto_include_ids:
+                continue
+            record = colrev.record.Record(data=record_dict)
+            self.screen(
+                record=record,
+                screen_inclusion=True,
+                screening_criteria="",
+            )
+            record.remove_field(key="include_flag")
+
+        self.review_manager.create_commit(
+            msg="Include records (include_flag)", manual_author=True
+        )
+        return selected_auto_include_ids
+
+    @colrev.operation.Operation.decorate()
+    def main(self, *, split_str: str = "NA") -> None:
         """Screen records for inclusion (main entrypoint)"""
 
         self.review_manager.logger.info("Screen")
@@ -415,17 +454,23 @@ class Screen(colrev.operation.Operation):
 
             endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
 
+            selected_auto_include_ids = self.__auto_include(records=records)
+
             selected_record_ids = [
                 r["ID"]
                 for r in records.values()
                 if colrev.record.RecordState.pdf_prepared == r["colrev_status"]
+                and not r.get("include_flag", "0") == "1"
             ]
-            endpoint.run_screen(self, records, split)  # type: ignore
+            if split:
+                split = [x for x in selected_record_ids if x in split]
 
-            self.__print_stats(selected_record_ids=selected_record_ids)
+            endpoint.run_screen(self, records, selected_record_ids)  # type: ignore
+
+            self.__print_stats(
+                selected_record_ids=selected_record_ids + selected_auto_include_ids
+            )
 
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed screen operation{colors.END}"
         )
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

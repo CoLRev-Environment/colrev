@@ -371,11 +371,12 @@ class PDFPrep(colrev.operation.Operation):
             except colrev_exceptions.TEIException:
                 self.review_manager.logger.error("Eror generating TEI")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
         reprocess: bool = False,
-        batch_size: int,
+        batch_size: int = 0,
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 

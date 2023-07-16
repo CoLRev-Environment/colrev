@@ -52,6 +52,7 @@ colrev.dataset.Dataset
       ~Dataset.save_records_dict
       ~Dataset.save_records_dict_to_file
       ~Dataset.set_ids
+      ~Dataset.stash_unstaged_changes
       ~Dataset.update_gitignore
 
 
