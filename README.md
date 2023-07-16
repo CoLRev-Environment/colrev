@@ -20,7 +20,7 @@
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
@@ -75,6 +75,7 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MalouSchmidt"><img src="https://avatars.githubusercontent.com/u/131263679?v=4?s=100" width="100px;" alt="MalouSchmidt"/><br /><sub><b>MalouSchmidt</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=MalouSchmidt" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/RheaDoesStuff"><img src="https://avatars.githubusercontent.com/u/74066245?v=4?s=100" width="100px;" alt="RheaDoesStuff"/><br /><sub><b>RheaDoesStuff</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=RheaDoesStuff" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Cohen2000"><img src="https://avatars.githubusercontent.com/u/113113352?v=4?s=100" width="100px;" alt="Cohen2000"/><br /><sub><b>Cohen2000</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=Cohen2000" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RobertAhr"><img src="https://avatars.githubusercontent.com/u/131687952?v=4?s=100" width="100px;" alt="RobertAhr"/><br /><sub><b>RobertAhr</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=RobertAhr" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
