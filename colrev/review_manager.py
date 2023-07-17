@@ -115,9 +115,9 @@ class ReviewManager:
                 self.pdf_dir.mkdir(exist_ok=True)
                 self.output_dir.mkdir(exist_ok=True)
 
-            self.report_logger = None
-            self.logger = None
-            self.set_debug_options()
+            report_logger, logger = self.get_loggers_by_debug_mode()
+            self.report_logger = report_logger
+            self.logger = logger
 
             self.environment_manager = self.get_environment_manager()
 
@@ -150,16 +150,30 @@ class ReviewManager:
         high_level_operation: bool = False,
         exact_call: str = "",
     ) -> None:
+        """Update review_manager's state"""
         self.force_mode = force_mode
-        """Force mode variable (bool)"""
+        # Force mode variable (bool)
         self.verbose_mode = verbose_mode
-        """Verbose mode variable (bool)"""
+        # Verbose mode variable (bool)
         self.debug_mode = debug_mode
-        """Debug mode variable (bool)"""
+        # Debug mode variable (bool)
         self.high_level_operation = high_level_operation
-        """A high-level operation was called (bool)"""
+        # A high-level operation was called (bool)
         self.exact_call = exact_call
-        self.set_debug_options()
+        report_logger, logger = self.get_loggers_by_debug_mode()
+        self.report_logger = report_logger
+        self.logger = logger
+
+    def get_loggers_by_debug_mode(self) -> typing.Tuple[logging.Logger, logging.Logger]:
+        """return loggers"""
+        if self.debug_mode:
+            return colrev.logger.setup_report_logger(
+                review_manager=self, level=logging.DEBUG
+            ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
+        else:
+            return colrev.logger.setup_report_logger(
+                review_manager=self, level=logging.INFO
+            ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
@@ -736,24 +750,6 @@ class ReviewManager:
         if identifier:
             identifier_list = [identifier]
         return any("true" == os.getenv(x) for x in identifier_list)
-
-    def set_debug_options(self):
-        if self.debug_mode:
-            self.report_logger = colrev.logger.setup_report_logger(
-                review_manager=self, level=logging.DEBUG
-            )
-            """Logger for the commit report"""
-            self.logger = colrev.logger.setup_logger(
-                review_manager=self, level=logging.DEBUG
-            )
-            """Logger for processing information"""
-        else:
-            self.report_logger = colrev.logger.setup_report_logger(
-                review_manager=self, level=logging.INFO
-            )
-            self.logger = colrev.logger.setup_logger(
-                review_manager=self, level=logging.INFO
-            )
 
 
 # pylint: disable=redefined-outer-name

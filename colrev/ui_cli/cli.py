@@ -130,9 +130,43 @@ def main(ctx: click.core.Context) -> None:
     """
 
     try:
-        ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
+        if ctx.command_path.endswith("repl"):
+            print("using repl, will reuse review_manager")
+            ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
     except colrev.exceptions.RepoSetupError:
         pass
+
+
+def get_review_manager(
+    ctx: click.core.Context, review_manager_params: dict
+) -> colrev.review_manager.ReviewManager:
+    """Get review_manager instance. If it's available in ctx object, reuse that
+    if not creates a new one, Once created will update the review_manager with
+    the given parameters. If params requires review_manager to be reloaded, will
+    reload it
+    """
+    review_manager_params["exact_call"] = ctx.command_path
+    try:
+        review_manager = ctx.obj["review_manager"]
+        if (
+            "navigate_to_home_dir" in review_manager_params
+            or "path_str" in review_manager_params
+            or "skip_upgrade" in review_manager_params
+        ):
+            print("init review manager object ...")
+            review_manager = colrev.review_manager.ReviewManager(
+                **review_manager_params
+            )
+            ctx.obj["review_manager"] = review_manager
+        else:
+            print("updating review manager object ...")
+            review_manager.update_config(**review_manager_params)
+        return review_manager
+    except (TypeError, KeyError):
+        print("init review object ...")
+        review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
+        ctx.obj = {"review_manager": review_manager}
+        return review_manager
 
 
 @main.command(help_priority=1)
@@ -2211,10 +2245,10 @@ def settings(
     import json
     import ast
     import glom
-    import colrev.review_manager
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     if update_hooks:
         print("Update pre-commit hooks")
@@ -2409,8 +2443,9 @@ def pull(
 ) -> None:
     """Pull CoLRev project remote and record updates"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     pull_operation = review_manager.get_pull_operation()
 
@@ -2496,8 +2531,9 @@ def push(
 ) -> None:
     """Push CoLRev project remote and record updates"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     push_operation = review_manager.get_push_operation()
 
@@ -2530,8 +2566,9 @@ def service(
     """Service for real-time reviews"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+        review_manager = get_review_manager(
+            ctx,
+            {"verbose_mode": verbose, "force_mode": force},
         )
         review_manager.get_service_operation()
 
@@ -2585,8 +2622,9 @@ def show(  # type: ignore
         colrev.ui_cli.show_printer.print_venv_notes()
         return
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     if keyword == "sample":
@@ -2748,8 +2786,9 @@ def repare(
 ) -> None:
     """Repare file formatting errors in the CoLRev project."""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=True, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     repare_operation = review_manager.get_repare()
     repare_operation.main()
@@ -2784,8 +2823,9 @@ def remove(
 ) -> None:
     """Remove records, ... from CoLRev repositories"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     remove_operation = review_manager.get_remove_operation()
@@ -2849,8 +2889,9 @@ def merge(
 ) -> None:
     """Merge git branches."""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     if not branch:
@@ -2888,8 +2929,9 @@ def undo(
 ) -> None:
     """Undo operations."""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     if selection == "commit":
@@ -2954,33 +2996,6 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
-
-
-def get_review_manager(
-    ctx: click.core.Context, review_manager_params
-) -> colrev.review_manager.ReviewManager:
-    review_manager_params["exact_call"] = ctx.command_path
-    try:
-        review_manager = ctx.obj["review_manager"]
-        if (
-            "navigate_to_home_dir" in review_manager_params
-            or "path_str" in review_manager_params
-            or "skip_upgrade" in review_manager_params
-        ):
-            print("init review manager object ...")
-            review_manager = colrev.review_manager.ReviewManager(
-                **review_manager_params
-            )
-            ctx.obj["review_manager"] = review_manager
-        else:
-            print("updating review manager object ...")
-            review_manager.update_config(**review_manager_params)
-        return review_manager
-    except (TypeError, KeyError):
-        print("init review object ...")
-        review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
-        ctx.obj = {"review_manager": review_manager}
-        return review_manager
 
 
 register_repl(main)
