@@ -2976,7 +2976,7 @@ def get_review_manager(
             print("updating review manager object ...")
             review_manager.update_config(**review_manager_params)
         return review_manager
-    except (TypeError, KeyError) as e:
+    except (TypeError, KeyError):
         print("init review object ...")
         review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
         ctx.obj = {"review_manager": review_manager}
