@@ -140,7 +140,7 @@ class LocalIndex:
             / Path("journal_rankings.csv")
         )
         conn = sqlite3.connect(self.SQLITE_PATH)
-        data_frame = pd.read_csv(rankings_csv_path, encoding="cp850")
+        data_frame = pd.read_csv(rankings_csv_path, encoding="utf-8")
         data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
         conn.commit()
         conn.close()
