@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import typing
 from dataclasses import dataclass
-from pathlib import Path
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.language_service
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.record
 
@@ -41,6 +41,7 @@ class ScopePrescreen(JsonSchemaMixin):
         # pylint: disable=too-many-instance-attributes
 
         endpoint: str
+        ExcludePredatoryJournals: bool
         TimeScopeFrom: typing.Optional[int]
         TimeScopeTo: typing.Optional[int]
         LanguageScope: typing.Optional[list]
@@ -71,6 +72,7 @@ class ScopePrescreen(JsonSchemaMixin):
             "OutletExclusionScope": {
                 "tooltip": "Particular outlets that should be excluded"
             },
+            "ExcludePredatoryJournals": {"tooltip": "Exclude predatory journals"},
             "ENTRYTYPEScope": {
                 "tooltip": "Particular ENTRYTYPEs that should be included (exclusively)"
             },
@@ -97,69 +99,60 @@ class ScopePrescreen(JsonSchemaMixin):
             self.language_service.validate_iso_639_3_language_codes(
                 lang_code_list=settings["LanguageScope"]
             )
+        if "ExcludePredatoryJournals" not in settings:
+            settings["ExcludePredatoryJournals"] = True
+
         self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class.load_settings(data=settings)
-
-        self.predatory_journals_beal = self.__load_predatory_journals_beal()
+        self.local_index = colrev.env.local_index.LocalIndex()
 
         self.title_complementary_materials_keywords = (
             colrev.env.utils.load_complementary_material_keywords()
         )
-
-    def __load_predatory_journals_beal(self) -> dict:
-        predatory_journals = {}
-
-        filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/ops/predatory_journals_beall.csv")
-        )
-
-        if filedata:
-            for pred_journal in filedata.decode("utf-8").splitlines():
-                predatory_journals[pred_journal.lower()] = pred_journal.lower()
-
-        return predatory_journals
 
     def __conditional_prescreen_entrytypes(self, record: colrev.record.Record) -> None:
         if self.settings.ENTRYTYPEScope:
             if record.data["ENTRYTYPE"] not in self.settings.ENTRYTYPEScope:
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
+    def __predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
+        print(self.settings.ExcludePredatoryJournals)
+        if not self.settings.ExcludePredatoryJournals:
+            return
+        if "journal" not in record.data:
+            return
+
+        rankings = self.local_index.search_in_database(record.data["journal"])
+        if any(x["predatory"] == "yes" for x in rankings):
+            record.prescreen_exclude(reason="predatory_journals_beal")
+
     def __conditional_prescreen_outlets_exclusion(
         self, record: colrev.record.Record
     ) -> None:
-        if self.settings.OutletExclusionScope:
-            if "values" in self.settings.OutletExclusionScope:
-                for resource in self.settings.OutletExclusionScope["values"]:
-                    for key, value in resource.items():
-                        if key in record.data and record.data.get(key, "") == value:
-                            record.prescreen_exclude(reason="in OutletExclusionScope")
-            if "list" in self.settings.OutletExclusionScope:
-                for resource in self.settings.OutletExclusionScope["list"]:
-                    for key, value in resource.items():
-                        if not (
-                            key == "resource" and value == "predatory_journals_beal"
-                        ):
-                            continue
-                        if "journal" not in record.data:
-                            continue
-                        if (
-                            record.data["journal"].lower()
-                            in self.predatory_journals_beal
-                        ):
-                            record.prescreen_exclude(reason="predatory_journals_beal")
+        if not self.settings.OutletExclusionScope:
+            return
+        if "values" not in self.settings.OutletExclusionScope:
+            return
+
+        for resource in self.settings.OutletExclusionScope["values"]:
+            for key, value in resource.items():
+                if key in record.data and record.data.get(key, "") == value:
+                    record.prescreen_exclude(reason="in OutletExclusionScope")
 
     def __conditional_prescreen_outlets_inclusion(
         self, record: colrev.record.Record
     ) -> None:
-        if self.settings.OutletInclusionScope:
-            in_outlet_scope = False
-            if "values" in self.settings.OutletInclusionScope:
-                for outlet in self.settings.OutletInclusionScope["values"]:
-                    for key, value in outlet.items():
-                        if key in record.data and record.data.get(key, "") == value:
-                            in_outlet_scope = True
-            if not in_outlet_scope:
-                record.prescreen_exclude(reason="not in OutletInclusionScope")
+        if not self.settings.OutletInclusionScope:
+            return
+
+        in_outlet_scope = False
+        if "values" in self.settings.OutletInclusionScope:
+            for outlet in self.settings.OutletInclusionScope["values"]:
+                for key, value in outlet.items():
+                    if key in record.data and record.data.get(key, "") == value:
+                        in_outlet_scope = True
+        if not in_outlet_scope:
+            record.prescreen_exclude(reason="not in OutletInclusionScope")
 
     def __conditional_prescreen_timescope(self, record: colrev.record.Record) -> None:
         if self.settings.TimeScopeFrom:
@@ -177,22 +170,26 @@ class ScopePrescreen(JsonSchemaMixin):
     def __conditional_prescreen_complementary_materials(
         self, record: colrev.record.Record
     ) -> None:
-        if self.settings.ExcludeComplementaryMaterials:
-            if "title" in record.data:
-                if (
-                    record.data["title"].lower()
-                    in self.title_complementary_materials_keywords
-                ):
-                    record.prescreen_exclude(reason="complementary material")
+        if not self.settings.ExcludeComplementaryMaterials:
+            return
+
+        if "title" in record.data:
+            if (
+                record.data["title"].lower()
+                in self.title_complementary_materials_keywords
+            ):
+                record.prescreen_exclude(reason="complementary material")
 
     def __conditional_presecreen_not_in_ranking(
         self, record: colrev.record.Record
     ) -> None:
-        if self.settings.RequireRankedJournals:
-            if record.data["journal_ranking"] == "not included in a ranking":
-                record.set_status(
-                    target_state=colrev.record.RecordState.rev_prescreen_excluded
-                )
+        if not self.settings.RequireRankedJournals:
+            return
+
+        if record.data["journal_ranking"] == "not included in a ranking":
+            record.set_status(
+                target_state=colrev.record.RecordState.rev_prescreen_excluded
+            )
 
     def __conditional_prescreen(
         self,
@@ -207,6 +204,7 @@ class ScopePrescreen(JsonSchemaMixin):
         # because dedupe cannot handle merges between languages
         record = colrev.record.Record(data=record_dict)
 
+        self.__predatory_journal_exclusion(record=record)
         self.__conditional_prescreen_entrytypes(record=record)
         self.__conditional_prescreen_outlets_inclusion(record=record)
         self.__conditional_prescreen_outlets_exclusion(record=record)

@@ -148,57 +148,15 @@ class LocalIndex:
         conn.commit()
         conn.close()
 
-    def search_in_database(self, journal: typing.Optional[typing.Any]) -> str:
+    def search_in_database(self, journal: typing.Optional[typing.Any]) -> list:
         """Searches for journalranking in database"""
         cur = self.__get_sqlite_cursor(init=False)
         cur.execute(
-            "SELECT ranking FROM rankings WHERE journal_name = ?",
+            "SELECT * FROM rankings WHERE journal_name = ?",
             (journal,),
         )
-        content = cur.fetchall()
-        ranking = ""
-        in_ranking_included = False
-        for rankings in content:
-            if "AIS" in rankings.values():
-                cur.execute(
-                    "SELECT impact_factor FROM rankings WHERE ranking = 'AIS' AND journal_name = ?",
-                    (journal,),
-                )
-                impact_factor1 = cur.fetchone()
-                impact_factor1 = impact_factor1["impact_factor"]
-                if impact_factor1 is None:
-                    ranking += "Senior Scholar's List of Premier Journals; "
-                    in_ranking_included = True
-                else:
-                    ranking += (
-                        "Senior Scholar's List of Premier Journals "
-                        + impact_factor1
-                        + "; "
-                    )
-                    in_ranking_included = True
-            if "VHB" in rankings.values():
-                cur.execute(
-                    "SELECT impact_factor FROM rankings WHERE ranking = 'VHB' AND journal_name = ?",
-                    (journal,),
-                )
-                impact_factor2 = cur.fetchone()
-                impact_factor2 = impact_factor2["impact_factor"]
-                if impact_factor2 is None:
-                    ranking += "VHB-JOURQUAL3; "
-                    in_ranking_included = True
-                else:
-                    ranking += "VHB-JOURQUAL3 " + impact_factor2 + "; "
-                    in_ranking_included = True
-            if "FT-50" in rankings.values():
-                ranking += "FT50  "
-                in_ranking_included = True
-            if "Beall´s Predatory Journals" in rankings.values():
-                ranking = "Predatory Journal: Do not include!  "
-                in_ranking_included = True
-        if in_ranking_included is False:
-            ranking = "not included in a ranking  "
-        ranking = ranking[:-2]
-        return ranking.strip()
+        rankings = cur.fetchall()
+        return rankings
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}

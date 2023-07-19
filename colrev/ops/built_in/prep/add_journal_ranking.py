@@ -9,7 +9,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.local_index
 import colrev.env.package_manager
-import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
 
@@ -38,9 +37,7 @@ class AddJournalRanking(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-        self.local_index_source = local_index_connector.LocalIndexSearchSource(
-            source_operation=prep_operation
-        )
+        self.local_index = colrev.env.local_index.LocalIndex()
 
     def prepare(
         self,
@@ -49,18 +46,22 @@ class AddJournalRanking(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Add Journalranking to Metadata"""
 
-        journal = record.data.get("journal", "")
+        if record.data.get("journal", "") == "":
+            return record
 
-        if journal != "":
-            local_index = colrev.env.local_index.LocalIndex()
-            ranking = local_index.search_in_database(journal)
+        rankings = self.local_index.search_in_database(record.data["journal"])
+        # extend: include journal-impact factor or ranking category
+        if rankings:
+            rankings_str = ",".join(r["ranking"] for r in rankings)
+        else:
+            rankings_str = "not included in a ranking"
 
-            record.update_field(
-                key="journal_ranking",
-                value=ranking,
-                source="add_journal_ranking",
-                note="",
-            )
+        record.update_field(
+            key="journal_ranking",
+            value=rankings_str,
+            source="add_journal_ranking",
+            note="",
+        )
 
         return record
 
