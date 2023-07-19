@@ -80,6 +80,44 @@ def add_prep(
     )
 
 
+def add_prescreen(
+    *,
+    prescreen_operation: colrev.ops.prescreen.Prescreen,
+    add: str,
+) -> None:
+    """Add a prescreen package_endpoint"""
+
+    package_identifier, params_str = add.split(":")
+    package_identifier = package_identifier.lower()
+    params = {}
+    for p_el in params_str.split(";"):
+        key, value = p_el.split("=")
+        params[key] = value
+
+    p_dict = {**{"endpoint": package_identifier}, **params}
+    package_manager = prescreen_operation.review_manager.get_package_manager()
+    endpoint_dict = package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+        selected_packages=[p_dict],
+        operation=prescreen_operation,
+    )
+    prescreen_operation.review_manager.logger.info(
+        f"{colors.GREEN}Add prescreen endpoint{colors.END}"
+    )
+
+    if not hasattr(endpoint_dict[package_identifier], "add_endpoint"):
+        prescreen_operation.review_manager.logger.info(
+            'Cannot add endpoint (mising "add_endpoint" method)'
+        )
+        return
+
+    endpoint_dict[package_identifier].add_endpoint(params=params)  # type: ignore
+    prescreen_operation.review_manager.save_settings()
+    prescreen_operation.review_manager.create_commit(
+        msg=f"Add prescreen endpoint ({package_identifier})",
+    )
+
+
 def __extend_data_short_forms(*, add: str) -> str:
     # pylint: disable=too-many-return-statements
     if add == "endnote":

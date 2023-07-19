@@ -16,6 +16,7 @@ colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
    .. autosummary::
       :nosignatures:
 
+      ~ScopePrescreen.add_endpoint
       ~ScopePrescreen.all_json_schemas
       ~ScopePrescreen.field_mapping
       ~ScopePrescreen.from_dict

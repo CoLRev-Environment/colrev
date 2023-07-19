@@ -943,6 +943,8 @@ def prescreen(
 ) -> None:
     """Pre-screen exclusion based on metadata (titles and abstracts)"""
 
+    import colrev.ui_cli.add_packages
+
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
     )
@@ -972,7 +974,10 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        prescreen_operation.add(add=add)
+        colrev.ui_cli.add_packages.add_prescreen(
+            prescreen_operation=prescreen_operation,
+            add=add,
+        )
     else:
         review_manager.logger.info("Prescreen")
         review_manager.logger.info(
