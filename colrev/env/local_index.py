@@ -133,6 +133,9 @@ class LocalIndex:
 
     def load_journal_rankings(self) -> None:
         """Loads journal rankings into sqlite database"""
+
+        print("Index rankings")
+
         rankings_csv_path = (
             str(Path(__file__).parents[1])
             / Path("template")
