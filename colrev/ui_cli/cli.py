@@ -180,7 +180,7 @@ def get_review_manager(
 @main.command(help_priority=100)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
-def repl(
+def shell(
     ctx: click.core.Context,
 ) -> None:
     """Starts a interactive terminal"""
