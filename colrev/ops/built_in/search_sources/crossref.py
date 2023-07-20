@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 class CrossrefSearchSource(JsonSchemaMixin):
     """SearchSource for the Crossref API"""
 
-    __issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
+    __ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"
 
     # https://github.com/CrossRef/rest-api-doc
     __api_url = "https://api.crossref.org/works?"
@@ -199,7 +199,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
 
-        assert re.match(self.__issn_regex, journal_issn)
+        assert re.match(self.__ISSN_REGEX, journal_issn)
 
         journals = Journals(etiquette=self.etiquette)
         if rerun:
@@ -629,9 +629,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             if "scope" in source.search_parameters:
                 if "journal_issn" in source.search_parameters["scope"]:
                     issn_field = source.search_parameters["scope"]["journal_issn"]
-                    if not re.match(
-                        "[0-9][0-9][0-9][0-9][-]?[0-9][0-9][0-9][X0-9]", issn_field
-                    ):
+                    if not re.match(self.__ISSN_REGEX, issn_field):
                         raise colrev_exceptions.InvalidQueryException(
                             f"Crossref journal issn ({issn_field}) not matching required format"
                         )
