@@ -180,6 +180,7 @@ def get_review_manager(
 def repl(
     ctx: click.core.Context,
 ) -> None:
+    """ Starts a interactive terminal """
     from prompt_toolkit.history import FileHistory
 
     prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
