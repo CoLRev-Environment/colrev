@@ -917,7 +917,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         query_type = ""
         while query_type not in ["j", "k"]:
-            query_type = input("Create a query based on [k]eyword or [j]ournal?")
+            query_type = input("Create a query based on [k]eywords or [j]ournal?")
         if query_type == "j":
             print("Get ISSN from https://portal.issn.org/issn/search")
             issn = ""
@@ -935,23 +935,23 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 comment="",
             )
             return add_source
-        if query_type == "k":
-            keyword = input("Plase enter a keyword:")
-            keyword = keyword.replace(" ", "+")
-            query = f"https://search.crossref.org/?q={keyword}"
+        # if query_type == "k":
+        keywords = input("Enter the keywords:")
+        keywords = keywords.replace(" ", "+")
+        query = f"https://search.crossref.org/?q={keywords}"
 
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"crossref_{keyword}"
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.crossref",
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
-                comment="",
-            )
-            return add_source
+        filename = search_operation.get_unique_filename(
+            file_path_string=f"crossref_{keywords}"
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev.crossref",
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": query},
+            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+            comment="",
+        )
+        return add_source
 
     def load_fixes(
         self,
