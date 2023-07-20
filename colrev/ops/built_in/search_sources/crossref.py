@@ -915,9 +915,43 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add crossref endpoint with query {query}"
-        )
+        query_type = ""
+        while query_type not in ["j", "k"]:
+            query_type = input("Create a query based on [k]eyword or [j]ournal?")
+        if query_type == "j":
+            print("Get ISSN from https://portal.issn.org/issn/search")
+            issn = ""
+            while not re.match(cls.__ISSN_REGEX, issn):
+                issn = input("Enter the ISSN of the journal:")
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_issn_{issn}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"scope": {"journal_issn": issn}},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+            return add_source
+        if query_type == "k":
+            keyword = input("Plase enter a keyword:")
+            keyword = keyword.replace(" ", "+")
+            query = f"https://search.crossref.org/?q={keyword}"
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_{keyword}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+            return add_source
 
     def load_fixes(
         self,
