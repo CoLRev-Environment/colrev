@@ -26,6 +26,7 @@ colrev.ops.built\_in.prep
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.ops.built_in.prep.add_journal_ranking
    colrev.ops.built_in.prep.bibtex_crossref_resolution
    colrev.ops.built_in.prep.citeas_prep
    colrev.ops.built_in.prep.crossref_metadata_prep

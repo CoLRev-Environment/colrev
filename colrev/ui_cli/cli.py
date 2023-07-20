@@ -25,6 +25,10 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-return-statements
+# pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
@@ -181,7 +185,7 @@ def init(
     force: bool,
 ) -> None:
     """Initialize (define review objectives and type)"""
-    # pylint: disable=import-outside-toplevel
+
     import colrev.ops.init
 
     colrev.review_manager.get_init_operation(
@@ -426,7 +430,6 @@ def search(
 ) -> None:
     """Search for records"""
 
-    # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
 
     review_manager = colrev.review_manager.ReviewManager(
@@ -603,6 +606,14 @@ def load(
     help="Debug the preparation step for a selected record (in a file).",
 )
 @click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev prep -a colrev.add_journal_ranking
+""",
+)
+@click.option(
     "--skip",
     is_flag=True,
     default=False,
@@ -636,14 +647,15 @@ def prep(
     debug_file: Path,
     cpu: int,
     setup_custom_script: bool,
+    add: str,
     skip: bool,
     verbose: bool,
     force: bool,
 ) -> None:
     """Prepare records"""
 
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
+    import colrev.ui_cli.add_packages
+
     try:
         review_manager = colrev.review_manager.ReviewManager(
             force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
@@ -673,6 +685,12 @@ def prep(
             print("Activated custom_prep_script.py.")
             print(
                 "Please check and adapt its position in the settings.json and commit."
+            )
+            return
+        if add:
+            colrev.ui_cli.add_packages.add_prep(
+                prep_operation=prep_operation,
+                query=add,
             )
             return
         if skip:
@@ -953,7 +971,8 @@ def prescreen(
 ) -> None:
     """Pre-screen exclusion based on metadata (titles and abstracts)"""
 
-    # pylint: disable=too-many-locals
+    import colrev.ui_cli.add_packages
+
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
     )
@@ -983,7 +1002,10 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        prescreen_operation.add(add=add)
+        colrev.ui_cli.add_packages.add_prescreen(
+            prescreen_operation=prescreen_operation,
+            add=add,
+        )
     else:
         review_manager.logger.info("Prescreen")
         review_manager.logger.info(
@@ -1190,7 +1212,6 @@ def pdfs(
     )
 
     if dir:
-        # pylint: disable=import-outside-toplevel
         # pylint: disable=consider-using-with
         # pylint: disable=no-member
 
@@ -1390,7 +1411,6 @@ def pdf_get_man(
 
 
 def __print_pdf_hashes(*, pdf_path: Path) -> None:
-    # pylint: disable=import-outside-toplevel
     from PyPDF2 import PdfFileReader
     import colrev.qm.colrev_pdf_id
 
@@ -1669,7 +1689,6 @@ def data(
 ) -> None:
     """Complete selected forms of data analysis and synthesis"""
 
-    # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
 
     review_manager = colrev.review_manager.ReviewManager(
@@ -2012,10 +2031,6 @@ def env(
 ) -> None:
     """Manage the environment"""
 
-    # pylint: disable=too-many-return-statements
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
-
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
     )
@@ -2080,7 +2095,6 @@ def env(
         ):
             return
 
-        # pylint: disable=import-outside-toplevel
         import colrev.env.package_manager as p_manager
 
         package_manager = p_manager.PackageManager()
@@ -2090,7 +2104,7 @@ def env(
 
     if index:
         local_index.index()
-
+        local_index.load_journal_rankings()
     elif start:
         print("Started.")
 
@@ -2141,9 +2155,7 @@ def settings(
 ) -> None:
     """Settings of the CoLRev project"""
 
-    # pylint: disable=import-outside-toplevel
     # pylint: disable=reimported
-    # pylint: disable=too-many-locals
 
     from subprocess import check_call  # nosec
     from subprocess import DEVNULL  # nosec
@@ -2515,9 +2527,7 @@ def show(  # type: ignore
     callback=__validate_show,
 ) -> None:
     """Show aspects (sample, ...)"""
-    # pylint: disable=too-many-locals
 
-    # pylint: disable=import-outside-toplevel
     import colrev.operation
     import colrev.ui_cli.show_printer
 
@@ -2607,7 +2617,7 @@ def show(  # type: ignore
 # ) -> None:
 #     """CoLRev web interface."""
 
-#     # pylint: disable=import-outside-toplevel
+#
 #     import colrev.ui_web.settings_editor
 
 #     review_manager = colrev.review_manager.ReviewManager(
@@ -2845,7 +2855,6 @@ def version(
 ) -> None:
     """Show colrev version."""
 
-    # pylint: disable=import-outside-toplevel
     from importlib.metadata import version
 
     print(f'colrev version {version("colrev")}')

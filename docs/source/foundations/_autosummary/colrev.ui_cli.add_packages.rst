@@ -16,4 +16,6 @@ colrev.ui\_cli.add\_packages
       :nosignatures:
 
       add_data
+      add_prep
+      add_prescreen
       add_search_source
