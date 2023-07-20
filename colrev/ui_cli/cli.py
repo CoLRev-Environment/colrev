@@ -15,8 +15,8 @@ from pathlib import Path
 
 import click
 import click_completion.core
+import click_repl
 import pandas as pd
-from click_repl import register_repl
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
@@ -128,14 +128,16 @@ def main(ctx: click.core.Context) -> None:
     \b
     validate      Validate changes in the previous commit
 
+    \b
+    repl          Start interactive terminal
+
     Recommended workflow: colrev status > colrev OPERATION > colrev validate
 
     Documentation:  https://colrev.readthedocs.io/
     """
 
     try:
-        if ctx.command_path.endswith("repl"):
-            print("using repl, will reuse review_manager")
+        if ctx.invoked_subcommand == "repl":
             ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
     except colrev.exceptions.RepoSetupError:
         pass
@@ -149,6 +151,7 @@ def get_review_manager(
     the given parameters. If params requires review_manager to be reloaded, will
     reload it
     """
+
     review_manager_params["exact_call"] = ctx.command_path
     try:
         review_manager = ctx.obj["review_manager"]
@@ -163,14 +166,24 @@ def get_review_manager(
             )
             ctx.obj["review_manager"] = review_manager
         else:
-            print("updating review manager object ...")
             review_manager.update_config(**review_manager_params)
         return review_manager
     except (TypeError, KeyError):
-        print("init review object ...")
         review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
         ctx.obj = {"review_manager": review_manager}
         return review_manager
+
+
+@main.command(help_priority=100)
+@click.pass_context
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
+def repl(
+    ctx: click.core.Context,
+) -> None:
+    from prompt_toolkit.history import FileHistory
+
+    prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
+    click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
 
 
 @main.command(help_priority=1)
@@ -3007,4 +3020,4 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
     click.echo(f"{shell} completion installed in {path}")
 
 
-register_repl(main)
+# register_repl(main)
