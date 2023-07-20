@@ -37,13 +37,12 @@ def add_search_source(
         # Note : load runs the heuristics.
         return
 
-    if ":" not in query:
-        search_operation.review_manager.logger.error(
-            "Could not find package identifier at the beginning of the query"
-        )
-        return
-    package_identifier = query[: query.find(":")]
-    query = query[query.find(":") + 1 :]
+    if ":" in query:
+        package_identifier = query[: query.find(":")]
+        query = query[query.find(":") + 1 :]
+    else:
+        package_identifier = query
+        query = ""
 
     package_manager = search_operation.review_manager.get_package_manager()
 
