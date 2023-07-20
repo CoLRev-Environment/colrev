@@ -109,7 +109,9 @@ class Initializer:
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]
-        cur_content = [x for x in cur_content if not x.startswith("venv")]
+        cur_content = [
+            x for x in cur_content if not x.startswith("venv") and x != ".history"
+        ]
 
         if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
             cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
