@@ -2122,7 +2122,6 @@ def env(
             "verbose_mode": verbose,
             "force_mode": True,
         },
-
     )
 
     if install:
