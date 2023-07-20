@@ -214,6 +214,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         session: requests.Session,
         item: dict,
     ) -> dict:
+        # pylint: disable=too-many-branches
         # To test in browser:
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 

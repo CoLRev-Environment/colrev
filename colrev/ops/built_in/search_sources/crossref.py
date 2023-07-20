@@ -700,7 +700,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()

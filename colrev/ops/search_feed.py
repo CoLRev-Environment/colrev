@@ -337,7 +337,7 @@ class GeneralOriginFeed:
         ):
             return True
         return False
-                
+
     def update_existing_record(
         self,
         *,
@@ -397,8 +397,13 @@ class GeneralOriginFeed:
             record_a_orig=record_dict, record_b_orig=prev_record_dict_version
         ):
             changed = True
-            if self.__forthcoming_published(record_dict=record_dict, prev_record=prev_record_dict_version):
-                self.review_manager.logger.info(f" {colors.GREEN}forthcoming paper published: {main_record_dict['ID']}{colors.END}")
+            if self.__forthcoming_published(
+                record_dict=record_dict, prev_record=prev_record_dict_version
+            ):
+                self.review_manager.logger.info(
+                    f" {colors.GREEN}forthcoming paper published: "
+                    f"{main_record_dict['ID']}{colors.END}"
+                )
             elif similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {origin}")
             else:

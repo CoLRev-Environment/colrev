@@ -2245,9 +2245,7 @@ def env(
         ):
             return
 
-        import colrev.env.package_manager as p_manager
-
-        package_manager = p_manager.PackageManager()
+        package_manager = colrev.env.package_manager.PackageManager()
         package_manager.update_package_list()
 
     local_index = review_manager.get_local_index()

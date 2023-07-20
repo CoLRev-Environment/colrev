@@ -207,4 +207,3 @@ class Search(colrev.operation.Operation):
 
         if self.review_manager.in_ci_environment():
             print("\n\n")
-    

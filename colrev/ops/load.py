@@ -241,9 +241,42 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.info("No new search files...")
             return []
 
-        search_sources = self.__load_search_sources()
-        self.load_conversion_packages = self.__load_conversion_packages()
-        self.supported_extensions = self.__load_supported_extensions()
+        self.review_manager.logger.debug("Load available search_source endpoints...")
+
+        search_source_identifiers = self.package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            installed_only=True,
+        )
+
+        search_sources = self.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            selected_packages=[{"endpoint": p} for p in search_source_identifiers],
+            operation=self,
+            instantiate_objects=False,
+        )
+
+        self.review_manager.logger.debug("Load available load_conversion endpoints...")
+        load_conversion_package_identifiers = self.package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+            installed_only=True,
+        )
+
+        load_conversion_packages = self.package_manager.load_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
+            selected_packages=[
+                {"endpoint": p} for p in load_conversion_package_identifiers
+            ],
+            operation=self,
+        )
+
+        self.supported_extensions = [
+            item
+            for sublist in [
+                e.supported_extensions  # type: ignore
+                for _, e in load_conversion_packages.items()
+            ]
+            for item in sublist
+        ]
 
         for sfp in new_search_files:
             sfp_name = sfp
@@ -498,7 +531,7 @@ class Load(colrev.operation.Operation):
                 record.data["url"].find("login?url=https") + 10 :
             ]
 
-    def __import_record(self, *, record_dict: dict, include: bool) -> dict:
+    def __import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
@@ -527,8 +560,7 @@ class Load(colrev.operation.Operation):
                 f"{colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{colors.END}"
             )
-        if include:
-            record.data["include_flag"] = "1"
+
         return record.get_data()
 
     def __prep_records_for_import(
@@ -643,14 +675,12 @@ class Load(colrev.operation.Operation):
             )
 
     def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool, include: bool
+        self, *, source: colrev.settings.SearchSource, keep_ids: bool
     ) -> None:
         self.__setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.source_records_list:
-            source_record = self.__import_record(
-                record_dict=source_record, include=include
-            )
+            source_record = self.__import_record(record_dict=source_record)
 
             # Make sure IDs are unique / do not replace existing records
             order = 0
@@ -753,6 +783,7 @@ class Load(colrev.operation.Operation):
                     re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
                     for k, v in record.items()
                 }
+            return records
 
         def set_incremental_ids(*, records: dict) -> None:
             # if IDs to set for some records
@@ -844,7 +875,7 @@ class Load(colrev.operation.Operation):
         *,
         new_sources: typing.List[colrev.settings.SearchSource],
         keep_ids: bool = False,
-        include: bool = False,
+        combine_commits: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
 
