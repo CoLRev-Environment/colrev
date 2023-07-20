@@ -186,8 +186,28 @@ def shell(
     """Starts a interactive terminal"""
     from prompt_toolkit.history import FileHistory
 
+    print(f"CoLRev version {colrev.__version__}")
+    print("Workflow: status > OPERATION > validate")
+    print("https://colrev.readthedocs.io/en/latest/")
+    print("Type exit to close the shell")
+    print()
     prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
     click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
+
+
+@main.command(help_priority=100)
+@click.pass_context
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
+def exit(
+    ctx: click.core.Context,
+) -> None:
+    """Starts a interactive terminal"""
+    import inspect
+
+    curframe = inspect.currentframe()
+    calframe = inspect.getouterframes(curframe, 2)
+    if calframe[7].function == "shell":
+        raise click_repl.exceptions.ExitReplException
 
 
 @main.command(help_priority=1)
