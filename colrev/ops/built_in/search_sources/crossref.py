@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 class CrossrefSearchSource(JsonSchemaMixin):
     """SearchSource for the Crossref API"""
 
-    __issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
+    __ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"
 
     # https://github.com/CrossRef/rest-api-doc
     __api_url = "https://api.crossref.org/works?"
@@ -199,7 +199,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
 
-        assert re.match(self.__issn_regex, journal_issn)
+        assert re.match(self.__ISSN_REGEX, journal_issn)
 
         journals = Journals(etiquette=self.etiquette)
         if rerun:
@@ -629,9 +629,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             if "scope" in source.search_parameters:
                 if "journal_issn" in source.search_parameters["scope"]:
                     issn_field = source.search_parameters["scope"]["journal_issn"]
-                    if not re.match(
-                        "[0-9][0-9][0-9][0-9][-]?[0-9][0-9][0-9][X0-9]", issn_field
-                    ):
+                    if not re.match(self.__ISSN_REGEX, issn_field):
                         raise colrev_exceptions.InvalidQueryException(
                             f"Crossref journal issn ({issn_field}) not matching required format"
                         )
@@ -917,9 +915,43 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add crossref endpoint with query {query}"
-        )
+        query_type = ""
+        while query_type not in ["j", "k"]:
+            query_type = input("Create a query based on [k]eyword or [j]ournal?")
+        if query_type == "j":
+            print("Get ISSN from https://portal.issn.org/issn/search")
+            issn = ""
+            while not re.match(cls.__ISSN_REGEX, issn):
+                issn = input("Enter the ISSN of the journal:")
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_issn_{issn}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"scope": {"journal_issn": issn}},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+            return add_source
+        if query_type == "k":
+            keyword = input("Plase enter a keyword:")
+            keyword = keyword.replace(" ", "+")
+            query = f"https://search.crossref.org/?q={keyword}"
+
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_{keyword}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query": query},
+                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                comment="",
+            )
+            return add_source
 
     def load_fixes(
         self,
