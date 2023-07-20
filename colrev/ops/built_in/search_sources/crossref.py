@@ -914,7 +914,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 comment="",
             )
             return add_source
-
+        print("Interactively add Crossref as a SearchSource")
+        print()
+        print("Documentation:")
+        print(
+            "https://github.com/CoLRev-Environment/colrev/blob/"
+            + "main/colrev/ops/built_in/search_sources/crossref.md"
+        )
+        print()
         query_type = ""
         while query_type not in ["j", "k"]:
             query_type = input("Create a query based on [k]eywords or [j]ournal?")
@@ -947,7 +954,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             endpoint="colrev.crossref",
             filename=filename,
             search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": query},
+            search_parameters={"query": keywords},
             load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
