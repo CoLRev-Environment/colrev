@@ -170,10 +170,9 @@ class ReviewManager:
             return colrev.logger.setup_report_logger(
                 review_manager=self, level=logging.DEBUG
             ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
-        else:
-            return colrev.logger.setup_report_logger(
-                review_manager=self, level=logging.INFO
-            ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
+        return colrev.logger.setup_report_logger(
+            review_manager=self, level=logging.INFO
+        ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
