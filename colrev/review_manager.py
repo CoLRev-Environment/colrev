@@ -115,22 +115,9 @@ class ReviewManager:
                 self.pdf_dir.mkdir(exist_ok=True)
                 self.output_dir.mkdir(exist_ok=True)
 
-            if self.debug_mode:
-                self.report_logger = colrev.logger.setup_report_logger(
-                    review_manager=self, level=logging.DEBUG
-                )
-                """Logger for the commit report"""
-                self.logger = colrev.logger.setup_logger(
-                    review_manager=self, level=logging.DEBUG
-                )
-                """Logger for processing information"""
-            else:
-                self.report_logger = colrev.logger.setup_report_logger(
-                    review_manager=self, level=logging.INFO
-                )
-                self.logger = colrev.logger.setup_logger(
-                    review_manager=self, level=logging.INFO
-                )
+            report_logger, logger = self.get_loggers_by_debug_mode()
+            self.report_logger = report_logger
+            self.logger = logger
 
             self.environment_manager = self.get_environment_manager()
 
@@ -153,6 +140,39 @@ class ReviewManager:
                 raise exc
             if debug_mode:
                 self.logger.debug(exc)
+
+    def update_config(
+        self,
+        *,
+        force_mode: bool = False,
+        verbose_mode: bool = False,
+        debug_mode: bool = False,
+        high_level_operation: bool = False,
+        exact_call: str = "",
+    ) -> None:
+        """Update review_manager's state"""
+        self.force_mode = force_mode
+        # Force mode variable (bool)
+        self.verbose_mode = verbose_mode
+        # Verbose mode variable (bool)
+        self.debug_mode = debug_mode
+        # Debug mode variable (bool)
+        self.high_level_operation = high_level_operation
+        # A high-level operation was called (bool)
+        self.exact_call = exact_call
+        report_logger, logger = self.get_loggers_by_debug_mode()
+        self.report_logger = report_logger
+        self.logger = logger
+
+    def get_loggers_by_debug_mode(self) -> typing.Tuple[logging.Logger, logging.Logger]:
+        """return loggers"""
+        if self.debug_mode:
+            return colrev.logger.setup_report_logger(
+                review_manager=self, level=logging.DEBUG
+            ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
+        return colrev.logger.setup_report_logger(
+            review_manager=self, level=logging.INFO
+        ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
