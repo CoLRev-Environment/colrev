@@ -18,6 +18,7 @@ import click_completion.core
 import click_repl
 import pandas as pd
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
@@ -40,6 +41,8 @@ import colrev.ui_cli.dedupe_errors
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
+
+package_manager = colrev.env.package_manager.PackageManager()
 
 
 def __custom_startswith(string: str, incomplete: str) -> bool:
@@ -418,7 +421,13 @@ def retrieve(
 @click.option(
     "-a",
     "--add",
-    type=str,
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            installed_only=True,
+        ),
+        case_sensitive=False,
+    ),
     help="""
 Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
 """,
