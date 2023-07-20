@@ -291,10 +291,17 @@ class Checker:
             for [record_id, status, screen_crit] in status_data[
                 "screening_criteria_list"
             ]:
-                if status not in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.rev_included
+                if (
+                    status
+                    not in colrev.record.RecordState.get_post_x_states(
+                        state=colrev.record.RecordState.rev_included
+                    )
+                    and status != colrev.record.RecordState.md_needs_manual_preparation
                 ):
-                    assert "NA" == screen_crit
+                    if "NA" != screen_crit:
+                        raise colrev_exceptions.FieldValueError(
+                            f"{record_id}: screen_crit != NA ({screen_crit})"
+                        )
                     continue
 
                 # print([record_id, status, screen_crit])

@@ -15,6 +15,7 @@ from pathlib import Path
 from threading import Timer
 
 import git
+import pandas as pd
 import requests_cache
 from git.exc import GitCommandError
 from pybtex.database.input import bibtex
@@ -129,7 +130,33 @@ class LocalIndex:
         self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH, timeout=90)
         self.sqlite_connection.row_factory = self.__dict_factory
         return self.sqlite_connection.cursor()
-        # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
+
+    def load_journal_rankings(self) -> None:
+        """Loads journal rankings into sqlite database"""
+
+        print("Index rankings")
+
+        rankings_csv_path = (
+            str(Path(__file__).parents[1])
+            / Path("template")
+            / Path("ops")
+            / Path("journal_rankings.csv")
+        )
+        conn = sqlite3.connect(self.SQLITE_PATH)
+        data_frame = pd.read_csv(rankings_csv_path, encoding="utf-8")
+        data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
+        conn.commit()
+        conn.close()
+
+    def search_in_database(self, journal: typing.Optional[typing.Any]) -> list:
+        """Searches for journalranking in database"""
+        cur = self.__get_sqlite_cursor(init=False)
+        cur.execute(
+            "SELECT * FROM rankings WHERE journal_name = ?",
+            (journal,),
+        )
+        rankings = cur.fetchall()
+        return rankings
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}

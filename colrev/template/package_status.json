@@ -283,8 +283,12 @@
             "status": "EXPERIMENTAL"
         },
         {
+            "package_endpoint_identifier": "colrev.add_journal_ranking",
+            "status": "EXPERIMENTAL"
+        },
+        {
             "package_endpoint_identifier": "colrev.open_alex_prep",
-            "status": "RED"
+            "status": "EXPERIMENTAL"
         }
     ],
     "prep_man": [
