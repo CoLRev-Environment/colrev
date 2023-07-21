@@ -277,7 +277,7 @@ class Load(colrev.operation.Operation):
             ]
             for item in sublist
         ]
-
+        heuristic_result_list = []
         for sfp in new_search_files:
             sfp_name = sfp
             if sfp_name in [
@@ -289,10 +289,12 @@ class Load(colrev.operation.Operation):
                 print()
             self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
-            heuristic_result_list = self.__apply_source_heuristics(
-                filepath=sfp,
-                search_sources=search_sources,
-                load_conversion=load_conversion_packages,
+            heuristic_result_list.append(
+                self.__apply_source_heuristics(
+                    filepath=sfp,
+                    search_sources=search_sources,
+                    load_conversion=load_conversion_packages,
+                )
             )
         return heuristic_result_list
 
@@ -849,21 +851,16 @@ class Load(colrev.operation.Operation):
                 sources.append(source)
         return sources
 
-    def __create_load_commit(
-        self, source: colrev.settings.SearchSource, combine_commits: bool
-    ) -> None:
+    def __create_load_commit(self, source: colrev.settings.SearchSource) -> None:
         git_repo = self.review_manager.dataset.get_repo()
         stashed = "No local changes to save" != git_repo.git.stash(
             "push", "--keep-index"
         )
         part_exact_call = self.review_manager.exact_call
-        if not combine_commits:
-            self.review_manager.exact_call = (
-                f"{part_exact_call} -s {source.filename.name}"
-            )
-            self.review_manager.create_commit(
-                msg=f"Load {source.filename.name}",
-            )
+        self.review_manager.exact_call = f"{part_exact_call} -s {source.filename.name}"
+        self.review_manager.create_commit(
+            msg=f"Load {source.filename.name}",
+        )
         if stashed:
             git_repo.git.stash("pop")
         if not self.review_manager.high_level_operation:
@@ -875,7 +872,6 @@ class Load(colrev.operation.Operation):
         *,
         new_sources: typing.List[colrev.settings.SearchSource],
         keep_ids: bool = False,
-        combine_commits: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
 
@@ -890,15 +886,10 @@ class Load(colrev.operation.Operation):
                 self.__resolve_non_unique_ids(source=source)
                 self.__load_source_records(source=source, keep_ids=keep_ids)
                 self.__validate_load(source=source)
-                self.__create_load_commit(
-                    source=source, combine_commits=combine_commits
-                )
+                self.__create_load_commit(source=source)
 
             except colrev_exceptions.ImportException as exc:
                 print(exc)
-
-        if combine_commits:
-            self.review_manager.create_commit(msg="Load (multiple)")
 
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed load operation{colors.END}"

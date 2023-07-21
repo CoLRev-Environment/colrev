@@ -616,7 +616,7 @@ def load(
     # Note : reinitialize to load new scripts:
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
 
-    load_operation.main(new_sources=new_sources, keep_ids=keep_ids, include=include)
+    load_operation.main(new_sources=new_sources, keep_ids=keep_ids)
 
     if include:
         print()

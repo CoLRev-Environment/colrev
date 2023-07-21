@@ -101,10 +101,10 @@ def select_new_source(
     # is not part of the loop -> only one new_source is returned
 
     new_sources = []
-
-    new_source = __heuristics_check(
-        heuristic_result_list=heuristic_result_list, skip_query=skip_query
-    )
-
-    new_sources.append(new_source)
+    for heuristic_result in heuristic_result_list:
+        new_sources.append(
+            __heuristics_check(
+                heuristic_result_list=heuristic_result, skip_query=skip_query
+            )
+        )
     return new_sources
