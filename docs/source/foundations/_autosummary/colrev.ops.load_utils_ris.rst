@@ -1,7 +1,7 @@
-colrev.ops.built\_in.search\_sources.ris\_utils
-===============================================
+colrev.ops.load\_utils\_ris
+===========================
 
-.. automodule:: colrev.ops.built_in.search_sources.ris_utils
+.. automodule:: colrev.ops.load_utils_ris
 
 
 

@@ -14,7 +14,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.ris_utils
+import colrev.ops.load_utils_ris
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -57,9 +57,7 @@ class ZoteroTranslationLoader(JsonSchemaMixin):
         load_operation.review_manager.logger.info(
             "Starting Zotero translation services (Docker)"
         )
-        colrev.ops.built_in.search_sources.ris_utils.apply_ris_fixes(
-            filename=source.filename
-        )
+        colrev.ops.load_utils_ris.apply_ris_fixes(filename=source.filename)
 
         self.zotero_translation_service.start()
 

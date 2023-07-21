@@ -17,7 +17,7 @@ from thefuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.ris_utils
+import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
 
@@ -123,16 +123,14 @@ class UnknownSearchSource(JsonSchemaMixin):
     def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
         if self.search_source.filename.suffix == ".ris":
-            colrev.ops.built_in.search_sources.ris_utils.apply_ris_fixes(
+            colrev.ops.load_utils_ris.apply_ris_fixes(
                 filename=self.search_source.filename
             )
-            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+            ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
                 filename=self.search_source.filename
             )
             self.__ris_fixes(entries=ris_entries)
-            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
-                ris_entries
-            )
+            records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
             return records
 
         # if self.search_source.filename.suffix == ".bib":

@@ -36,6 +36,7 @@ colrev.ops
    colrev.ops.distribute
    colrev.ops.init
    colrev.ops.load
+   colrev.ops.load_utils_ris
    colrev.ops.merge
    colrev.ops.pdf_get
    colrev.ops.pdf_get_man

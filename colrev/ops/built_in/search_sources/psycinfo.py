@@ -17,7 +17,7 @@ from rispy.config import TAG_KEY_MAPPING
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.ris_utils
+import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
 
@@ -148,13 +148,11 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            ris_entries = colrev.ops.built_in.search_sources.ris_utils.load_ris_entries(
+            ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
                 filename=self.search_source.filename, ris_parser=PsycInfoRISParser
             )
             self.__ris_fixes(entries=ris_entries)
-            records = colrev.ops.built_in.search_sources.ris_utils.convert_to_records(
-                ris_entries
-            )
+            records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
             return records
 
         raise NotImplementedError
