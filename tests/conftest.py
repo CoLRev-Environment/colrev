@@ -223,7 +223,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     new_sources = colrev.ui_cli.cli_load.select_new_source(
         heuristic_result_list=heuristic_list, skip_query=True
     )
-    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
+    load_operation.main(new_sources=new_sources, keep_ids=False)
     review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
 
     prep_operation = review_manager.get_prep_operation()
