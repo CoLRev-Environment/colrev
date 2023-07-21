@@ -19,7 +19,7 @@ colrev.ops.load.Load
       ~Load.check_precondition
       ~Load.conclude
       ~Load.decorate
-      ~Load.get_new_sources
+      ~Load.get_new_sources_heuristic_list
       ~Load.import_provenance
       ~Load.main
 

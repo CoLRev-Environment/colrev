@@ -30,6 +30,7 @@ colrev.ops
    colrev.ops.clone
    colrev.ops.commit
    colrev.ops.correct
+   colrev.ops.dashboard
    colrev.ops.data
    colrev.ops.dedupe
    colrev.ops.distribute
@@ -50,6 +51,7 @@ colrev.ops
    colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search
+   colrev.ops.search_feed
    colrev.ops.search_sources
    colrev.ops.status
    colrev.ops.sync

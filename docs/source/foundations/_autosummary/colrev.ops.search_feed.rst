@@ -1,7 +1,7 @@
-colrev.ops.search
-=================
+colrev.ops.search\_feed
+=======================
 
-.. automodule:: colrev.ops.search
+.. automodule:: colrev.ops.search_feed
 
 
 
@@ -20,4 +20,4 @@ colrev.ops.search
       :template: custom-class-template.rst
       :nosignatures:
 
-      Search
+      GeneralOriginFeed

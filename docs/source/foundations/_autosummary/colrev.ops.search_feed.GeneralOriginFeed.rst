@@ -1,7 +1,7 @@
-colrev.ops.search.GeneralOriginFeed
-===================================
+colrev.ops.search\_feed.GeneralOriginFeed
+=========================================
 
-.. currentmodule:: colrev.ops.search
+.. currentmodule:: colrev.ops.search_feed
 
 .. autoclass:: GeneralOriginFeed
    :members:
@@ -20,6 +20,7 @@ colrev.ops.search.GeneralOriginFeed
       ~GeneralOriginFeed.print_post_run_search_infos
       ~GeneralOriginFeed.save_feed_file
       ~GeneralOriginFeed.set_id
+      ~GeneralOriginFeed.update_existing_record
 
 
 
