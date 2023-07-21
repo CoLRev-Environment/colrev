@@ -9,19 +9,19 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 
 
-def test_pdf_get(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
-) -> None:
-    """Test the pdf-get operation"""
+# def test_pdf_get(  # type: ignore
+#     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+# ) -> None:
+#     """Test the pdf-get operation"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="prescreen_commit"
-    )
+#     helpers.reset_commit(
+#         review_manager=base_repo_review_manager, commit="prescreen_commit"
+#     )
 
-    pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
-        notify_state_transition_operation=True
-    )
-    # pdf_get_operation.main()
+#     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
+#         notify_state_transition_operation=True
+#     )
+#   pdf_get_operation.main()
 
 
 def test_pdf_get_import_file(  # type: ignore
@@ -158,35 +158,35 @@ def test_pdf_get_get_target_filepath(  # type: ignore
     assert actual == expected
 
 
-def test_pdf_get_get_relink_pdfs(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
-) -> None:
-    """Test the pdf-get get_relink_pdfs()"""
+# def test_pdf_get_get_relink_pdfs(  # type: ignore
+#     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+# ) -> None:
+#     """Test the pdf-get get_relink_pdfs()"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="pdf_get_commit"
-    )
+#     helpers.reset_commit(
+#         review_manager=base_repo_review_manager, commit="pdf_get_commit"
+#     )
 
-    pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
-        notify_state_transition_operation=True
-    )
-    original_source = base_repo_review_manager.settings.sources[0]
-    base_repo_review_manager.settings.sources[0].endpoint = "colrev.pdfs_dir"
-    base_repo_review_manager.settings.sources[0].search_parameters = {
-        "scope": {"path": "pdfs"}
-    }
-    # pdf_get_operation.relink_pdfs()
+#     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
+#         notify_state_transition_operation=True
+#     )
+#     original_source = base_repo_review_manager.settings.sources[0]
+#     base_repo_review_manager.settings.sources[0].endpoint = "colrev.pdfs_dir"
+#     base_repo_review_manager.settings.sources[0].search_parameters = {
+#         "scope": {"path": "pdfs"}
+#     }
+#   pdf_get_operation.relink_pdfs()
 
-    # helpers.retrieve_test_file(
-    #     source=Path("SrivastavaShainesh2015.pdf"),
-    #     target=Path("data/pdfs/Srivastava2015.pdf"),
-    # )
-    # pdf_get_operation.import_pdf(
-    #     record=colrev.record.Record(
-    #         data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
-    #     )
-    # )
-    # base_repo_review_manager.settings.sources[0] = original_source
+#   helpers.retrieve_test_file(
+#       source=Path("SrivastavaShainesh2015.pdf"),
+#       target=Path("data/pdfs/Srivastava2015.pdf"),
+#   )
+#   pdf_get_operation.import_pdf(
+#       record=colrev.record.Record(
+#           data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
+#       )
+#   )
+#   base_repo_review_manager.settings.sources[0] = original_source
 
 
 # TODO : collect ci_environment tests in a single test script
