@@ -97,6 +97,8 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         for record in records.values():
             if re.search(r"-\d{1,2}$", record["ID"]):
                 original_record_id = re.sub(r"-\d{1,2}$", "", record["ID"])
+                if original_record_id not in records:
+                    continue
                 original_record = records[original_record_id]
 
                 # Note: between duplicate records, there are variations in spelling and completeness
