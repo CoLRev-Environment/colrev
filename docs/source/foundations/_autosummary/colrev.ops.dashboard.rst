@@ -1,7 +1,7 @@
-colrev.ui\_cli.cli
-==================
+colrev.ops.dashboard
+====================
 
-.. automodule:: colrev.ui_cli.cli
+.. automodule:: colrev.ops.dashboard
 
 
 
@@ -15,8 +15,7 @@ colrev.ui\_cli.cli
       :toctree:
       :nosignatures:
 
-      catch_exception
-      get_review_manager
+      main
 
 
 
@@ -29,4 +28,4 @@ colrev.ui\_cli.cli
       :template: custom-class-template.rst
       :nosignatures:
 
-      SpecialHelpOrder
+      Dashboard

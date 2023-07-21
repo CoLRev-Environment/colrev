@@ -274,7 +274,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        ais_feed: colrev.ops.search.GeneralOriginFeed,
+        ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches

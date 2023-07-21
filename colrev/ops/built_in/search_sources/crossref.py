@@ -685,7 +685,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         record: colrev.record.Record,
-        feed: colrev.ops.search.GeneralOriginFeed,
+        feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         """Restore the url from the feed if it exists
         (url-resolution is not always available)"""
@@ -700,7 +700,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -734,7 +734,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self.__restore_url(record=retrieved_record, feed=crossref_feed)
             crossref_feed.add_record(record=retrieved_record)
 
-            changed = search_operation.update_existing_record(
+            changed = crossref_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record.data,
                 prev_record_dict_version=prev_record_dict_version,
@@ -763,7 +763,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -797,7 +797,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     )
                     crossref_feed.nr_added += 1
                 else:
-                    changed = search_operation.update_existing_record(
+                    changed = crossref_feed.update_existing_record(
                         records=records,
                         record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,

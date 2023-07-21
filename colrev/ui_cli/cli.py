@@ -23,6 +23,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_load
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
@@ -421,7 +422,10 @@ def retrieve(
 
     review_manager.exact_call = "colrev prep"
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list, skip_query=True
+    )
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
     load_operation.main(new_sources=new_sources, keep_ids=False)
 
@@ -529,10 +533,15 @@ def search(
         )
 
     elif view:
-        search_operation.view_sources()
+        for source in search_operation.sources:
+            search_operation.review_manager.p_printer.pprint(source)
 
     elif setup_custom_script:
-        search_operation.setup_custom_script()
+        import colrev.ui_cli.setup_custom_scripts
+
+        colrev.ui_cli.setup_custom_scripts.setup_custom_search_script(
+            review_manager=review_manager
+        )
         print("Activated custom_search_script.py.")
         print("Please update the source in settings.json and commit.")
     elif bws:
@@ -598,19 +607,23 @@ def load(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=skip_query)
-    if include:
-        print()
-        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
-            f"{colors.GREEN}Automatically include records from "
-            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
-        )
+
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list, skip_query=True
+    )
+
     # Note : reinitialize to load new scripts:
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
 
     load_operation.main(new_sources=new_sources, keep_ids=keep_ids, include=include)
 
     if include:
+        print()
+        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
+            f"{colors.GREEN}Automatically include records from "
+            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
+        )
         print()
         prep_operation = review_manager.get_prep_operation()
         prep_operation.main()
@@ -1350,7 +1363,7 @@ def pdfs(
     help="Rename the PDF files according to record IDs",
 )
 @click.option(
-    "--relink_files",
+    "--relink_pdfs",
     is_flag=True,
     default=False,
     help="Recreate links to PDFs based on colrev pdf-IDs (when PDFs were renamed)",
@@ -1382,7 +1395,7 @@ def pdf_get(
     ctx: click.core.Context,
     copy_to_repo: bool,
     rename: bool,
-    relink_files: bool,
+    relink_pdfs: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -1398,13 +1411,13 @@ def pdf_get(
         },
     )
 
-    state_transition_operation = not relink_files and not setup_custom_script
+    state_transition_operation = not relink_pdfs and not setup_custom_script
     pdf_get_operation = review_manager.get_pdf_get_operation(
         notify_state_transition_operation=state_transition_operation
     )
 
-    if relink_files:
-        pdf_get_operation.relink_files()
+    if relink_pdfs:
+        pdf_get_operation.relink_pdfs()
         return
     if copy_to_repo:
         pdf_get_operation.copy_pdfs_to_repo()
@@ -2232,9 +2245,7 @@ def env(
         ):
             return
 
-        import colrev.env.package_manager as p_manager
-
-        package_manager = p_manager.PackageManager()
+        package_manager = colrev.env.package_manager.PackageManager()
         package_manager.update_package_list()
 
     local_index = review_manager.get_local_index()

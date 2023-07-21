@@ -186,7 +186,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #         / record_to_import["file"]
             #     )
 
-            #     pdf_get_operation.import_file(
+            #     pdf_get_operation.import_pdf(
             #         record=colrev.record.Record(data=record_to_import)
             #     )
 

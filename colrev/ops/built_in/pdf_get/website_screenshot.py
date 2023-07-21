@@ -55,6 +55,6 @@ class WebsiteScreenshot(JsonSchemaMixin):
         )
 
         if "file" in record.data:
-            pdf_get_operation.import_file(record=record)
+            pdf_get_operation.import_pdf(record=record)
 
         return record

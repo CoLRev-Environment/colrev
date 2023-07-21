@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 
 if TYPE_CHECKING:
     import colrev.review_manager
+    import colrev.ops.search_feed
 
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -175,7 +176,7 @@ class SearchSource(JsonSchemaMixin):
     def setup_for_load(
         self,
         *,
-        record_list: typing.List[typing.Dict],
+        source_records_list: typing.List[typing.Dict],
         imported_origins: typing.List[str],
     ) -> None:
         """Set the SearchSource up for the load process (initialize statistics)"""
@@ -184,10 +185,10 @@ class SearchSource(JsonSchemaMixin):
         # attributes are temporary. They should not be
         # saved to settings.json.
 
-        self.to_import = len(record_list)
+        self.to_import = len(source_records_list)
         self.imported_origins: typing.List[str] = imported_origins
         self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = record_list
+        self.source_records_list: typing.List[typing.Dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
@@ -227,13 +228,13 @@ class SearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
-    ) -> colrev.ops.search.GeneralOriginFeed:
+    ) -> colrev.ops.search_feed.GeneralOriginFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        import colrev.ops.search
+        import colrev.ops.search_feed
 
-        return colrev.ops.search.GeneralOriginFeed(
+        return colrev.ops.search_feed.GeneralOriginFeed(
             review_manager=review_manager,
             search_source=self,
             source_identifier=source_identifier,

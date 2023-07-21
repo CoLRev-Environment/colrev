@@ -18,13 +18,12 @@ colrev.ops.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
+      ~Search.check_source_selection_exists
       ~Search.conclude
       ~Search.decorate
       ~Search.get_unique_filename
       ~Search.main
-      ~Search.setup_custom_script
-      ~Search.update_existing_record
-      ~Search.view_sources
+      ~Search.remove_forthcoming
 
 
 

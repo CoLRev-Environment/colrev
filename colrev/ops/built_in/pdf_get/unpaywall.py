@@ -148,7 +148,7 @@ class Unpaywall(JsonSchemaMixin):
                     record.update_field(
                         key="file", value=str(pdf_filepath), source=source
                     )
-                    pdf_get_operation.import_file(record=record)
+                    pdf_get_operation.import_pdf(record=record)
 
                 else:
                     os.remove(pdf_filepath)

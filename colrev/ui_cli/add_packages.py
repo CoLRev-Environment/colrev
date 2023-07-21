@@ -9,6 +9,7 @@ import requests
 import colrev.env.package_manager
 import colrev.ops.built_in.data.bibliography_export
 import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_load
 
 
 def add_search_source(
@@ -32,7 +33,12 @@ def add_search_source(
         shutil.copyfile(query, dst)
         search_operation.review_manager.logger.info(f"Copied {filename} to repo.")
         load_operation = search_operation.review_manager.get_load_operation()
-        new_sources = load_operation.get_new_sources()
+
+        heuristic_list = load_operation.get_new_sources_heuristic_list()
+        new_sources = colrev.ui_cli.cli_load.select_new_source(
+            heuristic_result_list=heuristic_list, skip_query=True
+        )
+
         load_operation.main(new_sources=new_sources)
         # Note : load runs the heuristics.
         return

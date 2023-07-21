@@ -499,7 +499,7 @@ class Advisor:
                 review_instructions.append(
                     {
                         "msg": f"record with broken file link ({non_existent_pdfs})."
-                        " Use\n    colrev pdf-get --relink_files"
+                        " Use\n    colrev pdf-get --relink_pdfs"
                     }
                 )
 
