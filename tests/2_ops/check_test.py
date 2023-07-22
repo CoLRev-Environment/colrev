@@ -14,7 +14,7 @@ def test_checks(  # type: ignore
 
     checker = colrev.checker.Checker(review_manager=base_repo_review_manager)
 
-    expected = ["0.9.0", "0.9.0"]
+    expected = ["0.9.1", "0.9.1"]
     actual = checker.get_colrev_versions()
     assert expected == actual
 

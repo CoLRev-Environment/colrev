@@ -488,7 +488,7 @@ class Load(colrev.operation.Operation):
         for source_record in source.search_source.source_records_list:
             source_record = self.__import_record(record_dict=source_record)
 
-            # Make sure IDs are unique / do not replace existing records
+            # Make sure not to replace existing records
             order = 0
             letters = list(string.ascii_lowercase)
             next_unique_id = source_record["ID"]

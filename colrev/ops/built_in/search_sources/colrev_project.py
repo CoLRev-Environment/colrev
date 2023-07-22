@@ -237,6 +237,13 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             records = colrev.ops.load_utils_bib.load_bib_file(
                 load_operation=load_operation, source=self.search_source
             )
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+
             return records
 
         raise NotImplementedError

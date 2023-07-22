@@ -127,6 +127,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_4,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.9.0"),
+                "target_version": CoLRevVersion("0.9.1"),
+                "script": self.__migrate_0_9_1,
+                "released": True,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -380,6 +386,14 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
 
+        return self.repo.is_dirty()
+
+    def __migrate_0_9_1(self) -> bool:
+        settings = self.__load_settings_dict()
+        for source in settings["sources"]:
+            if "load_conversion_package_endpoint" in source:
+                del source["load_conversion_package_endpoint"]
+        self.__save_settings(settings)
         return self.repo.is_dirty()
 
 

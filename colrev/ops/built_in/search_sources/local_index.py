@@ -18,6 +18,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -307,15 +308,17 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
-        if self.search_source.filename.suffix == ".csv":
-            csv_loader = colrev.ops.load_utils_table.CSVLoader(
-                load_operation=load_operation, settings=self.search_source
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
             )
-            records = csv_loader.load()
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+
             return records
 
         raise NotImplementedError

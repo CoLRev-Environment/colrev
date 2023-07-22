@@ -151,11 +151,6 @@ class CSVLoader(JsonSchemaMixin):
 
     """Loads csv files (based on pandas)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = True
-
-    supported_extensions = ["csv"]
-
     def __init__(
         self,
         *,
@@ -163,7 +158,6 @@ class CSVLoader(JsonSchemaMixin):
         settings: colrev.settings.SearchSource,
     ):
         self.load_operation = load_operation
-        # self.settings = self.settings_class.load_settings(data=settings)
         self.settings = settings
 
     def load(self) -> dict:
@@ -198,32 +192,25 @@ class CSVLoader(JsonSchemaMixin):
 class ExcelLoader:
     """Loads Excel (xls, xlsx) files (based on pandas)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
-    ci_supported: bool = True
-
-    supported_extensions = ["xls", "xlsx"]
-
     def __init__(
         self,
         *,
         load_operation: colrev.ops.load.Load,
-        settings: colrev.settings.SearchSource,
+        source: colrev.settings.SearchSource,
     ):
-        # self.settings = self.settings_class.load_settings(data=settings)
-        self.settings = settings
+        self.source = source
+        self.load_operation = load_operation
 
-    def load(
-        self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ) -> dict:
+    def load(self) -> dict:
         """Load records from the source"""
 
         try:
             data = pd.read_excel(
-                source.filename, dtype=str
+                self.source.filename, dtype=str
             )  # dtype=str to avoid type casting
         except pd.errors.ParserError:
-            load_operation.review_manager.logger.error(
-                f"Error: Not an xlsx file: {source.filename.name}"
+            self.load_operation.review_manager.logger.error(
+                f"Error: Not an xlsx file: {self.source.filename.name}"
             )
             return {}
 
