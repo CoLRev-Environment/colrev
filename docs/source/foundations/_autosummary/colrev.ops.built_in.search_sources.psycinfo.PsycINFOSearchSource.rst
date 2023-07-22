@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
       ~PsycINFOSearchSource.heuristic
       ~PsycINFOSearchSource.json_schema
       ~PsycINFOSearchSource.load
-      ~PsycINFOSearchSource.load_fixes
       ~PsycINFOSearchSource.prepare
       ~PsycINFOSearchSource.register_field_encoders
       ~PsycINFOSearchSource.run_search

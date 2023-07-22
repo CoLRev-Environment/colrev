@@ -22,6 +22,7 @@ from defusedxml.lxml import fromstring
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 
@@ -78,7 +79,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                     filename=self.__pubmed_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -131,7 +131,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -642,15 +641,29 @@ class PubMedSearchSource(JsonSchemaMixin):
                 rerun=rerun,
             )
 
-    # def load()...
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation, settings=self.search_source
+            )
+            records = csv_loader.load()
+            self.__load_fixes(records=records)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
+
+        raise NotImplementedError
+
     # TODO : csv: parse volume/number/pages from citation field
 
-    def load_fixes(
+    def __load_fixes(
         self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
         records: typing.Dict,
-    ) -> dict:
+    ) -> None:
         """Load fixes for Pubmed"""
 
         for record in records.values():
@@ -673,8 +686,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 record["ENTRYTYPE"] = "article"
             if record.get("pii", "pii").lower() == record.get("doi", "doi").lower():
                 del record["pii"]
-
-        return records
+            if record.get("nihms_id", "") == "nan":
+                del record["nihms_id"]
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

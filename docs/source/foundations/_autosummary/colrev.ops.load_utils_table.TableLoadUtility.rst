@@ -1,7 +1,7 @@
-colrev.ops.built\_in.load\_conversion.table\_loader.TableLoadUtility
-====================================================================
+colrev.ops.load\_utils\_table.TableLoadUtility
+==============================================
 
-.. currentmodule:: colrev.ops.built_in.load_conversion.table_loader
+.. currentmodule:: colrev.ops.load_utils_table
 
 .. autoclass:: TableLoadUtility
    :members:

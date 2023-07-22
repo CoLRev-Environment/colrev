@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.get_masterdata
       ~OpenAlexSearchSource.heuristic
       ~OpenAlexSearchSource.json_schema
-      ~OpenAlexSearchSource.load_fixes
+      ~OpenAlexSearchSource.load
       ~OpenAlexSearchSource.prepare
       ~OpenAlexSearchSource.register_field_encoders
       ~OpenAlexSearchSource.run_search

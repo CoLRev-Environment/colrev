@@ -25,7 +25,6 @@ def setup_custom_search_script(
         filename=Path("data/search/custom_search.bib"),
         search_type=colrev.settings.SearchType.DB,
         search_parameters={},
-        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
         comment="",
     )
 

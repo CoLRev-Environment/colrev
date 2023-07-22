@@ -67,38 +67,10 @@ def test_search_source_interfaces(
                 "filename": Path("test.bib"),
                 "search_type": colrev.settings.SearchType.DB,
                 "search_parameters": {"scope": {"path": "test"}},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": "",
                 "interface_test": True,
             }
             for p in search_source_identifiers
-        ],
-        operation=load_operation,
-        instantiate_objects=True,
-    )
-
-
-def test_load_conversion_package_interfaces(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test the load_conversion_package_interfaces"""
-
-    package_manager = base_repo_review_manager.get_package_manager()
-    load_operation = base_repo_review_manager.get_load_operation(
-        notify_state_transition_operation=False
-    )
-
-    load_conversion_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-        installed_only=True,
-    )
-    package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-        selected_packages=[
-            {
-                "endpoint": p,
-            }
-            for p in load_conversion_identifiers
         ],
         operation=load_operation,
         instantiate_objects=True,

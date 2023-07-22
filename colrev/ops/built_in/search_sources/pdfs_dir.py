@@ -19,6 +19,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
@@ -676,7 +677,6 @@ class PDFSearchSource(JsonSchemaMixin):
             filename=filename,
             search_type=colrev.settings.SearchType.PDFS,
             search_parameters={"scope": {"path": "data/pdfs"}},
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
         return add_source
@@ -712,33 +712,35 @@ class PDFSearchSource(JsonSchemaMixin):
         except (colrev_exceptions.RecordNotFoundInPrepSourceException,):
             pass
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for PDF directories (GROBID)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        missing_field_checker = colrev.qm.checkers.missing_field.MissingFieldChecker(
-            quality_model=load_operation.review_manager.get_qm()
-        )
-
-        for record_dict in records.values():
-            if "grobid-version" in record_dict:
-                del record_dict["grobid-version"]
-
-            self.__update_based_on_doi(record_dict=record_dict)
-
-            # Rerun restrictions and __update_fields_based_on_pdf_dirs
-            # because the restrictions/subdir-pattern may change
-            record_dict = self.__update_fields_based_on_pdf_dirs(
-                record_dict=record_dict, params=self.search_source.search_parameters
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
             )
-            record = colrev.record.Record(data=record_dict)
-            missing_field_checker.apply_curation_restrictions(record=record)
+            missing_field_checker = (
+                colrev.qm.checkers.missing_field.MissingFieldChecker(
+                    quality_model=load_operation.review_manager.get_qm()
+                )
+            )
 
-        return records
+            for record_dict in records.values():
+                if "grobid-version" in record_dict:
+                    del record_dict["grobid-version"]
+
+                self.__update_based_on_doi(record_dict=record_dict)
+
+                # Rerun restrictions and __update_fields_based_on_pdf_dirs
+                # because the restrictions/subdir-pattern may change
+                record_dict = self.__update_fields_based_on_pdf_dirs(
+                    record_dict=record_dict, params=self.search_source.search_parameters
+                )
+                record = colrev.record.Record(data=record_dict)
+                missing_field_checker.apply_curation_restrictions(record=record)
+            return records
+
+        raise NotImplementedError
 
     def __fix_special_chars(self, *, record: colrev.record.Record) -> None:
         # TODO : extract to separate scripts and also apply upon loading tei content

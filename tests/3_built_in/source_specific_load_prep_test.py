@@ -88,7 +88,6 @@ NO_CUSTOM_SOURCE = None
                 filename=Path("data/search/pdfs_dir.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             ),
             Path("pdfs_dir_result.bib"),
@@ -101,7 +100,6 @@ NO_CUSTOM_SOURCE = None
                 filename=Path("data/search/ieee.ris"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
-                load_conversion_package_endpoint={"endpoint": "colrev.rispy"},
                 comment="",
             ),
             Path("ieee_result.bib"),
@@ -165,7 +163,7 @@ def test_source(  # type: ignore
     new_sources = colrev.ui_cli.cli_load.select_new_source(
         heuristic_result_list=heuristic_list, skip_query=True
     )
-    load_operation.main(new_sources=new_sources)
+
     if custom_source:
         new_sources = [custom_source]
         base_repo_review_manager.settings.sources = [custom_source]

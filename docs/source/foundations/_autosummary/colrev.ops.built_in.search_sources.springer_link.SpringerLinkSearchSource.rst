@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
       ~SpringerLinkSearchSource.get_masterdata
       ~SpringerLinkSearchSource.heuristic
       ~SpringerLinkSearchSource.json_schema
-      ~SpringerLinkSearchSource.load_fixes
+      ~SpringerLinkSearchSource.load
       ~SpringerLinkSearchSource.prepare
       ~SpringerLinkSearchSource.register_field_encoders
       ~SpringerLinkSearchSource.run_search

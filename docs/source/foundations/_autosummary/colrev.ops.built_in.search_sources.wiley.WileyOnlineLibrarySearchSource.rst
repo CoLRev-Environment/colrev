@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
       ~WileyOnlineLibrarySearchSource.get_masterdata
       ~WileyOnlineLibrarySearchSource.heuristic
       ~WileyOnlineLibrarySearchSource.json_schema
-      ~WileyOnlineLibrarySearchSource.load_fixes
+      ~WileyOnlineLibrarySearchSource.load
       ~WileyOnlineLibrarySearchSource.prepare
       ~WileyOnlineLibrarySearchSource.register_field_encoders
       ~WileyOnlineLibrarySearchSource.run_search

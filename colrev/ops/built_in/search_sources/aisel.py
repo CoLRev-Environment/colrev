@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-import typing
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -164,7 +163,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": params},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -373,15 +371,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for AIS electronic Library (AISeL)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        raise NotImplementedError
 
     def __fix_entrytype(self, *, record: colrev.record.Record) -> None:
         # Note : simple heuristic

@@ -1,7 +1,7 @@
-colrev.ops.built\_in.load\_conversion.table\_loader
-===================================================
+colrev.ops.load\_utils\_table
+=============================
 
-.. automodule:: colrev.ops.built_in.load_conversion.table_loader
+.. automodule:: colrev.ops.load_utils_table
 
 
 

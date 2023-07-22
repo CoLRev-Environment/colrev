@@ -22,7 +22,6 @@ def fixture_eric_search_source(
         "filename": Path("data/search/eric.bib"),
         "search_type": colrev.settings.SearchType.DB,
         "search_parameters": {"query": "blockchain"},
-        "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
         "comment": "",
     }
     instance = colrev.ops.built_in.search_sources.eric.ERICSearchSource(

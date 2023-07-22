@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
       ~WebOfScienceSearchSource.get_masterdata
       ~WebOfScienceSearchSource.heuristic
       ~WebOfScienceSearchSource.json_schema
-      ~WebOfScienceSearchSource.load_fixes
+      ~WebOfScienceSearchSource.load
       ~WebOfScienceSearchSource.prepare
       ~WebOfScienceSearchSource.register_field_encoders
       ~WebOfScienceSearchSource.run_search

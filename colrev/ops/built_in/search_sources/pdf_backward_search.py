@@ -81,7 +81,6 @@ class BackwardSearchSource(JsonSchemaMixin):
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
             },
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 
@@ -383,15 +382,16 @@ class BackwardSearchSource(JsonSchemaMixin):
             f"Cannot add backward_search endpoint with query {query}"
         )
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for PDF backward searches (GROBID)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def get_masterdata(
         self,

@@ -163,36 +163,6 @@
             "status": "EXPERIMENTAL"
         }
     ],
-    "load_conversion": [
-        {
-            "package_endpoint_identifier": "colrev.bibtex",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.csv",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.excel",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.zotero_translate",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.md_to_bib",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.bibutils",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.rispy",
-            "status": "MATURING"
-        }
-    ],
     "prep": [
         {
             "package_endpoint_identifier": "colrev.source_specific_prep",

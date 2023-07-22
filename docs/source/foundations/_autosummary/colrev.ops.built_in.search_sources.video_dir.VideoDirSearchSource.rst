@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.video\_dir.VideoDirSearchSource
       ~VideoDirSearchSource.get_masterdata
       ~VideoDirSearchSource.heuristic
       ~VideoDirSearchSource.json_schema
-      ~VideoDirSearchSource.load_fixes
+      ~VideoDirSearchSource.load
       ~VideoDirSearchSource.prepare
       ~VideoDirSearchSource.register_field_encoders
       ~VideoDirSearchSource.run_search

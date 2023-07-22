@@ -74,17 +74,6 @@ def __heuristics_check(
 
     heuristic_source["source_candidate"].comment = None
 
-    if {} == heuristic_source["source_candidate"].load_conversion_package_endpoint:
-        custom_load_conversion_package_endpoint = input(
-            "provide custom load_conversion_package_endpoint [or NA]:"
-        )
-        if "NA" == custom_load_conversion_package_endpoint:
-            heuristic_source["source_candidate"].load_conversion_package_endpoint = {}
-        else:
-            heuristic_source["source_candidate"].load_conversion_package_endpoint = {
-                "endpoint": custom_load_conversion_package_endpoint
-            }
-
     return heuristic_source["source_candidate"]
 
 

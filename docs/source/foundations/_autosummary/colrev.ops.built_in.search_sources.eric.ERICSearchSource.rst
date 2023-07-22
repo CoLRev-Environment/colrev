@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
       ~ERICSearchSource.get_query_return
       ~ERICSearchSource.heuristic
       ~ERICSearchSource.json_schema
-      ~ERICSearchSource.load_fixes
+      ~ERICSearchSource.load
       ~ERICSearchSource.prepare
       ~ERICSearchSource.register_field_encoders
       ~ERICSearchSource.run_search

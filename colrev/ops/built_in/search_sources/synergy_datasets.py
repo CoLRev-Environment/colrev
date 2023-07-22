@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime
 import tempfile
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,6 +16,7 @@ from git import Repo
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -97,7 +97,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"dataset": dataset},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -172,22 +171,22 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for SYNERGY-datasets"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        for record in records.values():
-            if "pmid" in record:
-                record["pubmedid"] = record["pmid"].replace(
-                    "https://pubmed.ncbi.nlm.nih.gov/", ""
-                )
-                del record["pmid"]
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            for record in records.values():
+                if "pmid" in record:
+                    record["pubmedid"] = record["pmid"].replace(
+                        "https://pubmed.ncbi.nlm.nih.gov/", ""
+                    )
+                    del record["pmid"]
+            return records
 
-        return records
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

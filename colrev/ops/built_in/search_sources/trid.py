@@ -2,7 +2,6 @@
 """SearchSource: Transport Research International Documentation"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -114,7 +113,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
             if "publication_year" in entry:
                 entry["year"] = entry.pop("publication_year")
 
-    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
@@ -123,19 +122,13 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
             )
             self.__ris_fixes(entries=ris_entries)
             records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
             return records
 
         raise NotImplementedError
-
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Transport Research International Documentation"""
-
-        return records
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

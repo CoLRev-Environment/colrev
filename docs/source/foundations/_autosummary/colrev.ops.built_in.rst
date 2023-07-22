@@ -28,7 +28,6 @@ colrev.ops.built\_in
 
    colrev.ops.built_in.data
    colrev.ops.built_in.dedupe
-   colrev.ops.built_in.load_conversion
    colrev.ops.built_in.pdf_get
    colrev.ops.built_in.pdf_get_man
    colrev.ops.built_in.pdf_prep

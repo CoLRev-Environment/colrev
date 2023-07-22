@@ -13,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 
@@ -111,12 +112,27 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation, settings=self.search_source
+            )
+            records = csv_loader.load()
+            self.__load_fixes(records=records)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
+
+        raise NotImplementedError
+
+    def __load_fixes(
         self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
         records: typing.Dict,
-    ) -> dict:
+    ) -> None:
         """Load fixes for Springer Link"""
 
         # pylint: disable=too-many-branches
@@ -125,6 +141,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             if "item_title" in record_dict:
                 record_dict["title"] = record_dict["item_title"]
                 del record_dict["item_title"]
+
+            if record_dict.get("book_series_title", "") == "nan":
+                del record_dict["book_series_title"]
 
             if "content_type" in record_dict:
                 record = colrev.record.Record(data=record_dict)
@@ -171,8 +190,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     r"\g<1> and \g<2>",
                     record_dict["author"],
                 )
-
-        return records
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

@@ -41,8 +41,6 @@ class PackageEndpointType(Enum):
     # pylint: disable=C0103
     review_type = "review_type"
     """Endpoint for review types"""
-    load_conversion = "load_conversion"
-    """Endpoint for load conversion"""
     search_source = "search_source"
     """Endpoint for search sources"""
     prep = "prep"
@@ -158,12 +156,10 @@ class SearchSourcePackageEndpointInterface(
         """Retrieve masterdata from the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def load_fixes(  # type: ignore
+    def load(  # type: ignore
         load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: dict,
-    ) -> None:
-        """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
+    ) -> dict:
+        """Load records from the SearchSource (and convert to .bib)"""
 
     # pylint: disable=no-self-argument
     def prepare(record: dict, source: colrev.settings.SearchSource) -> None:  # type: ignore
@@ -408,7 +404,6 @@ class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     filename: Path
     search_type: colrev.settings.SearchType
     search_parameters: dict
-    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
 
@@ -425,11 +420,6 @@ class PackageManager:
             "import_name": SearchSourcePackageEndpointInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
-        },
-        PackageEndpointType.load_conversion: {
-            "import_name": LoadConversionPackageEndpointInterface,
-            "custom_class": "CustomLoad",
-            "operation_name": "load_operation",
         },
         PackageEndpointType.prep: {
             "import_name": PrepPackageEndpointInterface,
@@ -568,10 +558,6 @@ class PackageManager:
 
         if PackageEndpointType.search_source == package_type:
             package_details["properties"]["filename"] = {"type": "path"}
-            package_details["properties"]["load_conversion_package_endpoint"] = {
-                "type": "script",
-                "package_endpoint_type": "load_conversion",
-            }
 
         package_details = self.__replace_path_by_str(orig_dict=package_details)  # type: ignore
 

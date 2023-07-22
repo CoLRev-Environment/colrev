@@ -32,7 +32,6 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         filename=Path("data/search/complementary_backward_search.bib"),
         search_type=colrev.settings.SearchType.OTHER,
         search_parameters={},
-        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
         comment="",
     )
     feed = search_source.get_feed(

@@ -20,7 +20,6 @@ colrev.env.package\_manager.PackageEndpointType
    .. autosummary::
 
       ~PackageEndpointType.review_type
-      ~PackageEndpointType.load_conversion
       ~PackageEndpointType.search_source
       ~PackageEndpointType.prep
       ~PackageEndpointType.prep_man

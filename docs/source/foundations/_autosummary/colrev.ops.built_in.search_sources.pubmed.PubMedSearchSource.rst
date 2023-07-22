@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
       ~PubMedSearchSource.get_masterdata
       ~PubMedSearchSource.heuristic
       ~PubMedSearchSource.json_schema
-      ~PubMedSearchSource.load_fixes
+      ~PubMedSearchSource.load
       ~PubMedSearchSource.prepare
       ~PubMedSearchSource.register_field_encoders
       ~PubMedSearchSource.run_search

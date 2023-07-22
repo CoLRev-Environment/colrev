@@ -418,7 +418,6 @@ def fixture_search_feed(
         filename=Path("data/search/test.bib"),
         search_type=colrev.settings.SearchType.DB,
         search_parameters={"query": "query"},
-        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
         comment="",
     )
 

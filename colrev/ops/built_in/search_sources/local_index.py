@@ -89,7 +89,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     filename=self.__local_index_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -301,20 +300,25 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             filename=filename,
             search_type=colrev.settings.SearchType.DB,
             search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
         return add_source
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for local-index"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation, settings=self.search_source
+            )
+            records = csv_loader.load()
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

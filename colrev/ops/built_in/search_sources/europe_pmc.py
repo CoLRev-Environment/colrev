@@ -24,6 +24,7 @@ from thefuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -67,7 +68,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         filename: Path
         search_type: colrev.settings.SearchType
         search_parameters: dict
-        load_conversion_package_endpoint: dict
         comment: typing.Optional[str]
 
         _details = {
@@ -106,7 +106,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     filename=self.__europe_pmc_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -548,22 +547,22 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
 
         raise NotImplementedError
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Europe PMC"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

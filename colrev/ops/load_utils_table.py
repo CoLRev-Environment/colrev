@@ -1,8 +1,7 @@
 #! /usr/bin/env python
-"""Load conversion of tables (xlsx, csv)"""
+"""Convenience functions to load tabular files (csv, xlsx)"""
 from __future__ import annotations
 
-from dataclasses import asdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -12,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.settings
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -160,20 +160,20 @@ class CSVLoader(JsonSchemaMixin):
         self,
         *,
         load_operation: colrev.ops.load.Load,
-        settings: dict,
+        settings: colrev.settings.SearchSource,
     ):
-        self.settings = self.settings_class.load_settings(data=settings)
+        self.load_operation = load_operation
+        # self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = settings
 
-    def load(
-        self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ) -> dict:
+    def load(self) -> dict:
         """Load records from the source"""
 
         try:
-            data = pd.read_csv(source.filename)
+            data = pd.read_csv(self.settings.filename)
         except pd.errors.ParserError as exc:
             raise colrev_exceptions.ImportException(
-                f"Error: Not a csv file? {source.filename.name}"
+                f"Error: Not a csv file? {self.settings.filename.name}"
             ) from exc
 
         data.columns = data.columns.str.replace(" ", "_")
@@ -188,18 +188,6 @@ class CSVLoader(JsonSchemaMixin):
                 record["ID"] = str(i).rjust(6, "0")
 
         records = {r["ID"]: r for r in records_dict.values()}
-
-        endpoint_dict = load_operation.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[asdict(source)],
-            operation=load_operation,
-            ignore_not_available=False,
-        )
-        endpoint = endpoint_dict[source.endpoint]
-
-        records = endpoint.load_fixes(  # type: ignore
-            load_operation, source=source, records=records
-        )
 
         return records
 
@@ -219,9 +207,10 @@ class ExcelLoader:
         self,
         *,
         load_operation: colrev.ops.load.Load,
-        settings: dict,
+        settings: colrev.settings.SearchSource,
     ):
-        self.settings = self.settings_class.load_settings(data=settings)
+        # self.settings = self.settings_class.load_settings(data=settings)
+        self.settings = settings
 
     def load(
         self, load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
@@ -245,15 +234,4 @@ class ExcelLoader:
         records_dicts = TableLoadUtility.preprocess_records(records=record_value_list)
         records = {r["ID"]: r for r in records_dicts}
 
-        endpoint_dict = load_operation.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[asdict(source)],
-            operation=load_operation,
-            ignore_not_available=False,
-        )
-        endpoint = endpoint_dict[source.endpoint]
-
-        records = endpoint.load_fixes(  # type: ignore
-            load_operation, source=source, records=records
-        )
         return records

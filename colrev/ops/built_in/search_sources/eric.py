@@ -95,7 +95,6 @@ class ERICSearchSource(JsonSchemaMixin):
                 filename=Path("data/search/eric.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
         self.language_service = colrev.env.language_service.LanguageService()
@@ -166,7 +165,6 @@ class ERICSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": search, "start": start, "rows": rows},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -292,15 +290,16 @@ class ERICSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for ERIC"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

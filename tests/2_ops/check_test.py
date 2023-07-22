@@ -57,7 +57,6 @@ def test_checks(  # type: ignore
             #     "filename": Path("data/search/pdfs.bib"),
             #     "search_type": colrev.settings.SearchType.PDFS,
             #     "search_parameters": {"scope": {"path": "data/pdfs"}},
-            #     "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
             #     "comment": "",
             # },
             {  # type: ignore
@@ -65,7 +64,6 @@ def test_checks(  # type: ignore
                 "filename": Path("data/search/test_records.bib"),
                 "search_type": colrev.settings.SearchType.DB,
                 "search_parameters": {},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": None,
             },
         ]
@@ -77,7 +75,6 @@ def test_checks(  # type: ignore
                 "filename": Path("data/search/test_records.bib"),
                 "search_type": colrev.settings.SearchType.DB,
                 "search_parameters": {},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": None,
             },
         ]

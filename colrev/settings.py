@@ -165,7 +165,6 @@ class SearchSource(JsonSchemaMixin):
     filename: Path
     search_type: SearchType
     search_parameters: dict
-    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
     def get_corresponding_bib_file(self) -> Path:
@@ -249,8 +248,6 @@ class SearchSource(JsonSchemaMixin):
             f"{self.endpoint} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
             + f"   search parameters:   {self.search_parameters}"
-            # + "   load_conversion_package_endpoint:   "
-            # + f"{self.load_conversion_package_endpoint['endpoint']}"
             + optional_comment
         )
 
@@ -583,10 +580,6 @@ class Settings(JsonSchemaMixin):
             schema = cls.json_schema()
 
         sdefs = schema["definitions"]
-        sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
-            "package_endpoint_type": "load_conversion",
-            "type": "package_endpoint",
-        }
 
         # pylint: disable=unused-variable
         sdefs["PrepRound"]["properties"]["prep_package_endpoints"] = {  # type: ignore # noqa: F841

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Load conversion based on zotero importers (ris, rdf, json, mods, ...)"""
+"""Convenience functions to load ris files (based on rispy)"""
 from __future__ import annotations
 
 import re

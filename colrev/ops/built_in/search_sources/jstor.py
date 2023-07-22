@@ -111,7 +111,7 @@ class JSTORSearchSource(JsonSchemaMixin):
             if "title" in entry and "primary_title" not in entry:
                 entry["primary_title"] = entry.pop("title")
 
-    def load(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
@@ -120,6 +120,10 @@ class JSTORSearchSource(JsonSchemaMixin):
             )
             self.__ris_fixes(entries=ris_entries)
             records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
             return records
 
         raise NotImplementedError

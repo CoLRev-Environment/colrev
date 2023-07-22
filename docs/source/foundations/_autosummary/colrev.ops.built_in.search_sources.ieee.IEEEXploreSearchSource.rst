@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.heuristic
       ~IEEEXploreSearchSource.json_schema
       ~IEEEXploreSearchSource.load
-      ~IEEEXploreSearchSource.load_fixes
       ~IEEEXploreSearchSource.prepare
       ~IEEEXploreSearchSource.register_field_encoders
       ~IEEEXploreSearchSource.run_search

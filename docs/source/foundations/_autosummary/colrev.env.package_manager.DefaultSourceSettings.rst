@@ -45,5 +45,4 @@ colrev.env.package\_manager.DefaultSourceSettings
       ~DefaultSourceSettings.filename
       ~DefaultSourceSettings.search_type
       ~DefaultSourceSettings.search_parameters
-      ~DefaultSourceSettings.load_conversion_package_endpoint
       ~DefaultSourceSettings.comment

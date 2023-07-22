@@ -28,7 +28,7 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
       ~CrossrefSearchSource.get_masterdata
       ~CrossrefSearchSource.heuristic
       ~CrossrefSearchSource.json_schema
-      ~CrossrefSearchSource.load_fixes
+      ~CrossrefSearchSource.load
       ~CrossrefSearchSource.prepare
       ~CrossrefSearchSource.query_doi
       ~CrossrefSearchSource.register_field_encoders

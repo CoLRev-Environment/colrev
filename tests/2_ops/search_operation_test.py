@@ -54,7 +54,6 @@ def test_search_add_source(  # type: ignore
         ),
         search_type=colrev.settings.SearchType.DB,
         search_parameters={"query": "test"},
-        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
         comment="",
     )
 
@@ -99,7 +98,6 @@ def test_search_remove_forthcoming(  # type: ignore
         ),
         search_type=colrev.settings.SearchType.DB,
         search_parameters={"query": "test"},
-        load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
         comment="",
     )
 
