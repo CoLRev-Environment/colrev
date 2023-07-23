@@ -4,7 +4,7 @@ Note: This document is currently under development. It will contain the followin
 
 - description
 - coverage (disciplines, types of work)
-- supported (details): search updates, get_masterdata, run_search, load_fixes, prep
+- supported (details): run_search (including updates), load,  prep (including get_masterdata)
 
 One strategy could be to start with a relatively high threshold for the number of intext citations and to iteratively decrease it, and update the search:
 colrev search -a colrev.pdf_backward_search:min_intext_citations=2

@@ -2,7 +2,6 @@
 """SearchSource: JSTOR"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -127,16 +126,6 @@ class JSTORSearchSource(JsonSchemaMixin):
             return records
 
         raise NotImplementedError
-
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for JSTOR"""
-
-        return records
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
