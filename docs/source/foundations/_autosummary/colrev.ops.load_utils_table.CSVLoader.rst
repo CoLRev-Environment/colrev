@@ -16,24 +16,4 @@ colrev.ops.load\_utils\_table.CSVLoader
    .. autosummary::
       :nosignatures:
 
-      ~CSVLoader.all_json_schemas
-      ~CSVLoader.field_mapping
-      ~CSVLoader.from_dict
-      ~CSVLoader.from_json
-      ~CSVLoader.from_object
-      ~CSVLoader.json_schema
       ~CSVLoader.load
-      ~CSVLoader.register_field_encoders
-      ~CSVLoader.to_dict
-      ~CSVLoader.to_json
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~CSVLoader.ci_supported
-      ~CSVLoader.supported_extensions

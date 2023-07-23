@@ -507,6 +507,7 @@ class Load(colrev.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
+        self.__validate_load(source=source)
 
         if keep_ids:
             self.review_manager.logger.warning(
@@ -580,6 +581,42 @@ class Load(colrev.operation.Operation):
             sources.append(endpoint)
 
         return sources
+
+    def __validate_load(
+        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    ) -> None:
+        imported_origins = self.__get_currently_imported_origin_list()
+        imported = len(imported_origins) - source.search_source.len_before
+
+        if imported == source.search_source.to_import:
+            return
+        # Note : for diagnostics, it is easier if we complete the process
+        # and create the commit (instead of raising an exception)
+        self.review_manager.logger.error(
+            f"len_before: {source.search_source.len_before}"
+        )
+        self.review_manager.logger.error(f"len_after: {len(imported_origins)}")
+
+        origins_to_import = [
+            o["colrev_origin"] for o in source.search_source.source_records_list
+        ]
+        if source.search_source.to_import - imported > 0:
+            self.review_manager.logger.error(
+                f"{colors.RED}PROBLEM: delta: "
+                f"{source.search_source.to_import - imported} records missing{colors.END}"
+            )
+
+            missing_origins = [
+                o for o in origins_to_import if o not in imported_origins
+            ]
+            self.review_manager.logger.error(
+                f"{colors.RED}Records not yet imported: {missing_origins}{colors.END}"
+            )
+        else:
+            self.review_manager.logger.error(
+                f"{colors.RED}PROBLEM: "
+                f"{source.search_source.to_import - imported} records too much{colors.END}"
+            )
 
     def __create_load_commit(self, source: colrev.settings.SearchSource) -> None:
         git_repo = self.review_manager.dataset.get_repo()

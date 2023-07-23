@@ -2,12 +2,9 @@
 """Load conversion of reference sections (bibliographies) in md-documents based on GROBID"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
-import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 
@@ -19,11 +16,7 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(
-    colrev.env.package_manager.LoadConversionPackageEndpointInterface
-)
-@dataclass
-class MarkdownLoader(JsonSchemaMixin):
+class MarkdownLoader:
 
     """Loads reference strings from text (md) files (based on GROBID)"""
 

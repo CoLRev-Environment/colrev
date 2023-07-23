@@ -1,9 +1,9 @@
-colrev.ops.load\_utils\_table.ExcelLoader
+colrev.ops.load\_utils\_md.MarkdownLoader
 =========================================
 
-.. currentmodule:: colrev.ops.load_utils_table
+.. currentmodule:: colrev.ops.load_utils_md
 
-.. autoclass:: ExcelLoader
+.. autoclass:: MarkdownLoader
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,4 +16,4 @@ colrev.ops.load\_utils\_table.ExcelLoader
    .. autosummary::
       :nosignatures:
 
-      ~ExcelLoader.load
+      ~MarkdownLoader.load

@@ -2,12 +2,9 @@
 """Convenience functions to load tabular files (csv, xlsx)"""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pandas as pd
-import zope.interface
-from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -143,11 +140,7 @@ class TableLoadUtility:
         return records_dict
 
 
-@zope.interface.implementer(
-    colrev.env.package_manager.LoadConversionPackageEndpointInterface
-)
-@dataclass
-class CSVLoader(JsonSchemaMixin):
+class CSVLoader:
 
     """Loads csv files (based on pandas)"""
 
@@ -186,9 +179,6 @@ class CSVLoader(JsonSchemaMixin):
         return records
 
 
-@zope.interface.implementer(
-    colrev.env.package_manager.LoadConversionPackageEndpointInterface
-)
 class ExcelLoader:
     """Loads Excel (xls, xlsx) files (based on pandas)"""
 

@@ -167,22 +167,6 @@ class SearchSourcePackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class LoadConversionPackageEndpointInterface(
-    GeneralInterface, zope.interface.Interface
-):  # pylint: disable=inherit-non-class
-    """The PackageEndpoint interface for loading (different filetypes)"""
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-    supported_extensions = zope.interface.Attribute("""List of supported extensions""")
-
-    # pylint: disable=no-self-argument
-    def load(  # type: ignore
-        load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ) -> None:
-        """Run the load operation"""
-
-
-# pylint: disable=too-few-public-methods
 class PrepPackageEndpointInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
