@@ -91,7 +91,9 @@ def __apply_file_fixes(*, load_operation: colrev.ops.load.Load, filename: Path) 
 
 
 def load_bib_file(
-    load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
+    load_operation: colrev.ops.load.Load,
+    source: colrev.settings.SearchSource,
+    check_bib_file: bool = True,
 ) -> dict:
     """Load a bib file and return records dict"""
 
@@ -123,7 +125,9 @@ def load_bib_file(
                             )
                     line = file.readline()
 
-    def check_bib_file(*, source: colrev.settings.SearchSource, records: dict) -> None:
+    def __check_bib_file(
+        *, source: colrev.settings.SearchSource, records: dict
+    ) -> None:
         if len(records.items()) <= 3:
             return
         if not any("author" in r for ID, r in records.items()):
@@ -172,5 +176,6 @@ def load_bib_file(
     )
 
     check_nr_in_bib(source=source, records=records)
-    check_bib_file(source=source, records=records)
+    if check_bib_file:
+        __check_bib_file(source=source, records=records)
     return records
