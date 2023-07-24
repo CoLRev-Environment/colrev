@@ -46,13 +46,6 @@ EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 package_manager = colrev.env.package_manager.PackageManager()
 
 
-def __get_search_files() -> list:
-    # Take the filenames from sources because there may be API searches
-    # without files (yet)
-    review_manager = colrev.review_manager.ReviewManager()
-    return [str(x.filename) for x in review_manager.settings.sources]
-
-
 def __custom_startswith(string: str, incomplete: str) -> bool:
     """A custom completion matching that supports case insensitive matching"""
     if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
@@ -63,6 +56,13 @@ def __custom_startswith(string: str, incomplete: str) -> bool:
 
 click_completion.core.startswith = __custom_startswith
 click_completion.init()
+
+
+def get_search_files() -> list:
+    # Take the filenames from sources because there may be API searches
+    # without files (yet)
+    review_manager = colrev.review_manager.ReviewManager()
+    return [str(x.filename) for x in review_manager.settings.sources]
 
 
 class SpecialHelpOrder(click.Group):
@@ -467,7 +467,7 @@ Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
 @click.option(
     "-s",
     "--selected",
-    type=click.Choice(__get_search_files()),
+    type=click.Choice(get_search_files()),
     help="Only retrieve search results for selected sources",
 )
 @click.option(
