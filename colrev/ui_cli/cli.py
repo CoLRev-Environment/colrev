@@ -59,12 +59,13 @@ click_completion.init()
 
 
 def get_search_files() -> list:
+    """Get the search files (for click choices)"""
     # Take the filenames from sources because there may be API searches
     # without files (yet)
     try:
         review_manager = colrev.review_manager.ReviewManager()
         return [str(x.filename) for x in review_manager.settings.sources]
-    except Exception:  # colrev.RepoSetupError:
+    except Exception:  # pylint: disable=broad-exception-caught
         return []
 
 
@@ -3069,6 +3070,3 @@ def install_click(append, case_insensitive, shell, path) -> None:  # type: ignor
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo(f"{shell} completion installed in {path}")
-
-
-# register_repl(main)
