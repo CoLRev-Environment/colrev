@@ -23,7 +23,7 @@ NO_CUSTOM_SOURCE = None
     "source_filepath, expected_source_identifier, custom_source, expected_file",
     [
         # https://pypi.org/project/nbib/
-        # (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
+        (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
         (
             Path("ais.txt"),
             "colrev.ais_library",

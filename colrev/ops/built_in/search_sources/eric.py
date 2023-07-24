@@ -15,6 +15,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_nbib
 import colrev.ops.search
 import colrev.record
 
@@ -119,6 +120,10 @@ class ERICSearchSource(JsonSchemaMixin):
         """Source heuristic for ERIC"""
 
         result = {"confidence": 0.1}
+
+        if "OWN - ERIC" in data:
+            # if data.count("OWN - ERIC") > data.count("\n\n"):
+            result["confidence"] = 1.0
 
         # Note : no features in bib file for identification
 
@@ -292,6 +297,19 @@ class ERICSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".nbib":
+            records = colrev.ops.load_utils_nbib.load(source=self.search_source)
+            # ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
+            #     filename=self.search_source.filename
+            # )
+            # self.__ris_fixes(entries=ris_entries)
+            # records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
 
         if self.search_source.filename.suffix == ".bib":
             records = colrev.ops.load_utils_bib.load_bib_file(
