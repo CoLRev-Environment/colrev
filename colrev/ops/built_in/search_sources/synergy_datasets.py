@@ -44,14 +44,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_type = colrev.settings.SearchType.OTHER
+    api_search_supported = True
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "SYNERGY-datasets"
     link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/systematic_review_datasets.md"
+        + "colrev/ops/built_in/search_sources/synergy_datasets.md"
     )
 
     def __init__(
@@ -87,6 +87,23 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if not query.startswith("dataset="):
+            print("Retrieving available datasets")
+            date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
+            temp_path.mkdir()
+            Repo.clone_from(
+                "https://github.com/asreview/synergy-dataset", temp_path, depth=1
+            )
+            data_path = temp_path / Path("datasets")
+            print("https://github.com/asreview/synergy-dataset")
+            print(
+                "\n- "
+                + "\n- ".join([f.name for f in data_path.iterdir() if f.is_dir()])
+            )
+            query = input("Enter dataset:")
+            query = "dataset=" + query
+
         if query.startswith("dataset="):
             dataset = query.replace("dataset=", "")
             filename = search_operation.get_unique_filename(
@@ -95,14 +112,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.synergy_datasets",
                 filename=filename,
-                search_type=colrev.settings.SearchType.DB,
+                search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"dataset": dataset},
                 comment="",
             )
             return add_source
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add crossref endpoint with query {query}"
+            f"Cannot add SYNERGY endpoint with query {query}"
         )
 
     def validate_source(
@@ -115,7 +132,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
-        """Run a search of SystematicReviewDatasets"""
+        """Run a search of the SYNERGY datasets"""
 
         # TODO
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -176,7 +193,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".bib":
             records = colrev.ops.load_utils_bib.load_bib_file(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                check_bib_file=False,
             )
             for record in records.values():
                 if "pmid" in record:
