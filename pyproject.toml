@@ -77,7 +77,7 @@ dash = "^2.11.1"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
 pyalex = "^0.10"
 rispy = "^0.7.1"
-colrev-asreview = {git = "https://github.com/CoLRev-Environment/colrev-asreview"}
+colrev-asreview = "^0.1.0"
 click-repl = "^0.3.0"
 
 [tool.poetry.group.docs.dependencies]
