@@ -601,20 +601,16 @@ version = "0.1.0"
 description = ""
 category = "main"
 optional = false
-python-versions = ">=3.8, <4"
-files = []
-develop = false
+python-versions = ">=3.8,<4"
+files = [
+    {file = "colrev_asreview-0.1.0-py3-none-any.whl", hash = "sha256:cf90cb7a87400ac27ed856cb0c1f966ec46c7e8bf2e91cc41fc5d1c67ea17967"},
+    {file = "colrev_asreview-0.1.0.tar.gz", hash = "sha256:c303405887da6d0742c511cdfd7b96c1fff7f64354f98f2d03d3b4eb0c838eba"},
+]
 
 [package.dependencies]
-asreview = "^1.2"
+asreview = ">=1.2,<2.0"
 colrev = ">=0.9.0"
-dataclasses-jsonschema = "^2.16.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/CoLRev-Environment/colrev-asreview"
-reference = "HEAD"
-resolved_reference = "e0a23fd51fc767ce1a7f802d64f5756843916665"
+dataclasses-jsonschema = ">=2.16.0,<3.0.0"
 
 [[package]]
 name = "coverage"
@@ -4716,4 +4712,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "ac746674576fb337c80ec7e157dcaad5d3f35ce5f8ac4dd3eea217bcc9fe775b"
+content-hash = "8b2ef7b690f5f1f14e3eec2a1a863b262b11d229e6b8712220b059b7f69b11a8"
