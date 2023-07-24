@@ -24,12 +24,12 @@ NO_CUSTOM_SOURCE = None
     [
         # https://pypi.org/project/nbib/
         # (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
-        # (
-        #     Path("ais.txt"),
-        #     "colrev.ais_library",
-        #     NO_CUSTOM_SOURCE,
-        #     Path("ais_result.bib"),
-        # ),
+        (
+            Path("ais.txt"),
+            "colrev.ais_library",
+            NO_CUSTOM_SOURCE,
+            Path("ais_result.bib"),
+        ),
         (
             Path("pubmed.csv"),
             "colrev.pubmed",

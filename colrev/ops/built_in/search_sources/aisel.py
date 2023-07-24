@@ -16,8 +16,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_enl
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -373,6 +375,33 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
+
+        # Correct the file extension if necessary
+        if self.search_source.filename.suffix == ".txt":
+            new_filename = self.search_source.filename.with_suffix(".enl")
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .enl){colors.END}"
+            )
+            self.search_source.filename.rename(new_filename)
+            self.review_manager.dataset.add_changes(
+                path=self.search_source.filename, remove=True
+            )
+            self.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(path=new_filename)
+            self.review_manager.create_commit(
+                msg=f"Rename {self.search_source.filename}"
+            )
+
+        if self.search_source.filename.suffix in [
+            ".enl",
+        ]:
+            records = colrev.ops.load_utils_enl.load(source=self.search_source)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
 
         raise NotImplementedError
 

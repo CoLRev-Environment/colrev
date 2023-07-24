@@ -108,11 +108,6 @@ class Load(colrev.operation.Operation):
             endpoint,
             endpoint_class,
         ) in search_sources.items():
-            # pylint: disable=no-member
-            has_heuristic = getattr(endpoint_class, "heuristic", None)
-            if not has_heuristic:
-                self.review_manager.logger.debug(f"- {endpoint}: no heuristic")
-                continue
             res = endpoint_class.heuristic(filepath, data)  # type: ignore
             self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
             if res["confidence"] == 0.0:
@@ -125,37 +120,6 @@ class Load(colrev.operation.Operation):
                 search_type = endpoint_class.search_type
                 # Note : as the identifier, we use the filename
                 # (if search results are added by file/not via the API)
-
-                # Correct the file extension if necessary
-                if re.findall(r"^%0", data, re.MULTILINE) and filepath.suffix not in [
-                    ".enl"
-                ]:
-                    new_filename = filepath.with_suffix(".enl")
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Rename to {new_filename} "
-                        f"(because the format is .enl){colors.END}"
-                    )
-                    filepath.rename(new_filename)
-                    self.review_manager.dataset.add_changes(path=filepath, remove=True)
-                    filepath = new_filename
-                    res["filename"] = filepath
-                    self.review_manager.dataset.add_changes(path=new_filename)
-                    self.review_manager.create_commit(msg=f"Rename {filepath}")
-
-                if re.findall(r"^TI ", data, re.MULTILINE) and filepath.suffix not in [
-                    ".ris"
-                ]:
-                    new_filename = filepath.with_suffix(".ris")
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Rename to {new_filename} "
-                        f"(because the format is .ris){colors.END}"
-                    )
-                    filepath.rename(new_filename)
-                    self.review_manager.dataset.add_changes(path=filepath, remove=True)
-                    filepath = new_filename
-                    res["filename"] = filepath
-                    self.review_manager.dataset.add_changes(path=new_filename)
-                    self.review_manager.create_commit(msg=f"Rename {filepath}")
 
                 source_candidate = colrev.settings.SearchSource(
                     endpoint=endpoint,
