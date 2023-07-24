@@ -61,8 +61,11 @@ click_completion.init()
 def get_search_files() -> list:
     # Take the filenames from sources because there may be API searches
     # without files (yet)
-    review_manager = colrev.review_manager.ReviewManager()
-    return [str(x.filename) for x in review_manager.settings.sources]
+    try:
+        review_manager = colrev.review_manager.ReviewManager()
+        return [str(x.filename) for x in review_manager.settings.sources]
+    except Exception:  # colrev.RepoSetupError:
+        return []
 
 
 class SpecialHelpOrder(click.Group):
