@@ -194,18 +194,16 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 )
 
                 if added:
-                    forward_search_feed.nr_added += 1
+                    pass
                 elif rerun:
                     # Note : only re-index/update
-                    changed = forward_search_feed.update_existing_record(
+                    forward_search_feed.update_existing_record(
                         records=records,
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        forward_search_feed.nr_changed += 1
 
         forward_search_feed.save_feed_file()
         forward_search_feed.print_post_run_search_infos(records=records)

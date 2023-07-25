@@ -227,7 +227,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
                 if added:
                     self.review_manager.logger.info(" retrieve " + record.data["ID"])
-                    ieee_feed.nr_added += 1
                 else:
                     changed = ieee_feed.update_existing_record(
                         records=records,
@@ -238,12 +237,11 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                     )
                     if changed:
                         self.review_manager.logger.info(" update " + record.data["ID"])
-                        ieee_feed.nr_changed += 1
+
             query.startRecord += 200
             response = query.callAPI()
 
         ieee_feed.print_post_run_search_infos(records=records)
-
         ieee_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()

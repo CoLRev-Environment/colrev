@@ -393,15 +393,13 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]
 
                 dblp_feed.add_record(record=retrieved_record)
-                changed = dblp_feed.update_existing_record(
+                dblp_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record.data,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=True,
                 )
-                if changed:
-                    dblp_feed.nr_changed += 1
 
         dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
@@ -461,22 +459,19 @@ class DBLPSearchSource(JsonSchemaMixin):
                     self.review_manager.logger.info(
                         " retrieve " + retrieved_record.data["dblp_key"]
                     )
-                    dblp_feed.nr_added += 1
-
                 else:
-                    changed = dblp_feed.update_existing_record(
+                    dblp_feed.update_existing_record(
                         records=records,
                         record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        dblp_feed.nr_changed += 1
 
             if not retrieved:
                 break
 
+        dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()

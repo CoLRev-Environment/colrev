@@ -281,19 +281,15 @@ class BackwardSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=new_record),
             )
 
-            if added:
-                pdf_backward_search_feed.nr_added += 1
-            elif rerun:
+            if not added and rerun:
                 # Note : only re-index/update
-                changed = pdf_backward_search_feed.update_existing_record(
+                pdf_backward_search_feed.update_existing_record(
                     records=records,
                     record_dict=new_record,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    pdf_backward_search_feed.nr_changed += 1
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool

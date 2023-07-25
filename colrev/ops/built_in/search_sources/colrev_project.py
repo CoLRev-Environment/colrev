@@ -198,11 +198,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
             try:
                 colrev_project_search_feed.set_id(record_dict=record_to_import)
-                added = colrev_project_search_feed.add_record(
+                colrev_project_search_feed.add_record(
                     record=colrev.record.Record(data=record_to_import),
                 )
-                if added:
-                    colrev_project_search_feed.nr_added += 1
+
             except colrev_exceptions.NotFeedIdentifiableException:
                 print("not identifiable")
                 continue
