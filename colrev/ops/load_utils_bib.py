@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import re
 import typing
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
@@ -14,17 +13,33 @@ if TYPE_CHECKING:
     import colrev.ops.load
 
 
-def __apply_file_fixes(*, load_operation: colrev.ops.load.Load, filename: Path) -> None:
+def __apply_file_fixes(
+    *,
+    load_operation: colrev.ops.load.Load,
+    source: colrev.settings.SearchSource,
+) -> None:
     # pylint: disable=duplicate-code
 
-    if not filename.is_file():
+    if not source.filename.is_file():
+        load_operation.review_manager.logger.debug(
+            f"Did not find bib file {source.filename} "
+        )
         return
+
+    with open(source.filename, encoding="utf8") as bibtex_file:
+        contents = bibtex_file.read()
+        bib_r = re.compile(r"@.*{.*,", re.M)
+        if len(re.findall(bib_r, contents)) == 0:
+            load_operation.review_manager.logger.error(
+                f"Not a bib file? {source.filename.name}"
+            )
+            raise colrev_exceptions.UnsupportedImportFormatError(source.filename)
 
     # Errors to fix before pybtex loading:
     # - set_incremental_ids (otherwise, not all records will be loaded)
     # - fix_keys (keys containing white spaces)
     record_ids: typing.List[str] = []
-    with open(filename, "r+b") as file:
+    with open(source.filename, "r+b") as file:
         seekpos = file.tell()
         line = file.readline()
         while line:
@@ -107,6 +122,10 @@ def load_bib_file(
             }
 
     def check_nr_in_bib(*, source: colrev.settings.SearchSource, records: dict) -> None:
+        load_operation.review_manager.logger.debug(
+            f"Loaded {source.get_corresponding_bib_file().name} "
+            f"with {len(records)} records"
+        )
         nr_in_bib = load_operation.review_manager.dataset.get_nr_in_bib(
             file_path=source.get_corresponding_bib_file()
         )
@@ -140,41 +159,27 @@ def load_bib_file(
                 f"Import failed (no record with title field): {source.filename.name}"
             )
 
-    if not source.filename.is_file():
-        load_operation.review_manager.logger.debug(
-            f"Did not find bib file {source.get_corresponding_bib_file().name} "
-        )
-        return {}
-
-    with open(source.filename, encoding="utf8") as bibtex_file:
-        contents = bibtex_file.read()
-        bib_r = re.compile(r"@.*{.*,", re.M)
-        if len(re.findall(bib_r, contents)) == 0:
-            load_operation.review_manager.logger.error(
-                f"Not a bib file? {source.filename.name}"
-            )
+    def __load_records(*, source: colrev.settings.SearchSource) -> dict:
+        if not source.filename.is_file():
             return {}
+        with open(source.filename, encoding="utf8") as bibtex_file:
+            records = load_operation.review_manager.dataset.load_records_dict(
+                load_str=bibtex_file.read()
+            )
 
-    __apply_file_fixes(load_operation=load_operation, filename=source.filename)
+            if len(records) == 0:
+                load_operation.review_manager.report_logger.debug("No records loaded")
+                load_operation.review_manager.logger.debug("No records loaded")
+            return records
 
-    with open(source.filename, encoding="utf8") as bibtex_file:
-        records = load_operation.review_manager.dataset.load_records_dict(
-            load_str=bibtex_file.read()
-        )
+    __apply_file_fixes(load_operation=load_operation, source=source)
 
+    records = __load_records(source=source)
     if len(records) == 0:
-        load_operation.review_manager.report_logger.debug("No records loaded")
-        load_operation.review_manager.logger.debug("No records loaded")
         return records
 
     drop_empty_fields(records=records)
     records = dict(sorted(records.items()))
-
-    load_operation.review_manager.logger.debug(
-        f"Loaded {source.get_corresponding_bib_file().name} "
-        f"with {len(records)} records"
-    )
-
     check_nr_in_bib(source=source, records=records)
     if check_bib_file:
         __check_bib_file(source=source, records=records)

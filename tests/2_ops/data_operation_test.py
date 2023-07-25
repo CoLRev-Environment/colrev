@@ -4,7 +4,7 @@ import colrev.review_manager
 
 
 def test_data(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the date operation"""
 
@@ -13,7 +13,7 @@ def test_data(  # type: ignore
 
 
 def test_data_custom_script(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the date setup custom script"""
 
