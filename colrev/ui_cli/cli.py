@@ -433,10 +433,7 @@ def retrieve(
 
     review_manager.exact_call = "colrev prep"
     load_operation = review_manager.get_load_operation()
-    heuristic_list = load_operation.get_new_sources_heuristic_list()
-    new_sources = colrev.ui_cli.cli_load.select_new_source(
-        heuristic_result_list=heuristic_list, skip_query=True
-    )
+    new_sources = load_operation.get_most_likely_sources()
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
     load_operation.main(new_sources=new_sources, keep_ids=False)
 
@@ -621,7 +618,7 @@ def load(
 
     heuristic_list = load_operation.get_new_sources_heuristic_list()
     new_sources = colrev.ui_cli.cli_load.select_new_source(
-        heuristic_result_list=heuristic_list, skip_query=True
+        heuristic_result_list=heuristic_list
     )
 
     # Note : reinitialize to load new scripts:

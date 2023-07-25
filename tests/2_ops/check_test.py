@@ -50,7 +50,7 @@ def test_checks(  # type: ignore
     search_sources = base_repo_review_manager.settings.sources
     actual = [asdict(s) for s in search_sources]  # type: ignore
 
-    if current_platform in ["Linux"]:
+    if current_platform in ["Linux", "Darwin"]:
         expected = [  # type: ignore
             # {  # type: ignore
             #     "endpoint": "colrev.pdfs_dir",
@@ -64,18 +64,7 @@ def test_checks(  # type: ignore
                 "filename": Path("data/search/test_records.bib"),
                 "search_type": colrev.settings.SearchType.DB,
                 "search_parameters": {},
-                "comment": None,
-            },
-        ]
-        assert expected == actual
-    elif current_platform in ["Darwin"]:
-        expected = [  # type: ignore
-            {  # type: ignore
-                "endpoint": "colrev.unknown_source",
-                "filename": Path("data/search/test_records.bib"),
-                "search_type": colrev.settings.SearchType.DB,
-                "search_parameters": {},
-                "comment": None,
+                "comment": "",
             },
         ]
         assert expected == actual

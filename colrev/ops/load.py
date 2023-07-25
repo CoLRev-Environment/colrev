@@ -138,10 +138,7 @@ class Load(colrev.operation.Operation):
         return results_list
 
     def __apply_source_heuristics(
-        self,
-        *,
-        filepath: Path,
-        search_sources: dict,
+        self, *, filepath: Path, search_sources: dict
     ) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
 
@@ -163,15 +160,50 @@ class Load(colrev.operation.Operation):
 
         return results_list
 
-    def get_new_sources_heuristic_list(self) -> list:
-        """Get the heuristic result list of new SearchSources"""
+    def get_most_likely_sources(self) -> list:
+        """Get the most likely SearchSources
+
+        returns a dictionary:
+        {"filepath": [SearchSource1,..]}
+        """
+
+        heuristic_list = self.get_new_sources_heuristic_list()
+        selected_search_sources = []
+
+        for results_list in heuristic_list.values():
+            # Use the last / unknown_source
+            max_conf = 0.0
+            best_candidate_pos = 0
+            for i, heuristic_candidate in enumerate(results_list):
+                if heuristic_candidate["confidence"] > max_conf:
+                    best_candidate_pos = i + 1
+                    max_conf = heuristic_candidate["confidence"]
+            if not any(c["confidence"] > 0.1 for c in results_list):
+                source = [
+                    x
+                    for x in results_list
+                    if x["source_candidate"].endpoint == "colrev.unknown_source"
+                ][0]
+            else:
+                selection = str(best_candidate_pos)
+                source = results_list[int(selection) - 1]
+            selected_search_sources.append(source["source_candidate"])
+
+        return selected_search_sources
+
+    def get_new_sources_heuristic_list(self) -> dict:
+        """Get the heuristic result list of SearchSources candidates
+
+        returns a dictionary:
+        {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}
+        """
 
         # pylint: disable=redefined-outer-name
 
         new_search_files = self.__get_new_search_files()
         if not new_search_files:
             self.review_manager.logger.info("No new search files...")
-            return []
+            return {}
 
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
@@ -187,25 +219,18 @@ class Load(colrev.operation.Operation):
             instantiate_objects=False,
         )
 
-        heuristic_result_list = []
-        for sfp in new_search_files:
-            sfp_name = sfp
-            if sfp_name in [
-                str(source.filename) for source in self.review_manager.settings.sources
-            ]:
-                continue
-
+        heuristic_results = {}
+        for sfp_name in new_search_files:
             if not self.review_manager.high_level_operation:
                 print()
             self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
-            heuristic_result_list.append(
-                self.__apply_source_heuristics(
-                    filepath=sfp,
-                    search_sources=search_sources,
-                )
+            heuristic_results[sfp_name] = self.__apply_source_heuristics(
+                filepath=sfp_name,
+                search_sources=search_sources,
             )
-        return heuristic_result_list
+
+        return heuristic_results
 
     def __unescape_latex(self, *, input_str: str) -> str:
         # Based on
@@ -523,10 +548,12 @@ class Load(colrev.operation.Operation):
     def __load_active_sources(
         self, *, new_sources: typing.List[colrev.settings.SearchSource]
     ) -> list:
+        assert all(isinstance(x, colrev.settings.SearchSource) for x in new_sources)
         checker = self.review_manager.get_checker()
         checker.check_sources()
         sources_settings = []
         for source in self.review_manager.settings.sources:
+            assert isinstance(source, colrev.settings.SearchSource)
             sources_settings.append(source)
         for source in new_sources:
             if source.filename not in [s.filename for s in sources_settings]:

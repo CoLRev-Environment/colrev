@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Test the source_specific prep package"""
-import platform
 import shutil
 from pathlib import Path
 
@@ -140,9 +139,6 @@ def test_source(  # type: ignore
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
     )
-    if platform.system() not in ["Linux"]:
-        if source_filepath.suffix not in [".bib", ".ris", ".csv"]:
-            return
 
     base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
@@ -159,14 +155,11 @@ def test_source(  # type: ignore
     # Run load and test the heuristics
     load_operation = base_repo_review_manager.get_load_operation()
 
-    heuristic_list = load_operation.get_new_sources_heuristic_list()
-    new_sources = colrev.ui_cli.cli_load.select_new_source(
-        heuristic_result_list=heuristic_list, skip_query=True
-    )
-
     if custom_source:
         new_sources = [custom_source]
         base_repo_review_manager.settings.sources = [custom_source]
+    else:
+        new_sources = load_operation.get_most_likely_sources()
 
     load_operation.main(new_sources=new_sources)
 

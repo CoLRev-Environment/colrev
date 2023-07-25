@@ -182,10 +182,7 @@ class Service:
             search_operation.main(rerun=False)
 
             load_operation = self.review_manager.get_load_operation()
-            heuristic_list = load_operation.get_new_sources_heuristic_list()
-            new_sources = colrev.ui_cli.cli_load.select_new_source(
-                heuristic_result_list=heuristic_list, skip_query=True
-            )
+            new_sources = load_operation.get_most_likely_sources()
             load_operation = self.review_manager.get_load_operation()
             load_operation.main(new_sources=new_sources, keep_ids=False)
 
@@ -206,10 +203,7 @@ class Service:
                 load_operation = self.review_manager.get_load_operation()
                 print()
 
-                heuristic_list = load_operation.get_new_sources_heuristic_list()
-                new_sources = colrev.ui_cli.cli_load.select_new_source(
-                    heuristic_result_list=heuristic_list, skip_query=True
-                )
+                new_sources = load_operation.get_most_likely_sources()
 
                 load_operation.main(
                     new_sources=new_sources, keep_ids=False, combine_commits=False
