@@ -19,6 +19,7 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.lxml import fromstring
+from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -347,6 +348,10 @@ class PubMedSearchSource(JsonSchemaMixin):
                 return {"pubmed_id": pubmed_id}
         except requests.exceptions.RequestException:
             return {"pubmed_id": pubmed_id}
+        except XMLSyntaxError as exc:
+            raise colrev_exceptions.RecordNotParsableException(
+                "Error parsing xml"
+            ) from exc
         # pylint: disable=duplicate-code
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -440,6 +445,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
         ):
             pass
         return record
