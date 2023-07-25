@@ -105,6 +105,7 @@ class GeneralOriginFeed:
             added_new = False
         else:
             self.__max_id += 1
+            self.nr_added += 1
 
         if "colrev_data_provenance" in feed_record_dict:
             del feed_record_dict["colrev_data_provenance"]
@@ -138,27 +139,6 @@ class GeneralOriginFeed:
         record.add_provenance_all(source=colrev_origin)
 
         return added_new
-
-    def print_post_run_search_infos(self, *, records: dict) -> None:
-        """Print the search infos (after running the search)"""
-        if self.nr_added > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {self.nr_added} records{colors.END}"
-            )
-        else:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
-            )
-
-        if self.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {self.nr_changed} records{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
-                )
 
     def save_feed_file(self) -> None:
         """Save the feed file"""
@@ -397,6 +377,7 @@ class GeneralOriginFeed:
             record_a_orig=record_dict, record_b_orig=prev_record_dict_version
         ):
             changed = True
+            self.nr_changed += 1
             if self.__forthcoming_published(
                 record_dict=record_dict, prev_record=prev_record_dict_version
             ):
@@ -416,3 +397,24 @@ class GeneralOriginFeed:
                 )
 
         return changed
+
+    def print_post_run_search_infos(self, *, records: dict) -> None:
+        """Print the search infos (after running the search)"""
+        if self.nr_added > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Retrieved {self.nr_added} records{colors.END}"
+            )
+        else:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}No additional records retrieved{colors.END}"
+            )
+
+        if self.nr_changed > 0:
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Updated {self.nr_changed} records{colors.END}"
+            )
+        else:
+            if records:
+                self.review_manager.logger.info(
+                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                )

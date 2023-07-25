@@ -733,27 +733,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self.__restore_url(record=retrieved_record, feed=crossref_feed)
             crossref_feed.add_record(record=retrieved_record)
 
-            changed = crossref_feed.update_existing_record(
+            crossref_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record.data,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
                 update_time_variant_fields=rerun,
             )
-            if changed:
-                crossref_feed.nr_changed += 1
 
-        if crossref_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {crossref_feed.nr_changed} "
-                f"records based on Crossref{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date with Crossref{colors.END}"
-                )
-
+        crossref_feed.print_post_run_search_infos(records=records)
         crossref_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
@@ -794,17 +782,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     search_operation.review_manager.logger.info(
                         " retrieve " + retrieved_record.data["doi"]
                     )
-                    crossref_feed.nr_added += 1
                 else:
-                    changed = crossref_feed.update_existing_record(
+                    crossref_feed.update_existing_record(
                         records=records,
                         record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        crossref_feed.nr_changed += 1
 
                 # Note : only retrieve/update the latest deposits (unless in rerun mode)
                 if not added and not rerun:

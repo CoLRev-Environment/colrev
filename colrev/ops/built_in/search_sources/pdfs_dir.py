@@ -576,19 +576,17 @@ class PDFSearchSource(JsonSchemaMixin):
                     record=colrev.record.Record(data=new_record),
                 )
                 if added:
-                    pdfs_dir_feed.nr_added += 1
                     self.__add_doi_from_pdf_if_not_available(record_dict=new_record)
 
                 elif self.review_manager.force_mode:
                     # Note : only re-index/update
-                    if pdfs_dir_feed.update_existing_record(
+                    pdfs_dir_feed.update_existing_record(
                         records=records,
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
-                    ):
-                        pdfs_dir_feed.nr_changed += 1
+                    )
 
             for record in pdfs_dir_feed.feed_records.values():
                 record.pop("md_string")

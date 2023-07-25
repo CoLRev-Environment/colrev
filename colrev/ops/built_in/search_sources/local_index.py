@@ -195,17 +195,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
 
-            changed = local_index_feed.update_existing_record(
+            local_index_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record_dict,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
                 update_time_variant_fields=True,
             )
-            # Note : changed refers to the data/records.bib.
-            # Records that are not yet imported do not count.
-            if changed:
-                local_index_feed.nr_changed += 1
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
@@ -237,18 +233,18 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
             if added:
-                local_index_feed.nr_added += 1
+                self.review_manager.logger.info(
+                    " retrieve " + retrieved_record_dict["ID"]
+                )
 
             else:
-                changed = local_index_feed.update_existing_record(
+                local_index_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record_dict,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    local_index_feed.nr_changed += 1
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()

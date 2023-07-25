@@ -214,18 +214,14 @@ class ERICSearchSource(JsonSchemaMixin):
 
             if added:
                 self.review_manager.logger.info(" retrieve " + record.data["ID"])
-                eric_feed.nr_added += 1
             else:
-                changed = eric_feed.update_existing_record(
+                eric_feed.update_existing_record(
                     records=records,
                     record_dict=record.data,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    self.review_manager.logger.info(" update " + record.data["ID"])
-                    eric_feed.nr_changed += 1
 
         eric_feed.print_post_run_search_infos(records=records)
         eric_feed.save_feed_file()

@@ -482,17 +482,14 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                             " retrieve europe_pmc_id="
                             + retrieved_record.data["europe_pmc_id"]
                         )
-                        europe_pmc_feed.nr_added += 1
                     else:
-                        changed = europe_pmc_feed.update_existing_record(
+                        europe_pmc_feed.update_existing_record(
                             records=records,
                             record_dict=retrieved_record.data,
                             prev_record_dict_version=prev_record_dict_version,
                             source=self.search_source,
                             update_time_variant_fields=rerun,
                         )
-                        if changed:
-                            europe_pmc_feed.nr_changed += 1
 
                 url = "END"
                 next_page_url_node = root.find("nextPageUrl")
@@ -501,6 +498,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         url = next_page_url_node.text
 
             europe_pmc_feed.print_post_run_search_infos(records=records)
+
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass
         except OperationalError as exc:

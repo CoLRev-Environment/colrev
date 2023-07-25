@@ -312,17 +312,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
             if added:
                 self.review_manager.logger.info(" retrieve " + prep_record.data["url"])
-                ais_feed.nr_added += 1
             # else:
-            #     changed = search_operation.update_existing_record(
+            #     search_operation.update_existing_record(
             #         records=records,
             #         record_dict=prep_record.data,
             #         prev_record_dict_version=prev_record_dict_version,
             #         source=self.search_source,
             #         update_time_variant_fields=rerun,
             #     )
-            #     if changed:
-            #         ais_feed.nr_changed += 1
 
         ais_feed.print_post_run_search_infos(records=records)
 
