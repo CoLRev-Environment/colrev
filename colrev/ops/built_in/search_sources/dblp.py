@@ -471,7 +471,6 @@ class DBLPSearchSource(JsonSchemaMixin):
             if not retrieved:
                 break
 
-        dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -656,48 +655,50 @@ class DBLPSearchSource(JsonSchemaMixin):
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=same_record_type_required,
                 )
-                if similarity > prep_operation.retrieval_similarity:
-                    try:
-                        self.dblp_lock.acquire(timeout=60)
+                if similarity < prep_operation.retrieval_similarity:
+                    continue
 
-                        # Note : need to reload file
-                        # because the object is not shared between processes
-                        dblp_feed = self.search_source.get_feed(
-                            review_manager=prep_operation.review_manager,
-                            source_identifier=self.source_identifier,
-                            update_only=False,
-                        )
+                try:
+                    self.dblp_lock.acquire(timeout=60)
 
-                        dblp_feed.set_id(record_dict=retrieved_record.data)
-                        dblp_feed.add_record(record=retrieved_record)
+                    # Note : need to reload file
+                    # because the object is not shared between processes
+                    dblp_feed = self.search_source.get_feed(
+                        review_manager=prep_operation.review_manager,
+                        source_identifier=self.source_identifier,
+                        update_only=False,
+                    )
 
-                        record.merge(
-                            merging_record=retrieved_record,
-                            default_source=retrieved_record.data["colrev_origin"][0],
-                        )
-                        record.set_masterdata_complete(
-                            source=retrieved_record.data["colrev_origin"][0],
-                            masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                        )
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_prepared
-                        )
-                        if "Withdrawn (according to DBLP)" in record.data.get(
-                            "warning", ""
-                        ):
-                            record.prescreen_exclude(reason="retracted")
-                            record.remove_field(key="warning")
+                    dblp_feed.set_id(record_dict=retrieved_record.data)
+                    dblp_feed.add_record(record=retrieved_record)
 
-                        dblp_feed.save_feed_file()
-                        self.dblp_lock.release()
-                        return record
-
-                    except (
-                        colrev_exceptions.InvalidMerge,
-                        colrev_exceptions.NotFeedIdentifiableException,
+                    record.merge(
+                        merging_record=retrieved_record,
+                        default_source=retrieved_record.data["colrev_origin"][0],
+                    )
+                    record.set_masterdata_complete(
+                        source=retrieved_record.data["colrev_origin"][0],
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                    )
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+                    if "Withdrawn (according to DBLP)" in record.data.get(
+                        "warning", ""
                     ):
-                        self.dblp_lock.release()
-                        continue
+                        record.prescreen_exclude(reason="retracted")
+                        record.remove_field(key="warning")
+
+                    dblp_feed.save_feed_file()
+                    self.dblp_lock.release()
+                    return record
+
+                except (
+                    colrev_exceptions.InvalidMerge,
+                    colrev_exceptions.NotFeedIdentifiableException,
+                ):
+                    self.dblp_lock.release()
+                    continue
 
         except requests.exceptions.RequestException:
             pass
