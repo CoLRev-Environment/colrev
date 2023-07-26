@@ -659,8 +659,6 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    # TODO : csv: parse volume/number/pages from citation field
-
     def __load_fixes(
         self,
         records: typing.Dict,
@@ -679,16 +677,24 @@ class PubMedSearchSource(JsonSchemaMixin):
                 record["author"] = " and ".join(author_list)
             if "first_author" in record:
                 del record["first_author"]
-            if "citation" in record:
-                del record["citation"]
-            if "create_date" in record:
-                del record["create_date"]
             if record.get("journal", "") != "":
                 record["ENTRYTYPE"] = "article"
             if record.get("pii", "pii").lower() == record.get("doi", "doi").lower():
                 del record["pii"]
             if record.get("nihms_id", "") == "nan":
                 del record["nihms_id"]
+            if "citation" in record:
+                details_part = record["citation"]
+                details_part = details_part[details_part.find(";") + 1 :]
+                details_part = details_part[: details_part.find(".")]
+                if ":" in details_part:
+                    record["pages"] = details_part[details_part.find(":") + 1 :]
+                    details_part = details_part[: details_part.find(":")]
+                if "(" in details_part:
+                    record["number"] = details_part[details_part.find("(") + 1 : -1]
+                    details_part = details_part[: details_part.find("(")]
+                record["volume"] = details_part
+                del record["citation"]
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
