@@ -28,16 +28,18 @@ import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-return-statements
-# pylint: disable=import-outside-toplevel
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-many-arguments
 # pylint: disable=unused-argument
 # pylint: disable=superfluous-parens
+# pylint: disable=too-many-locals
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-locals
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-return-statements
+
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
@@ -143,16 +145,13 @@ def main(ctx: click.core.Context) -> None:
     \b
     validate      Validate changes in the previous commit
 
-    \b
-    repl          Start interactive terminal
-
     Recommended workflow: colrev status > colrev OPERATION > colrev validate
 
     Documentation:  https://colrev.readthedocs.io/
     """
 
     try:
-        if ctx.invoked_subcommand == "repl":
+        if ctx.invoked_subcommand == "shell":
             ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
     except colrev.exceptions.RepoSetupError:
         pass
@@ -274,7 +273,6 @@ def init(
     force: bool,
 ) -> None:
     """Initialize (define review objectives and type)"""
-
     import colrev.ops.init
 
     colrev.review_manager.get_init_operation(
@@ -353,7 +351,6 @@ def dashboard(
     verbose: bool,
 ) -> None:
     """Allows to track project progress through dashboard"""
-    # pylint: disable=import-outside-toplevel
     import colrev.ops.dashboard
 
     try:
@@ -450,20 +447,6 @@ def retrieve(
 
 
 @main.command(help_priority=4)
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            installed_only=True,
-        ),
-        case_sensitive=False,
-    ),
-    help="""
-Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
-""",
-)
 @click.option("-v", "--view", is_flag=True, default=False, help="View search sources")
 @click.option(
     "-s",
@@ -510,6 +493,14 @@ Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
     is_flag=True,
     default=False,
     help="Force mode",
+)
+@click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
+""",
 )
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
@@ -712,14 +703,6 @@ def load(
     help="Debug the preparation step for a selected record (in a file).",
 )
 @click.option(
-    "-a",
-    "--add",
-    type=str,
-    help="""
-Format: colrev prep -a colrev.add_journal_ranking
-""",
-)
-@click.option(
     "--skip",
     is_flag=True,
     default=False,
@@ -739,6 +722,19 @@ Format: colrev prep -a colrev.add_journal_ranking
     is_flag=True,
     default=False,
     help="Force mode",
+)
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep,
+            installed_only=True,
+        )
+    ),
+    help="""
+Format: colrev prep -a colrev.add_journal_ranking
+""",
 )
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
@@ -913,6 +909,20 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+            installed_only=True,
+        ),
+        case_sensitive=False,
+    ),
+    help="""
+Format: colrev dedupe -a colrev.active_learning_training
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def dedupe(
@@ -924,6 +934,7 @@ def dedupe(
     view: bool,
     verbose: bool,
     force: bool,
+    add: str,
 ) -> None:
     """Deduplicate records"""
 
@@ -934,6 +945,15 @@ def dedupe(
     dedupe_operation = review_manager.get_dedupe_operation(
         notify_state_transition_operation=state_transition_operation
     )
+
+    if add:
+        import colrev.ui_cli.add_packages
+
+        colrev.ui_cli.add_packages.add_endpoint_for_operation(
+            operation=dedupe_operation,
+            query=add,
+        )
+        return
 
     if merge:
         review_manager.settings.dedupe.same_source_merges = (
@@ -1078,6 +1098,8 @@ def prescreen(
 ) -> None:
     """Pre-screen exclusion based on metadata (titles and abstracts)"""
 
+    # pylint: disable=too-many-locals
+
     import colrev.ui_cli.add_packages
 
     review_manager = get_review_manager(
@@ -1189,6 +1211,14 @@ def prescreen(
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def screen(
@@ -1202,6 +1232,7 @@ def screen(
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
+    add: str,
 ) -> None:
     """Screen based on PDFs and inclusion/exclusion criteria"""
 
@@ -1209,6 +1240,15 @@ def screen(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     screen_operation = review_manager.get_screen_operation()
+
+    if add:
+        import colrev.ui_cli.add_packages
+
+        colrev.ui_cli.add_packages.add_endpoint_for_operation(
+            operation=screen_operation,
+            query=add,
+        )
+        return
 
     if include_all or include_all_always:
         screen_operation.include_all_in_screen(persist=include_all_always)
@@ -1615,6 +1655,19 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            installed_only=True,
+        )
+    ),
+    help="""
+Format: colrev pdf_prep -a colrev.pdf_check_ocr
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def pdf_prep(
@@ -1626,20 +1679,32 @@ def pdf_prep(
     tei: bool,
     verbose: bool,
     force: bool,
+    add: str,
 ) -> None:
     """Prepare PDFs"""
 
-    try:
-        review_manager = get_review_manager(
-            ctx,
-            {
-                "verbose_mode": verbose,
-                "force_mode": force,
-                "exact_call": EXACT_CALL,
-            },
-        )
-        pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
+    # pylint: disable=import-outside-toplevel
 
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
+    pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
+
+    if add:
+        import colrev.ui_cli.add_packages
+
+        colrev.ui_cli.add_packages.add_endpoint_for_operation(
+            operation=pdf_prep_operation,
+            query=add,
+        )
+        return
+
+    try:
         if update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
 
@@ -1733,6 +1798,7 @@ def pdf_prep_man(
     extract: bool,
     apply: bool,
     verbose: bool,
+    add: str,
     force: bool,
 ) -> None:
     """Prepare PDFs manually"""
@@ -2179,6 +2245,8 @@ def env(
     force: bool,
 ) -> None:
     """Manage the environment"""
+
+    # pylint: disable=too-many-branches
 
     review_manager = get_review_manager(
         ctx,

@@ -241,3 +241,50 @@ def add_data(
     data_operation.review_manager.logger.info(
         f"{colors.GREEN}Successfully added {add} data endpoint{colors.END}"
     )
+
+
+def add_endpoint_for_operation(
+    *,
+    operation: colrev.ops.dedupe.Dedupe
+    | colrev.ops.screen.Screen
+    | colrev.ops.pdf_prep.PDFPrep,
+    query: str,
+) -> None:
+    """Add a package_endpoint"""
+
+    # pylint: disable=import-outside-toplevel
+    # pylint: disable=redefined-outer-name
+
+    import colrev.ops.screen
+    import colrev.ops.dedupe
+    import colrev.ops.pdf_prep
+
+    op_type = type(operation)
+    if isinstance(operation, colrev.ops.dedupe.Dedupe):
+        op_name = "dedupe"
+        endpoints = operation.review_manager.settings.dedupe.dedupe_package_endpoints
+    elif isinstance(operation, colrev.ops.pdf_prep.PDFPrep):
+        op_name = "pdf_prep"
+        endpoints = (
+            operation.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
+        )
+    elif isinstance(operation, colrev.ops.screen.Screen):
+        op_name = "screen"
+        endpoints = operation.review_manager.settings.screen.screen_package_endpoints
+    else:
+        print(f"Invalid operation {op_type}")
+        return
+    package_identifier = query
+    try:
+        _ = endpoints.index(query)
+        return
+    except ValueError:
+        pass
+    operation.review_manager.logger.info(
+        f"{colors.GREEN}Add {op_name} package:{colors.END} {package_identifier}"
+    )
+    endpoints.append({"endpoint": package_identifier})
+    operation.review_manager.save_settings()
+    operation.review_manager.create_commit(
+        msg=f"Add {op_name} {package_identifier}",
+    )
