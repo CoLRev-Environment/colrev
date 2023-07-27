@@ -2,6 +2,7 @@
 """SearchSource: EBSCOHost"""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.load_utils_bib
+import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 
@@ -52,9 +54,10 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if data.count("\n@") > 1:
-            if data.count("search.ebscohost.com") >= data.count("\n@"):
-                result["confidence"] = 1.0
+        if data.count("@") >= 1:
+            if "URL = {https://search.ebscohost.com/" in data:
+                if re.match(r"@.*{\d{17}\,\n", data):
+                    result["confidence"] = 1.0
 
         return result
 
@@ -89,6 +92,12 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
 
         if self.search_source.filename.suffix == ".csv":
             csv_loader = colrev.ops.load_utils_table.CSVLoader(

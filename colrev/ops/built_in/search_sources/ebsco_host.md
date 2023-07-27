@@ -6,6 +6,8 @@ Note: This document is currently under development. It will contain the followin
 - coverage (disciplines, types of work)
 - supported (details): run_search (including updates), load,  prep (including get_masterdata)
 
+Export is available after adding citations to a folder ([1](https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager?language=en_US)).
+
 [EBSCOHost](https://search.ebscohost.com/)
 [EBSCOHost APIs](https://developer.ebsco.com/getting-started/available-apis)
 

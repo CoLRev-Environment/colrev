@@ -21,7 +21,6 @@ NO_CUSTOM_SOURCE = None
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, custom_source, expected_file",
     [
-        # https://pypi.org/project/nbib/
         (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
         (
             Path("ais.txt"),
@@ -40,6 +39,12 @@ NO_CUSTOM_SOURCE = None
             "colrev.springer_link",
             NO_CUSTOM_SOURCE,
             Path("springer_result.bib"),
+        ),
+        (
+            Path("ebsco.bib"),
+            "colrev.ebsco_host",
+            NO_CUSTOM_SOURCE,
+            Path("ebsco_result.bib"),
         ),
         (Path("dblp.bib"), "colrev.dblp", NO_CUSTOM_SOURCE, Path("dblp_result.bib")),
         (
