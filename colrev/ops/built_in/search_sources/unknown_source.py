@@ -125,6 +125,9 @@ class UnknownSearchSource(JsonSchemaMixin):
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
+        if not self.search_source.filename.is_file():
+            return {}
+
         data = self.search_source.filename.read_text(encoding="utf-8")
         # # Correct the file extension if necessary
         if re.findall(
