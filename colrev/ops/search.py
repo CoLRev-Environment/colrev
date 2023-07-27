@@ -93,6 +93,7 @@ class Search(colrev.operation.Operation):
     def remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
         """Remove forthcoming papers from a SearchSource"""
 
+    def __format_source_file(self, *, source: colrev.settings.SearchSource) -> None:
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
