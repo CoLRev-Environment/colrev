@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,6 +18,7 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -89,7 +89,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"url": query[4:]}},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
 
@@ -186,7 +185,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #         / record_to_import["file"]
             #     )
 
-            #     pdf_get_operation.import_file(
+            #     pdf_get_operation.import_pdf(
             #         record=colrev.record.Record(data=record_to_import)
             #     )
 
@@ -199,11 +198,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
             try:
                 colrev_project_search_feed.set_id(record_dict=record_to_import)
-                added = colrev_project_search_feed.add_record(
+                colrev_project_search_feed.add_record(
                     record=colrev.record.Record(data=record_to_import),
                 )
-                if added:
-                    colrev_project_search_feed.nr_added += 1
+
             except colrev_exceptions.NotFeedIdentifiableException:
                 print("not identifiable")
                 continue
@@ -231,15 +229,23 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         return result
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for CoLRev projects"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

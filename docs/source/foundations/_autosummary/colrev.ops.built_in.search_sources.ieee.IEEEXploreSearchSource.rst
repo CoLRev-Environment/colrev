@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.heuristic
       ~IEEEXploreSearchSource.json_schema
       ~IEEEXploreSearchSource.load
-      ~IEEEXploreSearchSource.load_fixes
       ~IEEEXploreSearchSource.prepare
       ~IEEEXploreSearchSource.register_field_encoders
       ~IEEEXploreSearchSource.run_search
@@ -42,8 +41,12 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
 
    .. autosummary::
 
+      ~IEEEXploreSearchSource.API_FIELDS
+      ~IEEEXploreSearchSource.FIELD_MAPPING
+      ~IEEEXploreSearchSource.SETTINGS
       ~IEEEXploreSearchSource.api_search_supported
       ~IEEEXploreSearchSource.ci_supported
+      ~IEEEXploreSearchSource.flag
       ~IEEEXploreSearchSource.heuristic_status
       ~IEEEXploreSearchSource.link
       ~IEEEXploreSearchSource.search_type

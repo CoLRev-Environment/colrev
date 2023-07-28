@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
       ~ACMDigitalLibrarySearchSource.get_masterdata
       ~ACMDigitalLibrarySearchSource.heuristic
       ~ACMDigitalLibrarySearchSource.json_schema
-      ~ACMDigitalLibrarySearchSource.load_fixes
+      ~ACMDigitalLibrarySearchSource.load
       ~ACMDigitalLibrarySearchSource.prepare
       ~ACMDigitalLibrarySearchSource.register_field_encoders
       ~ACMDigitalLibrarySearchSource.run_search

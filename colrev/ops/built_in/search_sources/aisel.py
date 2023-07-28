@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-import typing
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,8 +16,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_enl
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -164,7 +165,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": params},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -274,7 +274,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        ais_feed: colrev.ops.search.GeneralOriginFeed,
+        ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -312,17 +312,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
             if added:
                 self.review_manager.logger.info(" retrieve " + prep_record.data["url"])
-                ais_feed.nr_added += 1
             # else:
-            #     changed = search_operation.update_existing_record(
+            #     search_operation.update_existing_record(
             #         records=records,
             #         record_dict=prep_record.data,
             #         prev_record_dict_version=prev_record_dict_version,
             #         source=self.search_source,
             #         update_time_variant_fields=rerun,
             #     )
-            #     if changed:
-            #         ais_feed.nr_changed += 1
 
         ais_feed.print_post_run_search_infos(records=records)
 
@@ -373,15 +370,37 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for AIS electronic Library (AISeL)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        # Correct the file extension if necessary
+        if self.search_source.filename.suffix == ".txt":
+            new_filename = self.search_source.filename.with_suffix(".enl")
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .enl){colors.END}"
+            )
+            self.search_source.filename.rename(new_filename)
+            self.review_manager.dataset.add_changes(
+                path=self.search_source.filename, remove=True
+            )
+            self.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(path=new_filename)
+            self.review_manager.create_commit(
+                msg=f"Rename {self.search_source.filename}"
+            )
+
+        if self.search_source.filename.suffix in [
+            ".enl",
+        ]:
+            records = colrev.ops.load_utils_enl.load(source=self.search_source)
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
+
+        raise NotImplementedError
 
     def __fix_entrytype(self, *, record: colrev.record.Record) -> None:
         # Note : simple heuristic

@@ -17,7 +17,6 @@
             "filename": "data/search/pdfs.bib",
             "search_type": "PDFS",
             "search_parameters": {"scope": {"path": "data/pdfs"}},
-            "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
             "comment": ""
         }
     ],

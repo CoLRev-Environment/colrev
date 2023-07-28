@@ -16,6 +16,7 @@ from watchdog.observers import Observer
 
 import colrev.ops.status
 import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_load
 
 # pylint: disable=too-few-public-methods
 
@@ -181,7 +182,7 @@ class Service:
             search_operation.main(rerun=False)
 
             load_operation = self.review_manager.get_load_operation()
-            new_sources = load_operation.get_new_sources(skip_query=True)
+            new_sources = load_operation.get_most_likely_sources()
             load_operation = self.review_manager.get_load_operation()
             load_operation.main(new_sources=new_sources, keep_ids=False)
 
@@ -202,8 +203,11 @@ class Service:
                 load_operation = self.review_manager.get_load_operation()
                 print()
 
-                new_sources = load_operation.get_new_sources(skip_query=True)
-                load_operation.main(new_sources=new_sources, keep_ids=False)
+                new_sources = load_operation.get_most_likely_sources()
+
+                load_operation.main(
+                    new_sources=new_sources, keep_ids=False, combine_commits=False
+                )
             else:
                 self.service_queue.task_done()
                 return

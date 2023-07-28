@@ -67,7 +67,6 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             search_parameters={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"}
             },
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 
@@ -195,18 +194,16 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 )
 
                 if added:
-                    forward_search_feed.nr_added += 1
+                    pass
                 elif rerun:
                     # Note : only re-index/update
-                    changed = search_operation.update_existing_record(
+                    forward_search_feed.update_existing_record(
                         records=records,
                         record_dict=new_record,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        forward_search_feed.nr_changed += 1
 
         forward_search_feed.save_feed_file()
         forward_search_feed.print_post_run_search_infos(records=records)
@@ -242,15 +239,16 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for forward searches (OpenCitations)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

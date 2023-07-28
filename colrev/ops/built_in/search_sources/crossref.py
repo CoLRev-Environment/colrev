@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 class CrossrefSearchSource(JsonSchemaMixin):
     """SearchSource for the Crossref API"""
 
-    __issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
+    __ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"
 
     # https://github.com/CrossRef/rest-api-doc
     __api_url = "https://api.crossref.org/works?"
@@ -95,7 +95,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     filename=self.__crossref_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -199,7 +198,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
 
-        assert re.match(self.__issn_regex, journal_issn)
+        assert re.match(self.__ISSN_REGEX, journal_issn)
 
         journals = Journals(etiquette=self.etiquette)
         if rerun:
@@ -629,9 +628,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             if "scope" in source.search_parameters:
                 if "journal_issn" in source.search_parameters["scope"]:
                     issn_field = source.search_parameters["scope"]["journal_issn"]
-                    if not re.match(
-                        "[0-9][0-9][0-9][0-9][-]?[0-9][0-9][0-9][X0-9]", issn_field
-                    ):
+                    if not re.match(self.__ISSN_REGEX, issn_field):
                         raise colrev_exceptions.InvalidQueryException(
                             f"Crossref journal issn ({issn_field}) not matching required format"
                         )
@@ -687,7 +684,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         record: colrev.record.Record,
-        feed: colrev.ops.search.GeneralOriginFeed,
+        feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         """Restore the url from the feed if it exists
         (url-resolution is not always available)"""
@@ -702,7 +699,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -736,27 +733,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self.__restore_url(record=retrieved_record, feed=crossref_feed)
             crossref_feed.add_record(record=retrieved_record)
 
-            changed = search_operation.update_existing_record(
+            crossref_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record.data,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
                 update_time_variant_fields=rerun,
             )
-            if changed:
-                crossref_feed.nr_changed += 1
 
-        if crossref_feed.nr_changed > 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {crossref_feed.nr_changed} "
-                f"records based on Crossref{colors.END}"
-            )
-        else:
-            if records:
-                self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date with Crossref{colors.END}"
-                )
-
+        crossref_feed.print_post_run_search_infos(records=records)
         crossref_feed.save_feed_file()
         search_operation.review_manager.dataset.save_records_dict(records=records)
         search_operation.review_manager.dataset.add_record_changes()
@@ -765,7 +750,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        crossref_feed: colrev.ops.search.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -797,17 +782,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     search_operation.review_manager.logger.info(
                         " retrieve " + retrieved_record.data["doi"]
                     )
-                    crossref_feed.nr_added += 1
                 else:
-                    changed = search_operation.update_existing_record(
+                    crossref_feed.update_existing_record(
                         records=records,
                         record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        crossref_feed.nr_changed += 1
 
                 # Note : only retrieve/update the latest deposits (unless in rerun mode)
                 if not added and not rerun:
@@ -897,7 +879,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -912,24 +893,63 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"scope": {"journal_issn": query}},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
-
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add crossref endpoint with query {query}"
+        print("Interactively add Crossref as a SearchSource")
+        print()
+        print("Documentation:")
+        print(
+            "https://github.com/CoLRev-Environment/colrev/blob/"
+            + "main/colrev/ops/built_in/search_sources/crossref.md"
         )
+        print()
+        query_type = ""
+        while query_type not in ["j", "k"]:
+            query_type = input("Create a query based on [k]eywords or [j]ournal?")
+        if query_type == "j":
+            print("Get ISSN from https://portal.issn.org/issn/search")
+            issn = ""
+            while not re.match(cls.__ISSN_REGEX, issn):
+                issn = input("Enter the ISSN of the journal:")
+            filename = search_operation.get_unique_filename(
+                file_path_string=f"crossref_issn_{issn}"
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint="colrev.crossref",
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"scope": {"journal_issn": issn}},
+                comment="",
+            )
+            return add_source
+        # if query_type == "k":
+        keywords = input("Enter the keywords:")
+        keywords = keywords.replace(" ", "+")
+        query = f"https://search.crossref.org/?q={keywords}"
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Crossref"""
+        filename = search_operation.get_unique_filename(
+            file_path_string=f"crossref_{keywords}"
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev.crossref",
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": keywords},
+            comment="",
+        )
+        return add_source
 
-        return records
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

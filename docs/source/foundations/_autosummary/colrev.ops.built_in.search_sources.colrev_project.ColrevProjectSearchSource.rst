@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.get_masterdata
       ~ColrevProjectSearchSource.heuristic
       ~ColrevProjectSearchSource.json_schema
-      ~ColrevProjectSearchSource.load_fixes
+      ~ColrevProjectSearchSource.load
       ~ColrevProjectSearchSource.prepare
       ~ColrevProjectSearchSource.register_field_encoders
       ~ColrevProjectSearchSource.run_search

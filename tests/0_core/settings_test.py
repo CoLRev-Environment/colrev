@@ -36,7 +36,6 @@ def test_settings_load() -> None:
                 "filename": Path("data/search/pdfs.bib"),
                 "search_type": colrev.settings.SearchType.PDFS,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": "",
             }
         ],
@@ -238,7 +237,6 @@ def test_settings_load() -> None:
 #                     "filename",
 #                     "search_type",
 #                     "search_parameters",
-#                     "load_conversion_package_endpoint",
 #                 ],
 #                 "properties": {
 #                     "endpoint": {"type": "string"},
@@ -255,10 +253,6 @@ def test_settings_load() -> None:
 #                         ],
 #                     },
 #                     "search_parameters": {"type": "object", "additionalProperties": {}},
-#                     "load_conversion_package_endpoint": {
-#                         "package_endpoint_type": "load_conversion",
-#                         "type": "package_endpoint",
-#                     },
 #                     "comment": {"type": "string"},
 #                 },
 #                 "description": "Search source settings",

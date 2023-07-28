@@ -19,7 +19,8 @@ colrev.ops.load.Load
       ~Load.check_precondition
       ~Load.conclude
       ~Load.decorate
-      ~Load.get_new_sources
+      ~Load.get_most_likely_sources
+      ~Load.get_new_sources_heuristic_list
       ~Load.import_provenance
       ~Load.main
 
@@ -31,7 +32,5 @@ colrev.ops.load.Load
 
    .. autosummary::
 
-      ~Load.supported_extensions
-      ~Load.load_conversion_packages
       ~Load.force_mode
       ~Load.type

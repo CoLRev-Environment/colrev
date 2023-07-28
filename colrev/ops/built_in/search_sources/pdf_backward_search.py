@@ -81,7 +81,6 @@ class BackwardSearchSource(JsonSchemaMixin):
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
             },
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 
@@ -196,7 +195,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     def __complement_with_open_citations_data(
         self,
         *,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
@@ -239,7 +238,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         self,
         *,
         record: dict,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
         search_operation: colrev.ops.search.Search,
         records: dict,
         rerun: bool,
@@ -282,19 +281,15 @@ class BackwardSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=new_record),
             )
 
-            if added:
-                pdf_backward_search_feed.nr_added += 1
-            elif rerun:
+            if not added and rerun:
                 # Note : only re-index/update
-                changed = search_operation.update_existing_record(
+                pdf_backward_search_feed.update_existing_record(
                     records=records,
                     record_dict=new_record,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    pdf_backward_search_feed.nr_changed += 1
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
@@ -383,15 +378,16 @@ class BackwardSearchSource(JsonSchemaMixin):
             f"Cannot add backward_search endpoint with query {query}"
         )
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for PDF backward searches (GROBID)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def get_masterdata(
         self,

@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.get_masterdata
       ~EuropePMCSearchSource.heuristic
       ~EuropePMCSearchSource.json_schema
-      ~EuropePMCSearchSource.load_fixes
+      ~EuropePMCSearchSource.load
       ~EuropePMCSearchSource.prepare
       ~EuropePMCSearchSource.register_field_encoders
       ~EuropePMCSearchSource.run_search

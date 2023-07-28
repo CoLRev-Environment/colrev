@@ -54,6 +54,114 @@
         "doc",
         "test"
       ]
+    },
+    {
+      "login": "mhlbrsimon",
+      "name": "mhlbrsimon",
+      "avatar_url": "https://avatars.githubusercontent.com/u/83401831?v=4",
+      "profile": "https://github.com/mhlbrsimon",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ossendorfluca",
+      "name": "ossendorfluca",
+      "avatar_url": "https://avatars.githubusercontent.com/u/112037612?v=4",
+      "profile": "https://github.com/ossendorfluca",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "katharinaernst",
+      "name": "katharinaernst",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131549085?v=4",
+      "profile": "https://github.com/katharinaernst",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "einfachjessi",
+      "name": "einfachjessi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131001755?v=4",
+      "profile": "https://github.com/einfachjessi",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Janus678",
+      "name": "Janus678",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131582517?v=4",
+      "profile": "https://github.com/Janus678",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "frxdericz",
+      "name": "frxdericz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131789939?v=4",
+      "profile": "https://github.com/frxdericz",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "MalouSchmidt",
+      "name": "MalouSchmidt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131263679?v=4",
+      "profile": "https://github.com/MalouSchmidt",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "RheaDoesStuff",
+      "name": "RheaDoesStuff",
+      "avatar_url": "https://avatars.githubusercontent.com/u/74066245?v=4",
+      "profile": "https://github.com/RheaDoesStuff",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Cohen2000",
+      "name": "Cohen2000",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113113352?v=4",
+      "profile": "https://github.com/Cohen2000",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "RobertAhr",
+      "name": "RobertAhr",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131687952?v=4",
+      "profile": "https://github.com/RobertAhr",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ThomasFleischmann",
+      "name": "ThomasFleischmann",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131684139?v=4",
+      "profile": "https://github.com/ThomasFleischmann",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "AntonFrisch",
+      "name": "AntonFrisch",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131719653?v=4",
+      "profile": "https://github.com/AntonFrisch",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -61,5 +169,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "colrev",
-  "projectOwner": "CoLRev-Environment"
+  "projectOwner": "CoLRev-Environment",
+  "commitType": "docs"
 }

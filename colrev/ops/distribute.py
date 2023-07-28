@@ -96,7 +96,6 @@ class Distribute(colrev.operation.Operation):
                         filename=Path("search") / target_bib_file.name,
                         search_type=colrev.settings.SearchType.OTHER,
                         search_parameters={},
-                        load_conversion_package_endpoint={},
                         comment="",
                     )
 

@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
       ~LocalIndexSearchSource.get_masterdata
       ~LocalIndexSearchSource.heuristic
       ~LocalIndexSearchSource.json_schema
-      ~LocalIndexSearchSource.load_fixes
+      ~LocalIndexSearchSource.load
       ~LocalIndexSearchSource.prepare
       ~LocalIndexSearchSource.register_field_encoders
       ~LocalIndexSearchSource.run_search

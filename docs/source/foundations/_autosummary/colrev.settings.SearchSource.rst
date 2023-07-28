@@ -45,5 +45,4 @@ colrev.settings.SearchSource
       ~SearchSource.filename
       ~SearchSource.search_type
       ~SearchSource.search_parameters
-      ~SearchSource.load_conversion_package_endpoint
       ~SearchSource.comment

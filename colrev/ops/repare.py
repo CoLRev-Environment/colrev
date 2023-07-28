@@ -55,7 +55,7 @@ class Repare(colrev.operation.Operation):
                     source="local_index",
                     append_edit=False,
                 )
-                self.pdf_get_operation.import_file(record=record)
+                self.pdf_get_operation.import_pdf(record=record)
                 if "fulltext" in retrieved_record:
                     del retrieved_record["fulltext"]
                 self.review_manager.logger.info(

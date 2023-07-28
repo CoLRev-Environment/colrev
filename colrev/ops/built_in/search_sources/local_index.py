@@ -18,6 +18,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -89,7 +90,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     filename=self.__local_index_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -165,7 +165,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -195,17 +195,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
 
-            changed = search_operation.update_existing_record(
+            local_index_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record_dict,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
                 update_time_variant_fields=True,
             )
-            # Note : changed refers to the data/records.bib.
-            # Records that are not yet imported do not count.
-            if changed:
-                local_index_feed.nr_changed += 1
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
@@ -216,7 +212,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
@@ -237,18 +233,18 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
             if added:
-                local_index_feed.nr_added += 1
+                self.review_manager.logger.info(
+                    " retrieve " + retrieved_record_dict["ID"]
+                )
 
             else:
-                changed = search_operation.update_existing_record(
+                local_index_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record_dict,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    local_index_feed.nr_changed += 1
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
@@ -301,20 +297,27 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             filename=filename,
             search_type=colrev.settings.SearchType.DB,
             search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
         return add_source
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for local-index"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

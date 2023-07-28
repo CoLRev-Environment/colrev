@@ -151,8 +151,8 @@
             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for ERIC (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_)",
-            "ci_supported": false
+            "short_description": "SearchSource for the ERIC API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_)",
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
@@ -176,7 +176,7 @@
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "SearchSource for IEEEXplore (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.md>`_)",
-            "ci_supported": false
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.jstor",
@@ -271,7 +271,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for SYNERGY-datasets (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/systematic_review_datasets.md>`_)",
+            "short_description": "SearchSource for SYNERGY-datasets (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/synergy_datasets.md>`_)",
             "ci_supported": false
         },
         {
@@ -323,65 +323,15 @@
             "ci_supported": false
         }
     ],
-    "load_conversion": [
-        {
-            "package_endpoint_identifier": "colrev.bibtex",
-            "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads BibTeX files (based on pybtex) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/bib_pybtex_loader.md>`_)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.bibutils",
-            "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads bibliography files (based on bibutils) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/bibutils_loader.md>`_)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.csv",
-            "endpoint": "colrev.ops.built_in.load_conversion.table_loader.CSVLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads csv files (based on pandas) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.md>`_)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.excel",
-            "endpoint": "colrev.ops.built_in.load_conversion.table_loader.ExcelLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads Excel (xls, xlsx) files (based on pandas) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/table_loader.md>`_)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.md_to_bib",
-            "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads reference strings from text (md) files (based on GROBID) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/markdown_loader.md>`_)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.rispy",
-            "endpoint": "colrev.ops.built_in.load_conversion.ris_rispy_loader.RisRispyLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads BibTeX files (based on rispy) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/ris_rispy_loader.md>`_)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.zotero_translate",
-            "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Loads bibliography files (based on Zotero). (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/load_conversion/zotero_loader.md>`_)",
-            "ci_supported": false
-        }
-    ],
     "prep": [
+        {
+            "package_endpoint_identifier": "colrev.add_journal_ranking",
+            "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Class for add _journal_ranking (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/add_journal_ranking.md>`_)",
+            "ci_supported": false
+        },
         {
             "package_endpoint_identifier": "colrev.curation_prep",
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
@@ -521,8 +471,8 @@
         {
             "package_endpoint_identifier": "colrev.open_alex_prep",
             "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep",
-            "status": "RED",
-            "status_linked": "RED",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on OpenAlex metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/open_alex_metadata_prep.md>`_)",
             "ci_supported": true
         },
@@ -659,14 +609,6 @@
             "status_linked": "|MATURING|",
             "short_description": "Rule-based prescreen (scope) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.md>`_)",
             "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
-            "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev-asreview>`_)",
-            "ci_supported": false
         }
     ],
     "pdf_get": [

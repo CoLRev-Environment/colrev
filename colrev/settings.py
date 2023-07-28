@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 
 if TYPE_CHECKING:
     import colrev.review_manager
+    import colrev.ops.search_feed
 
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -164,7 +165,6 @@ class SearchSource(JsonSchemaMixin):
     filename: Path
     search_type: SearchType
     search_parameters: dict
-    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
     def get_corresponding_bib_file(self) -> Path:
@@ -175,7 +175,7 @@ class SearchSource(JsonSchemaMixin):
     def setup_for_load(
         self,
         *,
-        record_list: typing.List[typing.Dict],
+        source_records_list: typing.List[typing.Dict],
         imported_origins: typing.List[str],
     ) -> None:
         """Set the SearchSource up for the load process (initialize statistics)"""
@@ -184,10 +184,10 @@ class SearchSource(JsonSchemaMixin):
         # attributes are temporary. They should not be
         # saved to settings.json.
 
-        self.to_import = len(record_list)
+        self.to_import = len(source_records_list)
         self.imported_origins: typing.List[str] = imported_origins
         self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = record_list
+        self.source_records_list: typing.List[typing.Dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
@@ -227,13 +227,13 @@ class SearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
-    ) -> colrev.ops.search.GeneralOriginFeed:
+    ) -> colrev.ops.search_feed.GeneralOriginFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        import colrev.ops.search
+        import colrev.ops.search_feed
 
-        return colrev.ops.search.GeneralOriginFeed(
+        return colrev.ops.search_feed.GeneralOriginFeed(
             review_manager=review_manager,
             search_source=self,
             source_identifier=source_identifier,
@@ -248,8 +248,6 @@ class SearchSource(JsonSchemaMixin):
             f"{self.endpoint} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
             + f"   search parameters:   {self.search_parameters}"
-            # + "   load_conversion_package_endpoint:   "
-            # + f"{self.load_conversion_package_endpoint['endpoint']}"
             + optional_comment
         )
 
@@ -582,10 +580,6 @@ class Settings(JsonSchemaMixin):
             schema = cls.json_schema()
 
         sdefs = schema["definitions"]
-        sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
-            "package_endpoint_type": "load_conversion",
-            "type": "package_endpoint",
-        }
 
         # pylint: disable=unused-variable
         sdefs["PrepRound"]["properties"]["prep_package_endpoints"] = {  # type: ignore # noqa: F841

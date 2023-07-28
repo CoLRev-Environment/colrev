@@ -23,10 +23,10 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.decorate
       ~PDFGet.get_pdf
       ~PDFGet.get_target_filepath
-      ~PDFGet.import_file
+      ~PDFGet.import_pdf
       ~PDFGet.link_pdf
       ~PDFGet.main
-      ~PDFGet.relink_files
+      ~PDFGet.relink_pdfs
       ~PDFGet.rename_pdfs
       ~PDFGet.setup_custom_script
 

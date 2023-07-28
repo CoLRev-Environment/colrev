@@ -3,29 +3,6 @@
     "license": "MIT",
     "colrev_version": ">=0.6.0",
     "endpoints": {
-        "load_conversion": [
-            {"package_endpoint_identifier": "colrev.rispy",
-              "endpoint": "colrev.ops.built_in.load_conversion.ris_rispy_loader.RisRispyLoader"
-            },
-            {"package_endpoint_identifier": "colrev.bibtex",
-             "endpoint": "colrev.ops.built_in.load_conversion.bib_pybtex_loader.BibPybtexLoader"
-            },
-            {"package_endpoint_identifier": "colrev.csv",
-             "endpoint": "colrev.ops.built_in.load_conversion.table_loader.CSVLoader"
-            },
-            {"package_endpoint_identifier": "colrev.excel",
-             "endpoint": "colrev.ops.built_in.load_conversion.table_loader.ExcelLoader"
-            },
-            {"package_endpoint_identifier": "colrev.zotero_translate",
-             "endpoint": "colrev.ops.built_in.load_conversion.zotero_loader.ZoteroTranslationLoader"
-            },
-            {"package_endpoint_identifier": "colrev.md_to_bib",
-             "endpoint": "colrev.ops.built_in.load_conversion.markdown_loader.MarkdownLoader"
-            },
-            {"package_endpoint_identifier": "colrev.bibutils",
-             "endpoint": "colrev.ops.built_in.load_conversion.bibutils_loader.BibutilsLoader"
-            }
-        ],
         "prep": [
             {"package_endpoint_identifier": "colrev.open_alex_prep",
              "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep"
@@ -95,7 +72,10 @@
             },
             {"package_endpoint_identifier": "colrev.curation_prep",
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep"
-           }
+            },
+            {"package_endpoint_identifier": "colrev.add_journal_ranking",
+            "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking"
+            }
 
         ],
         "prep_man": [

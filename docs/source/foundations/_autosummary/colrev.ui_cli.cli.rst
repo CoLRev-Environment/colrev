@@ -16,6 +16,8 @@ colrev.ui\_cli.cli
       :nosignatures:
 
       catch_exception
+      get_review_manager
+      get_search_files
 
 
 

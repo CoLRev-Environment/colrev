@@ -2,7 +2,7 @@
 """SearchSource: EBSCOHost"""
 from __future__ import annotations
 
-import typing
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +11,8 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.ops.load_utils_bib
+import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 
@@ -52,9 +54,10 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if data.count("\n@") > 1:
-            if data.count("search.ebscohost.com") >= data.count("\n@"):
-                result["confidence"] = 1.0
+        if data.count("@") >= 1:
+            if "URL = {https://search.ebscohost.com/" in data:
+                if re.match(r"@.*{\d{17}\,\n", data):
+                    result["confidence"] = 1.0
 
         return result
 
@@ -87,15 +90,27 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for EBSCOHost"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation, settings=self.search_source
+            )
+            records = csv_loader.load()
+            load_operation.review_manager.dataset.save_records_dict_to_file(
+                records=records,
+                save_path=self.search_source.get_corresponding_bib_file(),
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

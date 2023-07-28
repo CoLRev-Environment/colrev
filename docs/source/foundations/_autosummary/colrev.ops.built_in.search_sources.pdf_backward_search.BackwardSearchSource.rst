@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
       ~BackwardSearchSource.get_masterdata
       ~BackwardSearchSource.heuristic
       ~BackwardSearchSource.json_schema
-      ~BackwardSearchSource.load_fixes
+      ~BackwardSearchSource.load
       ~BackwardSearchSource.prepare
       ~BackwardSearchSource.register_field_encoders
       ~BackwardSearchSource.run_search

@@ -5,7 +5,6 @@ from __future__ import annotations
 import html
 import json
 import re
-import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
@@ -20,6 +19,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -62,7 +62,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         filename: Path
         search_type: colrev.settings.SearchType
         search_parameters: dict
-        load_conversion_package_endpoint: dict
         comment: Optional[str]
 
         _details = {
@@ -100,7 +99,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                     filename=self.__dblp_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
         self.dblp_lock = Lock()
@@ -214,6 +212,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         session: requests.Session,
         item: dict,
     ) -> dict:
+        # pylint: disable=too-many-branches
         # To test in browser:
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -369,7 +368,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
         records = search_operation.review_manager.dataset.load_records_dict()
 
@@ -394,15 +393,13 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]
 
                 dblp_feed.add_record(record=retrieved_record)
-                changed = search_operation.update_existing_record(
+                dblp_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record.data,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=True,
                 )
-                if changed:
-                    dblp_feed.nr_changed += 1
 
         dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
@@ -414,7 +411,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         *,
         query: str,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
         rerun: bool,
     ) -> None:
@@ -462,18 +459,14 @@ class DBLPSearchSource(JsonSchemaMixin):
                     self.review_manager.logger.info(
                         " retrieve " + retrieved_record.data["dblp_key"]
                     )
-                    dblp_feed.nr_added += 1
-
                 else:
-                    changed = search_operation.update_existing_record(
+                    dblp_feed.update_existing_record(
                         records=records,
                         record_dict=retrieved_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        dblp_feed.nr_changed += 1
 
             if not retrieved:
                 break
@@ -500,7 +493,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        dblp_feed: colrev.ops.search.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
@@ -590,7 +583,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
@@ -599,15 +591,16 @@ class DBLPSearchSource(JsonSchemaMixin):
             f"Cannot add backward_search endpoint with query {query}"
         )
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for DBLP"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
@@ -662,48 +655,50 @@ class DBLPSearchSource(JsonSchemaMixin):
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=same_record_type_required,
                 )
-                if similarity > prep_operation.retrieval_similarity:
-                    try:
-                        self.dblp_lock.acquire(timeout=60)
+                if similarity < prep_operation.retrieval_similarity:
+                    continue
 
-                        # Note : need to reload file
-                        # because the object is not shared between processes
-                        dblp_feed = self.search_source.get_feed(
-                            review_manager=prep_operation.review_manager,
-                            source_identifier=self.source_identifier,
-                            update_only=False,
-                        )
+                try:
+                    self.dblp_lock.acquire(timeout=60)
 
-                        dblp_feed.set_id(record_dict=retrieved_record.data)
-                        dblp_feed.add_record(record=retrieved_record)
+                    # Note : need to reload file
+                    # because the object is not shared between processes
+                    dblp_feed = self.search_source.get_feed(
+                        review_manager=prep_operation.review_manager,
+                        source_identifier=self.source_identifier,
+                        update_only=False,
+                    )
 
-                        record.merge(
-                            merging_record=retrieved_record,
-                            default_source=retrieved_record.data["colrev_origin"][0],
-                        )
-                        record.set_masterdata_complete(
-                            source=retrieved_record.data["colrev_origin"][0],
-                            masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                        )
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_prepared
-                        )
-                        if "Withdrawn (according to DBLP)" in record.data.get(
-                            "warning", ""
-                        ):
-                            record.prescreen_exclude(reason="retracted")
-                            record.remove_field(key="warning")
+                    dblp_feed.set_id(record_dict=retrieved_record.data)
+                    dblp_feed.add_record(record=retrieved_record)
 
-                        dblp_feed.save_feed_file()
-                        self.dblp_lock.release()
-                        return record
-
-                    except (
-                        colrev_exceptions.InvalidMerge,
-                        colrev_exceptions.NotFeedIdentifiableException,
+                    record.merge(
+                        merging_record=retrieved_record,
+                        default_source=retrieved_record.data["colrev_origin"][0],
+                    )
+                    record.set_masterdata_complete(
+                        source=retrieved_record.data["colrev_origin"][0],
+                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                    )
+                    record.set_status(
+                        target_state=colrev.record.RecordState.md_prepared
+                    )
+                    if "Withdrawn (according to DBLP)" in record.data.get(
+                        "warning", ""
                     ):
-                        self.dblp_lock.release()
-                        continue
+                        record.prescreen_exclude(reason="retracted")
+                        record.remove_field(key="warning")
+
+                    dblp_feed.save_feed_file()
+                    self.dblp_lock.release()
+                    return record
+
+                except (
+                    colrev_exceptions.InvalidMerge,
+                    colrev_exceptions.NotFeedIdentifiableException,
+                ):
+                    self.dblp_lock.release()
+                    continue
 
         except requests.exceptions.RequestException:
             pass

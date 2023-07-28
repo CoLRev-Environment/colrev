@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.get_masterdata
       ~GoogleScholarSearchSource.heuristic
       ~GoogleScholarSearchSource.json_schema
-      ~GoogleScholarSearchSource.load_fixes
+      ~GoogleScholarSearchSource.load
       ~GoogleScholarSearchSource.prepare
       ~GoogleScholarSearchSource.register_field_encoders
       ~GoogleScholarSearchSource.run_search

@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
       ~EbscoHostSearchSource.get_masterdata
       ~EbscoHostSearchSource.heuristic
       ~EbscoHostSearchSource.json_schema
-      ~EbscoHostSearchSource.load_fixes
+      ~EbscoHostSearchSource.load
       ~EbscoHostSearchSource.prepare
       ~EbscoHostSearchSource.register_field_encoders
       ~EbscoHostSearchSource.run_search

@@ -35,6 +35,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_grobid_service
       ~ReviewManager.get_load_operation
       ~ReviewManager.get_local_index
+      ~ReviewManager.get_loggers_by_debug_mode
       ~ReviewManager.get_merge_operation
       ~ReviewManager.get_package_manager
       ~ReviewManager.get_pdf_get_man_operation
@@ -72,6 +73,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.reset_report_logger
       ~ReviewManager.save_settings
       ~ReviewManager.sharing
+      ~ReviewManager.update_config
       ~ReviewManager.update_status_yaml
 
 
@@ -102,5 +104,3 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.verbose_mode
       ~ReviewManager.debug_mode
       ~ReviewManager.high_level_operation
-      ~ReviewManager.report_logger
-      ~ReviewManager.logger

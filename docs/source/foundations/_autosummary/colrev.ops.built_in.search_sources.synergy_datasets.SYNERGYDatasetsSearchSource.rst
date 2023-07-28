@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
       ~SYNERGYDatasetsSearchSource.get_masterdata
       ~SYNERGYDatasetsSearchSource.heuristic
       ~SYNERGYDatasetsSearchSource.json_schema
-      ~SYNERGYDatasetsSearchSource.load_fixes
+      ~SYNERGYDatasetsSearchSource.load
       ~SYNERGYDatasetsSearchSource.prepare
       ~SYNERGYDatasetsSearchSource.register_field_encoders
       ~SYNERGYDatasetsSearchSource.run_search

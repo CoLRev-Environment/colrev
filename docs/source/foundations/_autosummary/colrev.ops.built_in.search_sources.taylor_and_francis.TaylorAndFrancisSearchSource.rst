@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
       ~TaylorAndFrancisSearchSource.get_masterdata
       ~TaylorAndFrancisSearchSource.heuristic
       ~TaylorAndFrancisSearchSource.json_schema
-      ~TaylorAndFrancisSearchSource.load_fixes
+      ~TaylorAndFrancisSearchSource.load
       ~TaylorAndFrancisSearchSource.prepare
       ~TaylorAndFrancisSearchSource.register_field_encoders
       ~TaylorAndFrancisSearchSource.run_search

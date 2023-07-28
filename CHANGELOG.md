@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.9.2 - 2023-07-24
+
+### Changed
+
+- Updated colrev-asreview dependency (PyPI instead of GitHub)
+
+## 0.9.1 - 2023-07-23
+
+### Changed
+
+- Integrated `load` into `SearchSource`. Removed `load_conversion` endpoint: `settings.json`, `packages`, `interface` etc.
+
 ## 0.9.0 - 2023-06-01
 
 ### Added

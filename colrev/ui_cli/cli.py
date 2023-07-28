@@ -15,12 +15,15 @@ from pathlib import Path
 
 import click
 import click_completion.core
+import click_repl
 import pandas as pd
 
+import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_load
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
@@ -31,10 +34,18 @@ import colrev.ui_cli.dedupe_errors
 # pylint: disable=too-many-arguments
 # pylint: disable=unused-argument
 # pylint: disable=superfluous-parens
+# pylint: disable=too-many-locals
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-locals
+# pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-return-statements
+
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
+
+package_manager = colrev.env.package_manager.PackageManager()
 
 
 def __custom_startswith(string: str, incomplete: str) -> bool:
@@ -47,6 +58,17 @@ def __custom_startswith(string: str, incomplete: str) -> bool:
 
 click_completion.core.startswith = __custom_startswith
 click_completion.init()
+
+
+def get_search_files() -> list:
+    """Get the search files (for click choices)"""
+    # Take the filenames from sources because there may be API searches
+    # without files (yet)
+    try:
+        review_manager = colrev.review_manager.ReviewManager()
+        return [str(x.filename) for x in review_manager.settings.sources]
+    except Exception:  # pylint: disable=broad-exception-caught
+        return []
 
 
 class SpecialHelpOrder(click.Group):
@@ -128,6 +150,76 @@ def main(ctx: click.core.Context) -> None:
     Documentation:  https://colrev.readthedocs.io/
     """
 
+    try:
+        if ctx.invoked_subcommand == "shell":
+            ctx.obj = {"review_manager": colrev.review_manager.ReviewManager()}
+    except colrev.exceptions.RepoSetupError:
+        pass
+
+
+def get_review_manager(
+    ctx: click.core.Context, review_manager_params: dict
+) -> colrev.review_manager.ReviewManager:
+    """Get review_manager instance. If it's available in ctx object, reuse that
+    if not creates a new one, Once created will update the review_manager with
+    the given parameters. If params requires review_manager to be reloaded, will
+    reload it
+    """
+
+    review_manager_params["exact_call"] = ctx.command_path
+    try:
+        review_manager = ctx.obj["review_manager"]
+        if (
+            "navigate_to_home_dir" in review_manager_params
+            or "path_str" in review_manager_params
+            or "skip_upgrade" in review_manager_params
+        ):
+            print("init review manager object ...")
+            review_manager = colrev.review_manager.ReviewManager(
+                **review_manager_params
+            )
+            ctx.obj["review_manager"] = review_manager
+        else:
+            review_manager.update_config(**review_manager_params)
+        return review_manager
+    except (TypeError, KeyError):
+        review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
+        ctx.obj = {"review_manager": review_manager}
+        return review_manager
+
+
+@main.command(help_priority=100)
+@click.pass_context
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
+def shell(
+    ctx: click.core.Context,
+) -> None:
+    """Starts a interactive terminal"""
+    from prompt_toolkit.history import FileHistory
+
+    print(f"CoLRev version {colrev.__version__}")
+    print("Workflow: status > OPERATION > validate")
+    print("https://colrev.readthedocs.io/en/latest/")
+    print("Type exit to close the shell")
+    print()
+    prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
+    click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
+
+
+@main.command(help_priority=100)
+@click.pass_context
+@catch_exception(handle=(colrev_exceptions.CoLRevException))
+def exit(
+    ctx: click.core.Context,
+) -> None:
+    """Starts a interactive terminal"""
+    import inspect
+
+    curframe = inspect.currentframe()
+    calframe = inspect.getouterframes(curframe, 2)
+    if calframe[7].function == "shell":
+        raise click_repl.exceptions.ExitReplException
+
 
 @main.command(help_priority=1)
 @click.option(
@@ -181,7 +273,6 @@ def init(
     force: bool,
 ) -> None:
     """Initialize (define review objectives and type)"""
-    # pylint: disable=import-outside-toplevel
     import colrev.ops.init
 
     colrev.review_manager.get_init_operation(
@@ -224,10 +315,10 @@ def status(
     force: bool,
 ) -> None:
     """Show status"""
-
     try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+        review_manager = get_review_manager(
+            ctx,
+            {"force_mode": force, "verbose_mode": verbose, "exact_call": EXACT_CALL},
         )
         status_operation = review_manager.get_status_operation()
 
@@ -242,6 +333,33 @@ def status(
     except KeyboardInterrupt:
         print("Stopped...")
     except colrev_exceptions.RepoSetupError as exc:
+        print(exc)
+
+
+# add dashboard operation
+@main.command(help_priority=100)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Verbose: printing more infos",
+)
+@click.pass_context
+def dashboard(
+    ctx: click.core.Context,
+    verbose: bool,
+) -> None:
+    """Allows to track project progress through dashboard"""
+    import colrev.ops.dashboard
+
+    try:
+        colrev.ops.dashboard.main()
+    except colrev_exceptions.NoRecordsError:
+        print("No records imported yet.")
+    except colrev_exceptions.CoLRevException as exc:
+        if verbose:
+            raise exc
         print(exc)
 
 
@@ -278,8 +396,9 @@ def retrieve(
     https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
     """
 
-    review_manager = colrev.review_manager.ReviewManager(
-        verbose_mode=verbose, force_mode=force, high_level_operation=True
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force, "high_level_operation": True},
     )
 
     if not any(review_manager.search_dir.iterdir()) and not any(
@@ -311,7 +430,7 @@ def retrieve(
 
     review_manager.exact_call = "colrev prep"
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
+    new_sources = load_operation.get_most_likely_sources()
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
     load_operation.main(new_sources=new_sources, keep_ids=False)
 
@@ -328,19 +447,11 @@ def retrieve(
 
 
 @main.command(help_priority=4)
-@click.option(
-    "-a",
-    "--add",
-    type=str,
-    help="""
-Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
-""",
-)
 @click.option("-v", "--view", is_flag=True, default=False, help="View search sources")
 @click.option(
     "-s",
     "--selected",
-    type=str,
+    type=click.Choice(get_search_files()),
     help="Only retrieve search results for selected sources",
 )
 @click.option(
@@ -383,6 +494,14 @@ Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def search(
@@ -398,12 +517,12 @@ def search(
 ) -> None:
     """Search for records"""
 
-    # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
+
     search_operation = review_manager.get_search_operation()
 
     if add:
@@ -413,10 +532,15 @@ def search(
         )
 
     elif view:
-        search_operation.view_sources()
+        for source in search_operation.sources:
+            search_operation.review_manager.p_printer.pprint(source)
 
     elif setup_custom_script:
-        search_operation.setup_custom_script()
+        import colrev.ui_cli.setup_custom_scripts
+
+        colrev.ui_cli.setup_custom_scripts.setup_custom_search_script(
+            review_manager=review_manager
+        )
         print("Activated custom_search_script.py.")
         print("Please update the source in settings.json and commit.")
     elif bws:
@@ -478,23 +602,27 @@ def load(
 ) -> None:
     """Load records"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=skip_query)
+
+    heuristic_list = load_operation.get_new_sources_heuristic_list()
+    new_sources = colrev.ui_cli.cli_load.select_new_source(
+        heuristic_result_list=heuristic_list
+    )
+
+    # Note : reinitialize to load new scripts:
+    load_operation = review_manager.get_load_operation(hide_load_explanation=True)
+
+    load_operation.main(new_sources=new_sources, keep_ids=keep_ids)
+
     if include:
         print()
         review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
             f"{colors.GREEN}Automatically include records from "
             f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
         )
-    # Note : reinitialize to load new scripts:
-    load_operation = review_manager.get_load_operation(hide_load_explanation=True)
-
-    load_operation.main(new_sources=new_sources, keep_ids=keep_ids, include=include)
-
-    if include:
         print()
         prep_operation = review_manager.get_prep_operation()
         prep_operation.main()
@@ -595,6 +723,19 @@ def load(
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep,
+            installed_only=True,
+        )
+    ),
+    help="""
+Format: colrev prep -a colrev.add_journal_ranking
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def prep(
@@ -608,17 +749,19 @@ def prep(
     debug_file: Path,
     cpu: int,
     setup_custom_script: bool,
+    add: str,
     skip: bool,
     verbose: bool,
     force: bool,
 ) -> None:
     """Prepare records"""
 
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
+    import colrev.ui_cli.add_packages
+
     try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+        review_manager = get_review_manager(
+            ctx,
+            {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL},
         )
         prep_operation = review_manager.get_prep_operation()
 
@@ -645,6 +788,12 @@ def prep(
             print("Activated custom_prep_script.py.")
             print(
                 "Please check and adapt its position in the settings.json and commit."
+            )
+            return
+        if add:
+            colrev.ui_cli.add_packages.add_prep(
+                prep_operation=prep_operation,
+                query=add,
             )
             return
         if skip:
@@ -694,8 +843,8 @@ def prep_man(
 ) -> None:
     """Prepare records manually"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     prep_man_operation = review_manager.get_prep_man_operation()
     if languages:
@@ -760,6 +909,20 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+            installed_only=True,
+        ),
+        case_sensitive=False,
+    ),
+    help="""
+Format: colrev dedupe -a colrev.active_learning_training
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def dedupe(
@@ -771,16 +934,26 @@ def dedupe(
     view: bool,
     verbose: bool,
     force: bool,
+    add: str,
 ) -> None:
     """Deduplicate records"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     state_transition_operation = not view
     dedupe_operation = review_manager.get_dedupe_operation(
         notify_state_transition_operation=state_transition_operation
     )
+
+    if add:
+        import colrev.ui_cli.add_packages
+
+        colrev.ui_cli.add_packages.add_endpoint_for_operation(
+            operation=dedupe_operation,
+            query=add,
+        )
+        return
 
     if merge:
         review_manager.settings.dedupe.same_source_merges = (
@@ -926,8 +1099,11 @@ def prescreen(
     """Pre-screen exclusion based on metadata (titles and abstracts)"""
 
     # pylint: disable=too-many-locals
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+
+    import colrev.ui_cli.add_packages
+
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     prescreen_operation = review_manager.get_prescreen_operation()
 
@@ -955,7 +1131,10 @@ def prescreen(
         prescreen_operation.setup_custom_script()
         print("Activated custom_prescreen_script.py.")
     elif add:
-        prescreen_operation.add(add=add)
+        colrev.ui_cli.add_packages.add_prescreen(
+            prescreen_operation=prescreen_operation,
+            add=add,
+        )
     else:
         review_manager.logger.info("Prescreen")
         review_manager.logger.info(
@@ -1032,6 +1211,14 @@ def prescreen(
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=str,
+    help="""
+Format: colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def screen(
@@ -1045,13 +1232,23 @@ def screen(
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
+    add: str,
 ) -> None:
     """Screen based on PDFs and inclusion/exclusion criteria"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
     )
     screen_operation = review_manager.get_screen_operation()
+
+    if add:
+        import colrev.ui_cli.add_packages
+
+        colrev.ui_cli.add_packages.add_endpoint_for_operation(
+            operation=screen_operation,
+            query=add,
+        )
+        return
 
     if include_all or include_all_always:
         screen_operation.include_all_in_screen(persist=include_all_always)
@@ -1154,15 +1351,17 @@ def pdfs(
 ) -> None:
     """Retrieve and prepare PDFs"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force,
-        verbose_mode=verbose,
-        high_level_operation=True,
-        exact_call=EXACT_CALL,
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+            "high_level_operation": True,
+        },
     )
 
     if dir:
-        # pylint: disable=import-outside-toplevel
         # pylint: disable=consider-using-with
         # pylint: disable=no-member
 
@@ -1212,7 +1411,7 @@ def pdfs(
     help="Rename the PDF files according to record IDs",
 )
 @click.option(
-    "--relink_files",
+    "--relink_pdfs",
     is_flag=True,
     default=False,
     help="Recreate links to PDFs based on colrev pdf-IDs (when PDFs were renamed)",
@@ -1244,24 +1443,29 @@ def pdf_get(
     ctx: click.core.Context,
     copy_to_repo: bool,
     rename: bool,
-    relink_files: bool,
+    relink_pdfs: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
 ) -> None:
     """Get PDFs"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
     )
 
-    state_transition_operation = not relink_files and not setup_custom_script
+    state_transition_operation = not relink_pdfs and not setup_custom_script
     pdf_get_operation = review_manager.get_pdf_get_operation(
         notify_state_transition_operation=state_transition_operation
     )
 
-    if relink_files:
-        pdf_get_operation.relink_files()
+    if relink_pdfs:
+        pdf_get_operation.relink_pdfs()
         return
     if copy_to_repo:
         pdf_get_operation.copy_pdfs_to_repo()
@@ -1316,8 +1520,13 @@ def pdf_get_man(
 ) -> None:
     """Get PDFs manually"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
     )
     pdf_get_man_operation = review_manager.get_pdf_get_man_operation()
 
@@ -1362,7 +1571,6 @@ def pdf_get_man(
 
 
 def __print_pdf_hashes(*, pdf_path: Path) -> None:
-    # pylint: disable=import-outside-toplevel
     from PyPDF2 import PdfFileReader
     import colrev.qm.colrev_pdf_id
 
@@ -1447,6 +1655,19 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
     default=False,
     help="Force mode",
 )
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            installed_only=True,
+        )
+    ),
+    help="""
+Format: colrev pdf_prep -a colrev.pdf_check_ocr
+""",
+)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def pdf_prep(
@@ -1458,15 +1679,32 @@ def pdf_prep(
     tei: bool,
     verbose: bool,
     force: bool,
+    add: str,
 ) -> None:
     """Prepare PDFs"""
 
-    try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
-        )
-        pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
+    # pylint: disable=import-outside-toplevel
 
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
+    )
+    pdf_prep_operation = review_manager.get_pdf_prep_operation(reprocess=reprocess)
+
+    if add:
+        import colrev.ui_cli.add_packages
+
+        colrev.ui_cli.add_packages.add_endpoint_for_operation(
+            operation=pdf_prep_operation,
+            query=add,
+        )
+        return
+
+    try:
         if update_colrev_pdf_ids:
             pdf_prep_operation.update_colrev_pdf_ids()
 
@@ -1560,12 +1798,18 @@ def pdf_prep_man(
     extract: bool,
     apply: bool,
     verbose: bool,
+    add: str,
     force: bool,
 ) -> None:
     """Prepare PDFs manually"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
     )
     pdf_prep_man_operation = review_manager.get_pdf_prep_man_operation()
 
@@ -1641,11 +1885,15 @@ def data(
 ) -> None:
     """Complete selected forms of data analysis and synthesis"""
 
-    # pylint: disable=import-outside-toplevel
     import colrev.ui_cli.add_packages
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=(force or profile), verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": (force or profile),
+            "exact_call": EXACT_CALL,
+        },
     )
     data_operation = review_manager.get_data_operation()
 
@@ -1750,8 +1998,13 @@ def validate(
     - a contributor name
     """
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
     )
     validate_operation = review_manager.get_validate_operation()
 
@@ -1801,8 +2054,13 @@ def trace(
 ) -> None:
     """Trace a record"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+            "exact_call": EXACT_CALL,
+        },
     )
     trace_operation = review_manager.get_trace_operation()
     trace_operation.main(record_id=id)
@@ -1849,8 +2107,12 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
 
     if not path:
         path = Path.cwd()
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=True, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": force,
+        },
     )
     distribute_operation = review_manager.get_distribute_operation()
     environment_registry = distribute_operation.get_environment_registry()
@@ -1984,12 +2246,14 @@ def env(
 ) -> None:
     """Manage the environment"""
 
-    # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=True, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {
+            "verbose_mode": verbose,
+            "force_mode": True,
+        },
     )
 
     if install:
@@ -2006,11 +2270,16 @@ def env(
             curated_resource_path = curated_resource["source_url"]
             if "/curated_metadata/" not in curated_resource_path:
                 continue
-            review_manager = colrev.review_manager.ReviewManager(
-                force_mode=force,
-                verbose_mode=verbose,
-                path_str=curated_resource_path,
+
+            review_manager = get_review_manager(
+                ctx,
+                {
+                    "verbose_mode": verbose,
+                    "force_mode": force,
+                    "path_str": curated_resource_path,
+                },
             )
+
             review_manager.dataset.pull_if_repo_clean()
             print(f"Pulled {curated_resource_path}")
         return
@@ -2052,17 +2321,14 @@ def env(
         ):
             return
 
-        # pylint: disable=import-outside-toplevel
-        import colrev.env.package_manager as p_manager
-
-        package_manager = p_manager.PackageManager()
+        package_manager = colrev.env.package_manager.PackageManager()
         package_manager.update_package_list()
 
     local_index = review_manager.get_local_index()
 
     if index:
         local_index.index()
-
+        local_index.load_journal_rankings()
     elif start:
         print("Started.")
 
@@ -2113,9 +2379,7 @@ def settings(
 ) -> None:
     """Settings of the CoLRev project"""
 
-    # pylint: disable=import-outside-toplevel
     # pylint: disable=reimported
-    # pylint: disable=too-many-locals
 
     from subprocess import check_call  # nosec
     from subprocess import DEVNULL  # nosec
@@ -2123,10 +2387,10 @@ def settings(
     import json
     import ast
     import glom
-    import colrev.review_manager
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     if update_hooks:
         print("Update pre-commit hooks")
@@ -2321,8 +2585,9 @@ def pull(
 ) -> None:
     """Pull CoLRev project remote and record updates"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     pull_operation = review_manager.get_pull_operation()
 
@@ -2408,8 +2673,9 @@ def push(
 ) -> None:
     """Push CoLRev project remote and record updates"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     push_operation = review_manager.get_push_operation()
 
@@ -2442,8 +2708,9 @@ def service(
     """Service for real-time reviews"""
 
     try:
-        review_manager = colrev.review_manager.ReviewManager(
-            force_mode=force, verbose_mode=verbose, exact_call=EXACT_CALL
+        review_manager = get_review_manager(
+            ctx,
+            {"verbose_mode": verbose, "force_mode": force},
         )
         review_manager.get_service_operation()
 
@@ -2487,9 +2754,7 @@ def show(  # type: ignore
     callback=__validate_show,
 ) -> None:
     """Show aspects (sample, ...)"""
-    # pylint: disable=too-many-locals
 
-    # pylint: disable=import-outside-toplevel
     import colrev.operation
     import colrev.ui_cli.show_printer
 
@@ -2497,8 +2762,9 @@ def show(  # type: ignore
         colrev.ui_cli.show_printer.print_venv_notes()
         return
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     if keyword == "sample":
@@ -2579,7 +2845,7 @@ def show(  # type: ignore
 # ) -> None:
 #     """CoLRev web interface."""
 
-#     # pylint: disable=import-outside-toplevel
+#
 #     import colrev.ui_web.settings_editor
 
 #     review_manager = colrev.review_manager.ReviewManager(
@@ -2660,8 +2926,9 @@ def repare(
 ) -> None:
     """Repare file formatting errors in the CoLRev project."""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=True, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
     repare_operation = review_manager.get_repare()
     repare_operation.main()
@@ -2696,8 +2963,9 @@ def remove(
 ) -> None:
     """Remove records, ... from CoLRev repositories"""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     remove_operation = review_manager.get_remove_operation()
@@ -2761,8 +3029,9 @@ def merge(
 ) -> None:
     """Merge git branches."""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     if not branch:
@@ -2800,8 +3069,9 @@ def undo(
 ) -> None:
     """Undo operations."""
 
-    review_manager = colrev.review_manager.ReviewManager(
-        force_mode=force, verbose_mode=verbose
+    review_manager = get_review_manager(
+        ctx,
+        {"verbose_mode": verbose, "force_mode": force},
     )
 
     if selection == "commit":
@@ -2817,7 +3087,6 @@ def version(
 ) -> None:
     """Show colrev version."""
 
-    # pylint: disable=import-outside-toplevel
     from importlib.metadata import version
 
     print(f'colrev version {version("colrev")}')

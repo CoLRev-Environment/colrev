@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.get_masterdata
       ~DBLPSearchSource.heuristic
       ~DBLPSearchSource.json_schema
-      ~DBLPSearchSource.load_fixes
+      ~DBLPSearchSource.load
       ~DBLPSearchSource.prepare
       ~DBLPSearchSource.register_field_encoders
       ~DBLPSearchSource.run_search

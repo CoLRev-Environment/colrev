@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Test the source_specific prep package"""
-import platform
 import shutil
 from pathlib import Path
 
@@ -8,7 +7,7 @@ import pytest
 
 import colrev.review_manager
 import colrev.settings
-
+import colrev.ui_cli.cli_load
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-arguments
@@ -22,14 +21,13 @@ NO_CUSTOM_SOURCE = None
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, custom_source, expected_file",
     [
-        # https://pypi.org/project/nbib/
-        # (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
-        # (
-        #     Path("ais.txt"),
-        #     "colrev.ais_library",
-        #     NO_CUSTOM_SOURCE,
-        #     Path("ais_result.bib"),
-        # ),
+        (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
+        (
+            Path("ais.txt"),
+            "colrev.ais_library",
+            NO_CUSTOM_SOURCE,
+            Path("ais_result.bib"),
+        ),
         (
             Path("pubmed.csv"),
             "colrev.pubmed",
@@ -41,6 +39,12 @@ NO_CUSTOM_SOURCE = None
             "colrev.springer_link",
             NO_CUSTOM_SOURCE,
             Path("springer_result.bib"),
+        ),
+        (
+            Path("ebsco.bib"),
+            "colrev.ebsco_host",
+            NO_CUSTOM_SOURCE,
+            Path("ebsco_result.bib"),
         ),
         (Path("dblp.bib"), "colrev.dblp", NO_CUSTOM_SOURCE, Path("dblp_result.bib")),
         (
@@ -88,7 +92,6 @@ NO_CUSTOM_SOURCE = None
                 filename=Path("data/search/pdfs_dir.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             ),
             Path("pdfs_dir_result.bib"),
@@ -101,7 +104,6 @@ NO_CUSTOM_SOURCE = None
                 filename=Path("data/search/ieee.ris"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
-                load_conversion_package_endpoint={"endpoint": "colrev.rispy"},
                 comment="",
             ),
             Path("ieee_result.bib"),
@@ -142,9 +144,6 @@ def test_source(  # type: ignore
         source=Path("built_in_search_sources/") / source_filepath,
         target=Path("data/search/") / source_filepath,
     )
-    if platform.system() not in ["Linux"]:
-        if source_filepath.suffix not in [".bib", ".ris", ".csv"]:
-            return
 
     base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
@@ -160,12 +159,12 @@ def test_source(  # type: ignore
 
     # Run load and test the heuristics
     load_operation = base_repo_review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
-    if source_filepath.suffix == ".ris" or source_filepath == "ais.txt":
-        new_sources[0].load_conversion_package_endpoint = {"endpoint": "colrev.rispy"}
+
     if custom_source:
         new_sources = [custom_source]
         base_repo_review_manager.settings.sources = [custom_source]
+    else:
+        new_sources = load_operation.get_most_likely_sources()
 
     load_operation.main(new_sources=new_sources)
 

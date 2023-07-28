@@ -22,11 +22,13 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_records
       ~LocalIndex.is_duplicate
+      ~LocalIndex.load_journal_rankings
       ~LocalIndex.reinitialize_sqlite_db
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_based_on_colrev_pdf_id
       ~LocalIndex.retrieve_from_toc
       ~LocalIndex.search
+      ~LocalIndex.search_in_database
 
 
 

@@ -16,18 +16,11 @@ import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
-# pylint: disable=too-many-lines
-
 
 class Load(colrev.operation.Operation):
     """Load the records"""
 
-    # Note : PDFs should be stored in the pdfs directory
-    # They should be included through colrev search
-
-    supported_extensions: typing.List[str]
-    load_conversion_packages: dict
-
+    # TODO : extract to separate format conversion script
     __LATEX_SPECIAL_CHAR_MAPPING = {
         '\\"u': "ü",
         "\\&": "&",
@@ -74,9 +67,6 @@ class Load(colrev.operation.Operation):
     def __get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
-        if not self.review_manager.search_dir.is_dir():
-            return []
-
         files = [
             f.relative_to(self.review_manager.path)
             for f in self.review_manager.search_dir.glob("**/*")
@@ -106,28 +96,11 @@ class Load(colrev.operation.Operation):
         ]
         return imported_origins
 
-    def __get_load_conversion_package_endpoint(
-        self, *, filepath: Path, load_conversion: dict
-    ) -> dict:
-        filetype = filepath.suffix.replace(".", "")
-        if filetype == "ris":
-            return {"endpoint": "colrev.rispy"}
-
-        for (
-            package_identifier,
-            selected_package,
-        ) in load_conversion.items():
-            if filetype in selected_package.supported_extensions:  # type: ignore
-                return {"endpoint": package_identifier}
-
-        raise colrev_exceptions.UnsupportedImportFormatError(filepath)
-
     def __get_heuristics_results_list(
         self,
         *,
         filepath: Path,
         search_sources: dict,
-        load_conversion: dict,
         data: str,
     ) -> list:
         results_list = []
@@ -135,11 +108,6 @@ class Load(colrev.operation.Operation):
             endpoint,
             endpoint_class,
         ) in search_sources.items():
-            # pylint: disable=no-member
-            has_heuristic = getattr(endpoint_class, "heuristic", None)
-            if not has_heuristic:
-                self.review_manager.logger.debug(f"- {endpoint}: no heuristic")
-                continue
             res = endpoint_class.heuristic(filepath, data)  # type: ignore
             self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
             if res["confidence"] == 0.0:
@@ -153,52 +121,11 @@ class Load(colrev.operation.Operation):
                 # Note : as the identifier, we use the filename
                 # (if search results are added by file/not via the API)
 
-                # Correct the file extension if necessary
-                if re.findall(r"^%0", data, re.MULTILINE) and filepath.suffix not in [
-                    ".enl"
-                ]:
-                    new_filename = filepath.with_suffix(".enl")
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Rename to {new_filename} "
-                        f"(because the format is .enl){colors.END}"
-                    )
-                    filepath.rename(new_filename)
-                    self.review_manager.dataset.add_changes(path=filepath, remove=True)
-                    filepath = new_filename
-                    res["filename"] = filepath
-                    self.review_manager.dataset.add_changes(path=new_filename)
-                    self.review_manager.create_commit(msg=f"Rename {filepath}")
-
-                if re.findall(r"^TI ", data, re.MULTILINE) and filepath.suffix not in [
-                    ".ris"
-                ]:
-                    new_filename = filepath.with_suffix(".ris")
-                    self.review_manager.logger.info(
-                        f"{colors.GREEN}Rename to {new_filename} "
-                        f"(because the format is .ris){colors.END}"
-                    )
-                    filepath.rename(new_filename)
-                    self.review_manager.dataset.add_changes(path=filepath, remove=True)
-                    filepath = new_filename
-                    res["filename"] = filepath
-                    self.review_manager.dataset.add_changes(path=new_filename)
-                    self.review_manager.create_commit(msg=f"Rename {filepath}")
-
-                if "load_conversion_package_endpoint" not in res:
-                    res[
-                        "load_conversion_package_endpoint"
-                    ] = self.__get_load_conversion_package_endpoint(
-                        filepath=filepath, load_conversion=load_conversion
-                    )
-
                 source_candidate = colrev.settings.SearchSource(
                     endpoint=endpoint,
                     filename=filepath,
                     search_type=search_type,
                     search_parameters={},
-                    load_conversion_package_endpoint=res[
-                        "load_conversion_package_endpoint"
-                    ],
                     comment="",
                 )
 
@@ -211,11 +138,7 @@ class Load(colrev.operation.Operation):
         return results_list
 
     def __apply_source_heuristics(
-        self,
-        *,
-        filepath: Path,
-        search_sources: dict,
-        load_conversion: dict,
+        self, *, filepath: Path, search_sources: dict
     ) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
 
@@ -228,7 +151,6 @@ class Load(colrev.operation.Operation):
         results_list = self.__get_heuristics_results_list(
             filepath=filepath,
             search_sources=search_sources,
-            load_conversion=load_conversion,
             data=data,
         )
 
@@ -238,101 +160,51 @@ class Load(colrev.operation.Operation):
 
         return results_list
 
-    def __select_source(self, *, heuristic_result_list: list, skip_query: bool) -> dict:
-        # pylint: disable=too-many-branches
-        if not skip_query:
-            print(f"{colors.ORANGE}Select search source{colors.END}:")
-            for i, heuristic_source in enumerate(heuristic_result_list):
-                highlight_color = ""
-                if heuristic_source["confidence"] >= 0.7:
-                    highlight_color = colors.GREEN
-                elif heuristic_source["confidence"] >= 0.5:
-                    highlight_color = colors.ORANGE
-                print(
-                    f"{highlight_color}{i+1} "
-                    f"(confidence: {round(heuristic_source['confidence'], 2)}):"
-                    f" {heuristic_source['source_candidate'].endpoint}{colors.END}"
-                )
+    def get_most_likely_sources(self) -> list:
+        """Get the most likely SearchSources
 
-        while True:
-            if skip_query:
-                # Use the last / unknown_source
-                max_conf = 0.0
-                best_candidate_pos = 0
-                for i, heuristic_candidate in enumerate(heuristic_result_list):
-                    if heuristic_candidate["confidence"] > max_conf:
-                        best_candidate_pos = i + 1
-                        max_conf = heuristic_candidate["confidence"]
-                if not any(c["confidence"] > 0.1 for c in heuristic_result_list):
-                    unknown_source_l = [
-                        x
-                        for x in heuristic_result_list
-                        if x["source_candidate"].endpoint == "colrev.unknown_source"
-                    ]
-                    if not unknown_source_l:
-                        raise colrev_exceptions.SourceHeuristicsException(
-                            "Could not identify the SearchSource"
-                        )
-                    return unknown_source_l[0]
+        returns a dictionary:
+        {"filepath": [SearchSource1,..]}
+        """
+
+        heuristic_list = self.get_new_sources_heuristic_list()
+        selected_search_sources = []
+
+        for results_list in heuristic_list.values():
+            # Use the last / unknown_source
+            max_conf = 0.0
+            best_candidate_pos = 0
+            for i, heuristic_candidate in enumerate(results_list):
+                if heuristic_candidate["confidence"] > max_conf:
+                    best_candidate_pos = i + 1
+                    max_conf = heuristic_candidate["confidence"]
+            if not any(c["confidence"] > 0.1 for c in results_list):
+                source = [
+                    x
+                    for x in results_list
+                    if x["source_candidate"].endpoint == "colrev.unknown_source"
+                ][0]
+            else:
                 selection = str(best_candidate_pos)
-            else:
-                selection = input("select nr")
-            if not selection.isdigit():
-                continue
-            if int(selection) in range(1, len(heuristic_result_list) + 1):
-                heuristic_source = heuristic_result_list[int(selection) - 1]
-                return heuristic_source
+                source = results_list[int(selection) - 1]
+            selected_search_sources.append(source["source_candidate"])
 
-    def __heuristics_check(
-        self, *, heuristic_result_list: list, skip_query: bool
-    ) -> colrev.settings.SearchSource:
-        if 0 == len(heuristic_result_list):
-            raise colrev_exceptions.SourceHeuristicsException(
-                "Could not identify the SearchSource"
-            )
-        if 1 == len(heuristic_result_list):
-            heuristic_source = heuristic_result_list[0]
-        else:
-            heuristic_source = self.__select_source(
-                heuristic_result_list=heuristic_result_list, skip_query=skip_query
-            )
+        return selected_search_sources
 
-        if "colrev.unknown_source" == heuristic_source["source_candidate"].endpoint:
-            cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
-            query_input = ""
-            if not skip_query:
-                query_input = input(cmd)
-            if query_input not in ["", "NA"]:
-                heuristic_source["source_candidate"].search_parameters = {
-                    "query": query_input
-                }
-            else:
-                heuristic_source["source_candidate"].search_parameters = {}
+    def get_new_sources_heuristic_list(self) -> dict:
+        """Get the heuristic result list of SearchSources candidates
 
-        self.review_manager.logger.info(
-            f"Source name: {heuristic_source['source_candidate'].endpoint}"
-        )
+        returns a dictionary:
+        {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}
+        """
 
-        heuristic_source["source_candidate"].comment = None
+        # pylint: disable=redefined-outer-name
 
-        if {} == heuristic_source["source_candidate"].load_conversion_package_endpoint:
-            custom_load_conversion_package_endpoint = input(
-                "provide custom load_conversion_package_endpoint [or NA]:"
-            )
-            if "NA" == custom_load_conversion_package_endpoint:
-                heuristic_source[
-                    "source_candidate"
-                ].load_conversion_package_endpoint = {}
-            else:
-                heuristic_source[
-                    "source_candidate"
-                ].load_conversion_package_endpoint = {
-                    "endpoint": custom_load_conversion_package_endpoint
-                }
+        new_search_files = self.__get_new_search_files()
+        if not new_search_files:
+            self.review_manager.logger.info("No new search files...")
+            return {}
 
-        return heuristic_source["source_candidate"]
-
-    def __load_search_sources(self) -> dict:
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
         search_source_identifiers = self.package_manager.discover_packages(
@@ -340,187 +212,25 @@ class Load(colrev.operation.Operation):
             installed_only=True,
         )
 
-        return self.package_manager.load_packages(
+        search_sources = self.package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,
             selected_packages=[{"endpoint": p} for p in search_source_identifiers],
             operation=self,
             instantiate_objects=False,
         )
 
-    def __load_conversion_packages(self) -> dict:
-        self.review_manager.logger.debug("Load available load_conversion endpoints...")
-        load_conversion_package_identifiers = self.package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            installed_only=True,
-        )
+        heuristic_results = {}
+        for sfp_name in new_search_files:
+            if not self.review_manager.high_level_operation:
+                print()
+            self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
-        return self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-            selected_packages=[
-                {"endpoint": p} for p in load_conversion_package_identifiers
-            ],
-            operation=self,
-        )
-
-    def __load_supported_extensions(self) -> list:
-        return [
-            item
-            for sublist in [
-                e.supported_extensions  # type: ignore
-                for _, e in self.load_conversion_packages.items()  # type: ignore
-            ]
-            for item in sublist
-        ]
-
-    def get_new_sources(
-        self, *, skip_query: bool = False
-    ) -> typing.List[colrev.settings.SearchSource]:
-        """Get new SearchSources"""
-
-        # pylint: disable=redefined-outer-name
-
-        new_search_files = self.__get_new_search_files()
-        if not new_search_files:
-            self.review_manager.logger.info("No new search files...")
-            return []
-
-        search_sources = self.__load_search_sources()
-        self.load_conversion_packages = self.__load_conversion_packages()
-        self.supported_extensions = self.__load_supported_extensions()
-
-        new_sources = []
-        for sfp in new_search_files:
-            try:
-                sfp_name = sfp
-                if not self.review_manager.high_level_operation:
-                    print()
-                self.review_manager.logger.info(f"Discover new source: {sfp_name}")
-                if sfp_name.suffix.strip(".") not in self.supported_extensions:
-                    raise colrev_exceptions.UnsupportedImportFormatError(sfp_name)
-                heuristic_result_list = self.__apply_source_heuristics(
-                    filepath=sfp,
-                    search_sources=search_sources,
-                    load_conversion=self.load_conversion_packages,
-                )
-                new_source = self.__heuristics_check(
-                    heuristic_result_list=heuristic_result_list, skip_query=skip_query
-                )
-                new_sources.append(new_source)
-            except (
-                colrev_exceptions.SourceHeuristicsException,
-                colrev_exceptions.UnsupportedImportFormatError,
-            ) as exc:
-                self.review_manager.logger.error(f"{colors.RED}{exc}{colors.END}")
-
-        return new_sources
-
-    def __check_bib_file(
-        self, *, source: colrev.settings.SearchSource, records: dict
-    ) -> None:
-        if len(records.items()) <= 3:
-            return
-        if not any("author" in r for ID, r in records.items()):
-            raise colrev_exceptions.ImportException(
-                f"Import failed (no record with author field): {source.filename.name}"
+            heuristic_results[sfp_name] = self.__apply_source_heuristics(
+                filepath=sfp_name,
+                search_sources=search_sources,
             )
 
-        if not any("title" in r for ID, r in records.items()):
-            raise colrev_exceptions.ImportException(
-                f"Import failed (no record with title field): {source.filename.name}"
-            )
-
-    def __resolve_non_unique_ids(self, *, source: colrev.settings.SearchSource) -> None:
-        def get_unique_id(*, non_unique_id: str, id_list: list[str]) -> str:
-            order = 0
-            letters = list(string.ascii_lowercase)
-            temp_id = non_unique_id
-            next_unique_id = temp_id
-            appends: list = []
-            while next_unique_id in id_list:
-                if len(appends) == 0:
-                    order += 1
-                    appends = list(itertools.product(letters, repeat=order))
-                next_unique_id = temp_id + "".join(list(appends.pop(0)))
-
-            return next_unique_id
-
-        def inplace_change_second(
-            *, filename: Path, old_string: str, new_string: str
-        ) -> None:
-            new_file_lines = []
-            with open(filename, encoding="utf8") as file:
-                first_read = False
-                replaced = False
-                for line in file.readlines():
-                    if old_string in line and not first_read:
-                        first_read = True
-                    if old_string in line and first_read and not replaced:
-                        line = line.replace(old_string, new_string)
-                        replaced = True
-                    new_file_lines.append(line)
-
-                # s = f.read()
-                # if old_string not in s:
-                #     return
-            with open(filename, "w", encoding="utf8") as file:
-                for new_file_line in new_file_lines:
-                    file.write(new_file_line)
-
-        if not source.get_corresponding_bib_file().is_file():
-            return
-
-        with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
-            cr_dict = self.review_manager.dataset.load_records_dict(
-                load_str=bibtex_file.read()
-            )
-
-        ids_to_update = []
-        current_ids = list(cr_dict.keys())
-        for record in cr_dict.values():
-            if len([x for x in current_ids if x == record["ID"]]) > 1:
-                new_id = get_unique_id(non_unique_id=record["ID"], id_list=current_ids)
-                ids_to_update.append([record["ID"], new_id])
-                current_ids.append(new_id)
-
-        if len(ids_to_update) > 0:
-            self.review_manager.dataset.add_changes(
-                path=source.get_corresponding_bib_file()
-            )
-            self.review_manager.create_commit(
-                msg=f"Save original search file: {source.get_corresponding_bib_file().name}",
-            )
-
-            for old_id, new_id in ids_to_update:
-                self.review_manager.logger.info(
-                    f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
-                )
-                self.review_manager.report_logger.info(
-                    f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
-                )
-                inplace_change_second(
-                    filename=source.get_corresponding_bib_file(),
-                    old_string=f"{old_id},",
-                    new_string=f"{new_id},",
-                )
-            self.review_manager.dataset.add_changes(
-                path=source.get_corresponding_bib_file()
-            )
-            self.review_manager.create_commit(
-                msg=f"Resolve non-unique IDs in {source.get_corresponding_bib_file().name}"
-            )
-
-    def __getbib(self, *, file: Path) -> list[dict]:
-        with open(file, encoding="utf8") as bibtex_file:
-            contents = bibtex_file.read()
-            bib_r = re.compile(r"@.*{.*,", re.M)
-            if len(re.findall(bib_r, contents)) == 0:
-                self.review_manager.logger.error(f"Not a bib file? {file.name}")
-
-        with open(file, encoding="utf8") as bibtex_file:
-            search_records_dict = self.review_manager.dataset.load_records_dict(
-                load_str=bibtex_file.read()
-            )
-        return list(search_records_dict.values())
+        return heuristic_results
 
     def __unescape_latex(self, *, input_str: str) -> str:
         # Based on
@@ -551,7 +261,7 @@ class Load(colrev.operation.Operation):
             # Initialize colrev_masterdata_provenance
             colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
-            for key in record.data.keys():
+            for key in sorted(record.data.keys()):
                 if key in colrev.record.Record.identifying_field_keys:
                     if key not in colrev_masterdata_provenance:
                         colrev_masterdata_provenance[key] = {
@@ -579,45 +289,42 @@ class Load(colrev.operation.Operation):
         # pylint: disable=duplicate-code
         # For better readability of the git diff:
         fields_to_process = [
-            "author",
-            "year",
-            "title",
-            "journal",
-            "booktitle",
-            "series",
-            "volume",
-            "number",
-            "pages",
-            "doi",
-            "abstract",
+            f
+            for f in [
+                "author",
+                "year",
+                "title",
+                "journal",
+                "booktitle",
+                "series",
+                "volume",
+                "number",
+                "pages",
+                "doi",
+                "abstract",
+            ]
+            if f in record.data
         ]
 
         for field in fields_to_process:
-            if field in record.data:
-                if "\\" in record.data[field]:
-                    record.data[field] = self.__unescape_latex(
-                        input_str=record.data[field]
-                    )
+            if "\\" in record.data[field]:
+                record.data[field] = self.__unescape_latex(input_str=record.data[field])
+            if "<" in record.data[field]:
+                record.data[field] = self.__unescape_html(input_str=record.data[field])
 
-                if "<" in record.data[field]:
-                    record.data[field] = self.__unescape_html(
-                        input_str=record.data[field]
-                    )
-
-                record.data[field] = (
-                    record.data[field]
-                    .replace("\n", " ")
-                    .rstrip()
-                    .lstrip()
-                    .replace("{", "")
-                    .replace("}", "")
-                )
+            record.data[field] = (
+                record.data[field]
+                .replace("\n", " ")
+                .rstrip()
+                .lstrip()
+                .replace("{", "")
+                .replace("}", "")
+            )
         if record.data.get("title", "UNKNOWN") != "UNKNOWN":
             record.data["title"] = re.sub(r"\s+", " ", record.data["title"]).rstrip(".")
 
-        if "year" in record.data:
-            if str(record.data["year"]).endswith(".0"):
-                record.data["year"] = str(record.data["year"])[:-2]
+        if "year" in record.data and str(record.data["year"]).endswith(".0"):
+            record.data["year"] = str(record.data["year"])[:-2]
 
         if "pages" in record.data:
             record.data["pages"] = record.data["pages"].replace("–", "--")
@@ -644,17 +351,15 @@ class Load(colrev.operation.Operation):
         if record.data.get("number", "") == "ahead-of-print":
             del record.data["number"]
 
-        if "language" in record.data:
-            if len(record.data["language"]) != 3:
-                self.language_service.unify_to_iso_639_3_language_codes(record=record)
+        if "language" in record.data and len(record.data["language"]) != 3:
+            self.language_service.unify_to_iso_639_3_language_codes(record=record)
 
-        if "url" in record.data:
-            if "login?url=https" in record.data["url"]:
-                record.data["url"] = record.data["url"][
-                    record.data["url"].find("login?url=https") + 10 :
-                ]
+        if "url" in record.data and "login?url=https" in record.data["url"]:
+            record.data["url"] = record.data["url"][
+                record.data["url"].find("login?url=https") + 10 :
+            ]
 
-    def __import_record(self, *, record_dict: dict, include: bool) -> dict:
+    def __import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(
             f'import_record {record_dict["ID"]}: '
             # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
@@ -683,16 +388,15 @@ class Load(colrev.operation.Operation):
                 f"{colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{colors.END}"
             )
-        if include:
-            record.data["include_flag"] = "1"
+
         return record.get_data()
 
     def __prep_records_for_import(
-        self, *, source: colrev.settings.SearchSource, search_records: list
+        self, *, source_settings: colrev.settings.SearchSource, search_records: dict
     ) -> list:
         record_list = []
-        origin_prefix = source.get_origin_prefix()
-        for record in search_records:
+        origin_prefix = source_settings.get_origin_prefix()
+        for record in search_records.values():
             for key in colrev.record.Record.provenance_keys + [
                 "screening_criteria",
             ]:
@@ -706,7 +410,7 @@ class Load(colrev.operation.Operation):
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            if source.endpoint == "colrev.local_index":
+            if source_settings.endpoint == "colrev.local_index":
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
@@ -740,71 +444,40 @@ class Load(colrev.operation.Operation):
             record_list.append(record)
         return record_list
 
-    def __get_search_records(self, *, source: colrev.settings.SearchSource) -> list:
-        search_records = []
-        if source.get_corresponding_bib_file().is_file():
-            search_records = self.__getbib(file=source.get_corresponding_bib_file())
-            self.review_manager.logger.debug(
-                f"Loaded {source.get_corresponding_bib_file().name} "
-                f"with {len(search_records)} records"
-            )
-        else:
-            self.review_manager.logger.debug(
-                f"Did not find bib file {source.get_corresponding_bib_file().name} "
-            )
-            return []
+    def __setup_source_for_load(
+        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    ) -> None:
+        search_records = source.load(self)  # type: ignore
 
-        if len(search_records) == 0:
-            self.review_manager.logger.info(
-                f"{colors.GREEN}No records to load{colors.END}"
-            )
-            return search_records
-
-        nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
-            file_path=source.get_corresponding_bib_file()
+        source_records_list = self.__prep_records_for_import(
+            source_settings=source.search_source, search_records=search_records
         )
-        if len(search_records) < nr_in_bib:
-            self.review_manager.logger.error(
-                "broken bib file (not imported all records)"
+        imported_origins = self.__get_currently_imported_origin_list()
+        source_records_list = [
+            x
+            for x in source_records_list
+            if x["colrev_origin"][0] not in imported_origins
+        ]
+        source.search_source.setup_for_load(
+            source_records_list=source_records_list, imported_origins=imported_origins
+        )
+        if len(search_records) == 0:
+            raise colrev_exceptions.ImportException(
+                msg=f"{source} has no records to load"
             )
-            with open(source.get_corresponding_bib_file(), encoding="utf8") as file:
-                line = file.readline()
-                while line:
-                    if "@" in line[:3]:
-                        record_id = line[line.find("{") + 1 : line.rfind(",")]
-                        if record_id not in [x["ID"] for x in search_records]:
-                            self.review_manager.logger.error(
-                                f"{record_id} not imported"
-                            )
-                    line = file.readline()
-        return search_records
 
     def __load_source_records(
-        self, *, source: colrev.settings.SearchSource, keep_ids: bool, include: bool
+        self,
+        *,
+        source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        keep_ids: bool,
     ) -> None:
-        search_records = self.__get_search_records(source=source)
-
-        record_list = self.__prep_records_for_import(
-            source=source, search_records=search_records
-        )
-
-        imported_origins = self.__get_currently_imported_origin_list()
-        record_list = [
-            x for x in record_list if x["colrev_origin"][0] not in imported_origins
-        ]
-        source.setup_for_load(
-            record_list=record_list, imported_origins=imported_origins
-        )
-        if len(search_records) == 0:
-            return
-
+        self.__setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
-        for source_record in source.source_records_list:
-            source_record = self.__import_record(
-                record_dict=source_record, include=include
-            )
+        for source_record in source.search_source.source_records_list:
+            source_record = self.__import_record(record_dict=source_record)
 
-            # Make sure IDs are unique / do not replace existing records
+            # Make sure not to replace existing records
             order = 0
             letters = list(string.ascii_lowercase)
             next_unique_id = source_record["ID"]
@@ -822,8 +495,8 @@ class Load(colrev.operation.Operation):
                 + f"md_retrieved →  {source_record['colrev_status']}{colors.END}"
             )
 
-        self.__check_bib_file(source=source, records=records)
         self.review_manager.dataset.save_records_dict(records=records)
+        self.__validate_load(source=source)
 
         if keep_ids:
             self.review_manager.logger.warning(
@@ -833,109 +506,125 @@ class Load(colrev.operation.Operation):
             self.review_manager.logger.debug("Set IDs")
             records = self.review_manager.dataset.set_ids(
                 records=records,
-                selected_ids=[r["ID"] for r in source.source_records_list],
+                selected_ids=[
+                    r["ID"] for r in source.search_source.source_records_list
+                ],
             )
 
         self.review_manager.logger.info(
-            "New records loaded".ljust(38) + f"{source.to_import} records"
+            "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
 
         self.review_manager.dataset.add_setting_changes()
         self.review_manager.dataset.add_changes(
-            path=source.get_corresponding_bib_file()
+            path=source.search_source.get_corresponding_bib_file()
         )
-        self.review_manager.dataset.add_changes(path=source.filename)
+        self.review_manager.dataset.add_changes(path=source.search_source.filename)
         self.review_manager.dataset.add_record_changes()
+        if (
+            0 == getattr(source.search_source, "to_import", 0)
+            and not self.review_manager.high_level_operation
+        ):
+            print()
 
-    def __validate_load(self, *, source: colrev.settings.SearchSource) -> None:
-        imported_origins = self.__get_currently_imported_origin_list()
-        imported = len(imported_origins) - source.len_before
-
-        if imported != source.to_import:
-            # Note : for diagnostics, it is easier if we complete the process
-            # and create the commit (instead of raising an exception)
-            self.review_manager.logger.error(f"len_before: {source.len_before}")
-            self.review_manager.logger.error(f"len_after: {len(imported_origins)}")
-
-            origins_to_import = [o["colrev_origin"] for o in source.source_records_list]
-            if source.to_import - imported > 0:
-                self.review_manager.logger.error(
-                    f"{colors.RED}PROBLEM: delta: "
-                    f"{source.to_import - imported} records missing{colors.END}"
-                )
-
-                missing_origins = [
-                    o for o in origins_to_import if o not in imported_origins
-                ]
-                self.review_manager.logger.error(
-                    f"{colors.RED}Records not yet imported: {missing_origins}{colors.END}"
-                )
-            else:
-                self.review_manager.logger.error(
-                    f"{colors.RED}PROBLEM: "
-                    f"{source.to_import - imported} records too much{colors.END}"
-                )
-
-    def __save_records(self, *, records: dict, corresponding_bib_file: Path) -> None:
-        def fix_keys(*, records: dict) -> None:
-            for record_id, record in records.items():
-                records[record_id] = {
-                    re.sub("[^0-9a-zA-Z-_]+", "", k.replace(" ", "_")): v
-                    for k, v in record.items()
-                }
-
-        def set_incremental_ids(*, records: dict) -> None:
-            # if IDs to set for some records
-            if 0 != len([r for r in records if "ID" not in r]):
-                i = 1
-                for record in records.values():
-                    if "ID" not in record:
-                        record["ID"] = f"{i+1}".rjust(10, "0")
-                        i += 1
-
-        def drop_empty_fields(*, records: dict) -> None:
-            for record_id in records:
-                records[record_id] = {
-                    k: v for k, v in records[record_id].items() if v is not None
-                }
-                records[record_id] = {
-                    k: v for k, v in records[record_id].items() if v != "nan"
-                }
-
-        def drop_fields(*, records: dict) -> None:
-            for record_id in records:
-                records[record_id] = {
-                    k: v
-                    for k, v in records[record_id].items()
-                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
-                }
-
-        if not records:
-            self.review_manager.report_logger.debug("No records loaded")
-            self.review_manager.logger.debug("No records loaded")
+    def __add_source_to_settings(
+        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    ) -> None:
+        # Add to settings (if new filename)
+        if source.search_source.filename in [
+            s.filename for s in self.review_manager.settings.sources
+        ]:
             return
-
-        fix_keys(records=records)
-        set_incremental_ids(records=records)
-        drop_empty_fields(records=records)
-        drop_fields(records=records)
-        records = dict(sorted(records.items()))
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=corresponding_bib_file
-        )
+        git_repo = self.review_manager.dataset.get_repo()
+        self.review_manager.settings.sources.append(source.search_source)
+        self.review_manager.save_settings()
+        # Add files that were renamed (removed)
+        for obj in git_repo.index.diff(None).iter_change_type("D"):
+            if source.search_source.filename.stem in obj.b_path:
+                self.review_manager.dataset.add_changes(
+                    path=Path(obj.b_path), remove=True
+                )
 
     def __load_active_sources(
         self, *, new_sources: typing.List[colrev.settings.SearchSource]
     ) -> list:
+        assert all(isinstance(x, colrev.settings.SearchSource) for x in new_sources)
         checker = self.review_manager.get_checker()
         checker.check_sources()
-        sources = []
+        sources_settings = []
         for source in self.review_manager.settings.sources:
-            sources.append(source)
+            assert isinstance(source, colrev.settings.SearchSource)
+            sources_settings.append(source)
         for source in new_sources:
-            if source.filename not in [s.filename for s in sources]:
-                sources.append(source)
+            if source.filename not in [s.filename for s in sources_settings]:
+                sources_settings.append(source)
+        sources = []
+        package_manager = self.review_manager.get_package_manager()
+        for source in sources_settings:
+            endpoint_dict = package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                selected_packages=[source.get_dict()],
+                operation=self,
+            )
+            # if source.endpoint.lower() not in endpoint_dict:
+            #     raise ...
+            endpoint = endpoint_dict[source.endpoint.lower()]
+            sources.append(endpoint)
+
         return sources
+
+    def __validate_load(
+        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    ) -> None:
+        imported_origins = self.__get_currently_imported_origin_list()
+        imported = len(imported_origins) - source.search_source.len_before
+
+        if imported == source.search_source.to_import:
+            return
+        # Note : for diagnostics, it is easier if we complete the process
+        # and create the commit (instead of raising an exception)
+        self.review_manager.logger.error(
+            f"len_before: {source.search_source.len_before}"
+        )
+        self.review_manager.logger.error(f"len_after: {len(imported_origins)}")
+
+        origins_to_import = [
+            o["colrev_origin"] for o in source.search_source.source_records_list
+        ]
+        if source.search_source.to_import - imported > 0:
+            self.review_manager.logger.error(
+                f"{colors.RED}PROBLEM: delta: "
+                f"{source.search_source.to_import - imported} records missing{colors.END}"
+            )
+
+            missing_origins = [
+                o for o in origins_to_import if o not in imported_origins
+            ]
+            self.review_manager.logger.error(
+                f"{colors.RED}Records not yet imported: {missing_origins}{colors.END}"
+            )
+        else:
+            self.review_manager.logger.error(
+                f"{colors.RED}PROBLEM: "
+                f"{source.search_source.to_import - imported} records too much{colors.END}"
+            )
+
+    def __create_load_commit(self, source: colrev.settings.SearchSource) -> None:
+        git_repo = self.review_manager.dataset.get_repo()
+        stashed = "No local changes to save" != git_repo.git.stash(
+            "push", "--keep-index"
+        )
+        part_exact_call = self.review_manager.exact_call
+        self.review_manager.exact_call = (
+            f"{part_exact_call} -s {source.search_source.filename.name}"
+        )
+        self.review_manager.create_commit(
+            msg=f"Load {source.search_source.filename.name}",
+        )
+        if stashed:
+            git_repo.git.stash("pop")
+        if not self.review_manager.high_level_operation:
+            print()
 
     @colrev.operation.Operation.decorate()
     def main(
@@ -943,79 +632,19 @@ class Load(colrev.operation.Operation):
         *,
         new_sources: typing.List[colrev.settings.SearchSource],
         keep_ids: bool = False,
-        include: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
 
         if not self.review_manager.high_level_operation:
             print()
-        git_repo = self.review_manager.dataset.get_repo()
-        part_exact_call = self.review_manager.exact_call
+
         for source in self.__load_active_sources(new_sources=new_sources):
             try:
-                self.review_manager.logger.info(f"Load {source.filename}")
-                if not source.filename.is_file():
-                    continue
+                self.review_manager.logger.info(f"Load {source.search_source.filename}")
+                self.__add_source_to_settings(source=source)
+                self.__load_source_records(source=source, keep_ids=keep_ids)
+                self.__create_load_commit(source=source)
 
-                # Add to settings (if new filename)
-                if source.filename not in [
-                    s.filename for s in self.review_manager.settings.sources
-                ]:
-                    self.review_manager.settings.sources.append(source)
-                    self.review_manager.save_settings()
-                    # Add files that were renamed (removed)
-                    for obj in git_repo.index.diff(None).iter_change_type("D"):
-                        if source.filename.stem in obj.b_path:
-                            self.review_manager.dataset.add_changes(
-                                path=Path(obj.b_path), remove=True
-                            )
-
-                # 1. convert to bib and fix format (if necessary)
-                load_conversion_package_endpoint_dict = self.package_manager.load_packages(
-                    package_type=colrev.env.package_manager.PackageEndpointType.load_conversion,
-                    selected_packages=[source.load_conversion_package_endpoint],
-                    operation=self,
-                )
-
-                load_conversion_package_endpoint = (
-                    load_conversion_package_endpoint_dict[
-                        source.load_conversion_package_endpoint["endpoint"]
-                    ]
-                )
-                records = load_conversion_package_endpoint.load(self, source)  # type: ignore
-                self.__save_records(
-                    records=records,
-                    corresponding_bib_file=source.get_corresponding_bib_file(),
-                )
-
-                # 2. resolve non-unique IDs (if any)
-                self.__resolve_non_unique_ids(source=source)
-
-                # 3. load and add records to data/records.bib
-                self.__load_source_records(
-                    source=source, keep_ids=keep_ids, include=include
-                )
-                if (
-                    0 == getattr(source, "to_import", 0)
-                    and not self.review_manager.high_level_operation
-                ):
-                    print()
-
-                # 4. validate load
-                self.__validate_load(source=source)
-
-                stashed = self.review_manager.dataset.stash_unstaged_changes()
-
-                self.review_manager.exact_call = (
-                    f"{part_exact_call} -s {source.filename.name}"
-                )
-                self.review_manager.create_commit(
-                    msg=f"Load {source.filename.name}",
-                )
-                if stashed:
-                    git_repo.git.stash("pop")
-                if not self.review_manager.high_level_operation:
-                    print()
             except colrev_exceptions.ImportException as exc:
                 print(exc)
 

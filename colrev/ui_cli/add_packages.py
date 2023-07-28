@@ -9,6 +9,7 @@ import requests
 import colrev.env.package_manager
 import colrev.ops.built_in.data.bibliography_export
 import colrev.ui_cli.cli_colors as colors
+import colrev.ui_cli.cli_load
 
 
 def add_search_source(
@@ -32,18 +33,17 @@ def add_search_source(
         shutil.copyfile(query, dst)
         search_operation.review_manager.logger.info(f"Copied {filename} to repo.")
         load_operation = search_operation.review_manager.get_load_operation()
-        new_sources = load_operation.get_new_sources()
+        new_sources = load_operation.get_most_likely_sources()
         load_operation.main(new_sources=new_sources)
         # Note : load runs the heuristics.
         return
 
-    if ":" not in query:
-        search_operation.review_manager.logger.error(
-            "Could not find package identifier at the beginning of the query"
-        )
-        return
-    package_identifier = query[: query.find(":")]
-    query = query[query.find(":") + 1 :]
+    if ":" in query:
+        package_identifier = query[: query.find(":")]
+        query = query[query.find(":") + 1 :]
+    else:
+        package_identifier = query
+        query = ""
 
     package_manager = search_operation.review_manager.get_package_manager()
 
@@ -82,6 +82,66 @@ def add_search_source(
         fname = add_source.filename.relative_to(search_operation.review_manager.path)
     search_operation.review_manager.create_commit(
         msg=f"Add search source {fname}",
+    )
+
+
+def add_prep(
+    *,
+    prep_operation: colrev.ops.prep.Prep,
+    query: str,
+) -> None:
+    """Add a prep package_endpoint"""
+
+    package_identifier = query
+
+    prep_operation.review_manager.logger.info(
+        f"{colors.GREEN}Add prep package:{colors.END} {package_identifier}"
+    )
+    prep_operation.review_manager.settings.prep.prep_rounds[
+        0
+    ].prep_package_endpoints.append({"endpoint": package_identifier})
+    prep_operation.review_manager.save_settings()
+
+    prep_operation.review_manager.create_commit(
+        msg=f"Add prep {package_identifier}",
+    )
+
+
+def add_prescreen(
+    *,
+    prescreen_operation: colrev.ops.prescreen.Prescreen,
+    add: str,
+) -> None:
+    """Add a prescreen package_endpoint"""
+
+    package_identifier, params_str = add.split(":")
+    package_identifier = package_identifier.lower()
+    params = {}
+    for p_el in params_str.split(";"):
+        key, value = p_el.split("=")
+        params[key] = value
+
+    p_dict = {**{"endpoint": package_identifier}, **params}
+    package_manager = prescreen_operation.review_manager.get_package_manager()
+    endpoint_dict = package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+        selected_packages=[p_dict],
+        operation=prescreen_operation,
+    )
+    prescreen_operation.review_manager.logger.info(
+        f"{colors.GREEN}Add prescreen endpoint{colors.END}"
+    )
+
+    if not hasattr(endpoint_dict[package_identifier], "add_endpoint"):
+        prescreen_operation.review_manager.logger.info(
+            'Cannot add endpoint (mising "add_endpoint" method)'
+        )
+        return
+
+    endpoint_dict[package_identifier].add_endpoint(params=params)  # type: ignore
+    prescreen_operation.review_manager.save_settings()
+    prescreen_operation.review_manager.create_commit(
+        msg=f"Add prescreen endpoint ({package_identifier})",
     )
 
 
@@ -180,4 +240,51 @@ def add_data(
     data_operation.main(selection_list=["colrev.bibliography_export"], silent_mode=True)
     data_operation.review_manager.logger.info(
         f"{colors.GREEN}Successfully added {add} data endpoint{colors.END}"
+    )
+
+
+def add_endpoint_for_operation(
+    *,
+    operation: colrev.ops.dedupe.Dedupe
+    | colrev.ops.screen.Screen
+    | colrev.ops.pdf_prep.PDFPrep,
+    query: str,
+) -> None:
+    """Add a package_endpoint"""
+
+    # pylint: disable=import-outside-toplevel
+    # pylint: disable=redefined-outer-name
+
+    import colrev.ops.screen
+    import colrev.ops.dedupe
+    import colrev.ops.pdf_prep
+
+    op_type = type(operation)
+    if isinstance(operation, colrev.ops.dedupe.Dedupe):
+        op_name = "dedupe"
+        endpoints = operation.review_manager.settings.dedupe.dedupe_package_endpoints
+    elif isinstance(operation, colrev.ops.pdf_prep.PDFPrep):
+        op_name = "pdf_prep"
+        endpoints = (
+            operation.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
+        )
+    elif isinstance(operation, colrev.ops.screen.Screen):
+        op_name = "screen"
+        endpoints = operation.review_manager.settings.screen.screen_package_endpoints
+    else:
+        print(f"Invalid operation {op_type}")
+        return
+    package_identifier = query
+    try:
+        _ = endpoints.index(query)
+        return
+    except ValueError:
+        pass
+    operation.review_manager.logger.info(
+        f"{colors.GREEN}Add {op_name} package:{colors.END} {package_identifier}"
+    )
+    endpoints.append({"endpoint": package_identifier})
+    operation.review_manager.save_settings()
+    operation.review_manager.create_commit(
+        msg=f"Add {op_name} {package_identifier}",
     )

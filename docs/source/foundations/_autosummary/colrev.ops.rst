@@ -30,11 +30,18 @@ colrev.ops
    colrev.ops.clone
    colrev.ops.commit
    colrev.ops.correct
+   colrev.ops.dashboard
    colrev.ops.data
    colrev.ops.dedupe
    colrev.ops.distribute
    colrev.ops.init
    colrev.ops.load
+   colrev.ops.load_utils_bib
+   colrev.ops.load_utils_enl
+   colrev.ops.load_utils_md
+   colrev.ops.load_utils_nbib
+   colrev.ops.load_utils_ris
+   colrev.ops.load_utils_table
    colrev.ops.merge
    colrev.ops.pdf_get
    colrev.ops.pdf_get_man
@@ -50,6 +57,7 @@ colrev.ops
    colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search
+   colrev.ops.search_feed
    colrev.ops.search_sources
    colrev.ops.status
    colrev.ops.sync

@@ -11,8 +11,10 @@ def test_pdf_prep(  # type: ignore
     helpers.reset_commit(
         review_manager=base_repo_review_manager, commit="pdf_get_commit"
     )
-    # pdf_prep_operation = base_repo_review_manager.get_pdf_prep_operation(reprocess=False)
-    # pdf_prep_operation.main()
+    pdf_prep_operation = base_repo_review_manager.get_pdf_prep_operation(
+        reprocess=False
+    )
+    pdf_prep_operation.main(batch_size=0)
 
 
 def test_pdf_discard(  # type: ignore

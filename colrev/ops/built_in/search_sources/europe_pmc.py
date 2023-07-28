@@ -24,6 +24,7 @@ from thefuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -67,7 +68,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         filename: Path
         search_type: colrev.settings.SearchType
         search_parameters: dict
-        load_conversion_package_endpoint: dict
         comment: typing.Optional[str]
 
         _details = {
@@ -106,7 +106,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     filename=self.__europe_pmc_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -422,7 +421,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self,
         *,
         search_operation: colrev.ops.search.Search,
-        europe_pmc_feed: colrev.ops.search.GeneralOriginFeed,
+        europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -483,17 +482,14 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                             " retrieve europe_pmc_id="
                             + retrieved_record.data["europe_pmc_id"]
                         )
-                        europe_pmc_feed.nr_added += 1
                     else:
-                        changed = search_operation.update_existing_record(
+                        europe_pmc_feed.update_existing_record(
                             records=records,
                             record_dict=retrieved_record.data,
                             prev_record_dict_version=prev_record_dict_version,
                             source=self.search_source,
                             update_time_variant_fields=rerun,
                         )
-                        if changed:
-                            europe_pmc_feed.nr_changed += 1
 
                 url = "END"
                 next_page_url_node = root.find("nextPageUrl")
@@ -502,6 +498,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         url = next_page_url_node.text
 
             europe_pmc_feed.print_post_run_search_infos(records=records)
+
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass
         except OperationalError as exc:
@@ -548,22 +545,22 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
             return add_source
 
         raise NotImplementedError
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Europe PMC"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

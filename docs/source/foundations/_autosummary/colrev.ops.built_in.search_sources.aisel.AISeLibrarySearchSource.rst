@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
       ~AISeLibrarySearchSource.get_masterdata
       ~AISeLibrarySearchSource.heuristic
       ~AISeLibrarySearchSource.json_schema
-      ~AISeLibrarySearchSource.load_fixes
+      ~AISeLibrarySearchSource.load
       ~AISeLibrarySearchSource.prepare
       ~AISeLibrarySearchSource.register_field_encoders
       ~AISeLibrarySearchSource.run_search

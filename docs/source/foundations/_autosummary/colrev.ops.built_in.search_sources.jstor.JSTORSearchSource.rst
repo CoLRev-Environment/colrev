@@ -26,7 +26,6 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
       ~JSTORSearchSource.heuristic
       ~JSTORSearchSource.json_schema
       ~JSTORSearchSource.load
-      ~JSTORSearchSource.load_fixes
       ~JSTORSearchSource.prepare
       ~JSTORSearchSource.register_field_encoders
       ~JSTORSearchSource.run_search

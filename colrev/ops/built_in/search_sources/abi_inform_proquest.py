@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -85,43 +85,48 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for ABI/INFORM (ProQuest)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        to_delete = []
-        for record in records.values():
-            if re.search(r"-\d{1,2}$", record["ID"]):
-                original_record_id = re.sub(r"-\d{1,2}$", "", record["ID"])
-                original_record = records[original_record_id]
-
-                # Note: between duplicate records, there are variations in spelling and completeness
-                if (
-                    colrev.record.Record.get_record_similarity(
-                        record_a=colrev.record.Record(data=record),
-                        record_b=colrev.record.Record(data=original_record),
-                    )
-                    < 0.9
-                ):
-                    continue
-
-                if original_record_id not in records:
-                    continue
-                to_delete.append(record["ID"])
-        if to_delete:
-            for rid in to_delete:
-                load_operation.review_manager.logger.info(f" remove duplicate {rid}")
-                del records[rid]
-
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=source.filename
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
             )
+            to_delete = []
+            for record in records.values():
+                if re.search(r"-\d{1,2}$", record["ID"]):
+                    original_record_id = re.sub(r"-\d{1,2}$", "", record["ID"])
+                    if original_record_id not in records:
+                        continue
+                    original_record = records[original_record_id]
 
-        return records
+                    # Note: between duplicate records,
+                    # there are variations in spelling and completeness
+                    if (
+                        colrev.record.Record.get_record_similarity(
+                            record_a=colrev.record.Record(data=record),
+                            record_b=colrev.record.Record(data=original_record),
+                        )
+                        < 0.9
+                    ):
+                        continue
+
+                    if original_record_id not in records:
+                        continue
+                    to_delete.append(record["ID"])
+            if to_delete:
+                for rid in to_delete:
+                    load_operation.review_manager.logger.info(
+                        f" remove duplicate {rid}"
+                    )
+                    del records[rid]
+
+                load_operation.review_manager.dataset.save_records_dict_to_file(
+                    records=records, save_path=self.search_source.filename
+                )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

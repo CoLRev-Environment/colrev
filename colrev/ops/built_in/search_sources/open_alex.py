@@ -2,7 +2,6 @@
 """SearchSource: OpenAlex"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -16,6 +15,7 @@ from pyalex import Works
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.record
 
 if TYPE_CHECKING:
@@ -75,7 +75,6 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 filename=self.__open_alex_md_filename,
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                 comment="",
             )
 
@@ -115,7 +114,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         record_dict["title"] = item.get("title", "")
         if record_dict["title"] is None:
             del record_dict["title"]
-        if item["type"] == "journal-article":
+        if item["type"] in ["journal-article", "article"]:
             record_dict["ENTRYTYPE"] = "article"
             if (
                 item.get("primary_location", None) is not None
@@ -294,15 +293,16 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             f"Cannot add OpenAlex endpoint with query {query}"
         )
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for OpenAlex"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

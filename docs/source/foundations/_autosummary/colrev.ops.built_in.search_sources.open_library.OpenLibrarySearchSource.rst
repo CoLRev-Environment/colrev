@@ -26,7 +26,7 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.get_masterdata
       ~OpenLibrarySearchSource.heuristic
       ~OpenLibrarySearchSource.json_schema
-      ~OpenLibrarySearchSource.load_fixes
+      ~OpenLibrarySearchSource.load
       ~OpenLibrarySearchSource.prepare
       ~OpenLibrarySearchSource.register_field_encoders
       ~OpenLibrarySearchSource.run_search

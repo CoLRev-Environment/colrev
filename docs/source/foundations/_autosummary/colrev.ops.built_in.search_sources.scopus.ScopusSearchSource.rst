@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
       ~ScopusSearchSource.get_masterdata
       ~ScopusSearchSource.heuristic
       ~ScopusSearchSource.json_schema
-      ~ScopusSearchSource.load_fixes
+      ~ScopusSearchSource.load
       ~ScopusSearchSource.prepare
       ~ScopusSearchSource.register_field_encoders
       ~ScopusSearchSource.run_search

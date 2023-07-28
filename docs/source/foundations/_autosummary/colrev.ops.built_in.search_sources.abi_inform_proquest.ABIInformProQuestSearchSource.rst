@@ -25,7 +25,7 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
       ~ABIInformProQuestSearchSource.get_masterdata
       ~ABIInformProQuestSearchSource.heuristic
       ~ABIInformProQuestSearchSource.json_schema
-      ~ABIInformProQuestSearchSource.load_fixes
+      ~ABIInformProQuestSearchSource.load
       ~ABIInformProQuestSearchSource.prepare
       ~ABIInformProQuestSearchSource.register_field_encoders
       ~ABIInformProQuestSearchSource.run_search

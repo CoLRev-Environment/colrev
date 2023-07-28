@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Test the exclude_languages prep package"""
+"""Test the crossref SearchSource"""
 from pathlib import Path
 
 import pytest
@@ -16,13 +16,12 @@ import colrev.ops.prep
 def fixture_crossref_search_source(
     prep_operation: colrev.ops.prep.Prep,
 ) -> colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource:
-    """Fixture for crossref prep"""
+    """Fixture for crossref SearchSource"""
     settings = {
-        "endpoint": "colrev.get_masterdata_from_crossref",
+        "endpoint": "colrev.crossref",
         "filename": Path("data/search/md_crossref.bib"),
         "search_type": colrev.settings.SearchType.DB,
         "search_parameters": {},
-        "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
         "comment": "",
     }
     instance = colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(
