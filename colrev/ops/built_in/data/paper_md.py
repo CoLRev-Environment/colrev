@@ -127,16 +127,18 @@ class PaperMarkdown(JsonSchemaMixin):
         )
         self.__temp_path.mkdir(exist_ok=True, parents=True)
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
+    # pylint: disable=unused-argument
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
 
-        paper_md_endpoint_details = {
+        add_source = {
             "endpoint": "colrev.paper_md",
             "version": "0.1",
             "word_template": Path("data/APA-7.docx"),
         }
 
-        return paper_md_endpoint_details
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def __retrieve_default_word_template(self) -> Path:
         template_name = self.data_operation.review_manager.data_dir / Path("APA-7.docx")

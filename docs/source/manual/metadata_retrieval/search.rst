@@ -48,14 +48,14 @@ Examples:
 
 .. code-block:: bash
 
-    colrev search -a colrev.crossref:"https://search.crossref.org/?q=+microsourcing&from_ui=yes"
-    colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
-    colrev search -a colrev.ais_library:"https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
-    colrev search -a colrev.pdf_backward_search:default
-    colrev search -a colrev.open_citations_forward_search:default
-    colrev search -a colrev.local_index:"title LIKE '%dark side%'"
-    colrev search -a colrev.colrev_project:"url=https://github.com/CoLRev-Environment/example"
-    colrev search -a /home/user/references.bib
+    colrev search -a colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
+    colrev search -a colrev.dblp -p "https://dblp.org/search?q=microsourcing"
+    colrev search -a colrev.ais_library -p "https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
+    colrev search -a colrev.pdf_backward_search
+    colrev search -a colrev.open_citations_forward_search
+    colrev search -a colrev.local_index -p "title LIKE '%dark side%'"
+    colrev search -a colrev.colrev_project -p "url=https://github.com/CoLRev-Environment/example"
+    colrev search -a colrev.unknown_source -p /home/user/references.bib
 
 ..
     Examples:

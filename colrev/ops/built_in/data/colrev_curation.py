@@ -59,10 +59,12 @@ class ColrevCuration(JsonSchemaMixin):
 
         self.data_operation = data_operation
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
+    # pylint: disable=unused-argument
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
 
-        curation_endpoint_details = {
+        add_source = {
             "endpoint": "colrev.colrev_curation",
             "version": "0.1",
             "curation_url": "TODO",
@@ -78,7 +80,7 @@ class ColrevCuration(JsonSchemaMixin):
             "curated_fields": ["doi", "url"],
         }
 
-        return curation_endpoint_details
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def __get_stats(
         self,

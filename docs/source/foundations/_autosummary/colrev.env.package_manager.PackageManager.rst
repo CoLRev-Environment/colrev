@@ -16,6 +16,7 @@ colrev.env.package\_manager.PackageManager
    .. autosummary::
       :nosignatures:
 
+      ~PackageManager.add_endpoint_for_operation
       ~PackageManager.discover_packages
       ~PackageManager.get_package_details
       ~PackageManager.load_package_endpoint

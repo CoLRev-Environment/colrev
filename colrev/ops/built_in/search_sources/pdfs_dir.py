@@ -663,12 +663,10 @@ class PDFSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        filename = search_operation.get_unique_filename(file_path_string="pdfs")
+        filename = operation.get_unique_filename(file_path_string="pdfs")
         # pylint: disable=no-value-for-parameter
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.pdfs_dir",
@@ -677,7 +675,7 @@ class PDFSearchSource(JsonSchemaMixin):
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )
-        return add_source
+        operation.review_manager.settings.sources.append(add_source)
 
     def __update_based_on_doi(self, *, record_dict: dict) -> None:
         if "doi" not in record_dict:

@@ -139,7 +139,7 @@ class SearchSourcePackageEndpointInterface(
         """Heuristic to identify the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def add_endpoint(search_operation: colrev.ops.search.Search, query: str):  # type: ignore
+    def add_endpoint(operation: colrev.operation.Operation, params: str):  # type: ignore
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
     # pylint: disable=no-self-argument
@@ -318,10 +318,6 @@ class DataPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    # pylint: disable=no-method-argument
-    def get_default_setup() -> dict:  # type: ignore
-        """Get the default setup for the data package endpoint"""
-        return {}  # pragma: no cover
 
     def update_data(  # type: ignore
         data_operation: colrev.ops.data.Data,
@@ -977,3 +973,98 @@ class PackageManager:
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+    def add_endpoint_for_operation(
+        self,
+        *,
+        operation: colrev.operation.Operation,
+        package_identifier: str,
+        params: str,
+    ) -> None:
+        """Add a package_endpoint"""
+
+        settings = operation.review_manager.settings
+        package_type_dict = {
+            colrev.operation.OperationsType.search: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.search_source,
+                "endpoint_location": settings.sources,
+            },
+            colrev.operation.OperationsType.prep: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.prep,
+                "endpoint_location": settings.prep.prep_rounds[
+                    0
+                ].prep_package_endpoints,
+            },
+            colrev.operation.OperationsType.prep_man: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.prep_man,
+                "endpoint_location": settings.prep.prep_man_package_endpoints,
+            },
+            colrev.operation.OperationsType.dedupe: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.dedupe,
+                "endpoint_location": settings.dedupe.dedupe_package_endpoints,
+            },
+            colrev.operation.OperationsType.prescreen: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.prescreen,
+                "endpoint_location": settings.prescreen.prescreen_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_get: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get,
+                "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_get_man: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+                "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_prep: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep,
+                "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_prep_man: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+                "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
+            },
+            colrev.operation.OperationsType.screen: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.screen,
+                "endpoint_location": settings.screen.screen_package_endpoints,
+            },
+            colrev.operation.OperationsType.data: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.data,
+                "endpoint_location": settings.data.data_package_endpoints,
+            },
+        }
+
+        package_type = package_type_dict[operation.type]["package_type"]
+        endpoints = package_type_dict[operation.type]["endpoint_location"]
+
+        registered_endpoints = [
+            e["endpoint"] if isinstance(e, dict) else e.endpoint for e in endpoints  # type: ignore
+        ]
+        if package_identifier in registered_endpoints:
+            operation.review_manager.logger.warning(
+                f"Package {package_identifier} already in {endpoints}"
+            )
+            if "y" != input("Continue [y/n]?"):
+                return
+
+        operation.review_manager.logger.info(
+            f"{colors.GREEN}Add {operation.type} package:{colors.END} {package_identifier}"
+        )
+
+        endpoint_dict = self.load_packages(
+            package_type=package_type,  # type: ignore
+            selected_packages=[{"endpoint": package_identifier}],
+            operation=operation,
+            instantiate_objects=False,
+        )
+
+        e_class = endpoint_dict[package_identifier]
+        if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
+            add_package = e_class.add_endpoint(operation=operation, params=params)  # type: ignore
+        else:
+            add_package = {"endpoint": package_identifier}
+            endpoints.append(add_package)  # type: ignore
+
+        operation.review_manager.save_settings()
+        operation.review_manager.create_commit(
+            msg=f"Add {operation.type} {package_identifier}",
+        )

@@ -27,15 +27,9 @@ class CustomData:
     ) -> None:
         self.settings = from_dict(data_class=self.settings_class, data=settings)
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup for the custom data script"""
-
-        custom_endpoint_details = {
-            "endpoint": "CustomDataFormat",
-            "custom_data_format_version": "0.1",
-            "config": {},
-        }
-        return custom_endpoint_details
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
 
     def update_data(
         self,

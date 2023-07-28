@@ -16,6 +16,7 @@ colrev.ops.built\_in.data.paper\_md.PaperMarkdown
    .. autosummary::
       :nosignatures:
 
+      ~PaperMarkdown.add_endpoint
       ~PaperMarkdown.all_json_schemas
       ~PaperMarkdown.build_paper
       ~PaperMarkdown.field_mapping
@@ -23,7 +24,6 @@ colrev.ops.built\_in.data.paper\_md.PaperMarkdown
       ~PaperMarkdown.from_json
       ~PaperMarkdown.from_object
       ~PaperMarkdown.get_advice
-      ~PaperMarkdown.get_default_setup
       ~PaperMarkdown.json_schema
       ~PaperMarkdown.register_field_encoders
       ~PaperMarkdown.to_dict

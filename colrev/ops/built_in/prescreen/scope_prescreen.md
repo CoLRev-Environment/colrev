@@ -8,7 +8,7 @@ This package uses a predefined scope to apply prescreening decisions automatical
 The Scope Prescreen can be added as follows:
 
 ```
-colrev prescreen --add colrev.scope_prescreen:"TimeScopeFrom=2010"
+colrev prescreen -a colrev.scope_prescreen -p "TimeScopeFrom=2010"
 ```
 
 ## Method: __conditional_presecreen_not_in_ranking()

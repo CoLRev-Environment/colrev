@@ -110,31 +110,30 @@ class PubMedSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        host = urlparse(query).hostname
+        host = urlparse(params).hostname
 
         if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-            query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
+            params = params.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
 
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"pubmed_{query.replace('&sort=', '')}"
+            filename = operation.get_unique_filename(
+                file_path_string=f"pubmed_{params.replace('&sort=', '')}"
             )
-            query = (
+            params = (
                 "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
-                + query
+                + params
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.pubmed",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
+                search_parameters={"query": params},
                 comment="",
             )
-            return add_source
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise NotImplementedError
 

@@ -67,9 +67,9 @@ def test_search_add_source(  # type: ignore
     )
     s_obj = search_source[add_source.endpoint]
     query = "issn=1234-5678"
-    add_source = s_obj.add_endpoint(search_operation, query)  # type: ignore
+    s_obj.add_endpoint(search_operation, query)  # type: ignore
 
-    # Note : add_source is not (yet) appended to settings.sources.
+    search_operation.review_manager.settings.sources.pop()
 
 
 def test_search_get_unique_filename(
@@ -88,7 +88,7 @@ def test_search_get_unique_filename(
 
 
 def test_search_remove_forthcoming(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers, mocker
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the search.remove_forthcoming()"""
 
@@ -109,7 +109,9 @@ def test_search_remove_forthcoming(  # type: ignore
     )
     s_obj = search_source["colrev.crossref"]
     query = "issn=1234-5678"
-    add_source = s_obj.add_endpoint(search_operation, query)  # type: ignore
+    s_obj.add_endpoint(search_operation, query)  # type: ignore
+
+    add_source = search_operation.review_manager.settings.sources[-1]
 
     search_operation.remove_forthcoming(source=add_source)
 
@@ -120,3 +122,4 @@ def test_search_remove_forthcoming(  # type: ignore
         assert "00003" not in records.keys()
 
     add_source.get_corresponding_bib_file().unlink()
+    search_operation.review_manager.settings.sources.pop()

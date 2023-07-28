@@ -16,13 +16,13 @@ colrev.ops.built\_in.data.obsidian.Obsidian
    .. autosummary::
       :nosignatures:
 
+      ~Obsidian.add_endpoint
       ~Obsidian.all_json_schemas
       ~Obsidian.field_mapping
       ~Obsidian.from_dict
       ~Obsidian.from_json
       ~Obsidian.from_object
       ~Obsidian.get_advice
-      ~Obsidian.get_default_setup
       ~Obsidian.json_schema
       ~Obsidian.register_field_encoders
       ~Obsidian.to_dict

@@ -16,8 +16,8 @@ based on [GROBID](https://github.com/kermitt2/grobid)
 ## Add the search source
 
 ```
-colrev search -a colrev.pdf_backward_search:default
-colrev search -a colrev.pdf_backward_search:min_intext_citations=2
+colrev search -a colrev.pdf_backward_search -p default
+colrev search -a colrev.pdf_backward_search -p min_intext_citations=2
 ```
 
 ## Conducting a selective backward search

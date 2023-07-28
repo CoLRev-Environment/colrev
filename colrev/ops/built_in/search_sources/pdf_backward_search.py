@@ -359,23 +359,26 @@ class BackwardSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if query == "default":
-            return cls.get_default_source()
+        if params == "default":
+            add_source = cls.get_default_source()
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
-        if query.startswith("min_intext_citations="):
-            source = cls.get_default_source()
-            min_intext_citations = query.replace("min_intext_citations=", "")
+        if params.startswith("min_intext_citations="):
+            add_source = cls.get_default_source()
+            min_intext_citations = params.replace("min_intext_citations=", "")
             assert min_intext_citations.isdigit()
-            source.search_parameters["min_intext_citations"] = int(min_intext_citations)
-            return source
+            add_source.search_parameters["min_intext_citations"] = int(
+                min_intext_citations
+            )
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add backward_search endpoint with query {query}"
+            f"Cannot add backward_search endpoint with query {params}"
         )
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
