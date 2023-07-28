@@ -9,6 +9,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import pyalex
+import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from pyalex import Works
@@ -190,12 +191,16 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         except (
             colrev_exceptions.InvalidMerge,
             colrev_exceptions.RecordNotParsableException,
+            requests.exceptions.RequestException,
         ):
             pass
         except Exception as exc:
             raise exc
         finally:
-            self.open_alex_lock.release()
+            try:
+                self.open_alex_lock.release()
+            except ValueError:
+                pass
 
         return record
 
