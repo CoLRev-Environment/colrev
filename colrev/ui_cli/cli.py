@@ -181,10 +181,12 @@ def get_review_manager(
             ctx.obj["review_manager"] = review_manager
         else:
             review_manager.update_config(**review_manager_params)
+        review_manager.shell_mode = True
         return review_manager
     except (TypeError, KeyError):
         review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
         ctx.obj = {"review_manager": review_manager}
+        review_manager.shell_mode = True
         return review_manager
 
 
@@ -224,8 +226,13 @@ def exit(
 @main.command(help_priority=1)
 @click.option(
     "--type",
-    type=str,
-    default="literature_review",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+            installed_only=True,
+        )
+    ),
+    default="colrev.literature_review",
     help="Review type (e.g., literature_review (default), scoping_review, theoretical_review)",
 )
 @click.option(

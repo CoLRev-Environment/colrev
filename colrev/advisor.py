@@ -749,6 +749,11 @@ class Advisor:
         # self.review_manager.logger.debug(
         #     f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
         # )
+        if self.review_manager.shell_mode:
+            for category in instructions.values():
+                for item in category:
+                    if "cmd" in item:
+                        item["cmd"] = item["cmd"].replace("colrev ", "")
         return instructions
 
     def get_sharing_instructions(self) -> dict:
