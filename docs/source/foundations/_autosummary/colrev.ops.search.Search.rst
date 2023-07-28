@@ -16,7 +16,6 @@ colrev.ops.search.Search
    .. autosummary::
       :nosignatures:
 
-      ~Search.add_source
       ~Search.check_precondition
       ~Search.check_source_selection_exists
       ~Search.conclude

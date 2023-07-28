@@ -16,7 +16,6 @@ colrev.ops.data.Data
    .. autosummary::
       :nosignatures:
 
-      ~Data.add_data_endpoint
       ~Data.check_precondition
       ~Data.conclude
       ~Data.decorate
