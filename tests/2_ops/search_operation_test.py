@@ -42,7 +42,7 @@ def test_search_selection(  # type: ignore
 
 
 def test_search_add_source(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, mocker
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the search add_source"""
 
