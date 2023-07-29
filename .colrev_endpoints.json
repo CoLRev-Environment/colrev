@@ -311,7 +311,11 @@
             },
             {"package_endpoint_identifier": "colrev.scientometric",
              "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview"
-            }
+            },
+            {"package_endpoint_identifier": "colrev.blank",
+            "endpoint": "colrev.ops.built_in.review_types.blank.BlankReview"
+           }
+
         ]
     }
 

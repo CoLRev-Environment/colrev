@@ -43,6 +43,10 @@
         {
             "package_endpoint_identifier": "colrev.scientometric",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.blank",
+            "status": "EXPERIMENTAL"
         }
     ],
     "search_source": [

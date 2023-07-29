@@ -1,6 +1,14 @@
 {
     "review_type": [
         {
+            "package_endpoint_identifier": "colrev.blank",
+            "endpoint": "colrev.ops.built_in.review_types.blank.BlankReview",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Blank review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/blank.md>`_)",
+            "ci_supported": true
+        },
+        {
             "package_endpoint_identifier": "colrev.conceptual_review",
             "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview",
             "status": "|EXPERIMENTAL|",
