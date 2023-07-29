@@ -13,7 +13,7 @@ License: [may contain copyrighted material, unless stated otherwise](https://eur
 ## Add the search source
 
 ```
-colrev search -a colrev.europe_pmc:"https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
+colrev search -a colrev.europe_pmc -p "https://europepmc.org/search?query=fitbit%20AND%20gamification%20AND%20RCT%20AND%20diabetes%20mellitus"
 ```
 
 ## Links

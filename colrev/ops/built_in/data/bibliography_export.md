@@ -5,12 +5,12 @@ This endpoint exports the records in different bibliographical formats, which ca
 To add an endpoint, run any of the following:
 
 ```
-    colrev data --add endnote
-    colrev data --add zotero
-    colrev data --add jabref
-    colrev data --add mendeley
-    colrev data --add citavi
-    colrev data --add rdf_bibliontology
+    colrev data -a colrev.bibliography_export -p endnote
+    colrev data -a colrev.bibliography_export -p zotero
+    colrev data -a colrev.bibliography_export -p jabref
+    colrev data -a colrev.bibliography_export -p mendeley
+    colrev data -a colrev.bibliography_export -p citavi
+    colrev data -a colrev.bibliography_export -p rdf_bibliontology
 ```
 
 ## Links

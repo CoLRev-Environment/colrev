@@ -63,6 +63,8 @@ class ReviewManager:
     path: Path
     """Path of the project repository"""
 
+    shell_mode = False
+
     def __init__(
         self,
         *,

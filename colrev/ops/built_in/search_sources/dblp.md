@@ -15,7 +15,7 @@ License: [Open Data Commons ODC-BY 1.0 license](https://dblp.org/db/about/copyri
 Run a search on dblp.org and paste the url in the following command:
 
 ```
-colrev search -a colrev.dblp:"https://dblp.org/search?q=microsourcing"
+colrev search -a colrev.dblp -p "https://dblp.org/search?q=microsourcing"
 ```
 
 ## Links

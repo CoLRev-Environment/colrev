@@ -137,16 +137,14 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in query:
-            query = query.replace(
+        if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in params:
+            params = params.replace(
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
             ).lstrip("&")
 
-            parameter_pairs = query.split("&")
+            parameter_pairs = params.split("&")
             search_parameters = {}
             for parameter in parameter_pairs:
                 key, value = parameter.split("=")
@@ -154,7 +152,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
             last_value = list(search_parameters.values())[-1]
 
-            filename = search_operation.get_unique_filename(
+            filename = operation.get_unique_filename(
                 file_path_string=f"ieee_{last_value}"
             )
 
@@ -165,7 +163,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 search_parameters=search_parameters,
                 comment="",
             )
-            return add_source
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise NotImplementedError
 

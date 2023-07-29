@@ -9,7 +9,7 @@ Note: This document is currently under development. It will contain the followin
 ## Add the search source
 
 ```
-colrev search -a colrev.colrev_project:"/path/to/local/file.bib"
+colrev search -a colrev.colrev_project -p "/path/to/local/file.bib"
 ```
 
 ## Links

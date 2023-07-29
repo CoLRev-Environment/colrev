@@ -26,7 +26,6 @@ colrev.ui\_cli
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.ui_cli.add_packages
    colrev.ui_cli.cli
    colrev.ui_cli.cli_colors
    colrev.ui_cli.cli_load

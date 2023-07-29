@@ -148,29 +148,28 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         return params
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        query = query.lstrip("colrev.ais_library:").rstrip('"').lstrip('"')
+        params = params.lstrip("colrev.ais_library:").rstrip('"').lstrip('"')
 
-        host = urlparse(query).hostname
+        host = urlparse(params).hostname
 
         if host and host.endswith("aisel.aisnet.org"):
-            params = cls.__parse_query(query=query)
-            filename = search_operation.get_unique_filename(file_path_string="ais")
+            q_params = cls.__parse_query(query=params)
+            filename = operation.get_unique_filename(file_path_string="ais")
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.ais_library",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": params},
+                search_parameters={"query": q_params},
                 comment="",
             )
-            return add_source
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add aisel endpoint with query {query}"
+            f"Cannot add aisel endpoint with query {q_params}"
         )
 
     def validate_source(

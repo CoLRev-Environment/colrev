@@ -562,33 +562,32 @@ class DBLPSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if (
-            "https://dblp.org/search?q=" in query
-            or "https://dblp.org/search/publ?q=" in query
+            "https://dblp.org/search?q=" in params
+            or "https://dblp.org/search/publ?q=" in params
         ):
-            query = query.replace("https://dblp.org/search?q=", cls.__api_url).replace(
-                "https://dblp.org/search/publ?q=", cls.__api_url
-            )
+            params = params.replace(
+                "https://dblp.org/search?q=", cls.__api_url
+            ).replace("https://dblp.org/search/publ?q=", cls.__api_url)
 
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"dblp_{query.replace(cls.__api_url, '')}"
+            filename = operation.get_unique_filename(
+                file_path_string=f"dblp_{params.replace(cls.__api_url, '')}"
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.dblp",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
+                search_parameters={"query": params},
                 comment="",
             )
-            return add_source
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add backward_search endpoint with query {query}"
+            f"Cannot add backward_search endpoint with query {params}"
         )
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

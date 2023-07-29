@@ -57,12 +57,18 @@ def test_search_add_source(  # type: ignore
         comment="",
     )
 
-    with mocker.patch.object(
-        colrev.ops.search.Search,
-        "main",
-        return_value=True,
-    ):
-        search_operation.add_source(add_source=add_source)
+    package_manager = search_operation.review_manager.get_package_manager()
+
+    search_source = package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        selected_packages=[{"endpoint": add_source.endpoint}],
+        operation=search_operation,
+        instantiate_objects=False,
+    )
+    s_obj = search_source[add_source.endpoint]
+    query = "issn=1234-5678"
+    s_obj.add_endpoint(search_operation, query)  # type: ignore
+
     search_operation.review_manager.settings.sources.pop()
 
 
@@ -82,31 +88,30 @@ def test_search_get_unique_filename(
 
 
 def test_search_remove_forthcoming(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers, mocker
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the search.remove_forthcoming()"""
 
     helpers.retrieve_test_file(
         source=Path("search_files/crossref_feed.bib"),
-        target=Path("data/search/crossref_feed.bib"),
+        target=Path("data/search/crossref_issn_1234-5678.bib"),
     )
     search_operation = base_repo_review_manager.get_search_operation()
-    add_source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=(
-            base_repo_review_manager.path / Path("data/search/crossref_feed.bib")
-        ),
-        search_type=colrev.settings.SearchType.DB,
-        search_parameters={"query": "test"},
-        comment="",
-    )
 
-    with mocker.patch.object(
-        colrev.ops.search.Search,
-        "main",
-        return_value=True,
-    ):
-        search_operation.add_source(add_source=add_source)
+    base_repo_review_manager.settings.search.retrieve_forthcoming = False
+    package_manager = search_operation.review_manager.get_package_manager()
+
+    search_source = package_manager.load_packages(
+        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        selected_packages=[{"endpoint": "colrev.crossref"}],
+        operation=search_operation,
+        instantiate_objects=False,
+    )
+    s_obj = search_source["colrev.crossref"]
+    query = "issn=1234-5678"
+    s_obj.add_endpoint(search_operation, query)  # type: ignore
+
+    add_source = search_operation.review_manager.settings.sources[-1]
 
     search_operation.remove_forthcoming(source=add_source)
 
@@ -114,7 +119,7 @@ def test_search_remove_forthcoming(  # type: ignore
         records = base_repo_review_manager.dataset.load_records_dict(
             load_str=bibtex_file.read()
         )
-        assert "00003" not in records
+        assert "00003" not in records.keys()
 
     add_source.get_corresponding_bib_file().unlink()
     search_operation.review_manager.settings.sources.pop()

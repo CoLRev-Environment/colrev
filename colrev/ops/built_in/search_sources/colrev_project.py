@@ -76,21 +76,21 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         )
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if query.startswith("url="):
-            filename = search_operation.get_unique_filename(
-                file_path_string=query.split("/")[-1]
+        if params.startswith("url="):
+            filename = operation.get_unique_filename(
+                file_path_string=params.split("/")[-1]
             )
-            return colrev.settings.SearchSource(
+            add_source = colrev.settings.SearchSource(
                 endpoint="colrev.colrev_project",
                 filename=filename,
                 search_type=colrev.settings.SearchType.OTHER,
-                search_parameters={"scope": {"url": query[4:]}},
+                search_parameters={"scope": {"url": params[4:]}},
                 comment="",
             )
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise NotImplementedError
 

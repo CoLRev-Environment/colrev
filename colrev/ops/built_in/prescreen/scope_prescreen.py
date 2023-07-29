@@ -231,31 +231,37 @@ class ScopePrescreen(JsonSchemaMixin):
                 + "Prescreen included (automatically)"
             )
 
-    def add_endpoint(self, *, params: dict) -> None:
+    @classmethod
+    def add_endpoint(cls, *, operation: colrev.ops.search.Search, params: str) -> None:
         """Add  the scope_prescreen as an endpoint"""
+
+        params_dict = {}
+        for p_el in params.split(";"):
+            key, value = p_el.split("=")
+            params_dict[key] = value
 
         for (
             existing_scope_prescreen
-        ) in self.review_manager.settings.prescreen.prescreen_package_endpoints:
+        ) in operation.review_manager.settings.prescreen.prescreen_package_endpoints:
             if existing_scope_prescreen["endpoint"] != "colrev.scope_prescreen":
                 continue
-            self.review_manager.logger.info(
+            operation.review_manager.logger.info(
                 "Integrating into existing colrev.scope_prescreen"
             )
-            for key, value in params.items():
+            for key, value in params_dict.items():
                 if (
                     key in existing_scope_prescreen
                     and existing_scope_prescreen[key] != value
                 ):
-                    self.review_manager.logger.info(
+                    operation.review_manager.logger.info(
                         f"Replacing {key} ({existing_scope_prescreen[key]} -> {value})"
                     )
                 existing_scope_prescreen[key] = value
             return
 
         # Insert (if not added before)
-        self.review_manager.settings.prescreen.prescreen_package_endpoints.insert(
-            0, {**{"endpoint": "colrev.scope_prescreen"}, **params}
+        operation.review_manager.settings.prescreen.prescreen_package_endpoints.insert(
+            0, {**{"endpoint": "colrev.scope_prescreen"}, **params_dict}
         )
 
     def run_prescreen(

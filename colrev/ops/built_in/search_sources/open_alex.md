@@ -9,7 +9,7 @@ Note: This document is currently under development. It will contain the followin
 ## Add the search source
 
 ```
-colrev search -a colrev.open_alex:"..."
+colrev search -a colrev.open_alex -p "..."
 ```
 
 To test the metadata provided for a particular `open_alex_id` use:

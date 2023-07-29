@@ -16,13 +16,13 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
    .. autosummary::
       :nosignatures:
 
+      ~BibliographyExport.add_endpoint
       ~BibliographyExport.all_json_schemas
       ~BibliographyExport.field_mapping
       ~BibliographyExport.from_dict
       ~BibliographyExport.from_json
       ~BibliographyExport.from_object
       ~BibliographyExport.get_advice
-      ~BibliographyExport.get_default_setup
       ~BibliographyExport.json_schema
       ~BibliographyExport.register_field_encoders
       ~BibliographyExport.to_dict

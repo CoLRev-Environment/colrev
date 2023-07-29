@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import click
 import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -83,15 +84,6 @@ class BibliographyExport(JsonSchemaMixin):
 
         if not data_operation.review_manager.in_ci_environment():
             data_operation.review_manager.get_zotero_translation_service()
-
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
-        endnote_endpoint_details = {
-            "endpoint": "colrev.bibliography_export",
-            "version": "0.1",
-            "bib_format": "endnote",
-        }
-        return endnote_endpoint_details
 
     def __pybtex_conversion(
         self, *, data_operation: colrev.ops.data.Data, selected_records: dict
@@ -187,6 +179,27 @@ class BibliographyExport(JsonSchemaMixin):
             raise colrev_exceptions.ImportException(
                 f"Zotero translators failed ({exc})"
             )
+
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add bibliography as an endpoint"""
+
+        add_source = {
+            "endpoint": "colrev.bibliography_export",
+            "version": "0.1",
+            "bib_format": "endnote",
+        }
+
+        if params:
+            add_source["bib_format"] = params
+        else:
+            choice = click.prompt(
+                "Select a bibliography format",
+                type=click.Choice([b.value for b in BibFormats]),
+            )
+            add_source["bib_format"] = choice
+
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def update_data(
         self,

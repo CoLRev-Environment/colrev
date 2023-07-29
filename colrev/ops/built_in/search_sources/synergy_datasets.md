@@ -13,7 +13,7 @@ Note: This document is currently under development. It will contain the followin
 <!-- Download search results and store in `data/search/` directory. API-access not yet available. -->
 
 ```
-colrev search -a colrev.synergy_datasets:dataset=Appenzeller-Herzog_2019
+colrev search -a colrev.synergy_datasets -p dataset=Appenzeller-Herzog_2019
 ```
 
 ## Links

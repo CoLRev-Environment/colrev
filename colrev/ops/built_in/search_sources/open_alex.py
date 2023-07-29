@@ -289,13 +289,11 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add OpenAlex endpoint with query {query}"
+            f"Cannot add OpenAlex endpoint with query {params}"
         )
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

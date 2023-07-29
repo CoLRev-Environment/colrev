@@ -9,7 +9,7 @@ Note: This document is currently under development. It will contain the followin
 ## Add the search source
 
 ```
-colrev search -a colrev.local_index:"title LIKE '%dark side%'"
+colrev search -a colrev.local_index -p "title LIKE '%dark side%'"
 ```
 
 ## Links

@@ -48,33 +48,6 @@ class Search(colrev.operation.Operation):
 
         return filename
 
-    def add_source(self, *, add_source: colrev.settings.SearchSource) -> None:
-        """Add a new source"""
-
-        package_manager = self.review_manager.get_package_manager()
-        endpoint_dict = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[add_source.get_dict()],
-            operation=self,
-        )
-        endpoint = endpoint_dict[add_source.endpoint.lower()]
-        endpoint.validate_source(search_operation=self, source=add_source)  # type: ignore
-
-        self.review_manager.logger.info(f"{colors.GREEN}Add source:{colors.END}")
-        print(add_source)
-        self.review_manager.settings.sources.append(add_source)
-        self.review_manager.save_settings()
-
-        print()
-
-        self.main(selection_str=str(add_source.filename), rerun=False, skip_commit=True)
-        fname = add_source.filename
-        if fname.is_absolute():
-            fname = add_source.filename.relative_to(self.review_manager.path)
-        self.review_manager.create_commit(
-            msg=f"Add search source {fname}",
-        )
-
     def __get_search_sources(
         self, *, selection_str: Optional[str] = None
     ) -> list[colrev.settings.SearchSource]:
@@ -92,6 +65,9 @@ class Search(colrev.operation.Operation):
 
     def remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
         """Remove forthcoming papers from a SearchSource"""
+
+        if self.review_manager.settings.search.retrieve_forthcoming:
+            return
 
         with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
@@ -195,15 +171,15 @@ class Search(colrev.operation.Operation):
                     ) from exc
                 self.review_manager.logger.warning("ServiceNotAvailableException")
 
-            if source.filename.is_file():
-                if not self.review_manager.settings.search.retrieve_forthcoming:
-                    self.remove_forthcoming(source=source)
+            if not source.get_corresponding_bib_file().is_file():
+                continue
 
-                self.review_manager.dataset.format_records_file()
-                self.review_manager.dataset.add_record_changes()
-                self.review_manager.dataset.add_changes(path=source.filename)
-                if not skip_commit:
-                    self.review_manager.create_commit(msg="Run search")
+            self.remove_forthcoming(source=source)
+            self.review_manager.dataset.format_records_file()
+            self.review_manager.dataset.add_record_changes()
+            self.review_manager.dataset.add_changes(path=source.filename)
+            if not skip_commit:
+                self.review_manager.create_commit(msg="Run search")
 
         if self.review_manager.in_ci_environment():
             print("\n\n")

@@ -222,12 +222,11 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+        """Add SearchSource as an endpoint"""
 
-        return cls.get_default_source()
+        add_source = cls.get_default_source()
+        operation.review_manager.settings.sources.append(add_source)
 
     def get_masterdata(
         self,

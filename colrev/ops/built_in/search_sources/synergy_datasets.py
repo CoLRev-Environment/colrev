@@ -82,12 +82,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
-    ) -> colrev.settings.SearchSource:
+    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if not query.startswith("dataset="):
+        if not params.startswith("dataset="):
             print("Retrieving available datasets")
             date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
@@ -101,12 +99,12 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "\n- "
                 + "\n- ".join([f.name for f in data_path.iterdir() if f.is_dir()])
             )
-            query = input("Enter dataset:")
-            query = "dataset=" + query
+            params = input("Enter dataset:")
+            params = "dataset=" + params
 
-        if query.startswith("dataset="):
-            dataset = query.replace("dataset=", "")
-            filename = search_operation.get_unique_filename(
+        if params.startswith("dataset="):
+            dataset = params.replace("dataset=", "")
+            filename = operation.get_unique_filename(
                 file_path_string=f"SYNERGY_{dataset}"
             )
             add_source = colrev.settings.SearchSource(
@@ -116,10 +114,11 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 search_parameters={"dataset": dataset},
                 comment="",
             )
-            return add_source
+            operation.review_manager.settings.sources.append(add_source)
+            return
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add SYNERGY endpoint with query {query}"
+            f"Cannot add SYNERGY endpoint with query {params}"
         )
 
     def validate_source(

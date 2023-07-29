@@ -62,15 +62,18 @@ class GithubPages(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = data_operation.review_manager
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
-        github_pages_endpoint_details = {
+    # pylint: disable=unused-argument
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
+
+        add_source = {
             "endpoint": "colrev.github_pages",
             "version": "0.1",
             "auto_push": True,
         }
 
-        return github_pages_endpoint_details
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def __setup_github_pages_branch(
         self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo

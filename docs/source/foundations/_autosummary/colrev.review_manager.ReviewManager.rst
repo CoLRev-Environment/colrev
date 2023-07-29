@@ -98,6 +98,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.SETTINGS_RELATIVE
       ~ReviewManager.STATUS_RELATIVE
       ~ReviewManager.notified_next_operation
+      ~ReviewManager.shell_mode
       ~ReviewManager.dataset
       ~ReviewManager.path
       ~ReviewManager.force_mode
