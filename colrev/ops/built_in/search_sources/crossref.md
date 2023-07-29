@@ -25,7 +25,7 @@ Whole journals can be added based on their issn:
 colrev search -a colrev.crossref -p "issn=1234-5678"
 ```
 
-To test the metadata provided for a particular `open_alex_id` use:
+To test the metadata provided for a particular `DOI` use:
 ```
 https://api.crossref.org/works/DOI
 ```
