@@ -21,7 +21,6 @@ colrev.ops.load.Load
       ~Load.decorate
       ~Load.get_most_likely_sources
       ~Load.get_new_sources_heuristic_list
-      ~Load.import_provenance
       ~Load.main
 
 

@@ -2,38 +2,22 @@
 """CoLRev load operation: Load records from search sources into references.bib."""
 from __future__ import annotations
 
-import html
 import itertools
-import re
 import string
 import typing
 from pathlib import Path
 
-import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+import colrev.ops.load_utils_formatter
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
 
 class Load(colrev.operation.Operation):
-    """Load the records"""
 
-    # TODO : extract to separate format conversion script
-    __LATEX_SPECIAL_CHAR_MAPPING = {
-        '\\"u': "ü",
-        "\\&": "&",
-        '\\"o': "ö",
-        '\\"a': "ä",
-        '\\"A': "Ä",
-        '\\"O': "Ö",
-        '\\"U': "Ü",
-        "\\textendash": "–",
-        "\\textemdash": "—",
-        "\\~a": "ã",
-        "\\'o": "ó",
-    }
+    """Load the records"""
 
     def __init__(
         self,
@@ -50,7 +34,8 @@ class Load(colrev.operation.Operation):
 
         self.quality_model = review_manager.get_qm()
         self.package_manager = self.review_manager.get_package_manager()
-        self.language_service = colrev.env.language_service.LanguageService()
+
+        self.load_formatter = colrev.ops.load_utils_formatter.LoadFormatter()
 
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
@@ -232,25 +217,7 @@ class Load(colrev.operation.Operation):
 
         return heuristic_results
 
-    def __unescape_latex(self, *, input_str: str) -> str:
-        # Based on
-        # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
-
-        for latex_char, repl_char in self.__LATEX_SPECIAL_CHAR_MAPPING.items():
-            input_str = input_str.replace(latex_char, repl_char)
-
-        input_str = input_str.replace("\\emph", "")
-        input_str = input_str.replace("\\textit", "")
-
-        return input_str
-
-    def __unescape_html(self, *, input_str: str) -> str:
-        input_str = html.unescape(input_str)
-        if "<" in input_str:
-            input_str = re.sub(r"<.*?>", "", input_str)
-        return input_str
-
-    def import_provenance(
+    def __import_provenance(
         self,
         *,
         record: colrev.record.Record,
@@ -285,97 +252,15 @@ class Load(colrev.operation.Operation):
             set_initial_import_provenance(record=record)
             record.update_masterdata_provenance(qm=self.quality_model)
 
-    def __import_format_fields(self, *, record: colrev.record.Record) -> None:
-        # pylint: disable=duplicate-code
-        # For better readability of the git diff:
-        fields_to_process = [
-            f
-            for f in [
-                "author",
-                "year",
-                "title",
-                "journal",
-                "booktitle",
-                "series",
-                "volume",
-                "number",
-                "pages",
-                "doi",
-                "abstract",
-            ]
-            if f in record.data
-        ]
-
-        for field in fields_to_process:
-            if "\\" in record.data[field]:
-                record.data[field] = self.__unescape_latex(input_str=record.data[field])
-            if "<" in record.data[field]:
-                record.data[field] = self.__unescape_html(input_str=record.data[field])
-
-            record.data[field] = (
-                record.data[field]
-                .replace("\n", " ")
-                .rstrip()
-                .lstrip()
-                .replace("{", "")
-                .replace("}", "")
-            )
-        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
-            record.data["title"] = re.sub(r"\s+", " ", record.data["title"]).rstrip(".")
-
-        if "year" in record.data and str(record.data["year"]).endswith(".0"):
-            record.data["year"] = str(record.data["year"])[:-2]
-
-        if "pages" in record.data:
-            record.data["pages"] = record.data["pages"].replace("–", "--")
-            if record.data["pages"].count("-") == 1:
-                record.data["pages"] = record.data["pages"].replace("-", "--")
-            if record.data["pages"].lower() == "n.pag":
-                del record.data["pages"]
-
-    def __import_process_fields(self, *, record: colrev.record.Record) -> None:
-        # Consistently set keys to lower case
-        lower_keys = [k.lower() for k in list(record.data.keys())]
-        for key, n_key in zip(list(record.data.keys()), lower_keys):
-            if key not in ["ID", "ENTRYTYPE"]:
-                record.data[n_key] = record.data.pop(key)
-
-        self.__import_format_fields(record=record)
-
-        if "number" not in record.data and "issue" in record.data:
-            record.data.update(number=record.data["issue"])
-            del record.data["issue"]
-
-        if record.data.get("volume", "") == "ahead-of-print":
-            del record.data["volume"]
-        if record.data.get("number", "") == "ahead-of-print":
-            del record.data["number"]
-
-        if "language" in record.data and len(record.data["language"]) != 3:
-            self.language_service.unify_to_iso_639_3_language_codes(record=record)
-
-        if "url" in record.data and "login?url=https" in record.data["url"]:
-            record.data["url"] = record.data["url"][
-                record.data["url"].find("login?url=https") + 10 :
-            ]
-
     def __import_record(self, *, record_dict: dict) -> dict:
-        self.review_manager.logger.debug(
-            f'import_record {record_dict["ID"]}: '
-            # f"\n{self.review_manager.p_printer.pformat(record_dict)}\n\n"
-        )
+        self.review_manager.logger.debug(f'import_record {record_dict["ID"]}: ')
 
         record = colrev.record.Record(data=record_dict)
-        if record.data["colrev_status"] == colrev.record.RecordState.md_retrieved:
-            self.__import_process_fields(record=record)
 
-        if "doi" in record.data:
-            record.data.update(
-                doi=record.data["doi"].replace("http://dx.doi.org/", "").upper()
-            )
-        self.import_provenance(
-            record=record,
-        )
+        # For better readability of the git diff:
+        self.load_formatter.run(record=record)
+
+        self.__import_provenance(record=record)
 
         if record.data["colrev_status"] in [
             colrev.record.RecordState.md_retrieved,
