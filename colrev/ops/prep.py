@@ -958,7 +958,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Overall curated (✔)".ljust(29)
+            "curated (✔)".ljust(29)
             + f"{colors.GREEN}{nr_recs}{colors.END}".rjust(20, " ")
             + " records"
         )
@@ -972,7 +972,7 @@ class Prep(colrev.operation.Operation):
         )
 
         self.review_manager.logger.info(
-            "Overall md_prepared".ljust(29)
+            "md_prepared".ljust(29)
             + f"{colors.GREEN}{nr_recs}{colors.END}".rjust(20, " ")
             + " records"
         )
@@ -987,9 +987,9 @@ class Prep(colrev.operation.Operation):
         )
         if nr_recs > 0:
             self.review_manager.logger.info(
-                "To prepare manually".ljust(29)
+                "md_needs_manual_preparation".ljust(29)
                 + f"{colors.ORANGE}{nr_recs}{colors.END}".rjust(20, " ")
-                + " records"
+                + f" records ({nr_recs/len(prepared_records)}%)"
             )
 
         nr_recs = len(
@@ -1002,8 +1002,9 @@ class Prep(colrev.operation.Operation):
         )
         if nr_recs > 0:
             self.review_manager.logger.info(
-                "Records prescreen-excluded".ljust(29)
+                "rev_prescreen_excluded".ljust(29)
                 + f"{colors.RED}{nr_recs}{colors.END}".rjust(20, " ")
+                + " records"
             )
 
     def skip_prep(self) -> None:
