@@ -120,12 +120,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             if "publication_year" in entry and "year" not in entry:
                 entry["year"] = entry.pop("publication_year")
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
-        """Load the records from the SearchSource file"""
-
-        if not self.search_source.filename.is_file():
-            return {}
-
+    def __rename_erroneous_extensions(self) -> None:
         data = self.search_source.filename.read_text(encoding="utf-8")
         # # Correct the file extension if necessary
         if re.findall(
@@ -145,6 +140,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             self.review_manager.create_commit(
                 msg=f"Rename {self.search_source.filename}"
             )
+            return
 
         if re.findall(
             r"^TI ", data, re.MULTILINE
@@ -164,67 +160,86 @@ class UnknownSearchSource(JsonSchemaMixin):
                 msg=f"Rename {self.search_source.filename}"
             )
 
-        if self.search_source.filename.suffix == ".ris":
-            colrev.ops.load_utils_ris.apply_ris_fixes(
-                filename=self.search_source.filename
-            )
-            ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
-                filename=self.search_source.filename
-            )
-            self.__ris_fixes(entries=ris_entries)
-            records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
-            return records
+    def __load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        colrev.ops.load_utils_ris.apply_ris_fixes(filename=self.search_source.filename)
+        ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
+            filename=self.search_source.filename
+        )
+        self.__ris_fixes(entries=ris_entries)
+        records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
+        return records
 
-        if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
-                load_operation=load_operation, source=self.search_source
-            )
-            return records
+    def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        records = colrev.ops.load_utils_bib.load_bib_file(
+            load_operation=load_operation, source=self.search_source
+        )
+        return records
 
-        if self.search_source.filename.suffix == ".csv":
-            csv_loader = colrev.ops.load_utils_table.CSVLoader(
-                load_operation=load_operation, settings=self.search_source
-            )
-            records = csv_loader.load()
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
-            return records
+    def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        csv_loader = colrev.ops.load_utils_table.CSVLoader(
+            load_operation=load_operation, settings=self.search_source
+        )
+        records = csv_loader.load()
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records,
+            save_path=self.search_source.get_corresponding_bib_file(),
+        )
+        return records
 
-        if self.search_source.filename.suffix in [".xls", ".xlsx"]:
-            excel_loader = colrev.ops.load_utils_table.ExcelLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = excel_loader.load()
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
-            return records
+    def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        excel_loader = colrev.ops.load_utils_table.ExcelLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        records = excel_loader.load()
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records,
+            save_path=self.search_source.get_corresponding_bib_file(),
+        )
+        return records
 
-        if self.search_source.filename.suffix == ".md":
-            md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = md_loader.load()
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
-            return records
+    def __load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        md_loader = colrev.ops.load_utils_md.MarkdownLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        records = md_loader.load()
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records,
+            save_path=self.search_source.get_corresponding_bib_file(),
+        )
+        return records
 
-        if self.search_source.filename.suffix in [
-            ".enl",
-        ]:
-            records = colrev.ops.load_utils_enl.load(source=self.search_source)
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
-            return records
+    def __load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        records = colrev.ops.load_utils_enl.load(source=self.search_source)
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records,
+            save_path=self.search_source.get_corresponding_bib_file(),
+        )
+        return records
 
-        raise NotImplementedError
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if not self.search_source.filename.is_file():
+            return {}
+
+        self.__rename_erroneous_extensions()
+
+        __load_methods = {
+            ".ris": self.__load_ris,
+            ".bib": self.__load_bib,
+            ".csv": self.__load_csv,
+            ".xls": self.__load_xlsx,
+            ".xlsx": self.__load_xlsx,
+            ".md": self.__load_md,
+            ".enl": self.__load_enl,
+        }
+
+        if self.search_source.filename.suffix not in __load_methods:
+            raise NotImplementedError
+
+        return __load_methods[self.search_source.filename.suffix](
+            load_operation=load_operation
+        )
 
     def __heuristically_fix_entrytypes(
         self, *, record: colrev.record.PrepRecord

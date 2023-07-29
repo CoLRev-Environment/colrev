@@ -96,8 +96,6 @@ Example 2:
     def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
         """Add as an endpoint"""
 
-        # TODO : add fields interactively
-
         add_source = {
             "endpoint": "colrev.structured",
             "version": "0.1",
