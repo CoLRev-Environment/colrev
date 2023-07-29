@@ -223,8 +223,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/ArticleTitle"
         )
         if title:
-            title = title[0].text.strip().rstrip(".")
-        return title
+            if title[0].text:
+                title = title[0].text.strip().rstrip(".")
+                return title
+        return ""
 
     @classmethod
     def __get_abstract_string(cls, *, root) -> str:  # type: ignore
