@@ -85,8 +85,8 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if not params.startswith("dataset="):
-            print("Retrieving available datasets")
+        if params is None or not params.startswith("dataset="):
+            operation.review_manager.logger.info("Retrieving available datasets")
             date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
             temp_path.mkdir()
@@ -94,10 +94,11 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "https://github.com/asreview/synergy-dataset", temp_path, depth=1
             )
             data_path = temp_path / Path("datasets")
+            files = data_path.glob("**/*_ids.csv")
             print("https://github.com/asreview/synergy-dataset")
             print(
                 "\n- "
-                + "\n- ".join([f.name for f in data_path.iterdir() if f.is_dir()])
+                + "\n- ".join([str(f.parent.name) + "/" + str(f.name) for f in files])
             )
             params = input("Enter dataset:")
             params = "dataset=" + params
@@ -105,7 +106,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         if params.startswith("dataset="):
             dataset = params.replace("dataset=", "")
             filename = operation.get_unique_filename(
-                file_path_string=f"SYNERGY_{dataset}"
+                file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.synergy_datasets",
@@ -128,12 +129,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     ) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
-        """Run a search of the SYNERGY datasets"""
-
-        # TODO
+    def __load_dataset(self) -> pd.DataFrame:
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
         temp_path.mkdir()
@@ -141,8 +137,36 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             "https://github.com/asreview/synergy-dataset", temp_path, depth=1
         )
         dataset_name = self.search_source.search_parameters["dataset"]
-        filename = Path(dataset_name) / Path(f"{dataset_name}_ids").with_suffix(".csv")
-        dataset_df = pd.read_csv(temp_path / Path("datasets") / filename)
+        dataset_df = pd.read_csv(temp_path / Path("datasets") / dataset_name)
+
+        # check data structure
+        if not all(x in dataset_df for x in ["doi", "pmid", "openalex_id"]):
+            raise colrev_exceptions.SearchSourceException(
+                f"Missing doi/pmid/openalex_id in {dataset_name}"
+            )
+        if "pmid" not in dataset_df:
+            dataset_df["pmid"] = pd.NA
+        missing_metadata = (
+            dataset_df[["doi", "pmid", "openalex_id"]].isna().all(axis="columns")
+        )
+        missing_metadata_percentage = missing_metadata.sum() / dataset_df.shape[0]
+        if missing_metadata_percentage > 0.1:
+            self.review_manager.logger.error(
+                f"Missing metadata percentage: {missing_metadata_percentage}"
+            )
+            input("ENTER to continue anyway")
+        else:
+            self.review_manager.logger.info(
+                f"Missing metadata: {missing_metadata_percentage:.2%}"
+            )
+        return dataset_df
+
+    def run_search(
+        self, search_operation: colrev.ops.search.Search, rerun: bool
+    ) -> None:
+        """Run a search of the SYNERGY datasets"""
+
+        dataset_df = self.__load_dataset()
 
         synergy_feed = self.search_source.get_feed(
             review_manager=self.review_manager,

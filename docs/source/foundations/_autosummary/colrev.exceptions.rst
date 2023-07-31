@@ -69,6 +69,7 @@ colrev.exceptions
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError
+      SearchSourceException
       ServiceNotAvailableException
       SourceHeuristicsException
       StatusFieldValueError

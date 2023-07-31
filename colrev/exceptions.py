@@ -357,6 +357,14 @@ class NotFeedIdentifiableException(CoLRevException):
         super().__init__(self.message)
 
 
+class SearchSourceException(CoLRevException):
+    """Records cannot be retrieved from the SearchSource."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 # Load
 
 
