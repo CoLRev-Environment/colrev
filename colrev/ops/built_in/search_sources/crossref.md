@@ -8,15 +8,12 @@ Note: This document is currently under development. It will contain the followin
 - supported (details): run_search (including updates), load,  prep (including get_masterdata)
 -->
 
-[Crossref](https://www.crossref.org/)
-
-[License](https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/)
-
 ## Add the search source
 
 It is possible to copy the url from the [search.crossref.org](https://search.crossref.org/?q=microsourcing&from_ui=yes) UI and add it as follows:
 
 ```
+colrev search -a colrev.crossref -p "query=microsourcing;years=2000-2010"
 colrev search -a colrev.crossref -p "https://search.crossref.org/?q=+microsourcing&from_ui=yes"
 ```
 
@@ -31,3 +28,6 @@ https://api.crossref.org/works/DOI
 ```
 
 ## Links
+
+- [Crossref](https://www.crossref.org/)
+- [License](https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/)
