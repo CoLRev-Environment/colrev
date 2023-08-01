@@ -752,7 +752,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def __scope_excluded(self, *, retrieved_record_dict: dict) -> bool:
         if (
             "scope" not in self.search_source.search_parameters
-            and "years" not in self.search_source.search_parameters["scope"]
+            or "years" not in self.search_source.search_parameters["scope"]
         ):
             return False
         year_from, year_to = self.search_source.search_parameters["scope"][
