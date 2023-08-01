@@ -980,6 +980,7 @@ class PackageManager:
         operation: colrev.operation.Operation,
         package_identifier: str,
         params: str,
+        prompt_on_same_source: bool = True,
     ) -> None:
         """Add a package_endpoint"""
 
@@ -1039,7 +1040,7 @@ class PackageManager:
         registered_endpoints = [
             e["endpoint"] if isinstance(e, dict) else e.endpoint for e in endpoints  # type: ignore
         ]
-        if package_identifier in registered_endpoints:
+        if package_identifier in registered_endpoints and prompt_on_same_source:
             operation.review_manager.logger.warning(
                 f"Package {package_identifier} already in {endpoints}"
             )
