@@ -37,6 +37,7 @@ if TYPE_CHECKING:
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
+# pylint: disable=too-many-lines
 
 
 @zope.interface.implementer(
@@ -922,7 +923,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
 
             filename = operation.get_unique_filename(
-                file_path_string=f"crossref_issn_{params}"
+                file_path_string=f"crossref_{params}"
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",

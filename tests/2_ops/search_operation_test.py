@@ -94,7 +94,7 @@ def test_search_remove_forthcoming(  # type: ignore
 
     helpers.retrieve_test_file(
         source=Path("search_files/crossref_feed.bib"),
-        target=Path("data/search/crossref_issn_1234-5678.bib"),
+        target=Path("data/search/crossref_issn=1234-5678.bib"),
     )
     search_operation = base_repo_review_manager.get_search_operation()
 
