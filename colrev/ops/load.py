@@ -383,11 +383,9 @@ class Load(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.__validate_load(source=source)
 
-        if keep_ids:
-            self.review_manager.logger.warning(
-                "Not yet fully implemented. Need to check/resolve ID duplicates."
-            )
-        else:
+        if not keep_ids:
+            # Set IDs based on local_index
+            # (the same records are more likely to have the same ID on the same machine)
             self.review_manager.logger.debug("Set IDs")
             records = self.review_manager.dataset.set_ids(
                 records=records,
