@@ -187,10 +187,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
             return retrieved_record
 
-        except (
-            requests.exceptions.JSONDecodeError,
-            requests.exceptions.ConnectTimeout,
-        ) as exc:
+        except (requests.exceptions.RequestException,) as exc:
             raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                 msg="Record not found in crossref (based on doi)"
             ) from exc
