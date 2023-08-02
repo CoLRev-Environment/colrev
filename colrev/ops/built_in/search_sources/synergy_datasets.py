@@ -167,12 +167,21 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         """Run a search of the SYNERGY datasets"""
 
         dataset_df = self.__load_dataset()
+        records = self.review_manager.dataset.load_records_dict()
 
         synergy_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=False,
         )
+        existing_keys = {
+            "doi": [r["doi"] for r in records.values() if "doi" in r],
+            "pmid": [r["pmid"] for r in records.values() if "pmid" in r],
+            "openalex_id": [
+                r["openalex_id"] for r in records.values() if "openalex_id" in r
+            ],
+        }
+
         for i, record in enumerate(dataset_df.to_dict(orient="records")):
             record["ID"] = i
             record["ENTRYTYPE"] = "article"
@@ -180,7 +189,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 if str(record[k]) == "nan":
                     del record[k]
             if "doi" in record.keys():
-                record["doi"] = str(record["doi"]).replace("https://doi.org/", "")
+                record["doi"] = (
+                    str(record["doi"]).replace("https://doi.org/", "").upper()
+                )
             if "pmid" in record.keys():
                 record["pmid"] = str(record["pmid"]).replace(
                     "https://pubmed.ncbi.nlm.nih.gov/", ""
@@ -193,6 +204,19 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             # Skip records without metadata
             if {"ID", "ENTRYTYPE", "label_included"} == set(record.keys()):
                 continue
+
+            if any(
+                value in existing_keys[key]
+                for key, value in record.items()
+                if key in ["doi", "pmid", "openalex_id"]
+            ):
+                continue
+            if "doi" in record:
+                existing_keys["doi"].append(record["doi"])
+            if "pmid" in record:
+                existing_keys["pmid"].append(record["pmid"])
+            if "openalex_id" in record:
+                existing_keys["openalex_id"].append(record["openalex_id"])
 
             synergy_feed.set_id(record_dict=record)
             synergy_feed.add_record(record=colrev.record.Record(data=record))
