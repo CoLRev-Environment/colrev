@@ -432,13 +432,21 @@ class PubMedSearchSource(JsonSchemaMixin):
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
                 if save_feed:
                     pubmed_feed.save_feed_file()
-                self.pubmed_lock.release()
+                try:
+                    self.pubmed_lock.release()
+                except ValueError:
+                    pass
+
                 return record
             except (
                 colrev_exceptions.InvalidMerge,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
-                self.pubmed_lock.release()
+                try:
+                    self.pubmed_lock.release()
+                except ValueError:
+                    pass
+
                 return record
 
         except (
