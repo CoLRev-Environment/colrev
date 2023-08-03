@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import tempfile
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -205,7 +206,11 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             ],
         }
 
-        decisions = {"doi": {}, "pmid": {}, "openalex_id": {}}
+        decisions: typing.Dict[str, typing.Dict[str, list]] = {
+            "doi": {},
+            "pmid": {},
+            "openalex_id": {},
+        }
         empty_records = 0
         duplicates = 0
         for i, record in enumerate(dataset_df.to_dict(orient="records")):
