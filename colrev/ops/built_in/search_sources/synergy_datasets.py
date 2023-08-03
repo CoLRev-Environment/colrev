@@ -19,6 +19,7 @@ import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 
@@ -85,7 +86,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None or not params.startswith("dataset="):
+        if params is None:
             operation.review_manager.logger.info("Retrieving available datasets")
             date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
@@ -161,6 +162,28 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             )
         return dataset_df
 
+    def __validate_decisions(self, *, decisions: dict, record: dict) -> None:
+        if "doi" in record:
+            doi = record["doi"].lower()
+            if doi in decisions["doi"]:
+                decisions["doi"][doi].append(record["label_included"])
+            else:
+                decisions["doi"][doi] = [record["label_included"]]
+
+        if "pmid" in record:
+            pmid = record["pmid"].lower()
+            if pmid in decisions["pmid"]:
+                decisions["pmid"][pmid].append(record["label_included"])
+            else:
+                decisions["pmid"][pmid] = [record["label_included"]]
+
+        if "openalex_id" in record:
+            oaid = record["openalex_id"].lower()
+            if oaid in decisions["openalex_id"]:
+                decisions["openalex_id"][oaid].append(record["label_included"])
+            else:
+                decisions["openalex_id"][oaid] = [record["label_included"]]
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
@@ -182,6 +205,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             ],
         }
 
+        decisions = {"doi": {}, "pmid": {}, "openalex_id": {}}
+        empty_records = 0
+        duplicates = 0
         for i, record in enumerate(dataset_df.to_dict(orient="records")):
             record["ID"] = i
             record["ENTRYTYPE"] = "article"
@@ -201,8 +227,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                     "https://openalex.org/", ""
                 )
 
+            self.__validate_decisions(decisions=decisions, record=record)
             # Skip records without metadata
             if {"ID", "ENTRYTYPE", "label_included"} == set(record.keys()):
+                empty_records += 1
                 continue
 
             if any(
@@ -210,7 +238,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 for key, value in record.items()
                 if key in ["doi", "pmid", "openalex_id"]
             ):
+                duplicates += 1
                 continue
+
             if "doi" in record:
                 existing_keys["doi"].append(record["doi"])
             if "pmid" in record:
@@ -222,6 +252,33 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             synergy_feed.add_record(record=colrev.record.Record(data=record))
 
             # The linking of doi/... should happen in the prep operation
+
+        decisions["doi"] = {
+            d: v for d, v in decisions["doi"].items() if len(v) > 1 and len(set(v)) != 1
+        }
+        decisions["pmid"] = {
+            d: v
+            for d, v in decisions["pmid"].items()
+            if len(v) > 1 and len(set(v)) != 1
+        }
+        decisions["openalex_id"] = {
+            d: v
+            for d, v in decisions["openalex_id"].items()
+            if len(v) > 1 and len(set(v)) != 1
+        }
+        if decisions["doi"] or decisions["pmid"] or decisions["openalex_id"]:
+            self.review_manager.logger.error(
+                "Errors in dataset: ambiguous inclusion decisions:"
+            )
+            print(f"{colors.RED}")
+            print(f"- dois: {', '.join(decisions['doi'])}")
+            print(f"- pmid: {', '.join(decisions['pmid'])}")
+            print(f"- openalex_id: {', '.join(decisions['openalex_id'])}")
+            print(f"{colors.END}")
+            # TODO : exclude ambiguous?!
+
+        self.review_manager.logger.info(f"Dropped {empty_records} empty records")
+        self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
 
         synergy_feed.save_feed_file()
 
