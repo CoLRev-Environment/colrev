@@ -115,7 +115,16 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         record_dict["title"] = item.get("title", "")
         if record_dict["title"] is None:
             del record_dict["title"]
-        if item["type"] in ["journal-article", "article"]:
+        if item["type_crossref"] == "proceedings-article":
+            record_dict["ENTRYTYPE"] = "inproceedings"
+            if (
+                item.get("primary_location", None) is not None
+                and item["primary_location"].get("source", None) is not None
+            ):
+                display_name = item["primary_location"]["source"]["display_name"]
+                if display_name != "Proceedings":
+                    record_dict["booktitle"] = display_name
+        elif item["type"] in ["journal-article", "article"]:
             record_dict["ENTRYTYPE"] = "article"
             if (
                 item.get("primary_location", None) is not None
@@ -182,6 +191,10 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
             open_alex_feed.set_id(record_dict=retrieved_record.data)
             open_alex_feed.add_record(record=retrieved_record)
+            record.change_entrytype(
+                new_entrytype=retrieved_record.data["ENTRYTYPE"],
+                qm=self.review_manager.get_qm(),
+            )
 
             record.merge(
                 merging_record=retrieved_record,
