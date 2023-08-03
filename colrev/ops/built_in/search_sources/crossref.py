@@ -820,6 +820,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
             except (
                 colrev_exceptions.RecordNotParsableException,
                 colrev_exceptions.NotFeedIdentifiableException,
+                KeyError  # error in crossref package:
+                # if len(result['message']['items']) == 0:
+                # KeyError: 'items'
             ):
                 pass
 
