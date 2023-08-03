@@ -989,7 +989,7 @@ class Prep(colrev.operation.Operation):
             self.review_manager.logger.info(
                 "md_needs_manual_preparation".ljust(29)
                 + f"{colors.ORANGE}{nr_recs}{colors.END}".rjust(20, " ")
-                + f" records ({nr_recs/len(prepared_records)}%)"
+                + f" records ({nr_recs/len(prepared_records):.2%})"
             )
 
         nr_recs = len(
