@@ -70,7 +70,7 @@ Following steps might be a good starting point.
              }
            }
 
-   This file should be in package root, so, the folder structure could be:
+   This file should be in package root, with the __init__.py, so, the folder structure could be:
 
    ::
 
@@ -79,8 +79,8 @@ Following steps might be a good starting point.
        │   ├── pyproject.toml
        │   ├── mypy.ini
        │   ├── .pre-commit-config.yaml
-       │   ├── .colrev_endpoints.json
        │   ├── colrev_asreview
+       │   │   ├── .colrev_endpoints.json
        │   │   ├── __init__.py
        │   │   ├── colrev_asreview.py
     ...
@@ -88,6 +88,18 @@ Following steps might be a good starting point.
    .. note::
 
       ``mypy.ini`` and ``.pre-commit-config.yaml`` should be copied from CoLRev repo, for ensuring CoLRev’s coding standards
+
+* Include the endpoints file in the `pyproject.toml <https://github.com/CoLRev-Environment/colrev-asreview/blob/main/pyproject.toml>`_
+
+   ..  code-block:: diff
+
+       ...
+         authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
+         readme = "README.md"
+       + include = ["colrev_asreview/.colrev_endpoints.json"]
+
+         [tool.poetry.dependencies]
+       ...
 
 * Install the extension ``pip install -e /path/to/colrev_asreview``:
 * Register the extension to the cloned CoLRev by editing the ``colrev/template/packages.json`` file e.g.:
