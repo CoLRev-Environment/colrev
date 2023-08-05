@@ -864,9 +864,10 @@ class Prep(colrev.operation.Operation):
     def __setup_prep_round(
         self, *, i: int, prep_round: colrev.settings.PrepRound
     ) -> None:
-        # pylint: disable=redefined-outer-name,invalid-name
-        PREP_COUNTER = Value("i", 0)
+        # pylint: disable=redefined-outer-name,invalid-name,global-statement
+        global PREP_COUNTER
         with PREP_COUNTER.get_lock():
+            PREP_COUNTER = Value("i", 0)
             PREP_COUNTER.value = 0  # type: ignore
 
         self.first_round = bool(i == 0)
