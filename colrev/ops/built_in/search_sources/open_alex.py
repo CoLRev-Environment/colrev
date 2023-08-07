@@ -115,7 +115,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         record_dict["title"] = item.get("title", "")
         if record_dict["title"] is None:
             del record_dict["title"]
-        if item["type_crossref"] == "proceedings-article":
+        if item.get("type_crossref", "") == "proceedings-article":
             record_dict["ENTRYTYPE"] = "inproceedings"
             if (
                 item.get("primary_location", None) is not None
