@@ -399,6 +399,21 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
             return records
 
+        # Note: force mode because AISeL does not offer a regular bib export
+        if self.search_source.filename.suffix == ".bib":
+            if not self.review_manager.force_mode:
+                self.review_manager.logger.error(
+                    f"{colors.RED}AISeL does not offer BibTex exports{colors.END}."
+                    "To load the file as an AISeL Search Source anyway, "
+                    "run colrev load -f"
+                )
+                raise NotImplementedError
+
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
         raise NotImplementedError
 
     def __fix_entrytype(self, *, record: colrev.record.Record) -> None:
