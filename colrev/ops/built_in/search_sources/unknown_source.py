@@ -121,6 +121,8 @@ class UnknownSearchSource(JsonSchemaMixin):
                 entry["year"] = entry.pop("publication_year")
 
     def __rename_erroneous_extensions(self) -> None:
+        if self.search_source.filename.suffix in [".xls", ".xlsx"]:
+            return
         data = self.search_source.filename.read_text(encoding="utf-8")
         # # Correct the file extension if necessary
         if re.findall(
