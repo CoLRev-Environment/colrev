@@ -32,7 +32,9 @@ class Search(colrev.operation.Operation):
     def get_unique_filename(self, file_path_string: str, suffix: str = ".bib") -> Path:
         """Get a unique filename for a (new) SearchSource"""
 
-        file_path_string = file_path_string.replace("+", "_").replace(" ", "_")
+        file_path_string = (
+            file_path_string.replace("+", "_").replace(" ", "_").replace(";", "_")
+        )
 
         if file_path_string.endswith(suffix):
             file_path_string = file_path_string.rstrip(suffix)
