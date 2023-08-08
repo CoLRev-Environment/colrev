@@ -205,6 +205,15 @@ class DBLPSearchSource(JsonSchemaMixin):
                 venue_string=ven_key,
                 venue_type="Conference or Workshop",
             )
+        elif item["type"] == "Informal and Other Publications":
+            item["ENTRYTYPE"] = "misc"
+            item["booktitle"] = item["venue"]
+        elif item["type"] == "Parts in Books or Collections":
+            item["ENTRYTYPE"] = "inbook"
+            item["booktitle"] = item["venue"]
+        else:
+            item["ENTRYTYPE"] = "misc"
+            self.review_manager.logger.warning("DBLP: Unknown type: %s", item)
 
     def __dblp_json_to_dict(
         self,
