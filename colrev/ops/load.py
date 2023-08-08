@@ -381,7 +381,6 @@ class Load(colrev.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.format_records_file()
         self.__validate_load(source=source)
 
         if not keep_ids:
@@ -490,7 +489,14 @@ class Load(colrev.operation.Operation):
         else:
             self.review_manager.logger.error(
                 f"{colors.RED}PROBLEM: "
-                f"{source.search_source.to_import - imported} records too much{colors.END}"
+                f"{-1*(source.search_source.to_import - imported)}"
+                f" records too much{colors.END}"
+            )
+            additional_origins = [
+                o for o in imported_origins if o not in origins_to_import
+            ]
+            self.review_manager.logger.error(
+                f"{colors.RED}Records additionally imported: {additional_origins}{colors.END}"
             )
 
     def __create_load_commit(self, source: colrev.settings.SearchSource) -> None:
