@@ -381,6 +381,7 @@ class Load(colrev.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.format_records_file()
         self.__validate_load(source=source)
 
         if not keep_ids:
