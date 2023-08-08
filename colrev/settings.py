@@ -191,11 +191,11 @@ class SearchSource(JsonSchemaMixin):
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
-        return (
-            str(self.get_corresponding_bib_file().name)
-            .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")
-            .lstrip("/")
-        )
+        bib_file_name = str(self.get_corresponding_bib_file().name)
+        assert ";" not in bib_file_name
+        return bib_file_name.replace(
+            str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), ""
+        ).lstrip("/")
 
     def is_md_source(self) -> bool:
         """Check whether the source is a metadata source (for preparation)"""
