@@ -937,7 +937,7 @@ class PackageManager:
             print(f'Loading package endpoints from {package["module"]}')
             module_spec = importlib.util.find_spec(package["module"])
 
-            endpoints_path = Path(module_spec.origin).parents[0] / Path(  # type:ignore
+            endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
                 ".colrev_endpoints.json"
             )
             if not endpoints_path.is_file():  # pragma: no cover
