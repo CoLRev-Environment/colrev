@@ -175,6 +175,12 @@ class CSVLoader:
                 record["ID"] = str(i).rjust(6, "0")
 
         records = {r["ID"]: r for r in records_dict.values()}
+        for record_id, record in records.items():
+            if "author" in record and ";" in record["author"]:
+                record["author"] = record["author"].replace("; ", " and ")
+            records[record_id] = {
+                k: v for k, v in record.items() if v not in ["", "nan"]
+            }
 
         return records
 
@@ -209,6 +215,12 @@ class ExcelLoader:
         data.columns = data.columns.str.lower()
         record_value_list = data.to_dict("records")
         records_dicts = TableLoadUtility.preprocess_records(records=record_value_list)
-        records = {r["ID"]: r for r in records_dicts}
+        records = {r["ID"]: r for r in records_dicts.values()}
+        for record_id, record in records.items():
+            if "author" in record and ";" in record["author"]:
+                record["author"] = record["author"].replace("; ", " and ")
+            records[record_id] = {
+                k: v for k, v in record.items() if v not in ["", "nan"]
+            }
 
         return records
