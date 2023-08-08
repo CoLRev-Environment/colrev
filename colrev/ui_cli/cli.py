@@ -46,6 +46,7 @@ import colrev.ui_cli.dedupe_errors
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
 package_manager = colrev.env.package_manager.PackageManager()
+SHELL_MODE = False
 
 
 def __custom_startswith(string: str, incomplete: str) -> bool:
@@ -181,12 +182,14 @@ def get_review_manager(
             ctx.obj["review_manager"] = review_manager
         else:
             review_manager.update_config(**review_manager_params)
-        review_manager.shell_mode = True
+        if SHELL_MODE:
+            review_manager.shell_mode = True
         return review_manager
     except (TypeError, KeyError):
         review_manager = colrev.review_manager.ReviewManager(**review_manager_params)
         ctx.obj = {"review_manager": review_manager}
-        review_manager.shell_mode = True
+        if SHELL_MODE:
+            review_manager.shell_mode = True
         return review_manager
 
 
@@ -205,6 +208,8 @@ def shell(
     print("Type exit to close the shell")
     print()
     prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
+    global SHELL_MODE
+    SHELL_MODE = True
     click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
 
 
