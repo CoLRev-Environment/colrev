@@ -43,7 +43,9 @@ colrev.ui\_cli.cli.SpecialHelpOrder
       ~SpecialHelpOrder.make_parser
       ~SpecialHelpOrder.parse_args
       ~SpecialHelpOrder.resolve_command
-      ~SpecialHelpOrder.resultcallback
+      ~SpecialHelpOrder.result_callback
+      ~SpecialHelpOrder.shell_complete
+      ~SpecialHelpOrder.to_info_dict
 
 
 
@@ -55,9 +57,10 @@ colrev.ui\_cli.cli.SpecialHelpOrder
 
       ~SpecialHelpOrder.allow_extra_args
       ~SpecialHelpOrder.allow_interspersed_args
+      ~SpecialHelpOrder.command_class
+      ~SpecialHelpOrder.group_class
       ~SpecialHelpOrder.ignore_unknown_options
       ~SpecialHelpOrder.commands
-      ~SpecialHelpOrder.result_callback
       ~SpecialHelpOrder.callback
       ~SpecialHelpOrder.params
       ~SpecialHelpOrder.name
