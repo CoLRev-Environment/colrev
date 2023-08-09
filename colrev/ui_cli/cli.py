@@ -208,6 +208,7 @@ def shell(
     print("Type exit to close the shell")
     print()
     prompt_kwargs = {"history": FileHistory(".history"), "message": "CoLRev > "}
+    # pylint: disable=global-statement
     global SHELL_MODE
     SHELL_MODE = True
     click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)

@@ -177,6 +177,48 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             else:
                 decisions["openalex_id"][oaid] = [record["label_included"]]
 
+    def __check_quality(self, *, decisions: dict) -> None:
+        decisions["doi"] = {
+            d: v for d, v in decisions["doi"].items() if len(v) > 1 and len(set(v)) != 1
+        }
+        decisions["pmid"] = {
+            d: v
+            for d, v in decisions["pmid"].items()
+            if len(v) > 1 and len(set(v)) != 1
+        }
+        decisions["openalex_id"] = {
+            d: v
+            for d, v in decisions["openalex_id"].items()
+            if len(v) > 1 and len(set(v)) != 1
+        }
+        if decisions["doi"] or decisions["pmid"] or decisions["openalex_id"]:
+            self.review_manager.logger.error(
+                "Errors in dataset: ambiguous inclusion decisions:"
+            )
+            print(f"{colors.RED}")
+            print(f"- dois: {', '.join(decisions['doi'])}")
+            print(f"- pmid: {', '.join(decisions['pmid'])}")
+            print(f"- openalex_id: {', '.join(decisions['openalex_id'])}")
+            print(f"{colors.END}")
+            # TODO : exclude ambiguous?!
+
+    def __prep_record(self, *, record: dict, ind: int) -> None:
+        record["ID"] = ind
+        record["ENTRYTYPE"] = "article"
+        for k in list(record.keys()):
+            if str(record[k]) == "nan":
+                del record[k]
+        if "doi" in record.keys():
+            record["doi"] = str(record["doi"]).replace("https://doi.org/", "").upper()
+        if "pmid" in record.keys():
+            record["pmid"] = str(record["pmid"]).replace(
+                "https://pubmed.ncbi.nlm.nih.gov/", ""
+            )
+        if "openalex_id" in record.keys():
+            record["openalex_id"] = str(record["openalex_id"]).replace(
+                "https://openalex.org/", ""
+            )
+
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
@@ -203,27 +245,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             "pmid": {},
             "openalex_id": {},
         }
-        empty_records = 0
-        duplicates = 0
-        for i, record in enumerate(dataset_df.to_dict(orient="records")):
-            record["ID"] = i
-            record["ENTRYTYPE"] = "article"
-            for k in list(record.keys()):
-                if str(record[k]) == "nan":
-                    del record[k]
-            if "doi" in record.keys():
-                record["doi"] = (
-                    str(record["doi"]).replace("https://doi.org/", "").upper()
-                )
-            if "pmid" in record.keys():
-                record["pmid"] = str(record["pmid"]).replace(
-                    "https://pubmed.ncbi.nlm.nih.gov/", ""
-                )
-            if "openalex_id" in record.keys():
-                record["openalex_id"] = str(record["openalex_id"]).replace(
-                    "https://openalex.org/", ""
-                )
-
+        empty_records, duplicates = 0, 0
+        for ind, record in enumerate(dataset_df.to_dict(orient="records")):
+            self.__prep_record(record=record, ind=ind)
             self.__validate_decisions(decisions=decisions, record=record)
             # Skip records without metadata
             if {"ID", "ENTRYTYPE", "label_included"} == set(record.keys()):
@@ -238,6 +262,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 duplicates += 1
                 continue
 
+            for key in list(record.keys()):
+                if key not in ["ID", "doi", "pmid", "openalex_id", "ENTRYTYPE"]:
+                    record[f"colrev.synergy_datasets.{key}"] = record.pop(key)
+
             if "doi" in record:
                 existing_keys["doi"].append(record["doi"])
             if "pmid" in record:
@@ -250,30 +278,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
             # The linking of doi/... should happen in the prep operation
 
-        decisions["doi"] = {
-            d: v for d, v in decisions["doi"].items() if len(v) > 1 and len(set(v)) != 1
-        }
-        decisions["pmid"] = {
-            d: v
-            for d, v in decisions["pmid"].items()
-            if len(v) > 1 and len(set(v)) != 1
-        }
-        decisions["openalex_id"] = {
-            d: v
-            for d, v in decisions["openalex_id"].items()
-            if len(v) > 1 and len(set(v)) != 1
-        }
-        if decisions["doi"] or decisions["pmid"] or decisions["openalex_id"]:
-            self.review_manager.logger.error(
-                "Errors in dataset: ambiguous inclusion decisions:"
-            )
-            print(f"{colors.RED}")
-            print(f"- dois: {', '.join(decisions['doi'])}")
-            print(f"- pmid: {', '.join(decisions['pmid'])}")
-            print(f"- openalex_id: {', '.join(decisions['openalex_id'])}")
-            print(f"{colors.END}")
-            # TODO : exclude ambiguous?!
-
+        self.__check_quality(decisions=decisions)
         self.review_manager.logger.info(f"Dropped {empty_records} empty records")
         self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
 

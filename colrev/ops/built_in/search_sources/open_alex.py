@@ -109,32 +109,35 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record_dict["author"] = ret_str
 
     def __parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
+        def set_entrytype(*, record_dict: dict, item: dict) -> None:
+            if record_dict["title"] is None:
+                del record_dict["title"]
+            if item.get("type_crossref", "") == "proceedings-article":
+                record_dict["ENTRYTYPE"] = "inproceedings"
+                if (
+                    item.get("primary_location", None) is not None
+                    and item["primary_location"].get("source", None) is not None
+                ):
+                    display_name = item["primary_location"]["source"]["display_name"]
+                    if display_name != "Proceedings":
+                        record_dict["booktitle"] = display_name
+            elif item["type"] in ["journal-article", "article"]:
+                record_dict["ENTRYTYPE"] = "article"
+                if (
+                    item.get("primary_location", None) is not None
+                    and item["primary_location"].get("source", None) is not None
+                ):
+                    record_dict["journal"] = item["primary_location"]["source"][
+                        "display_name"
+                    ]
+            else:
+                record_dict["ENTRYTYPE"] = "misc"
+
         record_dict = {}
         record_dict["openalex_id"] = item["id"].replace("https://openalex.org/", "")
 
         record_dict["title"] = item.get("title", "").lstrip("[").rstrip("].")
-        if record_dict["title"] is None:
-            del record_dict["title"]
-        if item.get("type_crossref", "") == "proceedings-article":
-            record_dict["ENTRYTYPE"] = "inproceedings"
-            if (
-                item.get("primary_location", None) is not None
-                and item["primary_location"].get("source", None) is not None
-            ):
-                display_name = item["primary_location"]["source"]["display_name"]
-                if display_name != "Proceedings":
-                    record_dict["booktitle"] = display_name
-        elif item["type"] in ["journal-article", "article"]:
-            record_dict["ENTRYTYPE"] = "article"
-            if (
-                item.get("primary_location", None) is not None
-                and item["primary_location"].get("source", None) is not None
-            ):
-                record_dict["journal"] = item["primary_location"]["source"][
-                    "display_name"
-                ]
-        else:
-            record_dict["ENTRYTYPE"] = "misc"
+        set_entrytype(record_dict=record_dict, item=item)
 
         if "publication_year" in item and item["publication_year"] is not None:
             record_dict["year"] = str(item["publication_year"])
