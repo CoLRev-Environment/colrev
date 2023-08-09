@@ -149,7 +149,7 @@ def load_bib_file(
     ) -> None:
         if len(records.items()) <= 3:
             return
-        if not any("author" in r for ID, r in records.items()):
+        if not any("author" in r for r in records.values()):
             raise colrev_exceptions.ImportException(
                 f"Import failed (no record with author field): {source.filename.name}"
             )
@@ -172,12 +172,21 @@ def load_bib_file(
                 load_operation.review_manager.logger.debug("No records loaded")
             return records
 
+    def lower_case_keys(*, records: dict) -> None:
+        for record in records.values():
+            for key in list(record.keys()):
+                if key in ["ID", "ENTRYTYPE"]:
+                    continue
+                if not key.islower():
+                    record[key.lower()] = record.pop(key)
+
     __apply_file_fixes(load_operation=load_operation, source=source)
 
     records = __load_records(source=source)
     if len(records) == 0:
         return records
 
+    lower_case_keys(records=records)
     drop_empty_fields(records=records)
     records = dict(sorted(records.items()))
     check_nr_in_bib(source=source, records=records)
