@@ -10,7 +10,7 @@
 - Update version in `CITATION.cff`.
 - Update version in `SECURITY.md`.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
-- Update the Github milestones, make plans for the next milestones
+- Update the Github milestones, close current one, make plans for the next milestones
 - Commit the changes.
 - Run `git tag -s $VERSION`.
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
