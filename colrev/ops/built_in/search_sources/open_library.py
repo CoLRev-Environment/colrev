@@ -243,13 +243,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the OpenLibrary (parameters etc.)"""
-
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:

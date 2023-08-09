@@ -128,13 +128,6 @@ class SearchSourcePackageEndpointInterface(
     link = zope.interface.Attribute("""Link to the SearchSource website""")
 
     # pylint: disable=no-self-argument
-    def validate_source(
-        search_operation: colrev.ops.search.Search, source: colrev.settings.SearchSource
-    ) -> None:  # type: ignore
-        """Validate the SearchSource (parameters etc.)"""
-        # May raise an InvalidQueryException
-
-    # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
         """Heuristic to identify the SearchSource"""
 

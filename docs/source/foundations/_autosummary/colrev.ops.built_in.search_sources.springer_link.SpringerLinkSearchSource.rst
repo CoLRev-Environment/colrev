@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
       ~SpringerLinkSearchSource.run_search
       ~SpringerLinkSearchSource.to_dict
       ~SpringerLinkSearchSource.to_json
-      ~SpringerLinkSearchSource.validate_source
 
 
 

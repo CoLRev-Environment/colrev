@@ -339,16 +339,10 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         return retrieved_records
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         # maybe : validate/assert that the venue_key is available
         if "scope" in source.search_parameters:
@@ -369,9 +363,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 "scope or query required in search_parameters"
             )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __run_md_search_update(
         self,
@@ -530,6 +522,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of DBLP"""
+
+        self.__validate_source()
 
         search_operation.review_manager.logger.debug(
             f"Retrieve DBLP: {self.search_source.search_parameters}"

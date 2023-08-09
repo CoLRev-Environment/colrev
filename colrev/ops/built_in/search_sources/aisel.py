@@ -172,16 +172,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             f"Cannot add aisel endpoint with query {q_params}"
         )
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "query" in source.search_parameters:
             if "search_terms" not in source.search_parameters["query"]:
@@ -189,21 +185,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     "query parameter does not contain search_terms"
                 )
 
-        # Note : can simply add files downloaded from AIS
-        # raise colrev_exceptions.InvalidQueryException(
-        #     f"Source missing query_file or query search_parameter ({source.filename})"
-        # )
-
-        if "query_file" in source.search_parameters:
-            if not Path(source.search_parameters["query_file"]).is_file():
-                raise colrev_exceptions.InvalidQueryException(
-                    f"File does not exist: query_file {source.search_parameters['query_file']} "
-                    f"for ({source.filename})"
-                )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:
@@ -330,6 +312,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of AISeLibrary"""
+
+        self.__validate_source()
 
         ais_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,

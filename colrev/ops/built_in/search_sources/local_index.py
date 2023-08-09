@@ -100,16 +100,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.local_index = source_operation.review_manager.get_local_index()
         self.review_manager = source_operation.review_manager
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         # if "query" not in source.search_parameters:
         # Note :  for md-sources, there is no query parameter.
@@ -135,9 +129,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             #         f"Source missing query/query search_parameter ({source.filename})"
             #     )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_parameters
@@ -253,6 +245,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of local-index"""
+
+        self.__validate_source()
 
         local_index_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,

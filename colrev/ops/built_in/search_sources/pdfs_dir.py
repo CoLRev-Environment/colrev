@@ -388,16 +388,12 @@ class PDFSearchSource(JsonSchemaMixin):
 
         return False
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "subdir_pattern" in source.search_parameters:
             if source.search_parameters["subdir_pattern"] != [
@@ -423,9 +419,7 @@ class PDFSearchSource(JsonSchemaMixin):
             raise colrev_exceptions.InvalidQueryException(
                 "path required in search_parameters/scope"
             )
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __add_md_string(self, *, record_dict: dict) -> dict:
         md_copy = record_dict.copy()
@@ -609,6 +603,8 @@ class PDFSearchSource(JsonSchemaMixin):
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of a PDF directory (based on GROBID)"""
+
+        self.__validate_source()
 
         # Do not run in continuous-integration environment
         if search_operation.review_manager.in_ci_environment():

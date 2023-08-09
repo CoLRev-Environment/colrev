@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
       ~JSTORSearchSource.run_search
       ~JSTORSearchSource.to_dict
       ~JSTORSearchSource.to_json
-      ~JSTORSearchSource.validate_source
 
 
 

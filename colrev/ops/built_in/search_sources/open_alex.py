@@ -238,18 +238,6 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-        # Note: not yet implemented
-
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:

@@ -32,7 +32,6 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.run_search
       ~OpenAlexSearchSource.to_dict
       ~OpenAlexSearchSource.to_json
-      ~OpenAlexSearchSource.validate_source
 
 
 

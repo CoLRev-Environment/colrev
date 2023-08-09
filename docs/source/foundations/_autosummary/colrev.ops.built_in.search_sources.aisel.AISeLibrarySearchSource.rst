@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
       ~AISeLibrarySearchSource.run_search
       ~AISeLibrarySearchSource.to_dict
       ~AISeLibrarySearchSource.to_json
-      ~AISeLibrarySearchSource.validate_source
 
 
 

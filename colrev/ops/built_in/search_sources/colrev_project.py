@@ -51,16 +51,11 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
+        source = self.search_source
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -71,9 +66,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 "url field required in search_parameters"
             )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
@@ -130,6 +123,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-locals
         # pdf_get_operation =
         # self.review_manager.get_pdf_get_operation(notify_state_transition_operation=False)
+
+        self.__validate_source()
 
         colrev_project_search_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,

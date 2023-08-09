@@ -605,16 +605,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return record
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self.__crossref_md_filename.name:
             if not any(x in source.search_parameters for x in ["query", "scope"]):
@@ -660,9 +654,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     "Crossref search_type should be in [DB,TOC]"
                 )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __get_crossref_query_return(self, *, rerun: bool) -> typing.Iterator[dict]:
         params = self.search_source.search_parameters
@@ -836,6 +828,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Crossref"""
+
+        self.__validate_source()
 
         crossref_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,

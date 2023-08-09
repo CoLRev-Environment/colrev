@@ -16,7 +16,6 @@ from git import Repo
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
@@ -123,13 +122,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add SYNERGY endpoint with query {params}"
         )
-
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
 
     def __load_dataset(self) -> pd.DataFrame:
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

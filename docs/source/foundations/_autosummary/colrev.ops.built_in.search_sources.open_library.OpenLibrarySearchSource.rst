@@ -32,7 +32,6 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.run_search
       ~OpenLibrarySearchSource.to_dict
       ~OpenLibrarySearchSource.to_json
-      ~OpenLibrarySearchSource.validate_source
 
 
 

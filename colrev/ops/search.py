@@ -153,7 +153,6 @@ class Search(colrev.operation.Operation):
             if source.endpoint.lower() not in endpoint_dict:
                 continue
             endpoint = endpoint_dict[source.endpoint.lower()]
-            endpoint.validate_source(search_operation=self, source=source)  # type: ignore
 
             if not endpoint.api_search_supported:  # type: ignore
                 continue

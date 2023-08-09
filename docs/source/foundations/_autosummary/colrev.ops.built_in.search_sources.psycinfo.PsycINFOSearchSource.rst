@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
       ~PsycINFOSearchSource.run_search
       ~PsycINFOSearchSource.to_dict
       ~PsycINFOSearchSource.to_json
-      ~PsycINFOSearchSource.validate_source
 
 
 

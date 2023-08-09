@@ -70,16 +70,12 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             comment="",
         )
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -94,9 +90,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
             )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __fw_search_condition(self, *, record: dict) -> bool:
         if "doi" not in record:
@@ -149,6 +143,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         """Run a forward search based on OpenCitations"""
 
         # pylint: disable=too-many-branches
+
+        self.__validate_source()
 
         records = search_operation.review_manager.dataset.load_records_dict()
 

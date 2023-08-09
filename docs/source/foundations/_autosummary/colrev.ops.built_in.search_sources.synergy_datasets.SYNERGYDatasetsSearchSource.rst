@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
       ~SYNERGYDatasetsSearchSource.run_search
       ~SYNERGYDatasetsSearchSource.to_dict
       ~SYNERGYDatasetsSearchSource.to_json
-      ~SYNERGYDatasetsSearchSource.validate_source
 
 
 

@@ -32,7 +32,6 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.run_search
       ~DBLPSearchSource.to_dict
       ~DBLPSearchSource.to_json
-      ~DBLPSearchSource.validate_source
 
 
 

@@ -75,28 +75,6 @@ class UnknownSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "query_file" in source.search_parameters:
-            if not Path(source.search_parameters["query_file"]).is_file():
-                raise colrev_exceptions.InvalidQueryException(
-                    f"File does not exist: query_file {source.search_parameters['query_file']} "
-                    f"for ({source.filename})"
-                )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
-
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:

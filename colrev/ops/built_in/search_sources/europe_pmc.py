@@ -366,31 +366,26 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         return record
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "query" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
             )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Europe PMC"""
 
+        self.__validate_source()
         # https://europepmc.org/RestfulWebService
 
         search_operation.review_manager.logger.info(

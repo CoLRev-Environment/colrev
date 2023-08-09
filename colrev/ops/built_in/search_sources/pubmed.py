@@ -137,16 +137,13 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        # TO DO
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self.__pubmed_md_filename.name:
             if "query" not in source.search_parameters:
@@ -157,9 +154,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             # if "query_file" in source.search_parameters:
             # ...
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
@@ -631,6 +626,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of Pubmed"""
+
+        self.__validate_source()
 
         pubmed_feed = self.search_source.get_feed(
             review_manager=search_operation.review_manager,

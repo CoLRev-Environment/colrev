@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.run_search
       ~IEEEXploreSearchSource.to_dict
       ~IEEEXploreSearchSource.to_json
-      ~IEEEXploreSearchSource.validate_source
 
 
 

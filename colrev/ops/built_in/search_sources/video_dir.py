@@ -64,25 +64,6 @@ class VideoDirSearchSource(JsonSchemaMixin):
         )
         self.zotero_lock = Lock()
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "path" not in source.search_parameters["scope"]:
-            raise colrev_exceptions.InvalidQueryException(
-                "path required in search_parameters/scope"
-            )
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
-
     def __index_video(self, *, path: Path) -> dict:
         record_dict = {"ENTRYTYPE": "online", "file": path}
         return record_dict
