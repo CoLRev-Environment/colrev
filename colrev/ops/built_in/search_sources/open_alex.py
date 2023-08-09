@@ -112,7 +112,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         record_dict = {}
         record_dict["openalex_id"] = item["id"].replace("https://openalex.org/", "")
 
-        record_dict["title"] = item.get("title", "")
+        record_dict["title"] = item.get("title", "").lstrip("[").rstrip("].")
         if record_dict["title"] is None:
             del record_dict["title"]
         if item.get("type_crossref", "") == "proceedings-article":
