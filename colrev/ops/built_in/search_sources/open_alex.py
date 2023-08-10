@@ -135,8 +135,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         record_dict = {}
         record_dict["openalex_id"] = item["id"].replace("https://openalex.org/", "")
-
-        record_dict["title"] = item.get("title", "").lstrip("[").rstrip("].")
+        if "title" in item and item["title"] is not None:
+            record_dict["title"] = item["title"].lstrip("[").rstrip("].")
         set_entrytype(record_dict=record_dict, item=item)
 
         if "publication_year" in item and item["publication_year"] is not None:
