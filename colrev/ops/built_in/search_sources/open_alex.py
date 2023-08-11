@@ -110,7 +110,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
     def __parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
         def set_entrytype(*, record_dict: dict, item: dict) -> None:
-            if record_dict["title"] is None:
+            if "title" in record_dict and record_dict["title"] is None:
                 del record_dict["title"]
             if item.get("type_crossref", "") == "proceedings-article":
                 record_dict["ENTRYTYPE"] = "inproceedings"
