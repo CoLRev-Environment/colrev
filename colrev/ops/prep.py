@@ -11,6 +11,7 @@ import typing
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
+from multiprocessing import Lock
 from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
@@ -137,6 +138,10 @@ class Prep(colrev.operation.Operation):
         self.debug_mode = False
         self.pad = 0
         self.__stats: typing.Dict[str, typing.List[timedelta]] = {}
+
+        self.temp_prep_lock = Lock()
+        self.current_temp_records = Path(".git/cur_temp_recs.bib")
+        self.temp_records = Path(".git/temp_recs.bib")
 
     def __add_stats(
         self, *, prep_round_package_endpoint: dict, start_time: datetime
@@ -474,6 +479,18 @@ class Prep(colrev.operation.Operation):
                 record=record, item=item, prior_state=prior_state
             )
 
+    def __save_to_temp(self, *, record: colrev.record.Record) -> None:
+        rec_str = self.review_manager.dataset.parse_bibtex_str(
+            recs_dict_in={record.data["ID"]: record.get_data()}
+        )
+        self.temp_prep_lock.acquire(timeout=120)
+        with open(self.current_temp_records, "a", encoding="utf-8") as cur_temp_rec:
+            cur_temp_rec.write(rec_str)
+        try:
+            self.temp_prep_lock.release()
+        except ValueError:
+            pass
+
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
         """Prepare a record (based on package_endpoints in the settings)"""
@@ -509,6 +526,8 @@ class Prep(colrev.operation.Operation):
             item=item,
             prior_state=prior_state,
         )
+
+        self.__save_to_temp(record=record)
 
         return record.get_data()
 
@@ -772,6 +791,48 @@ class Prep(colrev.operation.Operation):
                 print("ID not found in history.")
         else:
             prepare_data = self.__load_prep_data(polish=polish)
+        nr_items = len(prepare_data["items"])
+
+        if self.current_temp_records.is_file():
+            # combine and remove redundant records
+            cur_temp_recs = self.review_manager.dataset.load_records_dict(
+                file_path=self.current_temp_records
+            )
+            temp_recs = {}
+            if self.temp_records.is_file():
+                temp_recs = self.review_manager.dataset.load_records_dict(
+                    file_path=self.temp_records
+                )
+
+            combined_recs = {**temp_recs, **cur_temp_recs}
+            self.review_manager.dataset.save_records_dict_to_file(
+                records=combined_recs, save_path=self.temp_records
+            )
+            self.current_temp_records.unlink()
+
+        if self.temp_records.is_file():
+            temp_recs = self.review_manager.dataset.load_records_dict(
+                file_path=self.temp_records
+            )
+            self.review_manager.logger.info("Continue with existing records")
+            skipped_items = 0
+            list_to_skip = []
+            for item in prepare_data["items"]:
+                if item["ID"] not in temp_recs:
+                    continue
+                del temp_recs[item["ID"]]
+                # TODO : assert: colrev_origins identical
+                list_to_skip.append(item["ID"])
+                skipped_items += 1
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Skipped {skipped_items} records{colors.END}"
+            )
+            prepare_data["items"] = [
+                x for x in prepare_data["items"] if x["ID"] not in list_to_skip
+            ]
+
+            with PREP_COUNTER.get_lock():
+                PREP_COUNTER.value += skipped_items  # type: ignore
 
         if self.debug_mode:
             self.review_manager.logger.info(
@@ -786,7 +847,6 @@ class Prep(colrev.operation.Operation):
         self.pad = prepare_data["PAD"]
         items = prepare_data["items"]
         prep_data = []
-        nr_items = len(items)
         for item in items:
             prep_data.append(
                 {
@@ -1158,6 +1218,9 @@ class Prep(colrev.operation.Operation):
         debug_file: Optional[Path] = None,
         cpu: int = 4,
         polish: bool = False,
+        skip_resume: bool = True,  # TODO : inform users about resuming from temp data. cancel (ctrl +c) and use skip_resume to skip this
+        # TODO : resume-operation: current_commit, check whether it is old/outdated
+        # TODO : files should be in ./colrev (not .git)
     ) -> None:
         """Preparation of records (main entrypoint)"""
 
@@ -1193,6 +1256,20 @@ class Prep(colrev.operation.Operation):
                     prepared_records = pool.map(self.prepare, preparation_data)
                     pool.close()
                     pool.join()
+
+                # TODO : when we use .colrev/ dir and remove the following if statement, tests should pass again.
+                if self.temp_records.is_file():
+                    temp_recs = self.review_manager.dataset.load_records_dict(
+                        file_path=self.temp_records
+                    )
+                    prepared_records_ids = [x["ID"] for x in prepared_records]
+                    for record in temp_recs.values():
+                        if record["ID"] not in prepared_records_ids:
+                            prepared_records.append(record)
+
+                # TODO : reactivate (tests fail/change files, but the temp files should note be removed for Wassenaar2017.)
+                # self.temp_records.unlink(missing_ok=True)
+                # self.current_temp_records.unlink(missing_ok=True)
 
                 self.__create_prep_commit(
                     previous_preparation_data=previous_preparation_data,
