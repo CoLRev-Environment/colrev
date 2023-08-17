@@ -484,9 +484,8 @@ class Prep(colrev.operation.Operation):
                 if record["ID"] not in prepared_records_ids:
                     prepared_records.append(record)
 
-        # TODO : reactivate (tests fail/change files, but the temp files should note be removed for Wassenaar2017.)
-        # self.temp_records.unlink(missing_ok=True)
-        # self.current_temp_records.unlink(missing_ok=True)
+        self.temp_records.unlink(missing_ok=True)
+        self.current_temp_records.unlink(missing_ok=True)
 
     def __validate_record(self, *, record: colrev.record.Record) -> None:
         assert "colrev_status" in record.data and record.data["colrev_status"] in [
