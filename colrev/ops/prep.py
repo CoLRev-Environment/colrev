@@ -474,6 +474,31 @@ class Prep(colrev.operation.Operation):
         except ValueError:
             pass
 
+    def __complete_resumed_operation(self, *, prepared_records: list) -> None:
+        if self.temp_records.is_file():
+            temp_recs = self.review_manager.dataset.load_records_dict(
+                file_path=self.temp_records
+            )
+            prepared_records_ids = [x["ID"] for x in prepared_records]
+            for record in temp_recs.values():
+                if record["ID"] not in prepared_records_ids:
+                    prepared_records.append(record)
+
+        # TODO : reactivate (tests fail/change files, but the temp files should note be removed for Wassenaar2017.)
+        # self.temp_records.unlink(missing_ok=True)
+        # self.current_temp_records.unlink(missing_ok=True)
+
+    def __validate_record(self, *, record: colrev.record.Record) -> None:
+        assert "colrev_status" in record.data and record.data["colrev_status"] in [
+            colrev.record.RecordState.md_imported,
+            colrev.record.RecordState.md_prepared,
+            colrev.record.RecordState.md_needs_manual_preparation,
+            colrev.record.RecordState.rev_prescreen_excluded,
+        ]
+        assert "colrev_masterdata_provenance" in record.data
+        assert "ID" in record.data
+        assert "ENTRYTYPE" in record.data
+
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
         """Prepare a record (based on package_endpoints in the settings)"""
@@ -500,6 +525,7 @@ class Prep(colrev.operation.Operation):
                     record,
                     preparation_record,
                 )
+                self.__validate_record(record=record)
             except colrev_exceptions.PreparationBreak:
                 break
 
@@ -1238,17 +1264,7 @@ class Prep(colrev.operation.Operation):
                     pool.close()
                     pool.join()
 
-                if self.temp_records.is_file():
-                    temp_recs = self.review_manager.dataset.load_records_dict(
-                        file_path=self.temp_records
-                    )
-                    prepared_records_ids = [x["ID"] for x in prepared_records]
-                    for record in temp_recs.values():
-                        if record["ID"] not in prepared_records_ids:
-                            prepared_records.append(record)
-
-                self.temp_records.unlink(missing_ok=True)
-                self.current_temp_records.unlink(missing_ok=True)
+                self.__complete_resumed_operation(prepared_records=prepared_records)
 
                 self.__create_prep_commit(
                     previous_preparation_data=previous_preparation_data,
