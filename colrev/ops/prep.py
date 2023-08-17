@@ -1259,7 +1259,6 @@ class Prep(colrev.operation.Operation):
                     pool.close()
                     pool.join()
 
-                # TODO : when we use .colrev/ dir and remove the following if statement, tests should pass again.
                 if self.temp_records.is_file():
                     temp_recs = self.review_manager.dataset.load_records_dict(
                         file_path=self.temp_records
@@ -1269,9 +1268,8 @@ class Prep(colrev.operation.Operation):
                         if record["ID"] not in prepared_records_ids:
                             prepared_records.append(record)
 
-                # TODO : reactivate (tests fail/change files, but the temp files should note be removed for Wassenaar2017.)
-                # self.temp_records.unlink(missing_ok=True)
-                # self.current_temp_records.unlink(missing_ok=True)
+                self.temp_records.unlink(missing_ok=True)
+                self.current_temp_records.unlink(missing_ok=True)
 
                 self.__create_prep_commit(
                     previous_preparation_data=previous_preparation_data,
