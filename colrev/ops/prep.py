@@ -1202,9 +1202,6 @@ class Prep(colrev.operation.Operation):
         debug_file: Optional[Path] = None,
         cpu: int = 4,
         polish: bool = False,
-        skip_resume: bool = True,  # TODO : inform users about resuming from temp data. cancel (ctrl +c) and use skip_resume to skip this
-        # TODO : resume-operation: current_commit, check whether it is old/outdated
-        # TODO : files should be in ./colrev (not .git)
     ) -> None:
         """Preparation of records (main entrypoint)"""
 
