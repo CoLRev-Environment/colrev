@@ -43,19 +43,20 @@ class Dataset:
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
     GIT_IGNORE_FILE_RELATIVE = Path(".gitignore")
     DEFAULT_GIT_IGNORE_ITEMS = [
-        "*.bib.sav",
-        "venv",
+        ".history",
+        ".colrev",
         ".corrections",
-        "data/pdfs",
         ".report.log",
         "__pycache__",
+        "*.bib.sav",
+        "venv",
         "output",
+        "data/pdfs",
         "data/pdf_get_man/missing_pdf_files.csv",
         "data/.tei/",
         "data/prep_man/records_prep_man.bib",
         "data/prep/",
         "data/dedupe/",
-        ".history",
     ]
     DEPRECATED_GIT_IGNORE_ITEMS = [
         "missing_pdf_files.csv",
