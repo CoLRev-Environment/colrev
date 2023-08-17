@@ -59,6 +59,10 @@ class Helpers:
             commit_id = getattr(review_manager, commit)
         repo.head.reset(commit_id, index=True, working_tree=True)
 
+        # To prevent prep from continuing previous operations
+        Path(".colrev/cur_temp_recs.bib").unlink(missing_ok=True)
+        Path(".colrev/temp_recs.bib").unlink(missing_ok=True)
+
 
 @pytest.fixture(scope="session", name="helpers")
 def get_helpers():  # type: ignore

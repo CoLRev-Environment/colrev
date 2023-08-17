@@ -140,8 +140,8 @@ class Prep(colrev.operation.Operation):
         self.__stats: typing.Dict[str, typing.List[timedelta]] = {}
 
         self.temp_prep_lock = Lock()
-        self.current_temp_records = Path(".git/cur_temp_recs.bib")
-        self.temp_records = Path(".git/temp_recs.bib")
+        self.current_temp_records = Path(".colrev/cur_temp_recs.bib")
+        self.temp_records = Path(".colrev/temp_recs.bib")
 
     def __add_stats(
         self, *, prep_round_package_endpoint: dict, start_time: datetime
@@ -466,6 +466,7 @@ class Prep(colrev.operation.Operation):
             recs_dict_in={record.data["ID"]: record.get_data()}
         )
         self.temp_prep_lock.acquire(timeout=120)
+        self.current_temp_records.parent.mkdir(exist_ok=True)
         with open(self.current_temp_records, "a", encoding="utf-8") as cur_temp_rec:
             cur_temp_rec.write(rec_str)
         try:
@@ -787,6 +788,7 @@ class Prep(colrev.operation.Operation):
                 )
 
             combined_recs = {**temp_recs, **cur_temp_recs}
+            self.temp_records.parent.mkdir(exist_ok=True)
             self.review_manager.dataset.save_records_dict_to_file(
                 records=combined_recs, save_path=self.temp_records
             )
