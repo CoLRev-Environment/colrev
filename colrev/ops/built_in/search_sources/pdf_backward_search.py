@@ -192,7 +192,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
         for parent_record_id in {
-            x["cited_by_ID"] for x in pdf_backward_search_feed.feed_records.values()
+            x["bwsearch_ref"] for x in pdf_backward_search_feed.feed_records.values()
         }:
             parent_record = records[parent_record_id]
 
@@ -205,7 +205,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             updated = 0
             overall = 0
             for feed_record_dict in pdf_backward_search_feed.feed_records.values():
-                if feed_record_dict["cited_by_ID"] != parent_record_id:
+                if feed_record_dict["bwsearch_ref"] != parent_record_id:
                     continue
                 overall += 1
                 feed_record = colrev.record.Record(data=feed_record_dict)
