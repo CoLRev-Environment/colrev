@@ -358,6 +358,9 @@ class BackwardSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if params is None:
+            params = "min_intext_citations=3"
+
         if params == "default":
             add_source = cls.get_default_source()
             operation.review_manager.settings.sources.append(add_source)
