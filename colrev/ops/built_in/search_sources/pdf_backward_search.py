@@ -194,7 +194,9 @@ class BackwardSearchSource(JsonSchemaMixin):
         for parent_record_id in {
             x["bwsearch_ref"] for x in pdf_backward_search_feed.feed_records.values()
         }:
-            parent_record = records[parent_record_id]
+            parent_record = records[
+                parent_record_id[: parent_record_id.find("_backward_search_")]
+            ]
 
             if "doi" not in parent_record:
                 continue
