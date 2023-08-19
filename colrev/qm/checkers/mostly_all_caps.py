@@ -43,6 +43,9 @@ class MostlyAllCapsFieldChecker:
             if key in ["journal", "booktitle"] and len(record.data[key]) < 6:
                 continue
 
+            if record.data[key] == "PLoS ONE":
+                continue
+
             record.add_masterdata_provenance_note(key=key, note=self.msg)
 
 
