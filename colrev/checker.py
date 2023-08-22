@@ -343,6 +343,7 @@ class Checker:
         else:
             pattern = "=(in|out);".join(screening_criteria.keys()) + "=(in|out)"
             pattern_inclusion = "=in;".join(screening_criteria.keys()) + "=in"
+            criteria = list(screening_criteria.keys())
 
         for [record_id, status, screen_crit] in status_data["screening_criteria_list"]:
             self.__check_individual_record_screen(
