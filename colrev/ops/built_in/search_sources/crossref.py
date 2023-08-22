@@ -942,16 +942,19 @@ class CrossrefSearchSource(JsonSchemaMixin):
             query_type = input("Create a query based on [k]eywords or [j]ournal?")
         if query_type == "j":
             print("Get ISSN from https://portal.issn.org/issn/search")
-            # Alternatively (but probably a rare use case):
-            # from crossref.restful import Journals
-            # journals = Journals()
-            # ret = journals.query('MIS Quarterly')
-            # for jour in ret:
-            #     print(jour["title"])
-            #     print(jour["ISSN"])
+
             issn = ""
-            while not re.match(cls.__ISSN_REGEX, issn):
-                issn = input("Enter the ISSN of the journal:")
+            while True:
+                issn = input("Enter the ISSN (or journal name to lookup the ISSN):")
+                if re.match(cls.__ISSN_REGEX, issn):
+                    break
+                from crossref.restful import Journals
+
+                journals = Journals()
+                ret = journals.query(issn)
+                for jour in ret:
+                    print(f"{jour['title']}: {','.join(jour['ISSN'])}")
+
             filename = operation.get_unique_filename(
                 file_path_string=f"crossref_issn_{issn}"
             )
