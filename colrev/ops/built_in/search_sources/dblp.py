@@ -213,7 +213,8 @@ class DBLPSearchSource(JsonSchemaMixin):
             item["booktitle"] = item["venue"]
         else:
             item["ENTRYTYPE"] = "misc"
-            self.review_manager.logger.warning("DBLP: Unknown type: %s", item)
+            if item["type"] != "Editorship":
+                self.review_manager.logger.warning("DBLP: Unknown type: %s", item)
 
     def __dblp_json_to_dict(
         self,
@@ -380,6 +381,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 query=query,
             ):
                 if retrieved_record.data["dblp_key"] != feed_record.data["dblp_key"]:
+                    continue
+                if retrieved_record.data.get("type", "") == "Editorship":
                     continue
 
                 try:
