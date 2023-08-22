@@ -111,8 +111,7 @@ class PRISMA(JsonSchemaMixin):
         ] = status_stats.overall.rev_prescreen_excluded
         if status_stats.currently.exclusion:
             prisma_data.loc["dbr_excluded", "n"] = "; ".join(
-                f"{key}, {val}"
-                for key, val in status_stats.currently.exclusion.items()
+                f"{key}, {val}" for key, val in status_stats.currently.exclusion.items()
             )
         else:
             prisma_data.loc[
