@@ -928,7 +928,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             )
             operation.review_manager.settings.sources.append(add_source)
             return
+        cls.__add_interactively(operation=operation)
 
+    @classmethod
+    def __add_interactively(cls, *, operation: colrev.ops.search.Search) -> None:
         print("Interactively add Crossref as a SearchSource")
         print()
         print("Documentation:")
@@ -948,7 +951,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 issn = input("Enter the ISSN (or journal name to lookup the ISSN):")
                 if re.match(cls.__ISSN_REGEX, issn):
                     break
-                from crossref.restful import Journals
 
                 journals = Journals()
                 ret = journals.query(issn)
