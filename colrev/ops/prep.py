@@ -505,20 +505,49 @@ class Prep(colrev.operation.Operation):
         self.temp_records.unlink(missing_ok=True)
         self.current_temp_records.unlink(missing_ok=True)
 
-    def __validate_record(self, *, record: colrev.record.Record) -> None:
-        assert "colrev_status" in record.data and record.data["colrev_status"] in [
+    def __validate_record(
+        self, *, record: colrev.record.Record, prep_round_package_endpoint: str
+    ) -> None:
+        if "colrev_status" not in record.data:
+            print(record.data)
+            raise ValueError(
+                f"Record {record.data['ID']} has no colrev_status"
+                f" after {prep_round_package_endpoint}"
+            )
+        if not self.polish and record.data["colrev_status"] not in [
             colrev.record.RecordState.md_imported,
             colrev.record.RecordState.md_prepared,
             colrev.record.RecordState.md_needs_manual_preparation,
             colrev.record.RecordState.rev_prescreen_excluded,
-        ]
-        assert "colrev_masterdata_provenance" in record.data
-        assert "ID" in record.data
-        assert "ENTRYTYPE" in record.data
+        ]:
+            print(record.data)
+            raise ValueError(
+                f"Record {record.data['ID']} has invalid status {record.data['colrev_status']}"
+                f" after {prep_round_package_endpoint}"
+            )
+        if "colrev_masterdata_provenance" not in record.data:
+            raise ValueError(
+                f"Record {record.data['ID']} has no colrev_masterdata_provenance"
+                f" after {prep_round_package_endpoint}"
+            )
+        if "ID" not in record.data:
+            raise ValueError(
+                f"Record {record.data['ID']} has no ID"
+                f" after {prep_round_package_endpoint}"
+            )
+        if "ENTRYTYPE" not in record.data:
+            raise ValueError(
+                f"Record {record.data['ID']} has no ENTRYTYPE"
+                f" after {prep_round_package_endpoint}"
+            )
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
         """Prepare a record (based on package_endpoints in the settings)"""
+
+        # https://docs.python.org/3/library/concurrent.futures.html
+        # #concurrent.futures.Executor.map
+        # Exceptions are raised at the end/when results are retrieved from the iterator
 
         record: colrev.record.PrepRecord = item["record"]
 
@@ -542,7 +571,10 @@ class Prep(colrev.operation.Operation):
                     record,
                     preparation_record,
                 )
-                self.__validate_record(record=record)
+                self.__validate_record(
+                    record=record,
+                    prep_round_package_endpoint=prep_round_package_endpoint,
+                )
             except colrev_exceptions.PreparationBreak:
                 break
 
