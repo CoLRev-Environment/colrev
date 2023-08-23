@@ -1023,6 +1023,7 @@ class LocalIndex:
         except (
             colrev_exceptions.NotEnoughDataToIdentifyException,
             colrev_exceptions.NotTOCIdentifiableException,
+            colrev_exceptions.RecordNotInIndexException,
         ) as exc:
             raise colrev_exceptions.TOCNotAvailableException() from exc
 
