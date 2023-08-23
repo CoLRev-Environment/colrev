@@ -2,6 +2,7 @@
 
 - Run `make linkcheck` in the docs and fix broken links.
 - Run `poetry update`.
+- Go through the cli/help pages and check the order etc.
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script
 - Update version in `tests/2_ops/check_test.py`
 - Run `colrev env --update_package_list`.

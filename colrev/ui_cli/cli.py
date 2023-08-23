@@ -239,13 +239,13 @@ def exit(
         )
     ),
     default="colrev.literature_review",
-    help="Review type (e.g., literature_review (default), scoping_review, theoretical_review)",
+    help="Review type for the setup.",
 )
 @click.option(
     "--light",
     is_flag=True,
     default=False,
-    help="Setup a lightweight repository (not requiring Docker services)",
+    help="Setup a lightweight repository (without Docker services)",
 )
 @click.option(
     "--example",
@@ -285,7 +285,10 @@ def init(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Initialize (define review objectives and type)"""
+    """Initialize (define review objectives and type)
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/problem_formulation/init.html
+    """
     import colrev.ops.init
 
     colrev.review_manager.get_init_operation(
@@ -469,9 +472,7 @@ def retrieve(
             installed_only=True,
         )
     ),
-    help="""
-Format: colrev search -a colrev.dblp
-""",
+    help="""Search source to be added.""",
 )
 @click.option(
     "-p",
@@ -497,13 +498,6 @@ Format: colrev search -a colrev.dblp
 @click.option(
     "-bws",
     help="Backward search on a selected paper",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
 )
 @click.option(
     "-scs",
@@ -540,7 +534,10 @@ def search(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Search for records"""
+    """Search for records
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html
+    """
 
     review_manager = get_review_manager(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
@@ -623,7 +620,10 @@ def load(
     verbose: bool,
     force: bool,
 ) -> None:
-    """Load records"""
+    """Load records
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/load.html
+    """
 
     review_manager = get_review_manager(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
@@ -667,6 +667,23 @@ def load(
 
 
 @main.command(help_priority=6)
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep,
+            installed_only=True,
+        )
+    ),
+    help="""Prep package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
 @click.option(
     "-k",
     "--keep_ids",
@@ -746,29 +763,12 @@ def load(
     default=False,
     help="Force mode",
 )
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev prep -a colrev.add_journal_ranking
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def prep(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     keep_ids: bool,
     polish: bool,
     reset_records: str,
@@ -778,13 +778,14 @@ def prep(
     debug_file: Path,
     cpu: int,
     setup_custom_script: bool,
-    add: str,
-    params: str,
     skip: bool,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Prepare records"""
+    """Prepare records
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/prep.html
+    """
 
     try:
         review_manager = get_review_manager(
@@ -838,6 +839,23 @@ def prep(
 
 @main.command(help_priority=7)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+            installed_only=True,
+        )
+    ),
+    help="""Prep-man script  to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "--stats",
     is_flag=True,
     default=False,
@@ -849,25 +867,6 @@ def prep(
     is_flag=True,
     default=False,
     help="Export spreadsheet to add missing language fields.",
-)
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev prep_man -a colrev.prep_man_export
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
 )
 @click.option(
     "-v",
@@ -887,14 +886,17 @@ Format: colrev prep_man -a colrev.prep_man_export
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def prep_man(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     stats: bool,
     languages: bool,
     verbose: bool,
     force: bool,
-    add: str,
-    params: str,
 ) -> None:
-    """Prepare records manually"""
+    """Prepare records manually
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/prep.html
+    """
 
     review_manager = get_review_manager(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
@@ -927,6 +929,24 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 
 
 @main.command(help_priority=8)
+@click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+            installed_only=True,
+        ),
+        case_sensitive=False,
+    ),
+    help="""Dedupe package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
 @click.option(
     "-m",
     "--merge",
@@ -969,30 +989,12 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     default=False,
     help="Force mode",
 )
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
-            installed_only=True,
-        ),
-        case_sensitive=False,
-    ),
-    help="""
-Format: colrev dedupe -a colrev.active_learning_training
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def dedupe(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     merge: str,
     unmerge: str,
     fix_errors: bool,
@@ -1000,10 +1002,11 @@ def dedupe(
     view: bool,
     verbose: bool,
     force: bool,
-    add: str,
-    params: str,
 ) -> None:
-    """Deduplicate records"""
+    """Deduplicate records
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/dedupe.html
+    """
 
     review_manager = get_review_manager(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
@@ -1070,6 +1073,23 @@ def dedupe(
 
 @main.command(help_priority=9)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+            installed_only=True,
+        )
+    ),
+    help="""Prescreen package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "--include_all",
     is_flag=True,
     default=False,
@@ -1116,25 +1136,6 @@ def dedupe(
     required=False,
 )
 @click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev prescreen -a colrev.prescreen_scope
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
-@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -1159,6 +1160,8 @@ Format: colrev prescreen -a colrev.prescreen_scope
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def prescreen(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     include_all: bool,
     include_all_always: bool,
     export_format: str,
@@ -1167,13 +1170,14 @@ def prescreen(
     split: str,
     include: str,
     exclude: str,
-    add: str,
-    params: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Pre-screen exclusion based on metadata (titles and abstracts)"""
+    """Pre-screen exclusion based on metadata (titles and abstracts)
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/metadata_prescreen/prescreen.html
+    """
 
     # pylint: disable=too-many-locals
 
@@ -1229,6 +1233,23 @@ def prescreen(
 
 @main.command(help_priority=10)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.screen,
+            installed_only=True,
+        )
+    ),
+    help="""Screen package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "--include_all",
     is_flag=True,
     default=False,
@@ -1266,25 +1287,6 @@ def prescreen(
     help="Screen a split sample",
 )
 @click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.screen,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev screen -a colrev.screen_cli
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
-@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -1309,19 +1311,22 @@ Format: colrev screen -a colrev.screen_cli
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def screen(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     include_all: bool,
     include_all_always: bool,
     add_criterion: str,
     delete_criterion: str,
     create_split: int,
     split: str,
-    params: str,
-    add: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Screen based on PDFs and inclusion/exclusion criteria"""
+    """Screen based on PDFs and inclusion/exclusion criteria
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_screen/screen.html
+    """
 
     review_manager = get_review_manager(
         ctx, {"verbose_mode": verbose, "force_mode": force, "exact_call": EXACT_CALL}
@@ -1482,6 +1487,23 @@ def pdfs(
 
 @main.command(help_priority=12)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+            installed_only=True,
+        )
+    ),
+    help="""PDF-get package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "-c",
     "--copy-to-repo",
     is_flag=True,
@@ -1509,25 +1531,6 @@ def pdfs(
     help="Setup template for custom search script.",
 )
 @click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev pdf-get -a colrev.unpaywall
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
-@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -1545,16 +1548,19 @@ Format: colrev pdf-get -a colrev.unpaywall
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def pdf_get(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     copy_to_repo: bool,
     rename: bool,
     relink_pdfs: bool,
     setup_custom_script: bool,
-    add: str,
-    params: str,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Get PDFs"""
+    """Get PDFs
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html
+    """
 
     review_manager = get_review_manager(
         ctx,
@@ -1595,6 +1601,23 @@ def pdf_get(
 
 @main.command(help_priority=13)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+            installed_only=True,
+        )
+    ),
+    help="""PDF-get-man package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "-e",
     "--export",
     is_flag=True,
@@ -1606,25 +1629,6 @@ def pdf_get(
     is_flag=True,
     default=False,
     help="Discard all missing PDFs as not_available",
-)
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev pdf-get-man -a colrev.pdf_get_man_cli
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
 )
 @click.option(
     "-v",
@@ -1644,14 +1648,17 @@ Format: colrev pdf-get-man -a colrev.pdf_get_man_cli
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def pdf_get_man(
     ctx: click.core.Context,
-    export: bool,
-    discard: bool,
     add: str,
     params: str,
+    export: bool,
+    discard: bool,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Get PDFs manually"""
+    """Get PDFs manually
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_get.html
+    """
 
     review_manager = get_review_manager(
         ctx,
@@ -1752,6 +1759,23 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
 
 @main.command(help_priority=14)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            installed_only=True,
+        )
+    ),
+    help="""PDF-prep package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "--update_colrev_pdf_ids", is_flag=True, default=False, help="Update colrev_pdf_ids"
 )
 @click.option(
@@ -1795,29 +1819,12 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
     default=False,
     help="Force mode",
 )
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev pdf_prep -a colrev.pdf_check_ocr
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def pdf_prep(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     batch_size: int,
     update_colrev_pdf_ids: bool,
     reprocess: bool,
@@ -1825,10 +1832,11 @@ def pdf_prep(
     tei: bool,
     verbose: bool,
     force: bool,
-    add: str,
-    params: str,
 ) -> None:
-    """Prepare PDFs"""
+    """Prepare PDFs
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html
+    """
 
     # pylint: disable=import-outside-toplevel
 
@@ -1892,6 +1900,23 @@ def __delete_first_pages_cli(
 
 @main.command(help_priority=15)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+            installed_only=True,
+        )
+    ),
+    help="""PDF-prep-man package to be added.""",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "-dfp",
     "--delete_first_page",
     type=str,
@@ -1922,25 +1947,6 @@ def __delete_first_pages_cli(
     help="Apply manual preparation (from csv or bib)",
 )
 @click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
-            installed_only=True,
-        )
-    ),
-    help="""
-Format: colrev pdf-prep-man -a colrev.pdf_prep_man
-""",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
-)
-@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -1958,17 +1964,20 @@ Format: colrev pdf-prep-man -a colrev.pdf_prep_man
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def pdf_prep_man(
     ctx: click.core.Context,
+    add: str,
+    params: str,
     delete_first_page: str,
     stats: bool,
     discard: bool,
     extract: bool,
     apply: bool,
-    add: str,
-    params: str,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Prepare PDFs manually"""
+    """Prepare PDFs manually
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/pdf_retrieval/pdf_prep.html
+    """
 
     review_manager = get_review_manager(
         ctx,
@@ -2006,6 +2015,23 @@ def pdf_prep_man(
 
 @main.command(help_priority=16)
 @click.option(
+    "-a",
+    "--add",
+    type=click.Choice(
+        package_manager.discover_packages(
+            package_type=colrev.env.package_manager.PackageEndpointType.data,
+            installed_only=True,
+        )
+    ),
+    help="Data package to be added.",
+)
+@click.option(
+    "-p",
+    "--params",
+    type=str,
+    help="Parameters",
+)
+@click.option(
     "--profile",
     is_flag=True,
     default=False,
@@ -2016,23 +2042,6 @@ def pdf_prep_man(
     is_flag=True,
     default=False,
     help="Heuristics to prioritize reading efforts",
-)
-@click.option(
-    "-a",
-    "--add",
-    type=click.Choice(
-        package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.data,
-            installed_only=True,
-        )
-    ),
-    help="Format: colrev data -a colrev.structured",
-)
-@click.option(
-    "-p",
-    "--params",
-    type=str,
-    help="Parameters",
 )
 @click.option(
     "-scs",
@@ -2059,15 +2068,18 @@ def pdf_prep_man(
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def data(
     ctx: click.core.Context,
-    profile: bool,
-    reading_heuristics: bool,
     add: str,
     params: str,
+    profile: bool,
+    reading_heuristics: bool,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
 ) -> None:
-    """Complete selected forms of data analysis and synthesis"""
+    """Complete selected forms of data analysis and synthesis
+
+    Docs: https://colrev.readthedocs.io/en/latest/manual/data/data.html
+    """
 
     review_manager = get_review_manager(
         ctx,
@@ -2534,6 +2546,11 @@ def env(
     help="Modify the settings through the command line",
 )
 @click.option(
+    "-g",
+    "--update-global",
+    help="Global settings to update",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -2547,17 +2564,12 @@ def env(
     default=False,
     help="Force mode",
 )
-@click.option(
-    "-g",
-    "--update-global",
-    help="Global settings to update",
-)
 @click.pass_context
 def settings(
     ctx: click.core.Context,
     update_hooks: bool,
-    update_global: str,
     modify: str,
+    update_global: str,
     verbose: bool,
     force: bool,
 ) -> None:
