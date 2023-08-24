@@ -19,7 +19,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_enl
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -446,10 +445,25 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     )
 
     def __unify_container_titles(self, *, record: colrev.record.Record) -> None:
-        if record.data.get("journal", "") == "Management Information Systems Quarterly":
+        if "https://aisel.aisnet.org/misq/" in record.data.get("url", ""):
             record.update_field(
                 key="journal", value="MIS Quarterly", source="prep_ais_source"
             )
+            record.remove_field(key="booktitle")
+
+        if "https://aisel.aisnet.org/misqe/" in record.data.get("url", ""):
+            record.update_field(
+                key="journal", value="MIS Quarterly Executive", source="prep_ais_source"
+            )
+            record.remove_field(key="booktitle")
+
+        if "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):
+            record.update_field(
+                key="journal",
+                value="Business & Information Systems Engineering",
+                source="prep_ais_source",
+            )
+            record.remove_field(key="booktitle")
 
         if record.data["ENTRYTYPE"] == "inproceedings":
             for conf_abbreviation, conf_name in self.__conference_abbreviations.items():
@@ -467,13 +481,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     value=conf_name,
                     source="prep_ais_source",
                 )
-
-        if "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):
-            record.update_field(
-                key="journal",
-                value="Business & Information Systems Engineering",
-                source="prep_ais_source",
-            )
 
     def __format_fields(self, *, record: colrev.record.Record) -> None:
         if "abstract" in record.data:
