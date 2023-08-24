@@ -19,7 +19,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_enl
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
