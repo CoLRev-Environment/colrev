@@ -123,11 +123,6 @@ class PsycINFOSearchSource(JsonSchemaMixin):
             )
             self.__ris_fixes(entries=ris_entries)
             records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
-
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
             return records
 
         raise NotImplementedError

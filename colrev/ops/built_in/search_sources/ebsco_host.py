@@ -95,10 +95,6 @@ class EbscoHostSearchSource(JsonSchemaMixin):
                 load_operation=load_operation, settings=self.search_source
             )
             records = csv_loader.load()
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
             return records
 
         raise NotImplementedError

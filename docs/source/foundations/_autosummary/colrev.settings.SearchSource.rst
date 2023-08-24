@@ -21,7 +21,6 @@ colrev.settings.SearchSource
       ~SearchSource.from_dict
       ~SearchSource.from_json
       ~SearchSource.from_object
-      ~SearchSource.get_corresponding_bib_file
       ~SearchSource.get_dict
       ~SearchSource.get_feed
       ~SearchSource.get_origin_prefix

@@ -115,11 +115,11 @@ def test_search_remove_forthcoming(  # type: ignore
 
     search_operation.remove_forthcoming(source=add_source)
 
-    with open(add_source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
+    with open(add_source.filename, encoding="utf8") as bibtex_file:
         records = base_repo_review_manager.dataset.load_records_dict(
             load_str=bibtex_file.read()
         )
         assert "00003" not in records.keys()
 
-    add_source.get_corresponding_bib_file().unlink()
+    add_source.filename.unlink()
     search_operation.review_manager.settings.sources.pop()
