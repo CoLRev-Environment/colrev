@@ -126,7 +126,7 @@ class Repare(colrev.operation.Operation):
         source_feeds = {}
         for source in self.review_manager.settings.sources:
             source_feeds[
-                str(source.get_corresponding_bib_file()).replace("data/search/", "")
+                str(source.filename).replace("data/search/", "")
             ] = source.get_feed(
                 review_manager=self.review_manager,
                 source_identifier="NA",

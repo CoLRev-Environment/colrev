@@ -33,7 +33,7 @@ class GeneralOriginFeed:
         update_only: bool,
     ):
         self.source = search_source
-        self.feed_file = search_source.get_corresponding_bib_file()
+        self.feed_file = search_source.filename
 
         # Note: the source_identifier identifies records in the search feed.
         # This could be a doi or link or database-specific ID (like WOS accession numbers)

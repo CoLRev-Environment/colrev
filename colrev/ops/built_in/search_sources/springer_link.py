@@ -92,10 +92,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
             records = csv_loader.load()
             self.__load_fixes(records=records)
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
             return records
 
         raise NotImplementedError

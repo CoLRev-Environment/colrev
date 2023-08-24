@@ -56,8 +56,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
         sources = [
             s
             for s in prep_operation.review_manager.settings.sources
-            if s.filename.with_suffix(".bib")
-            == Path("data/search") / Path(origin_source)
+            if s.filename == Path("data/search") / Path(origin_source)
         ]
 
         for source in sources:

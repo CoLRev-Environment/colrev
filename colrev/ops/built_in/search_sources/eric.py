@@ -280,15 +280,6 @@ class ERICSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".nbib":
             records = colrev.ops.load_utils_nbib.load(source=self.search_source)
-            # ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
-            #     filename=self.search_source.filename
-            # )
-            # self.__ris_fixes(entries=ris_entries)
-            # records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
             return records
 
         if self.search_source.filename.suffix == ".bib":

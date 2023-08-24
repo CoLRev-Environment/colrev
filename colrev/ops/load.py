@@ -62,11 +62,7 @@ class Load(colrev.operation.Operation):
         files = [
             f
             for f in files
-            if str(f.with_suffix(".bib"))
-            not in [
-                str(s.filename.with_suffix(".bib"))
-                for s in self.review_manager.settings.sources
-            ]
+            if f not in [s.filename for s in self.review_manager.settings.sources]
         ]
 
         return sorted(list(set(files)))
@@ -399,9 +395,6 @@ class Load(colrev.operation.Operation):
         )
 
         self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(
-            path=source.search_source.get_corresponding_bib_file()
-        )
         self.review_manager.dataset.add_changes(path=source.search_source.filename)
         self.review_manager.dataset.add_record_changes()
         if (
