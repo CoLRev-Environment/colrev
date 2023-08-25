@@ -408,22 +408,6 @@ class Prep(colrev.operation.Operation):
                     + f"{progress}{prior_state} →  {target_state}{colors.END}"
                 )
 
-    def __validate_after_prepare(self, *, record: colrev.record.Record) -> None:
-        assert all(
-            x in record.data
-            for x in [
-                "ID",
-                "ENTRYTYPE",
-                "colrev_status",
-                "colrev_masterdata_provenance",
-            ]
-        )
-        assert record.data["colrev_status"] in [
-            colrev.record.RecordState.md_needs_manual_preparation,
-            colrev.record.RecordState.md_prepared,
-            colrev.record.RecordState.rev_prescreen_excluded,
-        ]
-
     def __post_package_prep(
         self,
         record: colrev.record.PrepRecord,
@@ -431,7 +415,6 @@ class Prep(colrev.operation.Operation):
         item: dict,
         prior_state: colrev.record.RecordState,
     ) -> None:
-        self.__validate_after_prepare(record=record)
 
         if self.last_round and not self.polish:
             if record.status_to_prepare():
