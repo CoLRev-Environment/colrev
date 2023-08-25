@@ -415,7 +415,6 @@ class Prep(colrev.operation.Operation):
         item: dict,
         prior_state: colrev.record.RecordState,
     ) -> None:
-
         if self.last_round and not self.polish:
             if record.status_to_prepare():
                 for key in list(record.data.keys()):
@@ -1074,7 +1073,7 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if "CURATED" in record["colrev_masterdata_provenance"]
+                if "CURATED" in record.get("colrev_masterdata_provenance", "")
             ]
         )
 
@@ -1279,7 +1278,7 @@ class Prep(colrev.operation.Operation):
                 )
                 previous_preparation_data = deepcopy(preparation_data)
 
-                if len(preparation_data) == 0:
+                if len(preparation_data) == 0 and not self.temp_records.is_file():
                     self.review_manager.logger.info("No records to prepare.")
                     print()
                     return
