@@ -663,6 +663,12 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
             return records
 
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
         raise NotImplementedError
 
     def __load_fixes(
