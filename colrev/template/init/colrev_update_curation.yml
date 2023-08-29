@@ -12,8 +12,12 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
       - name: Install CoLRev
+        working-directory: ${{ runner.temp }}
         run: |
-          pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
+          git clone https://github.com/CoLRev-Environment/colrev
+          cd colrev
+          python -m pip install poetry
+          poetry install
       - name: Setup git
         run: |
           git config --global user.name "CoLRev update"
@@ -28,13 +32,13 @@ jobs:
           git checkout -b ${{ env.BRANCH_NAME }}
       - name: Run CoLRev update
         run: |
-          colrev search -f
-          colrev load
-          colrev prep
-          colrev prep --polish
-          colrev prescreen
-          colrev pdfs
-          colrev screen
+          poetry run --directory ${{ runner.temp }}/colrev colrev search -f
+          poetry run --directory ${{ runner.temp }}/colrev colrev load
+          poetry run --directory ${{ runner.temp }}/colrev colrev prep
+          poetry run --directory ${{ runner.temp }}/colrev colrev prep --polish
+          poetry run --directory ${{ runner.temp }}/colrev colrev prescreen
+          poetry run --directory ${{ runner.temp }}/colrev colrev pdfs
+          poetry run --directory ${{ runner.temp }}/colrev colrev screen
           git push --set-upstream origin ${{ env.BRANCH_NAME }}
       - name: Create pull request
         uses: repo-sync/pull-request@v2

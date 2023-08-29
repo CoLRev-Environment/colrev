@@ -15,22 +15,27 @@ jobs:
     steps:
       - name: Checkout this repository
         uses: actions/checkout@v2
-      - run: |
-          pip install git+https://github.com/CoLRev-Environment/colrev.git#egg=colrev
+      - name: Install CoLRev
+        working-directory: ${{ runner.temp }}
+        run: |
+          git clone https://github.com/CoLRev-Environment/colrev
+          cd colrev
+          python -m pip install poetry
+          poetry install
       - run: |
           git config user.name "CoLRev update"
           git config user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
           git branch colrev-update
           git checkout colrev-update
-          colrev search -f
-          colrev load
-          colrev prep
-          colrev prep --polish
-          colrev dedupe
-          colrev prescreen
-          colrev pdfs
-          colrev screen
+          poetry run --directory ${{ runner.temp }}/colrev colrev search -f
+          poetry run --directory ${{ runner.temp }}/colrev colrev load
+          poetry run --directory ${{ runner.temp }}/colrev colrev prep
+          poetry run --directory ${{ runner.temp }}/colrev colrev prep --polish
+          poetry run --directory ${{ runner.temp }}/colrev colrev dedupe
+          poetry run --directory ${{ runner.temp }}/colrev colrev prescreen
+          poetry run --directory ${{ runner.temp }}/colrev colrev pdfs
+          poetry run --directory ${{ runner.temp }}/colrev colrev screen
           git push --set-upstream origin colrev-update
       - name: pull-request
         uses: repo-sync/pull-request@v2
