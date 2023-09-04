@@ -17,3 +17,5 @@ colrev search -a colrev.pubmed -p "https://pubmed.ncbi.nlm.nih.gov/?term=fitbit"
 ```
 
 ## Links
+
+- [Data field descriptions](https://www.nlm.nih.gov/bsd/mms/medlineelements.html)
