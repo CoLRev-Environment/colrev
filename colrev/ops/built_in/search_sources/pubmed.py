@@ -220,6 +220,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         if title:
             if title[0].text:
                 title = title[0].text.strip().rstrip(".")
+                if title.startswith("[") and title.endswith("]"):
+                    title = title[1:-1]
                 return title
         return ""
 
