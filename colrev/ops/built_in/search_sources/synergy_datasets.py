@@ -225,7 +225,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         """Run a search of the SYNERGY datasets"""
 
         dataset_df = self.__load_dataset()
-        records = self.review_manager.dataset.load_records_dict()
 
         synergy_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -233,10 +232,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             update_only=False,
         )
         existing_keys = {
-            "doi": [r["doi"] for r in records.values() if "doi" in r],
-            "pmid": [r["pmid"] for r in records.values() if "pmid" in r],
+            "doi": [r["doi"] for r in synergy_feed.feed_records.values() if "doi" in r],
+            "pmid": [
+                r["pmid"] for r in synergy_feed.feed_records.values() if "pmid" in r
+            ],
             "openalex_id": [
-                r["openalex_id"] for r in records.values() if "openalex_id" in r
+                r["openalex_id"]
+                for r in synergy_feed.feed_records.values()
+                if "openalex_id" in r
             ],
         }
 
@@ -254,6 +257,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 empty_records += 1
                 continue
 
+            # Skip records that are already in the feed
             if any(
                 value in existing_keys[key]
                 for key, value in record.items()
