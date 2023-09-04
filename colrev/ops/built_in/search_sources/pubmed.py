@@ -263,7 +263,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         if year:
             retrieved_record_dict.update(year=year[0].text)
 
-        retrieved_record_dict.update(volume=cls.__get_abstract_string(root=root))
+        retrieved_record_dict.update(abstract=cls.__get_abstract_string(root=root))
 
         article_id_list = root.xpath(
             "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
