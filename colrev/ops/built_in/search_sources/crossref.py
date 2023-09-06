@@ -854,10 +854,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     crossref_feed=crossref_feed,
                     rerun=rerun,
                 )
-        except (
-            requests.exceptions.Timeout,
-            requests.exceptions.JSONDecodeError,
-        ) as exc:
+        except (requests.exceptions.RequestException,) as exc:
             # watch github issue:
             # https://github.com/fabiobatalha/crossrefapi/issues/46
             if "504 Gateway Time-out" in str(exc):
