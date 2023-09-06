@@ -539,6 +539,11 @@ class Prep(colrev.operation.Operation):
         if self.review_manager.verbose_mode:
             self.review_manager.logger.info(" prep " + record.data["ID"])
 
+        if "colrev_data_provenance" not in record.data:
+            record.data["colrev_data_provenance"] = {}
+        if "colrev_masterdata_provenance" not in record.data:
+            record.data["colrev_masterdata_provenance"] = {}
+
         # preparation_record changes with each endpoint and
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
