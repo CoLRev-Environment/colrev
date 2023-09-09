@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.update\_masterdata\_status.UpdateMetadataStatusPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~UpdateMetadataStatusPrep.all_json_schemas
       ~UpdateMetadataStatusPrep.field_mapping
       ~UpdateMetadataStatusPrep.from_dict
@@ -26,17 +26,15 @@ colrev.ops.built\_in.prep.update\_masterdata\_status.UpdateMetadataStatusPrep
       ~UpdateMetadataStatusPrep.register_field_encoders
       ~UpdateMetadataStatusPrep.to_dict
       ~UpdateMetadataStatusPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~UpdateMetadataStatusPrep.always_apply_changes
       ~UpdateMetadataStatusPrep.ci_supported
       ~UpdateMetadataStatusPrep.source_correction_hint
-   
-   

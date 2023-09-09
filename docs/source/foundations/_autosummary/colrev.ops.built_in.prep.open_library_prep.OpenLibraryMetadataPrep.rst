@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~OpenLibraryMetadataPrep.all_json_schemas
       ~OpenLibraryMetadataPrep.check_availability
       ~OpenLibraryMetadataPrep.field_mapping
@@ -27,17 +27,15 @@ colrev.ops.built\_in.prep.open\_library\_prep.OpenLibraryMetadataPrep
       ~OpenLibraryMetadataPrep.register_field_encoders
       ~OpenLibraryMetadataPrep.to_dict
       ~OpenLibraryMetadataPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~OpenLibraryMetadataPrep.always_apply_changes
       ~OpenLibraryMetadataPrep.ci_supported
       ~OpenLibraryMetadataPrep.source_correction_hint
-   
-   

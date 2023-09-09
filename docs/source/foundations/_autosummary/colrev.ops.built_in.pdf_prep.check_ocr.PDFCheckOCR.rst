@@ -9,13 +9,13 @@ colrev.ops.built\_in.pdf\_prep.check\_ocr.PDFCheckOCR
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PDFCheckOCR.all_json_schemas
       ~PDFCheckOCR.field_mapping
       ~PDFCheckOCR.from_dict
@@ -26,15 +26,13 @@ colrev.ops.built\_in.pdf\_prep.check\_ocr.PDFCheckOCR
       ~PDFCheckOCR.register_field_encoders
       ~PDFCheckOCR.to_dict
       ~PDFCheckOCR.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PDFCheckOCR.ci_supported
-   
-   

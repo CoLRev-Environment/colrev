@@ -3,21 +3,21 @@ colrev.ops.built\_in.data
 
 .. automodule:: colrev.ops.built_in.data
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -33,4 +33,3 @@ colrev.ops.built\_in.data
    colrev.ops.built_in.data.paper_md
    colrev.ops.built_in.data.prisma
    colrev.ops.built_in.data.structured
-

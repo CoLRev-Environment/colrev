@@ -9,13 +9,13 @@ colrev.settings.SearchSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SearchSettings.all_json_schemas
       ~SearchSettings.field_mapping
       ~SearchSettings.from_dict
@@ -25,15 +25,13 @@ colrev.settings.SearchSettings
       ~SearchSettings.register_field_encoders
       ~SearchSettings.to_dict
       ~SearchSettings.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SearchSettings.retrieve_forthcoming
-   
-   

@@ -3,21 +3,21 @@ colrev.ops.built\_in.dedupe
 
 .. automodule:: colrev.ops.built_in.dedupe
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -31,4 +31,3 @@ colrev.ops.built\_in.dedupe
    colrev.ops.built_in.dedupe.curation_missing_dedupe
    colrev.ops.built_in.dedupe.simple_dedupe
    colrev.ops.built_in.dedupe.utils
-

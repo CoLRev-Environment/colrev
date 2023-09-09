@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~DBLPMetadataPrep.all_json_schemas
       ~DBLPMetadataPrep.check_availability
       ~DBLPMetadataPrep.field_mapping
@@ -27,17 +27,15 @@ colrev.ops.built\_in.prep.dblp\_metadata\_prep.DBLPMetadataPrep
       ~DBLPMetadataPrep.register_field_encoders
       ~DBLPMetadataPrep.to_dict
       ~DBLPMetadataPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DBLPMetadataPrep.always_apply_changes
       ~DBLPMetadataPrep.ci_supported
       ~DBLPMetadataPrep.source_correction_hint
-   
-   

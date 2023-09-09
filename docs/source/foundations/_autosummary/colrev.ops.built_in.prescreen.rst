@@ -3,21 +3,21 @@ colrev.ops.built\_in.prescreen
 
 .. automodule:: colrev.ops.built_in.prescreen
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -30,4 +30,3 @@ colrev.ops.built\_in.prescreen
    colrev.ops.built_in.prescreen.prescreen_cli
    colrev.ops.built_in.prescreen.prescreen_table
    colrev.ops.built_in.prescreen.scope_prescreen
-

@@ -3,21 +3,21 @@ colrev.ops.built\_in.search\_sources
 
 .. automodule:: colrev.ops.built_in.search_sources
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -59,4 +59,3 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.web_of_science
    colrev.ops.built_in.search_sources.website
    colrev.ops.built_in.search_sources.wiley
-

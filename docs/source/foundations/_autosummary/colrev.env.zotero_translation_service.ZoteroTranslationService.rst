@@ -9,24 +9,22 @@ colrev.env.zotero\_translation\_service.ZoteroTranslationService
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ZoteroTranslationService.start
       ~ZoteroTranslationService.stop
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ZoteroTranslationService.IMAGE_NAME
-   
-   

@@ -14,4 +14,3 @@ Names should be correctly separated.
 +-----------------+
 | editor          |
 +-----------------+
-

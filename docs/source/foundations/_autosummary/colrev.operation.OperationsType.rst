@@ -9,16 +9,16 @@ colrev.operation.OperationsType
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~OperationsType.search
       ~OperationsType.load
       ~OperationsType.prep
@@ -33,5 +33,3 @@ colrev.operation.OperationsType
       ~OperationsType.data
       ~OperationsType.format
       ~OperationsType.check
-   
-   

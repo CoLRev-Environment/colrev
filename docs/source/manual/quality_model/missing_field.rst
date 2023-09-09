@@ -40,4 +40,3 @@ Should contain required fields for each container. Following are the required fi
 +----------------+----------------------------------------------+
 | other          | author, title, year                          |
 +----------------+----------------------------------------------+
-

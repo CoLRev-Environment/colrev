@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.open\_alex\_metadata\_prep.OpenAlexMetadataPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~OpenAlexMetadataPrep.all_json_schemas
       ~OpenAlexMetadataPrep.check_availability
       ~OpenAlexMetadataPrep.field_mapping
@@ -27,17 +27,15 @@ colrev.ops.built\_in.prep.open\_alex\_metadata\_prep.OpenAlexMetadataPrep
       ~OpenAlexMetadataPrep.register_field_encoders
       ~OpenAlexMetadataPrep.to_dict
       ~OpenAlexMetadataPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~OpenAlexMetadataPrep.always_apply_changes
       ~OpenAlexMetadataPrep.ci_supported
       ~OpenAlexMetadataPrep.source_correction_hint
-   
-   

@@ -8,4 +8,3 @@ Language code should be valid
 +=================+
 | language        |
 +-----------------+
-

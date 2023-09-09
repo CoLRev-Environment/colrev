@@ -9,26 +9,24 @@ colrev.settings.SameSourceMergePolicy
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SameSourceMergePolicy.get_field_details
       ~SameSourceMergePolicy.get_options
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SameSourceMergePolicy.prevent
       ~SameSourceMergePolicy.warn
       ~SameSourceMergePolicy.apply
-   
-   

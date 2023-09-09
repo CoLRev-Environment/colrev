@@ -9,13 +9,13 @@ colrev.settings.LoadSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~LoadSettings.all_json_schemas
       ~LoadSettings.field_mapping
       ~LoadSettings.from_dict
@@ -25,9 +25,3 @@ colrev.settings.LoadSettings
       ~LoadSettings.register_field_encoders
       ~LoadSettings.to_dict
       ~LoadSettings.to_json
-   
-   
-
-   
-   
-   

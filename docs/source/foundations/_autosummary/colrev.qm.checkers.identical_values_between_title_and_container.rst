@@ -3,38 +3,29 @@ colrev.qm.checkers.identical\_values\_between\_title\_and\_container
 
 .. automodule:: colrev.qm.checkers.identical_values_between_title_and_container
 
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Functions
 
    .. autosummary::
       :toctree:
       :nosignatures:
-   
-      register
-   
-   
 
-   
-   
+      register
+
+
+
+
+
    .. rubric:: Classes
 
    .. autosummary::
       :toctree:
       :template: custom-class-template.rst
       :nosignatures:
-   
+
       IdenticalValuesChecker
-   
-   
-
-   
-   
-   
-
-
-

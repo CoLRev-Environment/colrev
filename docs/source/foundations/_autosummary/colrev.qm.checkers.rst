@@ -3,21 +3,21 @@ colrev.qm.checkers
 
 .. automodule:: colrev.qm.checkers
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -50,4 +50,3 @@ colrev.qm.checkers
    colrev.qm.checkers.record_not_in_toc
    colrev.qm.checkers.thesis_with_multiple_authors
    colrev.qm.checkers.year_format
-

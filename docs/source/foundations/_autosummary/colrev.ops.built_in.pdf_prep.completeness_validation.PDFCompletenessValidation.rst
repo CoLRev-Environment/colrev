@@ -9,13 +9,13 @@ colrev.ops.built\_in.pdf\_prep.completeness\_validation.PDFCompletenessValidatio
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PDFCompletenessValidation.all_json_schemas
       ~PDFCompletenessValidation.field_mapping
       ~PDFCompletenessValidation.from_dict
@@ -26,17 +26,15 @@ colrev.ops.built\_in.pdf\_prep.completeness\_validation.PDFCompletenessValidatio
       ~PDFCompletenessValidation.register_field_encoders
       ~PDFCompletenessValidation.to_dict
       ~PDFCompletenessValidation.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PDFCompletenessValidation.ci_supported
       ~PDFCompletenessValidation.roman_page_pattern
       ~PDFCompletenessValidation.roman_pages_pattern
-   
-   

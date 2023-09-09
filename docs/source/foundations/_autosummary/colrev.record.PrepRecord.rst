@@ -9,13 +9,13 @@ colrev.record.PrepRecord
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PrepRecord.add_data_provenance
       ~PrepRecord.add_data_provenance_note
       ~PrepRecord.add_masterdata_provenance
@@ -76,15 +76,15 @@ colrev.record.PrepRecord
       ~PrepRecord.update_field
       ~PrepRecord.update_masterdata_provenance
       ~PrepRecord.update_metadata_status
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PrepRecord.dict_fields_keys
       ~PrepRecord.identifying_field_keys
       ~PrepRecord.list_fields_keys
@@ -93,5 +93,3 @@ colrev.record.PrepRecord
       ~PrepRecord.provenance_keys
       ~PrepRecord.time_variant_fields
       ~PrepRecord.data
-   
-   

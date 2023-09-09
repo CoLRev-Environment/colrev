@@ -9,28 +9,26 @@ colrev.env.package\_manager.PackageManager
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PackageManager.discover_packages
       ~PackageManager.get_package_details
       ~PackageManager.load_package_endpoint
       ~PackageManager.load_packages
       ~PackageManager.update_package_list
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PackageManager.package_type_overview
       ~PackageManager.package
-   
-   

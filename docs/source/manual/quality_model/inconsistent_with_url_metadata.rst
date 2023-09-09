@@ -18,4 +18,3 @@ Checks url metadata should be consistent with Zotero generated metadata about th
 +-----------------+
 | number          |
 +-----------------+
-

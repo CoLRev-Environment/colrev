@@ -9,23 +9,21 @@ colrev.service.Service
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~Service.start_services
-   
-   
 
-   
-   
+      ~Service.start_services
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Service.review_manager
-   
-   

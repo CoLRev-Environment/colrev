@@ -8,4 +8,3 @@ Record should contain language code
 +=================+
 | language        |
 +-----------------+
-

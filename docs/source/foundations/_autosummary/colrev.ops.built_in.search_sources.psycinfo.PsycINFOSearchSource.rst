@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PsycINFOSearchSource.add_endpoint
       ~PsycINFOSearchSource.all_json_schemas
       ~PsycINFOSearchSource.field_mapping
@@ -32,15 +32,15 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
       ~PsycINFOSearchSource.to_dict
       ~PsycINFOSearchSource.to_json
       ~PsycINFOSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PsycINFOSearchSource.api_search_supported
       ~PsycINFOSearchSource.ci_supported
       ~PsycINFOSearchSource.heuristic_status
@@ -48,5 +48,3 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
       ~PsycINFOSearchSource.search_type
       ~PsycINFOSearchSource.short_name
       ~PsycINFOSearchSource.source_identifier
-   
-   

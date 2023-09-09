@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ERICSearchSource.add_endpoint
       ~ERICSearchSource.all_json_schemas
       ~ERICSearchSource.field_mapping
@@ -33,15 +33,15 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
       ~ERICSearchSource.to_dict
       ~ERICSearchSource.to_json
       ~ERICSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ERICSearchSource.API_FIELDS
       ~ERICSearchSource.FIELD_MAPPING
       ~ERICSearchSource.api_search_supported
@@ -51,5 +51,3 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
       ~ERICSearchSource.search_type
       ~ERICSearchSource.short_name
       ~ERICSearchSource.source_identifier
-   
-   

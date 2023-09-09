@@ -9,17 +9,11 @@ colrev.ops.load\_utils\_table.ExcelLoader
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~ExcelLoader.load
-   
-   
 
-   
-   
-   
+      ~ExcelLoader.load

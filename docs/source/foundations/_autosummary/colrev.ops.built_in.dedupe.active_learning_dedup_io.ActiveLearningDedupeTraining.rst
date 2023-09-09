@@ -9,13 +9,13 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ActiveLearningDedupeTraining.all_json_schemas
       ~ActiveLearningDedupeTraining.apply_active_learning
       ~ActiveLearningDedupeTraining.field_mapping
@@ -28,18 +28,16 @@ colrev.ops.built\_in.dedupe.active\_learning\_dedup\_io.ActiveLearningDedupeTrai
       ~ActiveLearningDedupeTraining.setup_active_learning_dedupe
       ~ActiveLearningDedupeTraining.to_dict
       ~ActiveLearningDedupeTraining.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ActiveLearningDedupeTraining.SETTINGS_FILE_RELATIVE
       ~ActiveLearningDedupeTraining.TRAINING_FILE_RELATIVE
       ~ActiveLearningDedupeTraining.ci_supported
       ~ActiveLearningDedupeTraining.deduper
-   
-   

@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.doi\_from\_urls\_prep.DOIFromURLsPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~DOIFromURLsPrep.all_json_schemas
       ~DOIFromURLsPrep.field_mapping
       ~DOIFromURLsPrep.from_dict
@@ -26,18 +26,16 @@ colrev.ops.built\_in.prep.doi\_from\_urls\_prep.DOIFromURLsPrep
       ~DOIFromURLsPrep.register_field_encoders
       ~DOIFromURLsPrep.to_dict
       ~DOIFromURLsPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DOIFromURLsPrep.always_apply_changes
       ~DOIFromURLsPrep.ci_supported
       ~DOIFromURLsPrep.doi_regex
       ~DOIFromURLsPrep.source_correction_hint
-   
-   

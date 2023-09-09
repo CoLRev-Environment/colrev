@@ -9,13 +9,13 @@ colrev.settings.PrescreenSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PrescreenSettings.all_json_schemas
       ~PrescreenSettings.field_mapping
       ~PrescreenSettings.from_dict
@@ -25,16 +25,14 @@ colrev.settings.PrescreenSettings
       ~PrescreenSettings.register_field_encoders
       ~PrescreenSettings.to_dict
       ~PrescreenSettings.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PrescreenSettings.explanation
       ~PrescreenSettings.prescreen_package_endpoints
-   
-   

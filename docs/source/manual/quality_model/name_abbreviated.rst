@@ -10,4 +10,3 @@ Names should not be abbreviated
 +-----------------+
 | editor          |
 +-----------------+
-

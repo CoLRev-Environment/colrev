@@ -9,13 +9,13 @@ colrev.settings.ScreenCriterion
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ScreenCriterion.all_json_schemas
       ~ScreenCriterion.field_mapping
       ~ScreenCriterion.from_dict
@@ -25,17 +25,15 @@ colrev.settings.ScreenCriterion
       ~ScreenCriterion.register_field_encoders
       ~ScreenCriterion.to_dict
       ~ScreenCriterion.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ScreenCriterion.explanation
       ~ScreenCriterion.comment
       ~ScreenCriterion.criterion_type
-   
-   

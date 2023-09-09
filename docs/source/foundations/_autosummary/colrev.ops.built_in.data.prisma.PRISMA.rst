@@ -9,13 +9,13 @@ colrev.ops.built\_in.data.prisma.PRISMA
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PRISMA.all_json_schemas
       ~PRISMA.field_mapping
       ~PRISMA.from_dict
@@ -29,15 +29,13 @@ colrev.ops.built\_in.data.prisma.PRISMA
       ~PRISMA.to_json
       ~PRISMA.update_data
       ~PRISMA.update_record_status_matrix
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PRISMA.ci_supported
-   
-   

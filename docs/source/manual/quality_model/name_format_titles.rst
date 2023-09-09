@@ -10,4 +10,3 @@ Name should not contains Titles ("MD", "Dr", "PhD", "Prof", "Dipl Ing")
 +-----------------+
 | editor          |
 +-----------------+
-

@@ -9,24 +9,22 @@ colrev.qm.checkers.container\_title\_abbreviated.ContainerTitleAbbreviatedChecke
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~ContainerTitleAbbreviatedChecker.run
-   
-   
 
-   
-   
+      ~ContainerTitleAbbreviatedChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ContainerTitleAbbreviatedChecker.fields_to_check
       ~ContainerTitleAbbreviatedChecker.msg
-   
-   

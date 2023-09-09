@@ -9,13 +9,13 @@ colrev.ops.built\_in.prescreen.conditional\_prescreen.ConditionalPrescreen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ConditionalPrescreen.all_json_schemas
       ~ConditionalPrescreen.field_mapping
       ~ConditionalPrescreen.from_dict
@@ -26,15 +26,13 @@ colrev.ops.built\_in.prescreen.conditional\_prescreen.ConditionalPrescreen
       ~ConditionalPrescreen.run_prescreen
       ~ConditionalPrescreen.to_dict
       ~ConditionalPrescreen.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ConditionalPrescreen.ci_supported
-   
-   

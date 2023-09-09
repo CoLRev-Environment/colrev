@@ -3,21 +3,21 @@ colrev.qm
 
 .. automodule:: colrev.qm
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -30,4 +30,3 @@ colrev.qm
    colrev.qm.colrev_id
    colrev.qm.colrev_pdf_id
    colrev.qm.quality_model
-

@@ -9,13 +9,13 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~BibliographyExport.all_json_schemas
       ~BibliographyExport.field_mapping
       ~BibliographyExport.from_dict
@@ -29,18 +29,16 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
       ~BibliographyExport.to_json
       ~BibliographyExport.update_data
       ~BibliographyExport.update_record_status_matrix
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~BibliographyExport.PYBTEX_FORMATS
       ~BibliographyExport.ZOTERO_FORMATS
       ~BibliographyExport.ci_supported
       ~BibliographyExport.settings
-   
-   

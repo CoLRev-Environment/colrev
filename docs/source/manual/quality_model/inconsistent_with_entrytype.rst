@@ -28,4 +28,3 @@ Record content should match with entity type content
 +--------------+-----------------------------------------+
 |misc          | journal,booktitle                       |
 +--------------+-----------------------------------------+
-

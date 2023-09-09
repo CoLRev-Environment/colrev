@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~BackwardSearchSource.add_endpoint
       ~BackwardSearchSource.all_json_schemas
       ~BackwardSearchSource.field_mapping
@@ -33,15 +33,15 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
       ~BackwardSearchSource.to_dict
       ~BackwardSearchSource.to_json
       ~BackwardSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~BackwardSearchSource.api_search_supported
       ~BackwardSearchSource.ci_supported
       ~BackwardSearchSource.heuristic_status
@@ -49,5 +49,3 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
       ~BackwardSearchSource.search_type
       ~BackwardSearchSource.short_name
       ~BackwardSearchSource.source_identifier
-   
-   

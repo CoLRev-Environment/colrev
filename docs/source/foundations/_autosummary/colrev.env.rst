@@ -3,21 +3,21 @@ colrev.env
 
 .. automodule:: colrev.env
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -36,4 +36,3 @@ colrev.env
    colrev.env.tei_parser
    colrev.env.utils
    colrev.env.zotero_translation_service
-

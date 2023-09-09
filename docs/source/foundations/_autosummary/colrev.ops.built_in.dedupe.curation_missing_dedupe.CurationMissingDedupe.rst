@@ -9,13 +9,13 @@ colrev.ops.built\_in.dedupe.curation\_missing\_dedupe.CurationMissingDedupe
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~CurationMissingDedupe.all_json_schemas
       ~CurationMissingDedupe.field_mapping
       ~CurationMissingDedupe.from_dict
@@ -26,15 +26,13 @@ colrev.ops.built\_in.dedupe.curation\_missing\_dedupe.CurationMissingDedupe
       ~CurationMissingDedupe.run_dedupe
       ~CurationMissingDedupe.to_dict
       ~CurationMissingDedupe.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~CurationMissingDedupe.ci_supported
-   
-   

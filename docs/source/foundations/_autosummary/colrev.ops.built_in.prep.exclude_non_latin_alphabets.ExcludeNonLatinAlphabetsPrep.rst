@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.exclude\_non\_latin\_alphabets.ExcludeNonLatinAlphabet
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ExcludeNonLatinAlphabetsPrep.all_json_schemas
       ~ExcludeNonLatinAlphabetsPrep.field_mapping
       ~ExcludeNonLatinAlphabetsPrep.from_dict
@@ -26,18 +26,16 @@ colrev.ops.built\_in.prep.exclude\_non\_latin\_alphabets.ExcludeNonLatinAlphabet
       ~ExcludeNonLatinAlphabetsPrep.register_field_encoders
       ~ExcludeNonLatinAlphabetsPrep.to_dict
       ~ExcludeNonLatinAlphabetsPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ExcludeNonLatinAlphabetsPrep.alphabet_detector
       ~ExcludeNonLatinAlphabetsPrep.always_apply_changes
       ~ExcludeNonLatinAlphabetsPrep.ci_supported
       ~ExcludeNonLatinAlphabetsPrep.source_correction_hint
-   
-   

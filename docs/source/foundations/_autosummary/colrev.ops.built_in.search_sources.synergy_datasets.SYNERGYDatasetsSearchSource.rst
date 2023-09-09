@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SYNERGYDatasetsSearchSource.add_endpoint
       ~SYNERGYDatasetsSearchSource.all_json_schemas
       ~SYNERGYDatasetsSearchSource.field_mapping
@@ -32,15 +32,15 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
       ~SYNERGYDatasetsSearchSource.to_dict
       ~SYNERGYDatasetsSearchSource.to_json
       ~SYNERGYDatasetsSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SYNERGYDatasetsSearchSource.api_search_supported
       ~SYNERGYDatasetsSearchSource.ci_supported
       ~SYNERGYDatasetsSearchSource.heuristic_status
@@ -48,5 +48,3 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
       ~SYNERGYDatasetsSearchSource.search_type
       ~SYNERGYDatasetsSearchSource.short_name
       ~SYNERGYDatasetsSearchSource.source_identifier
-   
-   

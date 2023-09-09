@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PDFSearchSource.add_endpoint
       ~PDFSearchSource.all_json_schemas
       ~PDFSearchSource.field_mapping
@@ -32,15 +32,15 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
       ~PDFSearchSource.to_dict
       ~PDFSearchSource.to_json
       ~PDFSearchSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PDFSearchSource.api_search_supported
       ~PDFSearchSource.ci_supported
       ~PDFSearchSource.heuristic_status
@@ -48,5 +48,3 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
       ~PDFSearchSource.search_type
       ~PDFSearchSource.short_name
       ~PDFSearchSource.source_identifier
-   
-   

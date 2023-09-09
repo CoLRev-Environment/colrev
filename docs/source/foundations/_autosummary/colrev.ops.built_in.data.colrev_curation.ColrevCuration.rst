@@ -9,13 +9,13 @@ colrev.ops.built\_in.data.colrev\_curation.ColrevCuration
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ColrevCuration.all_json_schemas
       ~ColrevCuration.field_mapping
       ~ColrevCuration.from_dict
@@ -29,16 +29,14 @@ colrev.ops.built\_in.data.colrev\_curation.ColrevCuration
       ~ColrevCuration.to_json
       ~ColrevCuration.update_data
       ~ColrevCuration.update_record_status_matrix
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ColrevCuration.ci_supported
       ~ColrevCuration.settings
-   
-   
