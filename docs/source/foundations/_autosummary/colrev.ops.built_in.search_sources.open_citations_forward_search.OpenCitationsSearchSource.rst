@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~OpenCitationsSearchSource.add_endpoint
       ~OpenCitationsSearchSource.all_json_schemas
       ~OpenCitationsSearchSource.field_mapping
@@ -32,15 +32,16 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
       ~OpenCitationsSearchSource.run_search
       ~OpenCitationsSearchSource.to_dict
       ~OpenCitationsSearchSource.to_json
+      ~OpenCitationsSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~OpenCitationsSearchSource.api_search_supported
       ~OpenCitationsSearchSource.ci_supported
       ~OpenCitationsSearchSource.heuristic_status
@@ -48,3 +49,5 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
       ~OpenCitationsSearchSource.search_type
       ~OpenCitationsSearchSource.short_name
       ~OpenCitationsSearchSource.source_identifier
+   
+   

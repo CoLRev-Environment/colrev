@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~EuropePMCSearchSource.add_endpoint
       ~EuropePMCSearchSource.all_json_schemas
       ~EuropePMCSearchSource.field_mapping
@@ -31,15 +31,16 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.run_search
       ~EuropePMCSearchSource.to_dict
       ~EuropePMCSearchSource.to_json
+      ~EuropePMCSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~EuropePMCSearchSource.api_search_supported
       ~EuropePMCSearchSource.ci_supported
       ~EuropePMCSearchSource.heuristic_status
@@ -47,3 +48,5 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.search_type
       ~EuropePMCSearchSource.short_name
       ~EuropePMCSearchSource.source_identifier
+   
+   

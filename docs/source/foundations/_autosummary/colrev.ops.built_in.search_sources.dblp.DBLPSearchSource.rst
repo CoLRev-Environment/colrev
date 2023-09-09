@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~DBLPSearchSource.add_endpoint
       ~DBLPSearchSource.all_json_schemas
       ~DBLPSearchSource.check_availability
@@ -32,15 +32,16 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.run_search
       ~DBLPSearchSource.to_dict
       ~DBLPSearchSource.to_json
+      ~DBLPSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~DBLPSearchSource.api_search_supported
       ~DBLPSearchSource.ci_supported
       ~DBLPSearchSource.heuristic_status
@@ -48,3 +49,5 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.search_type
       ~DBLPSearchSource.short_name
       ~DBLPSearchSource.source_identifier
+   
+   

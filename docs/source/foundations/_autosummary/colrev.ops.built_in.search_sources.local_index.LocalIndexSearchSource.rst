@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~LocalIndexSearchSource.add_endpoint
       ~LocalIndexSearchSource.all_json_schemas
       ~LocalIndexSearchSource.apply_correction
@@ -32,15 +32,16 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
       ~LocalIndexSearchSource.run_search
       ~LocalIndexSearchSource.to_dict
       ~LocalIndexSearchSource.to_json
+      ~LocalIndexSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~LocalIndexSearchSource.api_search_supported
       ~LocalIndexSearchSource.ci_supported
       ~LocalIndexSearchSource.essential_md_keys
@@ -49,3 +50,5 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
       ~LocalIndexSearchSource.search_type
       ~LocalIndexSearchSource.short_name
       ~LocalIndexSearchSource.source_identifier
+   
+   

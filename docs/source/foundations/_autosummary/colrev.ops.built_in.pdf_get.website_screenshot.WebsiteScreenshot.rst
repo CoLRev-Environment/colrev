@@ -9,13 +9,13 @@ colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~WebsiteScreenshot.all_json_schemas
       ~WebsiteScreenshot.field_mapping
       ~WebsiteScreenshot.from_dict
@@ -26,13 +26,15 @@ colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
       ~WebsiteScreenshot.register_field_encoders
       ~WebsiteScreenshot.to_dict
       ~WebsiteScreenshot.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~WebsiteScreenshot.ci_supported
+   
+   

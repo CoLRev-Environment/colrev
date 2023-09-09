@@ -9,13 +9,13 @@ colrev.env.package\_manager.DefaultSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~DefaultSettings.all_json_schemas
       ~DefaultSettings.field_mapping
       ~DefaultSettings.from_dict
@@ -26,13 +26,15 @@ colrev.env.package\_manager.DefaultSettings
       ~DefaultSettings.register_field_encoders
       ~DefaultSettings.to_dict
       ~DefaultSettings.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~DefaultSettings.endpoint
+   
+   

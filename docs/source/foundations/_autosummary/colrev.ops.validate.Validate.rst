@@ -9,13 +9,13 @@ colrev.ops.validate.Validate
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Validate.check_precondition
       ~Validate.conclude
       ~Validate.decorate
@@ -26,14 +26,16 @@ colrev.ops.validate.Validate
       ~Validate.validate_merge_prescreen_screen
       ~Validate.validate_preparation_changes
       ~Validate.validate_properties
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Validate.force_mode
       ~Validate.type
+   
+   

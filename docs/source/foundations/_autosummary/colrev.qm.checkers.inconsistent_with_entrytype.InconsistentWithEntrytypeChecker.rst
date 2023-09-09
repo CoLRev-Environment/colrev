@@ -9,22 +9,24 @@ colrev.qm.checkers.inconsistent\_with\_entrytype.InconsistentWithEntrytypeChecke
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~InconsistentWithEntrytypeChecker.run
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~InconsistentWithEntrytypeChecker.msg
       ~InconsistentWithEntrytypeChecker.record_field_inconsistencies
+   
+   

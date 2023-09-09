@@ -9,13 +9,13 @@ colrev.ops.prescreen.Prescreen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Prescreen.check_precondition
       ~Prescreen.conclude
       ~Prescreen.create_prescreen_split
@@ -29,14 +29,16 @@ colrev.ops.prescreen.Prescreen
       ~Prescreen.main
       ~Prescreen.prescreen
       ~Prescreen.setup_custom_script
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Prescreen.force_mode
       ~Prescreen.type
+   
+   

@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~EbscoHostSearchSource.add_endpoint
       ~EbscoHostSearchSource.all_json_schemas
       ~EbscoHostSearchSource.field_mapping
@@ -31,15 +31,16 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
       ~EbscoHostSearchSource.run_search
       ~EbscoHostSearchSource.to_dict
       ~EbscoHostSearchSource.to_json
+      ~EbscoHostSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~EbscoHostSearchSource.api_search_supported
       ~EbscoHostSearchSource.ci_supported
       ~EbscoHostSearchSource.heuristic_status
@@ -47,3 +48,5 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
       ~EbscoHostSearchSource.search_type
       ~EbscoHostSearchSource.short_name
       ~EbscoHostSearchSource.source_identifier
+   
+   

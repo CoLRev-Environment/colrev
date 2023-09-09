@@ -9,13 +9,13 @@ colrev.ops.built\_in.pdf\_prep\_man.pdf\_prep\_man\_cli.CoLRevCLIPDFManPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~CoLRevCLIPDFManPrep.all_json_schemas
       ~CoLRevCLIPDFManPrep.field_mapping
       ~CoLRevCLIPDFManPrep.from_dict
@@ -26,13 +26,15 @@ colrev.ops.built\_in.pdf\_prep\_man.pdf\_prep\_man\_cli.CoLRevCLIPDFManPrep
       ~CoLRevCLIPDFManPrep.register_field_encoders
       ~CoLRevCLIPDFManPrep.to_dict
       ~CoLRevCLIPDFManPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~CoLRevCLIPDFManPrep.ci_supported
+   
+   

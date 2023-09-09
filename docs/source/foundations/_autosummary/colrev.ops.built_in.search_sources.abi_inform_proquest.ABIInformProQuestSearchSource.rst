@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ABIInformProQuestSearchSource.add_endpoint
       ~ABIInformProQuestSearchSource.all_json_schemas
       ~ABIInformProQuestSearchSource.field_mapping
@@ -31,15 +31,16 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
       ~ABIInformProQuestSearchSource.run_search
       ~ABIInformProQuestSearchSource.to_dict
       ~ABIInformProQuestSearchSource.to_json
+      ~ABIInformProQuestSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ABIInformProQuestSearchSource.api_search_supported
       ~ABIInformProQuestSearchSource.ci_supported
       ~ABIInformProQuestSearchSource.heuristic_status
@@ -47,3 +48,5 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
       ~ABIInformProQuestSearchSource.search_type
       ~ABIInformProQuestSearchSource.short_name
       ~ABIInformProQuestSearchSource.source_identifier
+   
+   

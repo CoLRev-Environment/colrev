@@ -9,21 +9,23 @@ colrev.qm.checkers.inconsistent\_with\_doi\_metadata.InconsistentWithDOIMetadata
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~InconsistentWithDOIMetadataChecker.run
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~InconsistentWithDOIMetadataChecker.msg
+   
+   

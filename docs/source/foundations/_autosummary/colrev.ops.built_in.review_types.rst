@@ -3,21 +3,21 @@ colrev.ops.built\_in.review\_types
 
 .. automodule:: colrev.ops.built_in.review_types
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -26,7 +26,6 @@ colrev.ops.built\_in.review\_types
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.ops.built_in.review_types.blank
    colrev.ops.built_in.review_types.conceptual_review
    colrev.ops.built_in.review_types.critical_review
    colrev.ops.built_in.review_types.curated_masterdata
@@ -38,3 +37,4 @@ colrev.ops.built\_in.review\_types
    colrev.ops.built_in.review_types.scientometric
    colrev.ops.built_in.review_types.scoping_review
    colrev.ops.built_in.review_types.theoretical_review
+

@@ -9,13 +9,13 @@ colrev.ops.built\_in.pdf\_prep.last\_page.PDFLastPage
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PDFLastPage.all_json_schemas
       ~PDFLastPage.field_mapping
       ~PDFLastPage.from_dict
@@ -26,13 +26,15 @@ colrev.ops.built\_in.pdf\_prep.last\_page.PDFLastPage
       ~PDFLastPage.register_field_encoders
       ~PDFLastPage.to_dict
       ~PDFLastPage.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PDFLastPage.ci_supported
+   
+   

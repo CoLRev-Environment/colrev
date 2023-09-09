@@ -9,13 +9,13 @@ colrev.settings.DataSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~DataSettings.all_json_schemas
       ~DataSettings.field_mapping
       ~DataSettings.from_dict
@@ -25,13 +25,15 @@ colrev.settings.DataSettings
       ~DataSettings.register_field_encoders
       ~DataSettings.to_dict
       ~DataSettings.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~DataSettings.data_package_endpoints
+   
+   

@@ -9,21 +9,23 @@ colrev.qm.checkers.thesis\_with\_multiple\_authors.ThesisWithMultipleAuthorsChec
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ThesisWithMultipleAuthorsChecker.run
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ThesisWithMultipleAuthorsChecker.msg
+   
+   

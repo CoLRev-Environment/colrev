@@ -9,13 +9,13 @@ colrev.settings.Author
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Author.all_json_schemas
       ~Author.field_mapping
       ~Author.from_dict
@@ -25,15 +25,15 @@ colrev.settings.Author
       ~Author.register_field_encoders
       ~Author.to_dict
       ~Author.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Author.affiliations
       ~Author.orcid
       ~Author.name
@@ -42,3 +42,5 @@ colrev.settings.Author
       ~Author.contributions
       ~Author.funding
       ~Author.identifiers
+   
+   

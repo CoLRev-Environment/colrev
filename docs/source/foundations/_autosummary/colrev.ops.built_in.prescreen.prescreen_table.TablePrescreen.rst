@@ -9,13 +9,13 @@ colrev.ops.built\_in.prescreen.prescreen\_table.TablePrescreen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~TablePrescreen.all_json_schemas
       ~TablePrescreen.export_table
       ~TablePrescreen.field_mapping
@@ -28,14 +28,16 @@ colrev.ops.built\_in.prescreen.prescreen\_table.TablePrescreen
       ~TablePrescreen.run_prescreen
       ~TablePrescreen.to_dict
       ~TablePrescreen.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~TablePrescreen.ci_supported
       ~TablePrescreen.export_todos_only
+   
+   

@@ -9,13 +9,13 @@ colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ScopePrescreen.add_endpoint
       ~ScopePrescreen.all_json_schemas
       ~ScopePrescreen.field_mapping
@@ -27,14 +27,16 @@ colrev.ops.built\_in.prescreen.scope\_prescreen.ScopePrescreen
       ~ScopePrescreen.run_prescreen
       ~ScopePrescreen.to_dict
       ~ScopePrescreen.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ScopePrescreen.ci_supported
       ~ScopePrescreen.settings
+   
+   

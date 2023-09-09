@@ -9,13 +9,13 @@ colrev.env.environment\_manager.EnvironmentManager
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~EnvironmentManager.build_docker_image
       ~EnvironmentManager.check_docker_installed
       ~EnvironmentManager.check_git_installed
@@ -30,15 +30,15 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.register_repo
       ~EnvironmentManager.save_environment_registry
       ~EnvironmentManager.update_registry
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~EnvironmentManager.REGISTRY_RELATIVE
       ~EnvironmentManager.REGISTRY_RELATIVE_YAML
       ~EnvironmentManager.cache_path
@@ -46,3 +46,5 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.load_yaml
       ~EnvironmentManager.registry
       ~EnvironmentManager.registry_yaml
+   
+   

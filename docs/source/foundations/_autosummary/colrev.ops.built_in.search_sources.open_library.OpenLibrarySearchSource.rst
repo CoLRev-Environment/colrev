@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~OpenLibrarySearchSource.add_endpoint
       ~OpenLibrarySearchSource.all_json_schemas
       ~OpenLibrarySearchSource.check_availability
@@ -32,15 +32,16 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.run_search
       ~OpenLibrarySearchSource.to_dict
       ~OpenLibrarySearchSource.to_json
+      ~OpenLibrarySearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~OpenLibrarySearchSource.api_search_supported
       ~OpenLibrarySearchSource.ci_supported
       ~OpenLibrarySearchSource.heuristic_status
@@ -48,3 +49,5 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.search_type
       ~OpenLibrarySearchSource.short_name
       ~OpenLibrarySearchSource.source_identifier
+   
+   

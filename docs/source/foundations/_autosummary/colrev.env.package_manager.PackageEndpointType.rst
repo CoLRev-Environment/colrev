@@ -9,16 +9,16 @@ colrev.env.package\_manager.PackageEndpointType
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PackageEndpointType.review_type
       ~PackageEndpointType.search_source
       ~PackageEndpointType.prep
@@ -31,3 +31,5 @@ colrev.env.package\_manager.PackageEndpointType
       ~PackageEndpointType.pdf_prep_man
       ~PackageEndpointType.screen
       ~PackageEndpointType.data
+   
+   

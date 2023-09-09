@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~OpenAlexSearchSource.add_endpoint
       ~OpenAlexSearchSource.all_json_schemas
       ~OpenAlexSearchSource.check_availability
@@ -32,15 +32,16 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.run_search
       ~OpenAlexSearchSource.to_dict
       ~OpenAlexSearchSource.to_json
+      ~OpenAlexSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~OpenAlexSearchSource.api_search_supported
       ~OpenAlexSearchSource.ci_supported
       ~OpenAlexSearchSource.heuristic_status
@@ -48,3 +49,5 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.search_type
       ~OpenAlexSearchSource.short_name
       ~OpenAlexSearchSource.source_identifier
+   
+   

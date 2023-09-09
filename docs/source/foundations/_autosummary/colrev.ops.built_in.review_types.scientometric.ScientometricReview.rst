@@ -9,13 +9,13 @@ colrev.ops.built\_in.review\_types.scientometric.ScientometricReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ScientometricReview.all_json_schemas
       ~ScientometricReview.field_mapping
       ~ScientometricReview.from_dict
@@ -26,13 +26,15 @@ colrev.ops.built\_in.review\_types.scientometric.ScientometricReview
       ~ScientometricReview.register_field_encoders
       ~ScientometricReview.to_dict
       ~ScientometricReview.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ScientometricReview.ci_supported
+   
+   

@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.bibtex\_crossref\_resolution.BibTexCrossrefResolutionP
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~BibTexCrossrefResolutionPrep.all_json_schemas
       ~BibTexCrossrefResolutionPrep.field_mapping
       ~BibTexCrossrefResolutionPrep.from_dict
@@ -26,15 +26,17 @@ colrev.ops.built\_in.prep.bibtex\_crossref\_resolution.BibTexCrossrefResolutionP
       ~BibTexCrossrefResolutionPrep.register_field_encoders
       ~BibTexCrossrefResolutionPrep.to_dict
       ~BibTexCrossrefResolutionPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~BibTexCrossrefResolutionPrep.always_apply_changes
       ~BibTexCrossrefResolutionPrep.ci_supported
       ~BibTexCrossrefResolutionPrep.source_correction_hint
+   
+   

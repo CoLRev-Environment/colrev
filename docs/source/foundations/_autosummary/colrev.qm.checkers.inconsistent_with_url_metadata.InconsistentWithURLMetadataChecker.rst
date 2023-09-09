@@ -9,21 +9,23 @@ colrev.qm.checkers.inconsistent\_with\_url\_metadata.InconsistentWithURLMetadata
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~InconsistentWithURLMetadataChecker.run
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~InconsistentWithURLMetadataChecker.msg
+   
+   

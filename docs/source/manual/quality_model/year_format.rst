@@ -1,4 +1,10 @@
 year_format
 ============================
 
-Year is missing, or unknown
+``year`` should be full year.
+
++-----------------+
+| Fields checked  |
++=================+
+| year            |
++-----------------+

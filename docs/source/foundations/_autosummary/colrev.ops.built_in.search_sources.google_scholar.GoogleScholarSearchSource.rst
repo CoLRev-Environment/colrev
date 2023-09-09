@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~GoogleScholarSearchSource.add_endpoint
       ~GoogleScholarSearchSource.all_json_schemas
       ~GoogleScholarSearchSource.field_mapping
@@ -31,15 +31,16 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.run_search
       ~GoogleScholarSearchSource.to_dict
       ~GoogleScholarSearchSource.to_json
+      ~GoogleScholarSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~GoogleScholarSearchSource.api_search_supported
       ~GoogleScholarSearchSource.ci_supported
       ~GoogleScholarSearchSource.heuristic_status
@@ -47,3 +48,5 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.search_type
       ~GoogleScholarSearchSource.short_name
       ~GoogleScholarSearchSource.source_identifier
+   
+   

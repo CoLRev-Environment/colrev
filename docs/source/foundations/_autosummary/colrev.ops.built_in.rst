@@ -3,21 +3,21 @@ colrev.ops.built\_in
 
 .. automodule:: colrev.ops.built_in
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -38,3 +38,4 @@ colrev.ops.built\_in
    colrev.ops.built_in.review_types
    colrev.ops.built_in.screen
    colrev.ops.built_in.search_sources
+

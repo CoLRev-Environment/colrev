@@ -9,25 +9,27 @@ colrev.ops.push.Push
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Push.check_precondition
       ~Push.conclude
       ~Push.decorate
       ~Push.main
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Push.force_mode
       ~Push.type
+   
+   

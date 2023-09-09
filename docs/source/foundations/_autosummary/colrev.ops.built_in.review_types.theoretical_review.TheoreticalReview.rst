@@ -9,13 +9,13 @@ colrev.ops.built\_in.review\_types.theoretical\_review.TheoreticalReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~TheoreticalReview.all_json_schemas
       ~TheoreticalReview.field_mapping
       ~TheoreticalReview.from_dict
@@ -26,13 +26,15 @@ colrev.ops.built\_in.review\_types.theoretical\_review.TheoreticalReview
       ~TheoreticalReview.register_field_encoders
       ~TheoreticalReview.to_dict
       ~TheoreticalReview.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~TheoreticalReview.ci_supported
+   
+   

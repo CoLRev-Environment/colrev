@@ -9,11 +9,17 @@ colrev.ops.load\_utils\_md.MarkdownLoader
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~MarkdownLoader.load
+   
+   
+
+   
+   
+   

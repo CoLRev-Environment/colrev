@@ -9,13 +9,13 @@ colrev.ops.built\_in.prep.pubmed\_metadata\_prep.PubmedMetadataPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PubmedMetadataPrep.all_json_schemas
       ~PubmedMetadataPrep.check_availability
       ~PubmedMetadataPrep.field_mapping
@@ -27,15 +27,17 @@ colrev.ops.built\_in.prep.pubmed\_metadata\_prep.PubmedMetadataPrep
       ~PubmedMetadataPrep.register_field_encoders
       ~PubmedMetadataPrep.to_dict
       ~PubmedMetadataPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PubmedMetadataPrep.always_apply_changes
       ~PubmedMetadataPrep.ci_supported
       ~PubmedMetadataPrep.source_correction_hint
+   
+   

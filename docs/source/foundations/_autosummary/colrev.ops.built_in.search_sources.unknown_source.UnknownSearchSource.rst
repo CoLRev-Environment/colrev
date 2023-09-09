@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~UnknownSearchSource.add_endpoint
       ~UnknownSearchSource.all_json_schemas
       ~UnknownSearchSource.field_mapping
@@ -31,15 +31,16 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.run_search
       ~UnknownSearchSource.to_dict
       ~UnknownSearchSource.to_json
+      ~UnknownSearchSource.validate_source
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~UnknownSearchSource.HTML_CLEANER
       ~UnknownSearchSource.api_search_supported
       ~UnknownSearchSource.ci_supported
@@ -48,3 +49,5 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.search_type
       ~UnknownSearchSource.short_name
       ~UnknownSearchSource.source_identifier
+   
+   

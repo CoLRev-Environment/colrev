@@ -9,13 +9,13 @@ colrev.ops.prep\_man.PrepMan
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PrepMan.check_precondition
       ~PrepMan.conclude
       ~PrepMan.decorate
@@ -24,14 +24,16 @@ colrev.ops.prep\_man.PrepMan
       ~PrepMan.prep_man_langs
       ~PrepMan.prep_man_stats
       ~PrepMan.set_data
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PrepMan.force_mode
       ~PrepMan.type
+   
+   

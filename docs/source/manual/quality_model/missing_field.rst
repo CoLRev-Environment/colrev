@@ -1,2 +1,43 @@
 missing_field
 ============================
+
+Should contain required fields for each container. Following are the required fields for each possible containers
+
++----------------+----------------------------------------------+
+| container      | required fields                              |
++================+==============================================+
+| article        | author, title, journal, year, volume, number |
++----------------+----------------------------------------------+
+| inproceedings  | author, title, booktitle, year               |
++----------------+----------------------------------------------+
+| incollection   | author, title, booktitle, publisher, year    |
++----------------+----------------------------------------------+
+| inbook         | author, title, chapter, publisher, year      |
++----------------+----------------------------------------------+
+| proceedings    | booktitle, editor, year                      |
++----------------+----------------------------------------------+
+| conference     | booktitle, editor, year                      |
++----------------+----------------------------------------------+
+| book           | author, title, publisher, year               |
++----------------+----------------------------------------------+
+| phdthesis      | author, title, school, year                  |
++----------------+----------------------------------------------+
+| bachelorthesis | author, title, school, year                  |
++----------------+----------------------------------------------+
+| thesis         | author, title, school, year                  |
++----------------+----------------------------------------------+
+| masterthesis   | author, title, school, year                  |
++----------------+----------------------------------------------+
+| techreport     | author, title, institution, year             |
++----------------+----------------------------------------------+
+| unpublished    | title, author, year                          |
++----------------+----------------------------------------------+
+| misc           | author, title, year                          |
++----------------+----------------------------------------------+
+| software       | author, title, url                           |
++----------------+----------------------------------------------+
+| online         | author, title, url                           |
++----------------+----------------------------------------------+
+| other          | author, title, year                          |
++----------------+----------------------------------------------+
+

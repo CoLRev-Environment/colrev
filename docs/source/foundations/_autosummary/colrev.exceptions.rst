@@ -3,25 +3,25 @@ colrev.exceptions
 
 .. automodule:: colrev.exceptions
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
+   
+   
    .. rubric:: Exceptions
 
    .. autosummary::
       :toctree:
-
+   
       BrokenFilesError
       CleanRepoRequiredError
       CoLRevException
@@ -69,7 +69,6 @@ colrev.exceptions
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError
-      SearchSourceException
       ServiceNotAvailableException
       SourceHeuristicsException
       StatusFieldValueError
@@ -79,3 +78,8 @@ colrev.exceptions
       TOCNotAvailableException
       UnstagedGitChangesError
       UnsupportedImportFormatError
+   
+   
+
+
+

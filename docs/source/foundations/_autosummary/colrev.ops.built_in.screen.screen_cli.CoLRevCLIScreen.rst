@@ -9,13 +9,13 @@ colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~CoLRevCLIScreen.all_json_schemas
       ~CoLRevCLIScreen.field_mapping
       ~CoLRevCLIScreen.from_dict
@@ -26,13 +26,15 @@ colrev.ops.built\_in.screen.screen\_cli.CoLRevCLIScreen
       ~CoLRevCLIScreen.run_screen
       ~CoLRevCLIScreen.to_dict
       ~CoLRevCLIScreen.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~CoLRevCLIScreen.ci_supported
+   
+   
