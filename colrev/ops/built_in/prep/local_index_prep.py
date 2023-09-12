@@ -49,7 +49,11 @@ class LocalIndexPrep(JsonSchemaMixin):
 
         # don't move to  jour_iss_number_year prep
         # because toc-retrieval relies on adequate toc items!
-        if "volume" in record.data and "number" in record.data:
+        if (
+            "volume" in record.data
+            and "number" in record.data
+            and not record.masterdata_is_curated()
+        ):
             # Note : cannot use local_index as an attribute of PrepProcess
             # because it creates problems with multiprocessing
             fields_to_remove = self.local_index_source.local_index.get_fields_to_remove(
