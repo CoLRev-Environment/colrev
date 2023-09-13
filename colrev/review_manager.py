@@ -700,13 +700,6 @@ class ReviewManager:
 
         return colrev.ops.pull.Pull(review_manager=self)
 
-    def get_service_operation(self) -> colrev.service.Service:
-        """Get a service operation object"""
-
-        import colrev.service
-
-        return colrev.service.Service(review_manager=self)
-
     def get_search_sources(self) -> colrev.ops.search_sources.SearchSources:
         """Get a SearchSources object"""
 
