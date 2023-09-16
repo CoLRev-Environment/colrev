@@ -63,5 +63,8 @@ class MarkdownLoader:
         records = self.load_operation.review_manager.dataset.load_records_dict(
             load_str=data
         )
+        for record in records.values():
+            if record.get("year", "a") == record.get("date", "b"):
+                del record["date"]
 
         return records
