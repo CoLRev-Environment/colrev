@@ -26,8 +26,12 @@ def test_load(  # type: ignore
         source=Path("load_utils/") / Path("ais.txt"),
         target=Path("data/search/") / Path("ais.txt"),
     )
+    load_operation = base_repo_review_manager.get_load_operation()
 
-    records = colrev.ops.load_utils_enl.load(source=search_source)
+    enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+        load_operation=load_operation, source=search_source
+    )
+    records = enl_loader.load(source=search_source)
     expected = (
         helpers.test_data_path / Path("load_utils/") / Path("ais_expected.bib")
     ).read_text(encoding="utf-8")

@@ -9,10 +9,15 @@ colrev.ops.load\_utils\_nbib
 
 
 
-   .. rubric:: Functions
+
+
+
+
+   .. rubric:: Classes
 
    .. autosummary::
       :toctree:
+      :template: custom-class-template.rst
       :nosignatures:
 
-      load
+      NBIBLoader

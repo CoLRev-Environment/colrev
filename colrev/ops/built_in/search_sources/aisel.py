@@ -356,7 +356,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix in [".txt", ".enl"]:
-            records = colrev.ops.load_utils_enl.load(source=self.search_source)
+            enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+                load_operation=load_operation, source=self.search_source
+            )
+            records = enl_loader.load(source=self.search_source)
             return records
 
         # for API-based searches

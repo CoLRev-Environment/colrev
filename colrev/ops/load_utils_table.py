@@ -148,19 +148,21 @@ class CSVLoader:
         self,
         *,
         load_operation: colrev.ops.load.Load,
-        settings: colrev.settings.SearchSource,
+        source: colrev.settings.SearchSource,
     ):
         self.load_operation = load_operation
-        self.settings = settings
+        self.source = source
 
     def load(self) -> dict:
         """Load records from the source"""
 
+        self.load_operation.ensure_append_only(file=self.source.filename)
+
         try:
-            data = pd.read_csv(self.settings.filename)
+            data = pd.read_csv(self.source.filename)
         except pd.errors.ParserError as exc:
             raise colrev_exceptions.ImportException(
-                f"Error: Not a csv file? {self.settings.filename.name}"
+                f"Error: Not a csv file? {self.source.filename.name}"
             ) from exc
 
         data.columns = data.columns.str.replace(" ", "_")
@@ -194,11 +196,13 @@ class ExcelLoader:
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
     ):
-        self.source = source
         self.load_operation = load_operation
+        self.source = source
 
     def load(self) -> dict:
         """Load records from the source"""
+
+        self.load_operation.ensure_append_only(file=self.source.filename)
 
         try:
             data = pd.read_excel(

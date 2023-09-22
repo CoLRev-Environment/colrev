@@ -9,16 +9,6 @@ colrev.ops.load\_utils\_ris
 
 
 
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-      :nosignatures:
-
-      apply_ris_fixes
-      convert_to_records
-      load_ris_entries
-
 
 
 
@@ -31,3 +21,4 @@ colrev.ops.load\_utils\_ris
       :nosignatures:
 
       DefaultRISParser
+      RISLoader
