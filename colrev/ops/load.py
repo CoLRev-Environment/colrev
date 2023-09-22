@@ -219,7 +219,7 @@ class Load(colrev.operation.Operation):
         This method must be called for all extensions that work
         with an ex-post assignment of incremental IDs."""
 
-        assert str(file).startswith("data/search/")
+        assert not str(file).startswith("data/search/")
         git_repo = self.review_manager.dataset.get_repo()
         revlist = (
             (
