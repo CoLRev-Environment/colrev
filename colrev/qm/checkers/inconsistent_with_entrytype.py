@@ -11,17 +11,17 @@ class InconsistentWithEntrytypeChecker:
     """The InconsistentWithEntrytypeChecker"""
 
     record_field_inconsistencies: dict[str, list[str]] = {
-        "article": ["booktitle"],
-        "inproceedings": ["issue", "number", "journal"],
+        "article": ["booktitle", "isbn"],
+        "inproceedings": ["issue", "number", "journal", "isbn"],
         "incollection": [],
         "inbook": ["journal"],
-        "book": ["volume", "issue", "number", "journal"],
-        "phdthesis": ["volume", "issue", "number", "journal", "booktitle"],
-        "masterthesis": ["volume", "issue", "number", "journal", "booktitle"],
-        "techreport": ["volume", "issue", "number", "journal", "booktitle"],
-        "unpublished": ["volume", "issue", "number", "journal", "booktitle"],
-        "online": ["journal", "booktitle"],
-        "misc": ["journal", "booktitle"],
+        "book": ["issue", "number", "journal"],
+        "phdthesis": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
+        "masterthesis": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
+        "techreport": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
+        "unpublished": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
+        "online": ["journal", "booktitle", "isbn"],
+        "misc": ["journal", "booktitle", "isbn"],
     }
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
