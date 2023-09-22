@@ -49,9 +49,7 @@ def test_search_add_source(  # type: ignore
     search_operation = base_repo_review_manager.get_search_operation()
     add_source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
-        filename=(
-            base_repo_review_manager.path / Path("data/search/crossref_search.bib")
-        ),
+        filename=Path("data/search/crossref_search.bib"),
         search_type=colrev.settings.SearchType.DB,
         search_parameters={"query": "test"},
         comment="",

@@ -160,12 +160,27 @@ class SearchSource(JsonSchemaMixin):
     """Search source settings"""
 
     # pylint: disable=too-many-instance-attributes
-
     endpoint: str
     filename: Path
     search_type: SearchType
     search_parameters: dict
     comment: typing.Optional[str]
+
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        filename: Path,
+        search_type: SearchType,
+        search_parameters: dict,
+        comment: typing.Optional[str],
+    ) -> None:
+        self.endpoint = endpoint
+        assert str(filename).startswith("data/search")
+        self.filename = filename
+        self.search_type = search_type
+        self.search_parameters = search_parameters
+        self.comment = comment
 
     def setup_for_load(
         self,
