@@ -22,6 +22,7 @@ colrev.exceptions
    .. autosummary::
       :toctree:
 
+      AppendOnlyViolation
       BrokenFilesError
       CleanRepoRequiredError
       CoLRevException

@@ -92,7 +92,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             csv_loader = colrev.ops.load_utils_table.CSVLoader(
-                load_operation=load_operation, settings=self.search_source
+                load_operation=load_operation, source=self.search_source
             )
             records = csv_loader.load()
             return records

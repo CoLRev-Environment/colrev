@@ -279,7 +279,10 @@ class ERICSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".nbib":
-            records = colrev.ops.load_utils_nbib.load(source=self.search_source)
+            nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
+                load_operation=load_operation, source=self.search_source
+            )
+            records = nbib_loader.load(source=self.search_source)
             return records
 
         if self.search_source.filename.suffix == ".bib":

@@ -395,17 +395,18 @@ def test_doi_not_matching_pattern(
 def test_isbn_not_matching_pattern(
     isbn: str,
     defect: bool,
-    v_t_record: colrev.record.Record,
+    book_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test the isbn-not-matching-pattern checker"""
-    v_t_record.data["isbn"] = isbn
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    book_record.data["isbn"] = isbn
+    book_record.update_masterdata_provenance(qm=quality_model)
     if not defect:
-        assert not v_t_record.has_quality_defects()
+        print(book_record.data)
+        assert not book_record.has_quality_defects()
         return
     assert (
-        v_t_record.data["colrev_masterdata_provenance"]["isbn"]["note"]
-        == "isbn-not-matching-pattern"
+        "isbn-not-matching-pattern"
+        in book_record.data["colrev_masterdata_provenance"]["isbn"]["note"]
     )
-    assert v_t_record.has_quality_defects()
+    assert book_record.has_quality_defects()

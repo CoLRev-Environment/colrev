@@ -452,3 +452,20 @@ def fixture_v_t_record() -> colrev.record.Record:
             "language": "eng",
         }
     )
+
+
+@pytest.fixture(name="book_record")
+def fixture_book_record() -> colrev.record.Record:
+    """Book record for testing quality defects"""
+    return colrev.record.Record(
+        data={
+            "ID": "Popper2014",
+            "ENTRYTYPE": "book",
+            "title": "Conjectures and refutations: The growth of scientific knowledge",
+            "author": "Popper, Karl",
+            "year": "2014",
+            "isbn": "978-0-415-28594-0",
+            "publisher": "Routledge",
+            "language": "eng",
+        }
+    )
