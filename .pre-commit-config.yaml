@@ -51,7 +51,22 @@ repos:
     hooks:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.0.290
+  hooks:
+    - id: ruff # runs faster than pylint
+      args: [--fix, --exit-non-zero-on-fix]
 - repo: local
+  hooks:
+  - id: pytest-check
+    name: pytest-check
+    entry: pytest
+    language: system
+    pass_filenames: false
+    always_run: true
+    args:
+      ["--disable-warnings"]
+- repo: local # pylint should mostly be covered by ruff. Once custom checkers are supported (.pylintrc), we will switch to ruff completely.
   hooks:
     - id: pylint
       name: pylint
@@ -65,13 +80,3 @@ repos:
           "-sn", # Don't display the score
           "--rcfile=.pylintrc", # Link to your config file
         ]
-- repo: local
-  hooks:
-  - id: pytest-check
-    name: pytest-check
-    entry: pytest
-    language: system
-    pass_filenames: false
-    always_run: true
-    args:
-      ["--disable-warnings"]
