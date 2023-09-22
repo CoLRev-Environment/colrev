@@ -176,7 +176,8 @@ class SearchSource(JsonSchemaMixin):
         comment: typing.Optional[str],
     ) -> None:
         self.endpoint = endpoint
-        assert str(filename).startswith("data/search")
+        assert filename.parent.name == "search"
+        assert filename.parent.parent.name == "data"
         self.filename = filename
         self.search_type = search_type
         self.search_parameters = search_parameters
