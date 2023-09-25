@@ -31,6 +31,7 @@ class MarkdownLoader:
 
     def load(self) -> dict:
         """Load records from the source"""
+        self.load_operation.ensure_append_only(file=self.source.filename)
 
         self.load_operation.review_manager.logger.info(
             "Running GROBID to parse structured reference data"
@@ -63,5 +64,8 @@ class MarkdownLoader:
         records = self.load_operation.review_manager.dataset.load_records_dict(
             load_str=data
         )
+        for record in records.values():
+            if record.get("year", "a") == record.get("date", "b"):
+                del record["date"]
 
         return records

@@ -414,6 +414,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 merging_record=retrieved_record,
                 default_source=default_source,
             )
+            # If volume/number are no longer in the CURATED record
+            if "number" in record.data and "number" not in retrieved_record.data:
+                del record.data["number"]
+            if "volume" in record.data and "volume" not in retrieved_record.data:
+                del record.data["volume"]
+
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
             if record.data.get("prescreen_exclusion", "NA") == "retracted":
                 record.prescreen_exclude(reason="retracted")
@@ -452,10 +458,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
-
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
-            # Already linked to a local-index record
-            return record
 
         retrieved_record = self.__retrieve_record_from_local_index(
             record=record,

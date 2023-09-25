@@ -659,7 +659,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def __get_crossref_query_return(self, *, rerun: bool) -> typing.Iterator[dict]:
         params = self.search_source.search_parameters
 
-        if "query" in params:
+        if "query" in params and "mode" not in params:
             crossref_query = {"bibliographic": params["query"]}
             # potential extension : add the container_title:
             # crossref_query_return = works.query(
@@ -757,6 +757,83 @@ class CrossrefSearchSource(JsonSchemaMixin):
             return False
         return True
 
+    def __run_keyword_exploration_search(
+        self,
+        search_operation: colrev.ops.search.Search,
+        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
+    ) -> None:
+        works = Works(etiquette=self.etiquette)
+
+        def retrieve_exploratory_papers(keyword: str) -> typing.Iterator[dict]:
+            crossref_query_return = works.query(bibliographic=keyword.replace(" ", "+"))
+            yield from crossref_query_return
+
+        records = search_operation.review_manager.dataset.load_records_dict()
+        available_dois = [x["doi"] for x in records.values() if "doi" in x]
+
+        covered_keywords = [
+            x["explored_keyword"] for x in crossref_feed.feed_records.values()
+        ]
+
+        for keyword in self.search_source.search_parameters["query"].split(" OR "):
+            self.review_manager.logger.info(f"Explore '{keyword}'")
+            # Skip keywords that were already explored
+            if keyword in covered_keywords:
+                continue
+            nr_added = 0
+            for item in retrieve_exploratory_papers(keyword=keyword):
+                try:
+                    retrieved_record_dict = connector_utils.json_to_record(item=item)
+
+                    # Skip papers that do not have the keyword in the title
+                    if keyword not in retrieved_record_dict.get(
+                        "title", ""
+                    ).lower().replace("-", " "):
+                        continue
+
+                    # Skip papers that were already retrieved
+                    if retrieved_record_dict["doi"] in available_dois:
+                        continue
+                    retrieved_record_dict["explored_keyword"] = keyword
+                    crossref_feed.set_id(record_dict=retrieved_record_dict)
+                    retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                    self.__prep_crossref_record(
+                        record=retrieved_record, prep_main_record=False
+                    )
+
+                    self.__restore_url(record=retrieved_record, feed=crossref_feed)
+
+                    added = crossref_feed.add_record(record=retrieved_record)
+
+                    if added:
+                        nr_added += 1
+                        search_operation.review_manager.logger.info(
+                            " retrieve " + retrieved_record.data["doi"]
+                        )
+                    if nr_added >= 10:
+                        # TODO : notify when not enough papers are available with the keyword
+                        break
+
+                except (
+                    colrev_exceptions.RecordNotParsableException,
+                    colrev_exceptions.NotFeedIdentifiableException,
+                    KeyError  # error in crossref package:
+                    # if len(result['message']['items']) == 0:
+                    # KeyError: 'items'
+                ):
+                    pass
+
+        crossref_feed.print_post_run_search_infos(records=records)
+
+        crossref_feed.save_feed_file()
+        search_operation.review_manager.dataset.save_records_dict(records=records)
+        search_operation.review_manager.dataset.add_record_changes()
+
+        self.review_manager.dataset.format_records_file()
+        self.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.add_changes(path=self.search_source.filename)
+        self.review_manager.create_commit(msg="Run search")
+
     def __run_parameter_search(
         self,
         *,
@@ -768,6 +845,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_operation.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
+
+        if self.search_source.search_parameters.get("mode", "") == "resample_keywords":
+            self.__run_keyword_exploration_search(
+                search_operation=search_operation, crossref_feed=crossref_feed
+            )
+            return
 
         records = search_operation.review_manager.dataset.load_records_dict()
         for item in self.__get_crossref_query_return(rerun=rerun):

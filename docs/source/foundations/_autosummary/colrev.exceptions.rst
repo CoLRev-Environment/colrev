@@ -22,6 +22,7 @@ colrev.exceptions
    .. autosummary::
       :toctree:
 
+      AppendOnlyViolation
       BrokenFilesError
       CleanRepoRequiredError
       CoLRevException
@@ -69,6 +70,7 @@ colrev.exceptions
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError
+      SearchSourceException
       ServiceNotAvailableException
       SourceHeuristicsException
       StatusFieldValueError

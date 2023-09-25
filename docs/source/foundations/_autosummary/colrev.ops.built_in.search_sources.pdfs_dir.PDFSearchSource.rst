@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
       ~PDFSearchSource.run_search
       ~PDFSearchSource.to_dict
       ~PDFSearchSource.to_json
-      ~PDFSearchSource.validate_source
 
 
 

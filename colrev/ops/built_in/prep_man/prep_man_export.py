@@ -111,7 +111,10 @@ class ExportManPrep(JsonSchemaMixin):
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
                 if self.settings.pdf_handling_mode == "symlink":
-                    target_path.symlink_to(Path(record["file"]).resolve())
+                    try:
+                        target_path.symlink_to(Path(record["file"]).resolve())
+                    except FileExistsError:
+                        pass
 
                 if self.settings.pdf_handling_mode == "copy_first_page":
                     pdf_reader = PdfFileReader(str(record["file"]), strict=False)

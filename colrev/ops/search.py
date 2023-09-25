@@ -71,7 +71,11 @@ class Search(colrev.operation.Operation):
         if self.review_manager.settings.search.retrieve_forthcoming:
             return
 
-        with open(source.get_corresponding_bib_file(), encoding="utf8") as bibtex_file:
+        if source.filename.suffix != ".bib":
+            print(f"{source.filename.suffix} not yet supported")
+            return
+
+        with open(source.filename, encoding="utf8") as bibtex_file:
             records = self.review_manager.dataset.load_records_dict(
                 load_str=bibtex_file.read()
             )
@@ -85,7 +89,7 @@ class Search(colrev.operation.Operation):
             )
             records = {r["ID"]: r for r in record_list}
             self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=source.get_corresponding_bib_file()
+                records=records, save_path=source.filename
             )
 
     # pylint: disable=no-self-argument
@@ -172,7 +176,7 @@ class Search(colrev.operation.Operation):
                     ) from exc
                 self.review_manager.logger.warning("ServiceNotAvailableException")
 
-            if not source.get_corresponding_bib_file().is_file():
+            if not source.filename.is_file():
                 continue
 
             self.remove_forthcoming(source=source)

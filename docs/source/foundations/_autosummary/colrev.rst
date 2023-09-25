@@ -39,6 +39,5 @@
    colrev.qm
    colrev.record
    colrev.review_manager
-   colrev.service
    colrev.settings
    colrev.ui_cli

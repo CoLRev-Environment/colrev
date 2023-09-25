@@ -31,3 +31,5 @@ https://api.crossref.org/works/DOI
 
 - [Crossref](https://www.crossref.org/)
 - [License](https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/)
+
+- [Issue: AND Operators not yet supported](https://github.com/fabiobatalha/crossrefapi/issues/20)

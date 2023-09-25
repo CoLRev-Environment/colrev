@@ -160,17 +160,28 @@ class SearchSource(JsonSchemaMixin):
     """Search source settings"""
 
     # pylint: disable=too-many-instance-attributes
-
     endpoint: str
     filename: Path
     search_type: SearchType
     search_parameters: dict
     comment: typing.Optional[str]
 
-    def get_corresponding_bib_file(self) -> Path:
-        """Get the corresponding bib file"""
-
-        return self.filename.with_suffix(".bib")
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        filename: Path,
+        search_type: SearchType,
+        search_parameters: dict,
+        comment: typing.Optional[str],
+    ) -> None:
+        self.endpoint = endpoint
+        assert filename.parent.name == "search"
+        assert filename.parent.parent.name == "data"
+        self.filename = filename
+        self.search_type = search_type
+        self.search_parameters = search_parameters
+        self.comment = comment
 
     def setup_for_load(
         self,
@@ -191,11 +202,12 @@ class SearchSource(JsonSchemaMixin):
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
-        bib_file_name = str(self.get_corresponding_bib_file().name)
-        assert ";" not in bib_file_name
-        return bib_file_name.replace(
-            str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), ""
-        ).lstrip("/")
+        assert ";" not in str(self.filename.name)
+        return (
+            str(self.filename.name)
+            .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")
+            .lstrip("/")
+        )
 
     def is_md_source(self) -> bool:
         """Check whether the source is a metadata source (for preparation)"""

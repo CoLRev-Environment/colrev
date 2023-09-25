@@ -141,12 +141,13 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
 
     def __load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        colrev.ops.load_utils_ris.apply_ris_fixes(filename=self.search_source.filename)
-        ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
-            filename=self.search_source.filename
+        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+            load_operation=load_operation, source=self.search_source
         )
+        ris_loader.apply_ris_fixes(filename=self.search_source.filename)
+        ris_entries = ris_loader.load_ris_entries(filename=self.search_source.filename)
         self.__ris_fixes(entries=ris_entries)
-        records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
+        records = ris_loader.convert_to_records(entries=ris_entries)
         return records
 
     def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
@@ -157,13 +158,9 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
         csv_loader = colrev.ops.load_utils_table.CSVLoader(
-            load_operation=load_operation, settings=self.search_source
+            load_operation=load_operation, source=self.search_source
         )
         records = csv_loader.load()
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records,
-            save_path=self.search_source.get_corresponding_bib_file(),
-        )
         return records
 
     def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
@@ -171,10 +168,6 @@ class UnknownSearchSource(JsonSchemaMixin):
             load_operation=load_operation, source=self.search_source
         )
         records = excel_loader.load()
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records,
-            save_path=self.search_source.get_corresponding_bib_file(),
-        )
         return records
 
     def __load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
@@ -182,18 +175,13 @@ class UnknownSearchSource(JsonSchemaMixin):
             load_operation=load_operation, source=self.search_source
         )
         records = md_loader.load()
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records,
-            save_path=self.search_source.get_corresponding_bib_file(),
-        )
         return records
 
     def __load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        records = colrev.ops.load_utils_enl.load(source=self.search_source)
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records,
-            save_path=self.search_source.get_corresponding_bib_file(),
+        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+            load_operation=load_operation, source=self.search_source
         )
+        records = enl_loader.load(source=self.search_source)
         return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

@@ -26,7 +26,7 @@ repos:
     -   id: name-tests-test
     -   id: requirements-txt-fixer
 -   repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.9.1
     hooks:
     - id: black
       language_version: python3
@@ -37,12 +37,12 @@ repos:
         additional_dependencies: [flake8-typing-imports==1.12.0]
         args: ['--max-line-length=110', '--extend-ignore=E203,TYP006']
 -   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.10.0
+    rev: v3.11.0
     hooks:
     -   id: reorder-python-imports
         args: [--py3-plus]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.10.1
+    rev: v3.11.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]
@@ -51,7 +51,22 @@ repos:
     hooks:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.0.290
+  hooks:
+    - id: ruff # runs faster than pylint
+      args: [--fix, --exit-non-zero-on-fix]
 - repo: local
+  hooks:
+  - id: pytest-check
+    name: pytest-check
+    entry: pytest
+    language: system
+    pass_filenames: false
+    always_run: true
+    args:
+      ["--disable-warnings"]
+- repo: local # pylint should mostly be covered by ruff. Once custom checkers are supported (.pylintrc), we will switch to ruff completely.
   hooks:
     - id: pylint
       name: pylint
@@ -65,13 +80,3 @@ repos:
           "-sn", # Don't display the score
           "--rcfile=.pylintrc", # Link to your config file
         ]
-- repo: local
-  hooks:
-  - id: pytest-check
-    name: pytest-check
-    entry: pytest
-    language: system
-    pass_filenames: false
-    always_run: true
-    args:
-      ["--disable-warnings"]

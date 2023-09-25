@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
       ~EbscoHostSearchSource.run_search
       ~EbscoHostSearchSource.to_dict
       ~EbscoHostSearchSource.to_json
-      ~EbscoHostSearchSource.validate_source
 
 
 

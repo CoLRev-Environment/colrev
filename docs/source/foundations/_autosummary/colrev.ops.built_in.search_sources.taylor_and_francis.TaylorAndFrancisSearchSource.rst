@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
       ~TaylorAndFrancisSearchSource.run_search
       ~TaylorAndFrancisSearchSource.to_dict
       ~TaylorAndFrancisSearchSource.to_json
-      ~TaylorAndFrancisSearchSource.validate_source
 
 
 

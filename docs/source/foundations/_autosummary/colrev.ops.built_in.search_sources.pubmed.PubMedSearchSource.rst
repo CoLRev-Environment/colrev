@@ -32,7 +32,6 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
       ~PubMedSearchSource.run_search
       ~PubMedSearchSource.to_dict
       ~PubMedSearchSource.to_json
-      ~PubMedSearchSource.validate_source
 
 
 

@@ -187,6 +187,14 @@ class DirtyRepoAfterProcessingError(CoLRevException):
         super().__init__(self.message)
 
 
+class AppendOnlyViolation(Exception):
+    """Invalid changes to a file in append-only mode."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class ProcessOrderViolation(CoLRevException):
     """The process triggered dooes not have priority"""
 

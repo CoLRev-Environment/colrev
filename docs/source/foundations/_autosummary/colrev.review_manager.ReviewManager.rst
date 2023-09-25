@@ -56,7 +56,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_screenshot_service
       ~ReviewManager.get_search_operation
       ~ReviewManager.get_search_sources
-      ~ReviewManager.get_service_operation
       ~ReviewManager.get_status_operation
       ~ReviewManager.get_status_stats
       ~ReviewManager.get_sync_operation
@@ -98,6 +97,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.SETTINGS_RELATIVE
       ~ReviewManager.STATUS_RELATIVE
       ~ReviewManager.notified_next_operation
+      ~ReviewManager.shell_mode
       ~ReviewManager.dataset
       ~ReviewManager.path
       ~ReviewManager.force_mode

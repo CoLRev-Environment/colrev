@@ -123,17 +123,16 @@ def load_bib_file(
 
     def check_nr_in_bib(*, source: colrev.settings.SearchSource, records: dict) -> None:
         load_operation.review_manager.logger.debug(
-            f"Loaded {source.get_corresponding_bib_file().name} "
-            f"with {len(records)} records"
+            f"Loaded {source.filename.name} with {len(records)} records"
         )
         nr_in_bib = load_operation.review_manager.dataset.get_nr_in_bib(
-            file_path=source.get_corresponding_bib_file()
+            file_path=source.filename
         )
         if len(records) < nr_in_bib:
             load_operation.review_manager.logger.error(
                 "broken bib file (not imported all records)"
             )
-            with open(source.get_corresponding_bib_file(), encoding="utf8") as file:
+            with open(source.filename, encoding="utf8") as file:
                 line = file.readline()
                 while line:
                     if "@" in line[:3]:

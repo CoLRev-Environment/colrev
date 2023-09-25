@@ -37,7 +37,7 @@ def __get_authors(*, item: dict) -> str:
             if "given" in author:
                 a_string += f", {author['given']}"
             authors_strings.append(a_string)
-    return " and ".join(authors_strings)
+    return " and ".join(authors_strings).replace(",,", ",")
 
 
 def __get_number(*, item: dict) -> str:
@@ -159,6 +159,9 @@ def __remove_fields(*, record_dict: dict) -> dict:
     record_dict = {
         k: v for k, v in record_dict.items() if k in supported_fields and v != ""
     }
+
+    if record_dict.get("abstract", "") == "No abstract is available for this article.":
+        del record_dict["abstract"]
 
     return record_dict
 

@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
       ~ABIInformProQuestSearchSource.run_search
       ~ABIInformProQuestSearchSource.to_dict
       ~ABIInformProQuestSearchSource.to_json
-      ~ABIInformProQuestSearchSource.validate_source
 
 
 

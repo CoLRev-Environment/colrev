@@ -2880,52 +2880,12 @@ def push(
     )
 
 
-@main.command(hidden=True, help_priority=26)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
-@click.pass_context
-def service(
-    ctx: click.core.Context,
-    verbose: bool,
-    force: bool,
-) -> None:
-    """Service for real-time reviews"""
-
-    try:
-        review_manager = get_review_manager(
-            ctx,
-            {"verbose_mode": verbose, "force_mode": force},
-        )
-        review_manager.get_service_operation()
-
-    except KeyboardInterrupt:
-        print("\nPressed ctrl-c. Shutting down service")
-
-    if review_manager.dataset.has_changes():
-        if input("Commit current changes (y/n)?") == "y":
-            review_manager.create_commit(msg="Update (using CoLRev service)")
-    else:
-        print("No changes to commit")
-
-
 def __validate_show(ctx: click.core.Context, param: str, value: str) -> None:
     if value not in ["sample", "settings", "prisma", "venv"]:
         raise click.BadParameter("Invalid argument")
 
 
-@main.command(help_priority=27)
+@main.command(help_priority=26)
 @click.argument("keyword")
 @click.option(
     "-v",
@@ -3053,7 +3013,7 @@ def show(  # type: ignore
 #     se_instance.open_settings_editor()
 
 
-@main.command(hidden=True, help_priority=29)
+@main.command(hidden=True, help_priority=27)
 @click.option(
     "--disable_auto",
     is_flag=True,
@@ -3099,7 +3059,7 @@ def upgrade(
     upgrade_operation.main()
 
 
-@main.command(hidden=True, help_priority=30)
+@main.command(hidden=True, help_priority=28)
 @click.option(
     "-v",
     "--verbose",
@@ -3130,7 +3090,7 @@ def repare(
     repare_operation.main()
 
 
-@main.command(help_priority=31)
+@main.command(help_priority=29)
 @click.option(
     "--ids",
     help="Remove records and their origins from the repository (ID1,ID2,...).",
@@ -3170,7 +3130,7 @@ def remove(
         remove_operation.remove_records(ids=ids)
 
 
-@main.command(hidden=True, help_priority=32)
+@main.command(hidden=True, help_priority=30)
 @click.option(
     "-v",
     "--verbose",
@@ -3196,7 +3156,7 @@ def docs(
     webbrowser.open("https://colrev.readthedocs.io/en/latest/")
 
 
-@main.command(help_priority=33)
+@main.command(help_priority=31)
 @click.option(
     "--branch",
     help="Branch to merge.",
@@ -3240,7 +3200,7 @@ def merge(
     merge_operation.main(branch=branch)
 
 
-@main.command(help_priority=34)
+@main.command(help_priority=32)
 @click.argument("selection")
 @click.option(
     "-v",
@@ -3276,7 +3236,7 @@ def undo(
         git_repo.git.reset("--hard", "HEAD~1")
 
 
-@main.command(help_priority=35)
+@main.command(help_priority=33)
 @click.pass_context
 def version(
     ctx: click.core.Context,

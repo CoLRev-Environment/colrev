@@ -16,13 +16,13 @@ colrev.ops.built\_in.data.structured.StructuredData
    .. autosummary::
       :nosignatures:
 
+      ~StructuredData.add_endpoint
       ~StructuredData.all_json_schemas
       ~StructuredData.field_mapping
       ~StructuredData.from_dict
       ~StructuredData.from_json
       ~StructuredData.from_object
       ~StructuredData.get_advice
-      ~StructuredData.get_default_setup
       ~StructuredData.json_schema
       ~StructuredData.register_field_encoders
       ~StructuredData.to_dict

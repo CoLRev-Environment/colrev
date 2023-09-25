@@ -32,7 +32,6 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
       ~ERICSearchSource.run_search
       ~ERICSearchSource.to_dict
       ~ERICSearchSource.to_json
-      ~ERICSearchSource.validate_source
 
 
 

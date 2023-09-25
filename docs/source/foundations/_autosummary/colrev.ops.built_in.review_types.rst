@@ -26,6 +26,7 @@ colrev.ops.built\_in.review\_types
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.ops.built_in.review_types.blank
    colrev.ops.built_in.review_types.conceptual_review
    colrev.ops.built_in.review_types.critical_review
    colrev.ops.built_in.review_types.curated_masterdata

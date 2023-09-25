@@ -21,7 +21,6 @@ colrev.env.package\_manager.DefaultSourceSettings
       ~DefaultSourceSettings.from_dict
       ~DefaultSourceSettings.from_json
       ~DefaultSourceSettings.from_object
-      ~DefaultSourceSettings.get_corresponding_bib_file
       ~DefaultSourceSettings.get_dict
       ~DefaultSourceSettings.get_feed
       ~DefaultSourceSettings.get_origin_prefix

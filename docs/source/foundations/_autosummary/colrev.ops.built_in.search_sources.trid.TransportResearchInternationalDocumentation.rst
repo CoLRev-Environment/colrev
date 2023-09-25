@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.trid.TransportResearchInternationalDocument
       ~TransportResearchInternationalDocumentation.run_search
       ~TransportResearchInternationalDocumentation.to_dict
       ~TransportResearchInternationalDocumentation.to_json
-      ~TransportResearchInternationalDocumentation.validate_source
 
 
 

@@ -32,7 +32,6 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
       ~OpenCitationsSearchSource.run_search
       ~OpenCitationsSearchSource.to_dict
       ~OpenCitationsSearchSource.to_json
-      ~OpenCitationsSearchSource.validate_source
 
 
 

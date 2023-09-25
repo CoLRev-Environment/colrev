@@ -31,7 +31,6 @@ colrev.ops.built\_in.search\_sources.video\_dir.VideoDirSearchSource
       ~VideoDirSearchSource.run_search
       ~VideoDirSearchSource.to_dict
       ~VideoDirSearchSource.to_json
-      ~VideoDirSearchSource.validate_source
 
 
 

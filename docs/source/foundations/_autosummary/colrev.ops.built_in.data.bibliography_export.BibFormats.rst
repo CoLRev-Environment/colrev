@@ -11,6 +11,12 @@ colrev.ops.built\_in.data.bibliography\_export.BibFormats
 
 
 
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+
 
 
 

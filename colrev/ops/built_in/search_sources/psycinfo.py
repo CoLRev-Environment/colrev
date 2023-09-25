@@ -118,16 +118,14 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            ris_entries = colrev.ops.load_utils_ris.load_ris_entries(
+            ris_loader = colrev.ops.load_utils_ris.RISLoader(
+                load_operation=load_operation, source=self.search_source
+            )
+            ris_entries = ris_loader.load_ris_entries(
                 filename=self.search_source.filename, ris_parser=PsycInfoRISParser
             )
             self.__ris_fixes(entries=ris_entries)
-            records = colrev.ops.load_utils_ris.convert_to_records(ris_entries)
-
-            load_operation.review_manager.dataset.save_records_dict_to_file(
-                records=records,
-                save_path=self.search_source.get_corresponding_bib_file(),
-            )
+            records = ris_loader.convert_to_records(entries=ris_entries)
             return records
 
         raise NotImplementedError

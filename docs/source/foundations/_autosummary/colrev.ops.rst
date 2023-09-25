@@ -37,7 +37,10 @@ colrev.ops
    colrev.ops.init
    colrev.ops.load
    colrev.ops.load_utils_bib
+   colrev.ops.load_utils_enl
+   colrev.ops.load_utils_formatter
    colrev.ops.load_utils_md
+   colrev.ops.load_utils_nbib
    colrev.ops.load_utils_ris
    colrev.ops.load_utils_table
    colrev.ops.merge
