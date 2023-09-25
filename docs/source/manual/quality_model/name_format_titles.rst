@@ -1,7 +1,27 @@
 name_format_titles
 ============================
 
-Name should not contains Titles ("MD", "Dr", "PhD", "Prof", "Dipl Ing")
+Names should not contain titles, such as "MD", "Dr", "PhD", "Prof", or "Dipl Ing".
+
+**Problematic value**
+
+.. code-block:: python
+
+    @phdthesis{Smith2022,
+        ...
+        author = {Prof. Smith, M. PhD.},
+        ...
+    }
+
+**Correct value**
+
+.. code-block:: python
+
+    @phdthesis{Smith2022,
+        ...
+        author = {Smith, M.},
+        ...
+    }
 
 +-----------------+
 | Fields checked  |

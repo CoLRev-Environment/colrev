@@ -1,10 +1,30 @@
 inconsistent_with_entrytype
 ===========================
 
-Record content should match with entity type content
+Some fields are inconsistent with the respective ENTRYTYPE.
+
+**Problematic value**
+
+.. code-block:: python
+
+    @article{SmithParkerWeber2003,
+        ...
+        booktitle = {First Workshop on ...},
+        ...
+    }
+
+**Correct value**
+
+.. code-block:: python
+
+    @inproceedings{SmithParkerWeber2003,
+        ...
+        booktitle = {First Workshop on ...},
+        ...
+    }
 
 +--------------+-----------------------------------------+
-|Container     | allowed fields                          |
+|ENTRYTYPE     | inconsistent fields                     |
 +==============+=========================================+
 |article       | booktitle                               |
 +--------------+-----------------------------------------+

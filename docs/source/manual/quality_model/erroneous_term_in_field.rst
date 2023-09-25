@@ -4,7 +4,7 @@ erroneous_term_in_field
 Field should not contain any erroneous terms
 
 +-----------+-------------------------------------------------------------------------------+
-| container | allowed fields                                                                |
+| field     | Erroneous terms                                                               |
 +===========+===============================================================================+
 | author    | http, University, orcid, student, Harvard, Conference, Mrs, Hochschule        |
 +-----------+-------------------------------------------------------------------------------+
