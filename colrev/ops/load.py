@@ -384,6 +384,14 @@ class Load(colrev.operation.Operation):
         self.__setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.search_source.source_records_list:
+            # prefix non-standardized field keys
+            for key in list(source_record.keys()):
+                if key in colrev.record.Record.standardized_field_keys:
+                    continue
+                source_record[
+                    f"{source.search_source.endpoint}.{key}"
+                ] = source_record.pop(key)
+
             source_record = self.__import_record(record_dict=source_record)
 
             # Make sure not to replace existing records
@@ -397,6 +405,7 @@ class Load(colrev.operation.Operation):
                     appends = list(itertools.product(letters, repeat=order))
                 next_unique_id = source_record["ID"] + "".join(list(appends.pop(0)))
             source_record["ID"] = next_unique_id
+
             records[source_record["ID"]] = source_record
 
             self.review_manager.logger.info(
