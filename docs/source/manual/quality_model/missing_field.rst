@@ -1,10 +1,14 @@
 missing_field
 ============================
 
-Should contain required fields for each container. Following are the required fields for each possible containers
+Should contain required fields for each ENTRYTYPE. Following are the required fields for each possible ENTRYTYPE
+
+**TODO** : mention "not_missing" flag (integrate with general False-Positive flags? - e.g., IGNORE:missing, IGNORE:all-caps)
+
+See: inconsistent-field
 
 +----------------+----------------------------------------------+
-| container      | required fields                              |
+| ENTRYTYPE      | Required fields                              |
 +================+==============================================+
 | article        | author, title, journal, year, volume, number |
 +----------------+----------------------------------------------+
