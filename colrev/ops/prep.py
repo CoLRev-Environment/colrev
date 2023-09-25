@@ -867,7 +867,6 @@ class Prep(colrev.operation.Operation):
                 if item["ID"] not in temp_recs:
                     continue
                 del temp_recs[item["ID"]]
-                # TODO : assert: colrev_origins identical
                 list_to_skip.append(item["ID"])
                 skipped_items += 1
             self.review_manager.logger.info(

@@ -195,12 +195,17 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             self.review_manager.logger.error(
                 "Errors in dataset: ambiguous inclusion decisions:"
             )
-            print(f"{colors.RED}")
-            print(f"- dois: {', '.join(decisions['doi'])}")
-            print(f"- pmid: {', '.join(decisions['pmid'])}")
-            print(f"- openalex_id: {', '.join(decisions['openalex_id'])}")
-            print(f"{colors.END}")
-            # TODO : exclude ambiguous?!
+            msg = (
+                f"{colors.RED}"
+                + f"- dois: {', '.join(decisions['doi'])}"
+                + f"- pmid: {', '.join(decisions['pmid'])}"
+                + f"- openalex_id: {', '.join(decisions['openalex_id'])}"
+                + f"{colors.END}"
+            )
+            if self.review_manager.force_mode:
+                print(msg)
+            else:
+                raise colrev_exceptions.SearchSourceException(msg)
 
     def __prep_record(self, *, record: dict, ind: int) -> None:
         record["ID"] = ind

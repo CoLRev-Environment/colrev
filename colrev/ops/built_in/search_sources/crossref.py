@@ -811,7 +811,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                             " retrieve " + retrieved_record.data["doi"]
                         )
                     if nr_added >= 10:
-                        # TODO : notify when not enough papers are available with the keyword
                         break
 
                 except (
@@ -822,6 +821,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     # KeyError: 'items'
                 ):
                     pass
+                if nr_added < 10:
+                    self.review_manager.logger.info(
+                        f"Only {nr_added} papers found to resample keyword '{keyword}'"
+                    )
 
         crossref_feed.print_post_run_search_infos(records=records)
 
