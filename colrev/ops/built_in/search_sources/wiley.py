@@ -82,6 +82,10 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
             records = colrev.ops.load_utils_bib.load_bib_file(
                 load_operation=load_operation, source=self.search_source
             )
+            for record_dict in records.values():
+                if "eprint" not in record_dict:
+                    continue
+                record_dict["fulltext"] = record_dict.pop("eprint")
             return records
 
         raise NotImplementedError
@@ -91,12 +95,8 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Wiley"""
 
-        record.rename_field(key="eprint", new_key="fulltext")
-
         if record.data.get("ENTRYTYPE", "") == "inbook":
             record.rename_field(key="title", new_key="chapter")
             record.rename_field(key="booktitle", new_key="title")
-
-        record.rename_field(key="eprint", new_key="fulltext")
 
         return record

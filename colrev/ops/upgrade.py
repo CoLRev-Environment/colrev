@@ -133,6 +133,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_9_1,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.9.2"),
+                "target_version": CoLRevVersion("0.9.3"),
+                "script": self.__migrate_0_9_3,
+                "released": False,
+            },
         ]
 
         # Note: we should always update the colrev_version in settings.json because the
@@ -394,6 +400,36 @@ class Upgrade(colrev.operation.Operation):
             if "load_conversion_package_endpoint" in source:
                 del source["load_conversion_package_endpoint"]
         self.__save_settings(settings)
+        return self.repo.is_dirty()
+
+    def __migrate_0_9_3(self) -> bool:
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
+            if "dblp_key" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="dblp_key", new_key="colrev.dblp.dblp_key")
+            if "wos_accession_number" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="wos_accession_number",
+                    new_key="colrev.web_of_science.unique-id",
+                )
+            if "sem_scholar_id" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="sem_scholar_id", new_key="colrev.semantic_scholar.id"
+                )
+
+            # TODO : update open_alex source
+            if "openalex_id" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="openalex_id", new_key="colrev.open_alex.id"
+                )
+
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
 

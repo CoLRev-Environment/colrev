@@ -102,34 +102,42 @@ class ScopusSearchSource(JsonSchemaMixin):
                 record.rename_field(key="title", new_key="booktitle")
                 record.rename_field(key="journal", new_key="title")
 
-        if "document_type" in record.data:
-            if record.data["document_type"] == "Conference Paper":
+        if "colrev.scopus.document_type" in record.data:
+            if record.data["colrev.scopus.document_type"] == "Conference Paper":
                 record.change_entrytype(
                     new_entrytype="inproceedings", qm=self.quality_model
                 )
 
-            elif record.data["document_type"] == "Conference Review":
+            elif record.data["colrev.scopus.document_type"] == "Conference Review":
                 record.change_entrytype(
                     new_entrytype="proceedings", qm=self.quality_model
                 )
 
-            elif record.data["document_type"] == "Article":
+            elif record.data["colrev.scopus.document_type"] == "Article":
                 record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
-            record.remove_field(key="document_type")
+            record.remove_field(key="colrev.scopus.document_type")
 
-        if "Start_Page" in record.data and "End_Page" in record.data:
-            if record.data["Start_Page"] != "nan" and record.data["End_Page"] != "nan":
+        if (
+            "colrev.scopus.Start_Page" in record.data
+            and "colrev.scopus.End_Page" in record.data
+        ):
+            if (
+                record.data["colrev.scopus.Start_Page"] != "nan"
+                and record.data["colrev.scopus.End_Page"] != "nan"
+            ):
                 record.data["pages"] = (
-                    record.data["Start_Page"] + "--" + record.data["End_Page"]
+                    record.data["colrev.scopus.Start_Page"]
+                    + "--"
+                    + record.data["colrev.scopus.End_Page"]
                 )
                 record.data["pages"] = record.data["pages"].replace(".0", "")
-                record.remove_field(key="Start_Page")
-                record.remove_field(key="End_Page")
+                record.remove_field(key="colrev.scopus.Start_Page")
+                record.remove_field(key="colrev.scopus.End_Page")
 
-        if "note" in record.data:
-            if "cited By " in record.data["note"]:
-                record.rename_field(key="note", new_key="cited_by")
+        if "colrev.scopus.note" in record.data:
+            if "cited By " in record.data["colrev.scopus.note"]:
+                record.rename_field(key="colrev.scopus.note", new_key="cited_by")
                 record.data["cited_by"] = record.data["cited_by"].replace(
                     "cited By ", ""
                 )
@@ -137,7 +145,6 @@ class ScopusSearchSource(JsonSchemaMixin):
         if "author" in record.data:
             record.data["author"] = record.data["author"].replace("; ", " and ")
 
-        record.remove_field(key="source")
-        record.remove_field(key="art_number")
+        record.remove_field(key="colrev.scopus.source")
 
         return record

@@ -89,6 +89,30 @@ class Record:
 
     time_variant_fields = ["cited_by"]
 
+    # TODO : link to CEP
+    standardized_field_keys = (
+        identifying_field_keys
+        + provenance_keys
+        + [
+            "ID",
+            "ENTRYTYPE",
+            "doi",
+            "url",
+            "issn",
+            "isbn",
+            "fulltext",
+            "abstract",
+            "keywords",
+            "cited_by",
+            "file",
+            "institution",
+            "month",
+            "series",
+            "language",
+        ]
+    )
+    """Standardized field keys"""
+
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, *, data: dict) -> None:

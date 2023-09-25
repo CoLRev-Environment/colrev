@@ -620,10 +620,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 source="dblp",
                 keep_source_if_equal=True,
             )
-        record.remove_field(key="bibsource")
+        record.remove_field(key="colrev.dblp.bibsource")
         if any(x in record.data.get("url", "") for x in ["dblp.org", "doi.org"]):
             record.remove_field(key="url")
-        record.remove_field(key="timestamp")
+        record.remove_field(key="colrev.dblp.timestamp")
 
         return record
 
