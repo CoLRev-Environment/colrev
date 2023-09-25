@@ -423,10 +423,7 @@ class Upgrade(colrev.operation.Operation):
             # TODO : update open_alex source
             if "openalex_id" in record_dict:
                 record = colrev.record.Record(data=record_dict)
-                record.rename_field(
-                    key="openalex_id", new_key="colrev.open_alex.id"
-                )
-
+                record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
