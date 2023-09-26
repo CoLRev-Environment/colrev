@@ -1,3 +1,5 @@
+.. _CoLRev Setup:
+
 CoLRev development environment setup
 ====================================
 
@@ -34,3 +36,14 @@ of the `pip package
 manager <https://itsfoss.com/install-pipx-ubuntu/>`__. Support for newer
 Linux distributions is scheduled for April 2024 with the next LTS
 release of Ubuntu.
+
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Installations
+
+   setup/setup_cli
+   setup/setup_distro
+   setup/setup_vm
+   setup/setup_wsl2
+
