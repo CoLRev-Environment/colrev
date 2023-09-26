@@ -12,6 +12,8 @@ Other available distros:
 - "static" 
 - "ubuntu"
 
+TODO: add a $mydistro variable into the script
+
 ::
 
    sudo apt install ca-certificates curl gnupg
