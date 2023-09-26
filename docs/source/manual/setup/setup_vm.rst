@@ -1,3 +1,6 @@
+.. _Setup VM:
+
+
 Setup with VirtualBox
 =====================
 
