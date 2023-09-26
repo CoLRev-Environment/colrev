@@ -1,3 +1,5 @@
+.. _Setup distro:
+
 Install docker
 --------------
 If you are using a distro other than ubuntu, please replace "ubuntu" in the following links (urls) with your respective distro name
