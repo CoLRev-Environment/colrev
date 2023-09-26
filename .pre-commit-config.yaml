@@ -42,7 +42,7 @@ repos:
     -   id: reorder-python-imports
         args: [--py3-plus]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.11.0
+    rev: v3.13.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]
@@ -52,7 +52,7 @@ repos:
     -   id: mypy
         args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.0.290
+  rev: v0.0.291
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
