@@ -1,3 +1,5 @@
+.. _Setup CLI:
+
 Update git credentials and setup SSH
 ------------------------------------
 
