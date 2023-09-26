@@ -46,4 +46,3 @@ release of Ubuntu.
    setup/setup_distro
    setup/setup_vm
    setup/setup_wsl2
-
