@@ -6,13 +6,13 @@ CoLRev project. Although we only support the systems listed in the
 compatibility section, useful hints for the setup on other machines can
 be contributed to this repository (issues or pull-requests).
 
-The setup includes: 
+The setup includes:
 
--  Python3, pip 
--  git 
--  Docker 
--  CoLRev 
--  Continuous integration (pre-commit hooks) 
+-  Python3, pip
+-  git
+-  Docker
+-  CoLRev
+-  Continuous integration (pre-commit hooks)
 -  Visual Studio Code
 
 Compatibility

@@ -17,7 +17,7 @@ Install WSL2 via PowerShell
 ::
 
   Press "WIN + X" start "Windows PowerShell(Administrator)"
-  Enter the following command: 
+  Enter the following command:
   wsl --install -d ubuntu
 
 Restart your machine
@@ -29,4 +29,3 @@ Restart your machine
 
 
 Windows: 10/11 via WSL2 with Ubuntu 22.04.3 LTS (`tutorial and setup with “The one line install!” <https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#3-download-ubuntu>`__)
-

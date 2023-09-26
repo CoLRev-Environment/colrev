@@ -1,15 +1,15 @@
 Install docker
---------------    
+--------------
 If you are using a distro other than ubuntu, please replace "ubuntu" in the following links (urls) with your respective distro name
 Other available distros:
-  
-- "centos" 
+
+- "centos"
 - "debian"
-- "fedora" 
+- "fedora"
 - "raspbian" aka Raspberry Pi OS
-- "rhel" aka Red Hat Enterprise Linux 
-- "sles" aka SUSE Linux Enterprise Server 
-- "static" 
+- "rhel" aka Red Hat Enterprise Linux
+- "sles" aka SUSE Linux Enterprise Server
+- "static"
 - "ubuntu"
 
 TODO: add a $mydistro variable into the script
