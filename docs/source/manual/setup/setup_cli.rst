@@ -1,8 +1,7 @@
 Update git credentials and setup SSH
 ------------------------------------
 
-Before using the setup, please update your git credentials (using the
-shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+Before using the setup, please update your git credentials (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
 ::
 
@@ -11,9 +10,10 @@ shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
    git config --global user.email "lisa.smith@stud.uni-bamberg.de"
    git config --global credential.helper store
 
-Create an SSH key pair and register the public key at Github
+Create a SSH key pair and register the public key at Github
 (`steps <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`__).
 
+Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
 ::
 
@@ -42,11 +42,14 @@ Create an SSH key pair and register the public key at Github
    pre-commit install
    pre-commit run --all
 
-   # Create a testfolder and try out CoLRev
-   # Complete run to pull the Docker images, this may be time consuming
-   # The status operation will guide you through the whole process
+To test CoLRev in a demo project, run the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+
+::
+
    cd ~/Desktop
    mkdir test
    cd test
+   # Complete run to pull the Docker images, this may be time consuming
    colrev init --example
+   # The status operation will guide you through the whole process
    colrev status
