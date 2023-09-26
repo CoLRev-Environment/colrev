@@ -1,3 +1,5 @@
+.. _Setup WSL2:
+
 Setup with Windows Subsystem for Linux 2 (WSL2)
 ===============================================
 
