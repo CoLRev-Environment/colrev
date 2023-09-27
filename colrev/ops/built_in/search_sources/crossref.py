@@ -618,11 +618,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             if "scope" in source.search_parameters:
                 if "issn" in source.search_parameters["scope"]:
-                    issn_field = source.search_parameters["scope"]["issn"]
-                    if not re.match(self.__ISSN_REGEX, issn_field):
-                        raise colrev_exceptions.InvalidQueryException(
-                            f"Crossref journal issn ({issn_field}) not matching required format"
-                        )
+                    for issn_field in source.search_parameters["scope"]["issn"]:
+                        if not re.match(self.__ISSN_REGEX, issn_field):
+                            raise colrev_exceptions.InvalidQueryException(
+                                f"Crossref journal issn ({issn_field}) not matching required format"
+                            )
                 elif "years" in source.search_parameters["scope"]:
                     years_field = source.search_parameters["scope"]["years"]
                     if not re.match(self.__YEAR_SCOPE_REGEX, years_field):
@@ -669,7 +669,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             yield from self.__query(**crossref_query)
         elif "scope" in params and "issn" in params["scope"]:
             if "issn" in params["scope"]:
-                for issn in params["scope"]["issn"].split("|"):
+                for issn in params["scope"]["issn"]:
                     yield from self.__query_journal(issn=issn, rerun=rerun)
 
     def __restore_url(
@@ -1047,7 +1047,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 endpoint="colrev.crossref",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"scope": {"issn": issn}},
+                search_parameters={"scope": {"issn": [issn]}},
                 comment="",
             )
             operation.review_manager.settings.sources.append(add_source)
