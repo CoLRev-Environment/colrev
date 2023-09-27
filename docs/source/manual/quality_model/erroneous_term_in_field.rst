@@ -1,7 +1,19 @@
 erroneous_term_in_field
 =======================
 
-Field should not contain any erroneous terms
+Fields should not contain any erroneous terms.
+
+**Problematic value**
+
+.. code-block:: python
+
+    author = {Smith, F. orcid-0012393}
+
+**Correct value**
+
+.. code-block:: python
+
+    author = {Smith, F.}
 
 +-----------+-------------------------------------------------------------------------------+
 | field     | Erroneous terms                                                               |

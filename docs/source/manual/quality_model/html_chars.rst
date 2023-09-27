@@ -1,7 +1,21 @@
 html_chars
 ============================
 
-Field should not contain any HTML characters.
+Fields should not contain HTML tags.
+
+**Problematic value**
+
+.. code-block:: python
+
+    title = {A commentary on <i>microsourcing</i>}
+
+**Correct value**
+
+.. code-block:: python
+
+    title = {A commentary on microsourcing}
+
+Note: abstracts are not checked and may contain html tags.
 
 +-----------------+
 | Fields checked  |
