@@ -18,9 +18,10 @@ Fields should not contain inconsistent values,
 
     booktitle = {Proceedings of the 32nd Conference on ...}
 
-+-----------------+
-| Fields checked  |
-+=================+
-| journal         |
-| booktitle       |
-+-----------------+
++-----------------+---------------------+
+| Fields checked  | Erroneous values    |
++=================+=====================+
+| journal         | conference, workshop|
++-----------------+---------------------+
+| booktitle       |journal              |
++-----------------+---------------------+
