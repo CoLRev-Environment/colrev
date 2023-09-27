@@ -31,7 +31,6 @@ jobs:
           git checkout -b ${{ env.BRANCH_NAME }}
       - name: Run poetry update
         run: |
-          poetry remove watchdog
           poetry update
           git add .
           git commit -m 'update dependencies'
