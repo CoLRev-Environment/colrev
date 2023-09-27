@@ -403,6 +403,18 @@ class Upgrade(colrev.operation.Operation):
         return self.repo.is_dirty()
 
     def __migrate_0_9_3(self) -> bool:
+        settings = self.__load_settings_dict()
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev.crossref":
+                if "issn" not in source["search_parameters"].get("scope", {}):
+                    continue
+                if isinstance(source["search_parameters"]["scope"]["issn"], str):
+                    source["search_parameters"]["scope"]["issn"] = [
+                        source["search_parameters"]["scope"]["issn"]
+                    ]
+
+        self.__save_settings(settings)
+
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             # TODO : call methods in repare.py

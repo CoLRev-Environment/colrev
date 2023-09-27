@@ -618,6 +618,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             if "scope" in source.search_parameters:
                 if "issn" in source.search_parameters["scope"]:
+                    assert isinstance(source.search_parameters["scope"]["issn"], list)
                     for issn_field in source.search_parameters["scope"]["issn"]:
                         if not re.match(self.__ISSN_REGEX, issn_field):
                             raise colrev_exceptions.InvalidQueryException(
