@@ -563,6 +563,7 @@ class LocalIndex:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
             selected_row = None
+            print(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             cur.execute(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             for row in cur.fetchall():
                 selected_row = row
@@ -573,8 +574,8 @@ class LocalIndex:
                     record_dict=retrieved_record, include_file=False
                 )
                 records_to_return.append(colrev.record.Record(data=retrieved_record))
-        except sqlite3.OperationalError:
-            pass
+        except sqlite3.OperationalError as exc:
+            print(exc)
         finally:
             self.thread_lock.release()
 

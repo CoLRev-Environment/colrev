@@ -44,6 +44,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "pubmedid"
     search_type = colrev.settings.SearchType.DB
+    endpoint = "colrev.pubmed"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -76,7 +77,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.search_source = pubmed_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.pubmed",
+                    endpoint=self.endpoint,
                     filename=self.__pubmed_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
@@ -113,6 +114,10 @@ class PubMedSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+            return
+
         host = urlparse(params).hostname
 
         if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
@@ -126,7 +131,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 + params
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.pubmed",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": params},
@@ -293,7 +298,8 @@ class PubMedSearchSource(JsonSchemaMixin):
     def __get_pubmed_ids(self, query: str, retstart: int) -> typing.List[str]:
         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
-
+        if not query.startswith("https://pubmed.ncbi.nlm.nih.gov/?term="):
+            query = "https://pubmed.ncbi.nlm.nih.gov/?term=" + query
         ret = session.request(
             "GET", query + f"&retstart={retstart}", headers=headers, timeout=30
         )
@@ -468,7 +474,10 @@ class PubMedSearchSource(JsonSchemaMixin):
         # To test the metadata provided for a particular pubmed-id use:
         # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=10075143&rettype=xml&retmode=text
 
-        if len(record.data.get("title", "")) < 35 and "pubmedid" not in record.data:
+        if (
+            len(record.data.get("title", "")) < 35
+            and "colrev.pubmed.pubmedid" not in record.data
+        ):
             return record
 
         # at this point, we coujld validate metadata
@@ -476,7 +485,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         #    record = self.__check_doi_masterdata(record=record)
 
         # remove the following if we match basd on similarity
-        if "pubmedid" not in record.data:
+        if "colrev.pubmed.pubmedid" not in record.data:
             return record
 
         record = self.__get_masterdata_record(
@@ -705,24 +714,26 @@ class PubMedSearchSource(JsonSchemaMixin):
                     details_part = details_part[: details_part.find("(")]
                 record["volume"] = details_part
                 del record["citation"]
+            if "journal/book" in record:
+                record["journal"] = record.pop("journal/book")
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Pubmed"""
 
-        if "first_author" in record.data:
-            record.remove_field(key="first_author")
-        if "journal/book" in record.data:
-            record.rename_field(key="journal/book", new_key="journal")
+        if "colrev.pubmed.first_author" in record.data:
+            record.remove_field(key="colrev.pubmed.first_author")
         if record.data.get("author") == "UNKNOWN" and "authors" in record.data:
             record.remove_field(key="author")
             record.rename_field(key="authors", new_key="author")
 
         if record.data.get("year") == "UNKNOWN":
             record.remove_field(key="year")
-            if "publication_year" in record.data:
-                record.rename_field(key="publication_year", new_key="year")
+            if "colrev.pubmed.publication_year" in record.data:
+                record.rename_field(
+                    key="colrev.pubmed.publication_year", new_key="year"
+                )
 
         if "author" in record.data:
             record.data["author"] = colrev.record.PrepRecord.format_author_field(

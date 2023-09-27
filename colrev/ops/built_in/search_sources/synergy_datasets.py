@@ -326,6 +326,16 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
-        if not any(x in record.data for x in ["pmid", "doi", "openalex_id"]):
+
+        record.rename_field(
+            key="colrev.synergy_datasets.pubmedid", new_key="colrev.pubmed.pubmedid"
+        )
+        record.rename_field(
+            key="colrev.synergy_datasets.openalex_id", new_key="colrev.open_alex.id"
+        )
+        if not any(
+            x in record.data
+            for x in ["colrev.pubmed.pubmedid", "doi", "colrev.open_alex.id"]
+        ):
             record.prescreen_exclude(reason="no-metadata-available")
         return record

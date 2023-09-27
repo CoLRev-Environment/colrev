@@ -43,6 +43,7 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
 
       ~DBLPSearchSource.api_search_supported
       ~DBLPSearchSource.ci_supported
+      ~DBLPSearchSource.endpoint
       ~DBLPSearchSource.heuristic_status
       ~DBLPSearchSource.link
       ~DBLPSearchSource.search_type

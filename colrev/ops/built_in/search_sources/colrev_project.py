@@ -36,6 +36,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
     search_type = colrev.settings.SearchType.OTHER
+    endpoint = "colrev.colrev_project"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -71,12 +72,17 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+            return
+
         if params.startswith("url="):
             filename = operation.get_unique_filename(
                 file_path_string=params.split("/")[-1]
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.colrev_project",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"url": params[4:]}},

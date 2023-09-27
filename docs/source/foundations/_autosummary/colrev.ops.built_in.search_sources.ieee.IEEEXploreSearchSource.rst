@@ -45,6 +45,7 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.SETTINGS
       ~IEEEXploreSearchSource.api_search_supported
       ~IEEEXploreSearchSource.ci_supported
+      ~IEEEXploreSearchSource.endpoint
       ~IEEEXploreSearchSource.flag
       ~IEEEXploreSearchSource.heuristic_status
       ~IEEEXploreSearchSource.link

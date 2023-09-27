@@ -91,5 +91,6 @@ colrev.record.PrepRecord
       ~PrepRecord.pp
       ~PrepRecord.preferred_sources
       ~PrepRecord.provenance_keys
+      ~PrepRecord.standardized_field_keys
       ~PrepRecord.time_variant_fields
       ~PrepRecord.data

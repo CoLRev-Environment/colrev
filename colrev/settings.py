@@ -202,7 +202,7 @@ class SearchSource(JsonSchemaMixin):
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
-        assert ";" not in str(self.filename.name)
+        assert not any(x in str(self.filename.name) for x in [";", "/"])
         return (
             str(self.filename.name)
             .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")

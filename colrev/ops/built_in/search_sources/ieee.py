@@ -33,6 +33,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
     search_type = colrev.settings.SearchType.DB
+    endpoint = "colrev.ieee"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
@@ -103,7 +104,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             )
         else:
             self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.ieee",
+                endpoint=self.endpoint,
                 filename=Path("data/search/ieee.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={},
@@ -124,6 +125,11 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+            return
+
         if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in params:
             params = params.replace(
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
@@ -142,7 +148,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             )
 
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.ieee",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters=search_parameters,
