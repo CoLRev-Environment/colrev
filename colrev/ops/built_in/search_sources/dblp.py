@@ -41,6 +41,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     source_identifier = "dblp_key"
     search_type = colrev.settings.SearchType.DB
+    endpoint = "colrev.dblp"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -95,7 +96,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self.search_source = dblp_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.dblp",
+                    endpoint=self.endpoint,
                     filename=self.__dblp_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
@@ -571,6 +572,10 @@ class DBLPSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+            return
+
         if (
             "https://dblp.org/search?q=" in params
             or "https://dblp.org/search/publ?q=" in params
@@ -583,7 +588,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 file_path_string=f"dblp_{params.replace(cls.__api_url, '')}"
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.dblp",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": params},
@@ -651,8 +656,11 @@ class DBLPSearchSource(JsonSchemaMixin):
             for retrieved_record in self.__retrieve_dblp_records(
                 query=query,
             ):
-                if "dblp_key" in record.data:
-                    if retrieved_record.data["dblp_key"] != record.data["dblp_key"]:
+                if "colrev.dblp.dblp_key" in record.data:
+                    if (
+                        retrieved_record.data["dblp_key"]
+                        != record.data["colrev.dblp.dblp_key"]
+                    ):
                         continue
 
                 similarity = colrev.record.PrepRecord.get_retrieval_similarity(

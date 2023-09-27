@@ -113,7 +113,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key="booktitle", case="title")
         record.format_if_mostly_upper(key="author", case="title")
 
-        record.remove_field(key="researcherid-numbers")
-        record.remove_field(key="orcid-numbers")
+        record.remove_field(key="colrev.web_of_science.researcherid-numbers")
+        record.remove_field(key="colrev.web_of_science.orcid-numbers")
 
         return record

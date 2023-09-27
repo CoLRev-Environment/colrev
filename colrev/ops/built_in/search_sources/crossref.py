@@ -660,7 +660,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         params = self.search_source.search_parameters
 
         if "query" in params and "mode" not in params:
-            crossref_query = {"bibliographic": params["query"]}
+            crossref_query = {"bibliographic": params["query"].replace(" ", "+")}
             # potential extension : add the container_title:
             # crossref_query_return = works.query(
             #     container_title=
@@ -1055,8 +1055,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         # if query_type == "k":
         keywords = input("Enter the keywords:")
-        keywords = keywords.replace(" ", "+")
-        # query = f"https://search.crossref.org/?q={keywords}"
 
         filename = operation.get_unique_filename(
             file_path_string=f"crossref_{keywords}"

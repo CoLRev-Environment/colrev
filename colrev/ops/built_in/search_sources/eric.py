@@ -33,6 +33,7 @@ class ERICSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
     search_type = colrev.settings.SearchType.DB
+    endpoint = "colrev.eric"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
@@ -92,7 +93,7 @@ class ERICSearchSource(JsonSchemaMixin):
             )
         else:
             self.search_source = colrev.settings.SearchSource(
-                endpoint="colrev.eric",
+                endpoint=self.endpoint,
                 filename=Path("data/search/eric.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={},
@@ -137,7 +138,10 @@ class ERICSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
-        if "https://api.ies.ed.gov/eric/?" in params:
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+
+        elif "https://api.ies.ed.gov/eric/?" in params:
             url_parsed = urllib.parse.urlparse(params)
             new_query = urllib.parse.parse_qs(url_parsed.query)
             search = new_query.get("search", [""])[0]
@@ -147,7 +151,7 @@ class ERICSearchSource(JsonSchemaMixin):
                 search = ERICSearchSource.__search_split(search)
             filename = operation.get_unique_filename(file_path_string=f"eric_{search}")
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.eric",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": search, "start": start, "rows": rows},
@@ -156,9 +160,10 @@ class ERICSearchSource(JsonSchemaMixin):
             operation.review_manager.settings.sources.append(add_source)
             return
 
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add ERIC endpoint with query {params}"
-        )
+        else:
+            raise colrev_exceptions.PackageParameterError(
+                f"Cannot add ERIC endpoint with query {params}"
+            )
 
     def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
         """Get the records from a query"""

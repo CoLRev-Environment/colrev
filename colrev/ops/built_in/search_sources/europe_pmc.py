@@ -47,6 +47,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "europe_pmc_id"
     search_type = colrev.settings.SearchType.DB
+    endpoint = "colrev.europe_pmc"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -102,7 +103,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 self.search_source = europe_pmc_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.europe_pmc",
+                    endpoint=self.endpoint,
                     filename=self.__europe_pmc_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
@@ -522,6 +523,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+            return
+
         host = urlparse(params).hostname
 
         if host and host.endswith("europepmc.org"):
@@ -533,7 +538,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 + params
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.europe_pmc",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": params},

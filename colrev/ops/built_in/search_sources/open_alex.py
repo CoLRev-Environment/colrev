@@ -134,7 +134,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 record_dict["ENTRYTYPE"] = "misc"
 
         record_dict = {}
-        record_dict["openalex_id"] = item["id"].replace("https://openalex.org/", "")
+        record_dict["id"] = item["id"].replace("https://openalex.org/", "")
         if "title" in item and item["title"] is not None:
             record_dict["title"] = item["title"].lstrip("[").rstrip("].")
         set_entrytype(record_dict=record_dict, item=item)
@@ -180,7 +180,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         try:
             retrieved_record = self.__parse_item_to_record(
-                item=Works()[record.data["openalex_id"]]
+                item=Works()[record.data["colrev.open_alex.id"]]
             )
 
             self.open_alex_lock.acquire(timeout=120)
@@ -229,7 +229,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Retrieve masterdata from OpenAlex based on similarity with the record provided"""
 
-        if "openalex_id" not in record.data:
+        if "colrev.open_alex.id" not in record.data:
             # Note: not yet implemented
             # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
             # if len(record.data.get("title", "")) < 35 and "doi" not in record.data:

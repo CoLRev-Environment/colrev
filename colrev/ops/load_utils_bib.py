@@ -19,6 +19,26 @@ def __apply_file_fixes(
     source: colrev.settings.SearchSource,
 ) -> None:
     # pylint: disable=duplicate-code
+    # pylint: disable=too-many-statements
+
+    def fix_key(
+        file: typing.IO, line: bytes, replacement_line: bytes, seekpos: int
+    ) -> int:
+        load_operation.review_manager.logger.info(
+            f"Fix invalid key: \n{line.decode('utf-8')}"
+            f"{replacement_line.decode('utf-8')}"
+        )
+        line = file.readline()
+        remaining = line + file.read()
+        file.seek(seekpos)
+        file.write(replacement_line)
+        seekpos = file.tell()
+        file.flush()
+        os.fsync(file)
+        file.write(remaining)
+        file.truncate()  # if the replacement is shorter...
+        file.seek(seekpos)
+        return seekpos
 
     if not source.filename.is_file():
         load_operation.review_manager.logger.debug(
@@ -46,6 +66,14 @@ def __apply_file_fixes(
             if b"@" in line[:3]:
                 current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
                 current_id_str = current_id.decode("utf-8").lstrip().rstrip()
+
+                if any(x in current_id_str for x in [";"]):
+                    replacement_line = re.sub(
+                        r";",
+                        r"_",
+                        line.decode("utf-8"),
+                    ).encode("utf-8")
+                    seekpos = fix_key(file, line, replacement_line, seekpos)
 
                 if current_id_str in record_ids:
                     next_id = (
@@ -86,20 +114,7 @@ def __apply_file_fixes(
                     r"\1\2_\3\4",
                     line.decode("utf-8"),
                 ).encode("utf-8")
-                load_operation.review_manager.logger.info(
-                    f"Fix invalid key: \n{line.decode('utf-8')}"
-                    f"{replacement_line.decode('utf-8')}"
-                )
-                line = file.readline()
-                remaining = line + file.read()
-                file.seek(seekpos)
-                file.write(replacement_line)
-                seekpos = file.tell()
-                file.flush()
-                os.fsync(file)
-                file.write(remaining)
-                file.truncate()  # if the replacement is shorter...
-                file.seek(seekpos)
+                seekpos = fix_key(file, line, replacement_line, seekpos)
 
             seekpos = file.tell()
             line = file.readline()

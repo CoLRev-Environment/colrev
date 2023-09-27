@@ -99,8 +99,10 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
             r"PMID: \d*", record.data["colrev.taylor_and_francis.note"]
         ):
             record.rename_field(
-                key="colrev.taylor_and_francis.note", new_key="pubmed.pubmedid"
+                key="colrev.taylor_and_francis.note", new_key="colrev.pubmed.pubmedid"
             )
-            record.data["pubmed.pubmedid"] = record.data["pubmed.pubmedid"][6:]
+            record.data["colrev.pubmed.pubmedid"] = record.data[
+                "colrev.pubmed.pubmedid"
+            ][6:]
 
         return record

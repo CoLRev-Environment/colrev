@@ -38,6 +38,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "curation_ID"
     search_type = colrev.settings.SearchType.OTHER
+    endpoint = "colrev.local_index"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -59,7 +60,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         "issue",
         "author",
         "doi",
-        "dblp_key",
+        "colrev.dblp.dblp_key",
         "url",
     ]
 
@@ -86,7 +87,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 self.search_source = li_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.local_index",
+                    endpoint=self.endpoint,
                     filename=self.__local_index_md_filename,
                     search_type=colrev.settings.SearchType.OTHER,
                     search_parameters={},
@@ -134,6 +135,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def __retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_parameters
         query = params["query"]
+
+        # TODO : generally prefix with SQL fields
+        if not any(x in query for x in ["title", "abstract"]):
+            query = f'title LIKE "%{query}%"'
 
         returned_records = self.local_index.search(query=query)
 
@@ -281,11 +286,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if params is None:
+            operation.add_interactively(endpoint=cls.endpoint)
+            return
+
         filename = operation.get_unique_filename(
             file_path_string=f"local_index_{params}".replace("%", "").replace("'", "")
         )
         add_source = colrev.settings.SearchSource(
-            endpoint="colrev.local_index",
+            endpoint=cls.endpoint,
             filename=filename,
             search_type=colrev.settings.SearchType.DB,
             search_parameters={"query": params},

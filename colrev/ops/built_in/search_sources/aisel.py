@@ -34,6 +34,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "url"
     search_type = colrev.settings.SearchType.DB
+    endpoint = "colrev.ais_library"
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -150,6 +151,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        # if params is None:
+        #     operation.add_interactively(endpoint=cls.endpoint)
+        #     return
+
         params = params.lstrip("colrev.ais_library:").rstrip('"').lstrip('"')
 
         host = urlparse(params).hostname
@@ -158,7 +163,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             q_params = cls.__parse_query(query=params)
             filename = operation.get_unique_filename(file_path_string="ais")
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.ais_library",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
                 search_parameters={"query": q_params},

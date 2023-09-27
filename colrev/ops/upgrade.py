@@ -405,6 +405,32 @@ class Upgrade(colrev.operation.Operation):
     def __migrate_0_9_3(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
+            # TODO : call methods in repare.py
+
+            if "pubmedid" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="pubmedid", new_key="colrev.pubmed.pubmedid")
+
+            if "pii" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="pii", new_key="colrev.pubmed.pii")
+
+            if "pmc" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="pmc", new_key="colrev.pubmed.pmc")
+
+            if "label_included" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="label_included",
+                    new_key="colrev.synergy_datasets.label_included",
+                )
+            if "method" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="method", new_key="colrev.synergy_datasets.method"
+                )
+
             if "dblp_key" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="dblp_key", new_key="colrev.dblp.dblp_key")

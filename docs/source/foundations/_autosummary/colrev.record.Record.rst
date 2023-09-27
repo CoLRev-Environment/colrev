@@ -81,5 +81,6 @@ colrev.record.Record
       ~Record.pp
       ~Record.preferred_sources
       ~Record.provenance_keys
+      ~Record.standardized_field_keys
       ~Record.time_variant_fields
       ~Record.data
