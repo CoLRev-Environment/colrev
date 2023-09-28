@@ -49,7 +49,15 @@ import colrev.record
         (
             "Neale, J. and Boitano, T. and Cooke, M. and Morrow, D. and et al.",
             {"name-abbreviated", "name-format-separators"},
-        )
+        ),
+        (
+            "Brocke, Jan vom",
+            {"name-particles"},
+        ),
+        (
+            "vom Brocke, Jan",
+            {},
+        ),
         # (
         #     "Þórðarson, Kristinn and Oskarsdottir, Maria",
         #     [],
