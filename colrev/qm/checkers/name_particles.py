@@ -2,8 +2,6 @@
 """Checker for name particles."""
 from __future__ import annotations
 
-import re
-
 import colrev.qm.quality_model
 
 # pylint: disable=too-few-public-methods
@@ -33,7 +31,6 @@ class NameParticlesChecker:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __particle_defect(self, *, name: str) -> bool:
- 
         # https://en.wikipedia.org/wiki/Nobiliary_particle
 
         if name.endswith(" vom"):
@@ -43,6 +40,7 @@ class NameParticlesChecker:
             return True
 
         return False
+
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
     """Register the checker"""
