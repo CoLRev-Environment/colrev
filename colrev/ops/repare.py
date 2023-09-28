@@ -350,9 +350,24 @@ class Repare(colrev.operation.Operation):
         for record_dict in records.values():
             # TODO : extract to methods and call from upgrade.py
             # TBD: which parts are in upgrade/repare and which parts are in prepare??
+            record = colrev.record.Record(data=record_dict)
             if "fulltext" in record_dict.get("link", ""):
-                record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="link", new_key="fulltext")
+            if (
+                record.data.get("note", "").lower().startswith("cited by ")
+                and "cited_by" not in record.data
+            ):
+                record.data["note"] = record.data["note"][9:]
+                record.rename_field(key="note", new_key="cited_by")
+            if (
+                record.data.get("note", "").lower().startswith("cited by ")
+                and "cited_by" in record.data
+            ):
+                record.remove_field(key="note")
+            if record.data.get("link", "").startswith(
+                "https://api.elsevier.com/content/article/"
+            ) and record.data.get("link", "").endswith("Accept=text/xml"):
+                record.remove_field(key="link")
 
     @colrev.operation.Operation.decorate()
     def main(self) -> None:

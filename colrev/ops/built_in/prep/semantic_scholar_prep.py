@@ -77,7 +77,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
             if "booktitle" in record_in.data:
                 retrieved_record.update(booktitle=item["venue"])
         if "url" in item:
-            retrieved_record.update(sem_scholar_id=item["url"])
+            retrieved_record["colrev.semantic_scholar.id"] = item["url"]
 
         keys_to_drop = []
         for key, value in retrieved_record.items():
@@ -146,7 +146,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
             retrieved_record = self.retrieve_record_from_semantic_scholar(
                 prep_operation=prep_operation, url=url, record_in=record
             )
-            if "sem_scholar_id" not in retrieved_record.data:
+            if "colrev.semantic_scholar.id" not in retrieved_record.data:
                 return record
 
             # Remove fields that are not/rarely available before
@@ -170,7 +170,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
                 record.merge(
                     merging_record=retrieved_record,
-                    default_source=retrieved_record.data["sem_scholar_id"],
+                    default_source=retrieved_record.data["colrev.semantic_scholar.id"],
                 )
 
             else:

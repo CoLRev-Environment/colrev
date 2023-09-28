@@ -837,7 +837,13 @@ class Dedupe(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        global_keys = ["doi", "colrev_id", "pubmedid", "dblp_key", "url"]
+        global_keys = [
+            "doi",
+            "colrev_id",
+            "colrev.pubmed.pubmedid",
+            "colrev.dblp.dblp_key",
+            "url",
+        ]
         if "colrev_id" in global_keys:
             for record in records.values():
                 try:
