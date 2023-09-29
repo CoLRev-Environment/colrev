@@ -196,9 +196,9 @@ class Sync:
 
                 field_order = [
                     "doi",
-                    "dblp_key",
-                    "sem_scholar_id",
-                    "wos_accession_number",
+                    "colrev.dblp.dblp_key",
+                    "colrev.semantic_scholar.id",
+                    "colrev.web_of_science.unique-id",
                     "author",
                     "booktitle",
                     "journal",

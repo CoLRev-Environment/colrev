@@ -120,6 +120,25 @@ class Search(colrev.operation.Operation):
 
         return check_accepts
 
+    def add_interactively(self, *, endpoint: str) -> None:
+        """Add a SearchSource interactively"""
+        print(f"Interactively add {endpoint} as a SearchSource")
+        print()
+
+        keywords = input("Enter the keywords:")
+
+        filename = self.get_unique_filename(
+            file_path_string=f"{endpoint.replace('colrev.', '')}_{keywords}"
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint=endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query": keywords},
+            comment="",
+        )
+        self.review_manager.settings.sources.append(add_source)
+
     @check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
     )

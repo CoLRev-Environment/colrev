@@ -735,7 +735,7 @@ class PDFSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def __fix_special_chars(self, *, record: colrev.record.Record) -> None:
-        # TODO : extract to separate scripts and also apply upon loading tei content
+        # We may also apply the following upon loading tei content
         if "title" in record.data:
             record.data["title"] = (
                 record.data["title"]

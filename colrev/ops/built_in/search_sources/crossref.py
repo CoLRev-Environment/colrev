@@ -618,11 +618,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             if "scope" in source.search_parameters:
                 if "issn" in source.search_parameters["scope"]:
-                    issn_field = source.search_parameters["scope"]["issn"]
-                    if not re.match(self.__ISSN_REGEX, issn_field):
-                        raise colrev_exceptions.InvalidQueryException(
-                            f"Crossref journal issn ({issn_field}) not matching required format"
-                        )
+                    assert isinstance(source.search_parameters["scope"]["issn"], list)
+                    for issn_field in source.search_parameters["scope"]["issn"]:
+                        if not re.match(self.__ISSN_REGEX, issn_field):
+                            raise colrev_exceptions.InvalidQueryException(
+                                f"Crossref journal issn ({issn_field}) not matching required format"
+                            )
                 elif "years" in source.search_parameters["scope"]:
                     years_field = source.search_parameters["scope"]["years"]
                     if not re.match(self.__YEAR_SCOPE_REGEX, years_field):
@@ -660,7 +661,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         params = self.search_source.search_parameters
 
         if "query" in params and "mode" not in params:
-            crossref_query = {"bibliographic": params["query"]}
+            crossref_query = {"bibliographic": params["query"].replace(" ", "+")}
             # potential extension : add the container_title:
             # crossref_query_return = works.query(
             #     container_title=
@@ -669,7 +670,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             yield from self.__query(**crossref_query)
         elif "scope" in params and "issn" in params["scope"]:
             if "issn" in params["scope"]:
-                for issn in params["scope"]["issn"].split("|"):
+                for issn in params["scope"]["issn"]:
                     yield from self.__query_journal(issn=issn, rerun=rerun)
 
     def __restore_url(
@@ -811,7 +812,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                             " retrieve " + retrieved_record.data["doi"]
                         )
                     if nr_added >= 10:
-                        # TODO : notify when not enough papers are available with the keyword
                         break
 
                 except (
@@ -822,6 +822,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     # KeyError: 'items'
                 ):
                     pass
+                if nr_added < 10:
+                    self.review_manager.logger.info(
+                        f"Only {nr_added} papers found to resample keyword '{keyword}'"
+                    )
 
         crossref_feed.print_post_run_search_infos(records=records)
 
@@ -1044,7 +1048,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 endpoint="colrev.crossref",
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"scope": {"issn": issn}},
+                search_parameters={"scope": {"issn": [issn]}},
                 comment="",
             )
             operation.review_manager.settings.sources.append(add_source)
@@ -1052,8 +1056,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         # if query_type == "k":
         keywords = input("Enter the keywords:")
-        keywords = keywords.replace(" ", "+")
-        # query = f"https://search.crossref.org/?q={keywords}"
 
         filename = operation.get_unique_filename(
             file_path_string=f"crossref_{keywords}"

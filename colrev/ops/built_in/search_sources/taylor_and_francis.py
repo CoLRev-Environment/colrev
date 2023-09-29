@@ -94,11 +94,15 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Taylor and Francis"""
 
         # remove eprint and URL fields (they only have dois...)
-        record.remove_field(key="url")
-        record.remove_field(key="eprint")
-        if "note" in record.data and re.match(r"PMID: \d*", record.data["note"]):
-            record.rename_field(key="note", new_key="pmid")
-            record.data["pmid"] = record.data["pmid"][6:]
-        record.remove_field(key="publisher")
+        record.remove_field(key="colrev.taylor_and_francis.eprint")
+        if "colrev.taylor_and_francis.note" in record.data and re.match(
+            r"PMID: \d*", record.data["colrev.taylor_and_francis.note"]
+        ):
+            record.rename_field(
+                key="colrev.taylor_and_francis.note", new_key="colrev.pubmed.pubmedid"
+            )
+            record.data["colrev.pubmed.pubmedid"] = record.data[
+                "colrev.pubmed.pubmedid"
+            ][6:]
 
         return record

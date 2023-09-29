@@ -94,7 +94,10 @@ class Trace(colrev.operation.Operation):
 
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
-            filecontents = (commit.tree / "data" / "records.bib").data_stream.read()
+            try:
+                filecontents = (commit.tree / "data" / "records.bib").data_stream.read()
+            except KeyError:
+                continue
 
             commit_message_first_line = str(commit.message).partition("\n")[0]
 

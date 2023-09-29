@@ -32,7 +32,9 @@ class Repare(colrev.operation.Operation):
         )
         # fix file no longer available
         self.local_index = self.review_manager.get_local_index()
-        self.pdf_get_operation = self.review_manager.get_pdf_get_operation()
+        self.pdf_get_operation = self.review_manager.get_pdf_get_operation(
+            notify_state_transition_operation=False
+        )
 
     def __fix_broken_symlink_based_on_local_index(
         self, *, record: colrev.record.Record, full_path: Path
@@ -143,24 +145,26 @@ class Repare(colrev.operation.Operation):
         if "grobid-version" in record.data:
             del record.data["grobid-version"]
 
-        mk_to_remove = []
-        for key in record.data["colrev_data_provenance"]:
-            if key not in record.data:
-                mk_to_remove += [key]
-        for key in mk_to_remove:
-            del record.data["colrev_data_provenance"][key]
+        if "colrev_data_provenance" in record.data:
+            mk_to_remove = []
+            for key in record.data["colrev_data_provenance"]:
+                if key not in record.data:
+                    mk_to_remove += [key]
+            for key in mk_to_remove:
+                del record.data["colrev_data_provenance"][key]
 
-        mdk_to_remove = []
-        for key in record.data["colrev_masterdata_provenance"]:
-            if (
-                key not in record.data
-                and "CURATED" != key
-                and "not-missing"
-                not in record.data["colrev_masterdata_provenance"][key]["note"]
-            ):
-                mdk_to_remove += [key]
-        for key in mdk_to_remove:
-            del record.data["colrev_masterdata_provenance"][key]
+        if "colrev_masterdata_provenance" in record.data:
+            mdk_to_remove = []
+            for key in record.data["colrev_masterdata_provenance"]:
+                if (
+                    key not in record.data
+                    and "CURATED" != key
+                    and "not-missing"
+                    not in record.data["colrev_masterdata_provenance"][key]["note"]
+                ):
+                    mdk_to_remove += [key]
+            for key in mdk_to_remove:
+                del record.data["colrev_masterdata_provenance"][key]
 
         if self.review_manager.settings.is_curated_masterdata_repo():
             if "CURATED" in record.data["colrev_masterdata_provenance"]:
@@ -177,7 +181,8 @@ class Repare(colrev.operation.Operation):
                 del record.data["colrev_data_provenance"][key]
         if key not in record.data["colrev_data_provenance"]:
             for origin in record.data["colrev_origin"]:
-                origin_source, origin_id = origin.split("/")
+                origin_source = origin.split("/")[0]
+                origin_id = origin[len(origin_source) + 1 :]
                 if key in source_feeds[origin_source][origin_id]:
                     record.add_data_provenance(key=key, source=origin, note="")
         if key == "language":
@@ -201,7 +206,8 @@ class Repare(colrev.operation.Operation):
     ) -> None:
         options = {}
         for origin in record.data["colrev_origin"]:
-            origin_source, origin_id = origin.split("/")
+            origin_source = origin.split("/")[0]
+            origin_id = origin[len(origin_source) + 1 :]
             if key in source_feeds[origin_source][origin_id]:
                 options[origin_source] = source_feeds[origin_source][origin_id][key]
 
@@ -340,6 +346,29 @@ class Repare(colrev.operation.Operation):
             )
             self.review_manager.dataset.add_changes(path=search_source.filename)
 
+    def __update_field_names(self, *, records: dict) -> None:
+        for record_dict in records.values():
+            # TODO : extract to methods and call from upgrade.py
+            # TBD: which parts are in upgrade/repare and which parts are in prepare??
+            record = colrev.record.Record(data=record_dict)
+            if "fulltext" in record_dict.get("link", ""):
+                record.rename_field(key="link", new_key="fulltext")
+            if (
+                record.data.get("note", "").lower().startswith("cited by ")
+                and "cited_by" not in record.data
+            ):
+                record.data["note"] = record.data["note"][9:]
+                record.rename_field(key="note", new_key="cited_by")
+            if (
+                record.data.get("note", "").lower().startswith("cited by ")
+                and "cited_by" in record.data
+            ):
+                record.remove_field(key="note")
+            if record.data.get("link", "").startswith(
+                "https://api.elsevier.com/content/article/"
+            ) and record.data.get("link", "").endswith("Accept=text/xml"):
+                record.remove_field(key="link")
+
     @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
@@ -393,6 +422,8 @@ class Repare(colrev.operation.Operation):
         #         colrev.record.Record(data=record_dict).remove_field(
         #             key="colrev_local_index"
         #         )
+
+        self.__update_field_names(records=records)
 
         self.__fix_provenance(records=records)
 

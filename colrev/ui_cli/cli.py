@@ -2187,11 +2187,10 @@ def validate(
 
     \b
     The validation scope argument can be
-    - a commit-sha,
-    - a commit tree,
+    - A commit-sha,
     - '.' for the latest commit,
     - HEAD~4 for commit 4 before HEAD
-    - a contributor name
+    - A contributor name
     """
 
     review_manager = get_review_manager(

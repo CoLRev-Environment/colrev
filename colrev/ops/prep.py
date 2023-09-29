@@ -90,8 +90,9 @@ class Prep(colrev.operation.Operation):
         "file",
         "fulltext",
         "publisher",
-        "dblp_key",
-        "sem_scholar_id",
+        "colrev.dblp.dblp_key",
+        "colrev.semantic_scholar.id",
+        "colrev.web_of_science.unique-id",
         "url",
         "isbn",
         "address",
@@ -99,7 +100,6 @@ class Prep(colrev.operation.Operation):
         "warning",
         "crossref",
         "date",
-        "wos_accession_number",
         "link",
         "url",
         "crossmark",
@@ -867,7 +867,6 @@ class Prep(colrev.operation.Operation):
                 if item["ID"] not in temp_recs:
                     continue
                 del temp_recs[item["ID"]]
-                # TODO : assert: colrev_origins identical
                 list_to_skip.append(item["ID"])
                 skipped_items += 1
             self.review_manager.logger.info(

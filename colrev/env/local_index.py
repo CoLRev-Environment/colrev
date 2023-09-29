@@ -40,7 +40,7 @@ import colrev.ui_cli.cli_colors as colors
 class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
-    global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url", "colrev_id"]
+    global_keys = ["doi", "colrev.dblp.dblp_key", "colrev_pdf_id", "url", "colrev_id"]
     max_len_sha256 = 2**256
     request_timeout = 90
 
@@ -79,7 +79,10 @@ class LocalIndex:
         (TOC_INDEX, "toc_key"): "SELECT * FROM toc_index WHERE toc_key=?",
         (RECORD_INDEX, "colrev_id"): "SELECT * FROM record_index WHERE colrev_id=?",
         (RECORD_INDEX, "doi"): "SELECT * FROM record_index where doi=?",
-        (RECORD_INDEX, "dblp_key"): "SELECT * FROM record_index WHERE dblp_key=?",
+        (
+            RECORD_INDEX,
+            "colrev.dblp.dblp_key",
+        ): "SELECT * FROM record_index WHERE dblp_key=?",
         (
             RECORD_INDEX,
             "colrev_pdf_id",
@@ -102,7 +105,7 @@ class LocalIndex:
         "fulltext",
         "url",
         "doi",
-        "dblp_key",
+        "dblp_key",  # Note : no dots in key names
         "colrev_pdf_id",
         "bibtex",
         "layered_fields"
@@ -563,6 +566,7 @@ class LocalIndex:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
             selected_row = None
+            print(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             cur.execute(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             for row in cur.fetchall():
                 selected_row = row
@@ -573,8 +577,8 @@ class LocalIndex:
                     record_dict=retrieved_record, include_file=False
                 )
                 records_to_return.append(colrev.record.Record(data=retrieved_record))
-        except sqlite3.OperationalError:
-            pass
+        except sqlite3.OperationalError as exc:
+            print(exc)
         finally:
             self.thread_lock.release()
 

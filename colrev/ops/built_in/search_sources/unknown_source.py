@@ -448,6 +448,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         if not record.has_quality_defects() or record.masterdata_is_curated():
             return record
 
+        # TODO : assign fields (e.g., to colrev.pubmed.pubmedid)
+
         self.__heuristically_fix_entrytypes(
             record=record,
         )

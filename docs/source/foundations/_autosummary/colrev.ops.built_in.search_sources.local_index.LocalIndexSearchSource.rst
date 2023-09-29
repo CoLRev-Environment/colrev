@@ -43,6 +43,7 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
 
       ~LocalIndexSearchSource.api_search_supported
       ~LocalIndexSearchSource.ci_supported
+      ~LocalIndexSearchSource.endpoint
       ~LocalIndexSearchSource.essential_md_keys
       ~LocalIndexSearchSource.heuristic_status
       ~LocalIndexSearchSource.link
