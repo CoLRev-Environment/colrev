@@ -112,6 +112,8 @@ Further information is provided in the `documentation <index.html>`_, the develo
    dev_docs/api
    dev_docs/extensions
    dev_docs/dev_status
+   Github repository <https://github.com/CoLRev-Environment/colrev>
+   PyPI <https://pypi.org/project/colrev/>
 
 .. toctree::
    :hidden:
@@ -120,12 +122,3 @@ Further information is provided in the `documentation <index.html>`_, the develo
 
    foundations/colrev
    foundations/about
-
-
-.. toctree::
-   :hidden:
-   :caption: Links
-   :maxdepth: 1
-
-   Github repository <https://github.com/CoLRev-Environment/colrev>
-   PyPI <https://pypi.org/project/colrev/>
