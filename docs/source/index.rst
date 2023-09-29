@@ -82,7 +82,6 @@ Further information is provided in the `documentation <index.html>`_, the develo
    manual/operations
    manual/workflow
    manual/problem_formulation
-   manual/setup
    manual/metadata_retrieval
    manual/metadata_prescreen
    manual/pdf_retrieval
@@ -92,6 +91,7 @@ Further information is provided in the `documentation <index.html>`_, the develo
    manual/curation
    manual/quality_model
    manual/extensions
+   manual/dev_setup
    manual/reference_manager
    manual/credits
    manual/help
