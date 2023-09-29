@@ -15,8 +15,6 @@ Names should not be abbreviated
 
     author = {Smith, W. and Thompson, U.}
 
-TODO: An author field is considered incomplete if first name is missing, which is indicated by a ``,`` at the end of the author name
-
 +-----------------+
 | Fields checked  |
 +=================+

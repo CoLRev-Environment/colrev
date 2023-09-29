@@ -47,5 +47,5 @@ The record should be found in the relevant table-of-content (toc) if a toc is av
     Mamonov, S. and Peterson, R. - The role of IT in organizational innovation – A systematic literature review
     Eismann, K. and Posegga, O. and Fischbach, K. - Opening organizational learning in crisis management: On the affordances of social media
     Dhillon, G. and Smith, K. and Dissanayaka, I. - Information systems security research agenda: Exploring the gap between research and practice
-    **Wagner, G. and Prester, J. and Pare, G. - Exploring the boundaries and processes of digital platforms for knowledge work: A review of information systems research**
+    Wagner, G. and Prester, J. and Pare, G. - Exploring the boundaries and processes of digital platforms for knowledge work: A review of information systems research
     Hund, A. and Wagner, H. T. and Beimborn, D. and Weitzel, T. - Digital innovation: Review and novel perspective

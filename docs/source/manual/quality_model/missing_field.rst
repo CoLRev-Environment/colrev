@@ -26,8 +26,6 @@ Records should contain all required fields for the respective ENTRYTYPE.
         pages = {xiii-xxiii},
     }
 
-**TODO** : mention "not_missing" flag (integrate with general False-Positive flags? - e.g., IGNORE:missing, IGNORE:all-caps)
-
 See: inconsistent-field
 
 +----------------+----------------------------------------------+
