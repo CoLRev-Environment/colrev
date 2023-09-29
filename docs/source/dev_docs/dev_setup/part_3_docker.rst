@@ -1,9 +1,10 @@
-.. _Setup distro:
+.. _Setup docker:
 
-Install docker
---------------
-If you are using a distro other than ubuntu, please replace "ubuntu" in the following links (urls) with your respective distro name
-Other available distros:
+Setup part 3: Docker
+------------------------
+
+If you are using a distribution other than ubuntu, please replace "ubuntu" in the following links (urls) with your respective distribution name.
+Other available distributions:
 
 - "centos"
 - "debian"
