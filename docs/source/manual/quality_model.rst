@@ -6,13 +6,6 @@ The quality model specifies the necessary checks when a records should transitio
 
 Similar to linters such as pylint, it should be possible to disable selected checks. Failed checks are made transparent by adding the corresponding codes (e.g., `mostly-upper`) to the `colrev_masterdata_provenance` (`notes` field).
 
-**TODO**:
-
-- Similar to pylint, it should also be possible to mark false-positives.
-- Define "correct" inconsistent_with_doi_metadata. Refer to CURATED records
-- Link to Dedupe (definition of dedupe)
-- Add custom-field checks (e.g., "pubmed.id" or "synergy.method")
-
 .. toctree::
    :caption: Format
    :maxdepth: 3
