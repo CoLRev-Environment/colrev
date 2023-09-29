@@ -30,7 +30,7 @@ Support for newer Linux distributions is scheduled for April 2024 with the next 
    :maxdepth: 3
    :caption: Installations
 
-   setup/setup_cli
-   setup/setup_distro
-   setup/setup_vm
-   setup/setup_wsl2
+   dev_setup/setup_cli
+   dev_setup/setup_distro
+   dev_setup/setup_vm
+   dev_setup/setup_wsl2
