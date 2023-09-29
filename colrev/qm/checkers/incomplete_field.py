@@ -18,7 +18,7 @@ class IncompleteFieldChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the missing-field checks"""
 
-        for key in ["title", "journal", "booktitle", "author"]:
+        for key in ["title", "journal", "booktitle", "author", "abstract"]:
             if record.data.get(key, "UNKNOWN") == "UNKNOWN":
                 continue
             if self.__incomplete_field(record=record, key=key):

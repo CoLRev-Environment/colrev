@@ -1,7 +1,30 @@
 missing_field
 ============================
 
-Should contain required fields for each ENTRYTYPE. Following are the required fields for each possible ENTRYTYPE
+Records should contain all required fields for the respective ENTRYTYPE.
+
+**Problematic value**
+
+.. code-block:: python
+
+    @article{Webster2002,
+        title = {Analyzing the past to prepare for the future: Writing a literature review},
+        author = {Webster, Jane and Watson, Richard T},
+        journal = {MIS quarterly},
+    }
+
+**Correct value**
+
+.. code-block:: python
+
+    @article{Webster2002,
+        title = {Analyzing the past to prepare for the future: Writing a literature review},
+        author = {Webster, Jane and Watson, Richard T},
+        journal = {MIS quarterly},
+        volume = {26},
+        number = {2},
+        pages = {xiii-xxiii},
+    }
 
 **TODO** : mention "not_missing" flag (integrate with general False-Positive flags? - e.g., IGNORE:missing, IGNORE:all-caps)
 

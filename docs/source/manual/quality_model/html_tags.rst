@@ -1,4 +1,4 @@
-html_chars
+html_tags
 ============================
 
 Fields should not contain HTML tags.

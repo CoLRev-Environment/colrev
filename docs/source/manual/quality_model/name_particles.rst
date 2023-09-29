@@ -1,21 +1,20 @@
-name_abbreviated
+name_particles
 ============================
 
-Names should not be abbreviated
+Name particles should be formatted correctly.
 
 **Problematic value**
 
 .. code-block:: python
 
-    author = {Smith, W. et. al.}
+    author = {Brocke, Jan vom}
 
 **Correct value**
 
 .. code-block:: python
 
-    author = {Smith, W. and Thompson, U.}
+    author = {vom Brocke, Jan}
 
-TODO: An author field is considered incomplete if first name is missing, which is indicated by a ``,`` at the end of the author name
 
 +-----------------+
 | Fields checked  |
@@ -24,3 +23,7 @@ TODO: An author field is considered incomplete if first name is missing, which i
 +-----------------+
 | editor          |
 +-----------------+
+
+Links
+
+- `Name particles <https://en.wikipedia.org/wiki/Nobiliary_particle>`_

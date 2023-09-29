@@ -31,8 +31,6 @@ class NameParticlesChecker:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __particle_defect(self, *, name: str) -> bool:
-        # https://en.wikipedia.org/wiki/Nobiliary_particle
-
         if name.endswith(" vom"):
             return True
 
