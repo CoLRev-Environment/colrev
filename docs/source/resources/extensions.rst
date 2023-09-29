@@ -1,4 +1,4 @@
-Using Extension
+Using Extensions
 =====================
 
 CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process. At the same time you can easily include other extensions or custom scripts (batteries are swappable). Everything is specified in the settings.json (simply add the extension/script name as the endpoint in the ``settings.json`` of the project):

@@ -88,24 +88,37 @@ Further information is provided in the `documentation <index.html>`_, the develo
    manual/pdf_screen
    manual/data
    manual/collaboration
-   manual/curation
-   manual/quality_model
-   manual/extensions
-   manual/dev_setup
-   manual/reference_manager
+   manual/cli
    manual/credits
-   manual/help
 
 .. toctree::
    :hidden:
-   :caption: Documentation and governance
+   :caption: Additional resources
+   :maxdepth: 1
+
+   resources/extensions
+   resources/search_sources
+   resources/quality_model
+   resources/curation
+   resources/reference_manager
+   resources/help
+
+.. toctree::
+   :hidden:
+   :caption: Developer documentation
+   :maxdepth: 1
+
+   dev_docs/dev_setup
+   dev_docs/api
+   dev_docs/extensions
+   dev_docs/dev_status
+
+.. toctree::
+   :hidden:
+   :caption: Governance
    :maxdepth: 1
 
    foundations/colrev
-   foundations/api
-   foundations/cli
-   foundations/extensions
-   foundations/dev_status
    foundations/about
 
 
