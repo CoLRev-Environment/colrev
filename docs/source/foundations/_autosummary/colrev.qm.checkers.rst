@@ -31,7 +31,7 @@ colrev.qm.checkers
    colrev.qm.checkers.erroneous_symbol_in_field
    colrev.qm.checkers.erroneous_term_in_field
    colrev.qm.checkers.erroneous_title_field
-   colrev.qm.checkers.html_chars
+   colrev.qm.checkers.html_tags
    colrev.qm.checkers.identical_values_between_title_and_container
    colrev.qm.checkers.incomplete_field
    colrev.qm.checkers.inconsistent_content
@@ -46,6 +46,7 @@ colrev.qm.checkers
    colrev.qm.checkers.name_abbreviated
    colrev.qm.checkers.name_format_separators
    colrev.qm.checkers.name_format_titles
+   colrev.qm.checkers.name_particles
    colrev.qm.checkers.page_range
    colrev.qm.checkers.record_not_in_toc
    colrev.qm.checkers.thesis_with_multiple_authors

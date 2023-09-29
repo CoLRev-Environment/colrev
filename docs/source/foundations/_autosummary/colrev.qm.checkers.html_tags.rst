@@ -1,7 +1,7 @@
-colrev.qm.checkers.html\_chars
-==============================
+colrev.qm.checkers.html\_tags
+=============================
 
-.. automodule:: colrev.qm.checkers.html_chars
+.. automodule:: colrev.qm.checkers.html_tags
 
 
 
@@ -28,4 +28,4 @@ colrev.qm.checkers.html\_chars
       :template: custom-class-template.rst
       :nosignatures:
 
-      HTMLCharChecker
+      HTMLTagChecker
