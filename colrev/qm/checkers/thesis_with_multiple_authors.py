@@ -24,9 +24,11 @@ class ThesisWithMultipleAuthorsChecker:
             record.remove_masterdata_provenance_note(key="author", note=self.msg)
 
     def __multiple_authored_thesis(self, *, record: colrev.record.Record) -> bool:
-        if "thesis" in record.data["ENTRYTYPE"] and " and " in record.data.get(
-            "author", ""
-        ):
+        if record.data["ENTRYTYPE"] in [
+            "thesis",
+            "phdthesis",
+            "mastertsthesis",
+        ] and " and " in record.data.get("author", ""):
             return True
         return False
 

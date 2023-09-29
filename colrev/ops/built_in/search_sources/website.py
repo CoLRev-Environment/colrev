@@ -142,7 +142,7 @@ class WebsiteConnector:
         self.__set_keywords(record=record, item=item)
 
     def retrieve_md_from_website(self, *, record: colrev.record.Record) -> None:
-        """Retrieve the metadata the associated website (url) based on Zotero"""
+        """Retrieve the metadata of the associated website (url) based on Zotero"""
 
         self.zotero_lock.acquire(timeout=60)
 
