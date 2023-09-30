@@ -31,10 +31,10 @@ class NameParticlesChecker:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __particle_defect(self, *, name: str) -> bool:
-        if name.endswith(" vom"):
+        if name.endswith(" vom") or name.startswith("vom "):
             return True
 
-        if name.endswith(" von"):
+        if name.endswith(" von") or name.startswith("von "):
             return True
 
         return False

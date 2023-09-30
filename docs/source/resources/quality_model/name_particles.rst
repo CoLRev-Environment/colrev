@@ -1,7 +1,7 @@
 name_particles
 ============================
 
-Name particles should be formatted correctly.
+Name particles should be formatted correctly and protected.
 
 **Problematic value**
 
@@ -13,8 +13,7 @@ Name particles should be formatted correctly.
 
 .. code-block:: python
 
-    author = {vom Brocke, Jan}
-
+    author = {{vom Brocke}, Jan}
 
 +-----------------+
 | Fields checked  |

@@ -56,6 +56,10 @@ import colrev.record
         ),
         (
             "vom Brocke, Jan",
+            {"name-particles"},
+        ),
+        (
+            "{vom Brocke}, Jan",
             {},
         ),
         # (
