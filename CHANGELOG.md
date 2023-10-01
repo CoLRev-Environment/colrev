@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.9.3 - 2023-10-01
+
+### Changed
+
+- Introduced namespaced fields (e.g., `colrev.pubmed.pubmedid` instead of `pubmedid`).
+
 ## 0.9.2 - 2023-07-24
 
 ### Changed

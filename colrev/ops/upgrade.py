@@ -137,7 +137,7 @@ class Upgrade(colrev.operation.Operation):
                 "version": CoLRevVersion("0.9.2"),
                 "target_version": CoLRevVersion("0.9.3"),
                 "script": self.__migrate_0_9_3,
-                "released": False,
+                "released": True,
             },
         ]
 
