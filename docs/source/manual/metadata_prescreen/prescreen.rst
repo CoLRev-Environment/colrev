@@ -1,5 +1,5 @@
 
-.. _Metadata prescreen:
+.. _colrev prescreen:
 
 colrev prescreen
 ---------------------------------------------

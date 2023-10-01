@@ -1,3 +1,4 @@
+.. _index:
 
 Collaborative Literature Reviews
 ========================================
@@ -19,7 +20,7 @@ The following features stand out:
 - Provides validate and undo operations
 - Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
 
-Please consult the `statements of development status <https://colrev.readthedocs.io/en/latest/foundations/dev_status.html>`_. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
+Please consult the :ref:`statements of development status <dev status>`. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
 
 Getting started
 ---------------------------------------
@@ -65,7 +66,7 @@ Completing a literature review should be as simple as running the following comm
    # Complete the forms of data analysis and synthesis, as specified in the settings
    colrev data
 
-Further information is provided in the `documentation <index.html>`_, the developer `API reference <foundations/api.html>`_, and the `CoLRev framework <foundations/colrev.html>`_ summarizing the scientific foundations.
+Further information is provided in the :ref:`documentation <index>`, the developer :ref:`API reference <api>`, and the :ref:`CoLRev framework <colrev framework>` summarizing the scientific foundations.
 
 
 .. toctree::

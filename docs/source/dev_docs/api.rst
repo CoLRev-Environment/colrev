@@ -1,3 +1,4 @@
+.. _api:
 
 API reference
 ========================================
@@ -13,7 +14,7 @@ API reference
    :alt: Logo
 
 
-The extension interfaces are documented `here <extensions.html>`_.
+The extension interfaces are documented :ref:`here <extension interfaces>`.
 
 .. autosummary::
    :toctree: _autosummary

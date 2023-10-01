@@ -1,4 +1,4 @@
-.. _Dedupe:
+.. _colrev dedupe:
 
 colrev dedupe
 ==================================

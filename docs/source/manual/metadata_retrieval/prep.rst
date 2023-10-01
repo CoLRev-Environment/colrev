@@ -1,4 +1,4 @@
-.. _Prepare:
+.. _colrev prep:
 
 colrev prep
 ==================================

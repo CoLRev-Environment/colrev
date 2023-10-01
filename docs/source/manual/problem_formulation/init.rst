@@ -1,5 +1,4 @@
-
-.. _Init:
+.. _colrev init:
 
 colrev init
 -------------------------------

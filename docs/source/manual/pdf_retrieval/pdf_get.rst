@@ -1,4 +1,4 @@
-.. _PDF get:
+.. _colrev pdf-get:
 
 colrev pdf-get
 ==================================

@@ -1,4 +1,4 @@
-.. _Search:
+.. _colrev search:
 
 colrev search
 ==================================

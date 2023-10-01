@@ -1,16 +1,17 @@
+.. _dev status:
 
 Development status
 ==================================
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :ref:`dev status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :ref:`dev status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 14pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :ref:`dev status`
 
 Currently, CoLRev is recommended for users with technical expertise. We use it for our own projects and the use of Git versioning prevents data losses.
 A detailed overview of the project status and the roadmap is provided below. The maturity is rated as follows:
@@ -68,7 +69,7 @@ Packages |EXPERIMENTAL|
     - it should become clear whether there are mature packages for each operation (which ones)
 
 
-The status of each package is provided in the operations subpages (`init <../manual/problem_formulation/init.html>`_, `search <../manual/metadata_retrieval/search.html>`_, `load <../manual/metadata_retrieval/load.html>`_, `prep <../manual/metadata_retrieval/prep.html>`_, `dedupe <../manual/metadata_retrieval/dedupe.html>`_, `prescreen <../manual/metadata_prescreen/prescreen.html>`_, `pdf-get <../manual/pdf_retrieval/pdf_get.html>`_, `pdf-prep <../manual/pdf_retrieval/pdf_prep.html>`_, `screen <../manual/pdf_screen/screen.html>`_, `data <../manual/data/data.html>`_) Instructions on adding new packages and having them reviewed are provided in the `extensions <../manual/extensions.html>`_ section.
+The status of each package is provided in the operations subpages (:ref:`init <colrev init>`, :ref:`search <colrev search>`, :ref:`load <colrev load>`, :ref:`prep <colrev prep>`, :ref:`dedupe <colrev dedupe>`, :ref:`prescreen <colrev prescreen>`, :ref:`pdf-get <colrev pdf-get>`, :ref:`pdf-prep <colrev pdf-prep>`, :ref:`screen <colrev screen>`, :ref:`data <colrev data>`). Instructions on adding new packages and having them reviewed are provided in the :ref:`extension development` section.
 
 ..
     -> TODO : link to criteria
@@ -76,7 +77,7 @@ The status of each package is provided in the operations subpages (`init <../man
 Methods |EXPERIMENTAL|
 -----------------------------------------------------------------
 
-**Summary statement**: The operations are `aligned <../manual/operations.html>`_ with the established methodological steps of the review process and differences between review types and the typical forms of data analysis are considered during project setup. The *encoding of review methodology* is in progress and requires documentation.
+**Summary statement**: The operations are :ref:`aligned <operations>` with the established methodological steps of the review process and differences between review types and the typical forms of data analysis are considered during project setup. The *encoding of review methodology* is in progress and requires documentation.
 
 ..
     TODO : cover differences between review types in setup/validation

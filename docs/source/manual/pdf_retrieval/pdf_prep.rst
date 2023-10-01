@@ -1,4 +1,4 @@
-.. _PDF prep:
+.. _colrev pdf-prep:
 
 colrev pdf-prep
 ==================================

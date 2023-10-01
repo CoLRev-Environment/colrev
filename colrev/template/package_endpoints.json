@@ -5,7 +5,7 @@
             "endpoint": "colrev.ops.built_in.review_types.blank.BlankReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Blank review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/blank.md>`_)",
+            "short_description": "Blank review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/blank.md>`__)",
             "ci_supported": true
         },
         {
@@ -13,7 +13,7 @@
             "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Conceptual review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/conceptual_review.md>`_)",
+            "short_description": "Conceptual review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/conceptual_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -21,7 +21,7 @@
             "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Critical review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/critical_review.md>`_)",
+            "short_description": "Critical review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/critical_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -29,7 +29,7 @@
             "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Curated masterdata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/curated_masterdata.md>`_)",
+            "short_description": "Curated masterdata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/curated_masterdata.md>`__)",
             "ci_supported": true
         },
         {
@@ -37,7 +37,7 @@
             "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Descriptive review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/descriptive_review.md>`_)",
+            "short_description": "Descriptive review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/descriptive_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -45,7 +45,7 @@
             "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Literature review (simple) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/literature_review.md>`_)",
+            "short_description": "Literature review (simple) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/literature_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -53,7 +53,7 @@
             "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Meta-analysis (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/meta_analysis.md>`_)",
+            "short_description": "Meta-analysis (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/meta_analysis.md>`__)",
             "ci_supported": true
         },
         {
@@ -61,7 +61,7 @@
             "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Narrative review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/narrative_review.md>`_)",
+            "short_description": "Narrative review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/narrative_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -69,7 +69,7 @@
             "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Qualitative systematic review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.md>`_)",
+            "short_description": "Qualitative systematic review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/qualitative_systematic_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -77,7 +77,7 @@
             "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Scientometric study (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/scientometric.md>`_)",
+            "short_description": "Scientometric study (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/scientometric.md>`__)",
             "ci_supported": true
         },
         {
@@ -85,7 +85,7 @@
             "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Scoping review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/scoping_review.md>`_)",
+            "short_description": "Scoping review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/scoping_review.md>`__)",
             "ci_supported": true
         },
         {
@@ -93,7 +93,7 @@
             "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Theoretical review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/theoretical_review.md>`_)",
+            "short_description": "Theoretical review (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/review_types/theoretical_review.md>`__)",
             "ci_supported": true
         }
     ],
@@ -103,7 +103,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for ABI/INFORM (ProQuest) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/abi_inform_proquest.md>`_)",
+            "short_description": "SearchSource for ABI/INFORM (ProQuest) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/abi_inform_proquest.md>`__)",
             "ci_supported": false
         },
         {
@@ -111,7 +111,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for the ACM digital Library (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.md>`_)",
+            "short_description": "SearchSource for the ACM digital Library (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/acm_digital_library.md>`__)",
             "ci_supported": false
         },
         {
@@ -119,7 +119,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for the AIS electronic Library (AISeL) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.md>`_)",
+            "short_description": "SearchSource for the AIS electronic Library (AISeL) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.md>`__)",
             "ci_supported": true
         },
         {
@@ -127,7 +127,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Performs a search in a CoLRev project (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.md>`_)",
+            "short_description": "Performs a search in a CoLRev project (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/colrev_project.md>`__)",
             "ci_supported": true
         },
         {
@@ -135,7 +135,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for the Crossref API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.md>`_)",
+            "short_description": "SearchSource for the Crossref API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/crossref.md>`__)",
             "ci_supported": true
         },
         {
@@ -143,7 +143,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for DBLP (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.md>`_)",
+            "short_description": "SearchSource for DBLP (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/dblp.md>`__)",
             "ci_supported": true
         },
         {
@@ -151,7 +151,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for EBSCOHost (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ebsco_host.md>`_)",
+            "short_description": "SearchSource for EBSCOHost (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ebsco_host.md>`__)",
             "ci_supported": false
         },
         {
@@ -159,7 +159,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for the ERIC API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`_)",
+            "short_description": "SearchSource for the ERIC API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/eric.md>`__)",
             "ci_supported": true
         },
         {
@@ -167,7 +167,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for Europe PMC (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.md>`_)",
+            "short_description": "SearchSource for Europe PMC (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/europe_pmc.md>`__)",
             "ci_supported": true
         },
         {
@@ -175,7 +175,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for GoogleScholar (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.md>`_)",
+            "short_description": "SearchSource for GoogleScholar (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/google_scholar.md>`__)",
             "ci_supported": false
         },
         {
@@ -183,7 +183,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for IEEEXplore (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.md>`_)",
+            "short_description": "SearchSource for IEEEXplore (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/ieee.md>`__)",
             "ci_supported": true
         },
         {
@@ -191,7 +191,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for JSTOR (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.md>`_)",
+            "short_description": "SearchSource for JSTOR (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/jstor.md>`__)",
             "ci_supported": false
         },
         {
@@ -199,7 +199,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Performs a search in the LocalIndex (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.md>`_)",
+            "short_description": "Performs a search in the LocalIndex (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/local_index.md>`__)",
             "ci_supported": true
         },
         {
@@ -207,7 +207,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for the OpenAlex API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_alex.md>`_)",
+            "short_description": "SearchSource for the OpenAlex API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_alex.md>`__)",
             "ci_supported": true
         },
         {
@@ -215,7 +215,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Performs a forward search based on OpenCitations (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.md>`_)",
+            "short_description": "Performs a forward search based on OpenCitations (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_citations_forward_search.md>`__)",
             "ci_supported": true
         },
         {
@@ -223,7 +223,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for the OpenLibrary API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_library.md>`_)",
+            "short_description": "SearchSource for the OpenLibrary API (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/open_library.md>`__)",
             "ci_supported": true
         },
         {
@@ -231,7 +231,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Performs a backward search extracting references from PDFs using GROBID (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.md>`_)",
+            "short_description": "Performs a backward search extracting references from PDFs using GROBID (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdf_backward_search.md>`__)",
             "ci_supported": false
         },
         {
@@ -239,7 +239,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for PDF directories (based on GROBID) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.md>`_)",
+            "short_description": "SearchSource for PDF directories (based on GROBID) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.md>`__)",
             "ci_supported": false
         },
         {
@@ -247,7 +247,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for PsycINFO (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.md>`_)",
+            "short_description": "SearchSource for PsycINFO (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/psycinfo.md>`__)",
             "ci_supported": false
         },
         {
@@ -255,7 +255,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for Pubmed (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.md>`_)",
+            "short_description": "SearchSource for Pubmed (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pubmed.md>`__)",
             "ci_supported": true
         },
         {
@@ -263,7 +263,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for scopus (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.md>`_)",
+            "short_description": "SearchSource for scopus (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/scopus.md>`__)",
             "ci_supported": false
         },
         {
@@ -271,7 +271,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for Springer Link (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/springer_link.md>`_)",
+            "short_description": "SearchSource for Springer Link (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/springer_link.md>`__)",
             "ci_supported": false
         },
         {
@@ -279,7 +279,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for SYNERGY-datasets (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/synergy_datasets.md>`_)",
+            "short_description": "SearchSource for SYNERGY-datasets (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/synergy_datasets.md>`__)",
             "ci_supported": false
         },
         {
@@ -287,7 +287,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for Taylor and Francis (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/taylor_and_francis.md>`_)",
+            "short_description": "SearchSource for Taylor and Francis (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/taylor_and_francis.md>`__)",
             "ci_supported": false
         },
         {
@@ -295,7 +295,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for Transport Research International Documentation (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/trid.md>`_)",
+            "short_description": "SearchSource for Transport Research International Documentation (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/trid.md>`__)",
             "ci_supported": false
         },
         {
@@ -303,7 +303,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "SearchSource for unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`_)",
+            "short_description": "SearchSource for unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
             "ci_supported": false
         },
         {
@@ -311,7 +311,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for directory containing video files (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.md>`_)",
+            "short_description": "SearchSource for directory containing video files (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.md>`__)",
             "ci_supported": false
         },
         {
@@ -319,7 +319,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for Web of Science (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.md>`_)",
+            "short_description": "SearchSource for Web of Science (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/web_of_science.md>`__)",
             "ci_supported": false
         },
         {
@@ -327,7 +327,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "SearchSource for Wiley (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.md>`_)",
+            "short_description": "SearchSource for Wiley (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/wiley.md>`__)",
             "ci_supported": false
         }
     ],
@@ -337,7 +337,7 @@
             "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Class for add _journal_ranking (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/add_journal_ranking.md>`_)",
+            "short_description": "Class for add _journal_ranking (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/add_journal_ranking.md>`__)",
             "ci_supported": false
         },
         {
@@ -345,7 +345,7 @@
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Preparation of curations (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/curation_prep.md>`_)",
+            "short_description": "Preparation of curations (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/curation_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -353,7 +353,7 @@
             "endpoint": "colrev.ops.built_in.prep.exclude_collections.ExcludeCollectionsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by excluding collection entries (e.g., proceedings) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_collections.md>`_)",
+            "short_description": "Prepares records by excluding collection entries (e.g., proceedings) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_collections.md>`__)",
             "ci_supported": true
         },
         {
@@ -361,7 +361,7 @@
             "endpoint": "colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by excluding complementary materials (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_complementary_materials.md>`_)",
+            "short_description": "Prepares records by excluding complementary materials (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_complementary_materials.md>`__)",
             "ci_supported": true
         },
         {
@@ -369,7 +369,7 @@
             "endpoint": "colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by excluding ones that are not in the languages_to_include (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_languages.md>`_)",
+            "short_description": "Prepares records by excluding ones that are not in the languages_to_include (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_languages.md>`__)",
             "ci_supported": true
         },
         {
@@ -377,7 +377,7 @@
             "endpoint": "colrev.ops.built_in.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by excluding ones that have a non-latin alphabet (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_non_latin_alphabets.md>`_)",
+            "short_description": "Prepares records by excluding ones that have a non-latin alphabet (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/exclude_non_latin_alphabets.md>`__)",
             "ci_supported": true
         },
         {
@@ -385,7 +385,7 @@
             "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records by applying polishing rules (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/general_polish.md>`_)",
+            "short_description": "Prepares records by applying polishing rules (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/general_polish.md>`__)",
             "ci_supported": true
         },
         {
@@ -393,7 +393,7 @@
             "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records based on SemanticScholar metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/semantic_scholar_prep.md>`_)",
+            "short_description": "Prepares records based on SemanticScholar metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/semantic_scholar_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -401,7 +401,7 @@
             "endpoint": "colrev.ops.built_in.prep.doi_from_urls_prep.DOIFromURLsPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records by retrieving its DOI from the website (URL) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/doi_from_urls_prep.md>`_)",
+            "short_description": "Prepares records by retrieving its DOI from the website (URL) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/doi_from_urls_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -409,7 +409,7 @@
             "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records based on citeas.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/citeas_prep.md>`_)",
+            "short_description": "Prepares records based on citeas.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/citeas_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -417,7 +417,7 @@
             "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on crossref.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/crossref_metadata_prep.md>`_)",
+            "short_description": "Prepares records based on crossref.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/crossref_metadata_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -425,7 +425,7 @@
             "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on dblp.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/dblp_metadata_prep.md>`_)",
+            "short_description": "Prepares records based on dblp.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/dblp_metadata_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -433,7 +433,7 @@
             "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records based on doi.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/doi_metadata_prep.md>`_)",
+            "short_description": "Prepares records based on doi.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/doi_metadata_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -441,7 +441,7 @@
             "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on Europe PCM metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/europe_pmc_prep.md>`_)",
+            "short_description": "Prepares records based on Europe PCM metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/europe_pmc_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -449,7 +449,7 @@
             "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on LocalIndex metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/local_index_prep.md>`_)",
+            "short_description": "Prepares records based on LocalIndex metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/local_index_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -457,7 +457,7 @@
             "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on openlibrary.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/open_library_prep.md>`_)",
+            "short_description": "Prepares records based on openlibrary.org metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/open_library_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -465,7 +465,7 @@
             "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on Pubmed metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/pubmed_metadata_prep.md>`_)",
+            "short_description": "Prepares records based on Pubmed metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/pubmed_metadata_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -473,7 +473,7 @@
             "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records based on year-volume-issue dependency (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.md>`_)",
+            "short_description": "Prepares records based on year-volume-issue dependency (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/year_vol_iss_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -481,7 +481,7 @@
             "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records based on OpenAlex metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/open_alex_metadata_prep.md>`_)",
+            "short_description": "Prepares records based on OpenAlex metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/open_alex_metadata_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -489,7 +489,7 @@
             "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by removing invalid IDs DOIs/ISBNs (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/remove_broken_ids.md>`_)",
+            "short_description": "Prepares records by removing invalid IDs DOIs/ISBNs (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/remove_broken_ids.md>`__)",
             "ci_supported": true
         },
         {
@@ -497,7 +497,7 @@
             "endpoint": "colrev.ops.built_in.prep.remove_error500_urls.RemoveError500URLsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by removing urls that are not available (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/remove_error500_urls.md>`_)",
+            "short_description": "Prepares records by removing urls that are not available (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/remove_error500_urls.md>`__)",
             "ci_supported": true
         },
         {
@@ -505,7 +505,7 @@
             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/bibtex_crossref_resolution.md>`_)",
+            "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/bibtex_crossref_resolution.md>`__)",
             "ci_supported": true
         },
         {
@@ -513,7 +513,7 @@
             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on the prepare scripts specified by the SearchSource (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/source_specific_prep.md>`_)",
+            "short_description": "Prepares records based on the prepare scripts specified by the SearchSource (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/source_specific_prep.md>`__)",
             "ci_supported": true
         },
         {
@@ -521,7 +521,7 @@
             "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepares records by updating the metadata status (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/update_masterdata_status.md>`_)",
+            "short_description": "Prepares records by updating the metadata status (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep/update_masterdata_status.md>`__)",
             "ci_supported": true
         }
     ],
@@ -531,7 +531,7 @@
             "endpoint": "colrev.ops.built_in.prep_man.prep_man_export.ExportManPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Manual preparation based on exported and imported metadata (and PDFs if any) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_export.md>`_)",
+            "short_description": "Manual preparation based on exported and imported metadata (and PDFs if any) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep_man/prep_man_export.md>`__)",
             "ci_supported": false
         },
         {
@@ -539,7 +539,7 @@
             "endpoint": "colrev.ops.built_in.prep_man.curation_jupyter_prep_man.CurationJupyterNotebookManPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Manual preparation based on a Jupyter Notebook (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep_man/curation_jupyter_prep_man.md>`_)",
+            "short_description": "Manual preparation based on a Jupyter Notebook (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prep_man/curation_jupyter_prep_man.md>`__)",
             "ci_supported": false
         }
     ],
@@ -549,7 +549,7 @@
             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Applies trained (active learning) model (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.md>`_)",
+            "short_description": "Applies trained (active learning) model (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.md>`__)",
             "ci_supported": false
         },
         {
@@ -557,7 +557,7 @@
             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Active learning: training phase (minimum sample size of 50 required) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.md>`_)",
+            "short_description": "Active learning: training phase (minimum sample size of 50 required) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/active_learning_dedup_io.md>`__)",
             "ci_supported": false
         },
         {
@@ -565,7 +565,7 @@
             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Deduplication endpoint for curations with full journals/proceedings (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/curation_dedupe.md>`_)",
+            "short_description": "Deduplication endpoint for curations with full journals/proceedings (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/curation_dedupe.md>`__)",
             "ci_supported": true
         },
         {
@@ -573,7 +573,7 @@
             "endpoint": "colrev.ops.built_in.dedupe.curation_missing_dedupe.CurationMissingDedupe",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Deduplication of remaining records in a curated metadata repository (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/curation_missing_dedupe.md>`_)",
+            "short_description": "Deduplication of remaining records in a curated metadata repository (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/curation_missing_dedupe.md>`__)",
             "ci_supported": false
         },
         {
@@ -581,7 +581,7 @@
             "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Simple duplicate identification (for small sample sizes) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/simple_dedupe.md>`_)",
+            "short_description": "Simple duplicate identification (for small sample sizes) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/dedupe/simple_dedupe.md>`__)",
             "ci_supported": true
         }
     ],
@@ -591,7 +591,7 @@
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "CLI-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_cli.md>`_)",
+            "short_description": "CLI-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_cli.md>`__)",
             "ci_supported": false
         },
         {
@@ -599,7 +599,7 @@
             "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Conditional prescreen (currently: include all) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/conditional_prescreen.md>`_)",
+            "short_description": "Conditional prescreen (currently: include all) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/conditional_prescreen.md>`__)",
             "ci_supported": true
         },
         {
@@ -607,7 +607,7 @@
             "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Table-based prescreen (exported and imported) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_table.md>`_)",
+            "short_description": "Table-based prescreen (exported and imported) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/prescreen_table.md>`__)",
             "ci_supported": false
         },
         {
@@ -615,7 +615,7 @@
             "endpoint": "colrev.ops.built_in.prescreen.scope_prescreen.ScopePrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Rule-based prescreen (scope) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.md>`_)",
+            "short_description": "Rule-based prescreen (scope) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.md>`__)",
             "ci_supported": true
         },
         {
@@ -623,7 +623,7 @@
             "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev-asreview>`_)",
+            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev-asreview>`__)",
             "ci_supported": false
         }
     ],
@@ -633,7 +633,7 @@
             "endpoint": "colrev.ops.built_in.pdf_get.local_index_pdf_get.LocalIndexPDFGet",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Get PDFs from LocalIndex (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get/local_index_pdf_get.md>`_)",
+            "short_description": "Get PDFs from LocalIndex (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get/local_index_pdf_get.md>`__)",
             "ci_supported": false
         },
         {
@@ -641,7 +641,7 @@
             "endpoint": "colrev.ops.built_in.pdf_get.unpaywall.Unpaywall",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Get PDFs from unpaywall.org (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get/unpaywall.md>`_)",
+            "short_description": "Get PDFs from unpaywall.org (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get/unpaywall.md>`__)",
             "ci_supported": false
         },
         {
@@ -649,7 +649,7 @@
             "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Get PDFs from website screenshot (for \"online\" ENTRYTYPES) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get/website_screenshot.md>`_)",
+            "short_description": "Get PDFs from website screenshot (for \"online\" ENTRYTYPES) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get/website_screenshot.md>`__)",
             "ci_supported": false
         }
     ],
@@ -659,7 +659,7 @@
             "endpoint": "colrev.ops.built_in.pdf_get_man.pdf_get_man_cli.CoLRevCLIPDFGetMan",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Get PDFs manually based on a CLI (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get_man/pdf_get_man_cli.md>`_)",
+            "short_description": "Get PDFs manually based on a CLI (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_get_man/pdf_get_man_cli.md>`__)",
             "ci_supported": false
         }
     ],
@@ -669,7 +669,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by creating an annotated TEI document (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/tei_prep.md>`_)",
+            "short_description": "Prepare PDFs by creating an annotated TEI document (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/tei_prep.md>`__)",
             "ci_supported": false
         },
         {
@@ -677,7 +677,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/check_ocr.md>`_)",
+            "short_description": "Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/check_ocr.md>`__)",
             "ci_supported": false
         },
         {
@@ -685,7 +685,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/cover_page.md>`_)",
+            "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/cover_page.md>`__)",
             "ci_supported": false
         },
         {
@@ -693,7 +693,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/last_page.md>`_)",
+            "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/last_page.md>`__)",
             "ci_supported": false
         },
         {
@@ -701,7 +701,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by validating its completeness (based on the number of pages) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/completeness_validation.md>`_)",
+            "short_description": "Prepare PDFs by validating its completeness (based on the number of pages) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/completeness_validation.md>`__)",
             "ci_supported": false
         },
         {
@@ -709,7 +709,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by validating it against its associated metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/metadata_validation.md>`_)",
+            "short_description": "Prepare PDFs by validating it against its associated metadata (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep/metadata_validation.md>`__)",
             "ci_supported": false
         }
     ],
@@ -719,7 +719,7 @@
             "endpoint": "colrev.ops.built_in.pdf_prep_man.pdf_prep_man_cli.CoLRevCLIPDFManPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Manually prepare PDFs based on a CLI (not yet implemented) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep_man/pdf_prep_man_cli.md>`_)",
+            "short_description": "Manually prepare PDFs based on a CLI (not yet implemented) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/pdf_prep_man/pdf_prep_man_cli.md>`__)",
             "ci_supported": false
         }
     ],
@@ -729,7 +729,7 @@
             "endpoint": "colrev.ops.built_in.screen.screen_cli.CoLRevCLIScreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Screen documents using a CLI (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/screen/screen_cli.md>`_)",
+            "short_description": "Screen documents using a CLI (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/screen/screen_cli.md>`__)",
             "ci_supported": false
         },
         {
@@ -737,7 +737,7 @@
             "endpoint": "colrev.ops.built_in.screen.screen_table.TableScreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Screen documents using tables (exported and imported) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/screen/screen_table.md>`_)",
+            "short_description": "Screen documents using tables (exported and imported) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/screen/screen_table.md>`__)",
             "ci_supported": false
         }
     ],
@@ -747,7 +747,7 @@
             "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Export the sample references in Endpoint format (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/bibliography_export.md>`_)",
+            "short_description": "Export the sample references in Endpoint format (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/bibliography_export.md>`__)",
             "ci_supported": false
         },
         {
@@ -755,7 +755,7 @@
             "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "CoLRev Curation (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/colrev_curation.md>`_)",
+            "short_description": "CoLRev Curation (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/colrev_curation.md>`__)",
             "ci_supported": true
         },
         {
@@ -763,7 +763,7 @@
             "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Export the literature review into a Github Page (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/github_pages.md>`_)",
+            "short_description": "Export the literature review into a Github Page (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/github_pages.md>`__)",
             "ci_supported": false
         },
         {
@@ -771,7 +771,7 @@
             "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Export the sample into an Obsidian database (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/obsidian.md>`_)",
+            "short_description": "Export the sample into an Obsidian database (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/obsidian.md>`__)",
             "ci_supported": false
         },
         {
@@ -779,7 +779,7 @@
             "endpoint": "colrev.ops.built_in.data.paper_md.PaperMarkdown",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Synthesize the literature in a markdown paper (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/paper_md.md>`_)",
+            "short_description": "Synthesize the literature in a markdown paper (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/paper_md.md>`__)",
             "ci_supported": false
         },
         {
@@ -787,7 +787,7 @@
             "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Create a PRISMA diagram (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/prisma.md>`_)",
+            "short_description": "Create a PRISMA diagram (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/prisma.md>`__)",
             "ci_supported": false
         },
         {
@@ -795,7 +795,7 @@
             "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Summarize the literature in a structured data extraction (a table) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/structured.md>`_)",
+            "short_description": "Summarize the literature in a structured data extraction (a table) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/data/structured.md>`__)",
             "ci_supported": false
         }
     ]

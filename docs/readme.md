@@ -13,3 +13,8 @@ make linkcheck
 When errors occur during `make html`, it can help to delete the `colrev/docs/source/foundations/_autosummary` and rerun `make html`.
 
 Once available on Github, the documentation is automatically published at [readthedocs](https://colrev.readthedocs.io/en/latest/) (status information is available [here](https://readthedocs.org/projects/colrev/builds/)).
+
+
+```
+python -m sphinx.ext.intersphinx https://colrev.readthedocs.io/en/stable/objects.inv
+```

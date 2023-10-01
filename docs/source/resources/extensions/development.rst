@@ -1,7 +1,9 @@
-Extension Development Process
+.. _extension development:
+
+Extension development process
 =============================
 
-Extensions are referred through its respective endpoints, these endpoints can be enabled in ``settings.json`` of a project. The interfaces for the extension endpoints are documented in the `extension interfaces <../foundations/extensions.html>`_ section.
+Extensions are referred through its respective endpoints, these endpoints can be enabled in ``settings.json`` of a project. The interfaces for the extension endpoints are documented in the :ref:`extension interfaces <extension interfaces>` section.
 
 Extension development base guidelines
 -------------------------------------

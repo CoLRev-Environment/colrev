@@ -1,5 +1,4 @@
-
-.. _PDF screen:
+.. _colrev screen:
 
 colrev screen
 ---------------------------------------------

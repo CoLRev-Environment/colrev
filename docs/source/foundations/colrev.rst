@@ -1,3 +1,4 @@
+.. _colrev framework:
 
 The CoLRev Framework
 ====================================
@@ -223,7 +224,7 @@ The CoLRev framework is based on an opinionated and scientifically grounded sele
 Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data), freeing time and mental energy for literature analysis and synthesis.
 
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
-To accomplish these goals, CoLRev tracks a `colrev_status` for each record (see the `model <../manual/operations.html>`_):
+To accomplish these goals, CoLRev tracks a `colrev_status` for each record (see the :ref.`model <operations>`):
 
 - The `colrev_status` is used to determine the current state of the review project.
 - It is used by the ReviewManager to determine which operations are valid according to the order of operations (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen).

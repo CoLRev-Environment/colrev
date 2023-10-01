@@ -260,20 +260,6 @@ def exit(
     default=False,
     help="Add a local PDF collection repository",
 )
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode: conduct full search again",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def init(
@@ -282,8 +268,6 @@ def init(
     example: bool,
     light: bool,
     local_pdf_collection: bool,
-    verbose: bool,
-    force: bool,
 ) -> None:
     """Initialize (define review objectives and type)
 
@@ -302,48 +286,25 @@ def init(
 
 @main.command(help_priority=2)
 @click.option(
-    "-a",
-    "--analytics",
-    is_flag=True,
-    default=False,
-    help="Print analytics",
-)
-@click.option(
     "-v",
     "--verbose",
     is_flag=True,
     default=False,
     help="Verbose: printing more infos",
 )
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def status(
     ctx: click.core.Context,
-    analytics: bool,
     verbose: bool,
-    force: bool,
 ) -> None:
     """Show status"""
     try:
         review_manager = get_review_manager(
             ctx,
-            {"force_mode": force, "verbose_mode": verbose, "exact_call": EXACT_CALL},
+            {"force_mode": False, "verbose_mode": verbose, "exact_call": EXACT_CALL},
         )
         status_operation = review_manager.get_status_operation()
-
-        if analytics:
-            analytic_results = status_operation.get_analytics()
-            for cid, data_item in reversed(analytic_results.items()):
-                print(f"{cid} - {data_item}")
-            return
-
         colrev.ui_cli.cli_status_printer.print_project_status(status_operation)
 
     except KeyboardInterrupt:
@@ -974,7 +935,7 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     is_flag=True,
     default=False,
 )
-@click.option("-v", "--view", is_flag=True, default=False, help="View dedupe info")
+@click.option("--view", is_flag=True, default=False, help="View dedupe info")
 @click.option(
     "-v",
     "--verbose",
@@ -2225,35 +2186,19 @@ def validate(
     help="Record ID to trace (citation_key).",
     required=True,
 )
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
 @click.pass_context
 @catch_exception(handle=(colrev_exceptions.CoLRevException))
 def trace(
     ctx: click.core.Context,
     id: str,  # pylint: disable=invalid-name
-    verbose: bool,
-    force: bool,
 ) -> None:
     """Trace a record"""
 
     review_manager = get_review_manager(
         ctx,
         {
-            "verbose_mode": verbose,
-            "force_mode": force,
+            "verbose_mode": False,
+            "force_mode": False,
             "exact_call": EXACT_CALL,
         },
     )
@@ -2391,7 +2336,6 @@ def __print_environment_status(
 @click.option(
     "-s", "--status", is_flag=True, default=False, help="Print environment status"
 )
-@click.option("--start", is_flag=True, default=False, help="Start environment services")
 @click.option(
     "-r",
     "--register",
@@ -2418,13 +2362,6 @@ def __print_environment_status(
     default=False,
     help="Verbose: printing more infos",
 )
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
 @click.pass_context
 def env(
     ctx: click.core.Context,
@@ -2432,12 +2369,10 @@ def env(
     install: str,
     pull: bool,
     status: bool,
-    start: bool,
     register: bool,
     unregister: bool,
     update_package_list: bool,
     verbose: bool,
-    force: bool,
 ) -> None:
     """Manage the environment"""
 
@@ -2470,7 +2405,7 @@ def env(
                 ctx,
                 {
                     "verbose_mode": verbose,
-                    "force_mode": force,
+                    "force_mode": False,
                     "path_str": curated_resource_path,
                 },
             )
@@ -2524,8 +2459,6 @@ def env(
     if index:
         local_index.index()
         local_index.load_journal_rankings()
-    elif start:
-        print("Started.")
 
 
 @main.command(help_priority=21)
@@ -2665,27 +2598,11 @@ def settings(
     type=click.Path(exists=True),
     help="Sync selected citations from source file.",
 )
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
 @click.pass_context
 def sync(
     ctx: click.core.Context,
     add_hook: bool,
     src: Path,
-    verbose: bool,
-    force: bool,
 ) -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
 
@@ -2791,26 +2708,10 @@ def pull(
 
 @main.command(help_priority=24)
 @click.argument("git_url")
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=False,
-    help="Verbose: printing more infos",
-)
-@click.option(
-    "-f",
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force mode",
-)
 @click.pass_context
 def clone(
     ctx: click.core.Context,
     git_url: str,
-    verbose: bool,
-    force: bool,
 ) -> None:
     """Create local clone from shared CoLRev repository with git_url"""
 

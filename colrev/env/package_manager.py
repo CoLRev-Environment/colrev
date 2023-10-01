@@ -882,7 +882,7 @@ class PackageManager:
                     link = code_link
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
-                    endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
+                    endpoint_item["short_description"] + f" (`instructions <{link}>`__)"
                 )
 
             endpoint_list += [

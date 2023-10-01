@@ -11,9 +11,10 @@ Similar to linters such as pylint, it should be possible to disable selected che
    :maxdepth: 3
 
    quality_model/mostly_all_caps
-   quality_model/html_chars
+   quality_model/html_tags
    quality_model/name_format_titles
    quality_model/name_format_separators
+   quality_model/name_particles
    quality_model/year_format
    quality_model/doi_not_matching_pattern
    quality_model/isbn_not_matching_pattern
