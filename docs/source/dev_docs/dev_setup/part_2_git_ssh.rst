@@ -1,6 +1,6 @@
 .. _Setup-git-ssh:
 
-Setup part 1: Git and SSH
+Setup part 2: Git and SSH
 -------------------------------------------
 
 Before using the setup, please update your git credentials (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
