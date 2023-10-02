@@ -32,3 +32,5 @@ Other available distributions:
    sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
    sudo gpasswd -a $USER docker
    newgrp docker
+   # reboot system to fully load docker
+   reboot
