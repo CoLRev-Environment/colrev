@@ -283,6 +283,21 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
+            "ci_supported": false,
+            "search_types": [
+                "DB",
+                "OTHER",
+                "BACKWARD_SEARCH",
+                "FORWARD_SEARCH",
+                "TOC"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.web_of_science",
             "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
             "status": "|EXPERIMENTAL|",
@@ -331,6 +346,21 @@
                 "MD",
                 "TOC"
             ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
+            "ci_supported": false,
+            "search_types": [
+                "DB",
+                "OTHER",
+                "BACKWARD_SEARCH",
+                "FORWARD_SEARCH",
+                "TOC"
+            ]
         }
     ],
     "BACKWARD_SEARCH": [
@@ -344,6 +374,21 @@
             "search_types": [
                 "BACKWARD_SEARCH"
             ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
+            "ci_supported": false,
+            "search_types": [
+                "DB",
+                "OTHER",
+                "BACKWARD_SEARCH",
+                "FORWARD_SEARCH",
+                "TOC"
+            ]
         }
     ],
     "FORWARD_SEARCH": [
@@ -356,6 +401,21 @@
             "ci_supported": true,
             "search_types": [
                 "FORWARD_SEARCH"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.unknown_source",
+            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
+            "ci_supported": false,
+            "search_types": [
+                "DB",
+                "OTHER",
+                "BACKWARD_SEARCH",
+                "FORWARD_SEARCH",
+                "TOC"
             ]
         }
     ],
@@ -392,7 +452,11 @@
             "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
             "ci_supported": false,
             "search_types": [
-                "OTHER"
+                "DB",
+                "OTHER",
+                "BACKWARD_SEARCH",
+                "FORWARD_SEARCH",
+                "TOC"
             ]
         }
     ],

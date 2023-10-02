@@ -38,7 +38,13 @@ class UnknownSearchSource(JsonSchemaMixin):
     endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
-    search_types = [colrev.settings.SearchType.OTHER]
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.OTHER,
+        colrev.settings.SearchType.BACKWARD_SEARCH,
+        colrev.settings.SearchType.FORWARD_SEARCH,
+        colrev.settings.SearchType.TOC,
+    ]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na

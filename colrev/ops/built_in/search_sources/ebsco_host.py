@@ -65,12 +65,19 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     @classmethod
     def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        raise NotImplementedError
+
+        print("Manual search mode")
+        print("- Go do www.ebscohost.com")
+        print("- Search for your query")
+        print("- Save search results in data/search/...")
+        input("Add query (y/n)?")
+        # TODO : create SearchSource (with file and query if applicable)
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of EbscoHost"""
+        input("TO update the search results, to the following: ...")
 
     def get_masterdata(
         self,

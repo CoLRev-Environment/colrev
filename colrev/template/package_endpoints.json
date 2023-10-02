@@ -392,7 +392,11 @@
             "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
             "ci_supported": false,
             "search_types": [
-                "OTHER"
+                "DB",
+                "OTHER",
+                "BACKWARD_SEARCH",
+                "FORWARD_SEARCH",
+                "TOC"
             ]
         },
         {

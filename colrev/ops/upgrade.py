@@ -467,6 +467,11 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
+    def __migrate_0_10_1(self) -> bool:
+        # TODO : replace PDFS, ...
+        # change search_type to MD for dblp, ... (existing settings)
+        return False
+
 
 # Note: we can ask users to make decisions (when defaults are not clear)
 # via input() or simply cancel the process (raise a CoLrevException)
