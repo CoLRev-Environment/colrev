@@ -8,13 +8,13 @@ Although we only support the systems listed in the table below, useful hints for
 
 **Supported operating systems and setup methods:**
 
- =========== ============ ====== ========
-  OS/Setup    VirtualBox   WSL2   Native
- =========== ============ ====== ========
+ =========== ============ ====== ============
+  OS/Setup    Native       WSL2   VirtualBox
+ =========== ============ ====== ============
     Linux        yes        no     yes
-  Win 10/11      yes       yes      no
-    macOS        yes        no      no
- =========== ============ ====== ========
+  Win 10/11      no         yes    yes
+    macOS        no         no     yes
+ =========== ============ ====== ============
 
 **The setup also includes:**
 
