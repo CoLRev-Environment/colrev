@@ -907,7 +907,7 @@ class PackageManager:
                 if search_source_type.value in search_source["search_types"]:
                     search_source_types[search_source_type.value].append(search_source)
 
-        for key in search_source_types.keys():
+        for key in search_source_types:
             search_source_types[key] = sorted(
                 search_source_types[key],
                 key=lambda d: d["package_endpoint_identifier"],
