@@ -7,22 +7,22 @@ On Windows 10/11, CoLRev can be installed through the Windows Subsystem for Linu
 
 Additionally, Docker must also be installed as a prerequisite to run CoLRev (`Setup Docker for WSL2 <https://docs.docker.com/desktop/wsl>`__).
 
-Check availability of Virtualization in Task Manager
+Check availability of virtualization capabilities in Task Manager:
 
 ::
 
   Press "WIN + S", type "task" and start "Task Manager"
-  Performance tab shows if Virtualization is activated
+  Performance tab shows if "Virtualization" is activated
 
-Install WSL2 via PowerShell
+Install WSL2 via PowerShell:
 
 ::
 
-  Press "WIN + X", click on "Windows PowerShell(Administrator)"
+  Press "WIN + X", in the menu click on "Windows PowerShell(Administrator)"
   Enter the following command:
   wsl --install -d ubuntu
 
-Restart your machine
+Restart your machine and setup a new user:
 
 ::
 
