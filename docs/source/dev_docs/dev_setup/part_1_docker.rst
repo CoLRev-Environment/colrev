@@ -1,9 +1,10 @@
 .. _Setup docker:
 
-Setup part 3: Docker
+Setup part 1: Docker
 ------------------------
 
 If you are using a distribution other than ubuntu, please replace "ubuntu" in the following links (urls) with your respective distribution name.
+
 Other available distributions:
 
 - "centos"
@@ -15,15 +16,15 @@ Other available distributions:
 - "static"
 - "ubuntu"
 
-TODO: add a $mydistro variable into the script
-
 ::
 
    sudo apt install ca-certificates curl gnupg
    sudo install -m 0755 -d /etc/apt/keyrings
+   # curl -fsSL https://download.docker.com/linux/"NameOfYourDistro"/gpg
    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
    sudo chmod a+r /etc/apt/keyrings/docker.gpg
    echo \
+      # https://download.docker.com/linux/"NameOfYourDistro" \
      "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
      "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
