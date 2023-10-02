@@ -1,4 +1,4 @@
-doi_not_matching_pattern
+doi-not-matching-pattern
 ==================================
 
 The doi field should follow a `predefined pattern <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/qm/checkers/doi_not_matching_pattern.py#L17>`_.

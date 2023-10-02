@@ -1,4 +1,4 @@
-identical_values_between_title_and_container
+identical-values-between-title-and-container
 ============================================
 
 Title and containers (booktitle, journal) should not contain identical values.

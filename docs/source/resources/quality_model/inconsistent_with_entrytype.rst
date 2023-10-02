@@ -1,4 +1,4 @@
-inconsistent_with_entrytype
+inconsistent-with-entrytype
 ===========================
 
 Some fields are inconsistent with the respective ENTRYTYPE.

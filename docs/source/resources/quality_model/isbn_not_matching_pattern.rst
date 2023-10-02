@@ -1,4 +1,4 @@
-isbn_not_matching_pattern
+isbn-not-matching-pattern
 ============================
 
 ISBN should be valid.

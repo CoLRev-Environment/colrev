@@ -1,4 +1,4 @@
-erroneous_term_in_field
+erroneous-term-in-field
 =======================
 
 Fields should not contain any erroneous terms.

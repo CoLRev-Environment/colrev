@@ -1,4 +1,4 @@
-name_format_separators
+name-format-separators
 ============================
 
 Names should be correctly separated.

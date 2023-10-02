@@ -1,4 +1,4 @@
-page_range
+page-range
 ============================
 
 Page range should be valid, i.e., the first page should be lower than the last page if the pages are numerical.

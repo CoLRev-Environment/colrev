@@ -1,4 +1,4 @@
-mostly_all_caps
+mostly-all-caps
 ============================
 
 Fields should not contain mostly upper case letters.

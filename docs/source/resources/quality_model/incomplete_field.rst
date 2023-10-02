@@ -1,4 +1,4 @@
-incomplete_field
+incomplete-field
 ============================
 
 Fields should be complete. Fields considered incomplete (truncated) if they have ``...`` at the end.

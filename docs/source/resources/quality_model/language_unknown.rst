@@ -1,4 +1,4 @@
-language_unknown
+language-unknown
 ============================
 
 Record should contain a ISO 639-3 language code.

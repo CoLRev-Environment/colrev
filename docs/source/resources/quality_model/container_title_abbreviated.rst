@@ -1,4 +1,4 @@
-container_title_abbreviated
+container-title-abbreviated
 ===========================
 
 Containers should not be abbreviated.

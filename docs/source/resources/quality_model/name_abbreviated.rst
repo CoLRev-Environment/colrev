@@ -1,4 +1,4 @@
-name_abbreviated
+name-abbreviated
 ============================
 
 Names should not be abbreviated

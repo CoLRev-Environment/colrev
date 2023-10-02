@@ -1,4 +1,4 @@
-inconsistent_with_url_metadata
+inconsistent-with-url-metadata
 ==============================
 
 Checks url metadata should be consistent with Zotero generated metadata about the url.

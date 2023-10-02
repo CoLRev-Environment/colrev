@@ -1,4 +1,4 @@
-name_format_titles
+name-format-titles
 ============================
 
 Names should not contain titles, such as "MD", "Dr", "PhD", "Prof", or "Dipl Ing".

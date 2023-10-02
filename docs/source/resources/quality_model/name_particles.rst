@@ -1,4 +1,4 @@
-name_particles
+name-particles
 ============================
 
 Name particles should be formatted correctly and protected.

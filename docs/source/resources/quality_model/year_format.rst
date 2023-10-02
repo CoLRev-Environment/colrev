@@ -1,4 +1,4 @@
-year_format
+year-format
 ============================
 
 ``year`` should be full year.

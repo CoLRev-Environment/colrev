@@ -1,4 +1,4 @@
-inconsistent_with_doi_metadata
+inconsistent-with-doi-metadata
 ==============================
 
 Record content needs to be consistent with doi metadata.

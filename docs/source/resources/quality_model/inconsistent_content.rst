@@ -1,4 +1,4 @@
-inconsistent_content
+inconsistent-content
 ============================
 
 Fields should not contain inconsistent values,

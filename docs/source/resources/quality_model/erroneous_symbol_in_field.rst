@@ -1,4 +1,4 @@
-erroneous_symbol_in_field
+erroneous-symbol-in-field
 =========================
 
 Fields should not contains invalid symbols.

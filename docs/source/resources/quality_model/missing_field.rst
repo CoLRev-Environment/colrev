@@ -1,4 +1,4 @@
-missing_field
+missing-field
 ============================
 
 Records should contain all required fields for the respective ENTRYTYPE.

@@ -1,4 +1,4 @@
-language_format_error
+language-format-error
 ============================
 
 The ISO 639-3 language code should be valid.

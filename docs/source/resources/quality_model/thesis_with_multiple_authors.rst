@@ -1,4 +1,4 @@
-thesis_with_multiple_authors
+thesis-with-multiple-authors
 ============================
 
 Thesis ``ENTRYTYPE`` should not contain multiple authors.

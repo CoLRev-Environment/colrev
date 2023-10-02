@@ -1,4 +1,4 @@
-record_not_in_toc
+record-not-in-toc
 ============================
 
 The record should be found in the relevant table-of-content (toc) if a toc is available.

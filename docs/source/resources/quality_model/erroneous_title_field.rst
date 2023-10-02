@@ -1,4 +1,4 @@
-erroneous_title_field
+erroneous-title-field
 ============================
 
 Title should not contain typical defects.
