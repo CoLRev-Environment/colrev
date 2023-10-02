@@ -1,3 +1,4 @@
+.. _quality model:
 
 Quality model
 ==================================

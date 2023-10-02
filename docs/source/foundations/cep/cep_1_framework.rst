@@ -1,14 +1,17 @@
 .. _colrev framework:
 
-The CoLRev Framework
+CEP 1: CoLRev Framework
 ====================================
 
-The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
-
-.. figure:: ../../figures/framework_design_areas.png
-   :align: center
-   :alt: Areas
-   :figwidth: 800px
++----------------+------------------------------+
+| **Author**     | Gerit Wagner, Julian Prester |
++----------------+------------------------------+
+| **Status**     | Draft                        |
++----------------+------------------------------+
+| **Created**    | 2022-09-01                   |
++----------------+------------------------------+
+| **Discussion** | TODO : link-to-issue         |
++----------------+------------------------------+
 
 :any:`preliminaries`
 
@@ -39,6 +42,13 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 - :any:`curation_per_default`
 
 ..  Note : this page should mirror the areas of innovation (first page)
+
+The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
+
+.. figure:: ../../../figures/framework_design_areas.png
+   :align: center
+   :alt: Areas
+   :figwidth: 800px
 
 .. _preliminaries:
 
@@ -90,7 +100,7 @@ Guiding principles:
    - be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced
    - efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
 
-   .. figure:: ../../figures/macro_framework.png
+   .. figure:: ../../../figures/macro_framework.png
       :alt: Macro framework
 
 
@@ -426,7 +436,7 @@ Desigining a self-explanatory, fault-tolerant, and configurable user workflow
 In its basic form, the workflow consists of iteratively calling ``colrev status`` > ``colrev [process]`` > ``Git [process]``.
 It is self-explanatory with ``colrev status`` recommending the next ``colrev [process]`` or ``Git [process]``.
 
-.. figure:: ../../figures/workflow.png
+.. figure:: ../../../figures/workflow.png
    :width: 600
    :align: center
    :alt: Workflow cycle

@@ -121,5 +121,5 @@ Further information is provided in the :ref:`documentation <index>`, the develop
    :caption: Governance
    :maxdepth: 1
 
-   foundations/colrev
+   foundations/cep
    foundations/about
