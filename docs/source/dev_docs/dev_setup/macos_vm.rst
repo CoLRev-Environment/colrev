@@ -35,13 +35,13 @@ Install the guest additions for a better integration between host and guest syst
 
 ::
 
-   Open a Terminal an run the following command:
+   Open a Terminal and run the following command:
    sudo apt-get install virtualbox-guest-additions-iso
 
-   To activate copy-paste between the VM and your OS:
+   Activate copy-paste between the VM (guest) and your OS (host):
    Devices > Shared Clipboard > Bidirectional
 
-Afterwards, please update git and SSH setup_cli.
+Afterwards, please update :ref:`git and SSH <part_2_git_ssh>`.
 
 **Setup your own virtual machine from scratch**
 
