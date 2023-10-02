@@ -15,6 +15,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.10. - 2023-10-02
+
+### Added
+
+- SearchSources: SYNERGY datasets, OpenAlex, ERIC, IEEEXplore, ArXiv
+- JournalRankings: index, prep, and prescreen
+- CoLRev shell via cli-repl (`colrev shell`)
+- prep operation: pause and resume
+- Dashboard overview of the sample and project status
+- Extended tests, updated documentation (especially for extension development)
+- GitHub workflows to update dependencies (poetry update)
+- Ruff linter
+
+### Changed
+
+- Load: ris/csv/... files are loaded directly (without creating intermediate BibTeX file)
+- Introduced namespaced fields (e.g., `colrev.pubmed.pubmedid` instead of `pubmedid`)
+- Extracted quality checks to separate Quality Model
+- Docs: instructions for development setup
+- Code quality improvements (codacy)
+
+### Removed
+
+- colrev-asreview: extracted to separate package
+- watchdog-based service
+
 ## 0.9.3 - 2023-10-01
 
 ### Changed
