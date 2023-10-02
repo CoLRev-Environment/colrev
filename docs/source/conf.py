@@ -96,3 +96,7 @@ html_context = {
     "github_version": "master",  # Version
     "conf_py_path": "docs/source/",  # Path in the checkout to the docs root
 }
+
+linkcheck_ignore = [
+    r"http://bibutils.refbase.org/|https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116|https://www.tandfonline.com.*"
+]
