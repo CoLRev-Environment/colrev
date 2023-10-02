@@ -45,6 +45,6 @@ colrev.ops.built\_in.search\_sources.aisel.AISeLibrarySearchSource
       ~AISeLibrarySearchSource.endpoint
       ~AISeLibrarySearchSource.heuristic_status
       ~AISeLibrarySearchSource.link
-      ~AISeLibrarySearchSource.search_type
+      ~AISeLibrarySearchSource.search_types
       ~AISeLibrarySearchSource.short_name
       ~AISeLibrarySearchSource.source_identifier

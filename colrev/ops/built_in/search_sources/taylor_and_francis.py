@@ -24,11 +24,12 @@ import colrev.record
 )
 @dataclass
 class TaylorAndFrancisSearchSource(JsonSchemaMixin):
-    """SearchSource for Taylor and Francis"""
+    """Taylor and Francis"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

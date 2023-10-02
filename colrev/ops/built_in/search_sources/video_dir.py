@@ -27,13 +27,14 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class VideoDirSearchSource(JsonSchemaMixin):
-    """SearchSource for directory containing video files"""
+    """Directory containing video files"""
 
     # pylint: disable=too-many-instance-attributes
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.video_dir"
     source_identifier = "file"
-    search_type = colrev.settings.SearchType.OTHER
+    search_types = [colrev.settings.SearchType.FILES]
     api_search_supported = True
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

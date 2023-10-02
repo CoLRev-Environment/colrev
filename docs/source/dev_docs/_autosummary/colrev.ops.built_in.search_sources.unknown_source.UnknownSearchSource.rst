@@ -43,8 +43,9 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.HTML_CLEANER
       ~UnknownSearchSource.api_search_supported
       ~UnknownSearchSource.ci_supported
+      ~UnknownSearchSource.endpoint
       ~UnknownSearchSource.heuristic_status
       ~UnknownSearchSource.link
-      ~UnknownSearchSource.search_type
+      ~UnknownSearchSource.search_types
       ~UnknownSearchSource.short_name
       ~UnknownSearchSource.source_identifier

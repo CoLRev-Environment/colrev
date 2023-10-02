@@ -15,7 +15,7 @@
         {
             "endpoint": "colrev.pdfs_dir",
             "filename": "data/search/pdfs.bib",
-            "search_type": "PDFS",
+            "search_type": "FILES",
             "search_parameters": {"scope": {"path": "data/pdfs"}},
             "comment": ""
         }

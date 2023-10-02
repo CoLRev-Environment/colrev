@@ -18,6 +18,7 @@ Similar to linters such as pylint, it should be possible to disable selected che
    quality_model/year_format
    quality_model/doi_not_matching_pattern
    quality_model/isbn_not_matching_pattern
+   quality_model/pubmedid_not_matching_pattern
    quality_model/language_format_error
    quality_model/language_unknown
 

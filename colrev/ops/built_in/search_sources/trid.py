@@ -24,11 +24,12 @@ import colrev.record
 )
 @dataclass
 class TransportResearchInternationalDocumentation(JsonSchemaMixin):
-    """SearchSource for Transport Research International Documentation"""
+    """Transport Research International Documentation"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.trid"
     source_identifier = "biburl"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

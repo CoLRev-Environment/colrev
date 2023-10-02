@@ -35,13 +35,14 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class PDFSearchSource(JsonSchemaMixin):
-    """SearchSource for PDF directories (based on GROBID)"""
+    """PDF directories (based on GROBID)"""
 
     # pylint: disable=too-many-instance-attributes
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.pdfs_dir"
     source_identifier = "file"
-    search_type = colrev.settings.SearchType.PDFS
+    search_types = [colrev.settings.SearchType.FILES]
     api_search_supported = True
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -667,7 +668,7 @@ class PDFSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.pdfs_dir",
             filename=filename,
-            search_type=colrev.settings.SearchType.PDFS,
+            search_type=colrev.settings.SearchType.FILES,
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )

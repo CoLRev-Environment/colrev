@@ -32,12 +32,13 @@ if TYPE_CHECKING:
 )
 @dataclass
 class OpenAlexSearchSource(JsonSchemaMixin):
-    """SearchSource for the OpenAlex API"""
+    """OpenAlex API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"
     # "https://api.crossref.org/works/{{doi}}"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni

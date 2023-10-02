@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
 
       ~ACMDigitalLibrarySearchSource.api_search_supported
       ~ACMDigitalLibrarySearchSource.ci_supported
+      ~ACMDigitalLibrarySearchSource.endpoint
       ~ACMDigitalLibrarySearchSource.heuristic_status
       ~ACMDigitalLibrarySearchSource.link
-      ~ACMDigitalLibrarySearchSource.search_type
+      ~ACMDigitalLibrarySearchSource.search_types
       ~ACMDigitalLibrarySearchSource.short_name
       ~ACMDigitalLibrarySearchSource.source_identifier

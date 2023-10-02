@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 )
 @dataclass
 class CrossrefSearchSource(JsonSchemaMixin):
-    """SearchSource for the Crossref API"""
+    """Crossref API"""
 
     __ISSN_REGEX = r"^\d{4}-?\d{3}[\dxX]$"
     __YEAR_SCOPE_REGEX = r"^\d{4}-\d{4}$"
@@ -54,9 +54,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
     __api_url = "https://api.crossref.org/works?"
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.crossref"
     source_identifier = "doi"
     # "https://api.crossref.org/works/{{doi}}"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.MD,
+        colrev.settings.SearchType.TOC,
+    ]
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
@@ -95,7 +100,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.crossref",
                     filename=self.__crossref_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
                 )

@@ -23,13 +23,14 @@ import colrev.record
 )
 @dataclass
 class WebOfScienceSearchSource(JsonSchemaMixin):
-    """SearchSource for Web of Science"""
+    """Web of Science"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.web_of_science"
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

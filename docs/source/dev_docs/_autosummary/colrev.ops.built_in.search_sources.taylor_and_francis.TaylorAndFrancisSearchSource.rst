@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
 
       ~TaylorAndFrancisSearchSource.api_search_supported
       ~TaylorAndFrancisSearchSource.ci_supported
+      ~TaylorAndFrancisSearchSource.endpoint
       ~TaylorAndFrancisSearchSource.heuristic_status
       ~TaylorAndFrancisSearchSource.link
-      ~TaylorAndFrancisSearchSource.search_type
+      ~TaylorAndFrancisSearchSource.search_types
       ~TaylorAndFrancisSearchSource.short_name
       ~TaylorAndFrancisSearchSource.source_identifier

@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
 
       ~JSTORSearchSource.api_search_supported
       ~JSTORSearchSource.ci_supported
+      ~JSTORSearchSource.endpoint
       ~JSTORSearchSource.heuristic_status
       ~JSTORSearchSource.link
-      ~JSTORSearchSource.search_type
+      ~JSTORSearchSource.search_types
       ~JSTORSearchSource.short_name
       ~JSTORSearchSource.source_identifier

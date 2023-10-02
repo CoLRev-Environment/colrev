@@ -45,6 +45,6 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.endpoint
       ~ColrevProjectSearchSource.heuristic_status
       ~ColrevProjectSearchSource.link
-      ~ColrevProjectSearchSource.search_type
+      ~ColrevProjectSearchSource.search_types
       ~ColrevProjectSearchSource.short_name
       ~ColrevProjectSearchSource.source_identifier

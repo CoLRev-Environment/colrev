@@ -31,11 +31,11 @@ import colrev.record
 )
 @dataclass
 class ColrevProjectSearchSource(JsonSchemaMixin):
-    """Performs a search in a CoLRev project"""
+    """CoLRev projects"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
-    search_type = colrev.settings.SearchType.OTHER
+    search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.colrev_project"
     api_search_supported = True
     ci_supported: bool = True

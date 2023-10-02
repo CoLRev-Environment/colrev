@@ -47,6 +47,6 @@ colrev.ops.built\_in.search\_sources.local\_index.LocalIndexSearchSource
       ~LocalIndexSearchSource.essential_md_keys
       ~LocalIndexSearchSource.heuristic_status
       ~LocalIndexSearchSource.link
-      ~LocalIndexSearchSource.search_type
+      ~LocalIndexSearchSource.search_types
       ~LocalIndexSearchSource.short_name
       ~LocalIndexSearchSource.source_identifier

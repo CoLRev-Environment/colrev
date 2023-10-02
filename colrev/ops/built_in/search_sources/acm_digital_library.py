@@ -23,13 +23,14 @@ import colrev.record
 )
 @dataclass
 class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for the ACM digital Library"""
+    """ACM digital Library"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.acm_digital_library"
     # Note : the ID contains the doi
     # "https://dl.acm.org/doi/{{ID}}"
     source_identifier = "doi"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

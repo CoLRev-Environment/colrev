@@ -32,12 +32,12 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class LocalIndexSearchSource(JsonSchemaMixin):
-    """Performs a search in the LocalIndex"""
+    """LocalIndex"""
 
     # pylint: disable=too-many-instance-attributes
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "curation_ID"
-    search_type = colrev.settings.SearchType.OTHER
+    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
     endpoint = "colrev.local_index"
     api_search_supported = True
     ci_supported: bool = True

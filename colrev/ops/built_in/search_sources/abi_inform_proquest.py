@@ -24,11 +24,12 @@ import colrev.record
 )
 @dataclass
 class ABIInformProQuestSearchSource(JsonSchemaMixin):
-    """SearchSource for ABI/INFORM (ProQuest)"""
+    """ABI/INFORM (ProQuest)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

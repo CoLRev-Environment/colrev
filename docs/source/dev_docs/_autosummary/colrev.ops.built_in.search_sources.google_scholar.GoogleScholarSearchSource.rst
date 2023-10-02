@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
 
       ~GoogleScholarSearchSource.api_search_supported
       ~GoogleScholarSearchSource.ci_supported
+      ~GoogleScholarSearchSource.endpoint
       ~GoogleScholarSearchSource.heuristic_status
       ~GoogleScholarSearchSource.link
-      ~GoogleScholarSearchSource.search_type
+      ~GoogleScholarSearchSource.search_types
       ~GoogleScholarSearchSource.short_name
       ~GoogleScholarSearchSource.source_identifier

@@ -39,11 +39,15 @@ defusedxml.defuse_stdlib()
 )
 @dataclass
 class PubMedSearchSource(JsonSchemaMixin):
-    """SearchSource for Pubmed"""
+    """Pubmed"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "pubmedid"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.MD,
+    ]
     endpoint = "colrev.pubmed"
     api_search_supported = True
     ci_supported: bool = True

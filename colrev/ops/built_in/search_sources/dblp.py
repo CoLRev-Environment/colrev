@@ -33,14 +33,18 @@ import colrev.settings
 )
 @dataclass
 class DBLPSearchSource(JsonSchemaMixin):
-    """SearchSource for DBLP"""
+    """DBLP API"""
 
     __api_url = "https://dblp.org/search/publ/api?q="
     __api_url_venues = "https://dblp.org/search/venue/api?q="
     __START_YEAR = 1980
 
     source_identifier = "dblp_key"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.MD,
+        colrev.settings.SearchType.TOC,
+    ]
     endpoint = "colrev.dblp"
     api_search_supported = True
     ci_supported: bool = True

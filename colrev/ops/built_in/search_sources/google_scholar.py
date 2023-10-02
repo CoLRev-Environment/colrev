@@ -24,11 +24,13 @@ import colrev.record
 )
 @dataclass
 class GoogleScholarSearchSource(JsonSchemaMixin):
-    """SearchSource for GoogleScholar"""
+    """GoogleScholar"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.google_scholar"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
+    # TODO : citation searches?
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

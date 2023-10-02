@@ -27,12 +27,12 @@ import colrev.record
 )
 @dataclass
 class IEEEXploreSearchSource(JsonSchemaMixin):
-    """SearchSource for IEEEXplore"""
+    """IEEEXplore"""
 
     flag = True
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.ieee"
     api_search_supported = True
     ci_supported: bool = True

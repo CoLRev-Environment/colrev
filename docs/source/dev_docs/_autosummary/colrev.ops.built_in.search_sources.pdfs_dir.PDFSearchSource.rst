@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.pdfs\_dir.PDFSearchSource
 
       ~PDFSearchSource.api_search_supported
       ~PDFSearchSource.ci_supported
+      ~PDFSearchSource.endpoint
       ~PDFSearchSource.heuristic_status
       ~PDFSearchSource.link
-      ~PDFSearchSource.search_type
+      ~PDFSearchSource.search_types
       ~PDFSearchSource.short_name
       ~PDFSearchSource.source_identifier

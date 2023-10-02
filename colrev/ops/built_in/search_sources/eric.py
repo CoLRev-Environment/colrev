@@ -28,11 +28,11 @@ import colrev.record
 )
 @dataclass
 class ERICSearchSource(JsonSchemaMixin):
-    """SearchSource for the ERIC API"""
+    """ERIC API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.eric"
     api_search_supported = True
     ci_supported: bool = True

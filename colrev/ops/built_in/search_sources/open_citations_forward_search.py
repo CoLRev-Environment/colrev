@@ -27,13 +27,14 @@ import colrev.record
 )
 @dataclass
 class OpenCitationsSearchSource(JsonSchemaMixin):
-    """Performs a forward search based on OpenCitations
+    """Forward search based on OpenCitations
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
-    search_type = colrev.settings.SearchType.FORWARD_SEARCH
+    search_types = [colrev.settings.SearchType.FORWARD_SEARCH]
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

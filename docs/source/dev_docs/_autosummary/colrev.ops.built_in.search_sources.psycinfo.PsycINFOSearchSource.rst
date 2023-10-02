@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
 
       ~PsycINFOSearchSource.api_search_supported
       ~PsycINFOSearchSource.ci_supported
+      ~PsycINFOSearchSource.endpoint
       ~PsycINFOSearchSource.heuristic_status
       ~PsycINFOSearchSource.link
-      ~PsycINFOSearchSource.search_type
+      ~PsycINFOSearchSource.search_types
       ~PsycINFOSearchSource.short_name
       ~PsycINFOSearchSource.source_identifier

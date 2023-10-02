@@ -42,11 +42,15 @@ defusedxml.defuse_stdlib()
 )
 @dataclass
 class EuropePMCSearchSource(JsonSchemaMixin):
-    """SearchSource for Europe PMC"""
+    """Europe PMC"""
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "europe_pmc_id"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.MD,
+    ]
     endpoint = "colrev.europe_pmc"
     api_search_supported = True
     ci_supported: bool = True

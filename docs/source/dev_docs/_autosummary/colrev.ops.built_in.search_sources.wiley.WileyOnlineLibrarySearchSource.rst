@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
 
       ~WileyOnlineLibrarySearchSource.api_search_supported
       ~WileyOnlineLibrarySearchSource.ci_supported
+      ~WileyOnlineLibrarySearchSource.endpoint
       ~WileyOnlineLibrarySearchSource.heuristic_status
       ~WileyOnlineLibrarySearchSource.link
-      ~WileyOnlineLibrarySearchSource.search_type
+      ~WileyOnlineLibrarySearchSource.search_types
       ~WileyOnlineLibrarySearchSource.short_name
       ~WileyOnlineLibrarySearchSource.source_identifier

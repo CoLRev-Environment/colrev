@@ -49,6 +49,6 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.flag
       ~IEEEXploreSearchSource.heuristic_status
       ~IEEEXploreSearchSource.link
-      ~IEEEXploreSearchSource.search_type
+      ~IEEEXploreSearchSource.search_types
       ~IEEEXploreSearchSource.short_name
       ~IEEEXploreSearchSource.source_identifier

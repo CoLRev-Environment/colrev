@@ -46,6 +46,6 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
       ~PubMedSearchSource.endpoint
       ~PubMedSearchSource.heuristic_status
       ~PubMedSearchSource.link
-      ~PubMedSearchSource.search_type
+      ~PubMedSearchSource.search_types
       ~PubMedSearchSource.short_name
       ~PubMedSearchSource.source_identifier

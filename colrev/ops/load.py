@@ -98,7 +98,7 @@ class Load(colrev.operation.Operation):
 
                 res["endpoint"] = endpoint
 
-                search_type = endpoint_class.search_type
+                search_type = colrev.settings.SearchType.DB
                 # Note : as the identifier, we use the filename
                 # (if search results are added by file/not via the API)
 

@@ -31,7 +31,7 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
-    """SearchSource for SYNERGY-datasets
+    """SYNERGY-datasets
 
     https://github.com/asreview/synergy-dataset
 
@@ -44,8 +44,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     """
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.synergy_datasets"
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.OTHER
+    search_types = [colrev.settings.SearchType.API]
     api_search_supported = True
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

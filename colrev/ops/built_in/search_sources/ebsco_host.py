@@ -25,15 +25,16 @@ import colrev.record
 )
 @dataclass
 class EbscoHostSearchSource(JsonSchemaMixin):
-    """SearchSource for EBSCOHost"""
+    """EBSCOHost"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
 
+    endpoint = "colrev.ebsco_host"
     # https://connect.ebsco.com/s/article/
     # What-is-the-Accession-Number-AN-in-EBSCOhost-records?language=en_US
     # Note : ID is the accession number.
     source_identifier = "{{ID}}"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

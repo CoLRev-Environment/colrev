@@ -28,15 +28,16 @@ import colrev.record
 )
 @dataclass
 class BackwardSearchSource(JsonSchemaMixin):
-    """Performs a backward search extracting references from PDFs using GROBID
+    """Backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
     __api_url = "https://opencitations.net/index/coci/api/v1/references/"
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.pdf_backward_search"
     source_identifier = "bwsearch_ref"
-    search_type = colrev.settings.SearchType.BACKWARD_SEARCH
+    search_types = [colrev.settings.SearchType.BACKWARD_SEARCH]
     api_search_supported = True
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

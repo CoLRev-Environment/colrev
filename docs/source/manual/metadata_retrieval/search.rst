@@ -13,10 +13,59 @@ colrev search
    :height: 12pt
    :target: :ref:`dev status`
 
-In the ``colrev search`` operation, records (metadata) are retrieved and stored in the ``data/search`` directory. Records retrieved in the search are implicitly in the ``md_retrieved`` status. Search results are retrieved from different sources:
+In the ``colrev search`` operation, records (metadata) are retrieved and stored in the ``data/search`` directory.
+Records retrieved in the search are implicitly in the ``md_retrieved`` status. Search results are retrieved from different types of SearchSources:
 
-- Search results can be obtained automatically from different APIs as explained below.
-- In addition, search results that are obtained manually from academic databases can be added to the ``data/search`` directory.
+..
+    https://www.tablesgenerator.com/text_tables#
+
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| Type     | Description                                                                                            | Retrieval           | Query     |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| DB       | Traditional search in an academic database:                                                            | Manual              | Mandatory |
+|          |                                                                                                        |                     |           |
+|          | - Manually execute the search and export results from database                                         |                     |           |
+|          | - Add search results to data/search                                                                    |                     |           |
+|          | - Add query to data/search                                                                             |                     |           |
+|          | - Run colrev load (a heuristic method automatically identifies the database)                           |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| API      | Automated API search:                                                                                  | Automated           | Mandatory |
+|          |                                                                                                        |                     |           |
+|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including the query                   |                     |           |
+|          | - Run colrev search to automatically retrieve records based on query                                   |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| BACKWARD | Backward citation search:                                                                              | Automated or manual | Optional  |
+|          |                                                                                                        |                     |           |
+|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
+|          | - Run colrev search to execute backward search                                                         |                     |           |
+|          | - Manual addition of search results is possible                                                        |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| FORWARD  | Forward citation search:                                                                               | Automated or manual | Optional  |
+|          |                                                                                                        |                     |           |
+|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
+|          | - Run colrev search to execute forward search                                                          |                     |           |
+|          | - Manual addition of search results is possible                                                        |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| TOC      | Table-of-content search:                                                                               | Automated or manual | Mandatory |
+|          |                                                                                                        |                     |           |
+|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters                  |                     |           |
+|          | - Run colrev search to retrieve all records from the selected journal(s) or conference(s)              |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| FILES    | Extraction of metadata from files:                                                                     | Automated           | Optional  |
+|          |                                                                                                        |                     |           |
+|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
+|          | - Metadata is extracted from files (e.g., PDF documents) in a selected directory (see colrev.pdfs_dir) |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| OTHER    | Complementary/other searches:                                                                          | Manual              | Optional  |
+|          |                                                                                                        |                     |           |
+|          | - Add search results to data/search                                                                    |                     |           |
+|          | - Run colrev load                                                                                      |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| MD       | Metadata (only) SearchSource:                                                                          | Automated           | NA        |
+|          |                                                                                                        |                     |           |
+|          | - Record metadata are automatically retrieved to **amend existing records**                            |                     |           |
+|          | - No additional records are added                                                                      |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 
 When running ``colrev search`` iteratively, the unique IDs are used to determine whether search results (individual records) already exist or whether they are new. New records are added and existing records are updated in the search source and the main records (if the metadata changed). This is useful when forthcoming journal papers are assigned to a specific volume/issue, when papers are retracted, or when metadata changes in a CoLRev curation.
 
@@ -76,14 +125,102 @@ When search results are added, we apply heuristics to identify their source. Kno
 
 The following SearchSources are covered (additional ones are on the `SearchSource roadmap <https://github.com/CoLRev-Environment/colrev/issues/106>`_):
 
-.. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
 
     {{ make_list_table_from_mappings(
-        [("Identifier", "package_endpoint_identifier"), ("SearchSource packages", "short_description"), ("Status", "status_linked")],
-        data['search_source'],
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['DB'],
         title='',
-        columns=[25,55,20]
+        columns=[55,25,20]
         ) }}
+
+For API-based searches:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['API'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+For TOC searches:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['TOC'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+For BACKWARD_SEARCH:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['BACKWARD_SEARCH'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+For FORWARD_SEARCH:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['FORWARD_SEARCH'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+For FILES:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['FILES'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+
+For OTHER:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['OTHER'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+For MD SearchSources:
+
+.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+
+    {{ make_list_table_from_mappings(
+        [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
+        data['MD'],
+        title='',
+        columns=[55,25,20]
+        ) }}
+
+..
+    .. datatemplate:json:: ../../../../colrev/template/package_endpoints.json
+
+        {{ make_list_table_from_mappings(
+            [("Identifier", "package_endpoint_identifier"), ("SearchSource packages", "short_description"), ("Status", "status_linked")],
+            data['search_source'],
+            title='',
+            columns=[25,55,20]
+            ) }}
 
 Notes:
     - Other SearchSources are handled by "Unknown Source"

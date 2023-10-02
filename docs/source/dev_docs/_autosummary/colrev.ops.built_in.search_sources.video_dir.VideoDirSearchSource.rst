@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.video\_dir.VideoDirSearchSource
 
       ~VideoDirSearchSource.api_search_supported
       ~VideoDirSearchSource.ci_supported
+      ~VideoDirSearchSource.endpoint
       ~VideoDirSearchSource.heuristic_status
       ~VideoDirSearchSource.link
-      ~VideoDirSearchSource.search_type
+      ~VideoDirSearchSource.search_types
       ~VideoDirSearchSource.short_name
       ~VideoDirSearchSource.source_identifier

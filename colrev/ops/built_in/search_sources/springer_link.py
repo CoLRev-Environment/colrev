@@ -28,11 +28,12 @@ import colrev.record
 )
 @dataclass
 class SpringerLinkSearchSource(JsonSchemaMixin):
-    """SearchSource for Springer Link"""
+    """Springer Link"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.springer_link"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported

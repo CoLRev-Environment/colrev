@@ -42,8 +42,9 @@ colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
 
       ~SpringerLinkSearchSource.api_search_supported
       ~SpringerLinkSearchSource.ci_supported
+      ~SpringerLinkSearchSource.endpoint
       ~SpringerLinkSearchSource.heuristic_status
       ~SpringerLinkSearchSource.link
-      ~SpringerLinkSearchSource.search_type
+      ~SpringerLinkSearchSource.search_types
       ~SpringerLinkSearchSource.short_name
       ~SpringerLinkSearchSource.source_identifier

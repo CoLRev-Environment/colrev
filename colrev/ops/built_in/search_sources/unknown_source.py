@@ -32,12 +32,13 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class UnknownSearchSource(JsonSchemaMixin):
-    """SearchSource for unknown search results"""
+    """Unknown search results"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.OTHER]
     api_search_supported = False
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na

@@ -113,8 +113,8 @@ class SearchSourcePackageEndpointInterface(
         Retrieved records are identified through the source_identifier
         when they are added to/updated in the GeneralOriginFeed"""
     )
-    search_type = zope.interface.Attribute(
-        """Main SearchType associated with the SearchSource"""
+    search_types = zope.interface.Attribute(
+        """SearchTypes associated with the SearchSource"""
     )
 
     api_search_supported = zope.interface.Attribute(
@@ -460,6 +460,9 @@ class PackageManager:
         self.__colrev_path = Path(colrev_spec.origin).parents[1]
         self.__package_endpoints_json_file = self.__colrev_path / Path(
             "colrev/template/package_endpoints.json"
+        )
+        self.__search_source_types_json_file = self.__colrev_path / Path(
+            "colrev/template/search_source_types.json"
         )
 
     def __load_package_endpoints_index(self) -> dict:
@@ -884,12 +887,36 @@ class PackageManager:
                 endpoint_item["short_description"] = (
                     endpoint_item["short_description"] + f" (`instructions <{link}>`__)"
                 )
+                if endpoint_type == "search_source":
+                    endpoint_item["search_types"] = [
+                        x.value for x in endpoint.search_types
+                    ]
 
             endpoint_list += [
                 x
                 for x in package_endpoints["endpoints"][endpoint_type]
                 if x["package_endpoint_identifier"].split(".")[0] == selected_package
             ]
+
+    def __extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
+        search_source_types: typing.Dict[str, list] = {}
+        for search_source_type in colrev.settings.SearchType:
+            if search_source_type.value not in search_source_types:
+                search_source_types[search_source_type.value] = []
+            for search_source in package_endpoints_json["search_source"]:
+                if search_source_type.value in search_source["search_types"]:
+                    search_source_types[search_source_type.value].append(search_source)
+
+        for key in search_source_types.keys():
+            search_source_types[key] = sorted(
+                search_source_types[key],
+                key=lambda d: d["package_endpoint_identifier"],
+            )
+
+        json_object = json.dumps(search_source_types, indent=4)
+        with open(self.__search_source_types_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
 
     def __load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
@@ -949,6 +976,9 @@ class PackageManager:
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
                 package_status=package_status,
+            )
+            self.__extract_search_source_types(
+                package_endpoints_json=package_endpoints_json
             )
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(

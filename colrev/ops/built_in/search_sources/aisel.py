@@ -29,11 +29,11 @@ import colrev.record
 )
 @dataclass
 class AISeLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for the AIS electronic Library (AISeL)"""
+    """AIS electronic Library (AISeL)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.DB, colrev.settings.SearchType.API]
     endpoint = "colrev.ais_library"
     api_search_supported = True
     ci_supported: bool = True

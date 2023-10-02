@@ -45,6 +45,6 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.endpoint
       ~EuropePMCSearchSource.heuristic_status
       ~EuropePMCSearchSource.link
-      ~EuropePMCSearchSource.search_type
+      ~EuropePMCSearchSource.search_types
       ~EuropePMCSearchSource.short_name
       ~EuropePMCSearchSource.source_identifier
