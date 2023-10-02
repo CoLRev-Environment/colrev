@@ -16,6 +16,8 @@ Other available distributions:
 - "static"
 - "ubuntu"
 
+Install Docker with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+
 ::
 
    sudo apt install ca-certificates curl gnupg
