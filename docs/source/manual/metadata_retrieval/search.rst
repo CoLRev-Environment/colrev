@@ -5,13 +5,13 @@ colrev search
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :ref:`dev status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :ref:`dev status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :ref:`dev status`
 
 In the ``colrev search`` operation, records (metadata) are retrieved and stored in the ``data/search`` directory. Records retrieved in the search are implicitly in the ``md_retrieved`` status. Search results are retrieved from different sources:
 
