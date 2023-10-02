@@ -29,7 +29,7 @@ To avoid performance issues, the following settings are recommended:
    If you encounter any graphical glitches or errors, consider turning off 3D acceleration temporarily:
    Settings > Display > Screen > uncheck "Enabale 3D Acceleration"
 
-Start the machine, and log in (pre-built VM image: user ubuntu with password ``ubuntu``).
+Start the machine, and log in (pre-built VM image: user ``ubuntu`` with password ``ubuntu``).
 
 Install the guest additions for a better integration between host and guest system:
 
