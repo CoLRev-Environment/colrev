@@ -45,4 +45,4 @@ Afterwards, please update :ref:`git and SSH <part_2_git_ssh>`.
 
 **Setup your own virtual machine from scratch**
 
-If you want to setup your own virtual machine from scratch, please contiue with the steps :ref:`Setup part 1: Docker <part_1_docker>`.
+If you want to setup your own virtual machine from scratch, please contiue with the steps in :ref:`"Setup part 1: Docker" <part_1_docker>`.
