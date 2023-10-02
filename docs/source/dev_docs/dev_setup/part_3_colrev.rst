@@ -1,6 +1,6 @@
 .. _Setup-colrev:
 
-Setup part 2: CoLRev
+Setup part 3: CoLRev
 ------------------------------------
 
 Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
