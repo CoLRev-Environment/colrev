@@ -4,7 +4,7 @@ Setup
 ====================================
 
 This document describes the setup of a development environment for the CoLRev project.
-Although we only support the systems listed in the table, useful hints for the setup on other machines can be contributed to this repository (issues or pull-requests).
+Although we only support the systems listed in the table below, useful hints for the setup on other machines can be contributed to this repository (issues or pull-requests).
 
 **Supported operating systems and setup methods:**
 
