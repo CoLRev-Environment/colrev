@@ -30,9 +30,12 @@ Preparation procedures (the specific preparation depends on the specified settin
 
 - General rules, such as resolving BiBTeX cross-references, formatting DOI fields, and determining the language of records
 - SearchSource-specific rules to fix quality defects, such as incorrect use of field names (without affecting other SearchSources)
-- Consolidation with high-quality metadata-sources, i.e., retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library)
-- Linking with CoLRev curations, which establishes a quality curation loop
+- Linking and update based on high-quality metadata-sources, i.e., retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library)
+- Linking and update based on with CoLRev curations, which establishes a quality curation loop
 - Automated prescreen exclusion of retracted records, complementary materials (such as "About our authors" or "Editorial board"), or records using non-latin alphabets
+
+**Note.** When records are linked and updated based on SearchSources in the ``prep`` operation, corresponding metadata will be stored in additional metadata `SearchSources <search sources>` (with ``md_*`` prefix).
+Such metadata `SearchSources <search sources>` are also updated in the search. They do not retrieve additional records and they are excluded from statistics such as those displayed in the ``colrev status`` or PRISMA flow charts.
 
 Before starting the ``colrev prep-man`` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning ``prep``).
 
