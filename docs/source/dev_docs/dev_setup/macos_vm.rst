@@ -45,4 +45,4 @@ Afterwards, please update git and SSH setup_cli.
 
 **Setup your own virtual machine from scratch**
 
-If you want to setup your own virtual machine from scratch, please contiue with the steps in the setup_distro section.
+If you want to setup your own virtual machine from scratch, please contiue with the steps :ref:`Setup part 1: Docker <part_1_docker>`.
