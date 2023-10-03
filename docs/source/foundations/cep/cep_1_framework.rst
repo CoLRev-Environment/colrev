@@ -1,15 +1,20 @@
 CEP 1: CoLRev Framework
 ====================================
 
-+----------------+------------------------------+
-| **Author**     | Gerit Wagner, Julian Prester |
-+----------------+------------------------------+
-| **Status**     | Draft                        |
-+----------------+------------------------------+
-| **Created**    | 2022-09-01                   |
-+----------------+------------------------------+
-| **Discussion** | TODO : link-to-issue         |
-+----------------+------------------------------+
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Author**     | Gerit Wagner, Julian Prester                                                                                                       |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Status**     | Draft                                                                                                                              |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Created**    | 2022-09-01                                                                                                                         |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Discussion** | TODO : link-to-issue                                                                                                               |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **License**    | `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_         |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+
+Table of contents
+------------------------------
 
 :any:`preliminaries`
 
@@ -31,7 +36,7 @@ CEP 1: CoLRev Framework
 
 - :any:`user_workflow`
 - :any:`priority_processing`
-- :any:`check_and_undo`
+- :any:`validate_and_undo`
 
 :any:`area_community`
 
@@ -41,23 +46,17 @@ CEP 1: CoLRev Framework
 
 ..  Note : this page should mirror the areas of innovation (first page)
 
+.. _preliminaries:
+
+0. Preliminaries
+------------------------------
+
 The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
 .. figure:: ../../../figures/framework_design_areas.png
    :align: center
    :alt: Areas
    :figwidth: 800px
-
-.. _preliminaries:
-
-0. Preliminaries
-------------------------------
-
-Current status of the proposed CoLRev standard:
-
-- The CoLRev standard is currently in **draft status** and subject to frequent and substantial revisions.
-- Comments on this document are welcome. Please participate through Github pull requests.
-- The document is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_.
 
 Definitions:
 

@@ -5,6 +5,9 @@ The quality model specifies the necessary checks when a records should transitio
 
 Similar to linters such as pylint, it should be possible to disable selected checks. Failed checks are made transparent by adding the corresponding codes (e.g., `mostly-upper`) to the `colrev_masterdata_provenance` (`notes` field).
 
+Table of contents
+------------------------------
+
 :any:`format`
 
 - :any:`mostly-all-caps`

@@ -66,7 +66,7 @@ Completing a literature review should be as simple as running the following comm
 
 Further information is provided in the :doc:`documentation <index>`.
 The manual explains how to use the functionality of CoLRev when conducting a literature review. It covers the user workflow, the processing operations, as well as collaboration and curation.
-It does not explain the design and architecture of CoLRev, which are covered in the :doc:`colrev framework </foundations/cep/cep_1_framework>` and the :doc:`API reference </resources/api>`.
+It does not explain the design and architecture of CoLRev, which are covered in the :doc:`colrev framework </foundations/cep/cep_1_framework>` and the :doc:`API reference </dev_docs/api>`.
 Our goal is to provide a manual that is self-contained. Yet, it can help to be familiar with the basics of git - for example, by catching up with one of the interactive and free tutorials available online (`tutorial <https://learngitbranching.js.org/>`_).
 
 The manual is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_ and endorses the `Code of Conduct <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`_ for contributions.
