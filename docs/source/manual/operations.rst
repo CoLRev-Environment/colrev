@@ -1,5 +1,3 @@
-.. _operations:
-
 Steps and operations
 ==================================
 

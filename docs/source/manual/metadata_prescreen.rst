@@ -1,6 +1,3 @@
-
-.. _Metadata prescreen:
-
 Step 3: Metadata prescreen
 ---------------------------------------------
 

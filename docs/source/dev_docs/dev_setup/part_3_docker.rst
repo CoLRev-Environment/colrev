@@ -1,5 +1,3 @@
-.. _Setup docker:
-
 Setup part 3: Docker
 ------------------------
 

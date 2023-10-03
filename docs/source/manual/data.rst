@@ -1,5 +1,3 @@
-.. _Data:
-
 Step 6: Data extraction and synthesis
 ---------------------------------------------
 

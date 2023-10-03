@@ -1,6 +1,3 @@
-
-.. _PDF retrieval:
-
 Step 4: PDF retrieval
 ==================================
 

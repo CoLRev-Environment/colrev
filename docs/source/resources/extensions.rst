@@ -18,9 +18,9 @@ CoLRev comes with batteries included, i.e., a reference implementation for all s
     },
     ...
 
-The interfaces for the extension endpoints are documented in the :ref:`extension interfaces <extension interfaces>` section.
+The interfaces for the extension endpoints are documented in the :doc:`extension interfaces </dev_docs/extensions>` section.
 
-Registered extensions are public Python packages that can be installed via PyPI. An extension can have different `endpoints` (see :ref:`extension interfaces <extension interfaces>` for the interfaces). Registered extensions contain a ``.colrev_endpoints.json`` file in the package directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/.colrev_endpoints.json>`_ provides an example).
+Registered extensions are public Python packages that can be installed via PyPI. An extension can have different `endpoints` (see :doc:`extension interfaces </dev_docs/extensions>` for the interfaces). Registered extensions contain a ``.colrev_endpoints.json`` file in the package directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/.colrev_endpoints.json>`_ provides an example).
 
 To *register a new extension*:
 

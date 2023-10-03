@@ -1,14 +1,20 @@
-.. _colrev framework:
-
-The CoLRev Framework
+CEP 1: CoLRev Framework
 ====================================
 
-The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Author**     | Gerit Wagner, Julian Prester                                                                                                       |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Status**     | Draft                                                                                                                              |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Created**    | 2022-09-01                                                                                                                         |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **Discussion** | TODO : link-to-issue                                                                                                               |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| **License**    | `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_         |
++----------------+------------------------------------------------------------------------------------------------------------------------------------+
 
-.. figure:: ../../figures/framework_design_areas.png
-   :align: center
-   :alt: Areas
-   :figwidth: 800px
+Table of contents
+------------------------------
 
 :any:`preliminaries`
 
@@ -30,7 +36,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 
 - :any:`user_workflow`
 - :any:`priority_processing`
-- :any:`check_and_undo`
+- :any:`validate_and_undo`
 
 :any:`area_community`
 
@@ -45,11 +51,12 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 0. Preliminaries
 ------------------------------
 
-Current status of the proposed CoLRev standard:
+The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
-- The CoLRev standard is currently in **draft status** and subject to frequent and substantial revisions.
-- Comments on this document are welcome. Please participate through Github pull requests.
-- The document is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_.
+.. figure:: ../../../figures/framework_design_areas.png
+   :align: center
+   :alt: Areas
+   :figwidth: 800px
 
 Definitions:
 
@@ -90,7 +97,7 @@ Guiding principles:
    - be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced
    - efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
 
-   .. figure:: ../../figures/macro_framework.png
+   .. figure:: ../../../figures/macro_framework.png
       :alt: Macro framework
 
 
@@ -426,7 +433,7 @@ Desigining a self-explanatory, fault-tolerant, and configurable user workflow
 In its basic form, the workflow consists of iteratively calling ``colrev status`` > ``colrev [process]`` > ``Git [process]``.
 It is self-explanatory with ``colrev status`` recommending the next ``colrev [process]`` or ``Git [process]``.
 
-.. figure:: ../../figures/workflow.png
+.. figure:: ../../../figures/workflow.png
    :width: 600
    :align: center
    :alt: Workflow cycle
