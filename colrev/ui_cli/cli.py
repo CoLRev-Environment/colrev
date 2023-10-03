@@ -120,7 +120,7 @@ def catch_exception(func=None, *, handle) -> typing.Any:  # type: ignore
         try:
             return func(*args, **kwargs)
         except colrev_exceptions.CoLRevException as exc:
-            if kwargs["force"]:
+            if kwargs.get("verbose", False):
                 raise exc
             print(exc)
 
