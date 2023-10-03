@@ -1,5 +1,3 @@
-.. _cep:
-
 CoLRev enhancement proposals (CEPs)
 ======================================================
 

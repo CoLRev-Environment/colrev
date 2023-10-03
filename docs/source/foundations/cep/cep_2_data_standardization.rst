@@ -1,5 +1,3 @@
-.. _data standardization:
-
 CEP 2: Data standardization
 ====================================
 

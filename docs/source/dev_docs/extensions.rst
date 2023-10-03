@@ -1,5 +1,3 @@
-.. _extension interfaces:
-
 Extension interfaces
 ========================================
 

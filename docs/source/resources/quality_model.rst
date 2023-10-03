@@ -1,5 +1,3 @@
-.. _quality model:
-
 Quality model
 ==================================
 
@@ -224,7 +222,7 @@ Names should not contain titles, such as "MD", "Dr", "PhD", "Prof", or "Dipl Ing
 .. _name-format-separators:
 
 name-format-separators
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Names should be correctly separated.
 
@@ -327,7 +325,7 @@ year-format
 .. _doi-not-matching-pattern:
 
 doi-not-matching-pattern
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The doi field should follow a `predefined pattern <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/qm/checkers/doi_not_matching_pattern.py#L17>`_.
 
@@ -394,8 +392,6 @@ TODO : ISBN-10/ISBN13, how multiple ISBNs are stored
 
 language-format-error
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 
 The ISO 639-3 language code should be valid.
 
@@ -572,7 +568,7 @@ Fields should be complete. Fields considered incomplete (truncated) if they have
 .. _container-title-abbreviated:
 
 container-title-abbreviated
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Containers should not be abbreviated.
 
@@ -629,12 +625,10 @@ Names should not be abbreviated
 | editor          |
 +-----------------+
 
-
 .. _within-record consistency:
 
 Within-record consistency
 -------------------------------
-
 
 .. _inconsistent-with-entrytype:
 
@@ -689,7 +683,6 @@ Some fields are inconsistent with the respective ENTRYTYPE.
 |misc          | journal,booktitle                       |
 +--------------+-----------------------------------------+
 
-
 .. raw:: html
 
    <hr>
@@ -697,7 +690,7 @@ Some fields are inconsistent with the respective ENTRYTYPE.
 .. _thesis-with-multiple-authors:
 
 thesis-with-multiple-authors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Thesis ``ENTRYTYPE`` should not contain multiple authors.
 
@@ -726,7 +719,6 @@ Thesis ``ENTRYTYPE`` should not contain multiple authors.
 +==========================================================+
 | author [if ENTRYTPYE in thesis|phdthesis|mastertsthesis] |
 +----------------------------------------------------------+
-
 
 .. raw:: html
 
@@ -765,7 +757,7 @@ Page range should be valid, i.e., the first page should be lower than the last p
 .. _identical-values-between-title-and-container:
 
 identical-values-between-title-and-container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Title and containers (booktitle, journal) should not contain identical values.
 
@@ -898,8 +890,6 @@ Record content needs to be consistent with doi metadata.
 | author          |
 +-----------------+
 
-
-
 .. raw:: html
 
    <hr>
@@ -907,7 +897,7 @@ Record content needs to be consistent with doi metadata.
 .. _inconsistent-with-url-metadata:
 
 inconsistent-with-url-metadata
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Checks url metadata should be consistent with Zotero generated metadata about the url.
 
@@ -1050,7 +1040,7 @@ Common defects
 .. _erroneous-symbol-in-field:
 
 erroneous-symbol-in-field
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Fields should not contains invalid symbols.
 

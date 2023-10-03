@@ -1,17 +1,15 @@
-.. _colrev dedupe:
-
 colrev dedupe
 ==================================
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 
 The ``colrev dedupe`` operation identifies and merges duplicate records. Non-duplicate records transition from ``md_prepared`` to ``md_processed``. Duplicate records are integrated based on a quality-aware merge function and the combined record transitions to ``md_processed``. The predecessors of a merged record can be identified through the ``colrev_origin`` list, enabling ex-post validation and offering the possibility to undo merges.
 

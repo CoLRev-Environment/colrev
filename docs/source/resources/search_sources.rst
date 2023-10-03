@@ -1,5 +1,3 @@
-.. _search sources:
-
 SearchSources
 ==================================
 

@@ -1,5 +1,3 @@
-.. _colrev framework:
-
 CEP 1: CoLRev Framework
 ====================================
 

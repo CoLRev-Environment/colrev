@@ -1,17 +1,15 @@
-.. _colrev pdf-prep:
-
 colrev pdf-prep
 ==================================
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 
 In the ``colrev pdf-prep`` operation, records transition from ``pdf_imported`` to ``pdf_prepared`` or ``pdf_needs_manual_preparation``.
 Depending on the settings, this operation may involve any of the following:

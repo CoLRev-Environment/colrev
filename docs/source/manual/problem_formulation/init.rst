@@ -1,17 +1,15 @@
-.. _colrev init:
-
 colrev init
 -------------------------------
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: :ref:`dev status`
+   :target: :doc:`/dev_docs/dev_status`
 
 
 ``colrev init`` initializes a new CoLRev project. It requires an empty directory.

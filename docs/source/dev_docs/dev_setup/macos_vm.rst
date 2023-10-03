@@ -1,5 +1,3 @@
-.. _Setup VM:
-
 MacOS: VirtualBox
 ===========================
 
