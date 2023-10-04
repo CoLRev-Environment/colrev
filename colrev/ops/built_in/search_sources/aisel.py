@@ -362,9 +362,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix in [".txt", ".enl"]:
             enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="ID",
             )
-            records = enl_loader.load(source=self.search_source)
+            entries = enl_loader.load_enl_entries()
+            for entry in entries.values():
+                entry["ID"] = entry["url"].replace("https://aisel.aisnet.org/", "")
+            records = enl_loader.convert_to_records(entries=entries)
             return records
 
         # for API-based searches

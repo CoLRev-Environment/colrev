@@ -152,7 +152,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             load_operation=load_operation, source=self.search_source
         )
         ris_loader.apply_ris_fixes(filename=self.search_source.filename)
-        ris_entries = ris_loader.load_ris_entries(filename=self.search_source.filename)
+        ris_entries = ris_loader.load_ris_entries()
         self.__ris_fixes(entries=ris_entries)
         records = ris_loader.convert_to_records(entries=ris_entries)
         return records
@@ -167,14 +167,16 @@ class UnknownSearchSource(JsonSchemaMixin):
         csv_loader = colrev.ops.load_utils_table.CSVLoader(
             load_operation=load_operation, source=self.search_source
         )
-        records = csv_loader.load()
+        table_entries = csv_loader.load_table_entries()
+        records = csv_loader.convert_to_records(entries=table_entries)
         return records
 
     def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
         excel_loader = colrev.ops.load_utils_table.ExcelLoader(
             load_operation=load_operation, source=self.search_source
         )
-        records = excel_loader.load()
+        table_entries = excel_loader.load_table_entries()
+        records = excel_loader.convert_to_records(entries=table_entries)
         return records
 
     def __load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
@@ -188,7 +190,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
             load_operation=load_operation, source=self.search_source
         )
-        records = enl_loader.load(source=self.search_source)
+        entries = enl_loader.load_enl_entries()
+        records = enl_loader.convert_to_records(entries=entries)
         return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

@@ -89,11 +89,13 @@ class JSTORSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".ris":
             ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="jstor_id",
             )
-            ris_entries = ris_loader.load_ris_entries(
-                filename=self.search_source.filename
-            )
+            ris_entries = ris_loader.load_ris_entries()
+            for ris_entry in ris_entries:
+                ris_entry["jstor_id"] = ris_entry["url"].split("/")[-1]
             self.__ris_fixes(entries=ris_entries)
             records = ris_loader.convert_to_records(entries=ris_entries)
             return records

@@ -668,9 +668,12 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             csv_loader = colrev.ops.load_utils_table.CSVLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="pmid",
             )
-            records = csv_loader.load()
+            table_entries = csv_loader.load_table_entries()
+            records = csv_loader.convert_to_records(entries=table_entries)
             self.__load_fixes(records=records)
             return records
 

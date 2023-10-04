@@ -16,4 +16,5 @@ colrev.ops.load\_utils\_table.CSVLoader
    .. autosummary::
       :nosignatures:
 
-      ~CSVLoader.load
+      ~CSVLoader.convert_to_records
+      ~CSVLoader.load_table_entries

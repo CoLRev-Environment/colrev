@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.load_utils_bib
+import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
 
@@ -52,8 +53,10 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if "www.proquest.com" in data:  # nosec
-            if data.count("www.proquest.com") >= data.count("\n@"):
+        if "proquest.com" in data:  # nosec
+            if data.count("proquest.com") >= data.count("\n@"):
+                result["confidence"] = 1.0
+            if data.count("proquest.com") >= data.count("TY  -"):
                 result["confidence"] = 1.0
 
         return result
@@ -118,6 +121,16 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 load_operation=load_operation, source=self.search_source
             )
             self.__remove_duplicates(records=records)
+            return records
+
+        if self.search_source.filename.suffix == ".ris":
+            ris_loader = colrev.ops.load_utils_ris.RISLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="accession_number",
+            )
+            ris_entries = ris_loader.load_ris_entries()
+            records = ris_loader.convert_to_records(entries=ris_entries)
             return records
 
         raise NotImplementedError

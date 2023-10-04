@@ -120,6 +120,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.1}
 
+        if "Date Added To Xplore" in data:
+            result["confidence"] = 0.9
+            return result
+
         return result
 
     @classmethod
@@ -304,6 +308,30 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             if "publication_year" in entry and "year" not in entry:
                 entry["year"] = entry.pop("publication_year")
 
+    def __fix_csv_records(self, *, records: dict) -> None:
+        for record in records.values():
+            record["fulltext"] = record.pop("pdf_link")
+            if "article_citation_count" in record:
+                record["cited_by"] = record.pop("article_citation_count")
+            if "author_keywords" in record:
+                record["keywords"] = record.pop("author_keywords")
+            record["title"] = record.pop("document_title")
+            if "start_page" in record and "end_page" in record:
+                record["pages"] = record["start_page"] + "--" + record["end_page"]
+                del record["start_page"]
+                del record["end_page"]
+            if "isbns" in record:
+                record["isbn"] = record.pop("isbns")
+            if record["document_identifier"] == "IEEE Conferences":
+                record["ENTRYTYPE"] = "inproceedings"
+                record["booktitle"] = record.pop("publication_title")
+            elif record["document_identifier"] == "IEEE Journals":
+                record["ENTRYTYPE"] = "article"
+                record["journal"] = record.pop("publication_title")
+            elif record["document_identifier"] == "IEEE Standards":
+                record["ENTRYTYPE"] = "techreport"
+                record["key"] = record.pop("publication_title")
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
@@ -311,11 +339,24 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             ris_loader = colrev.ops.load_utils_ris.RISLoader(
                 load_operation=load_operation, source=self.search_source
             )
-            ris_entries = ris_loader.load_ris_entries(
-                filename=self.search_source.filename
-            )
+            ris_entries = ris_loader.load_ris_entries()
             self.__ris_fixes(entries=ris_entries)
             records = ris_loader.convert_to_records(entries=ris_entries)
+            return records
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="accession_number",
+            )
+            table_entries = csv_loader.load_table_entries()
+            for entry_id, entry in table_entries.items():
+                table_entries[entry_id]["accession_number"] = entry["pdf_link"].split(
+                    "="
+                )[-1]
+            records = csv_loader.convert_to_records(entries=table_entries)
+            self.__fix_csv_records(records=records)
             return records
 
         raise NotImplementedError
@@ -325,4 +366,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for IEEEXplore"""
 
+        if source.filename.suffix == ".csv":
+            if "author" in record.data:
+                record.data["author"] = colrev.record.PrepRecord.format_author_field(
+                    input_string=record.data["author"]
+                )
+            return record
         return record

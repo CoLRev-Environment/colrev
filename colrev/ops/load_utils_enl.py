@@ -37,28 +37,26 @@ class ENLLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
+        self.unique_id_field = unique_id_field
 
-    def load(
-        # load_operation: colrev.ops.load.Load,
-        self,
-        *,
-        source: colrev.settings.SearchSource,
-    ) -> dict:
-        """Converts ris entries it to bib records"""
+    def load_enl_entries(self) -> dict:
+        """Loads enl entries"""
 
         # pylint: disable=too-many-branches
 
-        self.load_operation.ensure_append_only(file=self.source.filename)
+        if self.unique_id_field == "":
+            self.load_operation.ensure_append_only(file=self.source.filename)
 
         # Note : REFERENCE_TYPES and KEY_MAP are hard-coded (standard)
         # This function intentionally fails when the input does not comply
         # with this standard
 
         records = {}
-        with open(source.filename, encoding="utf-8") as file:
+        with open(self.source.filename, encoding="utf-8") as file:
             record = {}
             ind = 1
             for line in file:
@@ -100,5 +98,21 @@ class ENLLoader:
                     record = {}
                 # else:
                 #     print(line)
+
+        return records
+
+    def convert_to_records(self, *, entries: dict) -> dict:
+        """Converts enl entries it to bib records"""
+
+        records: dict = {}
+        for counter, entry in enumerate(entries.values()):
+            if self.unique_id_field == "":
+                _id = str(counter + 1).zfill(5)
+            else:
+                _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
+
+            entry["ID"] = _id
+
+            records[_id] = entry
 
         return records

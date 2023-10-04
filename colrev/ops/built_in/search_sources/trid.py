@@ -90,11 +90,11 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".ris":
             ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="accession_number",
             )
-            ris_entries = ris_loader.load_ris_entries(
-                filename=self.search_source.filename
-            )
+            ris_entries = ris_loader.load_ris_entries()
             self.__ris_fixes(entries=ris_entries)
             records = ris_loader.convert_to_records(entries=ris_entries)
             return records

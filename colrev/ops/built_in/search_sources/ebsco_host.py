@@ -102,7 +102,9 @@ class EbscoHostSearchSource(JsonSchemaMixin):
             csv_loader = colrev.ops.load_utils_table.CSVLoader(
                 load_operation=load_operation, source=self.search_source
             )
-            records = csv_loader.load()
+            # TODO: any unique_id??
+            table_entries = csv_loader.load_table_entries()
+            records = csv_loader.convert_to_records(entries=table_entries)
             return records
 
         raise NotImplementedError

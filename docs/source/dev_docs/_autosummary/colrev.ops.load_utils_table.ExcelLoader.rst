@@ -16,4 +16,5 @@ colrev.ops.load\_utils\_table.ExcelLoader
    .. autosummary::
       :nosignatures:
 
-      ~ExcelLoader.load
+      ~ExcelLoader.convert_to_records
+      ~ExcelLoader.load_table_entries
