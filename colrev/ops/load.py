@@ -236,8 +236,9 @@ class Load(colrev.operation.Operation):
                 raise colrev_exceptions.AppendOnlyViolation(
                     f"{file} was changed (commit: {commit})"
                 )
-            prior_file_content = filecontents.decode("utf-8")
-        current_contents = file.read_text(encoding="utf-8")
+            prior_file_content = filecontents.decode("utf-8").replace("\r", "")
+        current_contents = file.read_text(encoding="utf-8").replace("\r", "")
+
         if not current_contents.startswith(prior_file_content):
             raise colrev_exceptions.AppendOnlyViolation(
                 f"{file} was changed (uncommitted file)"
