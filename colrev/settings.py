@@ -265,16 +265,22 @@ class SearchSource(JsonSchemaMixin):
 
     def __str__(self) -> str:
         formatted_str = ""
-        if self.is_md_source():
+        if self.search_type == SearchType.MD:
             formatted_str += "md: "
         elif self.search_type == SearchType.FILES:
             formatted_str += "files: "
-        elif self.search_parameters:
+        elif self.search_type == SearchType.DB:
+            formatted_str += "db: "
+        elif self.search_type == SearchType.API:
             formatted_str += "api: "
         elif self.search_type == SearchType.OTHER:
             formatted_str += "other: "
-        else:
-            formatted_str += "database: "
+        elif self.search_type == SearchType.BACKWARD_SEARCH:
+            formatted_str += "backward-search: "
+        elif self.search_type == SearchType.FORWARD_SEARCH:
+            formatted_str += "forward-search: "
+        elif self.search_type == SearchType.TOC:
+            formatted_str += "toc: "
 
         formatted_str += f"{self.endpoint} >> {self.filename}"
         if self.search_parameters:

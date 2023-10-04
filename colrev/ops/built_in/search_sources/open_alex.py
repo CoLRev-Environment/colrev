@@ -75,7 +75,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.open_alex",
                 filename=self.__open_alex_md_filename,
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=colrev.settings.SearchType.MD,
                 search_parameters={},
                 comment="",
             )
