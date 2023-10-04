@@ -63,6 +63,8 @@ class Load(colrev.operation.Operation):
             f
             for f in files
             if f not in [s.filename for s in self.review_manager.settings.sources]
+            and not str(f).endswith("_query.txt")
+            and ".~lock" not in str(f)
         ]
 
         return sorted(list(set(files)))
