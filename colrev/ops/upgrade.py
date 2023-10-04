@@ -484,8 +484,6 @@ class Upgrade(colrev.operation.Operation):
             if source["search_type"] == "PDFS":
                 source["search_type"] = "FILES"
 
-
-
         self.__save_settings(settings)
 
         return False
@@ -503,9 +501,9 @@ class CoLRevVersion:
             version_string = version_string[: version_string.find("+")]
 
         self.major = int(version_string[: version_string.find(".")])
-        self.minor = int(version_string[
-            version_string.find(".") + 1 : version_string.rfind(".")
-        ])
+        self.minor = int(
+            version_string[version_string.find(".") + 1 : version_string.rfind(".")]
+        )
         self.patch = int(version_string[version_string.rfind(".") + 1 :])
 
     def __eq__(self, other) -> bool:  # type: ignore
