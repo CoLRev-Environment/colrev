@@ -12,7 +12,7 @@ class InconsistentWithEntrytypeChecker:
 
     record_field_inconsistencies: dict[str, list[str]] = {
         "article": ["booktitle", "isbn"],
-        "inproceedings": ["issue", "number", "journal", "isbn"],
+        "inproceedings": ["issue", "number", "journal"],
         "incollection": [],
         "inbook": ["journal"],
         "book": ["issue", "number", "journal"],
