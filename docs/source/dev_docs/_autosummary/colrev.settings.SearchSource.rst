@@ -25,7 +25,6 @@ colrev.settings.SearchSource
       ~SearchSource.get_feed
       ~SearchSource.get_origin_prefix
       ~SearchSource.is_md_source
-      ~SearchSource.is_quasi_md_source
       ~SearchSource.json_schema
       ~SearchSource.register_field_encoders
       ~SearchSource.setup_for_load

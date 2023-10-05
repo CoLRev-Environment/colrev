@@ -255,16 +255,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         # )
 
         # try:
-        #     if (
-        #         self.search_source.is_md_source()
-        #         or self.search_source.is_quasi_md_source()
-        #     ):
+        #     if self.search_source.search_type == colrev.settings.SearchSource.MD:
         #         self.__run_md_search_update(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #         )
-
-        #     else:
+        #     elif self.search_source.search_type == colrev.settings.SearchSource.API:
         #         self.__run_parameter_search(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,

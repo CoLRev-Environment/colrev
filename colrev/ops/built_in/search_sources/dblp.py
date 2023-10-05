@@ -363,7 +363,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 )
         elif "query" in source.search_parameters:
             assert source.search_parameters["query"].startswith(self.__api_url)
-        elif source.is_md_source() or source.is_quasi_md_source():
+
+        elif source.search_type == colrev.settings.SearchSource.MD:
             pass  # No parameters required
         else:
             raise colrev_exceptions.InvalidQueryException(

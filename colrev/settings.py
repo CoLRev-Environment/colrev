@@ -132,22 +132,15 @@ class ProjectSettings(JsonSchemaMixin):
 class SearchType(Enum):
     """Type of search source"""
 
-    # TODO : introduce new search types
-    # TBD: for which usecase do we use quasi_md_source?
-    # TODO : migration scripts
     API = "API"  # Keyword-searches
-    # TODO: how to store the query?
     DB = "DB"  # search-results-file with search query
     TOC = "TOC"
     # Note : backward/forward searches are based on APIs/tools by definition.
     # otherwise, use OTHER
     BACKWARD_SEARCH = "BACKWARD_SEARCH"
     FORWARD_SEARCH = "FORWARD_SEARCH"
-    # TODO : rename pdfs_dir and integrate video_dir
     FILES = "FILES"  # Replaces PDFS
     OTHER = "OTHER"
-    # TODO : distinguish api/manual/file-based searches
-    # mention in docs/search sources: "colrev settings show" + figure
     MD = "MD"
 
     @classmethod
@@ -224,12 +217,6 @@ class SearchSource(JsonSchemaMixin):
         """Check whether the source is a metadata source (for preparation)"""
 
         return str(self.filename.name).startswith("md_")
-
-    def is_quasi_md_source(self) -> bool:
-        """Check whether the source is a quasi-metadata source
-        (when search files are added without search_parameters/queries)"""
-
-        return not bool(self.search_parameters)
 
     def get_dict(self) -> dict:
         """Get the dict of SearchSources (for endpoint initalization)"""
