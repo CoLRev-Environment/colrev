@@ -245,7 +245,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 

@@ -68,9 +68,26 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
-        raise NotImplementedError
+        # TODO : if filename...
+        print("Manual search mode")
+        print("- Go to https://search.proquest.com/abicomplete/advanced")
+        print("- Search for your query")
+        filename = operation.get_unique_filename(file_path_string="abi_informs")
+        query_file = operation.get_query_filename(filename=filename, instantiate=True)
+        print(f"- Save search results in {filename}")
+        print(f"- Save query in {query_file}")
+        input("Press Enter to complete")
+
+        add_source = colrev.settings.SearchSource(
+            endpoint=cls.endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query_file": query_file},
+            comment="",
+        )
+        return add_source
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool

@@ -27,12 +27,15 @@ class Search(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.search,
             notify_state_transition_operation=notify_state_transition_operation,
         )
-
+        self.review_manager = review_manager
         self.sources = review_manager.settings.sources
         self.package_manager = self.review_manager.get_package_manager()
 
     def get_unique_filename(self, file_path_string: str, suffix: str = ".bib") -> Path:
         """Get a unique filename for a (new) SearchSource"""
+
+        self.review_manager.load_settings()
+        self.sources = self.review_manager.settings.sources
 
         file_path_string = (
             file_path_string.replace("+", "_").replace(" ", "_").replace(";", "_")
@@ -42,15 +45,26 @@ class Search(colrev.operation.Operation):
             file_path_string = file_path_string.rstrip(suffix)
         filename = Path(f"data/search/{file_path_string}{suffix}")
         existing_filenames = [x.filename for x in self.sources]
-        if filename not in existing_filenames:
+        if all(x != filename for x in existing_filenames):
             return filename
 
         i = 1
-        while filename in existing_filenames:
+        while not all(x != filename for x in existing_filenames):
             filename = Path(f"data/search/{file_path_string}_{i}{suffix}")
             i += 1
 
         return filename
+
+    def get_query_filename(self, *, filename: Path, instantiate: bool = False) -> Path:
+        query_filename = Path("data/search/") / Path(str(filename.stem) + "_query.txt")
+        if instantiate:
+            with open(query_filename, "w", encoding="utf-8") as file:
+                file.write("")
+            input(
+                f"Created {query_filename}. Please store your query in the file and press Enter to continue."
+            )
+            self.review_manager.dataset.add_changes(path=query_filename)
+        return query_filename
 
     def __get_search_sources(
         self, *, selection_str: Optional[str] = None
@@ -279,7 +293,7 @@ class Search(colrev.operation.Operation):
 
         return heuristic_results
 
-    def add_interactively(self, *, endpoint: str) -> None:
+    def add_interactively(self, *, endpoint: str) -> colrev.settings.SearchSource:
         """Add a SearchSource interactively"""
         print(f"Interactively add {endpoint} as a SearchSource")
         print()
@@ -296,7 +310,7 @@ class Search(colrev.operation.Operation):
             search_parameters={"query": keywords},
             comment="",
         )
-        self.review_manager.settings.sources.append(add_source)
+        return add_source
 
     @check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"

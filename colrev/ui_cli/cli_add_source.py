@@ -42,8 +42,7 @@ class CLISourceAdder:
 
     def __select_source_from_heuristics(
         self, *, filename: Path, source_candidates: list
-    ) -> colrev.settings.SearchSource:
-        print(f"Search file {filename}")
+    ) -> None:
         if 1 == len(source_candidates):
             heuristic_source_dict = source_candidates[0]
         else:
@@ -58,40 +57,22 @@ class CLISourceAdder:
             only_ci_supported=self.review_manager.in_ci_environment(),
         )
 
-        # TODO call add_endpoint to add interactively
         endpoint = endpoint_dict[
             heuristic_source_dict["source_candidate"].endpoint.lower()
         ]
-        endpoint.add_endpoint(operation=self.search_operation, params="", filename=filename)  # type: ignore
-        input("here")
-        if (
-            "colrev.unknown_source"
-            == heuristic_source_dict["source_candidate"].endpoint
-        ):
-            cmd = "Enter the search query (or NA)".ljust(25, " ") + ": "
-            query_input = ""
-            query_input = input(cmd)
-            if query_input not in ["", "NA"]:
-                heuristic_source_dict["source_candidate"].search_parameters = {
-                    "query": query_input
-                }
-            else:
-                heuristic_source_dict["source_candidate"].search_parameters = {}
-
-        print(f"Source name: {heuristic_source_dict['source_candidate'].endpoint}")
-
-        heuristic_source_dict["source_candidate"].comment = None
-
-        return heuristic_source_dict["source_candidate"]
+        source = endpoint.add_endpoint(  # type: ignore
+            operation=self.search_operation, params="", filename=filename
+        )
+        self.search_operation.review_manager.settings.sources.append(source)
+        self.review_manager.save_settings()
+        self.review_manager.dataset.add_changes(path=filename)
 
     def add_new_sources(self) -> None:
         """Select the new source from the heuristic_result_list."""
 
         heuristic_list = self.search_operation.get_new_sources_heuristic_list()
         for filename, source_candidates in heuristic_list.items():
-            self.search_operation.review_manager.settings.sources.append(
-                self.__select_source_from_heuristics(
-                    filename=filename, source_candidates=source_candidates
-                )
+            self.__select_source_from_heuristics(
+                filename=filename, source_candidates=source_candidates
             )
         self.search_operation.review_manager.save_settings()

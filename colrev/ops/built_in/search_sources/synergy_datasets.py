@@ -89,7 +89,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
@@ -122,8 +122,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 search_parameters={"dataset": dataset},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add SYNERGY endpoint with query {params}"

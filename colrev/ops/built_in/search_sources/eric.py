@@ -140,12 +140,12 @@ class ERICSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
         elif "https://api.ies.ed.gov/eric/?" in params:
             url_parsed = urllib.parse.urlparse(params)
             new_query = urllib.parse.parse_qs(url_parsed.query)
@@ -162,13 +162,11 @@ class ERICSearchSource(JsonSchemaMixin):
                 search_parameters={"query": search, "start": start, "rows": rows},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
-        else:
-            raise colrev_exceptions.PackageParameterError(
-                f"Cannot add ERIC endpoint with query {params}"
-            )
+        raise colrev_exceptions.PackageParameterError(
+            f"Cannot add ERIC endpoint with query {params}"
+        )
 
     def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
         """Get the records from a query"""

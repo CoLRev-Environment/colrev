@@ -84,8 +84,22 @@ class UnknownSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        if filename:
+            query_file = operation.get_query_filename(
+                filename=filename, instantiate=True
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query_file": str(query_file)},
+                comment="",
+            )
+
+            return add_source
+
         raise NotImplementedError
 
     def run_search(

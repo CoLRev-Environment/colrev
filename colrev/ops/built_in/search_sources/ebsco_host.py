@@ -69,21 +69,42 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
         print("Manual search mode")
-        print("- Go do www.ebscohost.com")
+        print("- Go to https://search.ebscohost.com/")
         print("- Search for your query")
-        print("- Save search results in data/search/...")
-        input("Add query (y/n)?")
-        # TODO : create SearchSource (with file and query if applicable)
+        filename = operation.get_unique_filename(file_path_string="ebsco_host")
+        query_file = str(filename).replace(".bib", "_query.txt")
+        with open(query_file, "w", encoding="utf-8") as file:
+            file.write("")
+        print(f"- Save search results in {filename}")
+        print(f"- Save query in {query_file}")
+        input("Press Enter to complete")
+
+        add_source = colrev.settings.SearchSource(
+            endpoint=cls.endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query_file": query_file},
+            comment="",
+        )
+        return add_source
 
     def run_search(
         self, search_operation: colrev.ops.search.Search, rerun: bool
     ) -> None:
         """Run a search of EbscoHost"""
-        input("TO update the search results, to the following: ...")
+
+        query = Path(self.search_source.search_parameters["query_file"]).read_text(
+            encoding="utf-8"
+        )
+        print("- Go do https://search.ebscohost.com/")
+        print(f"- Search for your query:\n {query}")
+
+        # TODO: depends on whether running IDs were used as origins...
+        input("TO update the search results, replace the file!?!??! ")
 
     def get_masterdata(
         self,

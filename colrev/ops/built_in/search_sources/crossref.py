@@ -971,7 +971,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
         if params and "https://search.crossref.org/?q=" in params:
@@ -991,8 +991,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 search_parameters={"query": params},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         if params is not None:
             params_dict: typing.Dict[str, typing.Any] = {"scope": {}}
@@ -1020,12 +1019,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 search_parameters=params_dict,
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
-        cls.__add_interactively(operation=operation)
+            return add_source
+        source = cls.__add_interactively(operation=operation)
+        return source
 
     @classmethod
-    def __add_interactively(cls, *, operation: colrev.ops.search.Search) -> None:
+    def __add_interactively(
+        cls, *, operation: colrev.ops.search.Search
+    ) -> colrev.settings.SearchSource:
         print("Interactively add Crossref as a SearchSource")
         print()
         print("Documentation:")
@@ -1061,8 +1062,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 search_parameters={"scope": {"issn": [issn]}},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         # if query_type == "k":
         keywords = input("Enter the keywords:")
@@ -1077,7 +1077,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             search_parameters={"query": keywords},
             comment="",
         )
-        operation.review_manager.settings.sources.append(add_source)
+        return add_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

@@ -136,7 +136,7 @@ class SearchSourcePackageEndpointInterface(
         operation: colrev.operation.Operation,
         params: str,
         filename: typing.Optional[Path],
-    ):
+    ) -> colrev.settings.SearchSource:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
     # pylint: disable=no-self-argument

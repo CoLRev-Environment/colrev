@@ -665,7 +665,7 @@ class PDFSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         filename = operation.get_unique_filename(file_path_string="pdfs")
@@ -677,7 +677,7 @@ class PDFSearchSource(JsonSchemaMixin):
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )
-        operation.review_manager.settings.sources.append(add_source)
+        return add_source
 
     def __update_based_on_doi(self, *, record_dict: dict) -> None:
         if "doi" not in record_dict:

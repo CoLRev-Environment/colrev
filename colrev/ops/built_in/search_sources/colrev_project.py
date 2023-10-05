@@ -76,12 +76,12 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            source = operation.add_interactively(endpoint=cls.endpoint)
+            return source
 
         if params.startswith("url="):
             filename = operation.get_unique_filename(
@@ -94,8 +94,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 search_parameters={"scope": {"url": params[4:]}},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise NotImplementedError
 

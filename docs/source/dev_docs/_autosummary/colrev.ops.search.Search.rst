@@ -23,6 +23,7 @@ colrev.ops.search.Search
       ~Search.conclude
       ~Search.decorate
       ~Search.get_new_sources_heuristic_list
+      ~Search.get_query_filename
       ~Search.get_unique_filename
       ~Search.main
       ~Search.remove_forthcoming

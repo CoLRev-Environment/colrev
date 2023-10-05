@@ -288,12 +288,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         operation: colrev.ops.search.Search,
         params: str,
         filename: typing.Optional[Path],
-    ) -> None:
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
 
         filename = operation.get_unique_filename(
             file_path_string=f"local_index_{params}".replace("%", "").replace("'", "")
@@ -305,7 +305,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             search_parameters={"query": params},
             comment="",
         )
-        operation.review_manager.settings.sources.append(add_source)
+        return add_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
