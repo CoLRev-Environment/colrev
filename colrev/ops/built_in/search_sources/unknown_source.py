@@ -105,6 +105,12 @@ class UnknownSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.SearchNotAutomated(
+                    "DB search for UnknownSource not automated."
+                )
+
     def get_masterdata(
         self,
         prep_operation: colrev.ops.prep.Prep,

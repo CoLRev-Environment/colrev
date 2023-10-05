@@ -69,6 +69,12 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of TRID"""
 
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for TRID not automated."
+        #         )
+
     def get_masterdata(
         self,
         prep_operation: colrev.ops.prep.Prep,

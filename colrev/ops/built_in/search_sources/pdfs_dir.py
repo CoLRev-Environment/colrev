@@ -596,7 +596,7 @@ class PDFSearchSource(JsonSchemaMixin):
 
         # Do not run in continuous-integration environment
         if self.review_manager.in_ci_environment():
-            return
+            raise colrev_exceptions.SearchNotAutomated("PDFs Dir Search not automated.")
 
         if self.review_manager.force_mode:  # i.e., reindex all
             self.review_manager.logger.info("Reindex all")

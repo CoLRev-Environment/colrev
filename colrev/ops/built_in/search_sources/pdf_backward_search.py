@@ -294,7 +294,9 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         # Do not run in continuous-integration environment
         if self.review_manager.in_ci_environment():
-            return
+            raise colrev_exceptions.SearchNotAutomated(
+                "PDF Backward Search not automated."
+            )
 
         records = self.review_manager.dataset.load_records_dict()
 

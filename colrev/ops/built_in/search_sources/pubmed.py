@@ -656,6 +656,13 @@ class PubMedSearchSource(JsonSchemaMixin):
                 pubmed_feed=pubmed_feed,
                 rerun=rerun,
             )
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Pubmed not automated."
+        #         )
+
         else:
             raise NotImplementedError
 

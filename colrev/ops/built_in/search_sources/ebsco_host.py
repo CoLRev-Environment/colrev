@@ -99,7 +99,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         if self.search_source.search_type == colrev.settings.SearchSource.DB:
             if self.review_manager.in_ci_environment():
                 raise colrev_exceptions.SearchNotAutomated(
-                    "DB serach for Ebsco Host not automated."
+                    "DB search for Ebsco Host not automated."
                 )
 
             query = Path(self.search_source.search_parameters["query_file"]).read_text(

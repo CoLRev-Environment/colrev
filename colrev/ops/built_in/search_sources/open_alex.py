@@ -255,12 +255,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         # )
 
         # try:
-        #     if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        #     if self.search_source.search_type == colrev.settings.SearchType.MD:
         #         self.__run_md_search_update(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #         )
-        #     elif self.search_source.search_type == colrev.settings.SearchSource.API:
+        #     elif self.search_source.search_type == colrev.settings.SearchType.API:
         #         self.__run_parameter_search(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
@@ -279,6 +279,13 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         #     raise colrev_exceptions.ServiceNotAvailableException(
         #         self.__availability_exception_message
         #     )
+
+        # if self.search_source.search_type == colrev.settings.SearchType.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for OpenAlex not automated."
+        #         )
+
         raise NotImplementedError
 
     @classmethod

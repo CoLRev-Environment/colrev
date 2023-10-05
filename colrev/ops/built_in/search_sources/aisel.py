@@ -288,44 +288,60 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
 
         records = self.review_manager.dataset.load_records_dict()
-        for record_dict in self.__get_ais_query_return():
-            # Note : discard "empty" records
-            if "" == record_dict.get("author", "") and "" == record_dict.get(
-                "title", ""
-            ):
-                continue
 
-            try:
-                ais_feed.set_id(record_dict=record_dict)
-            except colrev_exceptions.NotFeedIdentifiableException:
-                continue
+        try:
+            for record_dict in self.__get_ais_query_return():
+                # Note : discard "empty" records
+                if "" == record_dict.get("author", "") and "" == record_dict.get(
+                    "title", ""
+                ):
+                    continue
 
-            # prev_record_dict_version = {}
-            # if record_dict["ID"] in ais_feed.feed_records:
-            #     prev_record_dict_version = deepcopy(
-            #         ais_feed.feed_records[record_dict["ID"]]
-            #     )
+                try:
+                    ais_feed.set_id(record_dict=record_dict)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
 
-            prep_record = colrev.record.PrepRecord(data=record_dict)
+                # prev_record_dict_version = {}
+                # if record_dict["ID"] in ais_feed.feed_records:
+                #     prev_record_dict_version = deepcopy(
+                #         ais_feed.feed_records[record_dict["ID"]]
+                #     )
 
-            if "colrev_data_provenance" in prep_record.data:
-                del prep_record.data["colrev_data_provenance"]
+                prep_record = colrev.record.PrepRecord(data=record_dict)
 
-            added = ais_feed.add_record(record=prep_record)
+                if "colrev_data_provenance" in prep_record.data:
+                    del prep_record.data["colrev_data_provenance"]
 
-            if added:
-                self.review_manager.logger.info(" retrieve " + prep_record.data["url"])
-            # else:
-            #     search_operation.update_existing_record(
-            #         records=records,
-            #         record_dict=prep_record.data,
-            #         prev_record_dict_version=prev_record_dict_version,
-            #         source=self.search_source,
-            #         update_time_variant_fields=rerun,
-            #     )
+                added = ais_feed.add_record(record=prep_record)
+
+                if added:
+                    self.review_manager.logger.info(
+                        " retrieve " + prep_record.data["url"]
+                    )
+                # else:
+                #     search_operation.update_existing_record(
+                #         records=records,
+                #         record_dict=prep_record.data,
+                #         prev_record_dict_version=prev_record_dict_version,
+                #         source=self.search_source,
+                #         update_time_variant_fields=rerun,
+                #     )
+        except (
+            requests.exceptions.JSONDecodeError,
+            requests.exceptions.HTTPError,
+        ) as exc:
+            # watch github issue:
+            # https://github.com/fabiobatalha/crossrefapi/issues/46
+            if "504 Gateway Time-out" in str(exc):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "Crossref (check https://status.crossref.org/)"
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref (check https://status.crossref.org/) ({exc})"
+            )
 
         ais_feed.print_post_run_search_infos(records=records)
-
         ais_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
@@ -341,25 +357,16 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        try:
-            if self.search_source.search_type == colrev.settings.SearchType.API:
-                self.__run_api_search(
-                    ais_feed=ais_feed,
-                    rerun=rerun,
-                )
-        except (
-            requests.exceptions.JSONDecodeError,
-            requests.exceptions.HTTPError,
-        ) as exc:
-            # watch github issue:
-            # https://github.com/fabiobatalha/crossrefapi/issues/46
-            if "504 Gateway Time-out" in str(exc):
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    "Crossref (check https://status.crossref.org/)"
-                )
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Crossref (check https://status.crossref.org/) ({exc})"
+        if self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(
+                ais_feed=ais_feed,
+                rerun=rerun,
             )
+        elif self.search_source.search_type == colrev.settings.SearchSource.DB:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.SearchNotAutomated(
+                    "DB search for AISeL not automated."
+                )
 
     def get_masterdata(
         self,

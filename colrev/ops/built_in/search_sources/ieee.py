@@ -171,8 +171,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
-        # pylint: disable=too-many-locals
-
         ieee_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
@@ -181,6 +179,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if self.search_source.search_type == colrev.settings.SearchSource.API:
             self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for IEEEXplore not automated."
+        #         )
 
         else:
             raise NotImplementedError

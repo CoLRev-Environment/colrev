@@ -378,6 +378,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type in self.search_types
+
         if "query" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
@@ -402,13 +404,20 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Europe PMC not automated."
+        #         )
 
         # if self.search_source.search_type == colrev.settings.SearchSource.MD:
         # self.__run_md_search_update(
         #     search_operation=search_operation,
         #     europe_pmc_feed=europe_pmc_feed,
         # )
-        raise NotImplementedError
+
+        else:
+            raise NotImplementedError
 
     def __run_api_search(
         self,

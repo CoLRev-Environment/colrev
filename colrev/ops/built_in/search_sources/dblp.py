@@ -351,6 +351,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type in self.search_types
+
         # maybe : validate/assert that the venue_key is available
         if source.search_type == colrev.settings.SearchSource.TOC:
             assert "scope" in source.search_parameters
