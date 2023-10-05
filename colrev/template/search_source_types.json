@@ -9,6 +9,7 @@
             "ci_supported": true,
             "search_types": [
                 "DB",
+                "TOC",
                 "API"
             ]
         },
@@ -165,6 +166,7 @@
             "ci_supported": true,
             "search_types": [
                 "DB",
+                "TOC",
                 "API"
             ]
         },
@@ -321,6 +323,19 @@
         }
     ],
     "TOC": [
+        {
+            "package_endpoint_identifier": "colrev.ais_library",
+            "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "AIS electronic Library (AISeL) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/aisel.md>`__)",
+            "ci_supported": true,
+            "search_types": [
+                "DB",
+                "TOC",
+                "API"
+            ]
+        },
         {
             "package_endpoint_identifier": "colrev.crossref",
             "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",

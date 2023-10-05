@@ -188,17 +188,9 @@ class ERICSearchSource(JsonSchemaMixin):
             record = self.__create_record(doc)
             yield record
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
+    def __run_api_search(
+        self, *, eric_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
     ) -> None:
-        """Run a search of ERIC"""
-
-        eric_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
         records = self.review_manager.dataset.load_records_dict()
         for record in self.get_query_return():
             prev_record_dict_version: dict = {}
@@ -219,6 +211,22 @@ class ERICSearchSource(JsonSchemaMixin):
         eric_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
+
+    def run_search(self, rerun: bool) -> None:
+        """Run a search of ERIC"""
+
+        # TODO : validate source
+
+        eric_feed = self.search_source.get_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        if self.search_source.search_type == colrev.settings.SearchSource.API:
+            self.__run_api_search(eric_feed=eric_feed, rerun=rerun)
+        else:
+            raise NotImplementedError
 
     def __build_search_url(self) -> str:
         url = "https://api.ies.ed.gov/eric/"

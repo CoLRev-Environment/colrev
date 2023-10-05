@@ -78,6 +78,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type == colrev.settings.SearchType.FORWARD_SEARCH
+
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
@@ -138,23 +140,21 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         return forward_citations
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a forward search based on OpenCitations"""
 
         # pylint: disable=too-many-branches
 
         self.__validate_source()
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         if not records:
             print("No records imported. Cannot run forward search yet.")
             return
 
         forward_search_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
@@ -163,9 +163,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             if not self.__fw_search_condition(record=record):
                 continue
 
-            search_operation.review_manager.logger.info(
-                f'Run forward search for {record["ID"]}'
-            )
+            self.review_manager.logger.info(f'Run forward search for {record["ID"]}')
 
             new_records = self.__get_forward_search_records(record_dict=record)
 
@@ -205,8 +203,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         forward_search_feed.save_feed_file()
         forward_search_feed.print_post_run_search_infos(records=records)
 
-        if search_operation.review_manager.dataset.has_changes():
-            search_operation.review_manager.create_commit(
+        if self.review_manager.dataset.has_changes():
+            self.review_manager.create_commit(
                 msg="Forward search", script_call="colrev search"
             )
 

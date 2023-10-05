@@ -243,9 +243,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of OpenAlex"""
 
         # https://docs.openalex.org/api-entities/works
@@ -285,6 +283,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         #     raise colrev_exceptions.ServiceNotAvailableException(
         #         self.__availability_exception_message
         #     )
+        raise NotImplementedError
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

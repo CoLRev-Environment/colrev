@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -45,6 +46,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -54,7 +56,6 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         # Simple heuristic:
         if "publisher = {Association for Computing Machinery}," in data:
             result["confidence"] = 0.7
-            print(data)
             return result
         # We may also check whether the ID=doi=url
         return result
@@ -67,12 +68,61 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+        if params != "":
+            # TODO : add API param search
+            raise NotImplementedError
+
+        # Interactively add DB search
+        if filename is None:
+            print("DB search mode")
+            print("- Go to https://dl.acm.org/")
+            print("- Search for your query")
+            filename = operation.get_unique_filename(
+                file_path_string="acm_digital_library"
+            )
+            print(f"- Save search results in {filename}")
+
+        query_file = operation.get_query_filename(filename=filename, instantiate=True)
+
+        add_source = colrev.settings.SearchSource(
+            endpoint=cls.endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query_file": str(query_file)},
+            comment="",
+        )
+        return add_source
+
+    def run_search(self, rerun: bool) -> None:
         """Run a search of ACM Digital Library"""
+
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            if self.search_source.filename.suffix in [".bib"]:
+                print("DB search mode")
+                print(
+                    f"- Go to {colors.ORANGE}https://dl.acm.org/{colors.END} and run the following query:"
+                )
+                query = Path(
+                    self.search_source.search_parameters["query_file"]
+                ).read_text(encoding="utf-8")
+                print()
+                print(f"{colors.ORANGE}{query}{colors.END}")
+                print()
+                print(
+                    f"- Replace search results in {colors.ORANGE}"
+                    + str(self.search_source.filename)
+                    + colors.END
+                )
+                input("Press enter to continue")
+                # TODO : validate?
+                # TODO : print statistics (#added, #changed)
+                self.review_manager.dataset.add_changes(
+                    path=self.search_source.filename
+                )
+                return
+
+            raise NotImplementedError
 
     def get_masterdata(
         self,

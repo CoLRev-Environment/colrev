@@ -229,10 +229,15 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "https://openalex.org/", ""
             )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def __validate_source(self) -> None:
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        assert source.search_type == colrev.settings.SearchType.API
+
+    def run_search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets"""
+
+        self.__validate_source()
 
         dataset_df = self.__load_dataset()
 

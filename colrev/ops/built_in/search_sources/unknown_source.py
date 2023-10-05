@@ -102,9 +102,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
     def get_masterdata(

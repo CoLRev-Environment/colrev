@@ -129,6 +129,7 @@
             "ci_supported": true,
             "search_types": [
                 "DB",
+                "TOC",
                 "API"
             ]
         },

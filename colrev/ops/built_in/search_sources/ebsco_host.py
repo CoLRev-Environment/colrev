@@ -12,6 +12,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.load_utils_table
 import colrev.ops.search
@@ -92,19 +93,26 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         )
         return add_source
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of EbscoHost"""
 
-        query = Path(self.search_source.search_parameters["query_file"]).read_text(
-            encoding="utf-8"
-        )
-        print("- Go do https://search.ebscohost.com/")
-        print(f"- Search for your query:\n {query}")
+        if self.search_source.search_type == colrev.settings.SearchSource.DB:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.SearchNotAutomated(
+                    "DB serach for Ebsco Host not automated."
+                )
 
-        # TODO: depends on whether running IDs were used as origins...
-        input("TO update the search results, replace the file!?!??! ")
+            query = Path(self.search_source.search_parameters["query_file"]).read_text(
+                encoding="utf-8"
+            )
+            print("- Go do https://search.ebscohost.com/")
+            print(f"- Search for your query:\n {query}")
+
+            # TODO: depends on whether running IDs were used as origins...
+            input("TO update the search results, replace the file!?!??! ")
+
+        else:
+            raise NotImplementedError
 
     def get_masterdata(
         self,

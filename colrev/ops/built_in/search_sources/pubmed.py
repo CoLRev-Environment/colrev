@@ -518,28 +518,25 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retstart += 20
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         if rerun:
-            search_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self.__get_pubmed_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
                     "title", ""
                 ):
-                    search_operation.review_manager.logger.warning(
-                        f"Skipped record: {record_dict}"
-                    )
+                    self.review_manager.logger.warning(f"Skipped record: {record_dict}")
                     continue
                 try:
                     pubmed_feed.set_id(record_dict=record_dict)
@@ -560,7 +557,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 added = pubmed_feed.add_record(record=prep_record)
 
                 if added:
-                    search_operation.review_manager.logger.info(
+                    self.review_manager.logger.info(
                         " retrieve pubmed-id=" + prep_record.data["pubmedid"]
                     )
                 else:
@@ -580,8 +577,8 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             pubmed_feed.print_post_run_search_infos(records=records)
             pubmed_feed.save_feed_file()
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
+            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.add_record_changes()
 
         except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
@@ -594,13 +591,12 @@ class PubMedSearchSource(JsonSchemaMixin):
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-    def __run_md_search_update(
+    def __run_md_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in pubmed_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
@@ -638,34 +634,30 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         pubmed_feed.save_feed_file()
         pubmed_feed.print_post_run_search_infos(records=records)
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
 
         self.__validate_source()
 
         pubmed_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                pubmed_feed=pubmed_feed,
-            )
+        if self.search_source.search_type == colrev.settings.SearchSource.MD:
+            self.__run_md_search(pubmed_feed=pubmed_feed)
 
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        elif self.search_source.search_type == colrev.settings.SearchSource.API:
+            self.__run_api_search(
                 pubmed_feed=pubmed_feed,
                 rerun=rerun,
             )
+        else:
+            raise NotImplementedError
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

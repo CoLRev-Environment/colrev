@@ -70,6 +70,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
+
         # TODO : if filename...
         print("Manual search mode")
         print("- Go to https://search.proquest.com/abicomplete/advanced")
@@ -89,9 +90,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         )
         return add_source
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of ABI/INFORM"""
 
     def get_masterdata(

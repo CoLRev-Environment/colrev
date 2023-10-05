@@ -385,42 +385,34 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
 
         self.__validate_source()
         # https://europepmc.org/RestfulWebService
 
-        search_operation.review_manager.logger.info(
-            f"Retrieve Europe PMC: {self.search_source.search_parameters}"
-        )
-
         europe_pmc_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            print("Not yet implemented")
-            # self.__run_md_search_update(
-            #     search_operation=search_operation,
-            #     europe_pmc_feed=europe_pmc_feed,
-            # )
-
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        if self.search_source.search_type == colrev.settings.SearchSource.API:
+            self.__run_api_search(
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
 
-    def __run_parameter_search(
+        # if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        # self.__run_md_search_update(
+        #     search_operation=search_operation,
+        #     europe_pmc_feed=europe_pmc_feed,
+        # )
+        raise NotImplementedError
+
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
@@ -437,7 +429,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             headers = {"user-agent": f"{__name__} (mailto:{email})"}
             session = self.review_manager.get_cached_session()
 
-            records = search_operation.review_manager.dataset.load_records_dict()
+            records = self.review_manager.dataset.load_records_dict()
 
             while url != "END":
                 self.review_manager.logger.debug(url)
@@ -461,7 +453,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                             europe_pmc_feed.feed_records[retrieved_record.data["ID"]]
                         )
                     if "title" not in retrieved_record.data:
-                        search_operation.review_manager.logger.warning(
+                        self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
                         )
                         continue
@@ -478,7 +470,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     added = europe_pmc_feed.add_record(record=retrieved_record)
 
                     if added:
-                        search_operation.review_manager.logger.info(
+                        self.review_manager.logger.info(
                             " retrieve europe_pmc_id="
                             + retrieved_record.data["europe_pmc_id"]
                         )

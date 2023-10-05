@@ -355,7 +355,7 @@ class Search(colrev.operation.Operation):
             )
 
             try:
-                endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
+                endpoint.run_search(rerun=rerun)  # type: ignore
             except colrev_exceptions.ServiceNotAvailableException as exc:
                 if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException(

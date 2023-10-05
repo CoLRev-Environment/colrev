@@ -34,7 +34,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "url"
-    search_types = [colrev.settings.SearchType.DB, colrev.settings.SearchType.API]
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.TOC,
+        colrev.settings.SearchType.API,
+    ]
     endpoint = "colrev.ais_library"
 
     ci_supported: bool = True
@@ -156,7 +160,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        add_source = None
+
+        # Add DB search
         if filename is not None:
             query_file = operation.get_query_filename(
                 filename=filename, instantiate=True
@@ -170,27 +175,25 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
             return add_source
 
-        # if params is None:
-        #     operation.add_interactively(endpoint=cls.endpoint)
-        #     return
+        # Add API search with params
+        if params != "":
+            host = urlparse(params).hostname
 
-        host = urlparse(params).hostname
+            if host and host.endswith("aisel.aisnet.org"):
+                q_params = cls.__parse_query(query=params)
+                filename = operation.get_unique_filename(file_path_string="ais")
+                add_source = colrev.settings.SearchSource(
+                    endpoint=cls.endpoint,
+                    filename=filename,
+                    search_type=colrev.settings.SearchType.DB,
+                    search_parameters={"query": q_params},
+                    comment="",
+                )
+                return add_source
 
-        if host and host.endswith("aisel.aisnet.org"):
-            q_params = cls.__parse_query(query=params)
-            filename = operation.get_unique_filename(file_path_string="ais")
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": q_params},
-                comment="",
-            )
-            return add_source
-
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add aisel endpoint with query {q_params}"
-        )
+        # Add API search without params
+        add_source = operation.add_interactively(endpoint=cls.endpoint)
+        return add_source
 
     def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
@@ -271,21 +274,20 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         return list(records.values())
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
 
         if rerun:
-            search_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         for record_dict in self.__get_ais_query_return():
             # Note : discard "empty" records
             if "" == record_dict.get("author", "") and "" == record_dict.get(
@@ -325,27 +327,23 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         ais_feed.print_post_run_search_infos(records=records)
 
         ais_feed.save_feed_file()
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of AISeLibrary"""
 
         self.__validate_source()
 
         ais_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
         try:
-            #  Note: not (yet) supported: self.search_source.is_md_source()
-            if "query" in self.search_source.search_parameters:
-                self.__run_parameter_search(
-                    search_operation=search_operation,
+            if self.search_source.search_type == colrev.settings.SearchType.API:
+                self.__run_api_search(
                     ais_feed=ais_feed,
                     rerun=rerun,
                 )

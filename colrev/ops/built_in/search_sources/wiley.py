@@ -67,9 +67,7 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Wiley"""
 
     def get_masterdata(

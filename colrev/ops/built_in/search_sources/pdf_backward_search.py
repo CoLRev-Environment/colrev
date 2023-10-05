@@ -90,6 +90,8 @@ class BackwardSearchSource(JsonSchemaMixin):
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type == colrev.settings.SearchType.BACKWARD_SEARCH
+
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Scope required in the search_parameters"
@@ -234,7 +236,6 @@ class BackwardSearchSource(JsonSchemaMixin):
         *,
         record: dict,
         pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
-        search_operation: colrev.ops.search.Search,
         records: dict,
         rerun: bool,
     ) -> None:
@@ -286,32 +287,30 @@ class BackwardSearchSource(JsonSchemaMixin):
                     update_time_variant_fields=rerun,
                 )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
 
         self.__validate_source()
 
         # Do not run in continuous-integration environment
-        if search_operation.review_manager.in_ci_environment():
+        if self.review_manager.in_ci_environment():
             return
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         if not records:
-            search_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "No records imported. Cannot run backward search yet."
             )
             return
 
-        search_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             "Set min_intext_citations="
             f"{self.search_source.search_parameters['min_intext_citations']}"
         )
 
         pdf_backward_search_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
@@ -323,13 +322,12 @@ class BackwardSearchSource(JsonSchemaMixin):
                 self.__run_backward_search_on_pdf(
                     record=record,
                     pdf_backward_search_feed=pdf_backward_search_feed,
-                    search_operation=search_operation,
                     records=records,
                     rerun=rerun,
                 )
 
             except colrev_exceptions.TEIException:
-                search_operation.review_manager.logger.info("Eror accessing TEI")
+                self.review_manager.logger.info("Eror accessing TEI")
 
         self.__complement_with_open_citations_data(
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
@@ -340,8 +338,8 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
         pdf_backward_search_feed.save_feed_file()
 
-        if search_operation.review_manager.dataset.has_changes():
-            search_operation.review_manager.create_commit(
+        if self.review_manager.dataset.has_changes():
+            self.review_manager.create_commit(
                 msg="Backward search", script_call="colrev search"
             )
 

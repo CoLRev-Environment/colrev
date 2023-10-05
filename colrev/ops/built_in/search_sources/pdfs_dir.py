@@ -100,7 +100,6 @@ class PDFSearchSource(JsonSchemaMixin):
     def __update_if_pdf_renamed(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         record_dict: dict,
         records: dict,
         search_source: Path,
@@ -117,9 +116,7 @@ class PDFSearchSource(JsonSchemaMixin):
             c_rec = c_rec_l.pop()
             if "colrev_pdf_id" in c_rec:
                 cpid = c_rec["colrev_pdf_id"]
-                pdf_fp = search_operation.review_manager.path / Path(
-                    record_dict["file"]
-                )
+                pdf_fp = self.review_manager.path / Path(record_dict["file"])
                 pdf_path = pdf_fp.parents[0]
                 potential_pdfs = pdf_path.glob("*.pdf")
 
@@ -130,21 +127,15 @@ class PDFSearchSource(JsonSchemaMixin):
 
                     if cpid == cpid_potential_pdf:
                         record_dict["file"] = str(
-                            potential_pdf.relative_to(
-                                search_operation.review_manager.path
-                            )
+                            potential_pdf.relative_to(self.review_manager.path)
                         )
                         c_rec["file"] = str(
-                            potential_pdf.relative_to(
-                                search_operation.review_manager.path
-                            )
+                            potential_pdf.relative_to(self.review_manager.path)
                         )
                         return updated
         return not_updated
 
-    def __remove_records_if_pdf_no_longer_exists(
-        self, *, search_operation: colrev.ops.search.Search
-    ) -> None:
+    def __remove_records_if_pdf_no_longer_exists(self) -> None:
         # search_operation.review_manager.logger.debug(
         #     "Checking for PDFs that no longer exist"
         # )
@@ -153,22 +144,19 @@ class PDFSearchSource(JsonSchemaMixin):
             return
 
         with open(self.search_source.filename, encoding="utf8") as target_db:
-            search_rd = search_operation.review_manager.dataset.load_records_dict(
+            search_rd = self.review_manager.dataset.load_records_dict(
                 load_str=target_db.read()
             )
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         to_remove: typing.List[str] = []
         files_removed = []
         for record_dict in search_rd.values():
-            x_pdf_path = search_operation.review_manager.path / Path(
-                record_dict["file"]
-            )
+            x_pdf_path = self.review_manager.path / Path(record_dict["file"])
             if not x_pdf_path.is_file():
                 if records:
                     updated = self.__update_if_pdf_renamed(
-                        search_operation=search_operation,
                         record_dict=record_dict,
                         records=records,
                         search_source=self.search_source.filename,
@@ -183,11 +171,11 @@ class PDFSearchSource(JsonSchemaMixin):
         search_rd = {
             x["ID"]: x
             for x in search_rd.values()
-            if (search_operation.review_manager.path / Path(x["file"])).is_file()
+            if (self.review_manager.path / Path(x["file"])).is_file()
         }
 
         if len(search_rd.values()) != 0:
-            search_operation.review_manager.dataset.save_records_dict_to_file(
+            self.review_manager.dataset.save_records_dict_to_file(
                 records=search_rd, save_path=self.search_source.filename
             )
 
@@ -197,14 +185,14 @@ class PDFSearchSource(JsonSchemaMixin):
                     if origin_to_remove in record_dict["colrev_origin"]:
                         record_dict["colrev_origin"].remove(origin_to_remove)
             if to_remove:
-                search_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     f" {colors.RED}Removed {len(to_remove)} records "
                     f"(PDFs no longer available){colors.END}"
                 )
                 print(" " + "\n ".join(files_removed))
             records = {k: v for k, v in records.items() if v["colrev_origin"]}
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
+            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.add_record_changes()
 
     def __update_fields_based_on_pdf_dirs(
         self, *, record_dict: dict, params: dict
@@ -396,6 +384,8 @@ class PDFSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type == colrev.settings.SearchType.FILES
+
         if "subdir_pattern" in source.search_parameters:
             if source.search_parameters["subdir_pattern"] != [
                 "NA",
@@ -542,7 +532,6 @@ class PDFSearchSource(JsonSchemaMixin):
     def __run_pdfs_dir_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         records: dict,
         pdfs_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
         local_index: colrev.env.local_index.LocalIndex,
@@ -600,27 +589,23 @@ class PDFSearchSource(JsonSchemaMixin):
             record.data["doi"] = res[0].upper()
         del record.data["text_from_pdf"]
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of a PDF directory (based on GROBID)"""
 
         self.__validate_source()
 
         # Do not run in continuous-integration environment
-        if search_operation.review_manager.in_ci_environment():
+        if self.review_manager.in_ci_environment():
             return
 
-        if search_operation.review_manager.force_mode:  # i.e., reindex all
-            search_operation.review_manager.logger.info("Reindex all")
+        if self.review_manager.force_mode:  # i.e., reindex all
+            self.review_manager.logger.info("Reindex all")
 
         # Removing records/origins for which PDFs were removed makes sense for curated repositories
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
         # In these cases, we may simply print a warning instead of modifying/removing records?
         if self.review_manager.settings.is_curated_masterdata_repo():
-            self.__remove_records_if_pdf_no_longer_exists(
-                search_operation=search_operation
-            )
+            self.__remove_records_if_pdf_no_longer_exists()
 
         grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
@@ -637,7 +622,6 @@ class PDFSearchSource(JsonSchemaMixin):
         linked_pdf_paths = [Path(r["file"]) for r in records.values() if "file" in r]
 
         self.__run_pdfs_dir_search(
-            search_operation=search_operation,
             records=records,
             pdfs_dir_feed=pdfs_dir_feed,
             linked_pdf_paths=linked_pdf_paths,

@@ -168,9 +168,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
         # pylint: disable=too-many-locals
@@ -181,6 +179,15 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
+        if self.search_source.search_type == colrev.settings.SearchSource.API:
+            self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
+
+        else:
+            raise NotImplementedError
+
+    def __run_api_search(
+        self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+    ) -> None:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )

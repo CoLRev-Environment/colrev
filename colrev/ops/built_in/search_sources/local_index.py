@@ -158,13 +158,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return records_to_import
 
-    def __run_md_search_update(
+    def __run_md_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
             feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
@@ -202,17 +201,16 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for retrieved_record_dict in self.__retrieve_from_index():
             try:
@@ -246,31 +244,30 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of local-index"""
 
         self.__validate_source()
 
         local_index_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                local_index_feed=local_index_feed,
-            )
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
+            self.__run_md_search(local_index_feed=local_index_feed)
 
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        elif self.search_source.search_type in [
+            colrev.settings.SearchType.API,
+            colrev.settings.SearchType.TOC,
+        ]:
+            self.__run_api_search(
                 local_index_feed=local_index_feed,
                 rerun=rerun,
             )
+        else:
+            raise NotImplementedError
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

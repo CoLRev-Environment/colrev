@@ -136,7 +136,7 @@ class SearchSourcePackageEndpointInterface(
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
     # pylint: disable=no-self-argument
-    def run_search(search_operation: colrev.ops.search.Search, rerun: bool) -> None:  # type: ignore
+    def run_search(rerun: bool) -> None:  # type: ignore
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument

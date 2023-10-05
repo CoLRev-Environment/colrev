@@ -40,7 +40,6 @@ colrev.ops.built\_in.search\_sources.taylor\_and\_francis.TaylorAndFrancisSearch
 
    .. autosummary::
 
-      ~TaylorAndFrancisSearchSource.api_search_supported
       ~TaylorAndFrancisSearchSource.ci_supported
       ~TaylorAndFrancisSearchSource.endpoint
       ~TaylorAndFrancisSearchSource.heuristic_status

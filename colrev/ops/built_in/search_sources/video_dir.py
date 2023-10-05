@@ -70,24 +70,22 @@ class VideoDirSearchSource(JsonSchemaMixin):
         record_dict = {"ENTRYTYPE": "online", "file": path}
         return record_dict
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of a directory containing videos"""
 
-        search_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             f"{colors.ORANGE}For better metadata, please add the url "
             f"(or authors and title){colors.END}"
         )
 
         video_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
         overall_files = [
-            x.relative_to(search_operation.review_manager.path)
+            x.relative_to(self.review_manager.path)
             for x in self.video_path.glob("**/*.mp4")
         ]
 
@@ -108,9 +106,7 @@ class VideoDirSearchSource(JsonSchemaMixin):
 
         video_feed.save_feed_file()
 
-        search_operation.review_manager.logger.info(
-            f"New videos added: {new_records_added}"
-        )
+        self.review_manager.logger.info(f"New videos added: {new_records_added}")
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

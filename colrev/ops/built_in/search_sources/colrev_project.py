@@ -126,9 +126,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         shutil.rmtree(temp_path)
         return records_to_import
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
@@ -138,7 +136,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.__validate_source()
 
         colrev_project_search_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
@@ -158,8 +156,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             "grobid-version",
         ]
 
-        search_operation.review_manager.logger.info("Importing selected records")
-        records = search_operation.review_manager.dataset.load_records_dict()
+        self.review_manager.logger.info("Importing selected records")
+        records = self.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
