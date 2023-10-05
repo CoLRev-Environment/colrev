@@ -61,6 +61,7 @@ class Helpers:
         # To prevent prep from continuing previous operations
         Path(".colrev/cur_temp_recs.bib").unlink(missing_ok=True)
         Path(".colrev/temp_recs.bib").unlink(missing_ok=True)
+        review_manager.load_settings()
 
 
 @pytest.fixture(scope="session", name="helpers")
@@ -75,9 +76,14 @@ def run_around_tests(  # type: ignore
 ) -> typing.Generator:
     """Fixture to clean up after tests"""
 
-    yield
-    # post test code here
+    # pre-test-code
+    # ...
+
+    yield  # run test-code
+
+    # post-test-code
     os.chdir(str(base_repo_review_manager.path))
+    base_repo_review_manager.load_settings()
     repo = git.Repo(base_repo_review_manager.path)
     repo.git.clean("-df")
     helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")

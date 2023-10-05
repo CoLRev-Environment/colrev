@@ -17,11 +17,8 @@ def test_search(  # type: ignore
     """Test the search operation"""
 
     ci_env_patcher.return_value = True
-
     search_operation = base_repo_review_manager.get_search_operation()
-    # base_repo_review_manager.settings.sources.append()
     base_repo_review_manager.settings.search.retrieve_forthcoming = False
-
     search_operation.main(rerun=True)
 
 
