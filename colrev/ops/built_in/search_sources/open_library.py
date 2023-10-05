@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -239,7 +240,12 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 

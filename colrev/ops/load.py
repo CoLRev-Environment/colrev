@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import itertools
 import string
-import typing
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
@@ -49,26 +48,6 @@ class Load(colrev.operation.Operation):
                 "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/load.html"
             )
 
-    def __get_new_search_files(self) -> list[Path]:
-        """Retrieve new search files (not yet registered in settings)"""
-
-        files = [
-            f.relative_to(self.review_manager.path)
-            for f in self.review_manager.search_dir.glob("**/*")
-        ]
-
-        # Only files that are not yet registered
-        # (also exclude bib files corresponding to a registered file)
-        files = [
-            f
-            for f in files
-            if f not in [s.filename for s in self.review_manager.settings.sources]
-            and not str(f).endswith("_query.txt")
-            and ".~lock" not in str(f)
-        ]
-
-        return sorted(list(set(files)))
-
     def __get_currently_imported_origin_list(self) -> list:
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
@@ -78,142 +57,6 @@ class Load(colrev.operation.Operation):
             item for x in record_header_list for item in x["colrev_origin"]
         ]
         return imported_origins
-
-    def __get_heuristics_results_list(
-        self,
-        *,
-        filepath: Path,
-        search_sources: dict,
-        data: str,
-    ) -> list:
-        results_list = []
-        for (
-            endpoint,
-            endpoint_class,
-        ) in search_sources.items():
-            res = endpoint_class.heuristic(filepath, data)  # type: ignore
-            self.review_manager.logger.debug(f"- {endpoint}: {res['confidence']}")
-            if res["confidence"] == 0.0:
-                continue
-            try:
-                result_item = {}
-
-                res["endpoint"] = endpoint
-
-                search_type = colrev.settings.SearchType.DB
-                # Note : as the identifier, we use the filename
-                # (if search results are added by file/not via the API)
-
-                source_candidate = colrev.settings.SearchSource(
-                    endpoint=endpoint,
-                    filename=filepath,
-                    search_type=search_type,
-                    search_parameters={},
-                    comment="",
-                )
-
-                result_item["source_candidate"] = source_candidate
-                result_item["confidence"] = res["confidence"]
-
-                results_list.append(result_item)
-            except colrev_exceptions.UnsupportedImportFormatError:
-                continue
-        return results_list
-
-    def __apply_source_heuristics(
-        self, *, filepath: Path, search_sources: dict
-    ) -> list[typing.Dict]:
-        """Apply heuristics to identify source"""
-
-        data = ""
-        try:
-            data = filepath.read_text()
-        except UnicodeDecodeError:
-            pass
-
-        results_list = self.__get_heuristics_results_list(
-            filepath=filepath,
-            search_sources=search_sources,
-            data=data,
-        )
-
-        # Reduce the results_list when there are results with very high confidence
-        if [r for r in results_list if r["confidence"] > 0.95]:
-            results_list = [r for r in results_list if r["confidence"] > 0.8]
-
-        return results_list
-
-    def get_most_likely_sources(self) -> list:
-        """Get the most likely SearchSources
-
-        returns a dictionary:
-        {"filepath": [SearchSource1,..]}
-        """
-
-        heuristic_list = self.get_new_sources_heuristic_list()
-        selected_search_sources = []
-
-        for results_list in heuristic_list.values():
-            # Use the last / unknown_source
-            max_conf = 0.0
-            best_candidate_pos = 0
-            for i, heuristic_candidate in enumerate(results_list):
-                if heuristic_candidate["confidence"] > max_conf:
-                    best_candidate_pos = i + 1
-                    max_conf = heuristic_candidate["confidence"]
-            if not any(c["confidence"] > 0.1 for c in results_list):
-                source = [
-                    x
-                    for x in results_list
-                    if x["source_candidate"].endpoint == "colrev.unknown_source"
-                ][0]
-            else:
-                selection = str(best_candidate_pos)
-                source = results_list[int(selection) - 1]
-            selected_search_sources.append(source["source_candidate"])
-
-        return selected_search_sources
-
-    def get_new_sources_heuristic_list(self) -> dict:
-        """Get the heuristic result list of SearchSources candidates
-
-        returns a dictionary:
-        {"filepath": ({"search_source": SourceCandidate1", "confidence": 0.98},..]}
-        """
-
-        # pylint: disable=redefined-outer-name
-
-        new_search_files = self.__get_new_search_files()
-        if not new_search_files:
-            self.review_manager.logger.info("No new search files...")
-            return {}
-
-        self.review_manager.logger.debug("Load available search_source endpoints...")
-
-        search_source_identifiers = self.package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            installed_only=True,
-        )
-
-        search_sources = self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
-            selected_packages=[{"endpoint": p} for p in search_source_identifiers],
-            operation=self,
-            instantiate_objects=False,
-        )
-
-        heuristic_results = {}
-        for sfp_name in new_search_files:
-            if not self.review_manager.high_level_operation:
-                print()
-            self.review_manager.logger.info(f"Discover new source: {sfp_name}")
-
-            heuristic_results[sfp_name] = self.__apply_source_heuristics(
-                filepath=sfp_name,
-                search_sources=search_sources,
-            )
-
-        return heuristic_results
 
     def ensure_append_only(self, *, file: Path) -> None:
         """Ensure that the file was only appended to.
@@ -461,23 +304,16 @@ class Load(colrev.operation.Operation):
                     path=Path(obj.b_path), remove=True
                 )
 
-    def __load_active_sources(
-        self, *, new_sources: typing.List[colrev.settings.SearchSource]
-    ) -> list:
-        assert all(isinstance(x, colrev.settings.SearchSource) for x in new_sources)
+    def __load_active_sources(self) -> list:
         checker = self.review_manager.get_checker()
         checker.check_sources()
         sources_settings = []
         for source in self.review_manager.settings.sources:
             assert isinstance(source, colrev.settings.SearchSource)
             sources_settings.append(source)
-        for source in new_sources:
-            if source.filename not in [s.filename for s in sources_settings]:
-                sources_settings.append(source)
         sources = []
-        package_manager = self.review_manager.get_package_manager()
         for source in sources_settings:
-            endpoint_dict = package_manager.load_packages(
+            endpoint_dict = self.package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
@@ -553,7 +389,6 @@ class Load(colrev.operation.Operation):
     def main(
         self,
         *,
-        new_sources: typing.List[colrev.settings.SearchSource],
         keep_ids: bool = False,
     ) -> None:
         """Load records (main entrypoint)"""
@@ -561,7 +396,7 @@ class Load(colrev.operation.Operation):
         if not self.review_manager.high_level_operation:
             print()
 
-        for source in self.__load_active_sources(new_sources=new_sources):
+        for source in self.__load_active_sources():
             try:
                 self.review_manager.logger.info(f"Load {source.search_source.filename}")
                 self.__add_source_to_settings(source=source)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import typing
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -87,7 +88,12 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 

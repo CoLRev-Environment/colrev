@@ -65,7 +65,7 @@ def test_search_add_source(  # type: ignore
     )
     s_obj = search_source[add_source.endpoint]
     query = "issn=1234-5678"
-    s_obj.add_endpoint(search_operation, query)  # type: ignore
+    s_obj.add_endpoint(search_operation, query, None)  # type: ignore
 
     search_operation.review_manager.settings.sources.pop()
 
@@ -107,7 +107,7 @@ def test_search_remove_forthcoming(  # type: ignore
     )
     s_obj = search_source["colrev.crossref"]
     query = "issn=1234-5678"
-    s_obj.add_endpoint(search_operation, query)  # type: ignore
+    s_obj.add_endpoint(search_operation, query, None)  # type: ignore
 
     add_source = search_operation.review_manager.settings.sources[-1]
 

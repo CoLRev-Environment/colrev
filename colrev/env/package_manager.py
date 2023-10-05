@@ -132,7 +132,11 @@ class SearchSourcePackageEndpointInterface(
         """Heuristic to identify the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def add_endpoint(operation: colrev.operation.Operation, params: str):  # type: ignore
+    def add_endpoint(  # type: ignore
+        operation: colrev.operation.Operation,
+        params: str,
+        filename: typing.Optional[Path],
+    ):
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
     # pylint: disable=no-self-argument

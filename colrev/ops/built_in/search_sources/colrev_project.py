@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -70,7 +71,12 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> None:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:

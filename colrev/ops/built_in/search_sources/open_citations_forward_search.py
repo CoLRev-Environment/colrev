@@ -219,7 +219,12 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> None:
         """Add SearchSource as an endpoint"""
 
         add_source = cls.get_default_source()
