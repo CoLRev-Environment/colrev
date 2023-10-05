@@ -399,15 +399,14 @@ def retrieve(
     )
     print()
 
+    review_manager.exact_call = "colrev search"
     search_operation = review_manager.get_search_operation()
+    search_operation.add_most_likely_sources()
     search_operation.main(rerun=False)
 
     print()
 
-    review_manager.exact_call = "colrev prep"
-    search_operation = review_manager.get_search_operation()
-    search_operation.add_most_likely_sources()
-    load_operation = review_manager.get_load_operation()
+    review_manager.exact_call = "colrev load"
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
     load_operation.main(keep_ids=False)
 
