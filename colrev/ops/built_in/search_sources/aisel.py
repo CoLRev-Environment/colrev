@@ -36,7 +36,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     source_identifier = "url"
     search_types = [colrev.settings.SearchType.DB, colrev.settings.SearchType.API]
     endpoint = "colrev.ais_library"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "AIS eLibrary"

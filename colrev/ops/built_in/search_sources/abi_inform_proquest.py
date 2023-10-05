@@ -32,7 +32,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
     search_types = [colrev.settings.SearchType.DB]
-    api_search_supported = False
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"

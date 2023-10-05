@@ -62,7 +62,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         colrev.settings.SearchType.MD,
         colrev.settings.SearchType.TOC,
     ]
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     link = (

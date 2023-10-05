@@ -348,9 +348,6 @@ class Search(colrev.operation.Operation):
                 continue
             endpoint = endpoint_dict[source.endpoint.lower()]
 
-            if not endpoint.api_search_supported:  # type: ignore
-                continue
-
             if not self.review_manager.high_level_operation:
                 print()
             self.review_manager.logger.info(
@@ -359,12 +356,14 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(search_operation=self, rerun=rerun)  # type: ignore
-            except colrev.exceptions.ServiceNotAvailableException as exc:
+            except colrev_exceptions.ServiceNotAvailableException as exc:
                 if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException(
                         source.endpoint
                     ) from exc
                 self.review_manager.logger.warning("ServiceNotAvailableException")
+            except colrev_exceptions.SearchNotAutomated as exc:
+                print(exc)
 
             if not source.filename.is_file():
                 continue

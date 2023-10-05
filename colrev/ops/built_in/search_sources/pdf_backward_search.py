@@ -38,7 +38,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     endpoint = "colrev.pdf_backward_search"
     source_identifier = "bwsearch_ref"
     search_types = [colrev.settings.SearchType.BACKWARD_SEARCH]
-    api_search_supported = True
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"

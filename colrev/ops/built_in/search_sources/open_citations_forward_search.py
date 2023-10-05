@@ -35,7 +35,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
     search_types = [colrev.settings.SearchType.FORWARD_SEARCH]
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "OpenCitations forward search"

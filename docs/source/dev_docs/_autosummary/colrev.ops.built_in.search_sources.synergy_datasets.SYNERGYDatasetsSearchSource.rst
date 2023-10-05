@@ -40,7 +40,6 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
 
    .. autosummary::
 
-      ~SYNERGYDatasetsSearchSource.api_search_supported
       ~SYNERGYDatasetsSearchSource.ci_supported
       ~SYNERGYDatasetsSearchSource.endpoint
       ~SYNERGYDatasetsSearchSource.heuristic_status

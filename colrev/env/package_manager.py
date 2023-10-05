@@ -117,10 +117,6 @@ class SearchSourcePackageEndpointInterface(
         """SearchTypes associated with the SearchSource"""
     )
 
-    api_search_supported = zope.interface.Attribute(
-        """Flag indicating whether API searches are supported (by the run_search method)"""
-    )
-
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
         """The status of the SearchSource heuristic"""
     )

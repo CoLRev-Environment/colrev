@@ -41,7 +41,6 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
 
    .. autosummary::
 
-      ~OpenAlexSearchSource.api_search_supported
       ~OpenAlexSearchSource.ci_supported
       ~OpenAlexSearchSource.endpoint
       ~OpenAlexSearchSource.heuristic_status

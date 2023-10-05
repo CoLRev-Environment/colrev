@@ -40,7 +40,6 @@ colrev.ops.built\_in.search\_sources.trid.TransportResearchInternationalDocument
 
    .. autosummary::
 
-      ~TransportResearchInternationalDocumentation.api_search_supported
       ~TransportResearchInternationalDocumentation.ci_supported
       ~TransportResearchInternationalDocumentation.endpoint
       ~TransportResearchInternationalDocumentation.heuristic_status

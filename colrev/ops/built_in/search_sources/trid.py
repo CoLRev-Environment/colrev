@@ -31,7 +31,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
     endpoint = "colrev.trid"
     source_identifier = "biburl"
     search_types = [colrev.settings.SearchType.DB]
-    api_search_supported = False
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "TRID"

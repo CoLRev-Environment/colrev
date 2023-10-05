@@ -34,7 +34,7 @@ class ERICSearchSource(JsonSchemaMixin):
     source_identifier = "ID"
     search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.eric"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     link = (

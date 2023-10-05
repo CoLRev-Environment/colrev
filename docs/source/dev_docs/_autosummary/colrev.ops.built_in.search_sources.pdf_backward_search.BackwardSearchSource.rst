@@ -41,7 +41,6 @@ colrev.ops.built\_in.search\_sources.pdf\_backward\_search.BackwardSearchSource
 
    .. autosummary::
 
-      ~BackwardSearchSource.api_search_supported
       ~BackwardSearchSource.ci_supported
       ~BackwardSearchSource.endpoint
       ~BackwardSearchSource.heuristic_status

@@ -47,7 +47,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     endpoint = "colrev.synergy_datasets"
     source_identifier = "ID"
     search_types = [colrev.settings.SearchType.API]
-    api_search_supported = True
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "SYNERGY-datasets"

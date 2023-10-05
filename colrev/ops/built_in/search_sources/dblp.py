@@ -47,7 +47,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         colrev.settings.SearchType.TOC,
     ]
     endpoint = "colrev.dblp"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "DBLP"

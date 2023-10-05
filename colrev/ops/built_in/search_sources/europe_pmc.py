@@ -52,7 +52,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         colrev.settings.SearchType.MD,
     ]
     endpoint = "colrev.europe_pmc"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"

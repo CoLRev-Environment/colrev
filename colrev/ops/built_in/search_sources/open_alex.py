@@ -40,7 +40,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     source_identifier = "openalex_id"
     # "https://api.crossref.org/works/{{doi}}"
     search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     link = (

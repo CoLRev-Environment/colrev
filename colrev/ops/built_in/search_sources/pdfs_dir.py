@@ -43,7 +43,7 @@ class PDFSearchSource(JsonSchemaMixin):
     endpoint = "colrev.pdfs_dir"
     source_identifier = "file"
     search_types = [colrev.settings.SearchType.FILES]
-    api_search_supported = True
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF directory"

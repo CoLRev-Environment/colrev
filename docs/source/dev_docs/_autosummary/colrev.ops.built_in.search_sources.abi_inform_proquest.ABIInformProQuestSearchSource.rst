@@ -40,7 +40,6 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
 
    .. autosummary::
 
-      ~ABIInformProQuestSearchSource.api_search_supported
       ~ABIInformProQuestSearchSource.ci_supported
       ~ABIInformProQuestSearchSource.endpoint
       ~ABIInformProQuestSearchSource.heuristic_status

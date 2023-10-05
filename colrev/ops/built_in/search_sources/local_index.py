@@ -39,7 +39,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     source_identifier = "curation_ID"
     search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
     endpoint = "colrev.local_index"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"

@@ -40,7 +40,6 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
 
    .. autosummary::
 
-      ~PsycINFOSearchSource.api_search_supported
       ~PsycINFOSearchSource.ci_supported
       ~PsycINFOSearchSource.endpoint
       ~PsycINFOSearchSource.heuristic_status

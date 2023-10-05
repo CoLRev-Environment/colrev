@@ -35,7 +35,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     source_identifier = "ID"
     search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.ieee"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     short_name = "IEEE Xplore"
