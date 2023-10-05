@@ -106,6 +106,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type in self.search_types
+
         # if "query" not in source.search_parameters:
         # Note :  for md-sources, there is no query parameter.
         #     raise colrev_exceptions.InvalidQueryException(

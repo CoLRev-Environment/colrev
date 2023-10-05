@@ -352,7 +352,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         # maybe : validate/assert that the venue_key is available
-        if "scope" in source.search_parameters:
+        if source.search_type == colrev.settings.SearchSource.TOC:
+            assert "scope" in source.search_parameters
             if "venue_key" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "venue_key required in search_parameters/scope"
@@ -361,7 +362,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
-        elif "query" in source.search_parameters:
+        if source.search_type == colrev.settings.SearchSource.API:
+            assert "query" in source.search_parameters
             assert source.search_parameters["query"].startswith(self.__api_url)
 
         elif source.search_type == colrev.settings.SearchSource.MD:
