@@ -1,5 +1,3 @@
-.. _Setup-colrev:
-
 Setup part 3: CoLRev
 ------------------------------------
 

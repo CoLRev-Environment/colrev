@@ -2,6 +2,7 @@
 """SearchSource: JSTOR"""
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,16 +24,17 @@ import colrev.record
 )
 @dataclass
 class JSTORSearchSource(JsonSchemaMixin):
-    """SearchSource for JSTOR"""
+    """JSTOR"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.jstor"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "JSTOR"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/jstor.md"
     )
@@ -58,15 +60,22 @@ class JSTORSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of JSTOR"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for JSTOR not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -88,11 +97,13 @@ class JSTORSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".ris":
             ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="jstor_id",
             )
-            ris_entries = ris_loader.load_ris_entries(
-                filename=self.search_source.filename
-            )
+            ris_entries = ris_loader.load_ris_entries()
+            for ris_entry in ris_entries:
+                ris_entry["jstor_id"] = ris_entry["url"].split("/")[-1]
             self.__ris_fixes(entries=ris_entries)
             records = ris_loader.convert_to_records(entries=ris_entries)
             return records

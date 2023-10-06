@@ -1,18 +1,16 @@
-# Prep endpoint: colrev.add_journal_ranking
+# Add journal rankings
 
-## Prerequisite
+## prep
 
-Initial ranking data is extracted from ranking.csv into SQLite Database sqlite_index.db with 'colrev env -i'.
+**Prerequisite** Initial ranking data is extracted from ranking.csv into SQLite Database sqlite_index.db with 'colrev env -i'.
 
-## Add the endpoint
-
-To add the endpoint, run
+**Add the endpoint**
 
 ```
 colrev prep -a colrev.add_journal_ranking
 ```
 
-## Description
+**Description**
 
 The add_journal_ranking extension allows the user to add a ranking to the records metadata for additional automated prescreen options. While iterating through the records, this class calls the search_in_database method to access the sqlite_index.db to compare if a journal_name is in one or more of the saved rankings. These rankings are being saved in the records metadata.
 

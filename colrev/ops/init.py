@@ -278,7 +278,7 @@ class Initializer:
                 if x["endpoint"] not in ["colrev.paper_md"]
             ]
             settings.sources = [
-                x for x in settings.sources if x.endpoint not in ["colrev.pdfs_dir"]
+                x for x in settings.sources if x.endpoint not in ["colrev.files_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [

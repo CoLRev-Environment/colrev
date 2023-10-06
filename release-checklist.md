@@ -10,14 +10,14 @@
 - Collect release notes and update the `CHANGELOG.md`.
 - Update version and date in `CITATION.cff`.
 - Update version in `SECURITY.md`.
-- Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
+- Update the **version** and **date** in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Update the Github milestones, close current one, make plans for the next milestones
-- Commit the changes.
+- Commit the changes (`release 0.10.0`).
+- Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
 - Run `git tag -s $VERSION` (format: "0.9.1").
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Check whether the tests pass locally (``pytest tests``).
-- Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
-- Test `colrev upgrade` in local repositories
+- Test `colrev upgrade` in local repositories (see `COLREV-UPDATE_ALL.txt`).
 - Run `git push` and wait for the GitHub actions to complete successfully.
 - Run `git push --atomic origin main $VERSION`.
 

@@ -1,12 +1,8 @@
-# SearchSource: CoLRev Project
+# CoLRev Project
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): run_search (including updates), load,  prep (including get_masterdata)
-
-## Add the search source
+### API search
 
 ```
 colrev search -a colrev.colrev_project -p "/path/to/local/file.bib"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import typing
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -32,17 +33,24 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class UnknownSearchSource(JsonSchemaMixin):
-    """SearchSource for unknown search results"""
+    """Unknown SearchSource"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.OTHER,
+        colrev.settings.SearchType.BACKWARD_SEARCH,
+        colrev.settings.SearchType.FORWARD_SEARCH,
+        colrev.settings.SearchType.TOC,
+    ]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/unknown_source.md"
     )
@@ -71,14 +79,37 @@ class UnknownSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        if filename:
+            query_file = operation.get_query_filename(
+                filename=filename, instantiate=True
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query_file": str(query_file)},
+                comment="",
+            )
+
+            return add_source
+
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
+
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.SearchNotAutomated(
+                    "DB search for UnknownSource not automated."
+                )
 
     def get_masterdata(
         self,
@@ -145,7 +176,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             load_operation=load_operation, source=self.search_source
         )
         ris_loader.apply_ris_fixes(filename=self.search_source.filename)
-        ris_entries = ris_loader.load_ris_entries(filename=self.search_source.filename)
+        ris_entries = ris_loader.load_ris_entries()
         self.__ris_fixes(entries=ris_entries)
         records = ris_loader.convert_to_records(entries=ris_entries)
         return records
@@ -160,14 +191,16 @@ class UnknownSearchSource(JsonSchemaMixin):
         csv_loader = colrev.ops.load_utils_table.CSVLoader(
             load_operation=load_operation, source=self.search_source
         )
-        records = csv_loader.load()
+        table_entries = csv_loader.load_table_entries()
+        records = csv_loader.convert_to_records(entries=table_entries)
         return records
 
     def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
         excel_loader = colrev.ops.load_utils_table.ExcelLoader(
             load_operation=load_operation, source=self.search_source
         )
-        records = excel_loader.load()
+        table_entries = excel_loader.load_table_entries()
+        records = excel_loader.convert_to_records(entries=table_entries)
         return records
 
     def __load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
@@ -181,7 +214,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
             load_operation=load_operation, source=self.search_source
         )
-        records = enl_loader.load(source=self.search_source)
+        entries = enl_loader.load_enl_entries()
+        records = enl_loader.convert_to_records(entries=entries)
         return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

@@ -1,5 +1,3 @@
-.. _Problem formulation:
-
 Step 1: Problem formulation
 ==================================
 
@@ -37,7 +35,7 @@ As a best practice recommendation, we suggest to keep notes on the review object
 This document may also serve as the review protocol and evolve into the final review manuscript.
 Review protocols often involve the following:
 
-- Sharing the repository with your team (see :ref:`instructions <collaboration>`)
+- Sharing the repository with your team (see :doc:`instructions </manual/collaboration>`)
 - Refining the review objectives and the characteristics of the review
 - Defining focal concepts of the review
 - Developing a search strategy and testing it
@@ -55,7 +53,7 @@ Review protocols often involve the following:
    Paré, G., Trudel, M. C., Jaana, M., & Kitsiou, S. (2015). Synthesizing information systems knowledge: A typology of literature reviews. Information & Management, 52(2), 183-199. `link <https://www.sciencedirect.com/science/article/abs/pii/S0378720614001116>`_
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Operations
 
    problem_formulation/init

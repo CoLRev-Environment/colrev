@@ -2,6 +2,7 @@
 """SearchSource: Wiley"""
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,16 +24,17 @@ import colrev.record
 )
 @dataclass
 class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for Wiley"""
+    """Wiley"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.wiley"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Wiley"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/wiley.md"
     )
@@ -56,14 +58,23 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Wiley"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Wiley not automated."
+        #         )
 
     def get_masterdata(
         self,

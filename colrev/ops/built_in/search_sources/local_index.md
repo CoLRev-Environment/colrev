@@ -1,15 +1,17 @@
-# SearchSource: LocalIndex
+# LocalIndex
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): run_search (including updates), load,  prep (including get_masterdata)
-
-## Add the search source
+### API search
 
 ```
 colrev search -a colrev.local_index -p "title LIKE '%dark side%'"
 ```
+
+### TOC search ...
+
+## pdf-get
+
+TODO...
 
 ## Links

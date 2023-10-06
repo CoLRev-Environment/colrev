@@ -1,4 +1,6 @@
-# Dedupe: Enter DedupeEndpoint
+# Curation missing dedupe
+
+## dedupe
 
 Note: This document is currently under development. It will contain the following elements.
 

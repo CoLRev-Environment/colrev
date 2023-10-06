@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.10.1 - 2023-10-06
+
+### Changed
+
+- SearchTypes: API, TOC, MD are added, PDFS is replaced by FILES.
+- SearchTypes are explained in the docs.
+- Package documentation is imported to docs.
+- colrev.pdfs_dir and colrev.video_dir are integrated into colrev.files_dir.
+
 ## 0.10. - 2023-10-02
 
 ### Added

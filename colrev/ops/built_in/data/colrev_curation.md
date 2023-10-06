@@ -1,12 +1,13 @@
-# Data: Enter DataEndpoint
+# CoLRev Curations
 
 Note: This document is currently under development. It will contain the following elements.
 
 - description
 - example
 
+## prep
 
-## Masterdata restrictions
+Curation prep: enforces masterdata restrictions.
 
 Masterdata restrictions are useful to specify field requirements related to the ENTRYTYPE, the journal name, and the required fields (volume/number).
 They can be set as follows:
@@ -39,5 +40,9 @@ They can be set as follows:
     }
 
 ```
+
+## data
+
+TODO
 
 ## Links

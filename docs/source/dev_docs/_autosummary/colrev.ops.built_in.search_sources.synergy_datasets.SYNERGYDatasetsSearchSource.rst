@@ -40,10 +40,10 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
 
    .. autosummary::
 
-      ~SYNERGYDatasetsSearchSource.api_search_supported
       ~SYNERGYDatasetsSearchSource.ci_supported
+      ~SYNERGYDatasetsSearchSource.docs_link
+      ~SYNERGYDatasetsSearchSource.endpoint
       ~SYNERGYDatasetsSearchSource.heuristic_status
-      ~SYNERGYDatasetsSearchSource.link
-      ~SYNERGYDatasetsSearchSource.search_type
+      ~SYNERGYDatasetsSearchSource.search_types
       ~SYNERGYDatasetsSearchSource.short_name
       ~SYNERGYDatasetsSearchSource.source_identifier

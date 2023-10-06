@@ -18,7 +18,14 @@ coverage-badge -o tests/coverage.svg
 
 # Keep tests short (check the ones that take most of the time)
 pytest --durations=5
+
+# Run individual test modules
+pytest tests/0_core/record_test.py
+# Run individual test methods
+pytest tests/0_core/record_test.py -k "test_update_metadata_status"
 ```
+
+
 
 References
 

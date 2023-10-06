@@ -1,5 +1,3 @@
-.. _Setup-git-ssh:
-
 Setup part 2: Git and SSH
 -------------------------------------------
 

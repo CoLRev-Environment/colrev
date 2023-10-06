@@ -18,6 +18,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from m2r import parse_from_file
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
@@ -113,30 +114,30 @@ class SearchSourcePackageEndpointInterface(
         Retrieved records are identified through the source_identifier
         when they are added to/updated in the GeneralOriginFeed"""
     )
-    search_type = zope.interface.Attribute(
-        """Main SearchType associated with the SearchSource"""
-    )
-
-    api_search_supported = zope.interface.Attribute(
-        """Flag indicating whether API searches are supported (by the run_search method)"""
+    search_types = zope.interface.Attribute(
+        """SearchTypes associated with the SearchSource"""
     )
 
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
         """The status of the SearchSource heuristic"""
     )
     short_name = zope.interface.Attribute("""Short name of the SearchSource""")
-    link = zope.interface.Attribute("""Link to the SearchSource website""")
+    docs_link = zope.interface.Attribute("""Link to the SearchSource website""")
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
         """Heuristic to identify the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def add_endpoint(operation: colrev.operation.Operation, params: str):  # type: ignore
+    def add_endpoint(  # type: ignore
+        operation: colrev.operation.Operation,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
     # pylint: disable=no-self-argument
-    def run_search(search_operation: colrev.ops.search.Search, rerun: bool) -> None:  # type: ignore
+    def run_search(rerun: bool) -> None:  # type: ignore
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument
@@ -460,6 +461,9 @@ class PackageManager:
         self.__colrev_path = Path(colrev_spec.origin).parents[1]
         self.__package_endpoints_json_file = self.__colrev_path / Path(
             "colrev/template/package_endpoints.json"
+        )
+        self.__search_source_types_json_file = self.__colrev_path / Path(
+            "colrev/template/search_source_types.json"
         )
 
     def __load_package_endpoints_index(self) -> dict:
@@ -801,12 +805,92 @@ class PackageManager:
 
         return packages_dict
 
+    def __import_package_docs(self, docs_link: str, identifier: str) -> str:
+        extensions_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/extensions_index"
+        )
+        local_built_in_path = Path(__file__).parent.parent / Path("ops/built_in")
+
+        if (
+            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/"
+            in docs_link
+        ):
+            docs_link = docs_link.replace(
+                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in",
+                str(local_built_in_path),
+            )
+            output = parse_from_file(docs_link)
+        else:
+            return "NotImplemented"
+            # TODO: retreive through requests later?
+            # output = convert('# Title\n\nSentence.')
+
+        file_path = Path(f"{identifier}.rst")
+        target = extensions_index_path / file_path
+        with open(target, "w", encoding="utf-8") as file:
+            # TODO : at this point, we may add metadata
+            # (such as package status, authors, url etc.)
+            file.write(output)
+
+        return str(file_path)
+
+    def __write_docs_for_index(self, docs_for_index: dict) -> None:
+        extensions_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/extensions_index.rst"
+        )
+        extensions_index_path_content = extensions_index_path.read_text(
+            encoding="utf-8"
+        )
+        new_doc = []
+        # append header
+        for line in extensions_index_path_content.split("\n"):
+            new_doc.append(line)
+            if ":caption:" in line:
+                new_doc.append("")
+                break
+
+        # append new links
+        for endpoint_type in [
+            "review_type",
+            "search_source",
+            "prep",
+            "prep_man",
+            "dedupe",
+            "prescreen",
+            "pdf_get",
+            "pdf_get_man",
+            "pdf_prep",
+            "pdf_prep_man",
+            "screen",
+            "data",
+        ]:
+            new_doc.append("")
+            new_doc.append(endpoint_type)
+            new_doc.append("-----------------------------")
+            new_doc.append("")
+
+            new_doc.append(".. toctree::")
+            new_doc.append("   :maxdepth: 1")
+            new_doc.append("")
+
+            doc_items = docs_for_index[endpoint_type]
+            for doc_item in sorted(doc_items, key=lambda d: d["identifier"]):
+                if doc_item == "NotImplemented":
+                    print(doc_item["path"])
+                    continue
+                new_doc.append(f"   extensions_index/{doc_item['path']}")
+
+        with open(extensions_index_path, "w", encoding="utf-8") as file:
+            for line in new_doc:
+                file.write(line + "\n")
+
     def __add_package_endpoints(
         self,
         *,
         selected_package: str,
         package_endpoints_json: dict,
         package_endpoints: dict,
+        docs_for_index: dict,
         package_status: dict,
     ) -> None:
         for endpoint_type, endpoint_list in package_endpoints_json.items():
@@ -876,20 +960,61 @@ class PackageManager:
                 # In separate packages, we the main readme.md file should be used
                 code_link = code_link[: code_link.rfind("/")]
                 code_link += ".md"
-                if hasattr(endpoint, "link"):
-                    link = endpoint.link
+                if hasattr(endpoint, "docs_link"):
+                    docs_link = endpoint.docs_link
                 else:
-                    link = code_link
+                    docs_link = code_link
+
+                package_index_path = self.__import_package_docs(
+                    docs_link, endpoint_item["package_endpoint_identifier"]
+                )
+
+                item = {
+                    "path": package_index_path,
+                    "short_description": endpoint_item["short_description"],
+                    "identifier": endpoint_item["package_endpoint_identifier"],
+                }
+                try:
+                    docs_for_index[endpoint_type].append(item)
+                except KeyError:
+                    docs_for_index[endpoint_type] = [item]
+
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
-                    endpoint_item["short_description"] + f" (`instructions <{link}>`__)"
+                    endpoint_item["short_description"]
+                    + " (:doc:`instructions </resources/extensions_index/"
+                    + f"{endpoint_item['package_endpoint_identifier']}>`)"
                 )
+                if endpoint_type == "search_source":
+                    endpoint_item["search_types"] = [
+                        x.value for x in endpoint.search_types
+                    ]
 
             endpoint_list += [
                 x
                 for x in package_endpoints["endpoints"][endpoint_type]
                 if x["package_endpoint_identifier"].split(".")[0] == selected_package
             ]
+
+    def __extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
+        search_source_types: typing.Dict[str, list] = {}
+        for search_source_type in colrev.settings.SearchType:
+            if search_source_type.value not in search_source_types:
+                search_source_types[search_source_type.value] = []
+            for search_source in package_endpoints_json["search_source"]:
+                if search_source_type.value in search_source["search_types"]:
+                    search_source_types[search_source_type.value].append(search_source)
+
+        for key in search_source_types:
+            search_source_types[key] = sorted(
+                search_source_types[key],
+                key=lambda d: d["package_endpoint_identifier"],
+            )
+
+        json_object = json.dumps(search_source_types, indent=4)
+        with open(self.__search_source_types_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
 
     def __load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
@@ -926,6 +1051,8 @@ class PackageManager:
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
         }
+        docs_for_index: typing.Dict[str, list] = {}
+
         for package in packages:
             print(f'Loading package endpoints from {package["module"]}')
             module_spec = importlib.util.find_spec(package["module"])
@@ -948,7 +1075,11 @@ class PackageManager:
                 selected_package=package["module"],
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
+                docs_for_index=docs_for_index,
                 package_status=package_status,
+            )
+            self.__extract_search_source_types(
+                package_endpoints_json=package_endpoints_json
             )
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(
@@ -967,6 +1098,8 @@ class PackageManager:
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+        self.__write_docs_for_index(docs_for_index)
 
     def add_endpoint_for_operation(
         self,

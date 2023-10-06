@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.10.0"
+version = "0.10.1"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
@@ -76,6 +76,7 @@ levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for the
 pyalex = "^0.10"
 rispy = "^0.7.1"
 colrev-asreview = "^0.1.0"
+m2r = "^0.3.1"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"
@@ -89,10 +90,50 @@ repoze-sphinx-autointerface = "^1.0.0"
 [tool.poetry.group.dev.dependencies]
 pylint = "^2.17.2"
 pytest = "^7.2.1"
-coverage = "^6.5.0"
+coverage = {extras = ["toml"], version = "^7.3.2"}
 types-click = "^7.1.8"
 pytest-mock = "^3.10.0"
 requests-mock = "^1.10.0"
+
+[tool.mypy]
+python_version = 3.8
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "requests.*",
+    "yaml.*",
+    "pkg_resources.*",
+]
+ignore_missing_imports = true
+
+[tool.pylint.MAIN]
+extension-pkg-whitelist = "lxml.etree"
+load-plugins = ["colrev.linter.colrev_lint"]
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = ["R0801"]
+
+[tool.coverage.report]
+omit = [
+    "colrev/ops/built_in/*", # omit reference implementation
+    "/usr/*", # omit everything in /usr
+    "*crossrefapi/crossref/*",
+    "colrev/env/grobid_service.py",
+    "/tmp/*",
+    "tests/*",
+]
+
+[tool.coverage.run]
+omit = [
+    "colrev/ops/built_in/*", # omit reference implementation
+    "/usr/*", # omit everything in /usr
+    "*crossrefapi/crossref/*",
+    "colrev/env/grobid_service.py",
+    "/tmp/*",
+    "tests/*",
+]
 
 [tool.ruff]
 line-length = 160

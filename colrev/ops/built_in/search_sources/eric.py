@@ -28,16 +28,16 @@ import colrev.record
 )
 @dataclass
 class ERICSearchSource(JsonSchemaMixin):
-    """SearchSource for the ERIC API"""
+    """ERIC API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.eric"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/eric.md"
     )
@@ -135,13 +135,19 @@ class ERICSearchSource(JsonSchemaMixin):
         return field_value
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
 
-        elif "https://api.ies.ed.gov/eric/?" in params:
+        if "https://api.ies.ed.gov/eric/?" in params:
             url_parsed = urllib.parse.urlparse(params)
             new_query = urllib.parse.parse_qs(url_parsed.query)
             search = new_query.get("search", [""])[0]
@@ -157,13 +163,11 @@ class ERICSearchSource(JsonSchemaMixin):
                 search_parameters={"query": search, "start": start, "rows": rows},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
-        else:
-            raise colrev_exceptions.PackageParameterError(
-                f"Cannot add ERIC endpoint with query {params}"
-            )
+        raise colrev_exceptions.PackageParameterError(
+            f"Cannot add ERIC endpoint with query {params}"
+        )
 
     def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
         """Get the records from a query"""
@@ -185,17 +189,9 @@ class ERICSearchSource(JsonSchemaMixin):
             record = self.__create_record(doc)
             yield record
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
+    def __run_api_search(
+        self, *, eric_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
     ) -> None:
-        """Run a search of ERIC"""
-
-        eric_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-
         records = self.review_manager.dataset.load_records_dict()
         for record in self.get_query_return():
             prev_record_dict_version: dict = {}
@@ -216,6 +212,22 @@ class ERICSearchSource(JsonSchemaMixin):
         eric_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.add_record_changes()
+
+    def run_search(self, rerun: bool) -> None:
+        """Run a search of ERIC"""
+
+        # TODO : validate source
+
+        eric_feed = self.search_source.get_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        if self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(eric_feed=eric_feed, rerun=rerun)
+        else:
+            raise NotImplementedError
 
     def __build_search_url(self) -> str:
         url = "https://api.ies.ed.gov/eric/"
@@ -285,9 +297,12 @@ class ERICSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".nbib":
             nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="eric_id",
             )
-            records = nbib_loader.load(source=self.search_source)
+            entries = nbib_loader.load_nbib_entries()
+            records = nbib_loader.convert_to_records(entries=entries)
             return records
 
         if self.search_source.filename.suffix == ".bib":
@@ -302,5 +317,8 @@ class ERICSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for ERIC"""
+
+        if "issn" in record.data:
+            record.data["issn"] = record.data["issn"].lstrip("ISSN-")
 
         return record

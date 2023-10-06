@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.load_utils_bib
+import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
 
@@ -24,16 +26,17 @@ import colrev.record
 )
 @dataclass
 class ABIInformProQuestSearchSource(JsonSchemaMixin):
-    """SearchSource for ABI/INFORM (ProQuest)"""
+    """ABI/INFORM (ProQuest)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
         + "ops/built_in/search_sources/abi_inform_proquest.md"
     )
@@ -51,21 +54,50 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
 
-        if "www.proquest.com" in data:  # nosec
-            if data.count("www.proquest.com") >= data.count("\n@"):
+        if "proquest.com" in data:  # nosec
+            if data.count("proquest.com") >= data.count("\n@"):
+                result["confidence"] = 1.0
+            if data.count("proquest.com") >= data.count("TY  -"):
                 result["confidence"] = 1.0
 
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
-        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        raise NotImplementedError
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
+        """Add SearchSource as an endpoint"""
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+        # TODO : if filename...
+        print("Manual search mode")
+        print("- Go to https://search.proquest.com/abicomplete/advanced")
+        print("- Search for your query")
+        filename = operation.get_unique_filename(file_path_string="abi_informs")
+        query_file = operation.get_query_filename(filename=filename, instantiate=True)
+        print(f"- Save search results in {filename}")
+        print(f"- Save query in {query_file}")
+        input("Press Enter to complete")
+
+        add_source = colrev.settings.SearchSource(
+            endpoint=cls.endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query_file": query_file},
+            comment="",
+        )
+        return add_source
+
+    def run_search(self, rerun: bool) -> None:
         """Run a search of ABI/INFORM"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for AbiInform not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -117,6 +149,16 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 load_operation=load_operation, source=self.search_source
             )
             self.__remove_duplicates(records=records)
+            return records
+
+        if self.search_source.filename.suffix == ".ris":
+            ris_loader = colrev.ops.load_utils_ris.RISLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="accession_number",
+            )
+            ris_entries = ris_loader.load_ris_entries()
+            records = ris_loader.convert_to_records(entries=ris_entries)
             return records
 
         raise NotImplementedError

@@ -106,7 +106,7 @@ class TableLoadUtility:
     def __drop_fields(cls, *, records_dict: dict) -> dict:
         for r_dict in records_dict.values():
             for key in list(r_dict.keys()):
-                if r_dict[key] == f"no {key}":
+                if r_dict[key] in [f"no {key}", "", "nan"]:
                     del r_dict[key]
             if (
                 r_dict.get("number_of_cited_references", "NA")
@@ -131,11 +131,19 @@ class TableLoadUtility:
         return records_dict
 
     @classmethod
+    def __fix_authors(cls, *, records_dict: dict) -> dict:
+        for record in records_dict.values():
+            if "author" in record and ";" in record["author"]:
+                record["author"] = record["author"].replace("; ", " and ")
+        return records_dict
+
+    @classmethod
     def preprocess_records(cls, *, records: list) -> dict:
         """Preprocess records imported from a table"""
 
         records_dict = cls.__get_records_dict(records=records)
         records_dict = cls.__drop_fields(records_dict=records_dict)
+        records_dict = cls.__fix_authors(records_dict=records_dict)
 
         return records_dict
 
@@ -149,14 +157,18 @@ class CSVLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
+        self.unique_id_field = unique_id_field
 
-    def load(self) -> dict:
-        """Load records from the source"""
+    def load_table_entries(self) -> dict:
+        """Load table entries from the source"""
 
-        self.load_operation.ensure_append_only(file=self.source.filename)
+        if self.unique_id_field == "":
+            self.load_operation.ensure_append_only(file=self.source.filename)
+        # TODO : else: plausibility check: the old uique_ids should still be available
 
         try:
             data = pd.read_csv(self.source.filename)
@@ -171,18 +183,19 @@ class CSVLoader:
         records_value_list = data.to_dict("records")
 
         records_dict = TableLoadUtility.preprocess_records(records=records_value_list)
+        return records_dict
 
-        if not all("ID" in r for r in records_dict.values()):
-            for i, record in enumerate(records_dict.values()):
-                record["ID"] = str(i).rjust(6, "0")
+    def convert_to_records(self, *, entries: dict) -> dict:
+        """Converts table entries it to bib records"""
 
-        records = {r["ID"]: r for r in records_dict.values()}
-        for record_id, record in records.items():
-            if "author" in record and ";" in record["author"]:
-                record["author"] = record["author"].replace("; ", " and ")
-            records[record_id] = {
-                k: v for k, v in record.items() if v not in ["", "nan"]
-            }
+        for i, record in enumerate(entries.values()):
+            if self.unique_id_field == "":
+                _id = str(i + 1).zfill(6)
+            else:
+                _id = record[self.unique_id_field].replace(" ", "").replace(";", "_")
+            record["ID"] = _id
+
+        records = {r["ID"]: r for r in entries.values()}
 
         return records
 
@@ -195,14 +208,17 @@ class ExcelLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
+        self.unique_id_field = unique_id_field
 
-    def load(self) -> dict:
+    def load_table_entries(self) -> dict:
         """Load records from the source"""
 
-        self.load_operation.ensure_append_only(file=self.source.filename)
+        if self.unique_id_field == "":
+            self.load_operation.ensure_append_only(file=self.source.filename)
 
         try:
             data = pd.read_excel(
@@ -218,13 +234,19 @@ class ExcelLoader:
         data.columns = data.columns.str.replace("-", "_")
         data.columns = data.columns.str.lower()
         record_value_list = data.to_dict("records")
-        records_dicts = TableLoadUtility.preprocess_records(records=record_value_list)
-        records = {r["ID"]: r for r in records_dicts.values()}
-        for record_id, record in records.items():
-            if "author" in record and ";" in record["author"]:
-                record["author"] = record["author"].replace("; ", " and ")
-            records[record_id] = {
-                k: v for k, v in record.items() if v not in ["", "nan"]
-            }
+        records_dict = TableLoadUtility.preprocess_records(records=record_value_list)
+        return records_dict
+
+    def convert_to_records(self, *, entries: dict) -> dict:
+        """Converts table entries it to bib records"""
+
+        for i, record in enumerate(entries.values()):
+            if self.unique_id_field == "":
+                _id = str(i + 1).zfill(6)
+            else:
+                _id = record[self.unique_id_field].replace(" ", "").replace(";", "_")
+            record["ID"] = _id
+
+        records = {r["ID"]: r for r in entries.values()}
 
         return records

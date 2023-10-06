@@ -28,16 +28,17 @@ import colrev.record
 )
 @dataclass
 class SpringerLinkSearchSource(JsonSchemaMixin):
-    """SearchSource for Springer Link"""
+    """Springer Link"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.springer_link"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Springer Link"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/springer_link.md"
     )
@@ -64,14 +65,23 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of SpringerLink"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for SprinterLink not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -88,9 +98,12 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             csv_loader = colrev.ops.load_utils_table.CSVLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="item_doi",
             )
-            records = csv_loader.load()
+            table_entries = csv_loader.load_table_entries()
+            records = csv_loader.convert_to_records(entries=table_entries)
             self.__load_fixes(records=records)
             return records
 

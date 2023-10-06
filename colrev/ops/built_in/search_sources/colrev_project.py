@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,17 +32,17 @@ import colrev.record
 )
 @dataclass
 class ColrevProjectSearchSource(JsonSchemaMixin):
-    """Performs a search in a CoLRev project"""
+    """CoLRev projects"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
-    search_type = colrev.settings.SearchType.OTHER
+    search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.colrev_project"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "CoLRev project"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/colrev_project.md"
     )
@@ -70,12 +71,17 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            source = operation.add_interactively(endpoint=cls.endpoint)
+            return source
 
         if params.startswith("url="):
             filename = operation.get_unique_filename(
@@ -88,8 +94,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 search_parameters={"scope": {"url": params[4:]}},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise NotImplementedError
 
@@ -121,9 +126,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         shutil.rmtree(temp_path)
         return records_to_import
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
@@ -133,7 +136,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.__validate_source()
 
         colrev_project_search_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
@@ -153,8 +156,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             "grobid-version",
         ]
 
-        search_operation.review_manager.logger.info("Importing selected records")
-        records = search_operation.review_manager.dataset.load_records_dict()
+        self.review_manager.logger.info("Importing selected records")
+        records = self.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []

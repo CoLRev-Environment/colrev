@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -34,17 +35,17 @@ if TYPE_CHECKING:
 )
 @dataclass
 class OpenLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for the OpenLibrary API"""
+    """OpenLibrary API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-
+    endpoint = "colrev.open_library"
     source_identifier = "isbn"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.MD]
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_library.md"
     )
@@ -75,7 +76,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.open_library",
                     filename=self.__open_library_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -239,14 +240,23 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of OpenLibrary"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for OpenLibrary not automated."
+        #         )
 
     def get_masterdata(
         self,

@@ -17,10 +17,13 @@ colrev.ops.search.Search
       :nosignatures:
 
       ~Search.add_interactively
+      ~Search.add_most_likely_sources
       ~Search.check_precondition
       ~Search.check_source_selection_exists
       ~Search.conclude
       ~Search.decorate
+      ~Search.get_new_sources_heuristic_list
+      ~Search.get_query_filename
       ~Search.get_unique_filename
       ~Search.main
       ~Search.remove_forthcoming

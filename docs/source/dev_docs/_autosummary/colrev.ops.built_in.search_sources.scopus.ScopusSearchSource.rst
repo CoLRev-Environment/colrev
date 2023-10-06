@@ -40,10 +40,10 @@ colrev.ops.built\_in.search\_sources.scopus.ScopusSearchSource
 
    .. autosummary::
 
-      ~ScopusSearchSource.api_search_supported
       ~ScopusSearchSource.ci_supported
+      ~ScopusSearchSource.docs_link
+      ~ScopusSearchSource.endpoint
       ~ScopusSearchSource.heuristic_status
-      ~ScopusSearchSource.link
-      ~ScopusSearchSource.search_type
+      ~ScopusSearchSource.search_types
       ~ScopusSearchSource.short_name
       ~ScopusSearchSource.source_identifier

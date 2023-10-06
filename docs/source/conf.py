@@ -101,4 +101,9 @@ linkcheck_ignore = [
     r"http://bibutils.refbase.org/|"
     + r"https://www.sciencedirect.com/.*"
     + r"|https://www.tandfonline.com.*"
+    + r"|https://onlinelibrary.wiley.com"
+    + r"|https://www.webofknowledge.com"
+    + r"|https://ieeexploreapi.ieee.org"
+    + r"|https://ieeexplore.ieee.org"
+    + r"|http://www.scopus.com"
 ]

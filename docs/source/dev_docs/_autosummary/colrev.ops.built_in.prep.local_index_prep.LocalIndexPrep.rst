@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.local\_index\_prep.LocalIndexPrep
 
       ~LocalIndexPrep.always_apply_changes
       ~LocalIndexPrep.ci_supported
+      ~LocalIndexPrep.docs_link
       ~LocalIndexPrep.source_correction_hint

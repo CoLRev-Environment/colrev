@@ -1,14 +1,12 @@
-# SearchSource: IEEEXplore
+# IEEEXplore
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): run_search (including updates), load,  prep (including get_masterdata)
+### DB search
 
-[IEEEXplore](https://ieeexplore.ieee.org/)
+csv export is preferred because the other formats (bib/ris) do not export the url (which includes the accession number). The accession number is important for search updates.
 
-## Add the search source
+### API search
 
 Download search results and store in `data/search/` directory.
 
@@ -41,3 +39,5 @@ colrev search -a colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/ar
 ```
 
 ## Links
+
+- [IEEEXplore](https://ieeexplore.ieee.org/)

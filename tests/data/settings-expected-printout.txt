@@ -2,7 +2,7 @@ Review (literature_review):
 Search
  - retrieve_forthcoming: True
 Sources
-colrev.pdfs_dir (type: PDFS, filename: data/search/pdfs.bib)
+colrev.files_dir (type: PDFS, filename: data/search/pdfs.bib)
    search parameters:   {'scope': {'path': 'data/pdfs'}}
 Load
  - TODO

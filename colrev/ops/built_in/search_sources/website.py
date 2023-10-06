@@ -28,7 +28,7 @@ class WebsiteConnector:
     """Connector for the Zotero translator for websites"""
 
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.todo
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/website.py"
     )

@@ -13,9 +13,9 @@
     },
     "sources": [
         {
-            "endpoint": "colrev.pdfs_dir",
-            "filename": "data/search/pdfs.bib",
-            "search_type": "PDFS",
+            "endpoint": "colrev.files_dir",
+            "filename": "data/search/files.bib",
+            "search_type": "FILES",
             "search_parameters": {"scope": {"path": "data/pdfs"}},
             "comment": ""
         }
@@ -48,7 +48,7 @@
                         "endpoint": "colrev.exclude_complementary_materials"
                     },
                     {
-                        "endpoint": "colrev.get_masterdata_from_local_index"
+                        "endpoint": "colrev.local_index"
                     },
                     {
                         "endpoint": "colrev.exclude_languages"
@@ -66,19 +66,19 @@
                         "endpoint": "colrev.get_year_from_vol_iss_jour"
                     },
                     {
-                        "endpoint": "colrev.get_masterdata_from_crossref"
+                        "endpoint": "colrev.crossref"
                     },
                     {
-                        "endpoint": "colrev.get_masterdata_from_pubmed"
+                        "endpoint": "colrev.pubmed"
                     },
                     {
-                        "endpoint": "colrev.get_masterdata_from_europe_pmc"
+                        "endpoint": "colrev.europe_pmc"
                     },
                     {
-                        "endpoint": "colrev.get_masterdata_from_dblp"
+                        "endpoint": "colrev.dblp"
                     },
                     {
-                        "endpoint": "colrev.get_masterdata_from_open_library"
+                        "endpoint": "colrev.open_library"
                     }
                 ]
             }

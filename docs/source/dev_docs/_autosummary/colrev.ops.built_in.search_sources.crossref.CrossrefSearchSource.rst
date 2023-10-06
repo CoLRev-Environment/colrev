@@ -44,10 +44,10 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
 
    .. autosummary::
 
-      ~CrossrefSearchSource.api_search_supported
       ~CrossrefSearchSource.ci_supported
+      ~CrossrefSearchSource.docs_link
+      ~CrossrefSearchSource.endpoint
       ~CrossrefSearchSource.heuristic_status
-      ~CrossrefSearchSource.link
-      ~CrossrefSearchSource.search_type
+      ~CrossrefSearchSource.search_types
       ~CrossrefSearchSource.short_name
       ~CrossrefSearchSource.source_identifier

@@ -42,17 +42,21 @@ defusedxml.defuse_stdlib()
 )
 @dataclass
 class EuropePMCSearchSource(JsonSchemaMixin):
-    """SearchSource for Europe PMC"""
+    """Europe PMC"""
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "europe_pmc_id"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.MD,
+    ]
     endpoint = "colrev.europe_pmc"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/europe_pmc.md"
     )
@@ -105,7 +109,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self.__europe_pmc_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -374,6 +378,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type in self.search_types
+
         if "query" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
@@ -381,42 +387,41 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
 
         self.__validate_source()
         # https://europepmc.org/RestfulWebService
 
-        search_operation.review_manager.logger.info(
-            f"Retrieve Europe PMC: {self.search_source.search_parameters}"
-        )
-
         europe_pmc_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            print("Not yet implemented")
-            # self.__run_md_search_update(
-            #     search_operation=search_operation,
-            #     europe_pmc_feed=europe_pmc_feed,
-            # )
-
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        if self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Europe PMC not automated."
+        #         )
 
-    def __run_parameter_search(
+        # if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        # self.__run_md_search_update(
+        #     search_operation=search_operation,
+        #     europe_pmc_feed=europe_pmc_feed,
+        # )
+
+        else:
+            raise NotImplementedError
+
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
@@ -433,7 +438,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             headers = {"user-agent": f"{__name__} (mailto:{email})"}
             session = self.review_manager.get_cached_session()
 
-            records = search_operation.review_manager.dataset.load_records_dict()
+            records = self.review_manager.dataset.load_records_dict()
 
             while url != "END":
                 self.review_manager.logger.debug(url)
@@ -457,7 +462,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                             europe_pmc_feed.feed_records[retrieved_record.data["ID"]]
                         )
                     if "title" not in retrieved_record.data:
-                        search_operation.review_manager.logger.warning(
+                        self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
                         )
                         continue
@@ -474,7 +479,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     added = europe_pmc_feed.add_record(record=retrieved_record)
 
                     if added:
-                        search_operation.review_manager.logger.info(
+                        self.review_manager.logger.info(
                             " retrieve europe_pmc_id="
                             + retrieved_record.data["europe_pmc_id"]
                         )
@@ -520,12 +525,17 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
 
         host = urlparse(params).hostname
 
@@ -544,8 +554,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 search_parameters={"query": params},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise NotImplementedError
 

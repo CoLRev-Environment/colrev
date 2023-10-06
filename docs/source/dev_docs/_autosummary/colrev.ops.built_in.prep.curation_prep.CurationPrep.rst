@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.curation\_prep.CurationPrep
 
       ~CurationPrep.always_apply_changes
       ~CurationPrep.ci_supported
+      ~CurationPrep.docs_link
       ~CurationPrep.source_correction_hint

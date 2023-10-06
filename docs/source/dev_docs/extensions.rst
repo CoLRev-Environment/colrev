@@ -1,5 +1,3 @@
-.. _extension interfaces:
-
 Extension interfaces
 ========================================
 
@@ -10,9 +8,6 @@ Extension interfaces
    :members:
 
 .. autointerface:: colrev.env.package_manager.SearchSourcePackageEndpointInterface
-   :members:
-
-.. autointerface:: colrev.env.package_manager.LoadConversionPackageEndpointInterface
    :members:
 
 .. autointerface:: colrev.env.package_manager.PrepPackageEndpointInterface

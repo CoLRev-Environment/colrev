@@ -1,8 +1,5 @@
-
 Custom script extensions
 ==================================
-
-
 
 To develop a custom extension script, run the command for the respective operation:
 

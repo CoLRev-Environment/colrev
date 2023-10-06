@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -24,16 +25,16 @@ import colrev.record
 )
 @dataclass
 class TaylorAndFrancisSearchSource(JsonSchemaMixin):
-    """SearchSource for Taylor and Francis"""
+    """Taylor and Francis"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Taylor and Francis"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/taylor_and_francis.md"
     )
@@ -42,6 +43,7 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -57,15 +59,22 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, operation: colrev.ops.search.Search, params: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of TaylorAndFrancis"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Taylor and Francis not automated."
+        #         )
 
     def get_masterdata(
         self,

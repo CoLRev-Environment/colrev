@@ -38,4 +38,5 @@ colrev.ops.built\_in.prep.open\_alex\_metadata\_prep.OpenAlexMetadataPrep
 
       ~OpenAlexMetadataPrep.always_apply_changes
       ~OpenAlexMetadataPrep.ci_supported
+      ~OpenAlexMetadataPrep.docs_link
       ~OpenAlexMetadataPrep.source_correction_hint
