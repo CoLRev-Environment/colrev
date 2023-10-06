@@ -38,8 +38,8 @@ The last sections of the setup explain how to setup CoLRev on Windows using the 
    :maxdepth: 3
    :caption: Installation instructions
 
-   dev_setup/part_1_docker
-   dev_setup/part_2_git_ssh
-   dev_setup/part_3_colrev
-   dev_setup/macos_vm
-   dev_setup/windows_wsl2
+   setup/part_1_docker
+   setup/part_2_git_ssh
+   setup/part_3_colrev
+   setup/windows_wsl2
+   setup/macos_vm

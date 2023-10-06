@@ -1,7 +1,7 @@
 Setup part 1: Docker
 ------------------------
 
-NOTE: if you are running Windows or macOS, please perform the steps in their respective sections first (:doc:`Windows <dev_docs/dev_setup/windows_wsl2>`, :doc:`macOS <dev_docs/dev_setup/macos_vm>`)!
+NOTE: if you are running Windows or macOS, please perform the steps in their respective sections first (:doc:`Windows <dev_docs/setup/windows_wsl2>`, :doc:`macOS <dev_docs/setup/macos_vm>`)!
 
 If you are using a distribution other than ubuntu, please replace "ubuntu" in the following links (urls) with your respective distribution name.
 

@@ -39,8 +39,8 @@ Install the guest additions for a better integration between host and guest syst
    Activate copy-paste between the VM (guest) and your OS (host):
    Devices > Shared Clipboard > Bidirectional
 
-Afterwards, please update :doc:`git and SSH <dev_docs/dev_setup/part_2_git_ssh>`.
+Afterwards, please update :doc:`git and SSH <dev_docs/setup/part_2_git_ssh>`.
 
 **Setup your own virtual machine from scratch**
 
-If you want to setup your own virtual machine from scratch, please contiue with the steps in :doc:`"Setup part 1: Docker" <dev_docs/dev_setup/part_1_docker>`.
+If you want to setup your own virtual machine from scratch, please contiue with the steps in :doc:`"Setup part 1: Docker" <dev_docs/setup/part_1_docker>`.

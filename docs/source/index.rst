@@ -112,7 +112,7 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :caption: Developer documentation
    :maxdepth: 1
 
-   dev_docs/dev_setup
+   dev_docs/setup
    dev_docs/api
    dev_docs/extensions
    dev_docs/dev_status

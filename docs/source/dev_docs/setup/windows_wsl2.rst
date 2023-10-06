@@ -27,4 +27,4 @@ Restart your machine and setup a new user:
   Press "WIN + S", type "ubuntu" and start "Ubuntu"
   Setup a new user and assign a password
 
-Afterwards, follow the steps in :doc:`"Setup part 2: Git and SS" <dev_docs/dev_setup/part_2_git_ssh>`.
+Afterwards, follow the steps in :doc:`"Setup part 2: Git and SS" <dev_docs/setup/part_2_git_ssh>`.
