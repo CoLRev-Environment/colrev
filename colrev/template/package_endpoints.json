@@ -296,11 +296,11 @@
             ]
         },
         {
-            "package_endpoint_identifier": "colrev.pdfs_dir",
-            "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource",
+            "package_endpoint_identifier": "colrev.files_dir",
+            "endpoint": "colrev.ops.built_in.search_sources.files_dir.FilesSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "PDF directories (based on GROBID) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/pdfs_dir.md>`__)",
+            "short_description": "Files directories (PDFs based on GROBID) (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/files_dir.md>`__)",
             "ci_supported": false,
             "search_types": [
                 "FILES"
@@ -398,17 +398,6 @@
                 "BACKWARD_SEARCH",
                 "FORWARD_SEARCH",
                 "TOC"
-            ]
-        },
-        {
-            "package_endpoint_identifier": "colrev.video_dir",
-            "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Directory containing video files (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/video_dir.md>`__)",
-            "ci_supported": false,
-            "search_types": [
-                "FILES"
             ]
         },
         {

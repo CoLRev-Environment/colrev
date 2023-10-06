@@ -32,8 +32,8 @@ def test_settings_load() -> None:
         },
         "sources": [
             {
-                "endpoint": "colrev.pdfs_dir",
-                "filename": Path("data/search/pdfs.bib"),
+                "endpoint": "colrev.files_dir",
+                "filename": Path("data/search/files.bib"),
                 "search_type": colrev.settings.SearchType.FILES,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
                 "comment": "",

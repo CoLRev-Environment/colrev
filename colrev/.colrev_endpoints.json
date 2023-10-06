@@ -256,11 +256,8 @@
             {"package_endpoint_identifier": "colrev.scopus",
              "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource"
             },
-            {"package_endpoint_identifier": "colrev.pdfs_dir",
-             "endpoint": "colrev.ops.built_in.search_sources.pdfs_dir.PDFSearchSource"
-            },
-            {"package_endpoint_identifier": "colrev.video_dir",
-             "endpoint": "colrev.ops.built_in.search_sources.video_dir.VideoDirSearchSource"
+            {"package_endpoint_identifier": "colrev.files_dir",
+             "endpoint": "colrev.ops.built_in.search_sources.files_dir.FilesSearchSource"
             },
             {"package_endpoint_identifier": "colrev.pdf_backward_search",
              "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource"

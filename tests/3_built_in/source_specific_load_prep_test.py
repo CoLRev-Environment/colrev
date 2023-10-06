@@ -84,16 +84,16 @@ NO_CUSTOM_SOURCE = None
         ),
         (Path("wiley.bib"), "colrev.wiley", NO_CUSTOM_SOURCE, Path("wiley_result.bib")),
         (
-            Path("pdfs_dir.bib"),
-            "colrev.pdfs_dir",
+            Path("files_dir.bib"),
+            "colrev.files_dir",
             colrev.settings.SearchSource(
-                endpoint="colrev.pdfs_dir",
-                filename=Path("data/search/pdfs_dir.bib"),
+                endpoint="colrev.files_dir",
+                filename=Path("data/search/files_dir.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),
-            Path("pdfs_dir_result.bib"),
+            Path("files_dir_result.bib"),
         ),
         (
             Path("ieee.ris"),

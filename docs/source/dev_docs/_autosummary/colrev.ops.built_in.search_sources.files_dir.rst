@@ -1,7 +1,7 @@
-colrev.ops.built\_in.search\_sources.video\_dir
+colrev.ops.built\_in.search\_sources.files\_dir
 ===============================================
 
-.. automodule:: colrev.ops.built_in.search_sources.video_dir
+.. automodule:: colrev.ops.built_in.search_sources.files_dir
 
 
 
@@ -20,4 +20,4 @@ colrev.ops.built\_in.search\_sources.video\_dir
       :template: custom-class-template.rst
       :nosignatures:
 
-      VideoDirSearchSource
+      FilesSearchSource

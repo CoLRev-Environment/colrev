@@ -479,6 +479,8 @@ class Upgrade(colrev.operation.Operation):
 
         settings = self.__load_settings_dict()
         for source in settings["sources"]:
+            if source["endpoint"] == "colrev.pdfs_dir":
+                source["endpoint"] = "colrev.files_dir"
             if "data/search/md_" in source["filename"]:
                 source["search_type"] = "MD"
             if source["search_type"] == "PDFS":
