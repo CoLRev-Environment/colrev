@@ -27,9 +27,11 @@ colrev.settings.SearchType
 
    .. autosummary::
 
+      ~SearchType.API
       ~SearchType.DB
       ~SearchType.TOC
       ~SearchType.BACKWARD_SEARCH
       ~SearchType.FORWARD_SEARCH
-      ~SearchType.PDFS
+      ~SearchType.FILES
       ~SearchType.OTHER
+      ~SearchType.MD

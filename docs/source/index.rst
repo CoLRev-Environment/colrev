@@ -100,6 +100,7 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    resources/extensions
+   resources/extensions_index
    resources/search_sources
    resources/quality_model
    resources/curation

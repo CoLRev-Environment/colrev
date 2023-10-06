@@ -18,6 +18,7 @@ Table of contents
 - :any:`year-format`
 - :any:`doi-not-matching-pattern`
 - :any:`isbn-not-matching-pattern`
+- :any:`pubmedid_not_matching_pattern`
 - :any:`language-format-error`
 - :any:`language-unknown`
 
@@ -386,6 +387,36 @@ TODO : ISBN-10/ISBN13, how multiple ISBNs are stored
 | ibn             |
 +-----------------+
 
+.. raw:: html
+
+   <hr>
+
+.. _pubmedid_not_matching_pattern:
+
+pubmedid_not_matching_pattern
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pubmed IDs should be formatted correctly (7 or 8 digits).
+
+**Problematic value**
+
+.. code-block:: python
+
+    colrev.pubmed.pubmedid = {PMID: 1498274774},
+
+**Correct value**
+
+.. code-block:: python
+
+    colrev.pubmed.pubmedid = {33044175},
+
++-------------------------+
+| Fields checked          |
++=========================+
+| colrev.pubmed.pubmedid  |
++-------------------------+
+
+- [PMID specification](https://www.nlm.nih.gov/bsd/mms/medlineelements.html#pmid)
 
 .. raw:: html
 

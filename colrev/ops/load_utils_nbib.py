@@ -20,16 +20,14 @@ class NBIBLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
+        self.unique_id_field = unique_id_field
 
-    def load(
-        self,
-        *,
-        source: colrev.settings.SearchSource,
-    ) -> dict:
-        """Converts ris entries it to bib records"""
+    def load_nbib_entries(self) -> dict:
+        """Loads nbib entries"""
 
         # pylint: disable=too-many-branches
 
@@ -37,10 +35,11 @@ class NBIBLoader:
         # This function intentionally fails when the input does not comply
         # with this standard
 
-        self.load_operation.ensure_append_only(file=self.source.filename)
+        if self.unique_id_field == "":
+            self.load_operation.ensure_append_only(file=self.source.filename)
 
         records = {}
-        with open(source.filename, encoding="utf-8") as file:
+        with open(self.source.filename, encoding="utf-8") as file:
             record = {}
             ind = 1
             for line in file:
@@ -79,6 +78,9 @@ class NBIBLoader:
                     else:
                         record["keywords"] = line[line.find(" - ") + 3 :].rstrip()
 
+                elif line.startswith("OID "):
+                    record["eric_id"] = line[line.find(" - ") + 3 :].rstrip()
+
                 elif line.rstrip() == "":
                     if not record:
                         continue
@@ -93,5 +95,21 @@ class NBIBLoader:
                     record = {}
                 # else:
                 #     print(line)
+
+        return records
+
+    def convert_to_records(self, *, entries: dict) -> dict:
+        """Converts nbib entries it to bib records"""
+
+        records: dict = {}
+        for counter, entry in enumerate(entries.values()):
+            if self.unique_id_field == "":
+                _id = str(counter + 1).zfill(5)
+            else:
+                _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
+
+            entry["ID"] = _id
+
+            records[_id] = entry
 
         return records

@@ -28,6 +28,8 @@ REFERENCE_TYPES = {
     "RPRT": "techreport",
     "CHAP": "inbook",
     "BOOK": "book",
+    "NEWS": "misc",
+    "BLOG": "misc",
 }
 KEY_MAP = {
     "article": {
@@ -77,7 +79,27 @@ KEY_MAP = {
         "keywords": "keywords",
         "pages": "pages",
     },
+    "phdthesis": {
+        "ID": "ID",
+        "ENTRYTYPE": "ENTRYTYPE",
+        "year": "year",
+        "authors": "author",
+        "primary_title": "title",
+        "url": "url",
+    },
     "techreport": {
+        "ID": "ID",
+        "ENTRYTYPE": "ENTRYTYPE",
+        "year": "year",
+        "authors": "author",
+        "primary_title": "title",
+        "url": "url",
+        "fulltext": "fulltext",
+        "keywords": "keywords",
+        "publisher": "publisher",
+        "pages": "pages",
+    },
+    "misc": {
         "ID": "ID",
         "ENTRYTYPE": "ENTRYTYPE",
         "year": "year",
@@ -119,9 +141,11 @@ class RISLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
+        self.unique_id_field = unique_id_field
 
     def apply_ris_fixes(self, *, filename: Path) -> None:
         """Fix common defects in RIS files"""
@@ -152,9 +176,7 @@ class RISLoader:
             for line in lines:
                 file.write(f"{line}\n")
 
-    def load_ris_entries(
-        self, *, filename: Path, ris_parser: BaseParser = DefaultRISParser
-    ) -> dict:
+    def load_ris_entries(self, *, ris_parser: BaseParser = DefaultRISParser) -> dict:
         """Load ris entries
 
         The resulting keys should coincide with those in the KEY_MAP
@@ -163,9 +185,10 @@ class RISLoader:
         # Note : depending on the source, a specific ris_parser implementation may be selected.
         # its DEFAULT_LIST_TAGS can be extended with list fiels that should be joined automatically
 
-        self.load_operation.ensure_append_only(file=self.source.filename)
+        if self.unique_id_field == "":
+            self.load_operation.ensure_append_only(file=self.source.filename)
 
-        with open(filename, encoding="utf-8") as ris_file:
+        with open(self.source.filename, encoding="utf-8") as ris_file:
             entries = rispy.load(file=ris_file, implementation=ris_parser)
 
         for entry in entries:
@@ -205,7 +228,11 @@ class RISLoader:
 
         records: dict = {}
         for counter, entry in enumerate(entries):
-            _id = str(counter + 1).zfill(5)
+            if self.unique_id_field == "":
+                _id = str(counter + 1).zfill(5)
+            else:
+                # TODO : similar ID assignment should be done for other parsers
+                _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
 
             type_of_ref = entry["type_of_reference"]
             if type_of_ref not in REFERENCE_TYPES:

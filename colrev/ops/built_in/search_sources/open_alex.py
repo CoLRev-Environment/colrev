@@ -2,6 +2,7 @@
 """SearchSource: OpenAlex"""
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -32,16 +33,17 @@ if TYPE_CHECKING:
 )
 @dataclass
 class OpenAlexSearchSource(JsonSchemaMixin):
-    """SearchSource for the OpenAlex API"""
+    """OpenAlex API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"
     # "https://api.crossref.org/works/{{doi}}"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = True
+    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_alex.md"
     )
@@ -74,7 +76,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.open_alex",
                 filename=self.__open_alex_md_filename,
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=colrev.settings.SearchType.MD,
                 search_parameters={},
                 comment="",
             )
@@ -241,9 +243,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of OpenAlex"""
 
         # https://docs.openalex.org/api-entities/works
@@ -255,16 +255,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         # )
 
         # try:
-        #     if (
-        #         self.search_source.is_md_source()
-        #         or self.search_source.is_quasi_md_source()
-        #     ):
+        #     if self.search_source.search_type == colrev.settings.SearchType.MD:
         #         self.__run_md_search_update(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #         )
-
-        #     else:
+        #     elif self.search_source.search_type == colrev.settings.SearchType.API:
         #         self.__run_parameter_search(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
@@ -284,6 +280,14 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         #         self.__availability_exception_message
         #     )
 
+        # if self.search_source.search_type == colrev.settings.SearchType.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for OpenAlex not automated."
+        #         )
+
+        raise NotImplementedError
+
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for OpenAlex"""
@@ -293,7 +297,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         raise colrev_exceptions.PackageParameterError(

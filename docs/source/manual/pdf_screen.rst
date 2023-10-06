@@ -21,7 +21,7 @@ Similar to the prescreen, it is possible to skip the screen temporarily (``colre
 This may be particularly useful in scientometric studies.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Operations
 
    pdf_screen/screen

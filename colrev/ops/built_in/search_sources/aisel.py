@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import typing
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,17 +30,21 @@ import colrev.record
 )
 @dataclass
 class AISeLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for the AIS electronic Library (AISeL)"""
+    """AIS electronic Library (AISeL)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.TOC,
+        colrev.settings.SearchType.API,
+    ]
     endpoint = "colrev.ais_library"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "AIS eLibrary"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/aisel.md"
     )
@@ -148,33 +153,47 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         return params
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        # if params is None:
-        #     operation.add_interactively(endpoint=cls.endpoint)
-        #     return
-
-        params = params.lstrip("colrev.ais_library:").rstrip('"').lstrip('"')
-
-        host = urlparse(params).hostname
-
-        if host and host.endswith("aisel.aisnet.org"):
-            q_params = cls.__parse_query(query=params)
-            filename = operation.get_unique_filename(file_path_string="ais")
+        # Add DB search
+        if filename is not None:
+            query_file = operation.get_query_filename(
+                filename=filename, instantiate=True
+            )
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": q_params},
+                search_parameters={"query_file": str(query_file)},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add aisel endpoint with query {q_params}"
-        )
+        # Add API search with params
+        if params != "":
+            host = urlparse(params).hostname
+
+            if host and host.endswith("aisel.aisnet.org"):
+                q_params = cls.__parse_query(query=params)
+                filename = operation.get_unique_filename(file_path_string="ais")
+                add_source = colrev.settings.SearchSource(
+                    endpoint=cls.endpoint,
+                    filename=filename,
+                    search_type=colrev.settings.SearchType.DB,
+                    search_parameters={"query": q_params},
+                    comment="",
+                )
+                return add_source
+
+        # Add API search without params
+        add_source = operation.add_interactively(endpoint=cls.endpoint)
+        return add_source
 
     def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
@@ -255,84 +274,59 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         return list(records.values())
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
 
         if rerun:
-            search_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 
-        records = search_operation.review_manager.dataset.load_records_dict()
-        for record_dict in self.__get_ais_query_return():
-            # Note : discard "empty" records
-            if "" == record_dict.get("author", "") and "" == record_dict.get(
-                "title", ""
-            ):
-                continue
-
-            try:
-                ais_feed.set_id(record_dict=record_dict)
-            except colrev_exceptions.NotFeedIdentifiableException:
-                continue
-
-            # prev_record_dict_version = {}
-            # if record_dict["ID"] in ais_feed.feed_records:
-            #     prev_record_dict_version = deepcopy(
-            #         ais_feed.feed_records[record_dict["ID"]]
-            #     )
-
-            prep_record = colrev.record.PrepRecord(data=record_dict)
-
-            if "colrev_data_provenance" in prep_record.data:
-                del prep_record.data["colrev_data_provenance"]
-
-            added = ais_feed.add_record(record=prep_record)
-
-            if added:
-                self.review_manager.logger.info(" retrieve " + prep_record.data["url"])
-            # else:
-            #     search_operation.update_existing_record(
-            #         records=records,
-            #         record_dict=prep_record.data,
-            #         prev_record_dict_version=prev_record_dict_version,
-            #         source=self.search_source,
-            #         update_time_variant_fields=rerun,
-            #     )
-
-        ais_feed.print_post_run_search_infos(records=records)
-
-        ais_feed.save_feed_file()
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
-
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
-        """Run a search of AISeLibrary"""
-
-        self.__validate_source()
-
-        ais_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
+        records = self.review_manager.dataset.load_records_dict()
 
         try:
-            #  Note: not (yet) supported: self.search_source.is_md_source()
-            if "query" in self.search_source.search_parameters:
-                self.__run_parameter_search(
-                    search_operation=search_operation,
-                    ais_feed=ais_feed,
-                    rerun=rerun,
-                )
+            for record_dict in self.__get_ais_query_return():
+                # Note : discard "empty" records
+                if "" == record_dict.get("author", "") and "" == record_dict.get(
+                    "title", ""
+                ):
+                    continue
+
+                try:
+                    ais_feed.set_id(record_dict=record_dict)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
+
+                # prev_record_dict_version = {}
+                # if record_dict["ID"] in ais_feed.feed_records:
+                #     prev_record_dict_version = deepcopy(
+                #         ais_feed.feed_records[record_dict["ID"]]
+                #     )
+
+                prep_record = colrev.record.PrepRecord(data=record_dict)
+
+                if "colrev_data_provenance" in prep_record.data:
+                    del prep_record.data["colrev_data_provenance"]
+
+                added = ais_feed.add_record(record=prep_record)
+
+                if added:
+                    self.review_manager.logger.info(
+                        " retrieve " + prep_record.data["url"]
+                    )
+                # else:
+                #     search_operation.update_existing_record(
+                #         records=records,
+                #         record_dict=prep_record.data,
+                #         prev_record_dict_version=prev_record_dict_version,
+                #         source=self.search_source,
+                #         update_time_variant_fields=rerun,
+                #     )
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.HTTPError,
@@ -346,6 +340,33 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             raise colrev_exceptions.ServiceNotAvailableException(
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
+
+        ais_feed.print_post_run_search_infos(records=records)
+        ais_feed.save_feed_file()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
+
+    def run_search(self, rerun: bool) -> None:
+        """Run a search of AISeLibrary"""
+
+        self.__validate_source()
+
+        ais_feed = self.search_source.get_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        if self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(
+                ais_feed=ais_feed,
+                rerun=rerun,
+            )
+        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.SearchNotAutomated(
+                    "DB search for AISeL not automated."
+                )
 
     def get_masterdata(
         self,
@@ -362,9 +383,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix in [".txt", ".enl"]:
             enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="ID",
             )
-            records = enl_loader.load(source=self.search_source)
+            entries = enl_loader.load_enl_entries()
+            for entry in entries.values():
+                entry["ID"] = entry["url"].replace("https://aisel.aisnet.org/", "")
+            records = enl_loader.convert_to_records(entries=entries)
             return records
 
         # for API-based searches

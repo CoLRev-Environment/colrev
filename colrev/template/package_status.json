@@ -135,12 +135,8 @@
             "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.pdfs_dir",
+            "package_endpoint_identifier": "colrev.files_dir",
             "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.video_dir",
-            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
@@ -165,6 +161,10 @@
         {
             "package_endpoint_identifier": "colrev.open_alex",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.files_dir",
+            "status": "RED"
         }
     ],
     "prep": [

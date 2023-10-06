@@ -41,10 +41,10 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
 
    .. autosummary::
 
-      ~OpenLibrarySearchSource.api_search_supported
       ~OpenLibrarySearchSource.ci_supported
+      ~OpenLibrarySearchSource.docs_link
+      ~OpenLibrarySearchSource.endpoint
       ~OpenLibrarySearchSource.heuristic_status
-      ~OpenLibrarySearchSource.link
-      ~OpenLibrarySearchSource.search_type
+      ~OpenLibrarySearchSource.search_types
       ~OpenLibrarySearchSource.short_name
       ~OpenLibrarySearchSource.source_identifier

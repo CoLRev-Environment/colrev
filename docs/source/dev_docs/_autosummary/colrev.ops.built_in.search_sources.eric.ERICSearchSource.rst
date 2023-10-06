@@ -43,11 +43,10 @@ colrev.ops.built\_in.search\_sources.eric.ERICSearchSource
 
       ~ERICSearchSource.API_FIELDS
       ~ERICSearchSource.FIELD_MAPPING
-      ~ERICSearchSource.api_search_supported
       ~ERICSearchSource.ci_supported
+      ~ERICSearchSource.docs_link
       ~ERICSearchSource.endpoint
       ~ERICSearchSource.heuristic_status
-      ~ERICSearchSource.link
-      ~ERICSearchSource.search_type
+      ~ERICSearchSource.search_types
       ~ERICSearchSource.short_name
       ~ERICSearchSource.source_identifier

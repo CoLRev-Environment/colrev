@@ -10,6 +10,12 @@ Note: This document is currently under development. It will contain the followin
 
 ## Add the search source
 
+### DB search
+
+csv export is preferred because the other formats (bib/ris) do not export the url (which includes the accession number). The accession number is important for search updates.
+
+### API search
+
 Download search results and store in `data/search/` directory.
 
 Data from the IEEE database can be retrieved with the URL from the [https://www.ieee.org/](https://ieeexploreapi.ieee.org/api/v1/search/articles?parameter&apikey=). Add the URL as follows:

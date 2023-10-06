@@ -70,6 +70,7 @@ colrev.exceptions
       RepoInitError
       RepoSetupError
       ReviewManagerNotNofiedError
+      SearchNotAutomated
       SearchSourceException
       ServiceNotAvailableException
       SourceHeuristicsException

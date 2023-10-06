@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
@@ -33,20 +34,24 @@ import colrev.settings
 )
 @dataclass
 class DBLPSearchSource(JsonSchemaMixin):
-    """SearchSource for DBLP"""
+    """DBLP API"""
 
     __api_url = "https://dblp.org/search/publ/api?q="
     __api_url_venues = "https://dblp.org/search/venue/api?q="
     __START_YEAR = 1980
 
     source_identifier = "dblp_key"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.MD,
+        colrev.settings.SearchType.TOC,
+    ]
     endpoint = "colrev.dblp"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "DBLP"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/dblp.md"
     )
@@ -98,7 +103,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self.__dblp_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -346,8 +351,11 @@ class DBLPSearchSource(JsonSchemaMixin):
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
+        assert source.search_type in self.search_types
+
         # maybe : validate/assert that the venue_key is available
-        if "scope" in source.search_parameters:
+        if source.search_type == colrev.settings.SearchType.TOC:
+            assert "scope" in source.search_parameters
             if "venue_key" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
                     "venue_key required in search_parameters/scope"
@@ -356,9 +364,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
-        elif "query" in source.search_parameters:
+        if source.search_type == colrev.settings.SearchType.API:
+            assert "query" in source.search_parameters
             assert source.search_parameters["query"].startswith(self.__api_url)
-        elif source.is_md_source() or source.is_quasi_md_source():
+
+        elif source.search_type == colrev.settings.SearchType.MD:
             pass  # No parameters required
         else:
             raise colrev_exceptions.InvalidQueryException(
@@ -367,13 +377,12 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def __run_md_search_update(
+    def __run_md_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in dblp_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
@@ -408,14 +417,13 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
     def __run_param_search_year_batch(
         self,
         *,
         query: str,
-        search_operation: colrev.ops.search.Search,
         dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
         rerun: bool,
@@ -494,10 +502,9 @@ class DBLPSearchSource(JsonSchemaMixin):
             query = self.search_source.search_parameters["query"] + "+" + str(year)
         return query
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
@@ -511,7 +518,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self.review_manager.logger.debug(f"Retrieve year {year}")
                 self.__run_param_search_year_batch(
                     query=self.__get_query(year=year),
-                    search_operation=search_operation,
                     dblp_feed=dblp_feed,
                     records=records,
                     rerun=rerun,
@@ -522,35 +528,27 @@ class DBLPSearchSource(JsonSchemaMixin):
         except (requests.exceptions.RequestException,):
             pass
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of DBLP"""
 
         self.__validate_source()
 
-        search_operation.review_manager.logger.debug(
-            f"Retrieve DBLP: {self.search_source.search_parameters}"
-        )
-
         dblp_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                dblp_feed=dblp_feed,
-            )
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
+            self.__run_md_search(dblp_feed=dblp_feed)
 
+        elif self.search_source.search_type in [
+            colrev.settings.SearchType.API,
+            colrev.settings.SearchType.TOC,
+        ]:
+            self.__run_api_search(dblp_feed=dblp_feed, rerun=rerun)
         else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
-                dblp_feed=dblp_feed,
-                rerun=rerun,
-            )
+            raise NotImplementedError
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -569,12 +567,17 @@ class DBLPSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
 
         if (
             "https://dblp.org/search?q=" in params
@@ -594,8 +597,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 search_parameters={"query": params},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add backward_search endpoint with query {params}"

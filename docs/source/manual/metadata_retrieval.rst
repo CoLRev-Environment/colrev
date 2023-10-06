@@ -40,7 +40,7 @@ In particular, this pertains to an efficient flow of new records through the pro
    - Mention that more detailed commands (prep, prep-man, ...) will be suggested if colrev retrieve does not result in all records transitioning to md_processed
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Operations
 
    metadata_retrieval/search

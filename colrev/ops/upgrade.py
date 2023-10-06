@@ -139,8 +139,15 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_9_3,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.10.0"),
+                "target_version": CoLRevVersion("0.10.1"),
+                "script": self.__migrate_0_10_1,
+                "released": False,
+            },
         ]
-
+        print(f"installed_colrev_version: {installed_colrev_version}")
+        print(f"settings_version: {settings_version}")
         # Note: we should always update the colrev_version in settings.json because the
         # checker.__check_software requires the settings version and
         # the installed version to be identical
@@ -156,7 +163,6 @@ class Upgrade(colrev.operation.Operation):
                 run_migration = True
             if not run_migration:
                 continue
-
             if installed_colrev_version == settings_version and migrator["released"]:
                 return
 
@@ -467,6 +473,23 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
+    def __migrate_0_10_1(self) -> bool:
+        # TODO : replace PDFS, ...
+        # change search_type to MD for dblp, ... (existing settings)
+
+        settings = self.__load_settings_dict()
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev.pdfs_dir":
+                source["endpoint"] = "colrev.files_dir"
+            if "data/search/md_" in source["filename"]:
+                source["search_type"] = "MD"
+            if source["search_type"] == "PDFS":
+                source["search_type"] = "FILES"
+
+        self.__save_settings(settings)
+
+        return False
+
 
 # Note: we can ask users to make decisions (when defaults are not clear)
 # via input() or simply cancel the process (raise a CoLrevException)
@@ -479,11 +502,11 @@ class CoLRevVersion:
         if "+" in version_string:
             version_string = version_string[: version_string.find("+")]
 
-        self.major = version_string[: version_string.find(".")]
-        self.minor = version_string[
-            version_string.find(".") + 1 : version_string.rfind(".")
-        ]
-        self.patch = version_string[version_string.rfind(".") + 1 :]
+        self.major = int(version_string[: version_string.find(".")])
+        self.minor = int(
+            version_string[version_string.find(".") + 1 : version_string.rfind(".")]
+        )
+        self.patch = int(version_string[version_string.rfind(".") + 1 :])
 
     def __eq__(self, other) -> bool:  # type: ignore
         return str(self) == str(other)

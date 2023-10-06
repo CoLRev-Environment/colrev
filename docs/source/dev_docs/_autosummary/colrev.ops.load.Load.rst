@@ -20,8 +20,6 @@ colrev.ops.load.Load
       ~Load.conclude
       ~Load.decorate
       ~Load.ensure_append_only
-      ~Load.get_most_likely_sources
-      ~Load.get_new_sources_heuristic_list
       ~Load.main
 
 

@@ -7,7 +7,6 @@ import pytest
 
 import colrev.review_manager
 import colrev.settings
-import colrev.ui_cli.cli_load
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-arguments
@@ -85,16 +84,16 @@ NO_CUSTOM_SOURCE = None
         ),
         (Path("wiley.bib"), "colrev.wiley", NO_CUSTOM_SOURCE, Path("wiley_result.bib")),
         (
-            Path("pdfs_dir.bib"),
-            "colrev.pdfs_dir",
+            Path("files_dir.bib"),
+            "colrev.files_dir",
             colrev.settings.SearchSource(
-                endpoint="colrev.pdfs_dir",
-                filename=Path("data/search/pdfs_dir.bib"),
+                endpoint="colrev.files_dir",
+                filename=Path("data/search/files_dir.bib"),
                 search_type=colrev.settings.SearchType.OTHER,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),
-            Path("pdfs_dir_result.bib"),
+            Path("files_dir_result.bib"),
         ),
         (
             Path("ieee.ris"),
@@ -157,16 +156,16 @@ def test_source(  # type: ignore
 
     base_repo_review_manager.save_settings()
 
-    # Run load and test the heuristics
-    load_operation = base_repo_review_manager.get_load_operation()
+    # Run search and load and test the heuristics
 
     if custom_source:
-        new_sources = [custom_source]
         base_repo_review_manager.settings.sources = [custom_source]
     else:
-        new_sources = load_operation.get_most_likely_sources()
+        search_operation = base_repo_review_manager.get_search_operation()
+        search_operation.add_most_likely_sources()
 
-    load_operation.main(new_sources=new_sources)
+    load_operation = base_repo_review_manager.get_load_operation()
+    load_operation.main()
 
     actual_source_identifier = base_repo_review_manager.settings.sources[0].endpoint
     # Note: fail if the heuristics are inadequate/do not create an erroneous expected_file

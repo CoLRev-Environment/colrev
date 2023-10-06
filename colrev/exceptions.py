@@ -334,6 +334,14 @@ class RepoInitError(CoLRevException):
 # Search
 
 
+class SearchNotAutomated(CoLRevException):
+    """The search cannot be completed automatically."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 class InvalidQueryException(CoLRevException):
     """The query format is not valid."""
 

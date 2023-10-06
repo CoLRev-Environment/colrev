@@ -13,7 +13,7 @@ The prescreen is typically conducted manually, but other modes of semi-automated
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Operations
 
    metadata_prescreen/prescreen

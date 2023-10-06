@@ -53,7 +53,7 @@ def test_checks(  # type: ignore
     if current_platform in ["Linux", "Darwin"]:
         expected = [  # type: ignore
             # {  # type: ignore
-            #     "endpoint": "colrev.pdfs_dir",
+            #     "endpoint": "colrev.files_dir",
             #     "filename": Path("data/search/pdfs.bib"),
             #     "search_type": colrev.settings.SearchType.PDFS,
             #     "search_parameters": {"scope": {"path": "data/pdfs"}},

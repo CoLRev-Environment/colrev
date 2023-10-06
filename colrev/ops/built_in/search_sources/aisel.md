@@ -18,7 +18,7 @@ Option 1: download the search results (advanced search, format:Bibliography Expo
 Option 2: copy the search link and add an API search (replacing the link):
 
 ```
-colrev search -a colrev.ais_library:"https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
+colrev search -a colrev.ais_library -p "https://aisel.aisnet.org/do/search/?q=microsourcing&start=0&context=509156&facet="
 ```
 
 Note: Complex queries can be entered in the basic search field. Example:

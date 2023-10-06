@@ -39,7 +39,7 @@ This allows users to efficiently keep track of the records' status and it inform
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Operations
 
    data/data

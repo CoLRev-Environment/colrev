@@ -43,12 +43,11 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.API_FIELDS
       ~IEEEXploreSearchSource.FIELD_MAPPING
       ~IEEEXploreSearchSource.SETTINGS
-      ~IEEEXploreSearchSource.api_search_supported
       ~IEEEXploreSearchSource.ci_supported
+      ~IEEEXploreSearchSource.docs_link
       ~IEEEXploreSearchSource.endpoint
       ~IEEEXploreSearchSource.flag
       ~IEEEXploreSearchSource.heuristic_status
-      ~IEEEXploreSearchSource.link
-      ~IEEEXploreSearchSource.search_type
+      ~IEEEXploreSearchSource.search_types
       ~IEEEXploreSearchSource.short_name
       ~IEEEXploreSearchSource.source_identifier

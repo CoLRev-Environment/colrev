@@ -31,7 +31,7 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
-    """SearchSource for SYNERGY-datasets
+    """SYNERGY-datasets
 
     https://github.com/asreview/synergy-dataset
 
@@ -44,13 +44,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     """
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.synergy_datasets"
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.OTHER
-    api_search_supported = True
+    search_types = [colrev.settings.SearchType.API]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "SYNERGY-datasets"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/synergy_datasets.md"
     )
@@ -83,7 +84,12 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
@@ -116,8 +122,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 search_parameters={"dataset": dataset},
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add SYNERGY endpoint with query {params}"
@@ -224,10 +229,15 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "https://openalex.org/", ""
             )
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def __validate_source(self) -> None:
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+        assert source.search_type == colrev.settings.SearchType.API
+
+    def run_search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets"""
+
+        self.__validate_source()
 
         dataset_df = self.__load_dataset()
 

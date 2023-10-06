@@ -23,7 +23,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
 import colrev.ui_cli.cli_colors as colors
-import colrev.ui_cli.cli_load
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
@@ -400,16 +399,16 @@ def retrieve(
     )
     print()
 
+    review_manager.exact_call = "colrev search"
     search_operation = review_manager.get_search_operation()
+    search_operation.add_most_likely_sources()
     search_operation.main(rerun=False)
 
     print()
 
-    review_manager.exact_call = "colrev prep"
-    load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_most_likely_sources()
+    review_manager.exact_call = "colrev load"
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
-    load_operation.main(new_sources=new_sources, keep_ids=False)
+    load_operation.main(keep_ids=False)
 
     print()
     review_manager.exact_call = "colrev prep"
@@ -461,6 +460,12 @@ def retrieve(
     help="Backward search on a selected paper",
 )
 @click.option(
+    "--skip",
+    is_flag=True,
+    default=False,
+    help="Skip adding new SearchSources",
+)
+@click.option(
     "-scs",
     "--setup_custom_script",
     is_flag=True,
@@ -491,6 +496,7 @@ def search(
     selected: str,
     rerun: bool,
     bws: str,
+    skip: str,
     setup_custom_script: bool,
     verbose: bool,
     force: bool,
@@ -511,12 +517,20 @@ def search(
         package_manager.add_endpoint_for_operation(
             operation=search_operation, package_identifier=add, params=params
         )
-        search_operation.main(selection_str=selected, rerun=rerun)
-    elif view:
+
+    if not skip:
+        import colrev.ui_cli.cli_add_source
+
+        cli_source_adder = colrev.ui_cli.cli_add_source.CLISourceAdder(
+            search_operation=search_operation
+        )
+        cli_source_adder.add_new_sources()
+
+    if view:
         for source in search_operation.sources:
             search_operation.review_manager.p_printer.pprint(source)
-
-    elif setup_custom_script:
+        return
+    if setup_custom_script:
         import colrev.ui_cli.setup_custom_scripts
 
         colrev.ui_cli.setup_custom_scripts.setup_custom_search_script(
@@ -530,9 +544,9 @@ def search(
         colrev.ui_cli.search_backward_selective.main(
             search_operation=search_operation, bws=bws
         )
+        return
 
-    else:
-        search_operation.main(selection_str=selected, rerun=rerun)
+    search_operation.main(selection_str=selected, rerun=rerun)
 
 
 @main.command(help_priority=5)
@@ -549,13 +563,6 @@ def search(
     is_flag=True,
     default=False,
     help="Skip entering the search query (if applicable)",
-)
-@click.option(
-    "-i",
-    "--include",
-    is_flag=True,
-    default=False,
-    help="Automatically include papers from the new sources.",
 )
 @click.option(
     "-v",
@@ -577,7 +584,6 @@ def load(
     ctx: click.core.Context,
     keep_ids: bool,
     skip_query: bool,
-    include: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -591,40 +597,10 @@ def load(
     )
     load_operation = review_manager.get_load_operation()
 
-    heuristic_list = load_operation.get_new_sources_heuristic_list()
-    new_sources = colrev.ui_cli.cli_load.select_new_source(
-        heuristic_result_list=heuristic_list
-    )
-
     # Note : reinitialize to load new scripts:
     load_operation = review_manager.get_load_operation(hide_load_explanation=True)
 
-    load_operation.main(new_sources=new_sources, keep_ids=keep_ids)
-
-    if include:
-        print()
-        review_manager.logger.info(  # pylint: disable=logging-fstring-interpolation
-            f"{colors.GREEN}Automatically include records from "
-            f"[{', '.join(str(s.filename) for s in new_sources)}]{colors.END}"
-        )
-        print()
-        prep_operation = review_manager.get_prep_operation()
-        prep_operation.main()
-        print()
-        dedupe_operation = review_manager.get_dedupe_operation()
-        dedupe_operation.main()
-        print()
-        prescreen_operation = review_manager.get_prescreen_operation()
-        prescreen_operation.main()
-        print()
-        pdf_get_operation = review_manager.get_pdf_get_operation()
-        pdf_get_operation.main()
-        print()
-        pdf_prep_operation = review_manager.get_pdf_prep_operation()
-        pdf_prep_operation.main()
-        print()
-        screen_operation = review_manager.get_screen_operation()
-        screen_operation.main()
+    load_operation.main(keep_ids=keep_ids)
 
 
 @main.command(help_priority=6)

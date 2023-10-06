@@ -2,6 +2,7 @@
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -27,18 +28,18 @@ import colrev.record
 )
 @dataclass
 class IEEEXploreSearchSource(JsonSchemaMixin):
-    """SearchSource for IEEEXplore"""
+    """IEEEXplore"""
 
     flag = True
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "ID"
-    search_type = colrev.settings.SearchType.DB
+    search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.ieee"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     short_name = "IEEE Xplore"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/ieee.md"
     )
@@ -120,15 +121,24 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.1}
 
+        if "Date Added To Xplore" in data:
+            result["confidence"] = 0.9
+            return result
+
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
 
         if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in params:
             params = params.replace(
@@ -154,17 +164,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 search_parameters=search_parameters,
                 comment="",
             )
-            operation.review_manager.settings.sources.append(add_source)
-            return
+            return add_source
 
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
-
-        # pylint: disable=too-many-locals
 
         ieee_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -172,6 +177,19 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
+        if self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for IEEEXplore not automated."
+        #         )
+
+        else:
+            raise NotImplementedError
+
+    def __get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
@@ -180,7 +198,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             self.review_manager.environment_manager.update_registry(
                 self.SETTINGS["api_key"], api_key
             )
+        return api_key
 
+    def __run_api_query(self) -> colrev.ops.built_in.search_sources.ieee_api.XPLORE:
+        api_key = self.__get_api_key()
         query = colrev.ops.built_in.search_sources.ieee_api.XPLORE(api_key)
         query.dataType("json")
         query.dataFormat("object")
@@ -202,7 +223,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             if key in parameter_methods:
                 method = parameter_methods[key]
                 method(value)
+        return query
 
+    def __run_api_search(
+        self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+    ) -> None:
+        query = self.__run_api_query()
         query.startRecord = 1
         response = query.callAPI()
         while "articles" in response:
@@ -304,6 +330,30 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             if "publication_year" in entry and "year" not in entry:
                 entry["year"] = entry.pop("publication_year")
 
+    def __fix_csv_records(self, *, records: dict) -> None:
+        for record in records.values():
+            record["fulltext"] = record.pop("pdf_link")
+            if "article_citation_count" in record:
+                record["cited_by"] = record.pop("article_citation_count")
+            if "author_keywords" in record:
+                record["keywords"] = record.pop("author_keywords")
+            record["title"] = record.pop("document_title")
+            if "start_page" in record and "end_page" in record:
+                record["pages"] = record["start_page"] + "--" + record["end_page"]
+                del record["start_page"]
+                del record["end_page"]
+            if "isbns" in record:
+                record["isbn"] = record.pop("isbns")
+            if record["document_identifier"] == "IEEE Conferences":
+                record["ENTRYTYPE"] = "inproceedings"
+                record["booktitle"] = record.pop("publication_title")
+            elif record["document_identifier"] == "IEEE Journals":
+                record["ENTRYTYPE"] = "article"
+                record["journal"] = record.pop("publication_title")
+            elif record["document_identifier"] == "IEEE Standards":
+                record["ENTRYTYPE"] = "techreport"
+                record["key"] = record.pop("publication_title")
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
@@ -311,11 +361,24 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             ris_loader = colrev.ops.load_utils_ris.RISLoader(
                 load_operation=load_operation, source=self.search_source
             )
-            ris_entries = ris_loader.load_ris_entries(
-                filename=self.search_source.filename
-            )
+            ris_entries = ris_loader.load_ris_entries()
             self.__ris_fixes(entries=ris_entries)
             records = ris_loader.convert_to_records(entries=ris_entries)
+            return records
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="accession_number",
+            )
+            table_entries = csv_loader.load_table_entries()
+            for entry_id, entry in table_entries.items():
+                table_entries[entry_id]["accession_number"] = entry["pdf_link"].split(
+                    "="
+                )[-1]
+            records = csv_loader.convert_to_records(entries=table_entries)
+            self.__fix_csv_records(records=records)
             return records
 
         raise NotImplementedError
@@ -325,4 +388,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for IEEEXplore"""
 
+        if source.filename.suffix == ".csv":
+            if "author" in record.data:
+                record.data["author"] = colrev.record.PrepRecord.format_author_field(
+                    input_string=record.data["author"]
+                )
+            return record
         return record

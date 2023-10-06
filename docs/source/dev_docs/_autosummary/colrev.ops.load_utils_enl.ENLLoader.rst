@@ -16,4 +16,18 @@ colrev.ops.load\_utils\_enl.ENLLoader
    .. autosummary::
       :nosignatures:
 
-      ~ENLLoader.load
+      ~ENLLoader.convert_to_records
+      ~ENLLoader.get_content
+      ~ENLLoader.get_tag
+      ~ENLLoader.is_tag
+      ~ENLLoader.load_enl_entries
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ENLLoader.PATTERN

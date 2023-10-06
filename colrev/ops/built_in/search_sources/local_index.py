@@ -32,18 +32,18 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class LocalIndexSearchSource(JsonSchemaMixin):
-    """Performs a search in the LocalIndex"""
+    """LocalIndex"""
 
     # pylint: disable=too-many-instance-attributes
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "curation_ID"
-    search_type = colrev.settings.SearchType.OTHER
+    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
     endpoint = "colrev.local_index"
-    api_search_supported = True
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/local_index.md"
     )
@@ -89,7 +89,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self.__local_index_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -105,6 +105,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+
+        assert source.search_type in self.search_types
 
         # if "query" not in source.search_parameters:
         # Note :  for md-sources, there is no query parameter.
@@ -158,13 +160,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return records_to_import
 
-    def __run_md_search_update(
+    def __run_md_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
             feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
@@ -202,17 +203,16 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.add_record_changes()
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
         local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for retrieved_record_dict in self.__retrieve_from_index():
             try:
@@ -246,31 +246,30 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of local-index"""
 
         self.__validate_source()
 
         local_index_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                local_index_feed=local_index_feed,
-            )
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
+            self.__run_md_search(local_index_feed=local_index_feed)
 
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        elif self.search_source.search_type in [
+            colrev.settings.SearchType.API,
+            colrev.settings.SearchType.TOC,
+        ]:
+            self.__run_api_search(
                 local_index_feed=local_index_feed,
                 rerun=rerun,
             )
+        else:
+            raise NotImplementedError
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -283,12 +282,17 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def add_endpoint(cls, operation: colrev.ops.search.Search, params: str) -> None:
+    def add_endpoint(
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if params is None:
-            operation.add_interactively(endpoint=cls.endpoint)
-            return
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
 
         filename = operation.get_unique_filename(
             file_path_string=f"local_index_{params}".replace("%", "").replace("'", "")
@@ -300,7 +304,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             search_parameters={"query": params},
             comment="",
         )
-        operation.review_manager.settings.sources.append(add_source)
+        return add_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
