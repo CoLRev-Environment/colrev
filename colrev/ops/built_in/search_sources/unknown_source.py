@@ -33,7 +33,7 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class UnknownSearchSource(JsonSchemaMixin):
-    """Unknown search results"""
+    """Unknown SearchSource"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.unknown_source"

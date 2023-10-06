@@ -362,7 +362,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 ais_feed=ais_feed,
                 rerun=rerun,
             )
-        elif self.search_source.search_type == colrev.settings.SearchSource.DB:
+        elif self.search_source.search_type == colrev.settings.SearchType.DB:
             if self.review_manager.in_ci_environment():
                 raise colrev_exceptions.SearchNotAutomated(
                     "DB search for AISeL not automated."

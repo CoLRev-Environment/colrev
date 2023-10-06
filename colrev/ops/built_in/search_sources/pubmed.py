@@ -648,10 +648,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
             self.__run_md_search(pubmed_feed=pubmed_feed)
 
-        elif self.search_source.search_type == colrev.settings.SearchSource.API:
+        elif self.search_source.search_type == colrev.settings.SearchType.API:
             self.__run_api_search(
                 pubmed_feed=pubmed_feed,
                 rerun=rerun,

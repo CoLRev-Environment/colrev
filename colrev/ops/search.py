@@ -56,12 +56,14 @@ class Search(colrev.operation.Operation):
         return filename
 
     def get_query_filename(self, *, filename: Path, instantiate: bool = False) -> Path:
+        """Get the corresponding filename for the search query"""
         query_filename = Path("data/search/") / Path(str(filename.stem) + "_query.txt")
         if instantiate:
             with open(query_filename, "w", encoding="utf-8") as file:
                 file.write("")
             input(
-                f"Created {query_filename}. Please store your query in the file and press Enter to continue."
+                f"Created {query_filename}. "
+                "Please store your query in the file and press Enter to continue."
             )
             self.review_manager.dataset.add_changes(path=query_filename)
         return query_filename

@@ -146,7 +146,8 @@ class ERICSearchSource(JsonSchemaMixin):
         if params is None:
             add_source = operation.add_interactively(endpoint=cls.endpoint)
             return add_source
-        elif "https://api.ies.ed.gov/eric/?" in params:
+
+        if "https://api.ies.ed.gov/eric/?" in params:
             url_parsed = urllib.parse.urlparse(params)
             new_query = urllib.parse.parse_qs(url_parsed.query)
             search = new_query.get("search", [""])[0]
@@ -223,7 +224,7 @@ class ERICSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchSource.API:
+        if self.search_source.search_type == colrev.settings.SearchType.API:
             self.__run_api_search(eric_feed=eric_feed, rerun=rerun)
         else:
             raise NotImplementedError

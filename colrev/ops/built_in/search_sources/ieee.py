@@ -177,7 +177,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchSource.API:
+        if self.search_source.search_type == colrev.settings.SearchType.API:
             self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
         # if self.search_source.search_type == colrev.settings.SearchSource.DB:
@@ -189,9 +189,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         else:
             raise NotImplementedError
 
-    def __run_api_search(
-        self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
-    ) -> None:
+    def __get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
@@ -200,7 +198,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             self.review_manager.environment_manager.update_registry(
                 self.SETTINGS["api_key"], api_key
             )
+        return api_key
 
+    def __run_api_query(self) -> colrev.ops.built_in.search_sources.ieee_api.XPLORE:
+        api_key = self.__get_api_key()
         query = colrev.ops.built_in.search_sources.ieee_api.XPLORE(api_key)
         query.dataType("json")
         query.dataFormat("object")
@@ -222,7 +223,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             if key in parameter_methods:
                 method = parameter_methods[key]
                 method(value)
+        return query
 
+    def __run_api_search(
+        self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+    ) -> None:
+        query = self.__run_api_query()
         query.startRecord = 1
         response = query.callAPI()
         while "articles" in response:

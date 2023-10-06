@@ -390,7 +390,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Unknown search results (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
+            "short_description": "Unknown SearchSource (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/search_sources/unknown_source.md>`__)",
             "ci_supported": false,
             "search_types": [
                 "DB",

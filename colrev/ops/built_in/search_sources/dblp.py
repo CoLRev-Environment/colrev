@@ -354,7 +354,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         assert source.search_type in self.search_types
 
         # maybe : validate/assert that the venue_key is available
-        if source.search_type == colrev.settings.SearchSource.TOC:
+        if source.search_type == colrev.settings.SearchType.TOC:
             assert "scope" in source.search_parameters
             if "venue_key" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
@@ -364,11 +364,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
-        if source.search_type == colrev.settings.SearchSource.API:
+        if source.search_type == colrev.settings.SearchType.API:
             assert "query" in source.search_parameters
             assert source.search_parameters["query"].startswith(self.__api_url)
 
-        elif source.search_type == colrev.settings.SearchSource.MD:
+        elif source.search_type == colrev.settings.SearchType.MD:
             pass  # No parameters required
         else:
             raise colrev_exceptions.InvalidQueryException(
@@ -539,12 +539,12 @@ class DBLPSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
             self.__run_md_search(dblp_feed=dblp_feed)
 
         elif self.search_source.search_type in [
-            colrev.settings.SearchSource.API,
-            colrev.settings.SearchSource.TOC,
+            colrev.settings.SearchType.API,
+            colrev.settings.SearchType.TOC,
         ]:
             self.__run_api_search(dblp_feed=dblp_feed, rerun=rerun)
         else:

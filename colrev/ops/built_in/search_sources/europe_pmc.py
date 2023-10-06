@@ -399,7 +399,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchSource.API:
+        if self.search_source.search_type == colrev.settings.SearchType.API:
             self.__run_api_search(
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,

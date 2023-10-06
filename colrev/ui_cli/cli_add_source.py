@@ -7,8 +7,12 @@ from pathlib import Path
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
 
+# pylint: disable=too-few-public-methods
+
 
 class CLISourceAdder:
+    """CLI utility to add SearchSources"""
+
     def __init__(self, *, search_operation: colrev.ops.search.Search) -> None:
         self.search_operation = search_operation
         self.review_manager = search_operation.review_manager

@@ -50,6 +50,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -96,7 +97,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of EbscoHost"""
 
-        if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
             if self.review_manager.in_ci_environment():
                 raise colrev_exceptions.SearchNotAutomated(
                     "DB search for Ebsco Host not automated."

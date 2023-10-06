@@ -107,7 +107,8 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
             if self.search_source.filename.suffix in [".bib"]:
                 print("DB search mode")
                 print(
-                    f"- Go to {colors.ORANGE}https://dl.acm.org/{colors.END} and run the following query:"
+                    f"- Go to {colors.ORANGE}https://dl.acm.org/{colors.END} "
+                    "and run the following query:"
                 )
                 query = Path(
                     self.search_source.search_parameters["query_file"]
