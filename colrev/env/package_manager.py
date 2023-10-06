@@ -18,6 +18,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from m2r import parse_from_file
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
@@ -121,7 +122,7 @@ class SearchSourcePackageEndpointInterface(
         """The status of the SearchSource heuristic"""
     )
     short_name = zope.interface.Attribute("""Short name of the SearchSource""")
-    link = zope.interface.Attribute("""Link to the SearchSource website""")
+    docs_link = zope.interface.Attribute("""Link to the SearchSource website""")
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
@@ -804,12 +805,68 @@ class PackageManager:
 
         return packages_dict
 
+    def __import_package_docs(self, docs_link: str, identifier: str) -> str:
+        extensions_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/extensions_index"
+        )
+        local_built_in_path = Path(__file__).parent.parent / Path("ops/built_in")
+
+        if (
+            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/"
+            in docs_link
+        ):
+            docs_link = docs_link.replace(
+                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in",
+                str(local_built_in_path),
+            )
+            output = parse_from_file(docs_link)
+        else:
+            return "NotImplemented"
+            # TODO: retreive through requests later?
+            # output = convert('# Title\n\nSentence.')
+
+        file_path = Path(f"{identifier}.rst")
+        target = extensions_index_path / file_path
+        with open(target, "w", encoding="utf-8") as file:
+            # TODO : at this point, we may add metadata
+            # (such as package status, authors, url etc.)
+            file.write(output)
+
+        return str(file_path)
+
+    def __write_docs_list_for_index(self, docs_list_for_index: list) -> None:
+        extensions_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/extensions_index.rst"
+        )
+        extensions_index_path_content = extensions_index_path.read_text(
+            encoding="utf-8"
+        )
+        new_doc = []
+        # append header
+        for line in extensions_index_path_content.split("\n"):
+            new_doc.append(line)
+            if ":caption:" in line:
+                new_doc.append("")
+                break
+
+        # append new links
+        for doc_item in docs_list_for_index:
+            if doc_item == "NotImplemented":
+                print(doc_item)
+                continue
+            new_doc.append(f"   extensions_index/{doc_item}")
+
+        with open(extensions_index_path, "w", encoding="utf-8") as file:
+            for line in new_doc:
+                file.write(line + "\n")
+
     def __add_package_endpoints(
         self,
         *,
         selected_package: str,
         package_endpoints_json: dict,
         package_endpoints: dict,
+        docs_list_for_index: list,
         package_status: dict,
     ) -> None:
         for endpoint_type, endpoint_list in package_endpoints_json.items():
@@ -879,13 +936,21 @@ class PackageManager:
                 # In separate packages, we the main readme.md file should be used
                 code_link = code_link[: code_link.rfind("/")]
                 code_link += ".md"
-                if hasattr(endpoint, "link"):
-                    link = endpoint.link
+                if hasattr(endpoint, "docs_link"):
+                    docs_link = endpoint.docs_link
                 else:
-                    link = code_link
+                    docs_link = code_link
+
+                package_index_path = self.__import_package_docs(
+                    docs_link, endpoint_item["package_endpoint_identifier"]
+                )
+                docs_list_for_index.append(package_index_path)
+
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
-                    endpoint_item["short_description"] + f" (`instructions <{link}>`__)"
+                    endpoint_item["short_description"]
+                    + " (:doc:`instructions </resources/extensions_index/"
+                    + f"{endpoint_item['package_endpoint_identifier']}>`)"
                 )
                 if endpoint_type == "search_source":
                     endpoint_item["search_types"] = [
@@ -953,6 +1018,8 @@ class PackageManager:
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
         }
+        docs_list_for_index: typing.List[str] = []
+
         for package in packages:
             print(f'Loading package endpoints from {package["module"]}')
             module_spec = importlib.util.find_spec(package["module"])
@@ -975,6 +1042,7 @@ class PackageManager:
                 selected_package=package["module"],
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
+                docs_list_for_index=docs_list_for_index,
                 package_status=package_status,
             )
             self.__extract_search_source_types(
@@ -997,6 +1065,8 @@ class PackageManager:
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+        self.__write_docs_list_for_index(docs_list_for_index)
 
     def add_endpoint_for_operation(
         self,

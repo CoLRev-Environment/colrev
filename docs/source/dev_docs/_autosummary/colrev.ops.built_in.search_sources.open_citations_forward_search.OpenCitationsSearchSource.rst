@@ -42,9 +42,9 @@ colrev.ops.built\_in.search\_sources.open\_citations\_forward\_search.OpenCitati
    .. autosummary::
 
       ~OpenCitationsSearchSource.ci_supported
+      ~OpenCitationsSearchSource.docs_link
       ~OpenCitationsSearchSource.endpoint
       ~OpenCitationsSearchSource.heuristic_status
-      ~OpenCitationsSearchSource.link
       ~OpenCitationsSearchSource.search_types
       ~OpenCitationsSearchSource.short_name
       ~OpenCitationsSearchSource.source_identifier

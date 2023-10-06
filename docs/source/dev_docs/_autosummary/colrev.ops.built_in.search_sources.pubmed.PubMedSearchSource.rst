@@ -42,9 +42,9 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
    .. autosummary::
 
       ~PubMedSearchSource.ci_supported
+      ~PubMedSearchSource.docs_link
       ~PubMedSearchSource.endpoint
       ~PubMedSearchSource.heuristic_status
-      ~PubMedSearchSource.link
       ~PubMedSearchSource.search_types
       ~PubMedSearchSource.short_name
       ~PubMedSearchSource.source_identifier

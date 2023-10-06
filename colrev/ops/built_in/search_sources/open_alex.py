@@ -43,7 +43,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_alex.md"
     )

@@ -41,9 +41,9 @@ colrev.ops.built\_in.search\_sources.colrev\_project.ColrevProjectSearchSource
    .. autosummary::
 
       ~ColrevProjectSearchSource.ci_supported
+      ~ColrevProjectSearchSource.docs_link
       ~ColrevProjectSearchSource.endpoint
       ~ColrevProjectSearchSource.heuristic_status
-      ~ColrevProjectSearchSource.link
       ~ColrevProjectSearchSource.search_types
       ~ColrevProjectSearchSource.short_name
       ~ColrevProjectSearchSource.source_identifier

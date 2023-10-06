@@ -70,18 +70,18 @@ The development of additional SearchSources is tracked in the `SearchSource road
 |          | - Run colrev search to retrieve all records from the selected journal(s) or conference(s)              |                     |           |
 |          | See :ref:`overview of TOC searches <toc searches>`                                                     |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
-| FILES    | Extraction of metadata from files:                                                                     | Automated           | Optional  |
-|          |                                                                                                        |                     |           |
-|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
-|          | - Metadata is extracted from files (e.g., PDF documents) in a selected directory (see colrev.pdfs_dir) |                     |           |
-|          | See :ref:`overview of FILES searches <file searches>`                                                  |                     |           |
-+----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
-| OTHER    | Complementary/other searches:                                                                          | Manual              | Optional  |
+| OTHER    | Non-systematic lookup searches or complementary searches:                                              | Manual              | Optional  |
 |          |                                                                                                        |                     |           |
 |          | - Papers suggested by colleagues, or serendipituous look-up searches                                   |                     |           |
 |          | - Add search results to data/search                                                                    |                     |           |
 |          | - Run colrev load                                                                                      |                     |           |
 |          | See :ref:`overview of OTHER searches <other searches>`                                                 |                     |           |
++----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
+| FILES    | Extraction of metadata from files:                                                                     | Automated           | Optional  |
+|          |                                                                                                        |                     |           |
+|          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
+|          | - Metadata is extracted from files (e.g., PDFs) in a selected directory (see colrev.files_dir)         |                     |           |
+|          | See :ref:`overview of FILES searches <file searches>`                                                  |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | MD       | Metadata SearchSource:                                                                                 | Automated           | NA        |
 |          |                                                                                                        |                     |           |
@@ -122,7 +122,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 
     colrev search -a '{"endpoint": "colrev.colrev_project","search_parameters": {"url": "/home/projects/review9"}}'
 
-    colrev search -a '{"endpoint": "colrev.pdfs_dir","search_parameters": {"scope": {"path": "/home/journals/PLOS"}, "sub_dir_pattern": "volume_number", "journal": "PLOS One"}}'
+    colrev search -a '{"endpoint": "colrev.files_dir","search_parameters": {"scope": {"path": "/home/journals/PLOS"}, "sub_dir_pattern": "volume_number", "journal": "PLOS One"}}'
 
 .. _db searches:
 

@@ -41,9 +41,9 @@ colrev.ops.built\_in.search\_sources.psycinfo.PsycINFOSearchSource
    .. autosummary::
 
       ~PsycINFOSearchSource.ci_supported
+      ~PsycINFOSearchSource.docs_link
       ~PsycINFOSearchSource.endpoint
       ~PsycINFOSearchSource.heuristic_status
-      ~PsycINFOSearchSource.link
       ~PsycINFOSearchSource.search_types
       ~PsycINFOSearchSource.short_name
       ~PsycINFOSearchSource.source_identifier

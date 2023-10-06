@@ -41,7 +41,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "EBSCOHost"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/ebsco_host.md"
     )

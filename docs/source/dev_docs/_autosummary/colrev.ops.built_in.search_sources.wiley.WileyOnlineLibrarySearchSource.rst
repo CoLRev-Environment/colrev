@@ -41,9 +41,9 @@ colrev.ops.built\_in.search\_sources.wiley.WileyOnlineLibrarySearchSource
    .. autosummary::
 
       ~WileyOnlineLibrarySearchSource.ci_supported
+      ~WileyOnlineLibrarySearchSource.docs_link
       ~WileyOnlineLibrarySearchSource.endpoint
       ~WileyOnlineLibrarySearchSource.heuristic_status
-      ~WileyOnlineLibrarySearchSource.link
       ~WileyOnlineLibrarySearchSource.search_types
       ~WileyOnlineLibrarySearchSource.short_name
       ~WileyOnlineLibrarySearchSource.source_identifier

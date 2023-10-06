@@ -1,4 +1,4 @@
-﻿colrev.ops.built\_in.search\_sources.files\_dir.FilesSearchSource
+colrev.ops.built\_in.search\_sources.files\_dir.FilesSearchSource
 =================================================================
 
 .. currentmodule:: colrev.ops.built_in.search_sources.files_dir

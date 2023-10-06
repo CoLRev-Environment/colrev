@@ -42,9 +42,9 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
    .. autosummary::
 
       ~DBLPSearchSource.ci_supported
+      ~DBLPSearchSource.docs_link
       ~DBLPSearchSource.endpoint
       ~DBLPSearchSource.heuristic_status
-      ~DBLPSearchSource.link
       ~DBLPSearchSource.search_types
       ~DBLPSearchSource.short_name
       ~DBLPSearchSource.source_identifier

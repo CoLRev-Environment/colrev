@@ -41,9 +41,9 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
    .. autosummary::
 
       ~EuropePMCSearchSource.ci_supported
+      ~EuropePMCSearchSource.docs_link
       ~EuropePMCSearchSource.endpoint
       ~EuropePMCSearchSource.heuristic_status
-      ~EuropePMCSearchSource.link
       ~EuropePMCSearchSource.search_types
       ~EuropePMCSearchSource.short_name
       ~EuropePMCSearchSource.source_identifier

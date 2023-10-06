@@ -26,5 +26,5 @@ colrev.ops.built\_in.search\_sources.website.WebsiteConnector
 
    .. autosummary::
 
+      ~WebsiteConnector.docs_link
       ~WebsiteConnector.heuristic_status
-      ~WebsiteConnector.link
