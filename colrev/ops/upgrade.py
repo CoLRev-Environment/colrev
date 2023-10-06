@@ -508,6 +508,16 @@ class Upgrade(colrev.operation.Operation):
                     source["search_type"] = "API"
                 else:
                     source["search_type"] = "TOC"
+
+            if (
+                source["endpoint"] == "colrev.crossref"
+                and "scope" in source["search_parameters"]
+            ):
+                if "query" in source["search_parameters"]:
+                    source["search_type"] = "API"
+                else:
+                    source["search_type"] = "TOC"
+
             if "data/search/md_" in source["filename"]:
                 source["search_type"] = "MD"
             if source["search_type"] == "PDFS":
