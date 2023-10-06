@@ -318,4 +318,7 @@ class ERICSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for ERIC"""
 
+        if "issn" in record.data:
+            record.data["issn"] = record.data["issn"].lstrip("ISSN-")
+
         return record
