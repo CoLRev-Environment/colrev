@@ -30,6 +30,11 @@ class ColrevCuration(JsonSchemaMixin):
     settings: ColrevCurationSettings
     ci_supported: bool = True
 
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/data/colrev_curation.md"
+    )
+
     @dataclass
     class ColrevCurationSettings(
         colrev.env.package_manager.DefaultSettings, JsonSchemaMixin

@@ -57,7 +57,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         settings: Optional[dict] = None,
     ) -> None:
         # Note: not yet implemented
-        # Note : once this is implemented, add "colrev.open_alex_prep" to the default settings
+        # Note : once this is implemented, add "colrev.open_alex" to the default settings
         # if settings:
         #     # OpenAlex as a search_source
         #     self.search_source = from_dict(

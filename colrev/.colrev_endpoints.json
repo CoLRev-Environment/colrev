@@ -4,7 +4,7 @@
     "colrev_version": ">=0.6.0",
     "endpoints": {
         "prep": [
-            {"package_endpoint_identifier": "colrev.open_alex_prep",
+            {"package_endpoint_identifier": "colrev.open_alex",
              "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep"
             },
             {"package_endpoint_identifier": "colrev.source_specific_prep",
@@ -40,19 +40,19 @@
             {"package_endpoint_identifier": "colrev.get_masterdata_from_doi",
              "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep"
             },
-            {"package_endpoint_identifier": "colrev.get_masterdata_from_crossref",
+            {"package_endpoint_identifier": "colrev.crossref",
              "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep"
             },
-            {"package_endpoint_identifier": "colrev.get_masterdata_from_pubmed",
+            {"package_endpoint_identifier": "colrev.pubmed",
              "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep"
             },
-            {"package_endpoint_identifier": "colrev.get_masterdata_from_europe_pmc",
+            {"package_endpoint_identifier": "colrev.europe_pmc",
              "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep"
             },
-            {"package_endpoint_identifier": "colrev.get_masterdata_from_dblp",
+            {"package_endpoint_identifier": "colrev.dblp",
              "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep"
             },
-            {"package_endpoint_identifier": "colrev.get_masterdata_from_open_library",
+            {"package_endpoint_identifier": "colrev.open_library",
              "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep"
             },
             {"package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
@@ -61,7 +61,7 @@
             {"package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
              "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep"
             },
-            {"package_endpoint_identifier": "colrev.get_masterdata_from_local_index",
+            {"package_endpoint_identifier": "colrev.local_index",
              "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep"
             },
             {"package_endpoint_identifier": "colrev.update_metadata_status",
@@ -70,7 +70,7 @@
             {"package_endpoint_identifier": "colrev.general_polish",
              "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep"
             },
-            {"package_endpoint_identifier": "colrev.curation_prep",
+            {"package_endpoint_identifier": "colrev.colrev_curation",
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep"
             },
             {"package_endpoint_identifier": "colrev.add_journal_ranking",

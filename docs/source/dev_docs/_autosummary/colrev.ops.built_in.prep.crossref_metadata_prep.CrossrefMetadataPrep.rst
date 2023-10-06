@@ -38,4 +38,5 @@ colrev.ops.built\_in.prep.crossref\_metadata\_prep.CrossrefMetadataPrep
 
       ~CrossrefMetadataPrep.always_apply_changes
       ~CrossrefMetadataPrep.ci_supported
+      ~CrossrefMetadataPrep.docs_link
       ~CrossrefMetadataPrep.source_correction_hint

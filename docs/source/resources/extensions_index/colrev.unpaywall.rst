@@ -1,6 +1,9 @@
 
-PDFGet: Enter PDFGetEndpoint
-============================
+Unpaywall
+=========
+
+pdf-get
+-------
 
 Note: This document is currently under development. It will contain the following elements.
 

@@ -834,7 +834,7 @@ class PackageManager:
 
         return str(file_path)
 
-    def __write_docs_list_for_index(self, docs_list_for_index: list) -> None:
+    def __write_docs_for_index(self, docs_for_index: dict) -> None:
         extensions_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/resources/extensions_index.rst"
         )
@@ -850,11 +850,35 @@ class PackageManager:
                 break
 
         # append new links
-        for doc_item in docs_list_for_index:
-            if doc_item == "NotImplemented":
-                print(doc_item)
-                continue
-            new_doc.append(f"   extensions_index/{doc_item}")
+        for endpoint_type in [
+            "review_type",
+            "search_source",
+            "prep",
+            "prep_man",
+            "dedupe",
+            "prescreen",
+            "pdf_get",
+            "pdf_get_man",
+            "pdf_prep",
+            "pdf_prep_man",
+            "screen",
+            "data",
+        ]:
+            new_doc.append("")
+            new_doc.append(endpoint_type)
+            new_doc.append("-----------------------------")
+            new_doc.append("")
+
+            new_doc.append(".. toctree::")
+            new_doc.append("   :maxdepth: 1")
+            new_doc.append("")
+
+            doc_items = docs_for_index[endpoint_type]
+            for doc_item in sorted(doc_items, key=lambda d: d["identifier"]):
+                if doc_item == "NotImplemented":
+                    print(doc_item["path"])
+                    continue
+                new_doc.append(f"   extensions_index/{doc_item['path']}")
 
         with open(extensions_index_path, "w", encoding="utf-8") as file:
             for line in new_doc:
@@ -866,7 +890,7 @@ class PackageManager:
         selected_package: str,
         package_endpoints_json: dict,
         package_endpoints: dict,
-        docs_list_for_index: list,
+        docs_for_index: dict,
         package_status: dict,
     ) -> None:
         for endpoint_type, endpoint_list in package_endpoints_json.items():
@@ -944,7 +968,16 @@ class PackageManager:
                 package_index_path = self.__import_package_docs(
                     docs_link, endpoint_item["package_endpoint_identifier"]
                 )
-                docs_list_for_index.append(package_index_path)
+
+                item = {
+                    "path": package_index_path,
+                    "short_description": endpoint_item["short_description"],
+                    "identifier": endpoint_item["package_endpoint_identifier"],
+                }
+                try:
+                    docs_for_index[endpoint_type].append(item)
+                except KeyError:
+                    docs_for_index[endpoint_type] = [item]
 
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
@@ -1018,7 +1051,7 @@ class PackageManager:
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
         }
-        docs_list_for_index: typing.List[str] = []
+        docs_for_index: typing.Dict[str, list] = {}
 
         for package in packages:
             print(f'Loading package endpoints from {package["module"]}')
@@ -1042,7 +1075,7 @@ class PackageManager:
                 selected_package=package["module"],
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
-                docs_list_for_index=docs_list_for_index,
+                docs_for_index=docs_for_index,
                 package_status=package_status,
             )
             self.__extract_search_source_types(
@@ -1066,7 +1099,7 @@ class PackageManager:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
-        self.__write_docs_list_for_index(docs_list_for_index)
+        self.__write_docs_for_index(docs_for_index)
 
     def add_endpoint_for_operation(
         self,

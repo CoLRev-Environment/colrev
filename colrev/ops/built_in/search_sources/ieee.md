@@ -1,14 +1,6 @@
-# SearchSource: IEEEXplore
+# IEEEXplore
 
-Note: This document is currently under development. It will contain the following elements.
-
-- description
-- coverage (disciplines, types of work)
-- supported (details): run_search (including updates), load,  prep (including get_masterdata)
-
-[IEEEXplore](https://ieeexplore.ieee.org/)
-
-## Add the search source
+## search
 
 ### DB search
 
@@ -47,3 +39,5 @@ colrev search -a colrev.ieee -p "https://ieeexploreapi.ieee.org/api/v1/search/ar
 ```
 
 ## Links
+
+- [IEEEXplore](https://ieeexplore.ieee.org/)

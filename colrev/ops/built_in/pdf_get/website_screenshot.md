@@ -1,4 +1,6 @@
-# PDFGet: Enter PDFGetEndpoint
+# Website screenshot
+
+## pdf-get
 
 Note: This document is currently under development. It will contain the following elements.
 

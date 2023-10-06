@@ -31,6 +31,11 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
     source_correction_hint = "ask the publisher to correct the metadata"
     always_apply_changes = False
 
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/open_library.md"
+    )
+
     def __init__(
         self,
         *,

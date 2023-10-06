@@ -1,6 +1,6 @@
 
-ReviewType: Blank
-=================
+Zero-settings (blank) review
+============================
 
 The *blank* ReviewType is primarily used for simulations.
 

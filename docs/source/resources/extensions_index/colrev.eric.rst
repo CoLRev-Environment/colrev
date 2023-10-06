@@ -1,21 +1,17 @@
 
-SearchSource: ERIC
-==================
+ERIC
+====
 
-Note: This document is currently under development. It will contain the following elements.
+search
+------
 
-
-* description
-* coverage (disciplines, types of work)
-* supported (details): run_search (including updates), load,  prep (including get_masterdata)
-
-`ERIC <https://eric.ed.gov/>`_
-`ERIC API <https://eric.ed.gov/?api>`_
-
-Add the search source
----------------------
+DB search
+^^^^^^^^^
 
 Download search results and store in ``data/search/`` directory.
+
+API search
+^^^^^^^^^^
 
 A search on the ERIC API can be performed as follows:
 
@@ -51,3 +47,7 @@ This command returns 5 records with starting record number 0.
 
 Links
 -----
+
+
+* `ERIC <https://eric.ed.gov/>`_
+* `ERIC API <https://eric.ed.gov/?api>`_

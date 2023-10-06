@@ -1,4 +1,6 @@
-# Prep: Enter PrepEndpoint
+# Polish
+
+## prep
 
 Note: This document is currently under development. It will contain the following elements.
 

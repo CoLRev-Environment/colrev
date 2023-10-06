@@ -1,18 +1,12 @@
 
-SearchSource: OpenCitations forward search
-==========================================
+OpenCitations forward search
+============================
 
-Note: This document is currently under development. It will contain the following elements.
+search
+------
 
-
-* description
-* coverage (disciplines, types of work)
-* supported (details): run_search (including updates), load,  prep (including get_masterdata)
-
-`OpenCitations <https://opencitations.net/>`_
-
-Add the search source
----------------------
+FORWARD search
+^^^^^^^^^^^^^^
 
 .. code-block::
 
@@ -20,3 +14,6 @@ Add the search source
 
 Links
 -----
+
+
+* `OpenCitations <https://opencitations.net/>`_

@@ -1,4 +1,4 @@
-# ReviewType: Qualitative systematic review
+# Qualitative systematic review
 
 Note: This document is currently under development. It will contain the following elements.
 

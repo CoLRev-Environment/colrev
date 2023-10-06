@@ -36,3 +36,4 @@ colrev.ops.built\_in.pdf\_get.local\_index\_pdf\_get.LocalIndexPDFGet
    .. autosummary::
 
       ~LocalIndexPDFGet.ci_supported
+      ~LocalIndexPDFGet.docs_link

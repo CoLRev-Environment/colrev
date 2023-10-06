@@ -1,6 +1,6 @@
 
-ReviewType: Meta-analysis
-=========================
+Meta-analysis
+=============
 
 Note: This document is currently under development. It will contain the following elements.
 

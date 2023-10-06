@@ -1,6 +1,9 @@
 
-Data: Bibliography export
-=========================
+Bibliography export
+===================
+
+data
+----
 
 This endpoint exports the records in different bibliographical formats, which can be useful when the team works with a particular reference manager.
 

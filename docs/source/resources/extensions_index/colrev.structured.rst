@@ -1,6 +1,9 @@
 
-Data: Enter DataEndpoint
-========================
+Structured extraction
+=====================
+
+data
+----
 
 Note: This document is currently under development. It will contain the following elements.
 

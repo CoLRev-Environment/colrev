@@ -28,7 +28,6 @@ class NBIBLoader:
 
     def load_nbib_entries(self) -> dict:
         """Loads nbib entries"""
-
         # pylint: disable=too-many-branches
 
         # Note : REFERENCE_TYPES and KEY_MAP are hard-coded (standard)

@@ -35,6 +35,11 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
     )
     always_apply_changes = False
 
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/crossref.md"
+    )
+
     def __init__(
         self,
         *,

@@ -1,15 +1,17 @@
-# SearchSource: ACM Digital Library
+# ACM Digital Library
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): run_search (including updates), load,  prep (including get_masterdata)
+### DB search
 
-[ACM Digital Library](https://dl.acm.org/)
+```
+colrev search -a abi_inform_proquest
+```
 
-## Add the search source
+### API search
 
-Download search results and store in `data/search/` directory. No API-access available.
+TODO
 
 ## Links
+
+- [ACM Digital Library](https://dl.acm.org/)

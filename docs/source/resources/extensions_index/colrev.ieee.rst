@@ -1,18 +1,9 @@
 
-SearchSource: IEEEXplore
-========================
+IEEEXplore
+==========
 
-Note: This document is currently under development. It will contain the following elements.
-
-
-* description
-* coverage (disciplines, types of work)
-* supported (details): run_search (including updates), load,  prep (including get_masterdata)
-
-`IEEEXplore <https://ieeexplore.ieee.org/>`_
-
-Add the search source
----------------------
+search
+------
 
 DB search
 ^^^^^^^^^
@@ -54,3 +45,6 @@ If your search query includes Boolean operators, add "queryText=query" to the UR
 
 Links
 -----
+
+
+* `IEEEXplore <https://ieeexplore.ieee.org/>`_

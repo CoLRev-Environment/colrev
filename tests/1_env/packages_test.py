@@ -383,7 +383,7 @@ def test_get_package_details(
     }
     actual = package_manager.get_package_details(
         package_type=colrev.env.package_manager.PackageEndpointType.prep,
-        package_identifier="colrev.curation_prep",
+        package_identifier="colrev.colrev_curation",
     )
     print(actual)
     assert expected == actual

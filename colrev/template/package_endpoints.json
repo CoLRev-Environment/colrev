@@ -433,11 +433,35 @@
             "ci_supported": false
         },
         {
-            "package_endpoint_identifier": "colrev.curation_prep",
+            "package_endpoint_identifier": "colrev.colrev_curation",
             "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Preparation of curations (:doc:`instructions </resources/extensions_index/colrev.curation_prep>`)",
+            "short_description": "Preparation of curations (:doc:`instructions </resources/extensions_index/colrev.colrev_curation>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.crossref",
+            "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Prepares records based on crossref.org metadata (:doc:`instructions </resources/extensions_index/colrev.crossref>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.dblp",
+            "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Prepares records based on dblp.org metadata (:doc:`instructions </resources/extensions_index/colrev.dblp>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.europe_pmc",
+            "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Prepares records based on Europe PCM metadata (:doc:`instructions </resources/extensions_index/colrev.europe_pmc>`)",
             "ci_supported": true
         },
         {
@@ -505,59 +529,11 @@
             "ci_supported": true
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_crossref",
-            "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on crossref.org metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_crossref>`)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_dblp",
-            "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on dblp.org metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_dblp>`)",
-            "ci_supported": true
-        },
-        {
             "package_endpoint_identifier": "colrev.get_masterdata_from_doi",
             "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on doi.org metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_doi>`)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_europe_pmc",
-            "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on Europe PCM metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_europe_pmc>`)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_local_index",
-            "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on LocalIndex metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_local_index>`)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_open_library",
-            "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on openlibrary.org metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_open_library>`)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_pubmed",
-            "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records based on Pubmed metadata (:doc:`instructions </resources/extensions_index/colrev.get_masterdata_from_pubmed>`)",
             "ci_supported": true
         },
         {
@@ -569,11 +545,35 @@
             "ci_supported": true
         },
         {
-            "package_endpoint_identifier": "colrev.open_alex_prep",
+            "package_endpoint_identifier": "colrev.local_index",
+            "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Prepares records based on LocalIndex metadata (:doc:`instructions </resources/extensions_index/colrev.local_index>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex",
             "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Prepares records based on OpenAlex metadata (:doc:`instructions </resources/extensions_index/colrev.open_alex_prep>`)",
+            "short_description": "Prepares records based on OpenAlex metadata (:doc:`instructions </resources/extensions_index/colrev.open_alex>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_library",
+            "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Prepares records based on openlibrary.org metadata (:doc:`instructions </resources/extensions_index/colrev.open_library>`)",
+            "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.pubmed",
+            "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "Prepares records based on Pubmed metadata (:doc:`instructions </resources/extensions_index/colrev.pubmed>`)",
             "ci_supported": true
         },
         {

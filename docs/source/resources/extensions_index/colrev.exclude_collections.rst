@@ -1,6 +1,9 @@
 
-Prep: Enter PrepEndpoint
-========================
+Exclude collections
+===================
+
+prep
+----
 
 Note: This document is currently under development. It will contain the following elements.
 

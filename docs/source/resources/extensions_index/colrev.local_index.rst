@@ -1,12 +1,24 @@
 
-PDFGet: Enter PDFGetEndpoint
-============================
+LocalIndex
+==========
 
-Note: This document is currently under development. It will contain the following elements.
+search
+------
 
+API search
+^^^^^^^^^^
 
-* description
-* example
+.. code-block::
+
+   colrev search -a colrev.local_index -p "title LIKE '%dark side%'"
+
+TOC search ...
+^^^^^^^^^^^^^^
+
+pdf-get
+-------
+
+TODO...
 
 Links
 -----
