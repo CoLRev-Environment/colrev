@@ -21,3 +21,15 @@ colrev.ops.load\_utils\_enl
       :nosignatures:
 
       ENLLoader
+
+
+
+
+
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+
+      NextLine
+      ParseError
