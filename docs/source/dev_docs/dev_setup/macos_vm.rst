@@ -27,20 +27,20 @@ To avoid performance issues, the following settings are recommended:
    If you encounter any graphical glitches or errors, consider turning off 3D acceleration temporarily:
    Settings > Display > Screen > uncheck "Enabale 3D Acceleration"
 
-Start the machine, and log in (pre-built VM image: user ubuntu with password ``ubuntu``).
+Start the machine, and log in (pre-built VM image: user ``ubuntu`` with password ``ubuntu``).
 
 Install the guest additions for a better integration between host and guest system:
 
 ::
 
-   Open a Terminal an run the following command:
+   Open a Terminal and run the following command:
    sudo apt-get install virtualbox-guest-additions-iso
 
-   To activate copy-paste between the VM and your OS:
+   Activate copy-paste between the VM (guest) and your OS (host):
    Devices > Shared Clipboard > Bidirectional
 
-Afterwards, please update git and SSH setup_cli.
+Afterwards, please update :doc:`git and SSH <dev_docs/dev_setup/part_2_git_ssh>`.
 
 **Setup your own virtual machine from scratch**
 
-If you want to setup your own virtual machine from scratch, please contiue with the steps in the setup_distro section.
+If you want to setup your own virtual machine from scratch, please contiue with the steps in :doc:`"Setup part 1: Docker" <dev_docs/dev_setup/part_1_docker>`.

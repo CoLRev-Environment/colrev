@@ -1,4 +1,4 @@
-Setup part 2: CoLRev
+Setup part 3: CoLRev
 ------------------------------------
 
 Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
@@ -28,7 +28,18 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    pip install -e .
    poetry install --with dev
    pre-commit install
+
+   # Run the pre-commit hooks
    pre-commit run --all
+
+   # Optional: Run the tests
+   pytest tests
+
+   # Optional: Build the docs locally
+   cd docs
+   make html
+   pre-commit run --all # to format the pages
+
 
 To test CoLRev in a demo project, run the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
