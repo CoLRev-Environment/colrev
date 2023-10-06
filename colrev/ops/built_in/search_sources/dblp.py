@@ -364,7 +364,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
-        if source.search_type == colrev.settings.SearchType.API:
+        elif source.search_type == colrev.settings.SearchType.API:
             assert "query" in source.search_parameters
             assert source.search_parameters["query"].startswith(self.__api_url)
 
