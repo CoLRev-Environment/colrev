@@ -47,6 +47,10 @@
         {
             "package_endpoint_identifier": "colrev.blank",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.umbrella",
+            "status": "EXPERIMENTAL"
         }
     ],
     "search_source": [

@@ -95,6 +95,14 @@
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Theoretical review (:doc:`instructions </resources/extensions_index/colrev.theoretical_review>`)",
             "ci_supported": true
+        },
+        {
+            "package_endpoint_identifier": "colrev.umbrella",
+            "endpoint": "colrev.ops.built_in.review_types.umbrella_review.UmbrellaReview",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Umbrella review (:doc:`instructions </resources/extensions_index/colrev.umbrella>`)",
+            "ci_supported": true
         }
     ],
     "search_source": [

@@ -311,8 +311,10 @@
             },
             {"package_endpoint_identifier": "colrev.blank",
             "endpoint": "colrev.ops.built_in.review_types.blank.BlankReview"
-           }
-
+            },
+            {"package_endpoint_identifier": "colrev.umbrella",
+            "endpoint": "colrev.ops.built_in.review_types.umbrella_review.UmbrellaReview"
+            }
         ]
     }
 

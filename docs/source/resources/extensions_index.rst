@@ -24,6 +24,7 @@ review_type
    extensions_index/colrev.scientometric.rst
    extensions_index/colrev.scoping_review.rst
    extensions_index/colrev.theoretical_review.rst
+   extensions_index/colrev.umbrella.rst
 
 search_source
 -----------------------------
