@@ -17,4 +17,17 @@ colrev.ops.load\_utils\_nbib.NBIBLoader
       :nosignatures:
 
       ~NBIBLoader.convert_to_records
+      ~NBIBLoader.get_content
+      ~NBIBLoader.get_tag
+      ~NBIBLoader.is_tag
       ~NBIBLoader.load_nbib_entries
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~NBIBLoader.PATTERN

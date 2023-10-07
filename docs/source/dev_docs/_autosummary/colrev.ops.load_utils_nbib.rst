@@ -21,3 +21,15 @@ colrev.ops.load\_utils\_nbib
       :nosignatures:
 
       NBIBLoader
+
+
+
+
+
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+
+      NextLine
+      ParseError
