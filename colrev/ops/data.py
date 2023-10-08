@@ -383,7 +383,6 @@ class Data(colrev.operation.Operation):
         )
         if records_status_changed:
             self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.dataset.add_record_changes()
 
         self.__post_data(silent_mode=silent_mode)
 

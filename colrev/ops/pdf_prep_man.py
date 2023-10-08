@@ -45,7 +45,6 @@ class PDFPrepMan(colrev.operation.Operation):
                     target_state=colrev.record.RecordState.pdf_not_available
                 )
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg="Discard man-prep PDFs", manual_author=True
         )

@@ -741,7 +741,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         crossref_feed.print_post_run_search_infos(records=records)
         crossref_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def __scope_excluded(self, *, retrieved_record_dict: dict) -> bool:
         if (
@@ -834,10 +833,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         crossref_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         self.review_manager.dataset.format_records_file()
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.dataset.add_changes(path=self.search_source.filename)
         self.review_manager.create_commit(msg="Run search")
 
@@ -909,7 +906,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         crossref_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""

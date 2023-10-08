@@ -350,7 +350,6 @@ class ExportManPrep(JsonSchemaMixin):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(msg="Prep-man (ExportManPrep)")
 
         self.review_manager.dataset.set_ids(selected_ids=imported_records)

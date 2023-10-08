@@ -418,7 +418,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def __run_param_search_year_batch(
         self,
@@ -486,7 +485,6 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         dblp_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def __get_query(self, *, year: int) -> str:
         if "scope" in self.search_source.search_parameters:

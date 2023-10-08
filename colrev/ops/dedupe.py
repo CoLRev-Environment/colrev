@@ -482,7 +482,6 @@ class Dedupe(colrev.operation.Operation):
                     set_to_md_processed.append(record.data["ID"])
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         return set_to_md_processed
 
     def __skip_merge_condition(
@@ -772,7 +771,6 @@ class Dedupe(colrev.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
         """Fix lists of errors"""
@@ -971,5 +969,4 @@ class Dedupe(colrev.operation.Operation):
                     )
 
             self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.dataset.add_record_changes()
             self.review_manager.create_commit(msg="Skip prescreen/include all")

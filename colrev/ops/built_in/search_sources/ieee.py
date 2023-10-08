@@ -260,7 +260,6 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         ieee_feed.print_post_run_search_infos(records=records)
         ieee_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def __update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
         if "start_page" in article:

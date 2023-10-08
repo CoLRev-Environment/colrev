@@ -138,7 +138,6 @@ class Prescreen(colrev.operation.Operation):
                 )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         msg = f"Pre-screen (exclude {ids})"
         if include:
@@ -224,7 +223,6 @@ class Prescreen(colrev.operation.Operation):
                     target_state=colrev.record.RecordState.rev_prescreen_included
                 )
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
@@ -306,8 +304,6 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.dataset.save_records_dict(
                 records={record.data["ID"]: record.get_data()}, partial=True
             )
-
-        self.review_manager.dataset.add_record_changes()
 
     def __auto_include(self, *, records: dict) -> list:
         selected_auto_include_ids = [

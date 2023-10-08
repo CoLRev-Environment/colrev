@@ -308,8 +308,6 @@ class PDFGet(colrev.operation.Operation):
         records = self.__relink_pdfs(records=records)
 
         self.review_manager.dataset.save_records_dict(records=records)
-
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
@@ -486,7 +484,6 @@ class PDFGet(colrev.operation.Operation):
 
         if pdfs_search_file.is_file():
             self.review_manager.dataset.add_changes(path=pdfs_search_file)
-        self.review_manager.dataset.add_record_changes()
 
     def __get_data(self) -> dict:
         # pylint: disable=duplicate-code
@@ -580,7 +577,6 @@ class PDFGet(colrev.operation.Operation):
                         )
                         record.remove_field(key="file")
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         return records
 

@@ -17,7 +17,6 @@ colrev.dataset.Dataset
       :nosignatures:
 
       ~Dataset.add_changes
-      ~Dataset.add_record_changes
       ~Dataset.add_setting_changes
       ~Dataset.behind_remote
       ~Dataset.create_commit

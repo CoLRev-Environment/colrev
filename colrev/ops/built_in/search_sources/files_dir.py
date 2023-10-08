@@ -198,7 +198,6 @@ class FilesSearchSource(JsonSchemaMixin):
                 print(" " + "\n ".join(files_removed))
             records = {k: v for k, v in records.items() if v["colrev_origin"]}
             self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.dataset.add_record_changes()
 
     def __update_fields_based_on_pdf_dirs(
         self, *, record_dict: dict, params: dict

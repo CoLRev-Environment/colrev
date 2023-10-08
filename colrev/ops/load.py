@@ -279,7 +279,6 @@ class Load(colrev.operation.Operation):
 
         self.review_manager.dataset.add_setting_changes()
         self.review_manager.dataset.add_changes(path=source.search_source.filename)
-        self.review_manager.dataset.add_record_changes()
         if (
             0 == getattr(source.search_source, "to_import", 0)
             and not self.review_manager.high_level_operation

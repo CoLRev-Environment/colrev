@@ -578,7 +578,9 @@ class Dataset:
 
         return bibtex_str
 
-    def save_records_dict_to_file(self, *, records: dict, save_path: Path) -> None:
+    def save_records_dict_to_file(
+        self, *, records: dict, save_path: Path, add_changes: bool = True
+    ) -> None:
         """Save the records dict to specified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
@@ -587,6 +589,13 @@ class Dataset:
 
         with open(save_path, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
+
+        if not add_changes:
+            return
+        if save_path == self.records_file:
+            self.__add_record_changes()
+        else:
+            self.add_changes(path=save_path)
 
     def __save_record_list_by_id(
         self, *, records: dict, append_new: bool = False
@@ -650,15 +659,19 @@ class Dataset:
                     "records not written to file: " f'{[x["ID"] for x in record_list]}'
                 )
 
-        self.add_record_changes()
+        self.__add_record_changes()
 
-    def save_records_dict(self, *, records: dict, partial: bool = False) -> None:
+    def save_records_dict(
+        self, *, records: dict, partial: bool = False, add_changes: bool = True
+    ) -> None:
         """Save the records dict in RECORDS_FILE"""
 
         if partial:
             self.__save_record_list_by_id(records=records)
             return
-        self.save_records_dict_to_file(records=records, save_path=self.records_file)
+        self.save_records_dict_to_file(
+            records=records, save_path=self.records_file, add_changes=add_changes
+        )
 
     def read_next_record(
         self, *, conditions: Optional[list] = None
@@ -725,7 +738,7 @@ class Dataset:
                 if ID not in paper_ids.split(",")
             }
             self.save_records_dict(records=records)
-            self.add_record_changes()
+            self.__add_record_changes()
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
@@ -919,7 +932,7 @@ class Dataset:
                 print(exc)
 
         self.save_records_dict(records=records)
-        self.add_record_changes()
+        self.__add_record_changes()
 
         return records
 
@@ -1049,7 +1062,7 @@ class Dataset:
             cmsg = master.commit.message
         return cmsg
 
-    def add_record_changes(self) -> None:
+    def __add_record_changes(self) -> None:
         """Add changes in records to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(randint(1, 50) * 0.1)  # nosec

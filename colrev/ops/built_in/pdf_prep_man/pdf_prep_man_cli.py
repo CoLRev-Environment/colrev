@@ -270,7 +270,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 break
 
         pdf_prep_man_operation.review_manager.dataset.save_records_dict(records=records)
-        pdf_prep_man_operation.review_manager.dataset.add_record_changes()
 
         if pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":

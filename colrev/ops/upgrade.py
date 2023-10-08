@@ -322,7 +322,6 @@ class Upgrade(colrev.operation.Operation):
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         return self.repo.is_dirty()
 
@@ -387,7 +386,6 @@ class Upgrade(colrev.operation.Operation):
                     "colrev_status"
                 ] = colrev.record.RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
     def __migrate_0_8_4(self) -> bool:
@@ -401,7 +399,6 @@ class Upgrade(colrev.operation.Operation):
                 record["colrev_masterdata_provenance"]["editor"] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         return self.repo.is_dirty()
 
@@ -475,7 +472,6 @@ class Upgrade(colrev.operation.Operation):
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
     def __migrate_0_10_1(self) -> bool:

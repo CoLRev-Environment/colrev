@@ -204,7 +204,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def __run_api_search(
         self,
@@ -757,7 +756,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # deal with remove/merge
 
         check_operation.review_manager.dataset.save_records_dict(records=records)
-        check_operation.review_manager.dataset.add_record_changes()
         check_operation.review_manager.create_commit(
             msg=f"Update {record_dict['ID']}", script_call="colrev push"
         )

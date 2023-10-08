@@ -687,7 +687,6 @@ class Prep(colrev.operation.Operation):
         self.__reset(record_list=records_to_reset)
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg="Reset metadata for manual preparation",
         )
@@ -738,8 +737,6 @@ class Prep(colrev.operation.Operation):
                 self.review_manager.dataset.add_changes(path=pdfs_origin_file)
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
-
         self.review_manager.create_commit(
             msg="Set IDs",
         )
@@ -1141,7 +1138,6 @@ class Prep(colrev.operation.Operation):
                 record = colrev.record.Record(data=record_dict)
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(msg="Skip prep")
 
     def __initialize_prep(self, *, polish: bool, debug_ids: str, cpu: int) -> None:

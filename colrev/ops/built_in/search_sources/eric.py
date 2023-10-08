@@ -211,7 +211,6 @@ class ERICSearchSource(JsonSchemaMixin):
         eric_feed.print_post_run_search_infos(records=records)
         eric_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of ERIC"""

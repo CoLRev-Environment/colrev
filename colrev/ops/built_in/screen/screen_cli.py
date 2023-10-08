@@ -271,8 +271,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             screen_operation.review_manager.logger.info("No records to screen")
             return records
 
-        screen_operation.review_manager.dataset.add_record_changes()
-
         if self.__i < self.__stat_len and split:  # if records remain for screening
             if input("Create commit (y/n)?") != "y":
                 return records
