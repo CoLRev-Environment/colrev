@@ -834,7 +834,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         crossref_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
 
-        self.review_manager.dataset.format_records_file()
         self.review_manager.dataset.add_changes(path=self.search_source.filename)
         self.review_manager.create_commit(msg="Run search")
 

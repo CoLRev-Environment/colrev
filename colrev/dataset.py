@@ -29,6 +29,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
+from colrev.exit_codes import ExitCodes
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -692,30 +693,56 @@ class Dataset:
                 records.append(record)
         yield from records
 
-    def format_records_file(self) -> bool:
-        """Format the records file"""
-        quality_model = self.review_manager.get_qm()
-        records = self.load_records_dict()
-        for record_dict in records.values():
-            if "colrev_status" not in record_dict:
-                print(f'Error: no status field in record ({record_dict["ID"]})')
-                continue
+    def get_format_report(self) -> dict:
+        """Get format report"""
 
-            record = colrev.record.PrepRecord(data=record_dict)
-            if record_dict["colrev_status"] in [
-                colrev.record.RecordState.md_needs_manual_preparation,
-            ]:
-                record.update_masterdata_provenance(qm=quality_model)
-                record.update_metadata_status()
+        if not self.records_file.is_file():
+            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
-            if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
-                record.reset_pdf_provenance_notes()
+        if not self.records_changed() and not self.review_manager.force_mode:
+            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
-        self.save_records_dict(records=records)
-        changed = self.RECORDS_FILE_RELATIVE in [
-            r.a_path for r in self.__git_repo.index.diff(None)
-        ]
-        return changed
+        try:
+            colrev.operation.FormatOperation(
+                review_manager=self.review_manager
+            )  # to notify
+            quality_model = self.review_manager.get_qm()
+            records = self.load_records_dict()
+            for record_dict in records.values():
+                if "colrev_status" not in record_dict:
+                    print(f'Error: no status field in record ({record_dict["ID"]})')
+                    continue
+
+                record = colrev.record.PrepRecord(data=record_dict)
+                if record_dict["colrev_status"] in [
+                    colrev.record.RecordState.md_needs_manual_preparation,
+                ]:
+                    record.update_masterdata_provenance(qm=quality_model)
+                    record.update_metadata_status()
+
+                if (
+                    record_dict["colrev_status"]
+                    == colrev.record.RecordState.pdf_prepared
+                ):
+                    record.reset_pdf_provenance_notes()
+
+            self.save_records_dict(records=records)
+            changed = self.RECORDS_FILE_RELATIVE in [
+                r.a_path for r in self.__git_repo.index.diff(None)
+            ]
+            self.review_manager.update_status_yaml()
+            self.review_manager.load_settings()
+            self.review_manager.save_settings()
+        except (
+            colrev_exceptions.UnstagedGitChangesError,
+            colrev_exceptions.StatusFieldValueError,
+        ) as exc:
+            return {"status": ExitCodes.FAIL, "msg": f"{type(exc).__name__}: {exc}"}
+
+        if changed:
+            return {"status": ExitCodes.FAIL, "msg": "records file formatted"}
+
+        return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
     # ID creation, update and lookup ---------------------------------------
 

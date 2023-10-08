@@ -25,7 +25,6 @@ import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
-from colrev.exit_codes import ExitCodes
 
 
 class ReviewManager:
@@ -234,7 +233,7 @@ class ReviewManager:
 
     def report(self, *, msg_file: Path) -> dict:
         """Append commit-message report if not already available
-        Entrypoint for pre-commit hooks)
+        (Entrypoint for pre-commit hooks)
         """
         import colrev.ops.commit
         import colrev.ops.correct
@@ -271,7 +270,7 @@ class ReviewManager:
 
     def sharing(self) -> dict:
         """Check whether sharing requirements are met
-        Entrypoint for pre-commit hooks)
+        (Entrypoint for pre-commit hooks)
         """
 
         self.notified_next_operation = colrev.operation.OperationsType.check
@@ -280,30 +279,9 @@ class ReviewManager:
         return sharing_advice
 
     def format_records_file(self) -> dict:
-        """Format the records file Entrypoint for pre-commit hooks)"""
+        """Format the records file (Entrypoint for pre-commit hooks)"""
 
-        if not self.dataset.records_file.is_file():
-            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
-
-        if not self.dataset.records_changed() and not self.force_mode:
-            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
-
-        try:
-            colrev.operation.FormatOperation(review_manager=self)  # to notify
-            changed = self.dataset.format_records_file()
-            self.update_status_yaml()
-            self.settings = self.load_settings()
-            self.save_settings()
-        except (
-            colrev_exceptions.UnstagedGitChangesError,
-            colrev_exceptions.StatusFieldValueError,
-        ) as exc:
-            return {"status": ExitCodes.FAIL, "msg": f"{type(exc).__name__}: {exc}"}
-
-        if changed:
-            return {"status": ExitCodes.FAIL, "msg": "records file formatted"}
-
-        return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
+        return self.dataset.get_format_report()
 
     def notify(
         self, *, operation: colrev.operation.Operation, state_transition: bool = True
