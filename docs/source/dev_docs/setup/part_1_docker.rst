@@ -22,5 +22,4 @@ Please reboot your system afterwards to fully activate docker.
 
 NOTE: 
    - If you are running Windows or macOS, please perform the steps in their respective sections first (:doc:`Windows <dev_docs/setup/windows_wsl2>`, :doc:`macOS <dev_docs/setup/macos_vm>`)!
-
    - If you are using a distribution other than Ubuntu (e.g. Debian, Linux Mint, Kali Linux etc.), please refer to the official install instructions of the Docker Engine (`Install Docker Engine <https://docs.docker.com/engine/install/>`__)!
