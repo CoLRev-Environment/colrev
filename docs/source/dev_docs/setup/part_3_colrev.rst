@@ -13,6 +13,10 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    # Install visual studio code (via snap)
    sudo snap install --classic code
 
+   # Add $HOME/.local/bin to PATH and load it into the current terminal session with source
+   echo 'export PATH="$PATH:$HOME/.local/bin"' >> $HOME/.bashrc
+   source ~/.bashrc
+
    sudo apt install python-is-python3
    sudo apt install python3-pip
    python3 -m pip install --upgrade pip
