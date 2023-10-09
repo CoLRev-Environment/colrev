@@ -26,7 +26,6 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    # Clone and install CoLRev on your Desktop
    # Make sure you have registered your SSH key on GitHub beforehand
    cd ~/Desktop
-   git clone git@github.com:geritwagner/dev-setup.git
    git clone git@github.com:CoLRev-Environment/colrev.git
    cd colrev
    pip install -e .
