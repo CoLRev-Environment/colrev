@@ -20,7 +20,6 @@ Install **Docker Engine for Ubuntu** with the following commands (using the shel
 
 Please reboot your system afterwards to fully activate docker.
 
-
 NOTE: 
    - If you are running Windows or macOS, please perform the steps in their respective sections first (:doc:`Windows <dev_docs/setup/windows_wsl2>`, :doc:`macOS <dev_docs/setup/macos_vm>`)!
 
