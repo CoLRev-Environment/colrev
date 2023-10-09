@@ -1,15 +1,11 @@
-# SearchSource: SpringerLink
+# SpringerLink
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): search updates, get_masterdata, run_search, load_fixes, prep
-
-[SpringerLink](https://link.springer.com/)
-
-## Add the search source
+### DB search
 
 Download search results and store in `data/search/` directory. API-access not yet available.
 
 ## Links
+
+- [SpringerLink](https://link.springer.com/)

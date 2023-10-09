@@ -1,4 +1,3 @@
-
 Workflow
 ==================================
 
@@ -58,7 +57,7 @@ Like all other operations, it also offers the possibility to display more detail
 CoLRev operation
 -------------------------------
 
-The methodological steps of the literature review are completed through the CoLRev operations (as illustrated `earlier <operations.html>`_).
+The methodological steps of the literature review are completed through the CoLRev operations (as illustrated :doc:`earlier </manual/operation>`).
 Once completed, operations can create new commits (versions).
 Detailed information on the steps and operations are provided on the following pages.
 
@@ -80,7 +79,7 @@ The following figure illustrates the validation for a ``prep`` operation:
    :alt: Validation (prep)
 
 ``validate`` is a general operation that allows users to validate changes in different types of commits (``prep``, ``dedupe``, ...),
-but also changes of particular users, properties of the review or other (see `docs <../foundations/cli.html#colrev-validate>`_).
+but also changes of particular users, properties of the review or other (see `cli-reference/validate <cli reference>`).
 For some operations (such as ``prep`` and ``dedupe``), CoLRev provides custom validation functionality, which displays the most substantial changes first.
 In other cases, CoLRev opens gitk, which displays all committed changes.
 If necessary, whole versions can be undone through git clients (for an overview of git GUI clients, see `here <https://git-scm.com/downloads/guis>`_).

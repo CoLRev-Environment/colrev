@@ -317,7 +317,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             preferred_masterdata_sources = [
                 s
                 for s in dedupe_operation.review_manager.settings.sources
-                if s.endpoint != "colrev.pdfs_dir"
+                if s.endpoint != "colrev.files_dir"
             ]
 
             dedupe_operation.apply_merges(
@@ -337,8 +337,6 @@ class CurationMissingDedupe(JsonSchemaMixin):
             dedupe_operation.review_manager.dataset.save_records_dict(records=records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-            dedupe_operation.review_manager.dataset.add_record_changes()
-
             dedupe_operation.review_manager.create_commit(
                 msg="Merge duplicate records",
             )
@@ -358,11 +356,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         )
 
             dedupe_operation.review_manager.dataset.save_records_dict(records=records)
-            dedupe_operation.review_manager.dataset.add_record_changes()
-
-            input("Edit records (if any) and press Enter")
-
-            dedupe_operation.review_manager.dataset.add_record_changes()
+            input("Edit records (if any), add to git, and press Enter")
 
             dedupe_operation.review_manager.create_commit(
                 msg="Add non-duplicate records",

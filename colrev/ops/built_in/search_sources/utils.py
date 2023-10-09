@@ -37,7 +37,7 @@ def __get_authors(*, item: dict) -> str:
             if "given" in author:
                 a_string += f", {author['given']}"
             authors_strings.append(a_string)
-    return " and ".join(authors_strings)
+    return " and ".join(authors_strings).replace(",,", ",")
 
 
 def __get_number(*, item: dict) -> str:
@@ -66,7 +66,10 @@ def __item_to_record(*, item: dict) -> dict:
     assert isinstance(item["title"], str)
 
     if isinstance(item.get("container-title", ""), list):
-        item["container-title"] = item["container-title"][0]
+        if len(item["container-title"]) > 0:
+            item["container-title"] = item["container-title"][0]
+        else:
+            item["container-title"] = ""
     assert isinstance(item.get("container-title", ""), str)
 
     item["ENTRYTYPE"] = "misc"
@@ -119,7 +122,7 @@ def __format_fields(*, record_dict: dict) -> dict:
         if key == "abstract":
             if value.startswith("Abstract "):
                 value = value[8:]
-        record_dict[key] = value
+        record_dict[key] = value.lstrip().rstrip()
 
     return record_dict
 
@@ -156,6 +159,9 @@ def __remove_fields(*, record_dict: dict) -> dict:
     record_dict = {
         k: v for k, v in record_dict.items() if k in supported_fields and v != ""
     }
+
+    if record_dict.get("abstract", "") == "No abstract is available for this article.":
+        del record_dict["abstract"]
 
     return record_dict
 

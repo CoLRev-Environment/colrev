@@ -28,7 +28,7 @@ class WebsiteConnector:
     """Connector for the Zotero translator for websites"""
 
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.todo
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/website.py"
     )
@@ -142,7 +142,7 @@ class WebsiteConnector:
         self.__set_keywords(record=record, item=item)
 
     def retrieve_md_from_website(self, *, record: colrev.record.Record) -> None:
-        """Retrieve the metadata the associated website (url) based on Zotero"""
+        """Retrieve the metadata of the associated website (url) based on Zotero"""
 
         self.zotero_lock.acquire(timeout=60)
 

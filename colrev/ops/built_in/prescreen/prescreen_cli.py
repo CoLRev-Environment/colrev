@@ -136,10 +136,6 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
             padding=padding,
         )
 
-        # records = prescreen_operation.review_manager.dataset.load_records_dict()
-        # prescreen_operation.review_manager.dataset.save_records_dict(records=records)
-        prescreen_operation.review_manager.dataset.add_record_changes()
-
         # Note : currently, it is easier to create a commit in all cases.
         # Upon continuing the prescreen, the scope-based prescreen commits the changes,
         # which is misleading.

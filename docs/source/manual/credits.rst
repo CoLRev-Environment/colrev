@@ -1,4 +1,3 @@
-
 Credits
 ==================================
 
@@ -99,7 +98,7 @@ Projects that power CoLRev:
      - License
      - Activity
    * - `dedupe <https://github.com/dedupeio/dedupe>`_ : duplicate identification (active learning)
-     - `MIT <https://github.com/dedupeio/dedupe/blob/master/LICENSE>`__
+     - `MIT <https://github.com/dedupeio/dedupe/blob/main/LICENSE>`__
      - |dedupeioactivity|
 
 .. list-table::
@@ -141,7 +140,7 @@ Projects that power CoLRev:
      - `MIT <https://github.com/pdfminer/pdfminer.six/blob/master/LICENSE>`__
      - |pdfmineractivity|
    * - `OCRmyPDF <https://github.com/ocrmypdf/OCRmyPDF>`_ \*: OCR tasks
-     - `MPL-2.0 <https://github.com/ocrmypdf/OCRmyPDF/blob/master/LICENSE>`__
+     - `MPL-2.0 <https://github.com/ocrmypdf/OCRmyPDF/blob/main/LICENSE>`__
      - |ocrmypdfactivity|
    * - `Tesseract OCR <https://github.com/tesseract-ocr/tesseract>`_ \*: OCR tasks
      - `Apache-2.0 <https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE>`__
@@ -159,7 +158,7 @@ Projects that power CoLRev:
      - License
      - Activity
    * - `pandoc <https://github.com/jgm/pandoc>`_ \*: creating manuscripts
-     - `GPL 2 <https://github.com/jgm/pandoc/blob/master/COPYRIGHT>`__
+     - `GPL 2 <https://github.com/jgm/pandoc/blob/main/COPYRIGHT>`__
      - |pandocactivity|
    * - `CSL <https://github.com/citation-style-language/styles>`_ \*: formatting citations
      - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`__
@@ -180,7 +179,7 @@ Projects that power CoLRev:
      - `MIT <https://github.com/pre-commit/pre-commit/blob/main/LICENSE>`__
      - |precommitactivity|
    * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
-     - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`__
+     - `Apache-2.0 <https://github.com/docker/docker-py/blob/main/LICENSE>`__
      - |dockerpyactivity|
    * - `pybtex <https://bitbucket.org/pybtex-devs/pybtex/src>`_ \*: Saving and loading record data (BiBTeX)
      - `MIT <https://bitbucket.org/pybtex-devs/pybtex/src/master/COPYING>`__

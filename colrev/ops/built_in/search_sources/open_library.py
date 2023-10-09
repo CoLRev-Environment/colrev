@@ -16,6 +16,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.record
 
 if TYPE_CHECKING:
@@ -34,17 +35,17 @@ if TYPE_CHECKING:
 )
 @dataclass
 class OpenLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for the OpenLibrary API"""
+    """OpenLibrary API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-
+    endpoint = "colrev.open_library"
     source_identifier = "isbn"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.MD]
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_library.md"
     )
@@ -75,9 +76,8 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.open_library",
                     filename=self.__open_library_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -241,22 +241,22 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the OpenLibrary (parameters etc.)"""
-
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of OpenLibrary"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for OpenLibrary not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -307,15 +307,16 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for OpenLibrary"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

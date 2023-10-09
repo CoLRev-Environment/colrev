@@ -109,7 +109,9 @@ class Initializer:
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]
-        cur_content = [x for x in cur_content if not x.startswith("venv")]
+        cur_content = [
+            x for x in cur_content if not x.startswith("venv") and x != ".history"
+        ]
 
         if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
             cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
@@ -276,7 +278,7 @@ class Initializer:
                 if x["endpoint"] not in ["colrev.paper_md"]
             ]
             settings.sources = [
-                x for x in settings.sources if x.endpoint not in ["colrev.pdfs_dir"]
+                x for x in settings.sources if x.endpoint not in ["colrev.files_dir"]
             ]
 
             settings.pdf_prep.pdf_prep_package_endpoints = [

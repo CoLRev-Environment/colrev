@@ -276,7 +276,6 @@ class CurationDedupe(JsonSchemaMixin):
         for record in records.values():
             record.pop("container_title")
         dedupe_operation.review_manager.dataset.save_records_dict(records=records)
-        dedupe_operation.review_manager.dataset.add_record_changes()
 
         if dedupe_operation.review_manager.dataset.has_changes():
             dedupe_operation.review_manager.logger.info(
@@ -576,7 +575,7 @@ class CurationDedupe(JsonSchemaMixin):
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
-            pdf_source = "colrev.pdfs_dir" == relevant_source[0].endpoint
+            pdf_source = "colrev.files_dir" == relevant_source[0].endpoint
         return pdf_source
 
     def __first_source_selected(
@@ -643,15 +642,12 @@ class CurationDedupe(JsonSchemaMixin):
         preferred_masterdata_sources = [
             s
             for s in dedupe_operation.review_manager.settings.sources
-            if s.endpoint != "colrev.pdfs_dir"
+            if s.endpoint != "colrev.files_dir"
         ]
         dedupe_operation.apply_merges(
             results=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
-
-        dedupe_operation.review_manager.dataset.add_record_changes()
-
         dedupe_operation.review_manager.create_commit(
             msg="Merge duplicate records",
         )

@@ -1,6 +1,3 @@
-
-.. _PDF retrieval:
-
 Step 4: PDF retrieval
 ==================================
 
@@ -30,7 +27,7 @@ To start the ``pdfs`` operation, run:
 	colrev pdfs
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Operations
 
    pdf_retrieval/pdf_get

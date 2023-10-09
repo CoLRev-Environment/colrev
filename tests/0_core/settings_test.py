@@ -32,11 +32,10 @@ def test_settings_load() -> None:
         },
         "sources": [
             {
-                "endpoint": "colrev.pdfs_dir",
-                "filename": Path("data/search/pdfs.bib"),
-                "search_type": colrev.settings.SearchType.PDFS,
+                "endpoint": "colrev.files_dir",
+                "filename": Path("data/search/files.bib"),
+                "search_type": colrev.settings.SearchType.FILES,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
                 "comment": "",
             }
         ],
@@ -55,17 +54,17 @@ def test_settings_load() -> None:
                         {"endpoint": "colrev.exclude_non_latin_alphabets"},
                         {"endpoint": "colrev.exclude_collections"},
                         {"endpoint": "colrev.exclude_complementary_materials"},
-                        {"endpoint": "colrev.get_masterdata_from_local_index"},
+                        {"endpoint": "colrev.local_index"},
                         {"endpoint": "colrev.exclude_languages"},
                         {"endpoint": "colrev.remove_urls_with_500_errors"},
                         {"endpoint": "colrev.remove_broken_ids"},
                         {"endpoint": "colrev.get_doi_from_urls"},
                         {"endpoint": "colrev.get_year_from_vol_iss_jour"},
-                        {"endpoint": "colrev.get_masterdata_from_crossref"},
-                        {"endpoint": "colrev.get_masterdata_from_pubmed"},
-                        {"endpoint": "colrev.get_masterdata_from_europe_pmc"},
-                        {"endpoint": "colrev.get_masterdata_from_dblp"},
-                        {"endpoint": "colrev.get_masterdata_from_open_library"},
+                        {"endpoint": "colrev.crossref"},
+                        {"endpoint": "colrev.pubmed"},
+                        {"endpoint": "colrev.europe_pmc"},
+                        {"endpoint": "colrev.dblp"},
+                        {"endpoint": "colrev.open_library"},
                     ],
                 }
             ],
@@ -81,10 +80,6 @@ def test_settings_load() -> None:
         "prescreen": {
             "explanation": "",
             "prescreen_package_endpoints": [
-                {
-                    "endpoint": "colrev.scope_prescreen",
-                    "LanguageScope": ["eng"],
-                },
                 {"endpoint": "colrev.colrev_cli_prescreen"},
             ],
         },
@@ -242,7 +237,6 @@ def test_settings_load() -> None:
 #                     "filename",
 #                     "search_type",
 #                     "search_parameters",
-#                     "load_conversion_package_endpoint",
 #                 ],
 #                 "properties": {
 #                     "endpoint": {"type": "string"},
@@ -259,10 +253,6 @@ def test_settings_load() -> None:
 #                         ],
 #                     },
 #                     "search_parameters": {"type": "object", "additionalProperties": {}},
-#                     "load_conversion_package_endpoint": {
-#                         "package_endpoint_type": "load_conversion",
-#                         "type": "package_endpoint",
-#                     },
 #                     "comment": {"type": "string"},
 #                 },
 #                 "description": "Search source settings",

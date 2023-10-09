@@ -11,35 +11,57 @@ import colrev.record
 @pytest.mark.parametrize(
     "author_str, defects",
     [
-        ("RAI", ["mostly-all-caps"]),
-        ("Rai, Arun and B,", ["incomplete-field"]),
-        ("Rai, Arun and B", ["name-format-separators"]),
+        ("RAI", {"mostly-all-caps", "incomplete-field"}),
+        ("Rai, Arun and B,", {"incomplete-field", "name-format-separators"}),
+        ("Rai, Arun and B", {"name-format-separators"}),
         # additional title
-        ("Rai, PhD, Arun", ["name-format-titles"]),
-        ("Rai, Phd, Arun", ["name-format-titles"]),
-        ("GuyPhD, Arun", []),  #
+        ("Rai, PhD, Arun", {"name-format-titles", "name-format-separators"}),
+        ("Rai, Phd, Arun", {"name-format-titles", "name-format-separators"}),
+        ("GuyPhD, Arun", {}),  #
         (
             "Rai, Arun; Straub, Detmar",
-            ["name-format-separators"],
+            {"name-format-separators"},
         ),
         # author without capital letters
         # NOTE: it's not a separator error, should be something more relevant
         (
             "Mathiassen, Lars and jonsson, katrin",
-            ["name-format-separators"],
+            {"name-format-separators"},
         ),
         (
             "University, Villanova and Sipior, Janice",
-            ["erroneous-term-in-field"],
+            {"erroneous-term-in-field"},
         ),
         (
             "Mourato, Inês and Dias, Álvaro and Pereira, Leandro",
-            [],
+            {},
         ),
-        ("DUTTON, JANE E. and ROBERTS, LAURA", ["mostly-all-caps"]),
-        ("Rai, Arun et al.", ["name-abbreviated"]),
-        ("Rai, Arun, and others", ["name-abbreviated"]),
-        ("Rai, and others", ["name-abbreviated"]),
+        ("DUTTON, JANE E. and ROBERTS, LAURA", {"mostly-all-caps"}),
+        ("Rai, Arun et al.", {"name-abbreviated"}),
+        (
+            "Rai, Arun, and others",
+            {"name-format-separators", "name-abbreviated", "incomplete-field"},
+        ),
+        (
+            "Rai, and others",
+            {"name-format-separators", "incomplete-field", "name-abbreviated"},
+        ),
+        (
+            "Neale, J. and Boitano, T. and Cooke, M. and Morrow, D. and et al.",
+            {"name-abbreviated", "name-format-separators"},
+        ),
+        (
+            "Brocke, Jan vom",
+            {"name-particles"},
+        ),
+        (
+            "vom Brocke, Jan",
+            {"name-particles"},
+        ),
+        (
+            "{vom Brocke}, Jan",
+            {},
+        ),
         # (
         #     "Þórðarson, Kristinn and Oskarsdottir, Maria",
         #     [],
@@ -48,7 +70,7 @@ import colrev.record
 )
 def test_get_quality_defects_author(
     author_str: str,
-    defects: list,
+    defects: set,
     v_t_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
@@ -60,10 +82,11 @@ def test_get_quality_defects_author(
         return
 
     assert v_t_record.has_quality_defects()
-    for defect in defects:
-        assert defect in v_t_record.data["colrev_masterdata_provenance"]["author"][
-            "note"
-        ].split(",")
+    # for defect in defects:
+    actual = set(
+        v_t_record.data["colrev_masterdata_provenance"]["author"]["note"].split(",")
+    )
+    assert defects == actual
 
 
 @pytest.mark.parametrize(
@@ -384,17 +407,48 @@ def test_doi_not_matching_pattern(
 def test_isbn_not_matching_pattern(
     isbn: str,
     defect: bool,
-    v_t_record: colrev.record.Record,
+    book_record: colrev.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test the isbn-not-matching-pattern checker"""
-    v_t_record.data["isbn"] = isbn
+    book_record.data["isbn"] = isbn
+    book_record.update_masterdata_provenance(qm=quality_model)
+    if not defect:
+        print(book_record.data)
+        assert not book_record.has_quality_defects()
+        return
+    assert (
+        "isbn-not-matching-pattern"
+        in book_record.data["colrev_masterdata_provenance"]["isbn"]["note"]
+    )
+    assert book_record.has_quality_defects()
+
+
+@pytest.mark.parametrize(
+    "pmid, defect",
+    [
+        ("1", False),
+        ("33044175", False),
+        ("33044175.2", False),
+        ("10.1177/02683962211048201", True),
+    ],
+)
+def test_pubmedid_not_matching_pattern(
+    pmid: str,
+    defect: bool,
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+    """Test the doi-not-matching-pattern checker"""
+    v_t_record.data["colrev.pubmed.pubmedid"] = pmid
     v_t_record.update_masterdata_provenance(qm=quality_model)
     if not defect:
         assert not v_t_record.has_quality_defects()
         return
     assert (
-        v_t_record.data["colrev_masterdata_provenance"]["isbn"]["note"]
-        == "isbn-not-matching-pattern"
+        v_t_record.data["colrev_masterdata_provenance"]["colrev.pubmed.pubmedid"][
+            "note"
+        ]
+        == "pubmedid-not-matching-pattern"
     )
     assert v_t_record.has_quality_defects()

@@ -29,6 +29,7 @@ class Remove(colrev.operation.Operation):
             notify_state_transition_operation=False,
         )
 
+    @colrev.operation.Operation.decorate()
     def remove_records(self, *, ids: str) -> None:
         """Remove records from CoLRev project."""
 
@@ -58,6 +59,4 @@ class Remove(colrev.operation.Operation):
                     self.review_manager.dataset.add_changes(path=filepath)
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
-
         self.review_manager.create_commit(msg="Remove records", manual_author=False)

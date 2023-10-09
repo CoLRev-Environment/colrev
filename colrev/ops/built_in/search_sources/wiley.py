@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -24,16 +24,17 @@ import colrev.record
 )
 @dataclass
 class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
-    """SearchSource for Wiley"""
+    """Wiley"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.wiley"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Wiley"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/wiley.md"
     )
@@ -42,32 +43,6 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "query_file" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
-            )
-
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -84,15 +59,22 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Wiley"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Wiley not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -104,27 +86,28 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Wiley"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            for record_dict in records.values():
+                if "eprint" not in record_dict:
+                    continue
+                record_dict["fulltext"] = record_dict.pop("eprint")
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Wiley"""
 
-        record.rename_field(key="eprint", new_key="fulltext")
-
         if record.data.get("ENTRYTYPE", "") == "inbook":
             record.rename_field(key="title", new_key="chapter")
             record.rename_field(key="booktitle", new_key="title")
-
-        record.rename_field(key="eprint", new_key="fulltext")
 
         return record

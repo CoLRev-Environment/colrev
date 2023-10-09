@@ -217,7 +217,6 @@ class TableScreen(JsonSchemaMixin):
                     )
 
         screen_operation.review_manager.dataset.save_records_dict(records=records)
-        screen_operation.review_manager.dataset.add_record_changes()
 
     def run_screen(
         self, screen_operation: colrev.ops.screen.Screen, records: dict, split: list

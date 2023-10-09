@@ -242,7 +242,7 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         return
 
     # To format:
-    status_operation.review_manager.dataset.save_records_dict(records=checker.records)
+    # status_operation.review_manager.dataset.save_records_dict(records=checker.records)
 
     # if (
     #     not status_operation.review_manager.in_virtualenv()

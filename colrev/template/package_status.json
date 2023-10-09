@@ -43,6 +43,14 @@
         {
             "package_endpoint_identifier": "colrev.scientometric",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.blank",
+            "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.umbrella",
+            "status": "EXPERIMENTAL"
         }
     ],
     "search_source": [
@@ -135,12 +143,8 @@
             "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.pdfs_dir",
+            "package_endpoint_identifier": "colrev.files_dir",
             "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.video_dir",
-            "status": "EXPERIMENTAL"
         },
         {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
@@ -161,32 +165,14 @@
         {
             "package_endpoint_identifier": "colrev.trid",
             "status": "EXPERIMENTAL"
-        }
-    ],
-    "load_conversion": [
-        {
-            "package_endpoint_identifier": "colrev.bibtex",
-            "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.csv",
-            "status": "MATURING"
+            "package_endpoint_identifier": "colrev.open_alex",
+            "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.excel",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.zotero_translate",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.md_to_bib",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.bibutils",
-            "status": "MATURING"
+            "package_endpoint_identifier": "colrev.files_dir",
+            "status": "RED"
         }
     ],
     "prep": [
@@ -235,23 +221,23 @@
             "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_crossref",
+            "package_endpoint_identifier": "colrev.crossref",
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_pubmed",
+            "package_endpoint_identifier": "colrev.pubmed",
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_europe_pmc",
+            "package_endpoint_identifier": "colrev.europe_pmc",
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_dblp",
+            "package_endpoint_identifier": "colrev.dblp",
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_open_library",
+            "package_endpoint_identifier": "colrev.open_library",
             "status": "MATURING"
         },
         {
@@ -263,7 +249,7 @@
             "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.get_masterdata_from_local_index",
+            "package_endpoint_identifier": "colrev.local_index",
             "status": "MATURING"
         },
         {
@@ -275,7 +261,15 @@
             "status": "EXPERIMENTAL"
         },
         {
-            "package_endpoint_identifier": "colrev.curation_prep",
+            "package_endpoint_identifier": "colrev.colrev_curation",
+            "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.add_journal_ranking",
+            "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.open_alex",
             "status": "EXPERIMENTAL"
         }
     ],
@@ -321,15 +315,15 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.asreview_prescreen",
-            "status": "EXPERIMENTAL"
-        },
-        {
             "package_endpoint_identifier": "colrev.conditional_prescreen",
             "status": "MATURING"
         },
         {
             "package_endpoint_identifier": "colrev.prescreen_table",
+            "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
             "status": "MATURING"
         }
     ],

@@ -42,7 +42,7 @@ class PDFGet(colrev.operation.Operation):
         pdf_endpoints = [
             s
             for s in self.review_manager.settings.sources
-            if s.endpoint == "colrev.pdfs_dir"
+            if s.endpoint == "colrev.files_dir"
         ]
         if pdf_endpoints:
             self.filepath_directory_pattern = (
@@ -55,23 +55,23 @@ class PDFGet(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         for record_dict in records.values():
-            if "file" in record_dict:
-                fpath = Path(record_dict["file"])
-                new_fpath = fpath.absolute()
-                if fpath.is_symlink():
-                    linked_file = fpath.resolve()
-                    if linked_file.is_file():
-                        fpath.unlink()
-                        shutil.copyfile(linked_file, new_fpath)
-                        self.review_manager.logger.info(
-                            f' {colors.GREEN}copied PDF for {record_dict["ID"]} {colors.END}'
-                        )
+            if "file" not in record_dict:
+                continue
+            fpath = Path(record_dict["file"])
+            new_fpath = fpath.absolute()
+            if fpath.is_symlink():
+                linked_file = fpath.resolve()
+                if linked_file.is_file():
+                    fpath.unlink()
+                    shutil.copyfile(linked_file, new_fpath)
+                    self.review_manager.logger.info(
+                        f' {colors.GREEN}copied PDF for {record_dict["ID"]} {colors.END}'
+                    )
 
-                elif new_fpath.is_file():
-                    if self.review_manager.verbose_mode:
-                        self.review_manager.logger.info(
-                            f'No need to copy PDF - already exits ({record_dict["ID"]})'
-                        )
+            elif new_fpath.is_file() and self.review_manager.verbose_mode:
+                self.review_manager.logger.info(
+                    f'No need to copy PDF - already exits ({record_dict["ID"]})'
+                )
 
     def link_pdf(self, *, record: colrev.record.Record) -> colrev.record.Record:
         """Link the PDF in its record (should be {ID}.pdf)"""
@@ -83,7 +83,7 @@ class PDFGet(colrev.operation.Operation):
             "file", "NA"
         ):
             record.update_field(key="file", value=str(pdf_filepath), source="link_pdf")
-            self.import_file(record=record)
+            self.import_pdf(record=record)
             if (
                 colrev.record.RecordState.rev_prescreen_included
                 == record.data["colrev_status"]
@@ -117,27 +117,25 @@ class PDFGet(colrev.operation.Operation):
 
         return target_filepath
 
-    def import_file(self, *, record: colrev.record.Record) -> None:
+    def import_pdf(self, *, record: colrev.record.Record) -> None:
         """Import a file (PDF) and copy/symlink it"""
         # self.review_manager.pdf_dir.mkdir(exist_ok=True)
         # new_fp = self.review_manager.PDF_DIR_RELATIVE / Path(record.data["ID"] + ".pdf").name
         new_fp = self.get_target_filepath(record=record)
         original_fp = Path(record.data["file"])
 
-        if new_fp != original_fp:
+        if new_fp != original_fp and not new_fp.is_file():
             new_fp.parents[0].mkdir(exist_ok=True, parents=True)
             if (
                 colrev.settings.PDFPathType.symlink
                 == self.review_manager.settings.pdf_get.pdf_path_type
             ):
-                if not new_fp.is_file():
-                    new_fp.symlink_to(original_fp)
+                new_fp.symlink_to(original_fp)
             elif (
                 colrev.settings.PDFPathType.copy
                 == self.review_manager.settings.pdf_get.pdf_path_type
             ):
-                if not new_fp.is_file():
-                    shutil.copyfile(original_fp, new_fp.resolve())
+                shutil.copyfile(original_fp, new_fp.resolve())
             # Note : else: leave absolute paths
 
         record.data["file"] = str(new_fp)
@@ -214,7 +212,7 @@ class PDFGet(colrev.operation.Operation):
 
         return record.get_data()
 
-    def __relink_pdf_files(
+    def __relink_pdfs(
         self,
         *,
         records: typing.Dict[str, typing.Dict],
@@ -225,7 +223,7 @@ class PDFGet(colrev.operation.Operation):
         corresponding_origin: str
         source_records: typing.List[typing.Dict] = []
         for source in self.review_manager.settings.sources:
-            if source.endpoint != "colrev.pdfs_dir":
+            if source.endpoint != "colrev.files_dir":
                 continue
 
             if not source.filename.is_file():
@@ -300,18 +298,16 @@ class PDFGet(colrev.operation.Operation):
 
         return records
 
-    def relink_files(self) -> None:
+    def relink_pdfs(self) -> None:
         """Relink record files to the corresponding PDFs (if available)"""
 
         self.review_manager.logger.info(
             "Checking PDFs in same directory to reassig when the cpid is identical"
         )
         records = self.review_manager.dataset.load_records_dict()
-        records = self.__relink_pdf_files(records=records)
+        records = self.__relink_pdfs(records=records)
 
         self.review_manager.dataset.save_records_dict(records=records)
-
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
@@ -373,7 +369,7 @@ class PDFGet(colrev.operation.Operation):
                             value=str(file),
                             source="linking-available-files",
                         )
-                        self.import_file(record=record)
+                        self.import_pdf(record=record)
                         if (
                             colrev.record.RecordState.rev_prescreen_included
                             == record.data["colrev_status"]
@@ -488,7 +484,6 @@ class PDFGet(colrev.operation.Operation):
 
         if pdfs_search_file.is_file():
             self.review_manager.dataset.add_changes(path=pdfs_search_file)
-        self.review_manager.dataset.add_record_changes()
 
     def __get_data(self) -> dict:
         # pylint: disable=duplicate-code
@@ -556,7 +551,7 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info(retrieved_string)
         self.review_manager.logger.info(not_retrieved_string)
 
-    def __set_status_if_file_linked(self, *, records: dict) -> dict:
+    def __set_status_if_pdf_linked(self, *, records: dict) -> dict:
         for record_dict in records.values():
             if record_dict["colrev_status"] in [
                 colrev.record.RecordState.rev_prescreen_included,
@@ -582,7 +577,6 @@ class PDFGet(colrev.operation.Operation):
                         )
                         record.remove_field(key="file")
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         return records
 
@@ -604,6 +598,7 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.save_settings()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
 
@@ -626,7 +621,7 @@ class PDFGet(colrev.operation.Operation):
         )
 
         records = self.review_manager.dataset.load_records_dict()
-        records = self.__set_status_if_file_linked(records=records)
+        records = self.__set_status_if_pdf_linked(records=records)
         records = self.check_existing_unlinked_pdfs(records=records)
 
         pdf_get_data = self.__get_data()

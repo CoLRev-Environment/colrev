@@ -15,6 +15,7 @@ from pathlib import Path
 from threading import Timer
 
 import git
+import pandas as pd
 import requests_cache
 from git.exc import GitCommandError
 from pybtex.database.input import bibtex
@@ -39,7 +40,7 @@ import colrev.ui_cli.cli_colors as colors
 class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
-    global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url", "colrev_id"]
+    global_keys = ["doi", "colrev.dblp.dblp_key", "colrev_pdf_id", "url", "colrev_id"]
     max_len_sha256 = 2**256
     request_timeout = 90
 
@@ -78,7 +79,10 @@ class LocalIndex:
         (TOC_INDEX, "toc_key"): "SELECT * FROM toc_index WHERE toc_key=?",
         (RECORD_INDEX, "colrev_id"): "SELECT * FROM record_index WHERE colrev_id=?",
         (RECORD_INDEX, "doi"): "SELECT * FROM record_index where doi=?",
-        (RECORD_INDEX, "dblp_key"): "SELECT * FROM record_index WHERE dblp_key=?",
+        (
+            RECORD_INDEX,
+            "colrev.dblp.dblp_key",
+        ): "SELECT * FROM record_index WHERE dblp_key=?",
         (
             RECORD_INDEX,
             "colrev_pdf_id",
@@ -101,7 +105,7 @@ class LocalIndex:
         "fulltext",
         "url",
         "doi",
-        "dblp_key",
+        "dblp_key",  # Note : no dots in key names
         "colrev_pdf_id",
         "bibtex",
         "layered_fields"
@@ -129,7 +133,33 @@ class LocalIndex:
         self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH, timeout=90)
         self.sqlite_connection.row_factory = self.__dict_factory
         return self.sqlite_connection.cursor()
-        # raise colrev_exceptions.ServiceNotAvailableException(dep="local_index")
+
+    def load_journal_rankings(self) -> None:
+        """Loads journal rankings into sqlite database"""
+
+        print("Index rankings")
+
+        rankings_csv_path = (
+            str(Path(__file__).parents[1])
+            / Path("template")
+            / Path("ops")
+            / Path("journal_rankings.csv")
+        )
+        conn = sqlite3.connect(self.SQLITE_PATH)
+        data_frame = pd.read_csv(rankings_csv_path, encoding="utf-8")
+        data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
+        conn.commit()
+        conn.close()
+
+    def search_in_database(self, journal: typing.Optional[typing.Any]) -> list:
+        """Searches for journalranking in database"""
+        cur = self.__get_sqlite_cursor(init=False)
+        cur.execute(
+            "SELECT * FROM rankings WHERE journal_name = ?",
+            (journal,),
+        )
+        rankings = cur.fetchall()
+        return rankings
 
     def __dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
         ret_dict = {}
@@ -536,6 +566,7 @@ class LocalIndex:
             self.thread_lock.acquire(timeout=60)
             cur = self.__get_sqlite_cursor()
             selected_row = None
+            print(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             cur.execute(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             for row in cur.fetchall():
                 selected_row = row
@@ -546,8 +577,8 @@ class LocalIndex:
                     record_dict=retrieved_record, include_file=False
                 )
                 records_to_return.append(colrev.record.Record(data=retrieved_record))
-        except sqlite3.OperationalError:
-            pass
+        except sqlite3.OperationalError as exc:
+            print(exc)
         finally:
             self.thread_lock.release()
 
@@ -996,6 +1027,7 @@ class LocalIndex:
         except (
             colrev_exceptions.NotEnoughDataToIdentifyException,
             colrev_exceptions.NotTOCIdentifiableException,
+            colrev_exceptions.RecordNotInIndexException,
         ) as exc:
             raise colrev_exceptions.TOCNotAvailableException() from exc
 

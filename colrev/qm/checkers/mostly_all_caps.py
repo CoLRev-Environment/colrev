@@ -24,6 +24,13 @@ class MostlyAllCapsFieldChecker:
             if record.data[key] == "UNKNOWN":
                 continue
             if (
+                record.data["ENTRYTYPE"] == "online"
+                and key == "title"
+                and len(record.data["title"]) < 10
+            ):
+                # Online sources/software can be short/have caps
+                continue
+            if (
                 colrev.env.utils.percent_upper_chars(
                     record.data[key].replace(" and ", "")
                 )
@@ -34,6 +41,9 @@ class MostlyAllCapsFieldChecker:
 
             # container-title-abbreviated
             if key in ["journal", "booktitle"] and len(record.data[key]) < 6:
+                continue
+
+            if record.data[key] == "PLoS ONE":
                 continue
 
             record.add_masterdata_provenance_note(key=key, note=self.msg)

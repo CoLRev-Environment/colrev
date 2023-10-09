@@ -43,19 +43,50 @@ class Helpers:
 
     @staticmethod
     def reset_commit(
-        *, review_manager: colrev.review_manager.ReviewManager, commit: str
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        commit: str = "",
+        commit_sha: str = "",
     ) -> None:
         """Reset to the selected commit"""
+        assert commit == "" or commit_sha == ""
         os.chdir(str(review_manager.path))
         repo = git.Repo(review_manager.path)
-        commit_id = getattr(review_manager, commit)
+        if commit_sha != "":
+            commit_id = commit_sha
+        elif commit:
+            commit_id = getattr(review_manager, commit)
         repo.head.reset(commit_id, index=True, working_tree=True)
+
+        # To prevent prep from continuing previous operations
+        Path(".colrev/cur_temp_recs.bib").unlink(missing_ok=True)
+        Path(".colrev/temp_recs.bib").unlink(missing_ok=True)
+        review_manager.load_settings()
 
 
 @pytest.fixture(scope="session", name="helpers")
 def get_helpers():  # type: ignore
     """Fixture returning Helpers"""
     return Helpers
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> typing.Generator:
+    """Fixture to clean up after tests"""
+
+    # pre-test-code
+    # ...
+
+    yield  # run test-code
+
+    # post-test-code
+    os.chdir(str(base_repo_review_manager.path))
+    base_repo_review_manager.load_settings()
+    repo = git.Repo(base_repo_review_manager.path)
+    repo.git.clean("-df")
+    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
 
 
 @pytest.fixture(scope="session", name="test_local_index_dir")
@@ -101,6 +132,12 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager = colrev.review_manager.ReviewManager(
         path_str=str(test_repo_dir), force_mode=True
     )
+
+    review_manager.get_load_operation()
+    git_repo = review_manager.dataset.get_repo()
+    if review_manager.in_ci_environment():
+        git_repo.config_writer().set_value("user", "name", "Tester").release()
+        git_repo.config_writer().set_value("user", "email", "tester@mail.com").release()
 
     def load_test_records(test_data_path) -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
@@ -190,9 +227,10 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         review_manager.dataset.get_last_commit_sha()
     )
 
+    search_operation = review_manager.get_search_operation()
+    search_operation.add_most_likely_sources()
     load_operation = review_manager.get_load_operation()
-    new_sources = load_operation.get_new_sources(skip_query=True)
-    load_operation.main(new_sources=new_sources, keep_ids=False, combine_commits=False)
+    load_operation.main(keep_ids=False)
     review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
 
     prep_operation = review_manager.get_prep_operation()
@@ -376,6 +414,33 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
     )
 
 
+@pytest.fixture(name="search_feed")
+def fixture_search_feed(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> typing.Generator:
+    """General search feed"""
+
+    source = colrev.settings.SearchSource(
+        endpoint="colrev.crossref",
+        filename=Path("data/search/test.bib"),
+        search_type=colrev.settings.SearchType.DB,
+        search_parameters={"query": "query"},
+        comment="",
+    )
+
+    feed = source.get_feed(
+        review_manager=base_repo_review_manager,
+        source_identifier="doi",
+        update_only=True,
+    )
+
+    prev_sources = base_repo_review_manager.settings.sources
+
+    yield feed
+
+    base_repo_review_manager.settings.sources = prev_sources
+
+
 @pytest.fixture(name="v_t_record")
 def fixture_v_t_record() -> colrev.record.Record:
     """Record for testing quality defects"""
@@ -390,5 +455,23 @@ def fixture_v_t_record() -> colrev.record.Record:
             "year": "2022",
             "volume": "37",
             "number": "2",
+            "language": "eng",
+        }
+    )
+
+
+@pytest.fixture(name="book_record")
+def fixture_book_record() -> colrev.record.Record:
+    """Book record for testing quality defects"""
+    return colrev.record.Record(
+        data={
+            "ID": "Popper2014",
+            "ENTRYTYPE": "book",
+            "title": "Conjectures and refutations: The growth of scientific knowledge",
+            "author": "Popper, Karl",
+            "year": "2014",
+            "isbn": "978-0-415-28594-0",
+            "publisher": "Routledge",
+            "language": "eng",
         }
     )

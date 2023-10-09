@@ -34,7 +34,7 @@ class NameFormatTitleChecker:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __title_in_name(self, *, name: str) -> bool:
-        name_parts = self.__words_rgx.findall(name.lower())
+        name_parts = self.__words_rgx.findall(name.lower().replace(".", ""))
         return any(title.lower() in name_parts for title in self.titles)
 
 

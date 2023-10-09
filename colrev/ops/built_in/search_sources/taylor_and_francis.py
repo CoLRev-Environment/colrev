@@ -12,6 +12,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -24,16 +25,16 @@ import colrev.record
 )
 @dataclass
 class TaylorAndFrancisSearchSource(JsonSchemaMixin):
-    """SearchSource for Taylor and Francis"""
+    """Taylor and Francis"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Taylor and Francis"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/taylor_and_francis.md"
     )
@@ -42,6 +43,7 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -57,22 +59,22 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of TaylorAndFrancis"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Taylor and Francis not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -84,15 +86,16 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Taylor and Francis"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
@@ -100,11 +103,15 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Taylor and Francis"""
 
         # remove eprint and URL fields (they only have dois...)
-        record.remove_field(key="url")
-        record.remove_field(key="eprint")
-        if "note" in record.data and re.match(r"PMID: \d*", record.data["note"]):
-            record.rename_field(key="note", new_key="pmid")
-            record.data["pmid"] = record.data["pmid"][6:]
-        record.remove_field(key="publisher")
+        record.remove_field(key="colrev.taylor_and_francis.eprint")
+        if "colrev.taylor_and_francis.note" in record.data and re.match(
+            r"PMID: \d*", record.data["colrev.taylor_and_francis.note"]
+        ):
+            record.rename_field(
+                key="colrev.taylor_and_francis.note", new_key="colrev.pubmed.pubmedid"
+            )
+            record.data["colrev.pubmed.pubmedid"] = record.data[
+                "colrev.pubmed.pubmedid"
+            ][6:]
 
         return record

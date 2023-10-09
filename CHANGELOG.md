@@ -15,6 +15,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.10.1 - 2023-10-06
+
+### Changed
+
+- SearchTypes: API, TOC, MD are added, PDFS is replaced by FILES.
+- SearchTypes are explained in the docs.
+- Package documentation is imported to docs.
+- colrev.pdfs_dir and colrev.video_dir are integrated into colrev.files_dir.
+
+## 0.10. - 2023-10-02
+
+### Added
+
+- SearchSources: SYNERGY datasets, OpenAlex, ERIC, IEEEXplore, ArXiv
+- JournalRankings: index, prep, and prescreen
+- CoLRev shell via cli-repl (`colrev shell`)
+- prep operation: pause and resume
+- Dashboard overview of the sample and project status
+- Extended tests, updated documentation (especially for extension development)
+- GitHub workflows to update dependencies (poetry update)
+- Ruff linter
+
+### Changed
+
+- Load: ris/csv/... files are loaded directly (without creating intermediate BibTeX file)
+- Introduced namespaced fields (e.g., `colrev.pubmed.pubmedid` instead of `pubmedid`)
+- Extracted quality checks to separate Quality Model
+- Docs: instructions for development setup
+- Code quality improvements (codacy)
+
+### Removed
+
+- colrev-asreview: extracted to separate package
+- watchdog-based service
+
+## 0.9.3 - 2023-10-01
+
+### Changed
+
+- Introduced namespaced fields (e.g., `colrev.pubmed.pubmedid` instead of `pubmedid`).
+
+## 0.9.2 - 2023-07-24
+
+### Changed
+
+- Updated colrev-asreview dependency (PyPI instead of GitHub)
+
+## 0.9.1 - 2023-07-23
+
+### Changed
+
+- Integrated `load` into `SearchSource`. Removed `load_conversion` endpoint: `settings.json`, `packages`, `interface` etc.
+
 ## 0.9.0 - 2023-06-01
 
 ### Added

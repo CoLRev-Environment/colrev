@@ -35,6 +35,7 @@ class Distribute(colrev.operation.Operation):
             if "curated_metadata/" not in x["repo_source_path"]
         ]
 
+    @colrev.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
         """Distribute records to other CoLRev repositories (main entrypoint)"""
 
@@ -95,7 +96,6 @@ class Distribute(colrev.operation.Operation):
                         filename=Path("search") / target_bib_file.name,
                         search_type=colrev.settings.SearchType.OTHER,
                         search_parameters={},
-                        load_conversion_package_endpoint={},
                         comment="",
                     )
 

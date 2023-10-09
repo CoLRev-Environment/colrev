@@ -1,0 +1,324 @@
+{
+    "authors": "Wagner, Gerit and Prester, Julian",
+    "license": "MIT",
+    "colrev_version": ">=0.6.0",
+    "endpoints": {
+        "prep": [
+            {"package_endpoint_identifier": "colrev.open_alex",
+             "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.source_specific_prep",
+             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep"
+            },
+            {"package_endpoint_identifier": "colrev.exclude_complementary_materials",
+             "endpoint": "colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep"
+            },
+            {"package_endpoint_identifier": "colrev.exclude_non_latin_alphabets",
+             "endpoint": "colrev.ops.built_in.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep"
+            },
+            {"package_endpoint_identifier": "colrev.exclude_languages",
+             "endpoint": "colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep"
+            },
+            {"package_endpoint_identifier": "colrev.exclude_collections",
+             "endpoint": "colrev.ops.built_in.prep.exclude_collections.ExcludeCollectionsPrep"
+            },
+            {"package_endpoint_identifier": "colrev.remove_urls_with_500_errors",
+             "endpoint": "colrev.ops.built_in.prep.remove_error500_urls.RemoveError500URLsPrep"
+            },
+            {"package_endpoint_identifier": "colrev.remove_broken_ids",
+             "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep"
+            },
+            {"package_endpoint_identifier": "colrev.resolve_crossrefs",
+             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep"
+            },
+            {"package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
+             "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep"
+            },
+            {"package_endpoint_identifier": "colrev.get_doi_from_urls",
+             "endpoint": "colrev.ops.built_in.prep.doi_from_urls_prep.DOIFromURLsPrep"
+            },
+            {"package_endpoint_identifier": "colrev.get_masterdata_from_doi",
+             "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.crossref",
+             "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.pubmed",
+             "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.europe_pmc",
+             "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.dblp",
+             "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.open_library",
+             "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep"
+            },
+            {"package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
+             "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep"
+            },
+            {"package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
+             "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep"
+            },
+            {"package_endpoint_identifier": "colrev.local_index",
+             "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep"
+            },
+            {"package_endpoint_identifier": "colrev.update_metadata_status",
+             "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep"
+            },
+            {"package_endpoint_identifier": "colrev.general_polish",
+             "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep"
+            },
+            {"package_endpoint_identifier": "colrev.colrev_curation",
+            "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep"
+            },
+            {"package_endpoint_identifier": "colrev.add_journal_ranking",
+            "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking"
+            }
+
+        ],
+        "prep_man": [
+            {"package_endpoint_identifier": "colrev.export_man_prep",
+             "endpoint": "colrev.ops.built_in.prep_man.prep_man_export.ExportManPrep"
+            },
+            {"package_endpoint_identifier": "colrev.prep_man_curation_jupyter",
+             "endpoint": "colrev.ops.built_in.prep_man.curation_jupyter_prep_man.CurationJupyterNotebookManPrep"
+            }
+        ],
+        "dedupe": [
+            {"package_endpoint_identifier": "colrev.simple_dedupe",
+             "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe"
+            },
+            {"package_endpoint_identifier": "colrev.active_learning_training",
+             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining"
+            },
+            {"package_endpoint_identifier": "colrev.active_learning_automated",
+             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated"
+            },
+            {"package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
+             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe"
+            },
+            {"package_endpoint_identifier": "colrev.curation_missing_dedupe",
+             "endpoint": "colrev.ops.built_in.dedupe.curation_missing_dedupe.CurationMissingDedupe"
+            }
+        ],
+        "prescreen": [
+            {"package_endpoint_identifier": "colrev.scope_prescreen",
+             "endpoint": "colrev.ops.built_in.prescreen.scope_prescreen.ScopePrescreen"
+            },
+            {"package_endpoint_identifier": "colrev.colrev_cli_prescreen",
+             "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen"
+            },
+            {"package_endpoint_identifier": "colrev.conditional_prescreen",
+             "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen"
+            },
+            {"package_endpoint_identifier": "colrev.prescreen_table",
+             "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen"
+            }
+        ],
+        "pdf_get": [
+            {"package_endpoint_identifier": "colrev.unpaywall",
+             "endpoint": "colrev.ops.built_in.pdf_get.unpaywall.Unpaywall"
+            },
+            {"package_endpoint_identifier": "colrev.local_index",
+             "endpoint": "colrev.ops.built_in.pdf_get.local_index_pdf_get.LocalIndexPDFGet"
+            },
+            {"package_endpoint_identifier": "colrev.website_screenshot",
+             "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot"
+            }
+        ],
+        "pdf_get_man": [
+            {"package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",
+             "endpoint": "colrev.ops.built_in.pdf_get_man.pdf_get_man_cli.CoLRevCLIPDFGetMan"
+            }
+        ],
+        "pdf_prep": [
+            {"package_endpoint_identifier": "colrev.pdf_check_ocr",
+             "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR"
+            },
+            {"package_endpoint_identifier": "colrev.remove_coverpage",
+             "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage"
+            },
+            {"package_endpoint_identifier": "colrev.remove_last_page",
+             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage"
+            },
+            {"package_endpoint_identifier": "colrev.validate_pdf_metadata",
+             "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation"
+            },
+            {"package_endpoint_identifier": "colrev.validate_completeness",
+             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation"
+            },
+            {"package_endpoint_identifier": "colrev.create_tei",
+             "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep"
+            }
+        ],
+        "pdf_prep_man": [
+            {"package_endpoint_identifier": "colrev.colrev_cli_pdf_prep_man",
+             "endpoint": "colrev.ops.built_in.pdf_prep_man.pdf_prep_man_cli.CoLRevCLIPDFManPrep"
+            }
+        ],
+        "screen": [
+            {"package_endpoint_identifier": "colrev.colrev_cli_screen",
+             "endpoint": "colrev.ops.built_in.screen.screen_cli.CoLRevCLIScreen"
+            },
+            {"package_endpoint_identifier": "colrev.screen_table",
+             "endpoint": "colrev.ops.built_in.screen.screen_table.TableScreen"
+            }
+        ],
+        "data": [
+            {"package_endpoint_identifier": "colrev.paper_md",
+             "endpoint": "colrev.ops.built_in.data.paper_md.PaperMarkdown"
+            },
+            {"package_endpoint_identifier": "colrev.structured",
+             "endpoint": "colrev.ops.built_in.data.structured.StructuredData"
+            },
+            {"package_endpoint_identifier": "colrev.bibliography_export",
+             "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport"
+            },
+            {"package_endpoint_identifier": "colrev.prisma",
+             "endpoint": "colrev.ops.built_in.data.prisma.PRISMA"
+            },
+            {"package_endpoint_identifier": "colrev.github_pages",
+             "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages"
+            },
+            {"package_endpoint_identifier": "colrev.obsidian",
+             "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian"
+            },
+            {"package_endpoint_identifier": "colrev.colrev_curation",
+            "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration"
+            }
+        ],
+        "search_source": [
+            {"package_endpoint_identifier": "colrev.open_alex",
+             "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.open_library",
+             "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.unknown_source",
+             "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.abi_inform_proquest",
+            "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.synergy_datasets",
+            "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.taylor_and_francis",
+            "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource"
+            },
+                {"package_endpoint_identifier": "colrev.ebsco_host",
+            "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.crossref",
+             "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.dblp",
+             "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.europe_pmc",
+             "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.acm_digital_library",
+             "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.pubmed",
+             "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.wiley",
+             "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.ieee",
+             "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.arxiv",
+             "endpoint": "colrev.ops.built_in.search_sources.arxiv.ArXivSource"
+            },
+            {"package_endpoint_identifier": "colrev.psycinfo",
+             "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.jstor",
+             "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.eric",
+             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.springer_link",
+             "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.ais_library",
+             "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.google_scholar",
+             "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.web_of_science",
+             "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.scopus",
+             "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.files_dir",
+             "endpoint": "colrev.ops.built_in.search_sources.files_dir.FilesSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.pdf_backward_search",
+             "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.open_citations_forward_search",
+             "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.colrev_project",
+             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.local_index",
+             "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource"
+            },
+            {"package_endpoint_identifier": "colrev.trid",
+             "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation"
+            }
+        ],
+        "review_type": [
+            {"package_endpoint_identifier": "colrev.curated_masterdata",
+             "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata"
+            },
+            {"package_endpoint_identifier": "colrev.literature_review",
+             "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview"
+            },
+            {"package_endpoint_identifier": "colrev.narrative_review",
+             "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview"
+            },
+            {"package_endpoint_identifier": "colrev.descriptive_review",
+             "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview"
+            },
+            {"package_endpoint_identifier": "colrev.scoping_review",
+             "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview"
+            },
+            {"package_endpoint_identifier": "colrev.critical_review",
+             "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview"
+            },
+            {"package_endpoint_identifier": "colrev.theoretical_review",
+             "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview"
+            },
+            {"package_endpoint_identifier": "colrev.conceptual_review",
+             "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview"
+            },
+            {"package_endpoint_identifier": "colrev.qualitative_systematic_review",
+             "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview"
+            },
+            {"package_endpoint_identifier": "colrev.meta_analysis",
+             "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis"
+            },
+            {"package_endpoint_identifier": "colrev.scientometric",
+             "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview"
+            },
+            {"package_endpoint_identifier": "colrev.blank",
+            "endpoint": "colrev.ops.built_in.review_types.blank.BlankReview"
+            },
+            {"package_endpoint_identifier": "colrev.umbrella",
+            "endpoint": "colrev.ops.built_in.review_types.umbrella_review.UmbrellaReview"
+            }
+        ]
+    }
+
+}

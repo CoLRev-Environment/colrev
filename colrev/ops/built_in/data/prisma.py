@@ -72,15 +72,17 @@ class PRISMA(JsonSchemaMixin):
                 imagename=self.prisma_image
             )
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
+    # pylint: disable=unused-argument
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
 
-        prisma_endpoint_details = {
+        add_source = {
             "endpoint": "colrev.prisma",
             "version": "0.1",
             "diagram_path": ["PRISMA.png"],
         }
-        return prisma_endpoint_details
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def __export_csv(
         self, data_operation: colrev.ops.data.Data, silent_mode: bool
@@ -108,9 +110,8 @@ class PRISMA(JsonSchemaMixin):
             "records_excluded", "n"
         ] = status_stats.overall.rev_prescreen_excluded
         if status_stats.currently.exclusion:
-            prisma_data.loc["dbr_excluded", "n"] = ";".join(
-                f"Reason {key}, {val}"
-                for key, val in status_stats.currently.exclusion.items()
+            prisma_data.loc["dbr_excluded", "n"] = "; ".join(
+                f"{key}, {val}" for key, val in status_stats.currently.exclusion.items()
             )
         else:
             prisma_data.loc[

@@ -1,17 +1,15 @@
-.. _Data:
-
 colrev data
 ---------------------------------------------
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :doc:`/dev_docs/dev_status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :doc:`/dev_docs/dev_status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :doc:`/dev_docs/dev_status`
 
 In the ``colrev data`` operation, records transition from ``rev_included`` to ``rev_synthesized``. The data analysis and synthesis can involve different activities (data endpoints). A record only transitions to ``rev_synthesized`` when **all** synthesis activities were completed.
 

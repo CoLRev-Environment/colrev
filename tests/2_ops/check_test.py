@@ -8,15 +8,13 @@ import colrev.review_manager
 
 
 def test_checks(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the checks"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
-
     checker = colrev.checker.Checker(review_manager=base_repo_review_manager)
 
-    expected = ["0.9.0", "0.9.0"]
+    expected = ["0.10.1", "0.10.1"]
     actual = checker.get_colrev_versions()
     assert expected == actual
 
@@ -52,14 +50,13 @@ def test_checks(  # type: ignore
     search_sources = base_repo_review_manager.settings.sources
     actual = [asdict(s) for s in search_sources]  # type: ignore
 
-    if current_platform in ["Linux"]:
+    if current_platform in ["Linux", "Darwin"]:
         expected = [  # type: ignore
             # {  # type: ignore
-            #     "endpoint": "colrev.pdfs_dir",
+            #     "endpoint": "colrev.files_dir",
             #     "filename": Path("data/search/pdfs.bib"),
             #     "search_type": colrev.settings.SearchType.PDFS,
             #     "search_parameters": {"scope": {"path": "data/pdfs"}},
-            #     "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
             #     "comment": "",
             # },
             {  # type: ignore
@@ -67,20 +64,7 @@ def test_checks(  # type: ignore
                 "filename": Path("data/search/test_records.bib"),
                 "search_type": colrev.settings.SearchType.DB,
                 "search_parameters": {},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
-                "comment": None,
-            },
-        ]
-        assert expected == actual
-    elif current_platform in ["Darwin"]:
-        expected = [  # type: ignore
-            {  # type: ignore
-                "endpoint": "colrev.unknown_source",
-                "filename": Path("data/search/test_records.bib"),
-                "search_type": colrev.settings.SearchType.DB,
-                "search_parameters": {},
-                "load_conversion_package_endpoint": {"endpoint": "colrev.bibtex"},
-                "comment": None,
+                "comment": "",
             },
         ]
         assert expected == actual

@@ -132,6 +132,7 @@ class Data(colrev.operation.Operation):
                     colrev.record.RecordState.rev_synthesized,
                     colrev.record.RecordState.rev_included,
                 ]
+                and record.get("year", "UNKNOWN").isdigit()
             ]
             observations = prepared_records_df[
                 prepared_records_df["ID"].isin(included_papers)
@@ -201,12 +202,6 @@ class Data(colrev.operation.Operation):
         tabulated.to_csv(output_dir / Path("ENTRYTYPES.csv"))
 
         self.review_manager.logger.info(f"Files are available in {output_dir.name}")
-
-    def add_data_endpoint(self, *, data_endpoint: dict) -> None:
-        """Add a data endpoint"""
-
-        self.review_manager.settings.data.data_package_endpoints.append(data_endpoint)
-        self.review_manager.save_settings()
 
     def setup_custom_script(self) -> None:
         """Setup a custom data script"""
@@ -316,6 +311,7 @@ class Data(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -387,7 +383,6 @@ class Data(colrev.operation.Operation):
         )
         if records_status_changed:
             self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.dataset.add_record_changes()
 
         self.__post_data(silent_mode=silent_mode)
 

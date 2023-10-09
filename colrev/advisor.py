@@ -499,7 +499,7 @@ class Advisor:
                 review_instructions.append(
                     {
                         "msg": f"record with broken file link ({non_existent_pdfs})."
-                        " Use\n    colrev pdf-get --relink_files"
+                        " Use\n    colrev pdf-get --relink_pdfs"
                     }
                 )
 
@@ -649,10 +649,10 @@ class Advisor:
         with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
             outlets = []
             for line in file.readlines():
-                if line.lstrip()[:7] == "journal":
+                if line.lstrip()[:8] == "journal ":
                     journal = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(journal)
-                if line.lstrip()[:9] == "booktitle":
+                if line.lstrip()[:10] == "booktitle ":
                     booktitle = line[line.find("{") + 1 : line.rfind("}")]
                     outlets.append(booktitle)
 
@@ -671,7 +671,7 @@ class Advisor:
             selected_journals = [
                 (candidate, freq)
                 for candidate, freq in selected
-                if candidate not in curated_outlets
+                if candidate not in curated_outlets + ["", "UNKNOWN"]
             ]
 
             journals = "\n   - " + "\n   - ".join(
@@ -749,6 +749,11 @@ class Advisor:
         # self.review_manager.logger.debug(
         #     f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
         # )
+        if self.review_manager.shell_mode:
+            for category in instructions.values():
+                for item in category:
+                    if "cmd" in item:
+                        item["cmd"] = item["cmd"].replace("colrev ", "")
         return instructions
 
     def get_sharing_instructions(self) -> dict:

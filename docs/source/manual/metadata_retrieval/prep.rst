@@ -1,17 +1,15 @@
-.. _Prepare:
-
 colrev prep
 ==================================
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :doc:`/dev_docs/dev_status`
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :doc:`/dev_docs/dev_status`
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: https://colrev.readthedocs.io/en/latest/foundations/dev_status.html
+   :target: :doc:`/dev_docs/dev_status`
 
 In the ``colrev prep`` operation, records with sufficient metadata quality transition from ``md_imported`` to ``md_prepared`` (``md_needs_manual_preparation`` otherwise). The benefit of separating high and low-quality metadata is that efforts to fix metadata can be allocated more precisely, which is important for duplicate identification and for ensuring high-quality sample metadata as well as reference sections.
 
@@ -30,9 +28,12 @@ Preparation procedures (the specific preparation depends on the specified settin
 
 - General rules, such as resolving BiBTeX cross-references, formatting DOI fields, and determining the language of records
 - SearchSource-specific rules to fix quality defects, such as incorrect use of field names (without affecting other SearchSources)
-- Consolidation with high-quality metadata-sources, i.e., retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library)
-- Linking with CoLRev curations, which establishes a quality curation loop
+- Linking and update based on high-quality metadata-sources, i.e., retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library)
+- Linking and update based on with CoLRev curations, which establishes a quality curation loop
 - Automated prescreen exclusion of retracted records, complementary materials (such as "About our authors" or "Editorial board"), or records using non-latin alphabets
+
+**Note.** When records are linked and updated based on SearchSources in the ``prep`` operation, corresponding metadata will be stored in additional metadata `SearchSources <search sources>` (with ``md_*`` prefix).
+Such metadata `SearchSources <search sources>` are also updated in the search. They do not retrieve additional records and they are excluded from statistics such as those displayed in the ``colrev status`` or PRISMA flow charts.
 
 Before starting the ``colrev prep-man`` operation, it is recommended to check the most common quality defects and to consider implementing preparation rules to fix these defects automatically (after rerunning ``prep``).
 

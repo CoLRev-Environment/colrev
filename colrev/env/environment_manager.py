@@ -38,7 +38,6 @@ class EnvironmentManager:
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
         self.__registered_ports: typing.List[str] = []
-        self.__registered_services: typing.List[str] = []
 
     def register_ports(self, *, ports: typing.List[str]) -> None:
         """Register a localhost port to avoid conflicts"""
@@ -49,24 +48,6 @@ class EnvironmentManager:
                 )
             self.__registered_ports.append(port_to_register)
 
-    def register_docker_service(self, *, imagename: str) -> None:
-        """Register a docker service"""
-        self.__registered_services.append(imagename)
-
-    def stop_docker_services(self) -> None:
-        """Stop registered docker services"""
-
-        try:
-            client = docker.from_env()
-            for container in client.containers.list():
-                if any(x in str(container.image) for x in self.__registered_services):
-                    container.stop()
-                    print(f"Stopped container {container.name} ({container.image})")
-        except DockerException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                f"Docker service not available ({exc}). Please install/start Docker."
-            ) from exc
-
     def load_environment_registry(self) -> dict:
         """Load the local registry"""
         environment_registry_path = self.registry
@@ -76,6 +57,8 @@ class EnvironmentManager:
             self.load_yaml = False
             with open(environment_registry_path, encoding="utf8") as file:
                 environment_registry = json.load(fp=file)
+            # assert "local_index" in environment_registry
+            # assert "packages" in environment_registry
         elif environment_registry_path_yaml.is_file():
             self.load_yaml = True
             backup_file = Path(str(environment_registry_path_yaml) + ".bk")
@@ -383,7 +366,7 @@ class EnvironmentManager:
 
         keys = key.split(".")
         # We don't want to allow user to replace any core settings, so check for packages key
-        if keys[0] != "packages":
+        if keys[0] != "packages" or len(keys) < 2:
             raise colrev_exceptions.PackageSettingMustStartWithPackagesException(key)
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)

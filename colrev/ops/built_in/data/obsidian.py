@@ -80,14 +80,18 @@ class Obsidian(JsonSchemaMixin):
         if hasattr(self.review_manager, "dataset"):
             self.review_manager.dataset.update_gitignore(add=self.GITIGNORE_LIST)
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
-        obsidian_endpoint_details = {
+    # pylint: disable=unused-argument
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
+
+        add_source = {
             "endpoint": "colrev.obsidian",
             "version": "0.1",
             "config": {},
         }
-        return obsidian_endpoint_details
+
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def __get_obsidian_missing(self, *, included: list) -> list:
         in_obsidian = []

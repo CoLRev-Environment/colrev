@@ -283,7 +283,6 @@ class PDFPrep(colrev.operation.Operation):
         pool.join()
         records = {r["ID"]: r for r in records_list}
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
@@ -371,11 +370,12 @@ class PDFPrep(colrev.operation.Operation):
             except colrev_exceptions.TEIException:
                 self.review_manager.logger.error("Eror generating TEI")
 
+    @colrev.operation.Operation.decorate()
     def main(
         self,
         *,
         reprocess: bool = False,
-        batch_size: int,
+        batch_size: int = 0,
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
@@ -450,8 +450,6 @@ class PDFPrep(colrev.operation.Operation):
         # Note: for formatting...
         records = self.review_manager.dataset.load_records_dict()
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
-
         self.review_manager.create_commit(msg="Prepare PDFs")
         self.review_manager.logger.info(
             f"{colors.GREEN}Completed pdf-prep operation{colors.END}"

@@ -11,6 +11,7 @@ import time
 import typing
 from copy import deepcopy
 from pathlib import Path
+from random import randint
 from typing import Optional
 from typing import TYPE_CHECKING
 
@@ -28,6 +29,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
+from colrev.exit_codes import ExitCodes
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -42,13 +44,15 @@ class Dataset:
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
     GIT_IGNORE_FILE_RELATIVE = Path(".gitignore")
     DEFAULT_GIT_IGNORE_ITEMS = [
-        "*.bib.sav",
-        "venv",
+        ".history",
+        ".colrev",
         ".corrections",
-        "data/pdfs",
         ".report.log",
         "__pycache__",
+        "*.bib.sav",
+        "venv",
         "output",
+        "data/pdfs",
         "data/pdf_get_man/missing_pdf_files.csv",
         "data/.tei/",
         "data/prep_man/records_prep_man.bib",
@@ -481,6 +485,8 @@ class Dataset:
 
         parser = bibtex.Parser()
         if load_str:
+            # Fix missing comma after fields
+            load_str = re.sub(r"(.)}\n", r"\g<1>},\n", load_str)
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
@@ -535,9 +541,9 @@ class Dataset:
                 "prescreen_exclusion",
                 "doi",
                 "grobid-version",
-                "dblp_key",
-                "sem_scholar_id",
-                "wos_accession_number",
+                "colrev.dblp.dblp_key",
+                "colrev.semantic_scholar.id",
+                "colrev.web_of_science.unique-id",
                 "author",
                 "booktitle",
                 "journal",
@@ -547,6 +553,9 @@ class Dataset:
                 "number",
                 "pages",
                 "editor",
+                "publisher",
+                "url",
+                "abstract",
             ]
 
             record = colrev.record.Record(data=record_dict)
@@ -560,17 +569,19 @@ class Dataset:
                         ordered_field, record_dict[ordered_field]
                     )
 
-            for key, value in record_dict.items():
+            for key in sorted(record_dict.keys()):
                 if key in field_order + ["ID", "ENTRYTYPE"]:
                     continue
 
-                bibtex_str += format_field(key, value)
+                bibtex_str += format_field(key, record_dict[key])
 
             bibtex_str += ",\n}\n"
 
         return bibtex_str
 
-    def save_records_dict_to_file(self, *, records: dict, save_path: Path) -> None:
+    def save_records_dict_to_file(
+        self, *, records: dict, save_path: Path, add_changes: bool = True
+    ) -> None:
         """Save the records dict to specified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
@@ -579,6 +590,13 @@ class Dataset:
 
         with open(save_path, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
+
+        if not add_changes:
+            return
+        if save_path == self.records_file:
+            self.__add_record_changes()
+        else:
+            self.add_changes(path=save_path)
 
     def __save_record_list_by_id(
         self, *, records: dict, append_new: bool = False
@@ -642,15 +660,19 @@ class Dataset:
                     "records not written to file: " f'{[x["ID"] for x in record_list]}'
                 )
 
-        self.add_record_changes()
+        self.__add_record_changes()
 
-    def save_records_dict(self, *, records: dict, partial: bool = False) -> None:
+    def save_records_dict(
+        self, *, records: dict, partial: bool = False, add_changes: bool = True
+    ) -> None:
         """Save the records dict in RECORDS_FILE"""
 
         if partial:
             self.__save_record_list_by_id(records=records)
             return
-        self.save_records_dict_to_file(records=records, save_path=self.records_file)
+        self.save_records_dict_to_file(
+            records=records, save_path=self.records_file, add_changes=add_changes
+        )
 
     def read_next_record(
         self, *, conditions: Optional[list] = None
@@ -671,30 +693,56 @@ class Dataset:
                 records.append(record)
         yield from records
 
-    def format_records_file(self) -> bool:
-        """Format the records file"""
-        quality_model = self.review_manager.get_qm()
-        records = self.load_records_dict()
-        for record_dict in records.values():
-            if "colrev_status" not in record_dict:
-                print(f'Error: no status field in record ({record_dict["ID"]})')
-                continue
+    def get_format_report(self) -> dict:
+        """Get format report"""
 
-            record = colrev.record.PrepRecord(data=record_dict)
-            if record_dict["colrev_status"] in [
-                colrev.record.RecordState.md_needs_manual_preparation,
-            ]:
-                record.update_masterdata_provenance(qm=quality_model)
-                record.update_metadata_status()
+        if not self.records_file.is_file():
+            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
-            if record_dict["colrev_status"] == colrev.record.RecordState.pdf_prepared:
-                record.reset_pdf_provenance_notes()
+        if not self.records_changed() and not self.review_manager.force_mode:
+            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
-        self.save_records_dict(records=records)
-        changed = self.RECORDS_FILE_RELATIVE in [
-            r.a_path for r in self.__git_repo.index.diff(None)
-        ]
-        return changed
+        try:
+            colrev.operation.FormatOperation(
+                review_manager=self.review_manager
+            )  # to notify
+            quality_model = self.review_manager.get_qm()
+            records = self.load_records_dict()
+            for record_dict in records.values():
+                if "colrev_status" not in record_dict:
+                    print(f'Error: no status field in record ({record_dict["ID"]})')
+                    continue
+
+                record = colrev.record.PrepRecord(data=record_dict)
+                if record_dict["colrev_status"] in [
+                    colrev.record.RecordState.md_needs_manual_preparation,
+                ]:
+                    record.update_masterdata_provenance(qm=quality_model)
+                    record.update_metadata_status()
+
+                if (
+                    record_dict["colrev_status"]
+                    == colrev.record.RecordState.pdf_prepared
+                ):
+                    record.reset_pdf_provenance_notes()
+
+            self.save_records_dict(records=records)
+            changed = self.RECORDS_FILE_RELATIVE in [
+                r.a_path for r in self.__git_repo.index.diff(None)
+            ]
+            self.review_manager.update_status_yaml()
+            self.review_manager.load_settings()
+            self.review_manager.save_settings()
+        except (
+            colrev_exceptions.UnstagedGitChangesError,
+            colrev_exceptions.StatusFieldValueError,
+        ) as exc:
+            return {"status": ExitCodes.FAIL, "msg": f"{type(exc).__name__}: {exc}"}
+
+        if changed:
+            return {"status": ExitCodes.FAIL, "msg": "records file formatted"}
+
+        return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
     # ID creation, update and lookup ---------------------------------------
 
@@ -717,7 +765,7 @@ class Dataset:
                 if ID not in paper_ids.split(",")
             }
             self.save_records_dict(records=records)
-            self.add_record_changes()
+            self.__add_record_changes()
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
@@ -911,7 +959,7 @@ class Dataset:
                 print(exc)
 
         self.save_records_dict(records=records)
-        self.add_record_changes()
+        self.__add_record_changes()
 
         return records
 
@@ -972,7 +1020,7 @@ class Dataset:
             path = path.relative_to(self.review_manager.path)
 
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(0.5)
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
         try:
@@ -1041,17 +1089,17 @@ class Dataset:
             cmsg = master.commit.message
         return cmsg
 
-    def add_record_changes(self) -> None:
+    def __add_record_changes(self) -> None:
         """Add changes in records to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(0.5)
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
         self.__git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(0.5)
+            time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
         self.__git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
@@ -1142,3 +1190,9 @@ class Dataset:
             if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
+
+    def stash_unstaged_changes(self) -> bool:
+        """Stash unstaged changes"""
+        return "No local changes to save" != self.__git_repo.git.stash(
+            "push", "--keep-index"
+        )

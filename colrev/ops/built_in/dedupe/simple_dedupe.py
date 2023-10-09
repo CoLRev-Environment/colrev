@@ -364,8 +364,7 @@ class SimpleDedupe(JsonSchemaMixin):
         # apply:
         dedupe_operation.apply_merges(results=potential_duplicates)
 
-        # add and commit
-        dedupe_operation.review_manager.dataset.add_record_changes()
+        # commit
         dedupe_operation.review_manager.create_commit(
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,

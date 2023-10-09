@@ -17,9 +17,12 @@ from thefuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
+import colrev.ops.load_utils_md
+import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
-
+import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -30,17 +33,24 @@ import colrev.record
 )
 @dataclass
 class UnknownSearchSource(JsonSchemaMixin):
-    """SearchSource for unknown search results"""
+    """Unknown SearchSource"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.OTHER,
+        colrev.settings.SearchType.BACKWARD_SEARCH,
+        colrev.settings.SearchType.FORWARD_SEARCH,
+        colrev.settings.SearchType.TOC,
+    ]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/unknown_source.md"
     )
@@ -70,37 +80,36 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        if filename:
+            query_file = operation.get_query_filename(
+                filename=filename, instantiate=True
+            )
+            add_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
+                filename=filename,
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"query_file": str(query_file)},
+                comment="",
+            )
+
+            return add_source
+
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "query_file" in source.search_parameters:
-            if not Path(source.search_parameters["query_file"]).is_file():
-                raise colrev_exceptions.InvalidQueryException(
-                    f"File does not exist: query_file {source.search_parameters['query_file']} "
-                    f"for ({source.filename})"
-                )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
-
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
+
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            if self.review_manager.in_ci_environment():
+                raise colrev_exceptions.SearchNotAutomated(
+                    "DB search for UnknownSource not automated."
+                )
 
     def get_masterdata(
         self,
@@ -112,18 +121,130 @@ class UnknownSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for unknown sources"""
+    def __ris_fixes(self, *, entries: dict) -> None:
+        for entry in entries:
+            if "title" in entry and "primary_title" not in entry:
+                entry["primary_title"] = entry.pop("title")
 
+            if "publication_year" in entry and "year" not in entry:
+                entry["year"] = entry.pop("publication_year")
+
+    def __rename_erroneous_extensions(self) -> None:
+        if self.search_source.filename.suffix in [".xls", ".xlsx"]:
+            return
+        data = self.search_source.filename.read_text(encoding="utf-8")
+        # # Correct the file extension if necessary
+        if re.findall(
+            r"^%0", data, re.MULTILINE
+        ) and self.search_source.filename.suffix not in [".enl"]:
+            new_filename = self.search_source.filename.with_suffix(".enl")
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .enl){colors.END}"
+            )
+            self.search_source.filename.rename(new_filename)
+            self.review_manager.dataset.add_changes(
+                path=self.search_source.filename, remove=True
+            )
+            self.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(path=new_filename)
+            self.review_manager.create_commit(
+                msg=f"Rename {self.search_source.filename}"
+            )
+            return
+
+        if re.findall(
+            r"^TI ", data, re.MULTILINE
+        ) and self.search_source.filename.suffix not in [".ris"]:
+            new_filename = self.search_source.filename.with_suffix(".ris")
+            self.review_manager.logger.info(
+                f"{colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .ris){colors.END}"
+            )
+            self.search_source.filename.rename(new_filename)
+            self.review_manager.dataset.add_changes(
+                path=self.search_source.filename, remove=True
+            )
+            self.search_source.filename = new_filename
+            self.review_manager.dataset.add_changes(path=new_filename)
+            self.review_manager.create_commit(
+                msg=f"Rename {self.search_source.filename}"
+            )
+
+    def __load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        ris_loader.apply_ris_fixes(filename=self.search_source.filename)
+        ris_entries = ris_loader.load_ris_entries()
+        self.__ris_fixes(entries=ris_entries)
+        records = ris_loader.convert_to_records(entries=ris_entries)
         return records
 
+    def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        records = colrev.ops.load_utils_bib.load_bib_file(
+            load_operation=load_operation, source=self.search_source
+        )
+        return records
+
+    def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        csv_loader = colrev.ops.load_utils_table.CSVLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        table_entries = csv_loader.load_table_entries()
+        records = csv_loader.convert_to_records(entries=table_entries)
+        return records
+
+    def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        excel_loader = colrev.ops.load_utils_table.ExcelLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        table_entries = excel_loader.load_table_entries()
+        records = excel_loader.convert_to_records(entries=table_entries)
+        return records
+
+    def __load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        md_loader = colrev.ops.load_utils_md.MarkdownLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        records = md_loader.load()
+        return records
+
+    def __load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+            load_operation=load_operation, source=self.search_source
+        )
+        entries = enl_loader.load_enl_entries()
+        records = enl_loader.convert_to_records(entries=entries)
+        return records
+
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if not self.search_source.filename.is_file():
+            return {}
+
+        self.__rename_erroneous_extensions()
+
+        __load_methods = {
+            ".ris": self.__load_ris,
+            ".bib": self.__load_bib,
+            ".csv": self.__load_csv,
+            ".xls": self.__load_xlsx,
+            ".xlsx": self.__load_xlsx,
+            ".md": self.__load_md,
+            ".enl": self.__load_enl,
+        }
+
+        if self.search_source.filename.suffix not in __load_methods:
+            raise NotImplementedError
+
+        return __load_methods[self.search_source.filename.suffix](
+            load_operation=load_operation
+        )
+
     def __heuristically_fix_entrytypes(
-        self, *, record: colrev.record.PrepRecord, source_identifier: str
+        self, *, record: colrev.record.PrepRecord
     ) -> None:
         """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
 
@@ -144,7 +265,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 )
                 record.remove_field(key="series")
 
-        if source_identifier == "colrev.md_to_bib":
+        if self.search_source.filename.suffix == ".md":
             if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
                 record.update_field(
                     key="ENTRYTYPE", value="book", source="unkown_source_prep"
@@ -246,9 +367,9 @@ class UnknownSearchSource(JsonSchemaMixin):
     def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         """Format fields"""
 
-        if record.data.get("entrytype", "") == "inproceedings":
+        if record.data.get("ENTRYTYPE", "") == "inproceedings":
             self.__format_inproceedings(record=record)
-        elif record.data.get("entrytype", "") == "article":
+        elif record.data.get("ENTRYTYPE", "") == "article":
             self.__format_article(record=record)
 
         if record.data.get("author", "UNKNOWN") != "UNKNOWN":
@@ -361,9 +482,10 @@ class UnknownSearchSource(JsonSchemaMixin):
         if not record.has_quality_defects() or record.masterdata_is_curated():
             return record
 
+        # TODO : assign fields (e.g., to colrev.pubmed.pubmedid)
+
         self.__heuristically_fix_entrytypes(
             record=record,
-            source_identifier=source.load_conversion_package_endpoint["endpoint"],
         )
 
         self.__impute_missing_fields(record=record)

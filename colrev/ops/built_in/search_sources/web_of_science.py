@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -24,18 +24,19 @@ import colrev.record
 )
 @dataclass
 class WebOfScienceSearchSource(JsonSchemaMixin):
-    """SearchSource for Web of Science"""
+    """Web of Science"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.web_of_science"
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Web of Science"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/web_of_science.md"
     )
@@ -53,9 +54,6 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         if data.count("UT WOS:") > 0.4 * data.count("TI "):
             result["confidence"] = 0.7
-            result["load_conversion_package_endpoint"] = {  # type: ignore
-                "endpoint": "colrev.zotero_translate"
-            }
             return result
 
         if "Unique-ID = {WOS:" in data:
@@ -78,41 +76,22 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "query_file" not in source.search_parameters:
-            print(
-                f"Warning: Source missing query_file search_parameter ({source.filename})"
-            )
-        else:
-            if not Path(source.search_parameters["query_file"]).is_file():
-                raise colrev_exceptions.InvalidQueryException(
-                    f"File does not exist: query_file {source.search_parameters['query_file']} "
-                    f"for ({source.filename})"
-                )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
-
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of WebOfScience"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for WebOfScience not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -124,15 +103,16 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Web of Science"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
@@ -144,7 +124,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key="booktitle", case="title")
         record.format_if_mostly_upper(key="author", case="title")
 
-        record.remove_field(key="researcherid-numbers")
-        record.remove_field(key="orcid-numbers")
+        record.remove_field(key="colrev.web_of_science.researcherid-numbers")
+        record.remove_field(key="colrev.web_of_science.orcid-numbers")
 
         return record

@@ -12,7 +12,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 
@@ -28,16 +28,17 @@ import colrev.record
 )
 @dataclass
 class SpringerLinkSearchSource(JsonSchemaMixin):
-    """SearchSource for Springer Link"""
+    """Springer Link"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.springer_link"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Springer Link"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/springer_link.md"
     )
@@ -48,32 +49,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.quality_model = source_operation.review_manager.get_qm()
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "query_file" not in source.search_parameters:
-            raise colrev_exceptions.InvalidQueryException(
-                f"Source missing query_file search_parameter ({source.filename})"
-            )
-
-        if not Path(source.search_parameters["query_file"]).is_file():
-            raise colrev_exceptions.InvalidQueryException(
-                f"File does not exist: query_file {source.search_parameters['query_file']} "
-                f"for ({source.filename})"
-            )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
-
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Springer Link"""
@@ -81,7 +56,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         result = {"confidence": 0.0}
 
         if filename.suffix == ".csv":
-            if data.count("http://link.springer.com") == data.count("\n"):
+            if data.count("http://link.springer.com") > data.count("\n") - 2:
                 result["confidence"] = 1.0
                 return result
 
@@ -91,15 +66,22 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of SpringerLink"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for SprinterLink not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -111,12 +93,26 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="item_doi",
+            )
+            table_entries = csv_loader.load_table_entries()
+            records = csv_loader.convert_to_records(entries=table_entries)
+            self.__load_fixes(records=records)
+            return records
+
+        raise NotImplementedError
+
+    def __load_fixes(
         self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
         records: typing.Dict,
-    ) -> dict:
+    ) -> None:
         """Load fixes for Springer Link"""
 
         # pylint: disable=too-many-branches
@@ -125,6 +121,9 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             if "item_title" in record_dict:
                 record_dict["title"] = record_dict["item_title"]
                 del record_dict["item_title"]
+
+            if record_dict.get("book_series_title", "") == "nan":
+                del record_dict["book_series_title"]
 
             if "content_type" in record_dict:
                 record = colrev.record.Record(data=record_dict)
@@ -171,8 +170,6 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     r"\g<1> and \g<2>",
                     record_dict["author"],
                 )
-
-        return records
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

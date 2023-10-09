@@ -28,20 +28,21 @@ import colrev.record
 )
 @dataclass
 class BackwardSearchSource(JsonSchemaMixin):
-    """Performs a backward search extracting references from PDFs using GROBID
+    """Backward search extracting references from PDFs using GROBID
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
     __api_url = "https://opencitations.net/index/coci/api/v1/references/"
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.pdf_backward_search"
     source_identifier = "bwsearch_ref"
-    search_type = colrev.settings.SearchType.BACKWARD_SEARCH
-    api_search_supported = True
+    search_types = [colrev.settings.SearchType.BACKWARD_SEARCH]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/pdf_backward_search.md"
     )
@@ -81,20 +82,15 @@ class BackwardSearchSource(JsonSchemaMixin):
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
             },
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
             comment="",
         )
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        assert source.search_type == colrev.settings.SearchType.BACKWARD_SEARCH
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -112,9 +108,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                     "search_parameters/scope/colrev_status must be rev_included|rev_synthesized"
                 )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __bw_search_condition(self, *, record: dict) -> bool:
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
@@ -196,14 +190,16 @@ class BackwardSearchSource(JsonSchemaMixin):
     def __complement_with_open_citations_data(
         self,
         *,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
         for parent_record_id in {
-            x["cited_by_ID"] for x in pdf_backward_search_feed.feed_records.values()
+            x["bwsearch_ref"] for x in pdf_backward_search_feed.feed_records.values()
         }:
-            parent_record = records[parent_record_id]
+            parent_record = records[
+                parent_record_id[: parent_record_id.find("_backward_search_")]
+            ]
 
             if "doi" not in parent_record:
                 continue
@@ -214,7 +210,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             updated = 0
             overall = 0
             for feed_record_dict in pdf_backward_search_feed.feed_records.values():
-                if feed_record_dict["cited_by_ID"] != parent_record_id:
+                if feed_record_dict["bwsearch_ref"] != parent_record_id:
                     continue
                 overall += 1
                 feed_record = colrev.record.Record(data=feed_record_dict)
@@ -239,8 +235,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         self,
         *,
         record: dict,
-        pdf_backward_search_feed: colrev.ops.search.GeneralOriginFeed,
-        search_operation: colrev.ops.search.Search,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
         records: dict,
         rerun: bool,
     ) -> None:
@@ -282,44 +277,42 @@ class BackwardSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=new_record),
             )
 
-            if added:
-                pdf_backward_search_feed.nr_added += 1
-            elif rerun:
+            if not added and rerun:
                 # Note : only re-index/update
-                changed = search_operation.update_existing_record(
+                pdf_backward_search_feed.update_existing_record(
                     records=records,
                     record_dict=new_record,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    pdf_backward_search_feed.nr_changed += 1
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
 
-        # Do not run in continuous-integration environment
-        if search_operation.review_manager.in_ci_environment():
-            return
+        self.__validate_source()
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        # Do not run in continuous-integration environment
+        if self.review_manager.in_ci_environment():
+            raise colrev_exceptions.SearchNotAutomated(
+                "PDF Backward Search not automated."
+            )
+
+        records = self.review_manager.dataset.load_records_dict()
 
         if not records:
-            search_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "No records imported. Cannot run backward search yet."
             )
             return
 
-        search_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             "Set min_intext_citations="
             f"{self.search_source.search_parameters['min_intext_citations']}"
         )
 
         pdf_backward_search_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
@@ -331,13 +324,12 @@ class BackwardSearchSource(JsonSchemaMixin):
                 self.__run_backward_search_on_pdf(
                     record=record,
                     pdf_backward_search_feed=pdf_backward_search_feed,
-                    search_operation=search_operation,
                     records=records,
                     rerun=rerun,
                 )
 
             except colrev_exceptions.TEIException:
-                search_operation.review_manager.logger.info("Eror accessing TEI")
+                self.review_manager.logger.info("Eror accessing TEI")
 
         self.__complement_with_open_citations_data(
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
@@ -348,8 +340,8 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
         pdf_backward_search_feed.save_feed_file()
 
-        if search_operation.review_manager.dataset.has_changes():
-            search_operation.review_manager.create_commit(
+        if self.review_manager.dataset.has_changes():
+            self.review_manager.create_commit(
                 msg="Backward search", script_call="colrev search"
             )
 
@@ -365,33 +357,43 @@ class BackwardSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if query == "default":
-            return cls.get_default_source()
+        if params is None:
+            params = "min_intext_citations=3"
 
-        if query.startswith("min_intext_citations="):
-            source = cls.get_default_source()
-            min_intext_citations = query.replace("min_intext_citations=", "")
+        if params == "default":
+            add_source = cls.get_default_source()
+            return add_source
+
+        if params.startswith("min_intext_citations="):
+            add_source = cls.get_default_source()
+            min_intext_citations = params.replace("min_intext_citations=", "")
             assert min_intext_citations.isdigit()
-            source.search_parameters["min_intext_citations"] = int(min_intext_citations)
-            return source
+            add_source.search_parameters["min_intext_citations"] = int(
+                min_intext_citations
+            )
+            return add_source
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add backward_search endpoint with query {query}"
+            f"Cannot add backward_search endpoint with query {params}"
         )
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for PDF backward searches (GROBID)"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def get_masterdata(
         self,

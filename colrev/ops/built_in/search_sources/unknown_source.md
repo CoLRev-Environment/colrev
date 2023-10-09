@@ -1,12 +1,12 @@
-# SearchSource: Unknown source
+# Unknown SearchSource
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): search updates, get_masterdata, run_search, load_fixes, prep
+### DB Search
 
-## Add the search source
+**load**
+
+- Typical Excel column names include: ...
 
 Download search results and store in `data/search/` directory. API-access not available (per definition).
 

@@ -25,7 +25,6 @@ import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
-from colrev.exit_codes import ExitCodes
 
 
 class ReviewManager:
@@ -62,6 +61,8 @@ class ReviewManager:
 
     path: Path
     """Path of the project repository"""
+
+    shell_mode = False
 
     def __init__(
         self,
@@ -115,22 +116,9 @@ class ReviewManager:
                 self.pdf_dir.mkdir(exist_ok=True)
                 self.output_dir.mkdir(exist_ok=True)
 
-            if self.debug_mode:
-                self.report_logger = colrev.logger.setup_report_logger(
-                    review_manager=self, level=logging.DEBUG
-                )
-                """Logger for the commit report"""
-                self.logger = colrev.logger.setup_logger(
-                    review_manager=self, level=logging.DEBUG
-                )
-                """Logger for processing information"""
-            else:
-                self.report_logger = colrev.logger.setup_report_logger(
-                    review_manager=self, level=logging.INFO
-                )
-                self.logger = colrev.logger.setup_logger(
-                    review_manager=self, level=logging.INFO
-                )
+            report_logger, logger = self.get_loggers_by_debug_mode()
+            self.report_logger = report_logger
+            self.logger = logger
 
             self.environment_manager = self.get_environment_manager()
 
@@ -153,6 +141,39 @@ class ReviewManager:
                 raise exc
             if debug_mode:
                 self.logger.debug(exc)
+
+    def update_config(
+        self,
+        *,
+        force_mode: bool = False,
+        verbose_mode: bool = False,
+        debug_mode: bool = False,
+        high_level_operation: bool = False,
+        exact_call: str = "",
+    ) -> None:
+        """Update review_manager's state"""
+        self.force_mode = force_mode
+        # Force mode variable (bool)
+        self.verbose_mode = verbose_mode
+        # Verbose mode variable (bool)
+        self.debug_mode = debug_mode
+        # Debug mode variable (bool)
+        self.high_level_operation = high_level_operation
+        # A high-level operation was called (bool)
+        self.exact_call = exact_call
+        report_logger, logger = self.get_loggers_by_debug_mode()
+        self.report_logger = report_logger
+        self.logger = logger
+
+    def get_loggers_by_debug_mode(self) -> typing.Tuple[logging.Logger, logging.Logger]:
+        """return loggers"""
+        if self.debug_mode:
+            return colrev.logger.setup_report_logger(
+                review_manager=self, level=logging.DEBUG
+            ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
+        return colrev.logger.setup_report_logger(
+            review_manager=self, level=logging.INFO
+        ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
 
     def __check_update(self) -> None:
         # Once the following has run for all repositories,
@@ -212,7 +233,7 @@ class ReviewManager:
 
     def report(self, *, msg_file: Path) -> dict:
         """Append commit-message report if not already available
-        Entrypoint for pre-commit hooks)
+        (Entrypoint for pre-commit hooks)
         """
         import colrev.ops.commit
         import colrev.ops.correct
@@ -249,7 +270,7 @@ class ReviewManager:
 
     def sharing(self) -> dict:
         """Check whether sharing requirements are met
-        Entrypoint for pre-commit hooks)
+        (Entrypoint for pre-commit hooks)
         """
 
         self.notified_next_operation = colrev.operation.OperationsType.check
@@ -258,30 +279,9 @@ class ReviewManager:
         return sharing_advice
 
     def format_records_file(self) -> dict:
-        """Format the records file Entrypoint for pre-commit hooks)"""
+        """Format the records file (Entrypoint for pre-commit hooks)"""
 
-        if not self.dataset.records_file.is_file():
-            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
-
-        if not self.dataset.records_changed() and not self.force_mode:
-            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
-
-        try:
-            colrev.operation.FormatOperation(review_manager=self)  # to notify
-            changed = self.dataset.format_records_file()
-            self.update_status_yaml()
-            self.settings = self.load_settings()
-            self.save_settings()
-        except (
-            colrev_exceptions.UnstagedGitChangesError,
-            colrev_exceptions.StatusFieldValueError,
-        ) as exc:
-            return {"status": ExitCodes.FAIL, "msg": f"{type(exc).__name__}: {exc}"}
-
-        if changed:
-            return {"status": ExitCodes.FAIL, "msg": "records file formatted"}
-
-        return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
+        return self.dataset.get_format_report()
 
     def notify(
         self, *, operation: colrev.operation.Operation, state_transition: bool = True
@@ -677,13 +677,6 @@ class ReviewManager:
         import colrev.ops.pull
 
         return colrev.ops.pull.Pull(review_manager=self)
-
-    def get_service_operation(self) -> colrev.service.Service:
-        """Get a service operation object"""
-
-        import colrev.service
-
-        return colrev.service.Service(review_manager=self)
 
     def get_search_sources(self) -> colrev.ops.search_sources.SearchSources:
         """Get a SearchSources object"""

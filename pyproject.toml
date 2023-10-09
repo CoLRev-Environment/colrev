@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.9.0"
+version = "0.10.1"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
@@ -22,7 +22,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Typing :: Typed",
 ]
-include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py.typed"]
+include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py.typed", "colrev/.colrev_endpoints.json"]
 
 [tool.poetry.scripts]
 colrev = "colrev.ui_cli.cli:main"
@@ -34,17 +34,24 @@ colrev-hooks-update = "colrev.hooks.update:main"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <4"
-alphabet-detector = "^0.0.7"
+click-repl = "^0.3.0"
+click = "^8.1.6"
+requests = "^2.28.1"
+requests-cache = "^0.9.6"
+tqdm = "^4.64.1"
+transitions = "^0.8.11"
+pre-commit = "^2.20.0"
+docker = "6.0.0"
+GitPython= "^3.1.29"
 beautifulsoup4 = "^4.11.1"
-click8 = "^8.0.1"
 click_completion = "^0.5.2"
+"zope.interface" = "^5.5.0"
+alphabet-detector = "^0.0.7"
 crossrefapi = "^1.5.0"
 dacite = "^1.6.0"
 daff = "^1.3.46"
 dedupe = "^2.0.20"
 dictdiffer = "^0.9.0"
-docker = "6.0.0"
-GitPython= "^3.1.29"
 lingua-language-detector = ">1.3"
 lxml = "^4.9.1"
 nameparser = "^1.1.2"
@@ -55,26 +62,21 @@ psutil = "^5.9.2"
 pybtex = "^0.24.0"
 PyPDF2 = "^1.28.6"
 PyYAML = "^6.0.0"
-requests = "^2.28.1"
-requests-cache = "^0.9.6"
 thefuzz = "^0.19.0"
-tqdm = "^4.64.1"
-transitions = "^0.8.11"
-"zope.interface" = "^5.5.0"
 pycountry = "^22.3.5"
 glom = "^22.1.0"
-pre-commit = "^2.20.0"
 Jinja2 = "^3.1.2"
 dataclasses-jsonschema = "^2.15.3"
-watchdog = "^2.2.1"
 openpyxl = "^3.1.2"
-pylint = "^2.17.2"
 pymupdf = "^1.22.0"
 imagehash = "^4.3.1"
 defusedxml = "^0.7.1"
-asreview = "^1.2"
-requests-mock = "^1.10.0"
+dash = "^2.11.1"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
+pyalex = "^0.10"
+rispy = "^0.7.1"
+colrev-asreview = "^0.1.0"
+m2r = "^0.3.1"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"
@@ -86,12 +88,60 @@ sphinx_collapse = "^0.1.2"
 repoze-sphinx-autointerface = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
+pylint = "^2.17.2"
 pytest = "^7.2.1"
-coverage = "^6.5.0"
+coverage = {extras = ["toml"], version = "^7.3.2"}
 types-click = "^7.1.8"
 pytest-mock = "^3.10.0"
 requests-mock = "^1.10.0"
 
+[tool.mypy]
+python_version = 3.8
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "requests.*",
+    "yaml.*",
+    "pkg_resources.*",
+]
+ignore_missing_imports = true
+
+[tool.pylint.MAIN]
+extension-pkg-whitelist = "lxml.etree"
+load-plugins = ["colrev.linter.colrev_lint"]
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = ["R0801"]
+
+[tool.coverage.report]
+omit = [
+    "colrev/ops/built_in/*", # omit reference implementation
+    "/usr/*", # omit everything in /usr
+    "*crossrefapi/crossref/*",
+    "colrev/env/grobid_service.py",
+    "/tmp/*",
+    "tests/*",
+]
+
+[tool.coverage.run]
+omit = [
+    "colrev/ops/built_in/*", # omit reference implementation
+    "/usr/*", # omit everything in /usr
+    "*crossrefapi/crossref/*",
+    "colrev/env/grobid_service.py",
+    "/tmp/*",
+    "tests/*",
+]
+
+[tool.ruff]
+line-length = 160
+
+[tool.ruff.per-file-ignores]
+"**/{tests,docs}/*" = ["E501"]
+
 [build-system]
-requires = ["poetry>=1.2.0b1"]
+# requires = ["poetry>=1.2.0b1"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

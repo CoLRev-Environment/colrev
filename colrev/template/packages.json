@@ -1,6 +1,10 @@
 [
     {
         "module": "colrev",
-        "url": "https://github.com/colrev/colrev"
+        "url": "https://github.com/CoLRev-Environment/colrev"
+    },
+    {
+        "module": "colrev_asreview",
+        "url": "https://github.com/CoLRev-Environment/colrev-asreview"
     }
 ]

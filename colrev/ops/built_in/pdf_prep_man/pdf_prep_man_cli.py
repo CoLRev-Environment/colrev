@@ -139,6 +139,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             except colrev_exceptions.InvalidPDFException:
                 pass
 
+    def __is_inside_wsl(self) -> bool:
+        return "wsl" in platform.uname().release.lower()
+
     def __man_pdf_prep_item(
         self,
         *,
@@ -146,7 +149,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         record: colrev.record.Record,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
     ) -> None:
-        self.__open_pdf(filepath=filepath)
+        if not self.__is_inside_wsl():
+            self.__open_pdf(filepath=filepath)
 
         # if PDF > 100 pages, we may check on which page we find the title & print
         intro_paragraph = (
@@ -266,7 +270,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 break
 
         pdf_prep_man_operation.review_manager.dataset.save_records_dict(records=records)
-        pdf_prep_man_operation.review_manager.dataset.add_record_changes()
 
         if pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":

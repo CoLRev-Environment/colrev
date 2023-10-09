@@ -1,15 +1,11 @@
-# SearchSource: Transport research international documentation (TRID)
+# Transport research international documentation (TRID)
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): search updates, get_masterdata, run_search, load_fixes, prep
-
-[TRID](https://trid.trb.org/)
-
-## Add the search source
+### DB search
 
 Download search results and store in `data/search/` directory. API-access not yet available.
 
 ## Links
+
+- [TRID](https://trid.trb.org/)

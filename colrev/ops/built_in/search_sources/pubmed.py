@@ -19,9 +19,11 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.lxml import fromstring
+from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 
@@ -37,16 +39,21 @@ defusedxml.defuse_stdlib()
 )
 @dataclass
 class PubMedSearchSource(JsonSchemaMixin):
-    """SearchSource for Pubmed"""
+    """Pubmed"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "pubmedid"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = True
+    search_types = [
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.MD,
+    ]
+    endpoint = "colrev.pubmed"
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "PubMed"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/pubmed.md"
     )
@@ -74,11 +81,10 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.search_source = pubmed_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.pubmed",
+                    endpoint=self.endpoint,
                     filename=self.__pubmed_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -110,44 +116,47 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        host = urlparse(query).hostname
+        if params is None:
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
+
+        host = urlparse(params).hostname
 
         if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-            query = query.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
+            params = params.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
 
-            filename = search_operation.get_unique_filename(
-                file_path_string=f"pubmed_{query.replace('&sort=', '')}"
+            filename = operation.get_unique_filename(
+                file_path_string=f"pubmed_{params.replace('&sort=', '')}"
             )
-            query = (
+            params = (
                 "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
-                + query
+                + params
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.pubmed",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                search_parameters={"query": params},
                 comment="",
             )
             return add_source
 
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        # TO DO
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self.__pubmed_md_filename.name:
             if "query" not in source.search_parameters:
@@ -158,9 +167,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             # if "query_file" in source.search_parameters:
             # ...
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
@@ -224,8 +231,12 @@ class PubMedSearchSource(JsonSchemaMixin):
             "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/ArticleTitle"
         )
         if title:
-            title = title[0].text.strip().rstrip(".")
-        return title
+            if title[0].text:
+                title = title[0].text.strip().rstrip(".")
+                if title.startswith("[") and title.endswith("]"):
+                    title = title[1:-1]
+                return title
+        return ""
 
     @classmethod
     def __get_abstract_string(cls, *, root) -> str:  # type: ignore
@@ -267,7 +278,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         if year:
             retrieved_record_dict.update(year=year[0].text)
 
-        retrieved_record_dict.update(volume=cls.__get_abstract_string(root=root))
+        retrieved_record_dict.update(abstract=cls.__get_abstract_string(root=root))
 
         article_id_list = root.xpath(
             "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
@@ -284,13 +295,19 @@ class PubMedSearchSource(JsonSchemaMixin):
         retrieved_record_dict = {
             k: v for k, v in retrieved_record_dict.items() if v != ""
         }
+        if (
+            retrieved_record_dict.get("pii", "pii").lower()
+            == retrieved_record_dict.get("doi", "doi").lower()
+        ):
+            del retrieved_record_dict["pii"]
 
         return retrieved_record_dict
 
     def __get_pubmed_ids(self, query: str, retstart: int) -> typing.List[str]:
         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
-
+        if not query.startswith("https://pubmed.ncbi.nlm.nih.gov/?term="):
+            query = "https://pubmed.ncbi.nlm.nih.gov/?term=" + query
         ret = session.request(
             "GET", query + f"&retstart={retstart}", headers=headers, timeout=30
         )
@@ -343,6 +360,10 @@ class PubMedSearchSource(JsonSchemaMixin):
                 return {"pubmed_id": pubmed_id}
         except requests.exceptions.RequestException:
             return {"pubmed_id": pubmed_id}
+        except XMLSyntaxError as exc:
+            raise colrev_exceptions.RecordNotParsableException(
+                "Error parsing xml"
+            ) from exc
         # pylint: disable=duplicate-code
         except OperationalError as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -422,13 +443,21 @@ class PubMedSearchSource(JsonSchemaMixin):
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
                 if save_feed:
                     pubmed_feed.save_feed_file()
-                self.pubmed_lock.release()
+                try:
+                    self.pubmed_lock.release()
+                except ValueError:
+                    pass
+
                 return record
             except (
                 colrev_exceptions.InvalidMerge,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
-                self.pubmed_lock.release()
+                try:
+                    self.pubmed_lock.release()
+                except ValueError:
+                    pass
+
                 return record
 
         except (
@@ -436,6 +465,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             OSError,
             IndexError,
             colrev_exceptions.RecordNotFoundInPrepSourceException,
+            colrev_exceptions.RecordNotParsableException,
         ):
             pass
         return record
@@ -452,7 +482,10 @@ class PubMedSearchSource(JsonSchemaMixin):
         # To test the metadata provided for a particular pubmed-id use:
         # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=10075143&rettype=xml&retmode=text
 
-        if len(record.data.get("title", "")) < 35 and "pubmedid" not in record.data:
+        if (
+            len(record.data.get("title", "")) < 35
+            and "colrev.pubmed.pubmedid" not in record.data
+        ):
             return record
 
         # at this point, we coujld validate metadata
@@ -460,7 +493,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         #    record = self.__check_doi_masterdata(record=record)
 
         # remove the following if we match basd on similarity
-        if "pubmedid" not in record.data:
+        if "colrev.pubmed.pubmedid" not in record.data:
             return record
 
         record = self.__get_masterdata_record(
@@ -485,28 +518,25 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retstart += 20
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
-        pubmed_feed: colrev.ops.search.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         if rerun:
-            search_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
 
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self.__get_pubmed_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get("author", "") and "" == record_dict.get(
                     "title", ""
                 ):
-                    search_operation.review_manager.logger.warning(
-                        f"Skipped record: {record_dict}"
-                    )
+                    self.review_manager.logger.warning(f"Skipped record: {record_dict}")
                     continue
                 try:
                     pubmed_feed.set_id(record_dict=record_dict)
@@ -527,20 +557,17 @@ class PubMedSearchSource(JsonSchemaMixin):
                 added = pubmed_feed.add_record(record=prep_record)
 
                 if added:
-                    search_operation.review_manager.logger.info(
+                    self.review_manager.logger.info(
                         " retrieve pubmed-id=" + prep_record.data["pubmedid"]
                     )
-                    pubmed_feed.nr_added += 1
                 else:
-                    changed = search_operation.update_existing_record(
+                    pubmed_feed.update_existing_record(
                         records=records,
                         record_dict=prep_record.data,
                         prev_record_dict_version=prev_record_dict_version,
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-                    if changed:
-                        pubmed_feed.nr_changed += 1
 
                 # Note : only retrieve/update the latest deposits (unless in rerun mode)
                 if not added and not rerun:
@@ -550,8 +577,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             pubmed_feed.print_post_run_search_infos(records=records)
             pubmed_feed.save_feed_file()
-            search_operation.review_manager.dataset.save_records_dict(records=records)
-            search_operation.review_manager.dataset.add_record_changes()
+            self.review_manager.dataset.save_records_dict(records=records)
 
         except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
@@ -564,13 +590,12 @@ class PubMedSearchSource(JsonSchemaMixin):
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-    def __run_md_search_update(
+    def __run_md_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
-        pubmed_feed: colrev.ops.search.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in pubmed_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
@@ -598,51 +623,73 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             pubmed_feed.add_record(record=colrev.record.Record(data=retrieved_record))
 
-            changed = search_operation.update_existing_record(
+            pubmed_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
                 update_time_variant_fields=True,
             )
-            if changed:
-                pubmed_feed.nr_changed += 1
 
         pubmed_feed.save_feed_file()
         pubmed_feed.print_post_run_search_infos(records=records)
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
 
+        self.__validate_source()
+
         pubmed_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                pubmed_feed=pubmed_feed,
-            )
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
+            self.__run_md_search(pubmed_feed=pubmed_feed)
 
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        elif self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(
                 pubmed_feed=pubmed_feed,
                 rerun=rerun,
             )
 
-    def load_fixes(
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Pubmed not automated."
+        #         )
+
+        else:
+            raise NotImplementedError
+
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".csv":
+            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                unique_id_field="pmid",
+            )
+            table_entries = csv_loader.load_table_entries()
+            records = csv_loader.convert_to_records(entries=table_entries)
+            self.__load_fixes(records=records)
+            return records
+
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
+
+    def __load_fixes(
         self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
         records: typing.Dict,
-    ) -> dict:
+    ) -> None:
         """Load fixes for Pubmed"""
 
         for record in records.values():
@@ -657,34 +704,44 @@ class PubMedSearchSource(JsonSchemaMixin):
                 record["author"] = " and ".join(author_list)
             if "first_author" in record:
                 del record["first_author"]
-            if "citation" in record:
-                del record["citation"]
-            if "create_date" in record:
-                del record["create_date"]
             if record.get("journal", "") != "":
                 record["ENTRYTYPE"] = "article"
             if record.get("pii", "pii").lower() == record.get("doi", "doi").lower():
                 del record["pii"]
-
-        return records
+            if record.get("nihms_id", "") == "nan":
+                del record["nihms_id"]
+            if "citation" in record:
+                details_part = record["citation"]
+                details_part = details_part[details_part.find(";") + 1 :]
+                details_part = details_part[: details_part.find(".")]
+                if ":" in details_part:
+                    record["pages"] = details_part[details_part.find(":") + 1 :]
+                    details_part = details_part[: details_part.find(":")]
+                if "(" in details_part:
+                    record["number"] = details_part[details_part.find("(") + 1 : -1]
+                    details_part = details_part[: details_part.find("(")]
+                record["volume"] = details_part
+                del record["citation"]
+            if "journal/book" in record:
+                record["journal"] = record.pop("journal/book")
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Pubmed"""
 
-        if "first_author" in record.data:
-            record.remove_field(key="first_author")
-        if "journal/book" in record.data:
-            record.rename_field(key="journal/book", new_key="journal")
+        if "colrev.pubmed.first_author" in record.data:
+            record.remove_field(key="colrev.pubmed.first_author")
         if record.data.get("author") == "UNKNOWN" and "authors" in record.data:
             record.remove_field(key="author")
             record.rename_field(key="authors", new_key="author")
 
         if record.data.get("year") == "UNKNOWN":
             record.remove_field(key="year")
-            if "publication_year" in record.data:
-                record.rename_field(key="publication_year", new_key="year")
+            if "colrev.pubmed.publication_year" in record.data:
+                record.rename_field(
+                    key="colrev.pubmed.publication_year", new_key="year"
+                )
 
         if "author" in record.data:
             record.data["author"] = colrev.record.PrepRecord.format_author_field(

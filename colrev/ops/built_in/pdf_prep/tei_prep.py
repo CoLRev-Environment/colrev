@@ -40,6 +40,7 @@ class TEIPDFPrep(JsonSchemaMixin):
                 pdf_prep_operation.review_manager.path / self.TEI_PATH_RELATIVE
             )
             self.tei_path.mkdir(exist_ok=True, parents=True)
+            pdf_prep_operation.docker_images_to_stop.append(grobid_service.GROBID_IMAGE)
 
     def prep_pdf(
         self,

@@ -53,7 +53,6 @@ class CustomPrescreen:
                 )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records=records)
-        prescreen_operation.review_manager.dataset.add_record_changes()
         prescreen_operation.review_manager.create_commit(
             msg="Pre-screen (random)",
             manual_author=False,

@@ -259,8 +259,8 @@ class PrepMan(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(
             records={record_dict["ID"]: record_dict}, partial=True
         )
-        self.review_manager.dataset.add_record_changes()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
 

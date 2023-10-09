@@ -24,6 +24,7 @@ from thefuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
@@ -41,16 +42,21 @@ defusedxml.defuse_stdlib()
 )
 @dataclass
 class EuropePMCSearchSource(JsonSchemaMixin):
-    """SearchSource for Europe PMC"""
+    """Europe PMC"""
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "europe_pmc_id"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = True
+    search_types = [
+        colrev.settings.SearchType.API,
+        colrev.settings.SearchType.DB,
+        colrev.settings.SearchType.MD,
+    ]
+    endpoint = "colrev.europe_pmc"
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/europe_pmc.md"
     )
@@ -67,7 +73,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         filename: Path
         search_type: colrev.settings.SearchType
         search_parameters: dict
-        load_conversion_package_endpoint: dict
         comment: typing.Optional[str]
 
         _details = {
@@ -102,11 +107,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 self.search_source = europe_pmc_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.europe_pmc",
+                    endpoint=self.endpoint,
                     filename=self.__europe_pmc_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -367,62 +371,58 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         return record
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        source = self.search_source
+
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+
+        assert source.search_type in self.search_types
 
         if "query" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
                 "Query required in search_parameters"
             )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
 
+        self.__validate_source()
         # https://europepmc.org/RestfulWebService
 
-        search_operation.review_manager.logger.info(
-            f"Retrieve Europe PMC: {self.search_source.search_parameters}"
-        )
-
         europe_pmc_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            print("Not yet implemented")
-            # self.__run_md_search_update(
-            #     search_operation=search_operation,
-            #     europe_pmc_feed=europe_pmc_feed,
-            # )
-
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        if self.search_source.search_type == colrev.settings.SearchType.API:
+            self.__run_api_search(
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Europe PMC not automated."
+        #         )
 
-    def __run_parameter_search(
+        # if self.search_source.search_type == colrev.settings.SearchSource.MD:
+        # self.__run_md_search_update(
+        #     search_operation=search_operation,
+        #     europe_pmc_feed=europe_pmc_feed,
+        # )
+
+        else:
+            raise NotImplementedError
+
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
-        europe_pmc_feed: colrev.ops.search.GeneralOriginFeed,
+        europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -438,7 +438,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             headers = {"user-agent": f"{__name__} (mailto:{email})"}
             session = self.review_manager.get_cached_session()
 
-            records = search_operation.review_manager.dataset.load_records_dict()
+            records = self.review_manager.dataset.load_records_dict()
 
             while url != "END":
                 self.review_manager.logger.debug(url)
@@ -462,7 +462,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                             europe_pmc_feed.feed_records[retrieved_record.data["ID"]]
                         )
                     if "title" not in retrieved_record.data:
-                        search_operation.review_manager.logger.warning(
+                        self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
                         )
                         continue
@@ -479,21 +479,18 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     added = europe_pmc_feed.add_record(record=retrieved_record)
 
                     if added:
-                        search_operation.review_manager.logger.info(
+                        self.review_manager.logger.info(
                             " retrieve europe_pmc_id="
                             + retrieved_record.data["europe_pmc_id"]
                         )
-                        europe_pmc_feed.nr_added += 1
                     else:
-                        changed = search_operation.update_existing_record(
+                        europe_pmc_feed.update_existing_record(
                             records=records,
                             record_dict=retrieved_record.data,
                             prev_record_dict_version=prev_record_dict_version,
                             source=self.search_source,
                             update_time_variant_fields=rerun,
                         )
-                        if changed:
-                            europe_pmc_feed.nr_changed += 1
 
                 url = "END"
                 next_page_url_node = root.find("nextPageUrl")
@@ -502,6 +499,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         url = next_page_url_node.text
 
             europe_pmc_feed.print_post_run_search_infos(records=records)
+
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass
         except OperationalError as exc:
@@ -528,42 +526,48 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        host = urlparse(query).hostname
+        if params is None:
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
+
+        host = urlparse(params).hostname
 
         if host and host.endswith("europepmc.org"):
-            query = query.replace("https://europepmc.org/search?query=", "")
+            params = params.replace("https://europepmc.org/search?query=", "")
 
-            filename = search_operation.get_unique_filename(
-                file_path_string="europepmc"
-            )
-            query = (
-                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=" + query
+            filename = operation.get_unique_filename(file_path_string="europepmc")
+            params = (
+                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
+                + params
             )
             add_source = colrev.settings.SearchSource(
-                endpoint="colrev.europe_pmc",
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": query},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                search_parameters={"query": params},
                 comment="",
             )
             return add_source
 
         raise NotImplementedError
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Europe PMC"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

@@ -1,4 +1,4 @@
-# ReviewType: Literature review
+# Literature review
 
 Note: This document is currently under development. It will contain the following elements.
 

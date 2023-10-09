@@ -1,4 +1,3 @@
-
 Collaborative Literature Reviews
 ========================================
 
@@ -6,7 +5,6 @@ Collaborative Literature Reviews
    :width: 400
    :align: center
    :alt: Logo
-
 
 CoLRev is an open-source environment for collaborative literature reviews. It integrates with differerent synthesis tools, takes care of the data, and facilitates Git-based collaboration.
 
@@ -17,15 +15,15 @@ The following features stand out:
 - Builds on git and its transparent collaboration model for the entire literature review process
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
 - Operates a model for data quality, content curation, and reuse
+- Provides validate and undo operations
 - Enables typological and methodological pluralism throughout the process (`in-progress <https://github.com/CoLRev-Environment/colrev/issues/110>`_)
 
-Please consult the `statements of development status <https://colrev.readthedocs.io/en/latest/foundations/dev_status.html>`_. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
+Please consult the :doc:`statements of development status </dev_docs/dev_status>`. A brief overview presented at ESMARConf2023 is available on `YouTube <https://www.youtube.com/watch?v=yfGGraQC6vs>`_.
 
 Getting started
 ---------------------------------------
 
 After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_ (Docker is optional but recommended):
-
 
 .. code-block::
 
@@ -35,21 +33,19 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # ... and start with the main command
    colrev status
 
+The CoLRev environment supports for the whole literature review process:
 
-**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next `operation <manual/operations.html>`_.
-After each operation, `validate the changes <manual/workflow.html#colrev-validate>`_.
-
-.. figure:: ../figures/workflow.png
+.. figure:: ../figures/figure-docs.png
    :width: 600
    :align: center
    :alt: Workflow cycle
 
-**The operations** allow you to complete a literature review. It should be as simple as running the following commands:
 
+Completing a literature review should be as simple as running the following commands:
 
 .. code-block::
 
-   # Initialize the project, formulate the objectives, specify the review type
+   # Formulate the objectives, initialize the project, specify the review type
    colrev init
 
    # Store search results in the data/search directory
@@ -68,30 +64,12 @@ After each operation, `validate the changes <manual/workflow.html#colrev-validat
    # Complete the forms of data analysis and synthesis, as specified in the settings
    colrev data
 
-For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
+Further information is provided in the :doc:`documentation <index>`.
+The manual explains how to use the functionality of CoLRev when conducting a literature review. It covers the user workflow, the processing operations, as well as collaboration and curation.
+It does not explain the design and architecture of CoLRev, which are covered in the :doc:`colrev framework </foundations/cep/cep_1_framework>` and the :doc:`API reference </dev_docs/api>`.
+Our goal is to provide a manual that is self-contained. Yet, it can help to be familiar with the basics of git - for example, by catching up with one of the interactive and free tutorials available online (`tutorial <https://learngitbranching.js.org/>`_).
 
-.. figure:: ../figures/settings.png
-   :width: 600
-   :align: center
-   :alt: Settings
-
-
-**The project collaboration loop** allows you to synchronize the project repository with your team.
-The ``colrev pull`` and ``colrev push`` operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
-In essence, a CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a record-level curation loop.
-
-**The record curation loop** proposes a new vision for the review process.
-Reuse of community-curated data from different sources is built into each operation.
-It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
-The more records are curated, the more you can focus on the synthesis.
-
-
-.. figure:: ../figures/reuse-vision_loop.png
-   :width: 800
-   :align: center
-   :alt: Reuse vision
-
-Further information is provided in the `documentation <index.html>`_, the developer `API reference <foundations/api.html>`_, and the `CoLRev framework <foundations/colrev.html>`_ summarizing the scientific foundations.
+The manual is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_ and endorses the `Code of Conduct <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`_ for contributions.
 
 
 .. toctree::
@@ -104,41 +82,47 @@ Further information is provided in the `documentation <index.html>`_, the develo
    :maxdepth: 2
    :caption: Manual
 
-   Introduction <manual/manual>
    manual/operations
    manual/workflow
    manual/problem_formulation
-   manual/setup
    manual/metadata_retrieval
    manual/metadata_prescreen
    manual/pdf_retrieval
    manual/pdf_screen
    manual/data
    manual/collaboration
-   manual/curation
-   manual/quality_model
-   manual/extensions
-   manual/reference_manager
+   manual/cli
    manual/credits
-   manual/help
 
 .. toctree::
    :hidden:
-   :caption: Documentation and governance
+   :caption: Additional resources
    :maxdepth: 1
 
-   foundations/colrev
-   foundations/api
-   foundations/cli
-   foundations/extensions
-   foundations/dev_status
-   foundations/about
-
+   resources/extensions
+   resources/extensions_index
+   resources/search_sources
+   resources/quality_model
+   resources/curation
+   resources/reference_manager
+   resources/help
 
 .. toctree::
    :hidden:
-   :caption: Links
+   :caption: Developer documentation
    :maxdepth: 1
 
+   dev_docs/setup
+   dev_docs/api
+   dev_docs/extensions
+   dev_docs/dev_status
    Github repository <https://github.com/CoLRev-Environment/colrev>
    PyPI <https://pypi.org/project/colrev/>
+
+.. toctree::
+   :hidden:
+   :caption: Governance
+   :maxdepth: 1
+
+   foundations/cep
+   foundations/about

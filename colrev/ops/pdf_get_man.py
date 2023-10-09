@@ -92,7 +92,6 @@ class PDFGetMan(colrev.operation.Operation):
                     target_state=colrev.record.RecordState.pdf_not_available
                 )
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg="Discard missing PDFs", manual_author=True
         )
@@ -183,8 +182,8 @@ class PDFGetMan(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(
             records={record_dict["ID"]: record_dict}, partial=True
         )
-        self.review_manager.dataset.add_record_changes()
 
+    @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""
 

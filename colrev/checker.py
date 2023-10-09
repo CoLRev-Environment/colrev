@@ -266,79 +266,96 @@ class Checker:
         #         + "\n    ".join(status_data["invalid_state_transitions"])
         #     )
 
+    def __check_individual_record_screen(
+        self,
+        *,
+        record_id: str,
+        status: colrev.record.RecordState,
+        screen_crit: str,
+        field_errors: typing.List[str],
+        pattern: str,
+        pattern_inclusion: str,
+        criteria: typing.List[str],
+    ) -> None:
+        # No screening criteria allowed before screen
+        if (
+            status
+            not in colrev.record.RecordState.get_post_x_states(
+                state=colrev.record.RecordState.rev_included
+            )
+            and status != colrev.record.RecordState.md_needs_manual_preparation
+        ):
+            if "NA" != screen_crit:
+                raise colrev_exceptions.FieldValueError(
+                    f"{record_id}: screen_crit != NA ({screen_crit})"
+                )
+            return
+
+        # All screening criteria must match pattern
+        if not re.match(pattern, screen_crit):
+            # Note: this should also catch cases of missing
+            # screening criteria
+            field_errors.append(
+                "Screening criteria field not matching "
+                f"pattern: {screen_crit} ({record_id}; criteria: {criteria})"
+            )
+            return
+
+        # Included papers must match inclusion pattern
+        if status in [
+            colrev.record.RecordState.rev_included,
+            colrev.record.RecordState.rev_synthesized,
+        ]:
+            if not re.match(pattern_inclusion, screen_crit):
+                field_errors.append(
+                    "Included record with screening_criterion satisfied: "
+                    f"{record_id}, {status}, {screen_crit}"
+                )
+            return
+
+        # Excluded papers must match exclusion pattern
+        if status == colrev.record.RecordState.rev_excluded:
+            if ["NA"] == criteria:
+                if screen_crit == "NA":
+                    return
+                field_errors.append(f"screen_crit field not NA: {screen_crit}")
+
+            if "=out" not in screen_crit:
+                self.review_manager.logger.error("criteria: %s", criteria)
+                field_errors.append(
+                    "Excluded record with no screening_criterion violated: "
+                    f"{record_id}, {status}, {screen_crit}"
+                )
+
     def __check_records_screen(self, *, status_data: dict) -> None:
         """Check consistency of screening criteria and status"""
 
-        # pylint: disable=too-many-branches
+        if not status_data["screening_criteria_list"]:
+            return
 
-        # Check screen
-        # Note: consistency of inclusion_2=yes -> inclusion_1=yes
-        # is implicitly ensured through status
-        # (screen2-included/excluded implies prescreen included!)
+        field_errors: typing.List[str] = []
 
-        field_errors = []
+        screening_criteria = self.review_manager.settings.screen.criteria
+        if not screening_criteria:
+            criteria = ["NA"]
+            pattern = "^NA$"
+            pattern_inclusion = "^NA$"
+        else:
+            pattern = "=(in|out);".join(screening_criteria.keys()) + "=(in|out)"
+            pattern_inclusion = "=in;".join(screening_criteria.keys()) + "=in"
+            criteria = list(screening_criteria.keys())
 
-        if status_data["screening_criteria_list"]:
-            screening_criteria = self.review_manager.settings.screen.criteria
-            if not screening_criteria:
-                criteria = ["NA"]
-                pattern = "^NA$"
-                pattern_inclusion = "^NA$"
-            else:
-                pattern = "=(in|out);".join(screening_criteria.keys()) + "=(in|out)"
-                pattern_inclusion = "=in;".join(screening_criteria.keys()) + "=in"
+        for [record_id, status, screen_crit] in status_data["screening_criteria_list"]:
+            self.__check_individual_record_screen(
+                record_id=record_id,
+                status=status,
+                screen_crit=screen_crit,
+                field_errors=field_errors,
+                pattern=pattern,
+                pattern_inclusion=pattern_inclusion,
+                criteria=criteria,
+            )
 
-            for [record_id, status, screen_crit] in status_data[
-                "screening_criteria_list"
-            ]:
-                if status not in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.rev_included
-                ):
-                    assert "NA" == screen_crit
-                    continue
-
-                # print([record_id, status, screen_crit])
-                if not re.match(pattern, screen_crit):
-                    # Note: this should also catch cases of missing
-                    # screening criteria
-                    field_errors.append(
-                        "Screening criteria field not matching "
-                        f"pattern: {screen_crit} ({record_id}; criteria: {criteria})"
-                    )
-
-                elif str(colrev.record.RecordState.rev_excluded) == status:
-                    if ["NA"] == criteria:
-                        if screen_crit == "NA":
-                            continue
-                        field_errors.append(f"screen_crit field not NA: {screen_crit}")
-
-                    if "=out" not in screen_crit:
-                        self.review_manager.logger.error("criteria: %s", criteria)
-                        field_errors.append(
-                            "Excluded record with no screening_criterion violated: "
-                            f"{record_id}, {status}, {screen_crit}"
-                        )
-
-                # Note: we don't have to consider the cases of
-                # status=retrieved/prescreen_included/prescreen_excluded
-                # because they would not have screening_criteria.
-                elif status in [
-                    str(colrev.record.RecordState.rev_included),
-                    str(colrev.record.RecordState.rev_synthesized),
-                ]:
-                    if not re.match(pattern_inclusion, screen_crit):
-                        field_errors.append(
-                            "Included record with screening_criterion satisfied: "
-                            f"{record_id}, {status}, {screen_crit}"
-                        )
-                else:
-                    if status == colrev.record.RecordState.rev_excluded:
-                        continue
-                    if not re.match(pattern_inclusion, screen_crit):
-                        field_errors.append(
-                            "Record with screening_criterion but before "
-                            f"screen: {record_id}, {status}"
-                        )
         if field_errors:
             raise colrev_exceptions.FieldValueError(
                 "\n    " + "\n    ".join(field_errors)

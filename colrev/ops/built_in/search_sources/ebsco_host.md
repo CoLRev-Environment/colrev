@@ -1,16 +1,13 @@
-# SearchSource: EBSCOHost
+# EBSCOHost
 
-Note: This document is currently under development. It will contain the following elements.
+## search
 
-- description
-- coverage (disciplines, types of work)
-- supported (details): search updates, get_masterdata, run_search, load_fixes, prep
+### DB search
 
-[EBSCOHost](https://search.ebscohost.com/)
-[EBSCOHost APIs](https://developer.ebsco.com/getting-started/available-apis)
-
-## Add the search source
-
+Export is available after adding citations to a folder ([1](https://connect.ebsco.com/s/article/How-to-Use-the-Export-Manager?language=en_US)).
 Download search results and store in `data/search/` directory. API-access not yet available.
 
 ## Links
+
+- [EBSCOHost](https://search.ebscohost.com/)
+- [EBSCOHost APIs](https://developer.ebsco.com/getting-started/available-apis)

@@ -77,6 +77,7 @@ class Prescreen(colrev.operation.Operation):
             return False
         return True
 
+    @colrev.operation.Operation.decorate()
     def include_all_in_prescreen(self, *, persist: bool) -> None:
         """Include all records in the prescreen"""
 
@@ -137,7 +138,6 @@ class Prescreen(colrev.operation.Operation):
                 )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         msg = f"Pre-screen (exclude {ids})"
         if include:
@@ -223,7 +223,6 @@ class Prescreen(colrev.operation.Operation):
                     target_state=colrev.record.RecordState.rev_prescreen_included
                 )
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         self.review_manager.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
@@ -306,9 +305,29 @@ class Prescreen(colrev.operation.Operation):
                 records={record.data["ID"]: record.get_data()}, partial=True
             )
 
-        self.review_manager.dataset.add_record_changes()
+    def __auto_include(self, *, records: dict) -> list:
+        selected_auto_include_ids = [
+            r["ID"]
+            for r in records.values()
+            if colrev.record.RecordState.md_processed == r["colrev_status"]
+            and r.get("include_flag", "0") == "1"
+        ]
+        if not selected_auto_include_ids:
+            return selected_auto_include_ids
+        self.review_manager.logger.info(
+            f"{colors.GREEN}Automatically including records with include_flag{colors.END}"
+        )
+        for record_dict in records.values():
+            if record_dict["ID"] not in selected_auto_include_ids:
+                continue
+            self.prescreen(
+                record=colrev.record.Record(data=record_dict),
+                prescreen_inclusion=True,
+            )
+        return selected_auto_include_ids
 
-    def main(self, *, split_str: str) -> None:
+    @colrev.operation.Operation.decorate()
+    def main(self, *, split_str: str = "NA") -> None:
         """Prescreen records (main entrypoint)"""
 
         # pylint: disable=duplicate-code
@@ -359,13 +378,16 @@ class Prescreen(colrev.operation.Operation):
                 r["ID"]
                 for r in records.values()
                 if colrev.record.RecordState.md_processed == r["colrev_status"]
+                and not r.get("include_flag", "0") == "1"
             ]
             endpoint.run_prescreen(self, records, split)  # type: ignore
 
-            self.__print_stats(selected_record_ids=selected_record_ids)
+            selected_auto_include_ids = self.__auto_include(records=records)
+
+            self.__print_stats(
+                selected_record_ids=selected_record_ids + selected_auto_include_ids
+            )
 
         self.review_manager.logger.info(
             "%sCompleted prescreen operation%s", colors.GREEN, colors.END
         )
-        if self.review_manager.in_ci_environment():
-            print("\n\n")

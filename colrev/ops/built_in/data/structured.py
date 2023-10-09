@@ -91,18 +91,18 @@ Example 2:
         )
         self.review_manager = data_operation.review_manager
 
-    def get_default_setup(self) -> dict:
-        """Get the default setup"""
+    # pylint: disable=unused-argument
+    @classmethod
+    def add_endpoint(cls, operation: colrev.ops.data.Data, params: str) -> None:
+        """Add as an endpoint"""
 
-        # Note : add fields interactively upon update_data()
-
-        structured_endpoint_details = {
+        add_source = {
             "endpoint": "colrev.structured",
             "version": "0.1",
             "fields": [],
             "data_path_relative": "data/data.csv",
         }
-        return structured_endpoint_details
+        operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def validate_structured_data(self) -> None:
         """Validate the extracted data"""

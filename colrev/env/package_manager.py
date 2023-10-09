@@ -18,6 +18,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from m2r import parse_from_file
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
@@ -27,6 +28,7 @@ import colrev.settings
 import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=too-many-lines
+# pylint: disable=too-many-ancestors
 
 
 # Inspiration for package descriptions:
@@ -40,8 +42,6 @@ class PackageEndpointType(Enum):
     # pylint: disable=C0103
     review_type = "review_type"
     """Endpoint for review types"""
-    load_conversion = "load_conversion"
-    """Endpoint for load conversion"""
     search_source = "search_source"
     """Endpoint for search sources"""
     prep = "prep"
@@ -67,8 +67,20 @@ class PackageEndpointType(Enum):
 
 
 # pylint: disable=too-few-public-methods
+class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non-class
+    """The General Interface for all package endpoints
+
+    Each package endpoint must implement the following attributes (methods)"""
+
+    ci_supported = zope.interface.Attribute(
+        """Flag indicating whether the extension can be run in
+        continuous integration environments (e.g. GitHub Actions)"""
+    )
+
+
+# pylint: disable=too-few-public-methods
 class ReviewTypePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for ReviewTypes"""
 
@@ -92,7 +104,7 @@ class SearchSourceHeuristicStatus(Enum):
 
 
 class SearchSourcePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for SearchSources"""
 
@@ -102,37 +114,30 @@ class SearchSourcePackageEndpointInterface(
         Retrieved records are identified through the source_identifier
         when they are added to/updated in the GeneralOriginFeed"""
     )
-    search_type = zope.interface.Attribute(
-        """Main SearchType associated with the SearchSource"""
-    )
-
-    api_search_supported = zope.interface.Attribute(
-        """Flag indicating whether API searches are supported (by the run_search method)"""
+    search_types = zope.interface.Attribute(
+        """SearchTypes associated with the SearchSource"""
     )
 
     heuristic_status: SearchSourceHeuristicStatus = zope.interface.Attribute(
         """The status of the SearchSource heuristic"""
     )
     short_name = zope.interface.Attribute("""Short name of the SearchSource""")
-    link = zope.interface.Attribute("""Link to the SearchSource website""")
-
-    # pylint: disable=no-self-argument
-    def validate_source(
-        search_operation: colrev.ops.search.Search, source: colrev.settings.SearchSource
-    ) -> None:  # type: ignore
-        """Validate the SearchSource (parameters etc.)"""
-        # May raise an InvalidQueryException
+    docs_link = zope.interface.Attribute("""Link to the SearchSource website""")
 
     # pylint: disable=no-self-argument
     def heuristic(filename: Path, data: str):  # type: ignore
         """Heuristic to identify the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def add_endpoint(search_operation: colrev.ops.search.Search, query: str):  # type: ignore
+    def add_endpoint(  # type: ignore
+        operation: colrev.operation.Operation,
+        params: str,
+        filename: typing.Optional[Path],
+    ) -> colrev.settings.SearchSource:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
 
     # pylint: disable=no-self-argument
-    def run_search(search_operation: colrev.ops.search.Search, rerun: bool) -> None:  # type: ignore
+    def run_search(rerun: bool) -> None:  # type: ignore
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument
@@ -145,12 +150,10 @@ class SearchSourcePackageEndpointInterface(
         """Retrieve masterdata from the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def load_fixes(  # type: ignore
+    def load(  # type: ignore
         load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: dict,
-    ) -> None:
-        """SearchSource-specific fixes to ensure that load_records (from .bib) works"""
+    ) -> dict:
+        """Load records from the SearchSource (and convert to .bib)"""
 
     # pylint: disable=no-self-argument
     def prepare(record: dict, source: colrev.settings.SearchSource) -> None:  # type: ignore
@@ -158,24 +161,8 @@ class SearchSourcePackageEndpointInterface(
 
 
 # pylint: disable=too-few-public-methods
-class LoadConversionPackageEndpointInterface(
-    zope.interface.Interface
-):  # pylint: disable=inherit-non-class
-    """The PackageEndpoint interface for loading (different filetypes)"""
-
-    settings_class = zope.interface.Attribute("""Class for the package settings""")
-    supported_extensions = zope.interface.Attribute("""List of supported extensions""")
-
-    # pylint: disable=no-self-argument
-    def load(  # type: ignore
-        load_operation: colrev.ops.load.Load, source: colrev.settings.SearchSource
-    ) -> None:
-        """Run the load operation"""
-
-
-# pylint: disable=too-few-public-methods
 class PrepPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep operations"""
 
@@ -196,7 +183,7 @@ class PrepPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrepManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prep-man operations"""
 
@@ -211,7 +198,7 @@ class PrepManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class DedupePackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for dedupe operations"""
 
@@ -224,7 +211,7 @@ class DedupePackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PrescreenPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for prescreen operations"""
 
@@ -239,7 +226,7 @@ class PrescreenPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFGetPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get operations"""
 
@@ -253,7 +240,7 @@ class PDFGetPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFGetManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-get-man operations"""
 
@@ -269,7 +256,7 @@ class PDFGetManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFPrepPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep operations"""
 
@@ -288,7 +275,7 @@ class PDFPrepPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class PDFPrepManPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for pdf-prep-man operations"""
 
@@ -304,7 +291,7 @@ class PDFPrepManPackageEndpointInterface(
 
 # pylint: disable=too-few-public-methods
 class ScreenPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for screen operations"""
 
@@ -318,17 +305,13 @@ class ScreenPackageEndpointInterface(
 
 
 class DataPackageEndpointInterface(
-    zope.interface.Interface
+    GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
     """The PackageEndpoint interface for data operations"""
 
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    # pylint: disable=no-method-argument
-    def get_default_setup() -> dict:  # type: ignore
-        """Get the default setup for the data package endpoint"""
-        return {}  # pragma: no cover
 
     def update_data(  # type: ignore
         data_operation: colrev.ops.data.Data,
@@ -395,7 +378,6 @@ class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     filename: Path
     search_type: colrev.settings.SearchType
     search_parameters: dict
-    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
 
@@ -412,11 +394,6 @@ class PackageManager:
             "import_name": SearchSourcePackageEndpointInterface,
             "custom_class": "CustomSearchSource",
             "operation_name": "source_operation",
-        },
-        PackageEndpointType.load_conversion: {
-            "import_name": LoadConversionPackageEndpointInterface,
-            "custom_class": "CustomLoad",
-            "operation_name": "load_operation",
         },
         PackageEndpointType.prep: {
             "import_name": PrepPackageEndpointInterface,
@@ -484,6 +461,9 @@ class PackageManager:
         self.__colrev_path = Path(colrev_spec.origin).parents[1]
         self.__package_endpoints_json_file = self.__colrev_path / Path(
             "colrev/template/package_endpoints.json"
+        )
+        self.__search_source_types_json_file = self.__colrev_path / Path(
+            "colrev/template/search_source_types.json"
         )
 
     def __load_package_endpoints_index(self) -> dict:
@@ -555,10 +535,6 @@ class PackageManager:
 
         if PackageEndpointType.search_source == package_type:
             package_details["properties"]["filename"] = {"type": "path"}
-            package_details["properties"]["load_conversion_package_endpoint"] = {
-                "type": "script",
-                "package_endpoint_type": "load_conversion",
-            }
 
         package_details = self.__replace_path_by_str(orig_dict=package_details)  # type: ignore
 
@@ -709,7 +685,7 @@ class PackageManager:
             packages_dict[package_identifier]["settings"] = selected_package
 
             # 1. Load built-in packages
-            if package_identifier.split(".")[0] == "colrev":
+            if not Path(package_identifier + ".py").is_file():
                 if package_identifier not in self.packages[package_type]:
                     raise colrev_exceptions.MissingDependencyError(
                         "Built-in dependency "
@@ -728,29 +704,19 @@ class PackageManager:
                     package_type=package_type, package_identifier=package_identifier
                 )
 
-            # 2. Load module packages
-            elif not Path(package_identifier + ".py").is_file():
-                try:
-                    packages_dict[package_identifier]["settings"] = selected_package
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = importlib.import_module(package_identifier)
-                    packages_dict[package_identifier][
-                        "custom_flag"
-                    ] = True  # pragma: no cover
-                except ModuleNotFoundError as exc:
-                    if ignore_not_available:
-                        print(f"Could not load {selected_package}")
-                        del packages_dict[package_identifier]
-                        continue
-                    raise colrev_exceptions.MissingDependencyError(
-                        "Dependency "
-                        f"{package_identifier} ({package_type}) not installed. "
-                        "Please install it\n  pip install "
-                        f"{package_identifier.split('.')[0]}"
-                    ) from exc
+            #     except ModuleNotFoundError as exc:
+            #         if ignore_not_available:
+            #             print(f"Could not load {selected_package}")
+            #             del packages_dict[package_identifier]
+            #             continue
+            #         raise colrev_exceptions.MissingDependencyError(
+            #             "Dependency "
+            #             f"{package_identifier} ({package_type}) not installed. "
+            #             "Please install it\n  pip install "
+            #             f"{package_identifier.split('.')[0]}"
+            #         ) from exc
 
-            # 3. Load custom packages in the directory
+            # 2. Load custom packages in the directory
             elif Path(package_identifier + ".py").is_file():
                 try:
                     # to import custom packages from the project dir
@@ -839,11 +805,92 @@ class PackageManager:
 
         return packages_dict
 
+    def __import_package_docs(self, docs_link: str, identifier: str) -> str:
+        extensions_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/extensions_index"
+        )
+        local_built_in_path = Path(__file__).parent.parent / Path("ops/built_in")
+
+        if (
+            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/"
+            in docs_link
+        ):
+            docs_link = docs_link.replace(
+                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in",
+                str(local_built_in_path),
+            )
+            output = parse_from_file(docs_link)
+        else:
+            return "NotImplemented"
+            # TODO: retreive through requests later?
+            # output = convert('# Title\n\nSentence.')
+
+        file_path = Path(f"{identifier}.rst")
+        target = extensions_index_path / file_path
+        with open(target, "w", encoding="utf-8") as file:
+            # TODO : at this point, we may add metadata
+            # (such as package status, authors, url etc.)
+            file.write(output)
+
+        return str(file_path)
+
+    def __write_docs_for_index(self, docs_for_index: dict) -> None:
+        extensions_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/extensions_index.rst"
+        )
+        extensions_index_path_content = extensions_index_path.read_text(
+            encoding="utf-8"
+        )
+        new_doc = []
+        # append header
+        for line in extensions_index_path_content.split("\n"):
+            new_doc.append(line)
+            if ":caption:" in line:
+                new_doc.append("")
+                break
+
+        # append new links
+        for endpoint_type in [
+            "review_type",
+            "search_source",
+            "prep",
+            "prep_man",
+            "dedupe",
+            "prescreen",
+            "pdf_get",
+            "pdf_get_man",
+            "pdf_prep",
+            "pdf_prep_man",
+            "screen",
+            "data",
+        ]:
+            new_doc.append("")
+            new_doc.append(endpoint_type)
+            new_doc.append("-----------------------------")
+            new_doc.append("")
+
+            new_doc.append(".. toctree::")
+            new_doc.append("   :maxdepth: 1")
+            new_doc.append("")
+
+            doc_items = docs_for_index[endpoint_type]
+            for doc_item in sorted(doc_items, key=lambda d: d["identifier"]):
+                if doc_item == "NotImplemented":
+                    print(doc_item["path"])
+                    continue
+                new_doc.append(f"   extensions_index/{doc_item['path']}")
+
+        with open(extensions_index_path, "w", encoding="utf-8") as file:
+            for line in new_doc:
+                file.write(line + "\n")
+
     def __add_package_endpoints(
         self,
         *,
+        selected_package: str,
         package_endpoints_json: dict,
         package_endpoints: dict,
+        docs_for_index: dict,
         package_status: dict,
     ) -> None:
         for endpoint_type, endpoint_list in package_endpoints_json.items():
@@ -856,6 +903,11 @@ class PackageManager:
             )
             print(f" load {endpoint_type}: \n -  {package_list}")
             for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
+                if (
+                    not endpoint_item["package_endpoint_identifier"].split(".")[0]
+                    == selected_package
+                ):
+                    continue
                 self.packages[PackageEndpointType[endpoint_type]][
                     endpoint_item["package_endpoint_identifier"]
                 ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
@@ -908,16 +960,61 @@ class PackageManager:
                 # In separate packages, we the main readme.md file should be used
                 code_link = code_link[: code_link.rfind("/")]
                 code_link += ".md"
-                if hasattr(endpoint, "link"):
-                    link = endpoint.link
+                if hasattr(endpoint, "docs_link"):
+                    docs_link = endpoint.docs_link
                 else:
-                    link = code_link
-                # Note: link format for the sphinx docs
-                endpoint_item["short_description"] = (
-                    endpoint_item["short_description"] + f" (`instructions <{link}>`_)"
+                    docs_link = code_link
+
+                package_index_path = self.__import_package_docs(
+                    docs_link, endpoint_item["package_endpoint_identifier"]
                 )
 
-            endpoint_list += package_endpoints["endpoints"][endpoint_type]
+                item = {
+                    "path": package_index_path,
+                    "short_description": endpoint_item["short_description"],
+                    "identifier": endpoint_item["package_endpoint_identifier"],
+                }
+                try:
+                    docs_for_index[endpoint_type].append(item)
+                except KeyError:
+                    docs_for_index[endpoint_type] = [item]
+
+                # Note: link format for the sphinx docs
+                endpoint_item["short_description"] = (
+                    endpoint_item["short_description"]
+                    + " (:doc:`instructions </resources/extensions_index/"
+                    + f"{endpoint_item['package_endpoint_identifier']}>`)"
+                )
+                if endpoint_type == "search_source":
+                    endpoint_item["search_types"] = [
+                        x.value for x in endpoint.search_types
+                    ]
+
+            endpoint_list += [
+                x
+                for x in package_endpoints["endpoints"][endpoint_type]
+                if x["package_endpoint_identifier"].split(".")[0] == selected_package
+            ]
+
+    def __extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
+        search_source_types: typing.Dict[str, list] = {}
+        for search_source_type in colrev.settings.SearchType:
+            if search_source_type.value not in search_source_types:
+                search_source_types[search_source_type.value] = []
+            for search_source in package_endpoints_json["search_source"]:
+                if search_source_type.value in search_source["search_types"]:
+                    search_source_types[search_source_type.value].append(search_source)
+
+        for key in search_source_types:
+            search_source_types[key] = sorted(
+                search_source_types[key],
+                key=lambda d: d["package_endpoint_identifier"],
+            )
+
+        json_object = json.dumps(search_source_types, indent=4)
+        with open(self.__search_source_types_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
 
     def __load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
@@ -954,10 +1051,13 @@ class PackageManager:
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
         }
+        docs_for_index: typing.Dict[str, list] = {}
+
         for package in packages:
             print(f'Loading package endpoints from {package["module"]}')
             module_spec = importlib.util.find_spec(package["module"])
-            endpoints_path = Path(module_spec.origin).parents[1] / Path(  # type:ignore
+
+            endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
                 ".colrev_endpoints.json"
             )
             if not endpoints_path.is_file():  # pragma: no cover
@@ -972,11 +1072,15 @@ class PackageManager:
                 continue
 
             self.__add_package_endpoints(
+                selected_package=package["module"],
                 package_endpoints_json=package_endpoints_json,
                 package_endpoints=package_endpoints,
+                docs_for_index=docs_for_index,
                 package_status=package_status,
             )
-
+            self.__extract_search_source_types(
+                package_endpoints_json=package_endpoints_json
+            )
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(
                 package_endpoints_json[key],
@@ -994,3 +1098,101 @@ class PackageManager:
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+        self.__write_docs_for_index(docs_for_index)
+
+    def add_endpoint_for_operation(
+        self,
+        *,
+        operation: colrev.operation.Operation,
+        package_identifier: str,
+        params: str,
+        prompt_on_same_source: bool = True,
+    ) -> None:
+        """Add a package_endpoint"""
+
+        settings = operation.review_manager.settings
+        package_type_dict = {
+            colrev.operation.OperationsType.search: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.search_source,
+                "endpoint_location": settings.sources,
+            },
+            colrev.operation.OperationsType.prep: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.prep,
+                "endpoint_location": settings.prep.prep_rounds[
+                    0
+                ].prep_package_endpoints,
+            },
+            colrev.operation.OperationsType.prep_man: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.prep_man,
+                "endpoint_location": settings.prep.prep_man_package_endpoints,
+            },
+            colrev.operation.OperationsType.dedupe: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.dedupe,
+                "endpoint_location": settings.dedupe.dedupe_package_endpoints,
+            },
+            colrev.operation.OperationsType.prescreen: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.prescreen,
+                "endpoint_location": settings.prescreen.prescreen_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_get: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get,
+                "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_get_man: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+                "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_prep: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep,
+                "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
+            },
+            colrev.operation.OperationsType.pdf_prep_man: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+                "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
+            },
+            colrev.operation.OperationsType.screen: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.screen,
+                "endpoint_location": settings.screen.screen_package_endpoints,
+            },
+            colrev.operation.OperationsType.data: {
+                "package_type": colrev.env.package_manager.PackageEndpointType.data,
+                "endpoint_location": settings.data.data_package_endpoints,
+            },
+        }
+
+        package_type = package_type_dict[operation.type]["package_type"]
+        endpoints = package_type_dict[operation.type]["endpoint_location"]
+
+        registered_endpoints = [
+            e["endpoint"] if isinstance(e, dict) else e.endpoint for e in endpoints  # type: ignore
+        ]
+        if package_identifier in registered_endpoints and prompt_on_same_source:
+            operation.review_manager.logger.warning(
+                f"Package {package_identifier} already in {endpoints}"
+            )
+            if "y" != input("Continue [y/n]?"):
+                return
+
+        operation.review_manager.logger.info(
+            f"{colors.GREEN}Add {operation.type} package:{colors.END} {package_identifier}"
+        )
+
+        endpoint_dict = self.load_packages(
+            package_type=package_type,  # type: ignore
+            selected_packages=[{"endpoint": package_identifier}],
+            operation=operation,
+            instantiate_objects=False,
+        )
+
+        e_class = endpoint_dict[package_identifier]
+        if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
+            add_package = e_class.add_endpoint(operation=operation, params=params)  # type: ignore
+        else:
+            add_package = {"endpoint": package_identifier}
+            endpoints.append(add_package)  # type: ignore
+
+        operation.review_manager.save_settings()
+        operation.review_manager.create_commit(
+            msg=f"Add {operation.type} {package_identifier}",
+        )

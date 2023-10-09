@@ -46,7 +46,7 @@ class Corrections:
         "colrev_origin",
         "colrev_data_provenance",
         "colrev_masterdata_provenance",
-        "sem_scholar_id",
+        "colrev.semantic_scholar.id",
         "cited_by",
         "abstract",
         "pages",
@@ -82,8 +82,8 @@ class Corrections:
             original_record.pop(k, None)
             corrected_record.pop(k, None)
 
-        # if "dblp_key" in corrected_record:
-        #     del corrected_record["dblp_key"]
+        # if "colrev.dblp.dblp_key" in corrected_record:
+        #     del corrected_record["colrev.dblp.dblp_key"]
 
     def __create_change_item(
         self,
@@ -133,12 +133,18 @@ class Corrections:
         if len(corrected_record.get("colrev_origin", [])) > len(
             original_record.get("colrev_origin", [])
         ):
-            if "dblp_key" in corrected_record and "dblp_key" in original_record:
-                if corrected_record["dblp_key"] != original_record["dblp_key"]:
+            if (
+                "colrev.dblp.dblp_key" in corrected_record
+                and "colrev.dblp.dblp_key" in original_record
+            ):
+                if (
+                    corrected_record["colrev.dblp.dblp_key"]
+                    != original_record["colrev.dblp.dblp_key"]
+                ):
                     selected_change_items = {  # type: ignore
                         "merge": [
-                            corrected_record["dblp_key"],
-                            original_record["dblp_key"],
+                            corrected_record["colrev.dblp.dblp_key"],
+                            original_record["colrev.dblp.dblp_key"],
                         ]
                     }
             # else:

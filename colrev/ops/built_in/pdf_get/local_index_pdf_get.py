@@ -30,6 +30,11 @@ class LocalIndexPDFGet(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
 
+    docs_link = (
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
+        + "colrev/ops/built_in/search_sources/local_index.md"
+    )
+
     def __init__(
         self,
         *,
@@ -56,7 +61,7 @@ class LocalIndexPDFGet(JsonSchemaMixin):
             record.update_field(
                 key="file", value=str(retrieved_record["file"]), source="local_index"
             )
-            pdf_get_operation.import_file(record=record)
+            pdf_get_operation.import_pdf(record=record)
             if "fulltext" in retrieved_record:
                 try:
                     record.get_tei_filename().write_text(retrieved_record["fulltext"])

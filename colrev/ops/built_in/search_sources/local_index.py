@@ -18,6 +18,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
@@ -31,17 +32,18 @@ import colrev.ui_cli.cli_colors as colors
 )
 @dataclass
 class LocalIndexSearchSource(JsonSchemaMixin):
-    """Performs a search in the LocalIndex"""
+    """LocalIndex"""
 
     # pylint: disable=too-many-instance-attributes
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "curation_ID"
-    search_type = colrev.settings.SearchType.OTHER
-    api_search_supported = True
+    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
+    endpoint = "colrev.local_index"
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/local_index.md"
     )
@@ -58,7 +60,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         "issue",
         "author",
         "doi",
-        "dblp_key",
+        "colrev.dblp.dblp_key",
         "url",
     ]
 
@@ -85,11 +87,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 self.search_source = li_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
-                    endpoint="colrev.local_index",
+                    endpoint=self.endpoint,
                     filename=self.__local_index_md_filename,
-                    search_type=colrev.settings.SearchType.OTHER,
+                    search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
-                    load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
                     comment="",
                 )
 
@@ -100,16 +101,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.local_index = source_operation.review_manager.get_local_index()
         self.review_manager = source_operation.review_manager
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        assert source.search_type in self.search_types
 
         # if "query" not in source.search_parameters:
         # Note :  for md-sources, there is no query parameter.
@@ -135,13 +132,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             #         f"Source missing query/query search_parameter ({source.filename})"
             #     )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_parameters
         query = params["query"]
+
+        # TODO : generally prefix with SQL fields
+        if not any(x in query for x in ["title", "abstract"]):
+            query = f'title LIKE "%{query}%"'
 
         returned_records = self.local_index.search(query=query)
 
@@ -161,13 +160,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return records_to_import
 
-    def __run_md_search_update(
+    def __run_md_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
-        local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
             feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
@@ -195,31 +193,25 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
 
-            changed = search_operation.update_existing_record(
+            local_index_feed.update_existing_record(
                 records=records,
                 record_dict=retrieved_record_dict,
                 prev_record_dict_version=prev_record_dict_version,
                 source=self.search_source,
                 update_time_variant_fields=True,
             )
-            # Note : changed refers to the data/records.bib.
-            # Records that are not yet imported do not count.
-            if changed:
-                local_index_feed.nr_changed += 1
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
-        search_operation.review_manager.dataset.save_records_dict(records=records)
-        search_operation.review_manager.dataset.add_record_changes()
+        self.review_manager.dataset.save_records_dict(records=records)
 
-    def __run_parameter_search(
+    def __run_api_search(
         self,
         *,
-        search_operation: colrev.ops.search.Search,
-        local_index_feed: colrev.ops.search.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
         rerun: bool,
     ) -> None:
-        records = search_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for retrieved_record_dict in self.__retrieve_from_index():
             try:
@@ -237,45 +229,46 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
             if added:
-                local_index_feed.nr_added += 1
+                self.review_manager.logger.info(
+                    " retrieve " + retrieved_record_dict["ID"]
+                )
 
             else:
-                changed = search_operation.update_existing_record(
+                local_index_feed.update_existing_record(
                     records=records,
                     record_dict=retrieved_record_dict,
                     prev_record_dict_version=prev_record_dict_version,
                     source=self.search_source,
                     update_time_variant_fields=rerun,
                 )
-                if changed:
-                    local_index_feed.nr_changed += 1
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of local-index"""
 
+        self.__validate_source()
+
         local_index_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.is_md_source() or self.search_source.is_quasi_md_source():
-            self.__run_md_search_update(
-                search_operation=search_operation,
-                local_index_feed=local_index_feed,
-            )
+        if self.search_source.search_type == colrev.settings.SearchType.MD:
+            self.__run_md_search(local_index_feed=local_index_feed)
 
-        else:
-            self.__run_parameter_search(
-                search_operation=search_operation,
+        elif self.search_source.search_type in [
+            colrev.settings.SearchType.API,
+            colrev.settings.SearchType.TOC,
+        ]:
+            self.__run_api_search(
                 local_index_feed=local_index_feed,
                 rerun=rerun,
             )
+        else:
+            raise NotImplementedError
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -289,32 +282,46 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        filename = search_operation.get_unique_filename(
-            file_path_string=f"local_index_{query}".replace("%", "").replace("'", "")
+        if params is None:
+            add_source = operation.add_interactively(endpoint=cls.endpoint)
+            return add_source
+
+        filename = operation.get_unique_filename(
+            file_path_string=f"local_index_{params}".replace("%", "").replace("'", "")
         )
         add_source = colrev.settings.SearchSource(
-            endpoint="colrev.local_index",
+            endpoint=cls.endpoint,
             filename=filename,
             search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": query},
-            load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+            search_parameters={"query": params},
             comment="",
         )
         return add_source
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for local-index"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
@@ -419,6 +426,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 merging_record=retrieved_record,
                 default_source=default_source,
             )
+            # If volume/number are no longer in the CURATED record
+            if "number" in record.data and "number" not in retrieved_record.data:
+                del record.data["number"]
+            if "volume" in record.data and "volume" not in retrieved_record.data:
+                del record.data["volume"]
+
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
             if record.data.get("prescreen_exclusion", "NA") == "retracted":
                 record.prescreen_exclude(reason="retracted")
@@ -457,10 +470,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
-
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
-            # Already linked to a local-index record
-            return record
 
         retrieved_record = self.__retrieve_record_from_local_index(
             record=record,
@@ -747,7 +756,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # deal with remove/merge
 
         check_operation.review_manager.dataset.save_records_dict(records=records)
-        check_operation.review_manager.dataset.add_record_changes()
         check_operation.review_manager.create_commit(
             msg=f"Update {record_dict['ID']}", script_call="colrev push"
         )

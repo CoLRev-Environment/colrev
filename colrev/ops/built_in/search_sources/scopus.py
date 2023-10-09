@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -24,16 +24,17 @@ import colrev.record
 )
 @dataclass
 class ScopusSearchSource(JsonSchemaMixin):
-    """SearchSource for scopus"""
+    """Scopus"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    endpoint = "colrev.scopus"
     source_identifier = "url"
-    search_type = colrev.settings.SearchType.DB
-    api_search_supported = False
+    search_types = [colrev.settings.SearchType.DB]
+
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Scopus"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/scopus.md"
     )
@@ -61,41 +62,22 @@ class ScopusSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
-        """Validate the SearchSource (parameters etc.)"""
-
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
-
-        if "query_file" not in source.search_parameters:
-            print(
-                f"Warning: Source missing query_file search_parameter ({source.filename})"
-            )
-        else:
-            if not Path(source.search_parameters["query_file"]).is_file():
-                raise colrev_exceptions.InvalidQueryException(
-                    f"File does not exist: query_file {source.search_parameters['query_file']} "
-                    f"for ({source.filename})"
-                )
-
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
-
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of Scopus"""
+
+        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
+        #     if self.review_manager.in_ci_environment():
+        #         raise colrev_exceptions.SearchNotAutomated(
+        #             "DB search for Scopus not automated."
+        #         )
 
     def get_masterdata(
         self,
@@ -107,54 +89,66 @@ class ScopusSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for Scopus"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Scopus"""
 
+        if "conference" == record.data["ENTRYTYPE"]:
+            record.data["ENTRYTYPE"] = "inproceedings"
+
         if "book" == record.data["ENTRYTYPE"]:
             if "journal" in record.data and "booktitle" not in record.data:
                 record.rename_field(key="title", new_key="booktitle")
                 record.rename_field(key="journal", new_key="title")
 
-        if "document_type" in record.data:
-            if record.data["document_type"] == "Conference Paper":
+        if "colrev.scopus.document_type" in record.data:
+            if record.data["colrev.scopus.document_type"] == "Conference Paper":
                 record.change_entrytype(
                     new_entrytype="inproceedings", qm=self.quality_model
                 )
 
-            elif record.data["document_type"] == "Conference Review":
+            elif record.data["colrev.scopus.document_type"] == "Conference Review":
                 record.change_entrytype(
                     new_entrytype="proceedings", qm=self.quality_model
                 )
 
-            elif record.data["document_type"] == "Article":
+            elif record.data["colrev.scopus.document_type"] == "Article":
                 record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
-            record.remove_field(key="document_type")
+            record.remove_field(key="colrev.scopus.document_type")
 
-        if "Start_Page" in record.data and "End_Page" in record.data:
-            if record.data["Start_Page"] != "nan" and record.data["End_Page"] != "nan":
+        if (
+            "colrev.scopus.Start_Page" in record.data
+            and "colrev.scopus.End_Page" in record.data
+        ):
+            if (
+                record.data["colrev.scopus.Start_Page"] != "nan"
+                and record.data["colrev.scopus.End_Page"] != "nan"
+            ):
                 record.data["pages"] = (
-                    record.data["Start_Page"] + "--" + record.data["End_Page"]
+                    record.data["colrev.scopus.Start_Page"]
+                    + "--"
+                    + record.data["colrev.scopus.End_Page"]
                 )
                 record.data["pages"] = record.data["pages"].replace(".0", "")
-                record.remove_field(key="Start_Page")
-                record.remove_field(key="End_Page")
+                record.remove_field(key="colrev.scopus.Start_Page")
+                record.remove_field(key="colrev.scopus.End_Page")
 
-        if "note" in record.data:
-            if "cited By " in record.data["note"]:
-                record.rename_field(key="note", new_key="cited_by")
+        if "colrev.scopus.note" in record.data:
+            if "cited By " in record.data["colrev.scopus.note"]:
+                record.rename_field(key="colrev.scopus.note", new_key="cited_by")
                 record.data["cited_by"] = record.data["cited_by"].replace(
                     "cited By ", ""
                 )
@@ -162,7 +156,6 @@ class ScopusSearchSource(JsonSchemaMixin):
         if "author" in record.data:
             record.data["author"] = record.data["author"].replace("; ", " and ")
 
-        record.remove_field(key="source")
-        record.remove_field(key="art_number")
+        record.remove_field(key="colrev.scopus.source")
 
         return record

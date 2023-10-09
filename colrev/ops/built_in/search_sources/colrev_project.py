@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 
@@ -31,16 +32,17 @@ import colrev.record
 )
 @dataclass
 class ColrevProjectSearchSource(JsonSchemaMixin):
-    """Performs a search in a CoLRev project"""
+    """CoLRev projects"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
-    search_type = colrev.settings.SearchType.OTHER
-    api_search_supported = True
+    search_types = [colrev.settings.SearchType.API]
+    endpoint = "colrev.colrev_project"
+
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "CoLRev project"
-    link = (
+    docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/colrev_project.md"
     )
@@ -51,16 +53,11 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
 
-    def validate_source(
-        self,
-        search_operation: colrev.ops.search.Search,
-        source: colrev.settings.SearchSource,
-    ) -> None:
+    def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
+        source = self.search_source
 
-        search_operation.review_manager.logger.debug(
-            f"Validate SearchSource {source.filename}"
-        )
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -71,27 +68,33 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 "url field required in search_parameters"
             )
 
-        search_operation.review_manager.logger.debug(
-            f"SearchSource {source.filename} validated"
-        )
+        self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     @classmethod
     def add_endpoint(
-        cls, search_operation: colrev.ops.search.Search, query: str
+        cls,
+        operation: colrev.ops.search.Search,
+        params: str,
+        filename: typing.Optional[Path],
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if query.startswith("url="):
-            filename = search_operation.get_unique_filename(
-                file_path_string=query.split("/")[-1]
+
+        if params is None:
+            source = operation.add_interactively(endpoint=cls.endpoint)
+            return source
+
+        if params.startswith("url="):
+            filename = operation.get_unique_filename(
+                file_path_string=params.split("/")[-1]
             )
-            return colrev.settings.SearchSource(
-                endpoint="colrev.colrev_project",
+            add_source = colrev.settings.SearchSource(
+                endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.OTHER,
-                search_parameters={"scope": {"url": query[4:]}},
-                load_conversion_package_endpoint={"endpoint": "colrev.bibtex"},
+                search_parameters={"scope": {"url": params[4:]}},
                 comment="",
             )
+            return add_source
 
         raise NotImplementedError
 
@@ -123,17 +126,17 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         shutil.rmtree(temp_path)
         return records_to_import
 
-    def run_search(
-        self, search_operation: colrev.ops.search.Search, rerun: bool
-    ) -> None:
+    def run_search(self, rerun: bool) -> None:
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
         # pdf_get_operation =
         # self.review_manager.get_pdf_get_operation(notify_state_transition_operation=False)
 
+        self.__validate_source()
+
         colrev_project_search_feed = self.search_source.get_feed(
-            review_manager=search_operation.review_manager,
+            review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
@@ -153,8 +156,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             "grobid-version",
         ]
 
-        search_operation.review_manager.logger.info("Importing selected records")
-        records = search_operation.review_manager.dataset.load_records_dict()
+        self.review_manager.logger.info("Importing selected records")
+        records = self.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
@@ -186,7 +189,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #         / record_to_import["file"]
             #     )
 
-            #     pdf_get_operation.import_file(
+            #     pdf_get_operation.import_pdf(
             #         record=colrev.record.Record(data=record_to_import)
             #     )
 
@@ -199,11 +202,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
             try:
                 colrev_project_search_feed.set_id(record_dict=record_to_import)
-                added = colrev_project_search_feed.add_record(
+                colrev_project_search_feed.add_record(
                     record=colrev.record.Record(data=record_to_import),
                 )
-                if added:
-                    colrev_project_search_feed.nr_added += 1
+
             except colrev_exceptions.NotFeedIdentifiableException:
                 print("not identifiable")
                 continue
@@ -231,15 +233,23 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         return result
 
-    def load_fixes(
-        self,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        records: typing.Dict,
-    ) -> dict:
-        """Load fixes for CoLRev projects"""
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
 
-        return records
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                }
+
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

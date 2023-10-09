@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import typing
 from importlib.metadata import version
@@ -127,8 +128,27 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_8_4,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.9.0"),
+                "target_version": CoLRevVersion("0.9.1"),
+                "script": self.__migrate_0_9_1,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.9.2"),
+                "target_version": CoLRevVersion("0.9.3"),
+                "script": self.__migrate_0_9_3,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.10.0"),
+                "target_version": CoLRevVersion("0.10.1"),
+                "script": self.__migrate_0_10_1,
+                "released": True,
+            },
         ]
-
+        print(f"installed_colrev_version: {installed_colrev_version}")
+        print(f"settings_version: {settings_version}")
         # Note: we should always update the colrev_version in settings.json because the
         # checker.__check_software requires the settings version and
         # the installed version to be identical
@@ -139,14 +159,13 @@ class Upgrade(colrev.operation.Operation):
             migrator = migration_scripts.pop(0)
             # Activate run_migration for the current settings_version
             if (
-                settings_version == migrator["version"]
+                migrator["target_version"] >= settings_version
             ):  # settings_version == migrator["version"] or
                 run_migration = True
             if not run_migration:
                 continue
-
             if installed_colrev_version == settings_version and migrator["released"]:
-                return
+                break
 
             migration_script = migrator["script"]
             self.review_manager.logger.info(
@@ -158,6 +177,10 @@ class Upgrade(colrev.operation.Operation):
             updated = migration_script()
             if not updated:
                 continue
+
+        if not run_migration:
+            print("migration not run")
+            return
 
         settings = self.__load_settings_dict()
         settings["project"]["colrev_version"] = str(installed_colrev_version)
@@ -299,7 +322,6 @@ class Upgrade(colrev.operation.Operation):
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         return self.repo.is_dirty()
 
@@ -364,7 +386,6 @@ class Upgrade(colrev.operation.Operation):
                     "colrev_status"
                 ] = colrev.record.RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
         return self.repo.is_dirty()
 
     def __migrate_0_8_4(self) -> bool:
@@ -374,12 +395,133 @@ class Upgrade(colrev.operation.Operation):
                 continue
             ed_val = record["colrev_data_provenance"]["editor"]
             del record["colrev_data_provenance"]["editor"]
-            record["colrev_masterdata_provenance"]["editor"] = ed_val
+            if "CURATED" not in record["colrev_masterdata_provenance"]:
+                record["colrev_masterdata_provenance"]["editor"] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.dataset.add_record_changes()
 
         return self.repo.is_dirty()
+
+    def __migrate_0_9_1(self) -> bool:
+        settings = self.__load_settings_dict()
+        for source in settings["sources"]:
+            if "load_conversion_package_endpoint" in source:
+                del source["load_conversion_package_endpoint"]
+        self.__save_settings(settings)
+        return self.repo.is_dirty()
+
+    def __migrate_0_9_3(self) -> bool:
+        settings = self.__load_settings_dict()
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev.crossref":
+                if "issn" not in source["search_parameters"].get("scope", {}):
+                    continue
+                if isinstance(source["search_parameters"]["scope"]["issn"], str):
+                    source["search_parameters"]["scope"]["issn"] = [
+                        source["search_parameters"]["scope"]["issn"]
+                    ]
+
+        self.__save_settings(settings)
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
+            # TODO : call methods in repare.py
+
+            if "pubmedid" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="pubmedid", new_key="colrev.pubmed.pubmedid")
+
+            if "pii" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="pii", new_key="colrev.pubmed.pii")
+
+            if "pmc" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="pmc", new_key="colrev.pubmed.pmc")
+
+            if "label_included" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="label_included",
+                    new_key="colrev.synergy_datasets.label_included",
+                )
+            if "method" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="method", new_key="colrev.synergy_datasets.method"
+                )
+
+            if "dblp_key" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="dblp_key", new_key="colrev.dblp.dblp_key")
+            if "wos_accession_number" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="wos_accession_number",
+                    new_key="colrev.web_of_science.unique-id",
+                )
+            if "sem_scholar_id" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(
+                    key="sem_scholar_id", new_key="colrev.semantic_scholar.id"
+                )
+
+            # TODO : update open_alex source
+            if "openalex_id" in record_dict:
+                record = colrev.record.Record(data=record_dict)
+                record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
+
+        self.review_manager.dataset.save_records_dict(records=records)
+        return self.repo.is_dirty()
+
+    def __migrate_0_10_1(self) -> bool:
+        prep_replacements = {
+            "colrev.open_alex_prep": "colrev.open_alex",
+            "colrev.get_masterdata_from_dblp": "colrev.dblp",
+            "colrev.crossref_metadata_prep": "colrev.crossref_metadata_prep",
+            "colrev.get_masterdata_from_crossref": "colrev.crossref",
+            "colrev.get_masterdata_from_europe_pmc": "colrev.europe_pmc",
+            "colrev.get_masterdata_from_pubmed": "colrev.pubmed",
+            "colrev.get_masterdata_from_open_library": "colrev.open_library",
+            "colrev.curation_prep": "colrev.colrev_curation",
+            "colrev.get_masterdata_from_local_index": "colrev.local_index",
+        }
+
+        settings = self.__load_settings_dict()
+        for prep_round in settings["prep"]["prep_rounds"]:
+            for prep_package in prep_round["prep_package_endpoints"]:
+                for old, new in prep_replacements.items():
+                    if prep_package["endpoint"] == old:
+                        prep_package["endpoint"] = new
+        for source in settings["sources"]:
+            if source["endpoint"] == "colrev.pdfs_dir":
+                source["endpoint"] = "colrev.files_dir"
+            if (
+                source["endpoint"] == "colrev.dblp"
+                and "scope" in source["search_parameters"]
+            ):
+                if "query" in source["search_parameters"]:
+                    source["search_type"] = "API"
+                else:
+                    source["search_type"] = "TOC"
+
+            if (
+                source["endpoint"] == "colrev.crossref"
+                and "scope" in source["search_parameters"]
+            ):
+                if "query" in source["search_parameters"]:
+                    source["search_type"] = "API"
+                else:
+                    source["search_type"] = "TOC"
+
+            if "data/search/md_" in source["filename"]:
+                source["search_type"] = "MD"
+            if source["search_type"] == "PDFS":
+                source["search_type"] = "FILES"
+
+        self.__save_settings(settings)
+
+        return False
 
 
 # Note: we can ask users to make decisions (when defaults are not clear)
@@ -392,22 +534,43 @@ class CoLRevVersion:
     def __init__(self, version_string: str) -> None:
         if "+" in version_string:
             version_string = version_string[: version_string.find("+")]
-
-        self.major = version_string[: version_string.find(".")]
-        self.minor = version_string[
-            version_string.find(".") + 1 : version_string.rfind(".")
-        ]
-        self.patch = version_string[version_string.rfind(".") + 1 :]
+        assert re.match(r"\d+\.\d+\.\d+$", version_string)
+        self.major = int(version_string[: version_string.find(".")])
+        self.minor = int(
+            version_string[version_string.find(".") + 1 : version_string.rfind(".")]
+        )
+        self.patch = int(version_string[version_string.rfind(".") + 1 :])
 
     def __eq__(self, other) -> bool:  # type: ignore
-        return str(self) == str(other)
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+        )
 
     def __lt__(self, other) -> bool:  # type: ignore
         if self.major < other.major:
             return True
-        if self.minor < other.minor:
+        if self.major == other.major and self.minor < other.minor:
             return True
-        if self.patch < other.patch:
+        if (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch < other.patch
+        ):
+            return True
+        return False
+
+    def __ge__(self, other) -> bool:  # type: ignore
+        if self.major > other.major:
+            return True
+        if self.major == other.major and self.minor > other.minor:
+            return True
+        if (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch > other.patch
+        ):
             return True
         return False
 

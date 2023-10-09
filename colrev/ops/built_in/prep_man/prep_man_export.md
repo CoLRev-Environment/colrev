@@ -1,4 +1,6 @@
-# PrepMan Export
+# Export prep-man
+
+## prep-man
 
 This package provides functionality aimed at
 - exporting records that need to be prepared,

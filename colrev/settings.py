@@ -24,6 +24,7 @@ import colrev.exceptions as colrev_exceptions
 
 if TYPE_CHECKING:
     import colrev.review_manager
+    import colrev.ops.search_feed
 
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
@@ -119,9 +120,9 @@ class ProjectSettings(JsonSchemaMixin):
     auto_upgrade: bool
 
     def __str__(self) -> str:
-        project_str = f"Review ({self.review_type}):"
+        project_str = f"- review ({self.review_type}):"
         if self.title:
-            project_str += f" {self.title}"
+            project_str += f"\n- title: {self.title}"
         return project_str
 
 
@@ -131,12 +132,16 @@ class ProjectSettings(JsonSchemaMixin):
 class SearchType(Enum):
     """Type of search source"""
 
-    DB = "DB"
+    API = "API"  # Keyword-searches
+    DB = "DB"  # search-results-file with search query
     TOC = "TOC"
+    # Note : backward/forward searches are based on APIs/tools by definition.
+    # otherwise, use OTHER
     BACKWARD_SEARCH = "BACKWARD_SEARCH"
     FORWARD_SEARCH = "FORWARD_SEARCH"
-    PDFS = "PDFS"
+    FILES = "FILES"  # Replaces PDFS
     OTHER = "OTHER"
+    MD = "MD"
 
     @classmethod
     def get_field_details(cls) -> typing.Dict:
@@ -159,23 +164,33 @@ class SearchSource(JsonSchemaMixin):
     """Search source settings"""
 
     # pylint: disable=too-many-instance-attributes
-
     endpoint: str
     filename: Path
     search_type: SearchType
     search_parameters: dict
-    load_conversion_package_endpoint: dict
     comment: typing.Optional[str]
 
-    def get_corresponding_bib_file(self) -> Path:
-        """Get the corresponding bib file"""
-
-        return self.filename.with_suffix(".bib")
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        filename: Path,
+        search_type: SearchType,
+        search_parameters: dict,
+        comment: typing.Optional[str],
+    ) -> None:
+        self.endpoint = endpoint
+        assert filename.parent.name == "search"
+        assert filename.parent.parent.name == "data"
+        self.filename = filename
+        self.search_type = search_type
+        self.search_parameters = search_parameters
+        self.comment = comment
 
     def setup_for_load(
         self,
         *,
-        record_list: typing.List[typing.Dict],
+        source_records_list: typing.List[typing.Dict],
         imported_origins: typing.List[str],
     ) -> None:
         """Set the SearchSource up for the load process (initialize statistics)"""
@@ -184,15 +199,16 @@ class SearchSource(JsonSchemaMixin):
         # attributes are temporary. They should not be
         # saved to settings.json.
 
-        self.to_import = len(record_list)
+        self.to_import = len(source_records_list)
         self.imported_origins: typing.List[str] = imported_origins
         self.len_before = len(imported_origins)
-        self.source_records_list: typing.List[typing.Dict] = record_list
+        self.source_records_list: typing.List[typing.Dict] = source_records_list
 
     def get_origin_prefix(self) -> str:
         """Get the corresponding origin prefix"""
+        assert not any(x in str(self.filename.name) for x in [";", "/"])
         return (
-            str(self.get_corresponding_bib_file().name)
+            str(self.filename.name)
             .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")
             .lstrip("/")
         )
@@ -201,12 +217,6 @@ class SearchSource(JsonSchemaMixin):
         """Check whether the source is a metadata source (for preparation)"""
 
         return str(self.filename.name).startswith("md_")
-
-    def is_quasi_md_source(self) -> bool:
-        """Check whether the source is a quasi-metadata source
-        (when search files are added without search_parameters/queries)"""
-
-        return not bool(self.search_parameters)
 
     def get_dict(self) -> dict:
         """Get the dict of SearchSources (for endpoint initalization)"""
@@ -227,13 +237,13 @@ class SearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
-    ) -> colrev.ops.search.GeneralOriginFeed:
+    ) -> colrev.ops.search_feed.GeneralOriginFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
-        import colrev.ops.search
+        import colrev.ops.search_feed
 
-        return colrev.ops.search.GeneralOriginFeed(
+        return colrev.ops.search_feed.GeneralOriginFeed(
             review_manager=review_manager,
             search_source=self,
             source_identifier=source_identifier,
@@ -241,17 +251,31 @@ class SearchSource(JsonSchemaMixin):
         )
 
     def __str__(self) -> str:
-        optional_comment = ""
+        formatted_str = ""
+        if self.search_type == SearchType.MD:
+            formatted_str += "md: "
+        elif self.search_type == SearchType.FILES:
+            formatted_str += "files: "
+        elif self.search_type == SearchType.DB:
+            formatted_str += "db: "
+        elif self.search_type == SearchType.API:
+            formatted_str += "api: "
+        elif self.search_type == SearchType.OTHER:
+            formatted_str += "other: "
+        elif self.search_type == SearchType.BACKWARD_SEARCH:
+            formatted_str += "backward-search: "
+        elif self.search_type == SearchType.FORWARD_SEARCH:
+            formatted_str += "forward-search: "
+        elif self.search_type == SearchType.TOC:
+            formatted_str += "toc: "
+
+        formatted_str += f"{self.endpoint} >> {self.filename}"
+        if self.search_parameters:
+            formatted_str += f"\n   search parameters:   {self.search_parameters}"
         if self.comment:
-            optional_comment = f"\n   comment:             {self.comment}"
-        return (
-            f"{self.endpoint} (type: {self.search_type}, "
-            + f"filename: {self.filename})\n"
-            + f"   search parameters:   {self.search_parameters}"
-            # + "   load_conversion_package_endpoint:   "
-            # + f"{self.load_conversion_package_endpoint['endpoint']}"
-            + optional_comment
-        )
+            formatted_str += f"\n   comment:             {self.comment}"
+
+        return formatted_str
 
 
 @dataclass
@@ -261,7 +285,7 @@ class SearchSettings(JsonSchemaMixin):
     retrieve_forthcoming: bool
 
     def __str__(self) -> str:
-        return f" - retrieve_forthcoming: {self.retrieve_forthcoming}"
+        return f"- retrieve_forthcoming: {self.retrieve_forthcoming}"
 
 
 # Load
@@ -272,7 +296,7 @@ class LoadSettings(JsonSchemaMixin):
     """Load settings"""
 
     def __str__(self) -> str:
-        return " - TODO"
+        return ""
 
 
 # Prep
@@ -306,9 +330,9 @@ class PrepSettings(JsonSchemaMixin):
 
     def __str__(self) -> str:
         return (
-            " - prep_rounds:\n   - "
+            f"- fields_to_keep: {self.fields_to_keep}\n"
+            + "- prep_rounds:\n - endpoints:\n   - "
             + "\n   - ".join([str(prep_round) for prep_round in self.prep_rounds])
-            + f"\n - fields_to_keep: {self.fields_to_keep}"
         )
 
 
@@ -344,10 +368,13 @@ class DedupeSettings(JsonSchemaMixin):
     dedupe_package_endpoints: list
 
     def __str__(self) -> str:
+        endpoints_str = "- endpoints: []\n"
+        if self.dedupe_package_endpoints:
+            endpoints_str = "- endpoints:\n - " + "\n - ".join(
+                [s["endpoint"] for s in self.dedupe_package_endpoints]
+            )
         return (
-            f" - same_source_merges: {self.same_source_merges}\n"
-            + " - "
-            + ",".join([s["endpoint"] for s in self.dedupe_package_endpoints])
+            f"- same_source_merges: {self.same_source_merges.value}\n" + endpoints_str
         )
 
 
@@ -362,9 +389,12 @@ class PrescreenSettings(JsonSchemaMixin):
     prescreen_package_endpoints: list
 
     def __str__(self) -> str:
-        return "- " + ",".join(
-            [s["endpoint"] for s in self.prescreen_package_endpoints]
-        )
+        endpoints_str = "- endpoints: []\n"
+        if self.prescreen_package_endpoints:
+            endpoints_str = "- endpoints:\n - " + "\n - ".join(
+                [s["endpoint"] for s in self.prescreen_package_endpoints]
+            )
+        return endpoints_str
 
 
 # PDF get
@@ -404,11 +434,12 @@ class PDFGetSettings(JsonSchemaMixin):
     pdf_get_man_package_endpoints: list
 
     def __str__(self) -> str:
-        return (
-            f" - pdf_path_type: {self.pdf_path_type}"
-            + "\n - "
-            + ",".join([s["endpoint"] for s in self.pdf_get_package_endpoints])
-        )
+        endpoints_str = "- endpoints: []\n"
+        if self.pdf_get_man_package_endpoints:
+            endpoints_str = "- endpoints:\n - " + "\n - ".join(
+                [s["endpoint"] for s in self.pdf_get_package_endpoints]
+            )
+        return f"- pdf_path_type: {self.pdf_path_type.value}\n" + endpoints_str
 
 
 # PDF prep
@@ -425,9 +456,12 @@ class PDFPrepSettings(JsonSchemaMixin):
     pdf_prep_man_package_endpoints: list
 
     def __str__(self) -> str:
-        return "- " + "\n- ".join(
-            [s["endpoint"] for s in self.pdf_prep_package_endpoints]
-        )
+        endpoints_str = "- endpoints: []\n"
+        if self.pdf_prep_package_endpoints:
+            endpoints_str = "- endpoints:\n - " + "\n - ".join(
+                [s["endpoint"] for s in self.pdf_prep_package_endpoints]
+            )
+        return endpoints_str
 
 
 # Screen
@@ -477,9 +511,17 @@ class ScreenSettings(JsonSchemaMixin):
     screen_package_endpoints: list
 
     def __str__(self) -> str:
+        endpoints_str = "- endpoints: []\n"
+        if self.screen_package_endpoints:
+            endpoints_str = "- endpoints:\n - " + "\n - ".join(
+                [s["endpoint"] for s in self.screen_package_endpoints]
+            )
+        criteria_str = "- criteria: []"
         if self.criteria:
-            return " - " + "\n - ".join([str(c) for c in self.criteria])
-        return " -"
+            criteria_str = "- Criteria:\n - " + "\n - ".join(
+                [str(c) for c in self.criteria]
+            )
+        return endpoints_str + criteria_str
 
 
 # Data
@@ -492,7 +534,12 @@ class DataSettings(JsonSchemaMixin):
     data_package_endpoints: list
 
     def __str__(self) -> str:
-        return " - " + "\n- ".join([s["endpoint"] for s in self.data_package_endpoints])
+        endpoints_str = "- endpoints: []\n"
+        if self.data_package_endpoints:
+            endpoints_str = "- endpoints:\n - " + "\n - ".join(
+                [s["endpoint"] for s in self.data_package_endpoints]
+            )
+        return endpoints_str
 
 
 @dataclass
@@ -538,14 +585,22 @@ class Settings(JsonSchemaMixin):
         return False
 
     def __str__(self) -> str:
+        sources_str = (
+            "\n- "
+            + "\n- ".join([str(s) for s in self.sources if s.is_md_source()])
+            + "\n- "
+            + "\n- ".join([str(s) for s in self.sources if not s.is_md_source()])
+        )
+
         return (
             str(self.project)
             + "\nSearch\n"
             + str(self.search)
-            + "\nSources\n- "
-            + "\n- ".join([str(s) for s in self.sources])
-            + "\nLoad\n"
-            + str(self.load)
+            + "\nSources"
+            + sources_str
+            # Note : no settings yet
+            # + "\nLoad\n"
+            # + str(self.load)
             + "\nPreparation\n"
             + str(self.prep)
             + "\nDedupe\n"
@@ -582,10 +637,6 @@ class Settings(JsonSchemaMixin):
             schema = cls.json_schema()
 
         sdefs = schema["definitions"]
-        sdefs["SearchSource"]["properties"]["load_conversion_package_endpoint"] = {  # type: ignore
-            "package_endpoint_type": "load_conversion",
-            "type": "package_endpoint",
-        }
 
         # pylint: disable=unused-variable
         sdefs["PrepRound"]["properties"]["prep_package_endpoints"] = {  # type: ignore # noqa: F841
