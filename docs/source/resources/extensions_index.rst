@@ -35,6 +35,7 @@ search_source
    extensions_index/colrev.abi_inform_proquest.rst
    extensions_index/colrev.acm_digital_library.rst
    extensions_index/colrev.ais_library.rst
+   extensions_index/colrev.arxiv.rst
    extensions_index/colrev.colrev_project.rst
    extensions_index/colrev.crossref.rst
    extensions_index/colrev.dblp.rst

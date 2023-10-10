@@ -78,6 +78,7 @@ rispy = "^0.7.1"
 colrev-asreview = "^0.1.0"
 m2r = "^0.3.1"
 inquirer = "^3.1.3"
+feedparser = "^6.0.10"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2.3"

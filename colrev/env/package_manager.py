@@ -1188,6 +1188,8 @@ class PackageManager:
         )
 
         e_class = endpoint_dict[package_identifier]
+        # TODO : if params.startswith("http"): params_dict = {"url": params}
+        # TODO : should parameters generally be key-value pairs separated by ; ?
         if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
             if params:
                 if params.startswith("http"):
