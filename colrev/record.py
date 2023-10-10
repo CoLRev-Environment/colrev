@@ -462,12 +462,10 @@ class Record:
             if source != "":
                 self.data["colrev_masterdata_provenance"][key]["source"] = source
         else:
-            if key in self.identifying_field_keys:
-                if key in self.data.get("colrev_masterdata_provenance", {}):
-                    del self.data["colrev_masterdata_provenance"][key]
-            else:
-                if key in self.data.get("colrev_data_provenance", {}):
-                    del self.data["colrev_data_provenance"][key]
+            if key in self.data.get("colrev_masterdata_provenance", {}):
+                del self.data["colrev_masterdata_provenance"][key]
+            if key in self.data.get("colrev_data_provenance", {}):
+                del self.data["colrev_data_provenance"][key]
 
     def set_masterdata_complete(
         self, *, source: str, masterdata_repository: bool, replace_source: bool = True
