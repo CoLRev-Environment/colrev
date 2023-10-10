@@ -247,7 +247,9 @@ class ArXivSource:
         entry["abstract"] = entry.pop("summary")
         entry["abstract"] = entry["abstract"].replace("\n", " ").replace("\r", " ")
         if "arxiv_journal_ref" in entry:
-            entry["arxiv_journal_ref"] = entry["arxiv_journal_ref"].replace("\n", " ").replace("\r", " ")
+            entry["arxiv_journal_ref"] = (
+                entry["arxiv_journal_ref"].replace("\n", " ").replace("\r", " ")
+            )
         entry["title"] = entry["title"].replace("\n ", "")
         entry["title"] = entry["title"].replace("\n ", "")
         if "arxiv_doi" in entry:
