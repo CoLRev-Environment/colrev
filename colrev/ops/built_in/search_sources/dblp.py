@@ -183,18 +183,22 @@ class DBLPSearchSource(JsonSchemaMixin):
         return venue
 
     def __dblp_json_set_type(self, *, item: dict, session: requests.Session) -> None:
-        if item["type"] == "Withdrawn Items":
+        lpos = item["key"].find("/") + 1
+        rpos = item["key"].rfind("/")
+        ven_key = item["key"][lpos:rpos]
+
+        if "corr" == ven_key:
+            item["ENTRYTYPE"] = "techreport"
+
+        elif item["type"] == "Withdrawn Items":
             if item["key"][:8] == "journals":
                 item["type"] = "Journal Articles"
             if item["key"][:4] == "conf":
                 item["type"] = "Conference and Workshop Papers"
             item["warning"] = "Withdrawn (according to DBLP)"
 
-        if item["type"] == "Journal Articles":
+        elif item["type"] == "Journal Articles":
             item["ENTRYTYPE"] = "article"
-            lpos = item["key"].find("/") + 1
-            rpos = item["key"].rfind("/")
-            ven_key = item["key"][lpos:rpos]
             item["journal"] = self.__get_dblp_venue(
                 session=session,
                 venue_string=ven_key,
@@ -202,9 +206,6 @@ class DBLPSearchSource(JsonSchemaMixin):
             )
         elif item["type"] == "Conference and Workshop Papers":
             item["ENTRYTYPE"] = "inproceedings"
-            lpos = item["key"].find("/") + 1
-            rpos = item["key"].rfind("/")
-            ven_key = item["key"][lpos:rpos]
             item["booktitle"] = self.__get_dblp_venue(
                 session=session,
                 venue_string=ven_key,
@@ -660,9 +661,12 @@ class DBLPSearchSource(JsonSchemaMixin):
             for retrieved_record in self.__retrieve_dblp_records(
                 query=query,
             ):
+                retrieved_record.data[
+                    "colrev.dblp.dblp_key"
+                ] = retrieved_record.data.pop("dblp_key")
                 if "colrev.dblp.dblp_key" in record.data:
                     if (
-                        retrieved_record.data["dblp_key"]
+                        retrieved_record.data["colrev.dblp.dblp_key"]
                         != record.data["colrev.dblp.dblp_key"]
                     ):
                         continue
