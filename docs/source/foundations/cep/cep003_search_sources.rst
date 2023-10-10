@@ -1,4 +1,4 @@
-CEP 3: SearchSources
+CEP003 - SearchSources
 ====================================
 
 +----------------+------------------------------+
@@ -14,15 +14,16 @@ CEP 3: SearchSources
 Table of contents
 ------------------------------
 
-:any:`summary`
+:any:`abstract`
+
 :any:`search types`
+
 :any:`search parameters`
 
+.. _abstract:
 
-.. _summary:
-
-Summary
-----------------
+Abstract
+------------------------------
 
 The SearchSources are an integral part of CoLRev.
 They support different steps depending on whether the SearchSource supports file-based exports of search results and/or API-based searches:

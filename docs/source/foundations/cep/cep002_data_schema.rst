@@ -1,5 +1,5 @@
-CEP 2: Data standardization
-====================================
+CEP002 - Data schema
+===========================
 
 +----------------+------------------------------+
 | **Author**     | Carlo Tang, Gerit Wagner     |
@@ -11,24 +11,44 @@ CEP 2: Data standardization
 | **Discussion** | TODO : link-to-issue         |
 +----------------+------------------------------+
 
-CEP000 - CEP Purpose and Guidelines
-===================================
+Table of contents
+------------------------------
 
-What is a CEP?
---------------
+:any:`abstract`
 
-CEP stands for CoLRev Enhancement Proposal. A CEP is a design document
-providing information to the CoLRev community, or describing a new
-feature for CoLRev or its processes or environment. The CEP should
-provide a concise technical specification of the feature and a rationale
-for the feature. (inspired by PEP, Python Enhancment Propsals
-https://peps.python.org/pep-0001/)
+:any:`entrytypes`
 
-CEP001 - Colrev data schema
-===========================
+:any:`fields`
+
+:any:`schema mapping`
+
+:any:`test data`
+
+.. _abstract:
+
+Abstract
+------------------------------
+
+
+This document describes the major elements (or fields) found on the
+CoLRev display format for CoLRev records. Some elements (e.g., Comment
+In) are not mandatory and will not appear in every record. Other
+elements (e.g., Author, MeSH term, Registry Number) may appear multiple
+times in one record. Some of the elements on this list are searchable
+fields in PubMed. For searching instructions, see the Search Field Tags
+section of PubMed Help. This document is supplementary information, to
+be used in conjuction with PubMed Help.
+
+CoLRev XML data element descriptions are also available (There are
+additional fields in the XML data)???
+
+
+.. _entrytypes:
+
+ENTRYTYPEs
+------------------------------------------------
 
 ENTRYTYPEs and their respective required fields
-------------------------------------------------
 
 .. verlinken auf missing und inconsistent with entry type
 
@@ -159,8 +179,12 @@ ENTRYTYPE: `unpublished <https://bibtex.eu/types/unpublished/>`__
 -  institution
 -  year
 
-Standardized field names, explanations, and field value restrictions
+.. _fields:
+
+Fields
 ---------------------------------------------------------------------
+
+Standardized field names, explanations, and field value restrictions
 
 .. <!--
 
@@ -228,8 +252,12 @@ Complementary/optional fields:
    information e.g. scopus.bib “cited by”
 -  cited_by: current number of citations (volatile)
 
-Schema Mapping: Colrev data schema (main records) - SearchSources
-=================================================================
+.. _schema mapping:
+
+Schema Mapping
+---------------------------------------------------------------------
+
+Colrev data schema (main records) - SearchSources (raw search results/feed)
 
 .. Feldbezeichnung ohne prefix erhalten, autor, titel, sind standardisiert,
 .. dlbp key ist nicht standardisiert, wird umgewandelt @Gerit
@@ -315,9 +343,10 @@ namespace example: @article{ID1, title = {Title1}, colrev.dblp.key =
    colrev/colrev/ops/built_in/search_sources/*.py
    -->
 
+.. _test data:
 
-Standardized test data
-======================
+Test data
+------------------------------
 
 Used for tests fakewerte standardisieren fakedaten ueber alle search
 sources hinweg einen standard journal article man muss sich nicht mehr
@@ -331,23 +360,9 @@ ENTRYTYPE: article
 @article{ID1, author = {Smith, Tom and Walter, Tim}, title = {An
 empirical study}, journal = {Nature}, }
 
-CoLRev Data Element (Field) Descriptions
-========================================
-
-This document describes the major elements (or fields) found on the
-CoLRev display format for CoLRev records. Some elements (e.g., Comment
-In) are not mandatory and will not appear in every record. Other
-elements (e.g., Author, MeSH term, Registry Number) may appear multiple
-times in one record. Some of the elements on this list are searchable
-fields in PubMed. For searching instructions, see the Search Field Tags
-section of PubMed Help. This document is supplementary information, to
-be used in conjuction with PubMed Help.
-
-CoLRev XML data element descriptions are also available (There are
-additional fields in the XML data)???
 
 Links informing the standard
-============================
+------------------------------------------------------------
 
 -  first source `bibtex.com <https://www.bibtex.com/e/entry-types/>`__
    required and optional fields are not specified
@@ -361,7 +376,8 @@ Links informing the standard
    different fields and descriptions
 
 TODO
-====
+------------------------------
 
+- Heading: CoLRev Data Element (Field) Descriptions
 -  `bibTeX Definition in Web Ontology Language (OWL) Version
    0.2 <https://zeitkunst.org/bibtex/0.2/>`__
