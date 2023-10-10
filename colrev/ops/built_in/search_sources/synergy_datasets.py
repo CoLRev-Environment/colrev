@@ -117,7 +117,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.synergy_datasets",
             filename=filename,
-            search_type=colrev.settings.SearchType.OTHER,
+            search_type=colrev.settings.SearchType.API,
             search_parameters={"dataset": dataset},
             comment="",
         )
@@ -295,7 +295,8 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         self.__check_quality(decisions=decisions)
         self.review_manager.logger.info(f"Dropped {empty_records} empty records")
         self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
-
+        records = self.review_manager.dataset.load_records_dict()
+        synergy_feed.print_post_run_search_infos(records=records)
         synergy_feed.save_feed_file()
 
     def get_masterdata(
