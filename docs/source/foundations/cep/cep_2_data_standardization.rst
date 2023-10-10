@@ -27,14 +27,14 @@ https://peps.python.org/pep-0001/)
 CEP001 - Colrev data schema
 ===========================
 
-ENTRYTYPEs and their respective required fields 
+ENTRYTYPEs and their respective required fields
 ------------------------------------------------
 
 .. verlinken auf missing und inconsistent with entry type
 
 .. raw:: html
 
-   <!-- 
+   <!--
    - fields (like title) can have a different meaning depending on the entrytype?!
    -->
 
@@ -159,7 +159,7 @@ ENTRYTYPE: `unpublished <https://bibtex.eu/types/unpublished/>`__
 -  institution
 -  year
 
-Standardized field names, explanations, and field value restrictions 
+Standardized field names, explanations, and field value restrictions
 ---------------------------------------------------------------------
 
 .. <!--
@@ -168,7 +168,7 @@ Standardized field names, explanations, and field value restrictions
 
    -->
 
-   <!-- 
+   <!--
    TBD:
    - latex/html characters?
 
@@ -188,7 +188,7 @@ Standardized field names, explanations, and field value restrictions
        ]
    -->
 
-   
+
 .. Identifying metadata (record.py):
 .. TODO : create table
 
@@ -233,7 +233,7 @@ Schema Mapping: Colrev data schema (main records) - SearchSources
 
 .. Feldbezeichnung ohne prefix erhalten, autor, titel, sind standardisiert,
 .. dlbp key ist nicht standardisiert, wird umgewandelt @Gerit
-..    <!--PART 3  
+..    <!--PART 3
    SearchSources durchschauen aus colrev/ops/built_in/searchsorces -> .py Dateien, erste Übersicht/Aufstellung
    ebsco_host
    eric
@@ -294,15 +294,15 @@ Following fields will be transformed and standardized:
 - publisher    <-> colrev.crossref.publisher
 - volume       <-> colrev.crossref.volume
 - number       <-> colrev.crossref.number
-- pages        <-> colrev.crossref.page 
+- pages        <-> colrev.crossref.page
 .. variation is intentional: "page" gets transformed to "pages"
 - editor       <-> colrev.crossref.editor
 - colrev.synergy.method <-> colrev.synergy.method
 
-Keys cannot be transformed and standardized, they remain immutable once created 
+Keys cannot be transformed and standardized, they remain immutable once created
 
-- colrev.dblp.key              <-> colrev.dblp.key 
-- colrev.openalex.key          <-> colrev.openalex.key  
+- colrev.dblp.key              <-> colrev.dblp.key
+- colrev.openalex.key          <-> colrev.openalex.key
 .. each search source will get its custom namespace, see excample below
 
 .. **TODO : anticipate upgrade of existing projects** mittlerweile
@@ -311,7 +311,7 @@ umgesetzt, name space pull request
 namespace example: @article{ID1, title = {Title1}, colrev.dblp.key =
 {de123414}, }
 
-..    <!-- 
+..    <!--
    colrev/colrev/ops/built_in/search_sources/*.py
    -->
 
