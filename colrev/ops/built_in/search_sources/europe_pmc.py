@@ -115,6 +115,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 )
 
             self.europe_pmc_lock = Lock()
+        self.operation = source_operation
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -404,11 +405,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for Europe PMC not automated."
-        #         )
+
+        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
         # if self.search_source.search_type == colrev.settings.SearchSource.MD:
         # self.__run_md_search_update(

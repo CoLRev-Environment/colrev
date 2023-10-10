@@ -71,6 +71,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -103,11 +104,8 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of Psycinfo"""
 
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for PsycInfo not automated."
-        #         )
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
     def get_masterdata(
         self,

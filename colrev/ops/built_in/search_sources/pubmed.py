@@ -92,6 +92,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             self.pubmed_lock = Lock()
 
         self.review_manager = source_operation.review_manager
+        self.operation = source_operation
         self.quality_model = self.review_manager.get_qm()
         _, self.email = source_operation.review_manager.get_committer()
 
@@ -668,11 +669,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 rerun=rerun,
             )
 
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for Pubmed not automated."
-        #         )
+        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
         else:
             raise NotImplementedError

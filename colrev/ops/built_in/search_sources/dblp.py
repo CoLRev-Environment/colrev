@@ -545,6 +545,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             colrev.settings.SearchType.TOC,
         ]:
             self.__run_api_search(dblp_feed=dblp_feed, rerun=rerun)
+
         else:
             raise NotImplementedError
 
