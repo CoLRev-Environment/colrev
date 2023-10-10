@@ -20,7 +20,7 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    sudo apt install python-is-python3
    sudo apt install python3-pip
    python3 -m pip install --upgrade pip
-   python3 -m pip install poetry pytest-mock pylint pytest pre-commit
+   python3 -m pip install poetry pytest-mock pylint pytest
    python3 -m pip install --upgrade paramiko
 
    # Clone and install CoLRev on your Desktop
