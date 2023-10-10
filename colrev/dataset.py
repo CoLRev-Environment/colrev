@@ -1013,7 +1013,9 @@ class Dataset:
 
         return self.__git_repo.is_dirty()
 
-    def add_changes(self, *, path: Path, remove: bool = False) -> None:
+    def add_changes(
+        self, *, path: Path, remove: bool = False, ignore_missing: bool = False
+    ) -> None:
         """Add changed file to git"""
 
         if path.is_absolute():
@@ -1030,6 +1032,9 @@ class Dataset:
                 self.__git_repo.index.add([str(path)])
         except GitCommandError:
             pass
+        except FileNotFoundError as exc:
+            if not ignore_missing:
+                raise exc
 
     def get_untracked_files(self) -> list:
         """Get the files that are untracked by git"""

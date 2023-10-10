@@ -218,6 +218,10 @@ class SearchSource(JsonSchemaMixin):
 
         return str(self.filename.name).startswith("md_")
 
+    def get_query(self) -> str:
+        """Get the query filepath"""
+        return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
+
     def get_dict(self) -> dict:
         """Get the dict of SearchSources (for endpoint initalization)"""
 

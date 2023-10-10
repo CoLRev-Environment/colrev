@@ -138,7 +138,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         params = self.search_source.search_parameters
         query = params["query"]
 
-        # TODO : generally prefix with SQL fields
         if not any(x in query for x in ["title", "abstract"]):
             query = f'title LIKE "%{query}%"'
 
@@ -284,13 +283,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
-            add_source = operation.add_interactively(endpoint=cls.endpoint)
+        # always API search
+
+        if len(params) == 0:
+            add_source = operation.add_api_source(endpoint=cls.endpoint)
             return add_source
 
         filename = operation.get_unique_filename(
@@ -299,7 +299,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
-            search_type=colrev.settings.SearchType.DB,
+            search_type=colrev.settings.SearchType.API,
             search_parameters={"query": params},
             comment="",
         )

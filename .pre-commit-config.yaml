@@ -12,7 +12,7 @@ ci:
 
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
     -   id: trailing-whitespace
         exclude: colrev/template/ops/status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt|^tests/data
@@ -42,7 +42,7 @@ repos:
     -   id: reorder-python-imports
         args: [--py3-plus]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.14.0
+    rev: v3.15.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus, --keep-runtime-typing]

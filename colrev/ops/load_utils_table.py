@@ -168,7 +168,6 @@ class CSVLoader:
 
         if self.unique_id_field == "":
             self.load_operation.ensure_append_only(file=self.source.filename)
-        # TODO : else: plausibility check: the old uique_ids should still be available
 
         try:
             data = pd.read_csv(self.source.filename)

@@ -525,6 +525,7 @@ def search(
             search_operation=search_operation
         )
         cli_source_adder.add_new_sources()
+        # TODO : pass recently_added DB searches to search.main (to skip updates)
 
     if view:
         for source in search_operation.sources:

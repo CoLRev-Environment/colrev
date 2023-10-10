@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -74,24 +73,20 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
-            source = operation.add_interactively(endpoint=cls.endpoint)
-            return source
-
-        if params.startswith("url="):
+        # Always API search
+        if "url" in params:
             filename = operation.get_unique_filename(
-                file_path_string=params.split("/")[-1]
+                file_path_string=params["url"].split("/")[-1]
             )
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
                 search_type=colrev.settings.SearchType.OTHER,
-                search_parameters={"scope": {"url": params[4:]}},
+                search_parameters={"scope": {"url": params["url"]}},
                 comment="",
             )
             return add_source

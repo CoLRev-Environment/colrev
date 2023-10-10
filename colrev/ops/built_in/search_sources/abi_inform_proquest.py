@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -41,10 +40,13 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         + "ops/built_in/search_sources/abi_inform_proquest.md"
     )
 
+    db_url = "https://search.proquest.com/abicomplete/advanced"
+
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.source_operation = source_operation
         self.quality_model = source_operation.review_manager.get_qm()
         self.review_manager = source_operation.review_manager
 
@@ -66,38 +68,30 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
-        # TODO : if filename...
-        print("Manual search mode")
-        print("- Go to https://search.proquest.com/abicomplete/advanced")
-        print("- Search for your query")
-        filename = operation.get_unique_filename(file_path_string="abi_informs")
-        query_file = operation.get_query_filename(filename=filename, instantiate=True)
-        print(f"- Save search results in {filename}")
-        print(f"- Save query in {query_file}")
-        input("Press Enter to complete")
-
-        add_source = colrev.settings.SearchSource(
-            endpoint=cls.endpoint,
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query_file": query_file},
-            comment="",
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params
         )
-        return add_source
+
+        if search_type == colrev.settings.SearchType.DB:
+            return operation.add_db_source(
+                search_source_cls=cls,
+                params=params,
+            )
+
+        raise NotImplementedError
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of ABI/INFORM"""
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for AbiInform not automated."
-        #         )
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
 
     def get_masterdata(
         self,

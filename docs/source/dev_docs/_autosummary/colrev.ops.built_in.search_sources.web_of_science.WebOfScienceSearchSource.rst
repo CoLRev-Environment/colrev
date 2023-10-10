@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
    .. autosummary::
 
       ~WebOfScienceSearchSource.ci_supported
+      ~WebOfScienceSearchSource.db_url
       ~WebOfScienceSearchSource.docs_link
       ~WebOfScienceSearchSource.endpoint
       ~WebOfScienceSearchSource.heuristic_status

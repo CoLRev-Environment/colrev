@@ -2,7 +2,6 @@
 """SearchSource: ACM Digital Library"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,11 +10,9 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -42,12 +39,14 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
         + "ops/built_in/search_sources/acm_digital_library.md"
     )
+    db_url = "https://dl.acm.org/"
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -65,67 +64,30 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params != "":
-            # TODO : add API param search
-            raise NotImplementedError
-
-        # Interactively add DB search
-        if filename is None:
-            print("DB search mode")
-            print("- Go to https://dl.acm.org/")
-            print("- Search for your query")
-            filename = operation.get_unique_filename(
-                file_path_string="acm_digital_library"
-            )
-            print(f"- Save search results in {filename}")
-
-        query_file = operation.get_query_filename(filename=filename, instantiate=True)
-
-        add_source = colrev.settings.SearchSource(
-            endpoint=cls.endpoint,
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query_file": str(query_file)},
-            comment="",
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params
         )
-        return add_source
+
+        if search_type == colrev.settings.SearchType.DB:
+            return operation.add_db_source(
+                search_source_cls=cls,
+                params=params,
+            )
+
+        raise NotImplementedError
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of ACM Digital Library"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            if self.review_manager.in_ci_environment():
-                raise colrev_exceptions.SearchNotAutomated(
-                    "DB search for ACM DL not automated."
-                )
-
             if self.search_source.filename.suffix in [".bib"]:
-                print("DB search mode")
-                print(
-                    f"- Go to {colors.ORANGE}https://dl.acm.org/{colors.END} "
-                    "and run the following query:"
-                )
-                query = Path(
-                    self.search_source.search_parameters["query_file"]
-                ).read_text(encoding="utf-8")
-                print()
-                print(f"{colors.ORANGE}{query}{colors.END}")
-                print()
-                print(
-                    f"- Replace search results in {colors.ORANGE}"
-                    + str(self.search_source.filename)
-                    + colors.END
-                )
-                input("Press enter to continue")
-                # TODO : validate?
-                # TODO : print statistics (#added, #changed)
-                self.review_manager.dataset.add_changes(
-                    path=self.search_source.filename
+                self.operation.run_db_search(  # type: ignore
+                    search_source_cls=self.__class__,
+                    source=self.search_source,
                 )
                 return
 

@@ -15,6 +15,7 @@ from sqlite3 import OperationalError
 from typing import Optional
 from typing import TYPE_CHECKING
 
+import inquirer
 import requests
 import zope.interface
 from crossref.restful import Etiquette
@@ -610,55 +611,52 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         return record
 
-    def __validate_source(self) -> None:
-        """Validate the SearchSource (parameters etc.)"""
+    def __validate_api_params(self) -> None:
         source = self.search_source
-        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        if source.filename.name != self.__crossref_md_filename.name:
-            if not any(x in source.search_parameters for x in ["query", "scope"]):
-                raise colrev_exceptions.InvalidQueryException(
-                    "Crossref search_parameters requires a query or issn field"
-                )
+        if not all(x in ["query", "scope"] for x in source.search_parameters):
+            raise colrev_exceptions.InvalidQueryException(
+                "Crossref search_parameters supports query or scope/issn field"
+            )
 
-            if "scope" in source.search_parameters:
-                if "issn" in source.search_parameters["scope"]:
-                    assert isinstance(source.search_parameters["scope"]["issn"], list)
-                    for issn_field in source.search_parameters["scope"]["issn"]:
-                        if not re.match(self.__ISSN_REGEX, issn_field):
-                            raise colrev_exceptions.InvalidQueryException(
-                                f"Crossref journal issn ({issn_field}) not matching required format"
-                            )
-                elif "years" in source.search_parameters["scope"]:
-                    years_field = source.search_parameters["scope"]["years"]
-                    if not re.match(self.__YEAR_SCOPE_REGEX, years_field):
+        if "scope" in source.search_parameters:
+            if "issn" in source.search_parameters["scope"]:
+                assert isinstance(source.search_parameters["scope"]["issn"], list)
+                for issn_field in source.search_parameters["scope"]["issn"]:
+                    if not re.match(self.__ISSN_REGEX, issn_field):
                         raise colrev_exceptions.InvalidQueryException(
-                            f"Scope (years) ({years_field}) not matching required format"
+                            f"Crossref journal issn ({issn_field}) not matching required format"
                         )
-                else:
+            elif "years" in source.search_parameters["scope"]:
+                years_field = source.search_parameters["scope"]["years"]
+                if not re.match(self.__YEAR_SCOPE_REGEX, years_field):
                     raise colrev_exceptions.InvalidQueryException(
-                        "Query missing valid parameters"
+                        f"Scope (years) ({years_field}) not matching required format"
                     )
-
-            elif "query" in source.search_parameters:
-                # Note: not yet implemented/supported
-                if " AND " in source.search_parameters["query"]:
-                    raise colrev_exceptions.InvalidQueryException(
-                        "AND not supported in CROSSREF query"
-                    )
-
             else:
                 raise colrev_exceptions.InvalidQueryException(
                     "Query missing valid parameters"
                 )
 
-            if source.search_type not in [
-                colrev.settings.SearchType.DB,
-                colrev.settings.SearchType.TOC,
-            ]:
+        if "query" in source.search_parameters:
+            # Note: not yet implemented/supported
+            if " AND " in source.search_parameters["query"]:
                 raise colrev_exceptions.InvalidQueryException(
-                    "Crossref search_type should be in [DB,TOC]"
+                    "AND not supported in CROSSREF query"
                 )
+
+    def __validate_source(self) -> None:
+        """Validate the SearchSource (parameters etc.)"""
+        source = self.search_source
+        self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
+
+        if source.search_type not in self.search_types:
+            raise colrev_exceptions.InvalidQueryException(
+                f"Crossref search_type should be in {self.search_types}"
+            )
+
+        if source.search_type == colrev.settings.SearchType.API:
+            self.__validate_api_params()
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
@@ -852,6 +850,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self.__run_keyword_exploration_search(crossref_feed=crossref_feed)
             return
 
+        # could print statistics (retrieve 4/200) based on the crossref header (nr records)
         records = self.review_manager.dataset.load_records_dict()
         for item in self.__get_crossref_query_return(rerun=rerun):
             try:
@@ -957,112 +956,91 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
-        if params and "https://search.crossref.org/?q=" in params:
-            params = (
-                params.replace("https://search.crossref.org/?q=", "")
-                .replace("&from_ui=yes", "")
-                .lstrip("+")
+        if list(params) == ["issn"]:
+            search_type = colrev.settings.SearchType.TOC
+        else:
+            search_type = operation.select_search_type(
+                search_types=cls.search_types, params=params
             )
 
-            filename = operation.get_unique_filename(
-                file_path_string=f"crossref_{params}"
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.crossref",
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": params},
-                comment="",
-            )
-            return add_source
+        if search_type == colrev.settings.SearchType.API:
+            if len(params) == 0:
+                add_source = operation.add_api_source(endpoint=cls.endpoint)
+                return add_source
 
-        if params is not None:
-            params_dict: typing.Dict[str, typing.Any] = {"scope": {}}
-            for item in params.split(";"):
-                key, value = item.split("=")
-                if key in ["issn", "years"]:
-                    params_dict["scope"][key] = value
-                else:
-                    params_dict[key] = value
-            if not params_dict["scope"]:
-                del params_dict["scope"]
-
-            if "scope" not in params_dict and "query" not in params_dict:
-                raise colrev_exceptions.InvalidQueryException(
-                    "Query parameters must contain query or scope (such as issn)"
+            if "url" in params:
+                query = (
+                    params["url"]
+                    .replace("https://search.crossref.org/?q=", "")
+                    .replace("&from_ui=yes", "")
+                    .lstrip("+")
                 )
 
+                filename = operation.get_unique_filename(
+                    file_path_string=f"crossref_{query}"
+                )
+                add_source = colrev.settings.SearchSource(
+                    endpoint="colrev.crossref",
+                    filename=filename,
+                    search_type=colrev.settings.SearchType.API,
+                    search_parameters={"query": query},
+                    comment="",
+                )
+                return add_source
+
+            raise NotImplementedError
+
+        if search_type == colrev.settings.SearchType.TOC:
+            if len(params) == 0:
+                source = cls.__add_toc_interactively(operation=operation)
+                return source
+
             filename = operation.get_unique_filename(
                 file_path_string=f"crossref_{params}"
             )
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
                 filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters=params_dict,
+                search_type=colrev.settings.SearchType.TOC,
+                search_parameters={"scope": params},
                 comment="",
             )
             return add_source
-        source = cls.__add_interactively(operation=operation)
-        return source
+
+        raise NotImplementedError
 
     @classmethod
-    def __add_interactively(
+    def __add_toc_interactively(
         cls, *, operation: colrev.ops.search.Search
     ) -> colrev.settings.SearchSource:
-        print("Interactively add Crossref as a SearchSource")
-        print()
-        print("Documentation:")
-        print(
-            "https://github.com/CoLRev-Environment/colrev/blob/"
-            + "main/colrev/ops/built_in/search_sources/crossref.md"
-        )
-        print()
-        query_type = ""
-        while query_type not in ["j", "k"]:
-            query_type = input("Create a query based on [k]eywords or [j]ournal?")
-        if query_type == "j":
-            print("Get ISSN from https://portal.issn.org/issn/search")
+        print("Get ISSN from https://portal.issn.org/issn/search")
 
-            issn = ""
-            while True:
-                issn = input("Enter the ISSN (or journal name to lookup the ISSN):")
-                if re.match(cls.__ISSN_REGEX, issn):
-                    break
+        j_name = input("Enter journal name to lookup the ISSN:")
+        journals = Journals()
+        ret = journals.query(j_name)
 
-                journals = Journals()
-                ret = journals.query(issn)
-                for jour in ret:
-                    print(f"{jour['title']}: {','.join(jour['ISSN'])}")
-
-            filename = operation.get_unique_filename(
-                file_path_string=f"crossref_issn_{issn}"
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.crossref",
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"scope": {"issn": [issn]}},
-                comment="",
-            )
-            return add_source
-
-        # if query_type == "k":
-        keywords = input("Enter the keywords:")
+        questions = [
+            inquirer.List(
+                "journal",
+                message="Select journal:",
+                choices=[{x["title"]: x["ISSN"]} for x in ret],
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+        issn = list(answers["journal"].values())[0][0]
 
         filename = operation.get_unique_filename(
-            file_path_string=f"crossref_{keywords}"
+            file_path_string=f"crossref_issn_{issn}"
         )
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.crossref",
             filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": keywords},
+            search_type=colrev.settings.SearchType.TOC,
+            search_parameters={"scope": {"issn": [issn]}},
             comment="",
         )
         return add_source

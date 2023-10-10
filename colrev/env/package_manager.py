@@ -131,10 +131,12 @@ class SearchSourcePackageEndpointInterface(
     # pylint: disable=no-self-argument
     def add_endpoint(  # type: ignore
         operation: colrev.operation.Operation,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
-        """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)"""
+        """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
+        params:
+        - search_file="..." to add a DB search
+        """
 
     # pylint: disable=no-self-argument
     def run_search(rerun: bool) -> None:  # type: ignore
@@ -821,9 +823,9 @@ class PackageManager:
             )
             output = parse_from_file(docs_link)
         else:
-            return "NotImplemented"
-            # TODO: retreive through requests later?
+            # to be retreived through requests for external packages
             # output = convert('# Title\n\nSentence.')
+            return "NotImplemented"
 
         file_path = Path(f"{identifier}.rst")
         target = extensions_index_path / file_path
@@ -1187,7 +1189,25 @@ class PackageManager:
 
         e_class = endpoint_dict[package_identifier]
         if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
-            add_package = e_class.add_endpoint(operation=operation, params=params)  # type: ignore
+            if params:
+                if params.startswith("http"):
+                    params_dict = {"url": params}
+                else:
+                    params_dict = {}
+                    for item in params.split(";"):
+                        key, value = item.split("=")
+                        params_dict[key] = value
+            else:
+                params_dict = {}
+            add_source = e_class.add_endpoint(  # type: ignore
+                operation=operation, params=params_dict
+            )
+            operation.review_manager.settings.sources.append(add_source)
+            operation.review_manager.save_settings()
+            operation.review_manager.dataset.add_changes(
+                path=add_source.filename, ignore_missing=True
+            )
+
         else:
             add_package = {"endpoint": package_identifier}
             endpoints.append(add_package)  # type: ignore

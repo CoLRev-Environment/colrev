@@ -5,7 +5,6 @@ from __future__ import annotations
 import html
 import json
 import re
-import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
@@ -297,6 +296,8 @@ class DBLPSearchSource(JsonSchemaMixin):
             if query:
                 query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
                 url = self.__api_url + query.replace(" ", "+") + "&format=json"
+            if url is not None and not url.startswith("http"):
+                url = f"https://dblp.org/search/publ/api?q={url}"
 
             headers = {"user-agent": f"{__name__}  (mailto:{self.email})"}
             # review_manager.logger.debug(url)
@@ -366,7 +367,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                 )
         elif source.search_type == colrev.settings.SearchType.API:
             assert "query" in source.search_parameters
-            assert source.search_parameters["query"].startswith(self.__api_url)
 
         elif source.search_type == colrev.settings.SearchType.MD:
             pass  # No parameters required
@@ -545,6 +545,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             colrev.settings.SearchType.TOC,
         ]:
             self.__run_api_search(dblp_feed=dblp_feed, rerun=rerun)
+
         else:
             raise NotImplementedError
 
@@ -568,37 +569,40 @@ class DBLPSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
-            add_source = operation.add_interactively(endpoint=cls.endpoint)
-            return add_source
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params
+        )
 
-        if (
-            "https://dblp.org/search?q=" in params
-            or "https://dblp.org/search/publ?q=" in params
-        ):
-            params = params.replace(
-                "https://dblp.org/search?q=", cls.__api_url
-            ).replace("https://dblp.org/search/publ?q=", cls.__api_url)
+        if search_type == colrev.settings.SearchType.API:
+            if len(params) == 0:
+                add_source = operation.add_api_source(endpoint=cls.endpoint)
+                return add_source
 
-            filename = operation.get_unique_filename(
-                file_path_string=f"dblp_{params.replace(cls.__api_url, '')}"
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": params},
-                comment="",
-            )
-            return add_source
+            if "url" in params:
+                query = (
+                    params["url"]
+                    .replace("https://dblp.org/search?q=", cls.__api_url)
+                    .replace("https://dblp.org/search/publ?q=", cls.__api_url)
+                )
+
+                filename = operation.get_unique_filename(file_path_string="dblp")
+                add_source = colrev.settings.SearchSource(
+                    endpoint=cls.endpoint,
+                    filename=filename,
+                    search_type=colrev.settings.SearchType.API,
+                    search_parameters={"query": query},
+                    comment="",
+                )
+                return add_source
+
+        # if search_type == colrev.settings.SearchType.TOC:
 
         raise colrev_exceptions.PackageParameterError(
-            f"Cannot add backward_search endpoint with query {params}"
+            f"Cannot add dblp endpoint with query {params}"
         )
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

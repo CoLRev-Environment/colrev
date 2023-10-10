@@ -141,10 +141,12 @@ class RISLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        ris_parser: BaseParser = DefaultRISParser,
         unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
+        self.ris_parser = ris_parser
         self.unique_id_field = unique_id_field
 
     def apply_ris_fixes(self, *, filename: Path) -> None:
@@ -176,7 +178,32 @@ class RISLoader:
             for line in lines:
                 file.write(f"{line}\n")
 
-    def load_ris_entries(self, *, ris_parser: BaseParser = DefaultRISParser) -> dict:
+    def __load_ris_entry(self, entry: dict) -> None:
+        if "start_page" in entry and "end_page" in entry:
+            entry["pages"] = f"{entry.pop('start_page')}--{entry.pop('end_page')}"
+        elif "start_page" in entry:
+            entry["pages"] = str(entry.pop("start_page"))
+
+        for key in [
+            self.ris_parser.DEFAULT_MAPPING[k]
+            for k in self.ris_parser.DEFAULT_LIST_TAGS
+        ]:
+            if key not in entry:
+                continue
+            if "author" in key:
+                entry[key] = " and ".join(entry[key])
+            elif "url" == key:
+                urls = entry["url"]
+                for url in urls:
+                    if url.endswith(".pdf"):
+                        entry["fulltext"] = url
+                    else:
+                        entry["url"] = url
+                        break
+            else:
+                entry[key] = ", ".join(entry[key])
+
+    def load_ris_entries(self) -> dict:
         """Load ris entries
 
         The resulting keys should coincide with those in the KEY_MAP
@@ -189,33 +216,10 @@ class RISLoader:
             self.load_operation.ensure_append_only(file=self.source.filename)
 
         with open(self.source.filename, encoding="utf-8") as ris_file:
-            entries = rispy.load(file=ris_file, implementation=ris_parser)
+            entries = rispy.load(file=ris_file, implementation=self.ris_parser)
 
         for entry in entries:
-            if "pages" in entry:
-                continue
-            if "start_page" in entry and "end_page" in entry:
-                entry["pages"] = f"{entry.pop('start_page')}--{entry.pop('end_page')}"
-            elif "start_page" in entry:
-                entry["pages"] = f"{entry.pop('start_page')}"
-
-            for key in [
-                ris_parser.DEFAULT_MAPPING[k] for k in ris_parser.DEFAULT_LIST_TAGS
-            ]:
-                if key not in entry:
-                    continue
-                if "author" in key:
-                    entry[key] = " and ".join(entry[key])
-                elif "url" == key:
-                    urls = entry["url"]
-                    for url in urls:
-                        if url.endswith(".pdf"):
-                            entry["fulltext"] = url
-                        else:
-                            entry["url"] = url
-                            break
-                else:
-                    entry[key] = ", ".join(entry[key])
+            self.__load_ris_entry(entry)
 
         return entries
 
@@ -231,7 +235,6 @@ class RISLoader:
             if self.unique_id_field == "":
                 _id = str(counter + 1).zfill(5)
             else:
-                # TODO : similar ID assignment should be done for other parsers
                 _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
 
             type_of_ref = entry["type_of_reference"]

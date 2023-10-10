@@ -57,6 +57,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/pubmed.md"
     )
+    db_url = "https://pubmed.ncbi.nlm.nih.gov/"
     __pubmed_md_filename = Path("data/search/md_pubmed.bib")
 
     def __init__(
@@ -91,6 +92,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             self.pubmed_lock = Lock()
 
         self.review_manager = source_operation.review_manager
+        self.operation = source_operation
         self.quality_model = self.review_manager.get_qm()
         _, self.email = source_operation.review_manager.get_committer()
 
@@ -118,44 +120,55 @@ class PubMedSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
-            add_source = operation.add_interactively(endpoint=cls.endpoint)
-            return add_source
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params
+        )
 
-        host = urlparse(params).hostname
+        if search_type == colrev.settings.SearchType.DB:
+            return operation.add_db_source(
+                search_source_cls=cls,
+                params=params,
+            )
 
-        if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
-            params = params.replace("https://pubmed.ncbi.nlm.nih.gov/?term=", "")
+        if search_type == colrev.settings.SearchType.API:
+            if len(params) == 0:
+                add_source = operation.add_api_source(endpoint=cls.endpoint)
+                return add_source
 
-            filename = operation.get_unique_filename(
-                file_path_string=f"pubmed_{params.replace('&sort=', '')}"
-            )
-            params = (
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
-                + params
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": params},
-                comment="",
-            )
-            return add_source
+            if "url" in params:
+                host = urlparse(params["url"]).hostname
+
+                if host and host.endswith("pubmed.ncbi.nlm.nih.gov"):
+                    params = params["url"].replace(
+                        "https://pubmed.ncbi.nlm.nih.gov/?term=", ""
+                    )
+
+                    filename = operation.get_unique_filename(file_path_string="pubmed")
+                    # params = (
+                    # "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term="
+                    #     + params
+                    # )
+                    add_source = colrev.settings.SearchSource(
+                        endpoint=cls.endpoint,
+                        filename=filename,
+                        search_type=colrev.settings.SearchType.API,
+                        search_parameters={"query": params},
+                        comment="",
+                    )
+                    return add_source
+
+            raise NotImplementedError
 
         raise NotImplementedError
 
     def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
-        # TO DO
         source = self.search_source
-
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
         if source.filename.name != self.__pubmed_md_filename.name:
@@ -319,6 +332,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             # )
             return []
 
+        # TODO : change to Beautifulsoup (more robust)
         root = fromstring(str.encode(ret.text))
         return [
             x.text
@@ -655,11 +669,8 @@ class PubMedSearchSource(JsonSchemaMixin):
                 rerun=rerun,
             )
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for Pubmed not automated."
-        #         )
+        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
         else:
             raise NotImplementedError

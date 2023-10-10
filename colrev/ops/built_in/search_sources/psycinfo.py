@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import typing
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -66,11 +65,13 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/psycinfo.md"
     )
+    db_url = "https://www.apa.org/search"
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -91,20 +92,20 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        raise NotImplementedError
+
+        return operation.add_db_source(
+            search_source_cls=cls,
+            params=params,
+        )
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of Psycinfo"""
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for PsycInfo not automated."
-        #         )
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
     def get_masterdata(
         self,
@@ -129,11 +130,12 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            # TODO : unique_id?
             ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation, source=self.search_source
+                load_operation=load_operation,
+                source=self.search_source,
+                ris_parser=PsycInfoRISParser,
             )
-            ris_entries = ris_loader.load_ris_entries(ris_parser=PsycInfoRISParser)
+            ris_entries = ris_loader.load_ris_entries()
             self.__ris_fixes(entries=ris_entries)
             records = ris_loader.convert_to_records(entries=ris_entries)
             return records

@@ -13,6 +13,10 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    # Install visual studio code (via snap)
    sudo snap install --classic code
 
+   # Add $HOME/.local/bin to PATH and load it into the current terminal session with source
+   echo 'export PATH="$PATH:$HOME/.local/bin"' >> $HOME/.bashrc
+   source ~/.bashrc
+
    sudo apt install python-is-python3
    sudo apt install python3-pip
    python3 -m pip install --upgrade pip
@@ -22,7 +26,6 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    # Clone and install CoLRev on your Desktop
    # Make sure you have registered your SSH key on GitHub beforehand
    cd ~/Desktop
-   git clone git@github.com:geritwagner/dev-setup.git
    git clone git@github.com:CoLRev-Environment/colrev.git
    cd colrev
    pip install -e .

@@ -138,17 +138,18 @@ class ERICSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a)"""
 
-        if params is None:
-            add_source = operation.add_interactively(endpoint=cls.endpoint)
+        # all API searches
+
+        if len(params) == 0:
+            add_source = operation.add_db_source(search_source_cls=cls, params=params)
             return add_source
 
-        if "https://api.ies.ed.gov/eric/?" in params:
-            url_parsed = urllib.parse.urlparse(params)
+        if "https://api.ies.ed.gov/eric/?" in params["url"]:
+            url_parsed = urllib.parse.urlparse(params["url"])
             new_query = urllib.parse.parse_qs(url_parsed.query)
             search = new_query.get("search", [""])[0]
             start = new_query.get("start", ["0"])[0]
@@ -214,8 +215,6 @@ class ERICSearchSource(JsonSchemaMixin):
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of ERIC"""
-
-        # TODO : validate source
 
         eric_feed = self.search_source.get_feed(
             review_manager=self.review_manager,

@@ -16,7 +16,8 @@ colrev.ops.search.Search
    .. autosummary::
       :nosignatures:
 
-      ~Search.add_interactively
+      ~Search.add_api_source
+      ~Search.add_db_source
       ~Search.add_most_likely_sources
       ~Search.check_precondition
       ~Search.check_source_selection_exists
@@ -27,6 +28,8 @@ colrev.ops.search.Search
       ~Search.get_unique_filename
       ~Search.main
       ~Search.remove_forthcoming
+      ~Search.run_db_search
+      ~Search.select_search_type
 
 
 

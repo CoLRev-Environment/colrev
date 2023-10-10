@@ -63,7 +63,9 @@ def test_checks(  # type: ignore
                 "endpoint": "colrev.unknown_source",
                 "filename": Path("data/search/test_records.bib"),
                 "search_type": colrev.settings.SearchType.DB,
-                "search_parameters": {},
+                "search_parameters": {
+                    "query_file": "data/search/test_records_query.txt"
+                },
                 "comment": "",
             },
         ]

@@ -35,7 +35,8 @@ def test_search_selection(  # type: ignore
     ):
         search_operation.main(rerun=False, selection_str="BROKEN")
 
-    search_operation.main(rerun=False, selection_str="data/search/test_records.bib")
+    # Note : DB search registered, which requires input() to complete
+    # search_operation.main(rerun=False, selection_str="data/search/test_records.bib")
 
 
 def test_search_add_source(  # type: ignore
@@ -61,8 +62,8 @@ def test_search_add_source(  # type: ignore
         instantiate_objects=False,
     )
     s_obj = search_source[add_source.endpoint]
-    query = "issn=1234-5678"
-    s_obj.add_endpoint(search_operation, query, None)  # type: ignore
+    query = {"issn": "1234-5678"}
+    s_obj.add_endpoint(search_operation, query)  # type: ignore
 
     search_operation.review_manager.settings.sources.pop()
 

@@ -115,6 +115,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 )
 
             self.europe_pmc_lock = Lock()
+        self.operation = source_operation
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -404,11 +405,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for Europe PMC not automated."
-        #         )
+
+        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
         # if self.search_source.search_type == colrev.settings.SearchSource.MD:
         # self.__run_md_search_update(
@@ -431,7 +430,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         try:
             params = self.search_source.search_parameters
-            url = params["query"]
+            url = (
+                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
+                + params["query"]
+            )
 
             _, email = self.review_manager.get_committer()
 
@@ -528,33 +530,28 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
-            add_source = operation.add_interactively(endpoint=cls.endpoint)
+        if len(params) == 0:
+            add_source = operation.add_api_source(endpoint=cls.endpoint)
             return add_source
 
-        host = urlparse(params).hostname
+        if "url" in params:
+            host = urlparse(params["url"]).hostname
 
-        if host and host.endswith("europepmc.org"):
-            params = params.replace("https://europepmc.org/search?query=", "")
-
-            filename = operation.get_unique_filename(file_path_string="europepmc")
-            params = (
-                "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
-                + params
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query": params},
-                comment="",
-            )
-            return add_source
+            if host and host.endswith("europepmc.org"):
+                query = params["url"].replace("https://europepmc.org/search?query=", "")
+                filename = operation.get_unique_filename(file_path_string="europepmc")
+                add_source = colrev.settings.SearchSource(
+                    endpoint=cls.endpoint,
+                    filename=filename,
+                    search_type=colrev.settings.SearchType.DB,
+                    search_parameters={"query": query},
+                    comment="",
+                )
+                return add_source
 
         raise NotImplementedError
 

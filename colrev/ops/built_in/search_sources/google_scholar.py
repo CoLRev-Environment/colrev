@@ -2,7 +2,6 @@
 """SearchSource: GoogleScholar"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -30,7 +29,6 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.google_scholar"
     source_identifier = "url"
-    # TODO : citation searches?
     search_types = [colrev.settings.SearchType.DB]
 
     ci_supported: bool = False
@@ -40,11 +38,13 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/google_scholar.md"
     )
+    db_url = "https://scholar.google.de/"
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -67,20 +67,20 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        raise NotImplementedError
+
+        return operation.add_db_source(
+            search_source_cls=cls,
+            params=params,
+        )
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of GoogleScholar"""
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for GoogleScholar not automated."
-        #         )
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
     def get_masterdata(
         self,

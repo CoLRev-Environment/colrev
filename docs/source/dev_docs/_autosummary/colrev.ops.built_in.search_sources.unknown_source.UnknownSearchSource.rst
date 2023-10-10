@@ -42,6 +42,7 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
 
       ~UnknownSearchSource.HTML_CLEANER
       ~UnknownSearchSource.ci_supported
+      ~UnknownSearchSource.db_url
       ~UnknownSearchSource.docs_link
       ~UnknownSearchSource.endpoint
       ~UnknownSearchSource.heuristic_status

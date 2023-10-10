@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import typing
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -54,6 +53,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/unknown_source.md"
     )
+    db_url = ""
 
     HTML_CLEANER = re.compile("<.*?>")
     __padding = 40
@@ -69,6 +69,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         )
         self.review_manager = source_operation.review_manager
         self.language_service = colrev.env.language_service.LanguageService()
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -82,34 +83,22 @@ class UnknownSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        if filename:
-            query_file = operation.get_query_filename(
-                filename=filename, instantiate=True
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query_file": str(query_file)},
-                comment="",
-            )
 
-            return add_source
-
-        raise NotImplementedError
+        return operation.add_db_source(
+            search_source_cls=cls,
+            params=params,
+        )
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            if self.review_manager.in_ci_environment():
-                raise colrev_exceptions.SearchNotAutomated(
-                    "DB search for UnknownSource not automated."
-                )
+            self.operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__, source=self.search_source
+            )
 
     def get_masterdata(
         self,
@@ -482,7 +471,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         if not record.has_quality_defects() or record.masterdata_is_curated():
             return record
 
-        # TODO : assign fields (e.g., to colrev.pubmed.pubmedid)
+        # we may assign fields heuristically (e.g., to colrev.pubmed.pubmedid)
 
         self.__heuristically_fix_entrytypes(
             record=record,

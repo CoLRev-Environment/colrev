@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.trid.TransportResearchInternationalDocument
    .. autosummary::
 
       ~TransportResearchInternationalDocumentation.ci_supported
+      ~TransportResearchInternationalDocumentation.db_url
       ~TransportResearchInternationalDocumentation.docs_link
       ~TransportResearchInternationalDocumentation.endpoint
       ~TransportResearchInternationalDocumentation.heuristic_status
