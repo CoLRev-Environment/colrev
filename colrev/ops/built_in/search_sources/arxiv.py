@@ -268,6 +268,11 @@ class ArXivSource:
                     entry["fulltext"] = link["href"]
                 else:
                     entry["url"] = link["href"]
+        if "link" in entry:
+            if "url" in entry:
+                del entry["link"]
+            else:
+                entry["url"] = entry.pop("link")
         del entry["links"]
         del entry["href"]
         del entry["guidislink"]
@@ -280,7 +285,10 @@ class ArXivSource:
         return entry
 
     def __get_arxiv_ids(self, query: str, retstart: int) -> typing.List[dict]:
-        url = f"https://export.arxiv.org/api/query?search_query=all:{query}&start={retstart}&max_results=20"
+        url = (
+            "https://export.arxiv.org/api/query?search_query="
+            + f"all:{query}&start={retstart}&max_results=20"
+        )
         feed = feedparser.parse(url)
         return feed["entries"]
 
@@ -446,6 +454,8 @@ class ArXivSource:
             records = colrev.ops.load_utils_bib.load_bib_file(
                 load_operation=load_operation, source=self.search_source
             )
+            for record in records.values():
+                record["institution"] = "ArXiv"
             return records
 
         raise NotImplementedError
