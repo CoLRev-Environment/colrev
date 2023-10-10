@@ -87,12 +87,11 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
+        if len(params) == 0:
             operation.review_manager.logger.info("Retrieving available datasets")
             date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
@@ -107,26 +106,22 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "\n- "
                 + "\n- ".join([str(f.parent.name) + "/" + str(f.name) for f in files])
             )
-            params = input("Enter dataset:")
-            params = "dataset=" + params
+            dataset = input("Enter dataset:")
+            params = {"dataset": dataset}
 
-        if params.startswith("dataset="):
-            dataset = params.replace("dataset=", "")
-            filename = operation.get_unique_filename(
-                file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint="colrev.synergy_datasets",
-                filename=filename,
-                search_type=colrev.settings.SearchType.OTHER,
-                search_parameters={"dataset": dataset},
-                comment="",
-            )
-            return add_source
-
-        raise colrev_exceptions.PackageParameterError(
-            f"Cannot add SYNERGY endpoint with query {params}"
+        assert "dataset" in params
+        dataset = params["dataset"]
+        filename = operation.get_unique_filename(
+            file_path_string=f"SYNERGY_{dataset.replace('/', '_').replace('_ids.csv', '')}"
         )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev.synergy_datasets",
+            filename=filename,
+            search_type=colrev.settings.SearchType.OTHER,
+            search_parameters={"dataset": dataset},
+            comment="",
+        )
+        return add_source
 
     def __load_dataset(self) -> pd.DataFrame:
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

@@ -89,7 +89,6 @@ class Record:
 
     time_variant_fields = ["cited_by"]
 
-    # TODO : link to CEP
     standardized_field_keys = (
         identifying_field_keys
         + provenance_keys

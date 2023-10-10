@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
    .. autosummary::
 
       ~JSTORSearchSource.ci_supported
+      ~JSTORSearchSource.db_url
       ~JSTORSearchSource.docs_link
       ~JSTORSearchSource.endpoint
       ~JSTORSearchSource.heuristic_status

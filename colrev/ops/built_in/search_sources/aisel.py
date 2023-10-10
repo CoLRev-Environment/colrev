@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-import typing
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -48,6 +47,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/aisel.md"
     )
+    db_url = "https://aisel.aisnet.org/"
 
     __conference_abbreviations = {
         "ICIS": "International Conference on Information Systems",
@@ -73,6 +73,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -145,7 +146,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             search_terms.append(search_term)
             term_no += 1
 
-        params = {"search_terms": search_terms, "peer_reviewed": peer_reviewed}
+        params = {"query": search_terms, "scope": {"peer_reviewed": peer_reviewed}}
         if start_date:
             params["start_date"] = start_date
         if end_date:
@@ -156,44 +157,43 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        # Add DB search
-        if filename is not None:
-            query_file = operation.get_query_filename(
-                filename=filename, instantiate=True
-            )
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters={"query_file": str(query_file)},
-                comment="",
-            )
-            return add_source
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params
+        )
 
-        # Add API search with params
-        if params != "":
-            host = urlparse(params).hostname
+        if search_type == colrev.settings.SearchType.DB:
+            return operation.add_db_source(
+                search_source_cls=cls,
+                params=params,
+            )
 
-            if host and host.endswith("aisel.aisnet.org"):
-                q_params = cls.__parse_query(query=params)
+        if search_type == colrev.settings.SearchType.API:
+            if "url" not in params:
+                # Add API search without params
+                add_source = operation.add_api_source(endpoint=cls.endpoint)
+                return add_source
+
+            if "url" in params:
+                host = urlparse(params["url"]).hostname
+                assert host and host.endswith("aisel.aisnet.org")
+                q_params = cls.__parse_query(query=params["url"])
                 filename = operation.get_unique_filename(file_path_string="ais")
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.DB,
-                    search_parameters={"query": q_params},
+                    search_type=colrev.settings.SearchType.API,
+                    search_parameters=q_params,
                     comment="",
                 )
                 return add_source
 
-        # Add API search without params
-        add_source = operation.add_interactively(endpoint=cls.endpoint)
-        return add_source
+        # if search_type == colrev.settings.SearchType.TOC:
+
+        raise NotImplementedError
 
     def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
@@ -202,33 +202,32 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        if "query" in source.search_parameters:
-            if "search_terms" not in source.search_parameters["query"]:
-                raise colrev_exceptions.InvalidQueryException(
-                    "query parameter does not contain search_terms"
-                )
+        if source.search_type == colrev.settings.SearchType.API:
+            if "query" not in source.search_parameters:
+                # if "search_terms" not in source.search_parameters["query"]:
+                raise colrev_exceptions.InvalidQueryException("query parameter missing")
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:
             final = ""
-            for i in params["search_terms"]:
+            for i in params["query"]:
                 final = f"{final} {i['operator']} {i['field']}:{i['term']}".strip()
                 final = final.replace("All fields:", "")
 
-            if "start_date" in params["search_terms"]:
-                final = f"{final}&start_date={params['search_terms']['start_date']}"
+            if "start_date" in params["query"]:
+                final = f"{final}&start_date={params['query']['start_date']}"
 
-            if "end_date" in params["search_terms"]:
-                final = f"{final}&end_date={params['search_terms']['end_date']}"
+            if "end_date" in params["query"]:
+                final = f"{final}&end_date={params['query']['end_date']}"
 
-            if "peer_reviewed" in params["search_terms"]:
+            if "peer_reviewed" in params["query"]:
                 final = f"{final}&peer_reviewed=true"
 
             return urllib.parse.quote(final)
 
-        params = self.search_source.search_parameters["query"]
+        params = self.search_source.search_parameters
         final_q = query_from_params(params)
 
         query_string = (
@@ -362,10 +361,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 rerun=rerun,
             )
         elif self.search_source.search_type == colrev.settings.SearchType.DB:
-            if self.review_manager.in_ci_environment():
-                raise colrev_exceptions.SearchNotAutomated(
-                    "DB search for AISeL not automated."
-                )
+            self.operation.run_db_search()  # type: ignore
 
     def get_masterdata(
         self,

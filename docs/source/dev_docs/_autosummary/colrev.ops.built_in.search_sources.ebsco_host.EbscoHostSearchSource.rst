@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
    .. autosummary::
 
       ~EbscoHostSearchSource.ci_supported
+      ~EbscoHostSearchSource.db_url
       ~EbscoHostSearchSource.docs_link
       ~EbscoHostSearchSource.endpoint
       ~EbscoHostSearchSource.heuristic_status

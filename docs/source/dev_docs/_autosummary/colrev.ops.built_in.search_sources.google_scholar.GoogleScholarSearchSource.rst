@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
    .. autosummary::
 
       ~GoogleScholarSearchSource.ci_supported
+      ~GoogleScholarSearchSource.db_url
       ~GoogleScholarSearchSource.docs_link
       ~GoogleScholarSearchSource.endpoint
       ~GoogleScholarSearchSource.heuristic_status

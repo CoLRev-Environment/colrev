@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
    .. autosummary::
 
       ~ACMDigitalLibrarySearchSource.ci_supported
+      ~ACMDigitalLibrarySearchSource.db_url
       ~ACMDigitalLibrarySearchSource.docs_link
       ~ACMDigitalLibrarySearchSource.endpoint
       ~ACMDigitalLibrarySearchSource.heuristic_status

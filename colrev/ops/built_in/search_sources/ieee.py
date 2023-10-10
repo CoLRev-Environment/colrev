@@ -2,7 +2,6 @@
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -43,6 +42,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/ieee.md"
     )
+    db_url = "https://ieeexplore.ieee.org/Xplore/home.jsp"
     SETTINGS = {
         "api_key": "packages.search_source.colrev.ieee.api_key",
     }
@@ -111,6 +111,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 search_parameters={},
                 comment="",
             )
+        self.operation = source_operation
 
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
@@ -129,42 +130,53 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls,
-        operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        cls, operation: colrev.ops.search.Search, params: dict
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        if params is None:
-            add_source = operation.add_interactively(endpoint=cls.endpoint)
-            return add_source
+        search_type = operation.select_search_type(
+            search_types=cls.search_types, params=params
+        )
 
-        if "https://ieeexploreapi.ieee.org/api/v1/search/articles?" in params:
-            params = params.replace(
-                "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
-            ).lstrip("&")
+        if search_type == colrev.settings.SearchType.API:
+            if len(params) == 0:
+                add_source = operation.add_api_source(endpoint=cls.endpoint)
+                return add_source
 
-            parameter_pairs = params.split("&")
-            search_parameters = {}
-            for parameter in parameter_pairs:
-                key, value = parameter.split("=")
-                search_parameters[key] = value
+            if (
+                "https://ieeexploreapi.ieee.org/api/v1/search/articles?"
+                in params["url"]
+            ):
+                query = (
+                    params["url"]
+                    .replace(
+                        "https://ieeexploreapi.ieee.org/api/v1/search/articles?", ""
+                    )
+                    .lstrip("&")
+                )
 
-            last_value = list(search_parameters.values())[-1]
+                parameter_pairs = query.split("&")
+                search_parameters = {}
+                for parameter in parameter_pairs:
+                    key, value = parameter.split("=")
+                    search_parameters[key] = value
 
-            filename = operation.get_unique_filename(
-                file_path_string=f"ieee_{last_value}"
-            )
+                last_value = list(search_parameters.values())[-1]
 
-            add_source = colrev.settings.SearchSource(
-                endpoint=cls.endpoint,
-                filename=filename,
-                search_type=colrev.settings.SearchType.DB,
-                search_parameters=search_parameters,
-                comment="",
-            )
-            return add_source
+                filename = operation.get_unique_filename(
+                    file_path_string=f"ieee_{last_value}"
+                )
+
+                add_source = colrev.settings.SearchSource(
+                    endpoint=cls.endpoint,
+                    filename=filename,
+                    search_type=colrev.settings.SearchType.API,
+                    search_parameters=search_parameters,
+                    comment="",
+                )
+                return add_source
+
+        # if search_type == colrev.settings.SearchType.API:
 
         raise NotImplementedError
 
@@ -180,11 +192,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         if self.search_source.search_type == colrev.settings.SearchType.API:
             self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for IEEEXplore not automated."
-        #         )
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
         else:
             raise NotImplementedError

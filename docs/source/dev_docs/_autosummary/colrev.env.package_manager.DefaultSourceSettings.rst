@@ -24,6 +24,7 @@ colrev.env.package\_manager.DefaultSourceSettings
       ~DefaultSourceSettings.get_dict
       ~DefaultSourceSettings.get_feed
       ~DefaultSourceSettings.get_origin_prefix
+      ~DefaultSourceSettings.get_query
       ~DefaultSourceSettings.is_md_source
       ~DefaultSourceSettings.json_schema
       ~DefaultSourceSettings.register_field_encoders

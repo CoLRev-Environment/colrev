@@ -2,7 +2,6 @@
 """SearchSource: Web of Science"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -40,11 +39,13 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/web_of_science.md"
     )
+    db_url = "http://webofscience.com/"
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -78,20 +79,20 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        raise NotImplementedError
+
+        return operation.add_db_source(
+            search_source_cls=cls,
+            params=params,
+        )
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of WebOfScience"""
 
-        # if self.search_source.search_type == colrev.settings.SearchSource.DB:
-        #     if self.review_manager.in_ci_environment():
-        #         raise colrev_exceptions.SearchNotAutomated(
-        #             "DB search for WebOfScience not automated."
-        #         )
+        if self.search_source.search_type == colrev.settings.SearchType.DB:
+            self.operation.run_db_search()  # type: ignore
 
     def get_masterdata(
         self,

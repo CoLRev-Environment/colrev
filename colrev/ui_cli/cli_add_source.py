@@ -64,8 +64,10 @@ class CLISourceAdder:
         endpoint = endpoint_dict[
             heuristic_source_dict["source_candidate"].endpoint.lower()
         ]
+        params = {"search_file": filename}
         source = endpoint.add_endpoint(  # type: ignore
-            operation=self.search_operation, params="", filename=filename
+            operation=self.search_operation,
+            params=params,
         )
         self.search_operation.review_manager.settings.sources.append(source)
         self.review_manager.save_settings()

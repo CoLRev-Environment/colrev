@@ -12,7 +12,7 @@ colrev search
    :target: :doc:`/dev_docs/dev_status`
 
 In the ``colrev search`` operation, the SearchSource is added to the project settings, and record metadata are retrieved.
-SearchSources keep track of the associated queries, as well as the search results files in the `data/search` directory (see :doc:`SearchSources </resources/search_sources>`).
+SearchSources keep track of the associated queries, as well as the search results files in the `data/search` directory (see :doc:`SearchSources </foundations/cep/cep_3_search_sources>`).
 Two steps are necessary to add a SearchSource and run a search:
 
 .. code-block:: bash

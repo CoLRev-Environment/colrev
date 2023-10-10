@@ -41,6 +41,7 @@ colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
    .. autosummary::
 
       ~SpringerLinkSearchSource.ci_supported
+      ~SpringerLinkSearchSource.db_url
       ~SpringerLinkSearchSource.docs_link
       ~SpringerLinkSearchSource.endpoint
       ~SpringerLinkSearchSource.heuristic_status

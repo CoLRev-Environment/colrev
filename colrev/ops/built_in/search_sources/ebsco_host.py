@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,7 +11,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.load_utils_table
 import colrev.ops.search
@@ -45,12 +43,14 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/ebsco_host.md"
     )
+    db_url = "https://search.ebscohost.com/"
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
+        self.operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -69,48 +69,20 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
-        params: str,
-        filename: typing.Optional[Path],
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint"""
 
-        print("Manual search mode")
-        print("- Go to https://search.ebscohost.com/")
-        print("- Search for your query")
-        filename = operation.get_unique_filename(file_path_string="ebsco_host")
-        query_file = str(filename).replace(".bib", "_query.txt")
-        with open(query_file, "w", encoding="utf-8") as file:
-            file.write("")
-        print(f"- Save search results in {filename}")
-        print(f"- Save query in {query_file}")
-        input("Press Enter to complete")
-
-        add_source = colrev.settings.SearchSource(
-            endpoint=cls.endpoint,
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query_file": query_file},
-            comment="",
+        return operation.add_db_source(
+            search_source_cls=cls,
+            params=params,
         )
-        return add_source
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of EbscoHost"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            if self.review_manager.in_ci_environment():
-                raise colrev_exceptions.SearchNotAutomated(
-                    "DB search for Ebsco Host not automated."
-                )
-
-            query = Path(self.search_source.search_parameters["query_file"]).read_text(
-                encoding="utf-8"
-            )
-            print("- Go do https://search.ebscohost.com/")
-            print(f"- Search for your query:\n {query}")
-
-            # TODO: depends on whether running IDs were used as origins...
-            input("TO update the search results, replace the file!?!??! ")
+            self.operation.run_db_search()  # type: ignore
 
         else:
             raise NotImplementedError
@@ -138,7 +110,6 @@ class EbscoHostSearchSource(JsonSchemaMixin):
             csv_loader = colrev.ops.load_utils_table.CSVLoader(
                 load_operation=load_operation, source=self.search_source
             )
-            # TODO: any unique_id??
             table_entries = csv_loader.load_table_entries()
             records = csv_loader.convert_to_records(entries=table_entries)
             return records

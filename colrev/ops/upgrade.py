@@ -466,7 +466,6 @@ class Upgrade(colrev.operation.Operation):
                     key="sem_scholar_id", new_key="colrev.semantic_scholar.id"
                 )
 
-            # TODO : update open_alex source
             if "openalex_id" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")

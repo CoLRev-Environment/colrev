@@ -1,9 +1,31 @@
-SearchSources
-==================================
+CEP 3: SearchSources
+====================================
+
++----------------+------------------------------+
+| **Author**     | Gerit Wagner                 |
++----------------+------------------------------+
+| **Status**     | Draft                        |
++----------------+------------------------------+
+| **Created**    | 2023-10-09                   |
++----------------+------------------------------+
+| **Discussion** | TODO : link-to-issue         |
++----------------+------------------------------+
+
+Table of contents
+------------------------------
+
+:any:`summary`
+:any:`search types`
+:any:`search parameters`
+
+
+.. _summary:
+
+Summary
+----------------
 
 The SearchSources are an integral part of CoLRev.
 They support different steps depending on whether the SearchSource supports file-based exports of search results and/or API-based searches:
-
 
 Knowing the source matters:
 
@@ -39,9 +61,42 @@ Both file-based and API-based searches:
 - the `load` method can read different file formats and fix formatting errors specific to the search source
 - the `prepare` method applies SearchSource-specific rules
 
-TODO:
+
+
+.. _search types:
+
+Search types
+------------------------------
+
+.. _search parameters:
+
+Search parameters
+------------------------------
+
+Search parameters are stored in the `SearchSource.search_parameters` field and standardized as follows::
+
+    "query": {
+            1: "term1",
+            2: "term2",
+            3: "1 OR 2"
+            }
+    scope: {
+            "start_date": 2000,
+            "end_date": 2023,
+            "language": ["en"],
+            "outlet": {"journal": ["Nature"], "booktitle": ["ICIS"]},
+            "issn": ["1234-5678"],
+            }
+
+    TODO : check crossref __YEAR_SCOPE_REGEX
+
+TODO
+------------------
 
 - SearchSource-specific translation of search queries
 - Retrieval of PDFs
 - Coverage reports
-- SearchSource-specific namespaces
+- SearchSource-specific namespaces (see CEP2)
+- Experimental/mature: parameters must be validated (before adding source and before running search), tests, docs implemented, unique_ids should be tested/recommended
+- settings should implement a get_query_dict() (similar to get_query())
+- print statistics after DB search (validate new file against file in history)

@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
+import inquirer
+
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
@@ -55,18 +57,129 @@ class Search(colrev.operation.Operation):
 
         return filename
 
-    def get_query_filename(self, *, filename: Path, instantiate: bool = False) -> Path:
+    def get_query_filename(
+        self, *, filename: Path, instantiate: bool = False, interactive: bool = False
+    ) -> Path:
         """Get the corresponding filename for the search query"""
         query_filename = Path("data/search/") / Path(str(filename.stem) + "_query.txt")
         if instantiate:
             with open(query_filename, "w", encoding="utf-8") as file:
                 file.write("")
-            input(
-                f"Created {query_filename}. "
-                "Please store your query in the file and press Enter to continue."
-            )
+            if interactive:
+                input(
+                    f"Created {colors.ORANGE}{query_filename}{colors.END}. "
+                    "Please store your query in the file and press Enter to continue."
+                )
             self.review_manager.dataset.add_changes(path=query_filename)
         return query_filename
+
+    def add_db_source(  # type: ignore
+        self, *, search_source_cls, params: dict
+    ) -> colrev.settings.SearchSource:
+        """Interactively add a DB SearchSource"""
+
+        if not all(x in ["search_file"] for x in list(params)):
+            raise NotImplementedError  # or parameter error
+
+        print("DB search mode")
+        if "search_file" in params:
+            filename = params["search_file"]
+            query_file = self.get_query_filename(filename=filename, instantiate=True)
+        else:
+            filename = self.get_unique_filename(
+                file_path_string=search_source_cls.endpoint.replace("colrev.", "")
+            )
+            print(f"- Go to {colors.ORANGE}{search_source_cls.db_url}{colors.END}")
+            query_file = self.get_query_filename(
+                filename=filename, instantiate=True, interactive=False
+            )
+            print(
+                f"- Search for your query and store it in {colors.ORANGE}{query_file}{colors.END}"
+            )
+            print(f"- Save search results in {colors.ORANGE}{filename}{colors.END}")
+            input("Press Enter to complete")
+            self.review_manager.dataset.add_changes(path=filename)
+
+        query_file = self.get_query_filename(filename=filename, instantiate=True)
+
+        add_source = colrev.settings.SearchSource(
+            endpoint=search_source_cls.endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.DB,
+            search_parameters={"query_file": str(query_file)},
+            comment="",
+        )
+        return add_source
+
+    def add_api_source(self, *, endpoint: str) -> colrev.settings.SearchSource:
+        """Interactively add an API SearchSource"""
+
+        print(f"Add {endpoint} as an API SearchSource")
+        print()
+
+        keywords = input("Enter the keywords:")
+
+        filename = self.get_unique_filename(
+            file_path_string=f"{endpoint.replace('colrev.', '')}_{keywords}"
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint=endpoint,
+            filename=filename,
+            search_type=colrev.settings.SearchType.API,
+            search_parameters={"query": keywords},
+            comment="",
+        )
+        return add_source
+
+    def select_search_type(
+        self, *, search_types: list, params: dict
+    ) -> colrev.settings.SearchType:
+        """Select the SearchType (interactively if neccessary)"""
+
+        if "url" in params:
+            return colrev.settings.SearchType.API
+        if "search_file" in params:
+            return colrev.settings.SearchType.DB
+
+        choices = [x for x in search_types if x != colrev.settings.SearchType.MD]
+        if len(choices) == 1:
+            return choices[0]
+        questions = [
+            inquirer.List(
+                "search_type",
+                message="Select SearchType:",
+                choices=choices,
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+        return colrev.settings.SearchType[answers["search_type"]]
+
+    def run_db_search(  # type: ignore
+        self,
+        *,
+        search_source_cls,
+        source: colrev.settings.SearchSource,
+    ) -> None:
+        """Interactively run a DB search"""
+
+        if self.review_manager.in_ci_environment():
+            raise colrev_exceptions.SearchNotAutomated("DB search not automated.")
+
+        print("DB search (update)")
+        print(
+            f"- Go to {colors.ORANGE}{search_source_cls.db_url}{colors.END} "
+            "and run the following query:"
+        )
+        print()
+        print(f"{colors.ORANGE}{source.get_query()}{colors.END}")
+        print()
+        print(
+            f"- Replace search results in {colors.ORANGE}"
+            + str(source.filename)
+            + colors.END
+        )
+        input("Press enter to continue")
+        self.review_manager.dataset.add_changes(path=source.filename)
 
     def __get_search_sources(
         self, *, selection_str: Optional[str] = None
@@ -222,7 +335,7 @@ class Search(colrev.operation.Operation):
 
         return results_list
 
-    def add_most_likely_sources(self) -> None:
+    def add_most_likely_sources(self, *, create_query_files: bool = True) -> None:
         """Get the most likely SearchSources
 
         returns a dictionary:
@@ -230,7 +343,6 @@ class Search(colrev.operation.Operation):
         """
 
         heuristic_list = self.get_new_sources_heuristic_list()
-        selected_search_sources = []
 
         for results_list in heuristic_list.values():
             # Use the last / unknown_source
@@ -249,9 +361,18 @@ class Search(colrev.operation.Operation):
             else:
                 selection = str(best_candidate_pos)
                 source = results_list[int(selection) - 1]
-            selected_search_sources.append(source["source_candidate"])
-        for selected_search_source in selected_search_sources:
-            self.review_manager.settings.sources.append(selected_search_source)
+
+            if create_query_files:
+                query_path = self.get_query_filename(
+                    filename=source["source_candidate"].filename
+                )
+                source["source_candidate"].search_parameters["query_file"] = str(
+                    query_path
+                )
+                query_path.write_text("", encoding="utf-8")
+                self.review_manager.dataset.add_changes(path=query_path)
+
+            self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
 
     def get_new_sources_heuristic_list(self) -> dict:
@@ -294,25 +415,6 @@ class Search(colrev.operation.Operation):
             )
 
         return heuristic_results
-
-    def add_interactively(self, *, endpoint: str) -> colrev.settings.SearchSource:
-        """Add a SearchSource interactively"""
-        print(f"Interactively add {endpoint} as a SearchSource")
-        print()
-
-        keywords = input("Enter the keywords:")
-
-        filename = self.get_unique_filename(
-            file_path_string=f"{endpoint.replace('colrev.', '')}_{keywords}"
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint=endpoint,
-            filename=filename,
-            search_type=colrev.settings.SearchType.DB,
-            search_parameters={"query": keywords},
-            comment="",
-        )
-        return add_source
 
     @check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
