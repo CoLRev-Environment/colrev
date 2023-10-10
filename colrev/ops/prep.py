@@ -849,7 +849,7 @@ class Prep(colrev.operation.Operation):
             combined_recs = {**temp_recs, **cur_temp_recs}
             self.temp_records.parent.mkdir(exist_ok=True)
             self.review_manager.dataset.save_records_dict_to_file(
-                records=combined_recs, save_path=self.temp_records
+                records=combined_recs, save_path=self.temp_records, add_changes=False
             )
             self.current_temp_records.unlink()
 
