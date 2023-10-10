@@ -142,6 +142,17 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.arxiv",
+            "endpoint": "colrev.ops.built_in.search_sources.arxiv.ArXivSource",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "SearchSource for arXiv (:doc:`instructions </resources/extensions_index/colrev.arxiv>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.colrev_project",
             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
             "status": "|MATURING|",

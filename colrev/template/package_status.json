@@ -107,6 +107,10 @@
             "status": "EXPERIMENTAL"
         },
         {
+            "package_endpoint_identifier": "colrev.arxiv",
+            "status": "EXPERIMENTAL"
+        },
+        {
             "package_endpoint_identifier": "colrev.psycinfo",
             "status": "EXPERIMENTAL"
         },

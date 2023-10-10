@@ -232,6 +232,9 @@
             {"package_endpoint_identifier": "colrev.ieee",
              "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource"
             },
+            {"package_endpoint_identifier": "colrev.arxiv",
+             "endpoint": "colrev.ops.built_in.search_sources.arxiv.ArXivSource"
+            },
             {"package_endpoint_identifier": "colrev.psycinfo",
              "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource"
             },
