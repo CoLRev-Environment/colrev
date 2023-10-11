@@ -618,8 +618,8 @@ class DBLPSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.PrepRecord:
         """Source-specific preparation for DBLP"""
 
         if record.data.get("author", "UNKNOWN") != "UNKNOWN":
