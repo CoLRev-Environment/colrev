@@ -279,6 +279,13 @@ class Record:
         # pylint: disable=direct-status-assign
         self.data["colrev_status"] = target_state
 
+    def prefix_non_standardized_field_keys(self, *, prefix: str) -> None:
+        """Prefix non-standardized field keys"""
+        for key in list(self.data.keys()):
+            if key in colrev.record.Record.standardized_field_keys:
+                continue
+            self.data[f"{prefix}.{key}"] = self.data.pop(key)
+
     def shares_origins(self, *, other_record: Record) -> bool:
         """Check at least one origin is shared with the other record"""
         return any(

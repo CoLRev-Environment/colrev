@@ -230,13 +230,9 @@ class Load(colrev.operation.Operation):
         self.__setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.search_source.source_records_list:
-            # prefix non-standardized field keys
-            for key in list(source_record.keys()):
-                if key in colrev.record.Record.standardized_field_keys:
-                    continue
-                source_record[
-                    f"{source.search_source.endpoint}.{key}"
-                ] = source_record.pop(key)
+            colrev.record.Record(data=source_record).prefix_non_standardized_field_keys(
+                prefix=source.search_source.endpoint
+            )
 
             source_record = self.__import_record(record_dict=source_record)
 

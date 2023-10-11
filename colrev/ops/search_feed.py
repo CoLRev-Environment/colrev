@@ -341,6 +341,7 @@ class GeneralOriginFeed:
         # TBD: in curated masterdata repositories?
 
         record = colrev.record.Record(data=record_dict)
+        record.prefix_non_standardized_field_keys(prefix=source.endpoint)
         changed = self.__update_existing_record_retract(
             record=record, main_record_dict=main_record_dict
         )
