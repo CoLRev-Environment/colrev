@@ -20,7 +20,7 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    sudo apt install python-is-python3
    sudo apt install python3-pip
    python3 -m pip install --upgrade pip
-   python3 -m pip install poetry pytest-mock pylint pytest
+   python3 -m pip install poetry
    python3 -m pip install --upgrade paramiko
 
    # Clone and install CoLRev on your Desktop
@@ -28,17 +28,16 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    cd ~/Desktop
    git clone git@github.com:CoLRev-Environment/colrev.git
    cd colrev
-   pip install -e .
-   poetry install --with dev
+   pip install -e .[dev,docs]
    pre-commit install
 
    # Run the pre-commit hooks
    pre-commit run --all
 
-   # Optional: Run the tests
+   # Run the tests separately (optional)
    pytest tests
 
-   # Optional: Build the docs locally
+   # Build the docs locally (optional)
    cd docs
    make html
    pre-commit run --all # to format the pages
