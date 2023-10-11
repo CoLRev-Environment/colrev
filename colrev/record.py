@@ -1967,6 +1967,30 @@ class PrepRecord(Record):
                     "pages"
                 ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
 
+    def fix_name_particles(self) -> None:
+        """Fix the name particles in the author field"""
+        if "author" not in self.data:
+            return
+        names = self.data["author"].split(" and ")
+        for ind, name in enumerate(names):
+            for prefix in [
+                "van den",
+                "von den",
+                "van der",
+                "von der",
+                "vom",
+                "van",
+                "von",
+            ]:
+                if name.startswith(f"{prefix} "):
+                    name = "{" + name.replace(", ", "}, ")
+                if name.endswith(f" {prefix}"):
+                    name = (
+                        "{" + prefix + " " + name[: -len(prefix)].replace(", ", "}, ")
+                    )
+                names[ind] = name
+        self.data["author"] = " and ".join(names)
+
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""
 

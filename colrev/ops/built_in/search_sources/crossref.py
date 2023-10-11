@@ -852,53 +852,58 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         # could print statistics (retrieve 4/200) based on the crossref header (nr records)
         records = self.review_manager.dataset.load_records_dict()
-        for item in self.__get_crossref_query_return(rerun=rerun):
-            try:
-                retrieved_record_dict = connector_utils.json_to_record(item=item)
-                crossref_feed.set_id(record_dict=retrieved_record_dict)
-                prev_record_dict_version = {}
-                if retrieved_record_dict["ID"] in crossref_feed.feed_records:
-                    prev_record_dict_version = deepcopy(
-                        crossref_feed.feed_records[retrieved_record_dict["ID"]]
+        try:
+            for item in self.__get_crossref_query_return(rerun=rerun):
+                try:
+                    retrieved_record_dict = connector_utils.json_to_record(item=item)
+                    crossref_feed.set_id(record_dict=retrieved_record_dict)
+                    prev_record_dict_version = {}
+                    if retrieved_record_dict["ID"] in crossref_feed.feed_records:
+                        prev_record_dict_version = deepcopy(
+                            crossref_feed.feed_records[retrieved_record_dict["ID"]]
+                        )
+
+                    if self.__scope_excluded(
+                        retrieved_record_dict=retrieved_record_dict
+                    ):
+                        continue
+                    retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                    self.__prep_crossref_record(
+                        record=retrieved_record, prep_main_record=False
                     )
 
-                if self.__scope_excluded(retrieved_record_dict=retrieved_record_dict):
-                    continue
-                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-                self.__prep_crossref_record(
-                    record=retrieved_record, prep_main_record=False
-                )
+                    self.__restore_url(record=retrieved_record, feed=crossref_feed)
 
-                self.__restore_url(record=retrieved_record, feed=crossref_feed)
+                    added = crossref_feed.add_record(record=retrieved_record)
 
-                added = crossref_feed.add_record(record=retrieved_record)
+                    if added:
+                        self.review_manager.logger.info(
+                            " retrieve " + retrieved_record.data["doi"]
+                        )
+                    else:
+                        crossref_feed.update_existing_record(
+                            records=records,
+                            record_dict=retrieved_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
+                        )
 
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + retrieved_record.data["doi"]
-                    )
-                else:
-                    crossref_feed.update_existing_record(
-                        records=records,
-                        record_dict=retrieved_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-
-                # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                if not added and not rerun:
-                    # problem: some publishers don't necessarily
-                    # deposit papers chronologically
-                    break
-            except (
-                colrev_exceptions.RecordNotParsableException,
-                colrev_exceptions.NotFeedIdentifiableException,
-                KeyError  # error in crossref package:
-                # if len(result['message']['items']) == 0:
-                # KeyError: 'items'
-            ):
-                pass
+                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                    if not added and not rerun:
+                        # problem: some publishers don't necessarily
+                        # deposit papers chronologically
+                        break
+                except (
+                    colrev_exceptions.RecordNotParsableException,
+                    colrev_exceptions.NotFeedIdentifiableException,
+                ):
+                    pass
+        except KeyError as exc:
+            print(exc)
+            # KeyError  # error in crossref package:
+            # if len(result['message']['items']) == 0:
+            # KeyError: 'items'
 
         crossref_feed.print_post_run_search_infos(records=records)
 
@@ -1057,10 +1062,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.PrepRecord:
         """Source-specific preparation for Crossref"""
-
         source_item = [
             x
             for x in record.data["colrev_origin"]
@@ -1071,5 +1075,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 source=source_item[0],
                 masterdata_repository=self.review_manager.settings.is_curated_repo(),
             )
+
+        record.fix_name_particles()
 
         return record

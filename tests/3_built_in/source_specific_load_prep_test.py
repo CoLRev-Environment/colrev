@@ -17,6 +17,8 @@ NO_CUSTOM_SOURCE = None
 # To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
 # and create the source_filepath in tests/data/built_in_search_sources.
 # The first test run will create the expected_file and fail on the first run.
+# To test an individual case, run:
+# pytest tests/3_built_in/source_specific_load_prep_test.py -vv -k crossref
 @pytest.mark.parametrize(
     "source_filepath, expected_source_identifier, custom_source, expected_file",
     [
@@ -26,6 +28,18 @@ NO_CUSTOM_SOURCE = None
             "colrev.ais_library",
             NO_CUSTOM_SOURCE,
             Path("ais_result.bib"),
+        ),
+        (
+            Path("crossref.bib"),
+            "colrev.crossref",
+            colrev.settings.SearchSource(
+                endpoint="colrev.crossref",
+                filename=Path("data/search/crossref.bib"),
+                search_type=colrev.settings.SearchType.API,
+                search_parameters={},
+                comment="",
+            ),
+            Path("crossref_result.bib"),
         ),
         (
             Path("pubmed.csv"),
@@ -89,7 +103,7 @@ NO_CUSTOM_SOURCE = None
             colrev.settings.SearchSource(
                 endpoint="colrev.files_dir",
                 filename=Path("data/search/files_dir.bib"),
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=colrev.settings.SearchType.FILES,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),
@@ -101,7 +115,7 @@ NO_CUSTOM_SOURCE = None
             colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
                 filename=Path("data/search/ieee.ris"),
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=colrev.settings.SearchType.DB,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),
@@ -154,8 +168,6 @@ def test_source(  # type: ignore
     ]
     base_repo_review_manager.settings.sources = []
 
-    base_repo_review_manager.save_settings()
-
     # Run search and load and test the heuristics
 
     if custom_source:
@@ -164,6 +176,7 @@ def test_source(  # type: ignore
         search_operation = base_repo_review_manager.get_search_operation()
         search_operation.add_most_likely_sources()
 
+    base_repo_review_manager.save_settings()
     load_operation = base_repo_review_manager.get_load_operation()
     load_operation.main()
 
