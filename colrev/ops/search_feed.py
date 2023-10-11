@@ -309,6 +309,8 @@ class GeneralOriginFeed:
     def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
         # Forthcoming paper published if volume and number are assigned
         # i.e., no longer UNKNOWN
+        if record_dict["ENTRYTYPE"] != "article":
+            return False
         if (
             record_dict.get("volume", "") != "UNKNOWN"
             and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
