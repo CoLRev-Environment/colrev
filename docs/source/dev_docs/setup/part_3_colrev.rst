@@ -40,7 +40,6 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    # Build the docs locally (optional)
    cd docs
    make html
-   pre-commit run --all # to format the pages
 
 
 To test CoLRev in a demo project, run the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
