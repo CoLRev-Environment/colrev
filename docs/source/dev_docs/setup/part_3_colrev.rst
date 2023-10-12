@@ -41,8 +41,7 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
    cd docs
    make html
 
-
-To test CoLRev in a demo project, run the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+Test CoLRev in a demo project with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
 ::
 
@@ -53,3 +52,14 @@ To test CoLRev in a demo project, run the following commands (using the shell / 
    colrev init --example
    # The status operation will guide you through the whole process
    colrev status
+
+Pull the newest changes from the main repository and update CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+
+::
+
+   # switch to colrev directory. Path may differ, if colrev was setup elsewhere
+   cd ~/Desktop/colrev
+   # pull the newest changes and apply the update
+   git pull
+   pip install -e .[dev,docs]
+   
