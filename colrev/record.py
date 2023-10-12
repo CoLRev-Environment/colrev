@@ -720,36 +720,18 @@ class Record:
     def __select_best_author(
         cls, *, record: Record, merging_record: Record, preferred_sources: list
     ) -> str:
-        # pylint: disable=too-many-return-statements
-        if "colrev_masterdata_provenance" not in record.data:
-            record.data["colrev_masterdata_provenance"] = {}
-        record_a_prov = record.data["colrev_masterdata_provenance"]
-
         if "colrev_masterdata_provenance" not in merging_record.data:
             merging_record.data["colrev_masterdata_provenance"] = {}
         merging_record_a_prov = merging_record.data["colrev_masterdata_provenance"]
 
-        if "author" in record_a_prov and "author" not in merging_record_a_prov:
-            # Prefer non-defect version
-            if "quality_defect" in record_a_prov["author"].get("note", ""):
-                return merging_record.data["author"]
-            # Prefer complete version
-            if "incomplete" in record_a_prov["author"].get("note", ""):
-                return merging_record.data["author"]
-        elif "author" in record_a_prov and "author" in merging_record_a_prov:
-            # Prefer non-defect version
-            if "quality_defect" in record_a_prov["author"].get(
-                "note", ""
-            ) and "quality_defect" not in merging_record_a_prov["author"].get(
-                "note", ""
-            ):
-                return merging_record.data["author"]
-
-            # Prefer complete version
-            if "incomplete" in record_a_prov["author"].get(
-                "note", ""
-            ) and "incomplete" not in merging_record_a_prov["author"].get("note", ""):
-                return merging_record.data["author"]
+        if not record.has_quality_defects(
+            field="author"
+        ) and merging_record.has_quality_defects(field="author"):
+            return record.data["author"]
+        if record.has_quality_defects(
+            field="author"
+        ) and not merging_record.has_quality_defects(field="author"):
+            return merging_record.data["author"]
 
         if len(record.data["author"]) > 0 and len(merging_record.data["author"]) > 0:
             default_mostly_upper = (
@@ -1185,14 +1167,6 @@ class Record:
                 "note": note,
             }
 
-        existing_note = self.data["colrev_masterdata_provenance"][key]["note"]
-        if "quality_defect" in existing_note and any(
-            x in existing_note for x in ["missing", "disagreement"]
-        ):
-            self.data["colrev_masterdata_provenance"][key]["note"] = (
-                existing_note.replace("quality_defect", "").rstrip(",").lstrip(",")
-            )
-
     def add_data_provenance_note(self, *, key: str, note: str) -> None:
         """Add a data provenance note (based on a key)"""
         if "colrev_data_provenance" not in self.data:
@@ -1296,8 +1270,21 @@ class Record:
 
         return True
 
-    def has_quality_defects(self) -> bool:
+    def has_quality_defects(self, *, field: str = "") -> bool:
         """Check whether a record has quality defects"""
+        if field != "":
+            if field in self.data.get("colrev_masterdata_provenance", {}):
+                note = self.data["colrev_masterdata_provenance"][field]["note"]
+                notes = note.split(",")
+                notes = [n for n in notes if n != "not-missing"]
+                return len(notes) == 0
+            elif field in self.data.get("colrev_data_provenance", {}):
+                note = self.data["colrev_data_provenance"][field]["note"]
+                notes = note.split(",")
+                notes = [n for n in notes if n != "not-missing"]
+                return len(notes) == 0
+            return False
+
         return any(
             x["note"] != ""
             for x in self.data.get("colrev_masterdata_provenance", {}).values()
@@ -1935,13 +1922,6 @@ class PrepRecord(Record):
 
         self.data[key] = prep_utils.capitalize_entities(self.data[key])
 
-        if key in self.data.get("colrev_masterdata_provenance", {}):
-            note = self.data["colrev_masterdata_provenance"][key]["note"]
-            if "quality_defect" in note:
-                self.data["colrev_masterdata_provenance"][key]["note"] = note.replace(
-                    "quality_defect", ""
-                )
-
     def rename_fields_based_on_mapping(self, *, mapping: dict) -> None:
         """Convenience function for the prep scripts (to rename fields)"""
 
@@ -2008,9 +1988,6 @@ class PrepRecord(Record):
             return True
 
         if any(
-            "disagreement with " in x["note"]
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
-        ) or any(
             "record_not_in_toc" in x["note"]
             for x in self.data.get("colrev_masterdata_provenance", {}).values()
         ):
@@ -2021,9 +1998,6 @@ class PrepRecord(Record):
     def preparation_break_condition(self) -> bool:
         """Check whether the break condition for the prep operation is given"""
         if any(
-            "disagreement with " in x["note"]
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
-        ) or any(
             "record_not_in_toc" in x["note"]
             for x in self.data.get("colrev_masterdata_provenance", {}).values()
         ):
