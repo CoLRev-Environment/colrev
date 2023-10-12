@@ -62,4 +62,3 @@ Pull the newest changes from the main repository and update CoLRev with the foll
    # pull the newest changes and apply the update
    git pull
    pip install -e .[dev,docs]
-   
