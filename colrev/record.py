@@ -1988,7 +1988,7 @@ class PrepRecord(Record):
             return True
 
         if any(
-            "record_not_in_toc" in x["note"]
+            "record-not-in-toc" in x["note"]
             for x in self.data.get("colrev_masterdata_provenance", {}).values()
         ):
             return True
@@ -1998,7 +1998,7 @@ class PrepRecord(Record):
     def preparation_break_condition(self) -> bool:
         """Check whether the break condition for the prep operation is given"""
         if any(
-            "record_not_in_toc" in x["note"]
+            "record-not-in-toc" in x["note"]
             for x in self.data.get("colrev_masterdata_provenance", {}).values()
         ):
             return True

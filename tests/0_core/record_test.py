@@ -1416,14 +1416,12 @@ def test_preparation_save_condition() -> None:
 
     prep_rec = r1.copy_prep_rec()
     prep_rec.data["colrev_status"] = colrev.record.RecordState.md_imported
-    prep_rec.data["colrev_masterdata_provenance"]["title"][
-        "note"
-    ] = "disagreement with test"
+    prep_rec.data["colrev_masterdata_provenance"]["title"]["note"] = "record-not-in-toc"
     expected = True
     actual = prep_rec.preparation_save_condition()
     assert expected == actual
 
-    prep_rec.data["colrev_masterdata_provenance"]["title"]["note"] = "record_not_in_toc"
+    prep_rec.data["colrev_masterdata_provenance"]["title"]["note"] = "record-not-in-toc"
     expected = True
     actual = prep_rec.preparation_save_condition()
     assert expected == actual
@@ -1435,8 +1433,8 @@ def test_preparation_break_condition() -> None:
     prep_rec = r1.copy_prep_rec()
     prep_rec.data["colrev_masterdata_provenance"]["title"][
         "note"
-    ] = "disagreement with website"
-    expected = True
+    ] = "inconsistent-with-url-metadata"
+    expected = False
     actual = prep_rec.preparation_break_condition()
     assert expected == actual
 
