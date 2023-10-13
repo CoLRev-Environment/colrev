@@ -6,6 +6,8 @@ import re
 import typing
 from typing import TYPE_CHECKING
 
+from colrev.constants import Fields
+
 if TYPE_CHECKING:
     import colrev.ops.load
 
@@ -40,19 +42,19 @@ class NBIBLoader:
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
         self.mapping = {
-            "TI": "title",
-            "AU": "author",
-            "DP": "year",
-            "JT": "journal",
-            "VI": "volume",
-            "IP": "number",
-            "PG": "pages",
-            "AB": "abstract",
-            "AID": "doi",
-            "ISSN": "issn",
+            "TI": Fields.TITLE,
+            "AU": Fields.AUTHOR,
+            "DP": Fields.YEAR,
+            "JT": Fields.JOURNAL,
+            "VI": Fields.VOLUME,
+            "IP": Fields.NUMBER,
+            "PG": Fields.PAGES,
+            "AB": Fields.ABSTRACT,
+            "AID": Fields.DOI,
+            "ISSN": Fields.ISSN,
             "OID": "eric_id",
-            "OT": "keywords",
-            "LA": "language",
+            "OT": Fields.KEYWORDS,
+            "LA": Fields.LANGUAGE,
             "PT": "type",
             # "OWN": "owner",
         }
@@ -128,8 +130,8 @@ class NBIBLoader:
 
         records = {}
         for ind, record in enumerate(records_list):
-            record["ID"] = str(ind).rjust(6, "0")
-            records[record["ID"]] = record
+            record[Fields.ID] = str(ind).rjust(6, "0")
+            records[record[Fields.ID]] = record
 
         return records
 
@@ -150,11 +152,11 @@ class NBIBLoader:
                 entry[list_field] = delimiter.join(entry[list_field])
 
             if "journal article" in entry["type"].lower():
-                entry["ENTRYTYPE"] = "article"
+                entry[Fields.ENTRYTYPE] = "article"
             else:
-                entry["ENTRYTYPE"] = "misc"
+                entry[Fields.ENTRYTYPE] = "misc"
 
-            entry["ID"] = _id
+            entry[Fields.ID] = _id
 
             records[_id] = entry
 

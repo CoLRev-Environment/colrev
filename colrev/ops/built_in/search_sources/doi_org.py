@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -39,7 +40,7 @@ class DOIConnector:
     ) -> colrev.record.Record:
         """Retrieve the metadata from DOI.org based on a record (similarity)"""
 
-        if "doi" not in record.data:
+        if Fields.DOI not in record.data:
             return record
 
         try:
@@ -50,16 +51,16 @@ class DOIConnector:
             # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
 
             try:
-                url = "http://dx.doi.org/" + record.data["doi"]
+                url = "http://dx.doi.org/" + record.data[Fields.DOI]
                 # review_manager.logger.debug(url)
                 headers = {"accept": "application/vnd.citationstyles.csl+json"}
                 ret = session.request("GET", url, headers=headers, timeout=timeout)
                 ret.raise_for_status()
                 if ret.status_code != 200:
                     review_manager.report_logger.info(
-                        f' {record.data["ID"]}'
+                        f" {record.data[Fields.ID]}"
                         + "metadata for "
-                        + f'doi  {record.data["doi"]} not (yet) available'
+                        + f"doi  {record.data[Fields.DOI]} not (yet) available"
                     )
                     return record
             except OperationalError as exc:
@@ -84,8 +85,8 @@ class DOIConnector:
                 record.prescreen_exclude(reason="retracted")
                 record.remove_field(key="warning")
 
-            if "title" in record.data:
-                record.format_if_mostly_upper(key="title", case="sentence")
+            if Fields.TITLE in record.data:
+                record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
 
         except (
             requests.exceptions.RequestException,
@@ -105,7 +106,7 @@ class DOIConnector:
     ) -> None:
         """Get the website link from DOI resolution API"""
 
-        if "doi" not in record.data:
+        if Fields.DOI not in record.data:
             return
 
         doi_url = f"https://www.doi.org/{record.data['doi']}"
@@ -159,7 +160,7 @@ class DOIConnector:
                         timeout=timeout,
                     )
             record.update_field(
-                key="url",
+                key=Fields.URL,
                 value=str(url.rstrip("/")),
                 source=doi_url,
                 keep_source_if_equal=True,

@@ -27,6 +27,7 @@ import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

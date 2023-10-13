@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 
 # pylint: disable=unused-argument
@@ -88,13 +89,14 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
 
     def __ris_fixes(self, *, entries: dict) -> None:
         for entry in entries:
+            # pylint: disable=colrev-missed-constant-usage
             if "title" in entry and "primary_title" not in entry:
                 entry["primary_title"] = entry.pop("title")
             if entry["type_of_reference"] in ["JOUR"]:
                 if "journal_name" in entry:
                     entry["secondary_title"] = entry.pop("journal_name")
             if "publication_year" in entry:
-                entry["year"] = entry.pop("publication_year")
+                entry[Fields.YEAR] = entry.pop("publication_year")
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""

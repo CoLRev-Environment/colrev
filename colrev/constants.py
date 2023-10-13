@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # pylint: disable=too-few-public-methods
+# pylint: disable=colrev-missed-constant-usage
 
 
 class ENTRYTYPES:

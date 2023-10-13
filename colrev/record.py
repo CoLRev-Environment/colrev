@@ -235,6 +235,8 @@ class Record:
         for key in list(self.data.keys()):
             if key in FieldSet.STANDARDIZED_FIELD_KEYS:
                 continue
+            if key.startswith("colrev."):
+                continue
             self.data[f"{prefix}.{key}"] = self.data.pop(key)
 
     def shares_origins(self, *, other_record: Record) -> bool:

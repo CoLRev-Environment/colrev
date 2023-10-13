@@ -41,19 +41,18 @@ class ExportManPrep(JsonSchemaMixin):
     RELATIVE_PREP_MAN_INFO_PATH_XLS = Path("records_prep_man_info.xlsx")
 
     __FIELDS_TO_KEEP = [
-        "ENTRYTYPE",
-        "author",
-        "title",
-        "year",
-        "journal",
-        "booktitle",
-        "incollection",
-        "colrev_status",
-        "volume",
-        "number",
-        "pages",
-        "doi",
-        "file",
+        Fields.ENTRYTYPE,
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.YEAR,
+        Fields.JOURNAL,
+        Fields.BOOKTITLE,
+        Fields.STATUS,
+        Fields.VOLUME,
+        Fields.NUMBER,
+        Fields.PAGES,
+        Fields.DOI,
+        Fields.FILE,
     ]
 
     @dataclass

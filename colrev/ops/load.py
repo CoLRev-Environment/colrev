@@ -172,7 +172,7 @@ class Load(colrev.operation.Operation):
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
                 if "curation_ID" in record:
-                    record["Fields.MD_PROV"] = {
+                    record[Fields.MD_PROV] = {
                         "CURATED": {
                             "source": record["curation_ID"].split("#")[0],
                             "note": "",

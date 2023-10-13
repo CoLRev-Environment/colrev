@@ -54,7 +54,7 @@ class Advisor:
                     found_a_conflict = True
         if found_a_conflict:
             item = {
-                Fields.TITLE: "Git merge conflict detected",
+                "title": "Git merge conflict detected",
                 "level": "WARNING",
                 "msg": "To resolve:\n  1 https://docs.github.com/en/"
                 + "pull-requests/collaborating-with-pull-requests/"
@@ -76,7 +76,7 @@ class Advisor:
         ]
         if len(non_staged) > 0:
             item = {
-                Fields.TITLE: f"Non-staged changes: {','.join(non_staged)}",
+                "title": f"Non-staged changes: {','.join(non_staged)}",
                 "level": "WARNING",
             }
             collaboration_instructions["items"].append(item)
@@ -94,7 +94,7 @@ class Advisor:
 
         if self.review_manager.dataset.behind_remote():
             item = {
-                Fields.TITLE: "Remote changes available on the server",
+                "title": "Remote changes available on the server",
                 "level": "WARNING",
                 "msg": "Once you have committed your changes, get the latest "
                 + "remote changes",
@@ -105,7 +105,7 @@ class Advisor:
 
         if self.review_manager.dataset.remote_ahead():
             item = {
-                Fields.TITLE: "Local changes not yet on the server",
+                "title": "Local changes not yet on the server",
                 "level": "WARNING",
                 "msg": "Once you have committed your changes, upload them "
                 + "to the shared repository.",
@@ -115,7 +115,7 @@ class Advisor:
 
         if share_stat_req == "NONE":
             collaboration_instructions["status"] = {
-                Fields.TITLE: "Sharing: currently ready for sharing",
+                "title": "Sharing: currently ready for sharing",
                 "level": "SUCCESS",
                 "msg": "",
                 # If consistency checks pass -
@@ -130,7 +130,7 @@ class Advisor:
                 and 0 == status_stats.currently.md_prepared
             ):
                 collaboration_instructions["status"] = {
-                    Fields.TITLE: "Sharing: currently ready for sharing",
+                    "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
                     "msg": "",
                     # If consistency checks pass -
@@ -139,7 +139,7 @@ class Advisor:
 
             else:
                 collaboration_instructions["status"] = {
-                    Fields.TITLE: "Sharing: currently not ready for sharing",
+                    "title": "Sharing: currently not ready for sharing",
                     "level": "WARNING",
                     "msg": "All records should be processed before sharing "
                     + "(see instructions above).",
@@ -163,7 +163,7 @@ class Advisor:
                 and 0 == status_stats.currently.pdf_prepared
             ):
                 collaboration_instructions["status"] = {
-                    Fields.TITLE: "Sharing: currently ready for sharing",
+                    "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
                     "msg": "",
                     # If consistency checks pass -
@@ -172,7 +172,7 @@ class Advisor:
 
             else:
                 collaboration_instructions["status"] = {
-                    Fields.TITLE: "Sharing: currently not ready for sharing",
+                    "title": "Sharing: currently not ready for sharing",
                     "level": "WARNING",
                     "msg": "All records should be screened before sharing "
                     + "(see instructions above).",
@@ -181,7 +181,7 @@ class Advisor:
         if share_stat_req == "COMPLETED":
             if 0 == status_stats.currently.non_completed:
                 collaboration_instructions["status"] = {
-                    Fields.TITLE: "Sharing: currently ready for sharing",
+                    "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
                     "msg": "",
                     # If consistency checks pass -
@@ -189,7 +189,7 @@ class Advisor:
                 }
             else:
                 collaboration_instructions["status"] = {
-                    Fields.TITLE: "Sharing: currently not ready for sharing",
+                    "title": "Sharing: currently not ready for sharing",
                     "level": "WARNING",
                     "msg": "All records should be completed before sharing "
                     + "(see instructions above).",
@@ -208,13 +208,15 @@ class Advisor:
 
         remote_connected = 0 != len(git_repo.remotes)
         if remote_connected:
-            collaboration_instructions[Fields.TITLE] = "Versioning and collaboration"
+            # pylint: disable=colrev-missed-constant-usage
+            collaboration_instructions["title"] = "Versioning and collaboration"
         else:
+            # pylint: disable=colrev-missed-constant-usage
             collaboration_instructions[
-                Fields.TITLE
+                "title"
             ] = "Versioning (not connected to shared repository)"
             item = {
-                Fields.TITLE: "Project not yet shared",
+                "title": "Project not yet shared",
                 "level": "WARNING",
                 "msg": "Please visit  https://github.com/new\n  "
                 + "create an empty repository called  "
@@ -243,7 +245,7 @@ class Advisor:
 
         if 0 == len(collaboration_instructions["items"]):
             item = {
-                Fields.TITLE: "Up-to-date",
+                "title": "Up-to-date",
                 "level": "SUCCESS",
             }
             collaboration_instructions["items"].append(item)
@@ -772,7 +774,7 @@ class Advisor:
 
         msgs = "\n ".join(
             [
-                x["level"] + x[Fields.TITLE] + x.get("msg", "")
+                x["level"] + x["title"] + x.get("msg", "")
                 for x in collaboration_instructions["items"]
             ]
         )

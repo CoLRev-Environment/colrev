@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import requests
 
 import colrev.env.package_manager
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -65,7 +66,7 @@ class MarkdownLoader:
             load_str=data
         )
         for record in records.values():
-            if record.get("year", "a") == record.get("date", "b"):
+            if record.get(Fields.YEAR, "a") == record.get("date", "b"):
                 del record["date"]
 
         return records

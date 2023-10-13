@@ -28,6 +28,7 @@ import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
+from colrev.constants import Fields
 
 # defuse std xml lib
 defusedxml.defuse_stdlib()
@@ -130,7 +131,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     @classmethod
     def __europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
-        retrieved_record_dict: dict = {"ENTRYTYPE": "article"}
+        retrieved_record_dict: dict = {Fields.ENTRYTYPE: "article"}
 
         retrieved_record_dict.update(
             author=cls.__get_string_from_item(item=item, key="authorString")

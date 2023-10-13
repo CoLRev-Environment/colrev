@@ -21,6 +21,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 defusedxml.defuse_stdlib()
 
@@ -107,6 +108,7 @@ class ArXivSource:
             add_source = operation.add_api_source(endpoint=cls.endpoint)
             return add_source
 
+        # pylint: disable=colrev-missed-constant-usage
         if "url" in params:
             host = urlparse(params["url"]).hostname
 
@@ -240,47 +242,57 @@ class ArXivSource:
 
         return record
 
+    # pylint: disable=colrev-missed-constant-usage
     def __parse_record(self, entry: dict) -> dict:
-        entry["ENTRYTYPE"] = "techreport"
+        entry[Fields.ENTRYTYPE] = "techreport"
         entry["arxivid"] = entry.pop("id").replace("http://arxiv.org/abs/", "")
-        entry["author"] = " and ".join([a["name"] for a in entry.pop("authors")])
-        entry["year"] = entry.pop("published")[:4]
-        entry["abstract"] = entry.pop("summary")
-        entry["abstract"] = entry["abstract"].replace("\n", " ").replace("\r", " ")
+        entry[Fields.AUTHOR] = " and ".join([a["name"] for a in entry.pop("authors")])
+        entry[Fields.YEAR] = entry.pop("published")[:4]
+        entry[Fields.ABSTRACT] = entry.pop("summary")
+        entry[Fields.ABSTRACT] = (
+            entry[Fields.ABSTRACT].replace("\n", " ").replace("\r", " ")
+        )
         if "arxiv_journal_ref" in entry:
             entry["arxiv_journal_ref"] = (
                 entry["arxiv_journal_ref"].replace("\n", " ").replace("\r", " ")
             )
-        entry["title"] = entry["title"].replace("\n ", "")
-        entry["title"] = entry["title"].replace("\n ", "")
+        entry[Fields.TITLE] = entry[Fields.TITLE].replace("\n ", "")
+        entry[Fields.TITLE] = entry[Fields.TITLE].replace("\n ", "")
         if "arxiv_doi" in entry:
-            entry["doi"] = entry.pop("arxiv_doi")
-        del entry["summary_detail"]
-        del entry["title_detail"]
-        del entry["updated"]
-        del entry["updated_parsed"]
-        del entry["author_detail"]
-        del entry["published_parsed"]
-        del entry["arxiv_primary_category"]
-        del entry["tags"]
+            entry[Fields.DOI] = entry.pop("arxiv_doi")
         if "links" in entry:
             for link in entry["links"]:
                 if link["type"] == "application/pdf":
-                    entry["fulltext"] = link["href"]
+                    entry[Fields.FULLTEXT] = link["href"]
                 else:
-                    entry["url"] = link["href"]
+                    entry[Fields.URL] = link["href"]
         if "link" in entry:
             if "url" in entry:
                 del entry["link"]
             else:
-                entry["url"] = entry.pop("link")
-        del entry["links"]
-        del entry["href"]
-        del entry["guidislink"]
+                entry[Fields.URL] = entry.pop("link")
         if "arxiv_comment" in entry:
-            entry["keywords"] = (
+            entry[Fields.KEYWORDS] = (
                 entry.pop("arxiv_comment").replace("Key words: ", "").replace("\n", "")
             )
+
+        fields_to_remove = [
+            "links",
+            "href",
+            "guidislink",
+            "summary_detail",
+            "title_detail",
+            "updated",
+            "updated_parsed",
+            "author_detail",
+            "published_parsed",
+            "arxiv_primary_category",
+            "tags",
+        ]
+        for field_to_remove in fields_to_remove:
+            if field_to_remove in entry:
+                del entry[field_to_remove]
+
         if "keywords" in entry and "pages" in entry["keywords"]:
             del entry["keywords"]
         return entry
@@ -320,8 +332,8 @@ class ArXivSource:
         try:
             for record_dict in self.__get_arxiv_query_return():
                 # Note : discard "empty" records
-                if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
+                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
+                    Fields.TITLE, ""
                 ):
                     self.review_manager.logger.warning(f"Skipped record: {record_dict}")
                     continue
@@ -331,15 +343,15 @@ class ArXivSource:
                     continue
 
                 prev_record_dict_version = {}
-                if record_dict["ID"] in arxiv_feed.feed_records:
+                if record_dict[Fields.ID] in arxiv_feed.feed_records:
                     prev_record_dict_version = deepcopy(
-                        arxiv_feed.feed_records[record_dict["ID"]]
+                        arxiv_feed.feed_records[record_dict[Fields.ID]]
                     )
 
                 prep_record = colrev.record.PrepRecord(data=record_dict)
 
-                if "colrev_data_provenance" in prep_record.data:
-                    del prep_record.data["colrev_data_provenance"]
+                if Fields.D_PROV in prep_record.data:
+                    del prep_record.data[Fields.D_PROV]
 
                 added = arxiv_feed.add_record(record=prep_record)
 
@@ -406,9 +418,9 @@ class ArXivSource:
     #             continue
 
     #         prev_record_dict_version = {}
-    #         if retrieved_record["ID"] in arxiv_feed.feed_records:
+    #         if retrieved_record[Fields.ID] in arxiv_feed.feed_records:
     #             prev_record_dict_version = arxiv_feed.feed_records[
-    #                 retrieved_record["ID"]
+    #                 retrieved_record[Fields.ID]
     #             ]
 
     #         arxiv_feed.add_record(record=colrev.record.Record(data=retrieved_record))
@@ -475,9 +487,9 @@ class ArXivSource:
     ) -> colrev.record.Record:
         """Source-specific preparation for ArXiv"""
 
-        if "author" in record.data:
-            record.data["author"] = colrev.record.PrepRecord.format_author_field(
-                input_string=record.data["author"]
+        if Fields.AUTHOR in record.data:
+            record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
+                input_string=record.data[Fields.AUTHOR]
             )
 
         return record

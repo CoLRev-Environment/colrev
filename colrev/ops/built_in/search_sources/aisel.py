@@ -19,6 +19,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_enl
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -32,6 +34,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     """AIS electronic Library (AISeL)"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [
         colrev.settings.SearchType.DB,
@@ -83,14 +86,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # TBD: aisel does not return bibtex?!
         nr_ais_links = data.count("https://aisel.aisnet.org/")
         nr_items = data.count("\n@")
-        if nr_items > 0 and "colrev_status" not in data:
+        if nr_items > 0 and Fields.STATUS not in data:
             result["confidence"] = nr_ais_links / nr_items
 
-        if "%T " in data and "colrev_status" not in data:
+        if "%T " in data and Fields.STATUS not in data:
             if data.count("%U https://aisel.aisnet.org") > 0.9 * data.count("%T "):
                 result["confidence"] = 1.0
 
-        if "@article" in data or "@inproc" in data and "colrev_status" not in data:
+        if "@article" in data or "@inproc" in data and Fields.STATUS not in data:
             if data.count("https://aisel.aisnet.org") > 0.9 * data.count("\n@"):
                 result["confidence"] = 1.0
 
@@ -171,6 +174,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 params=params,
             )
 
+        # pylint: disable=colrev-missed-constant-usage
         if search_type == colrev.settings.SearchType.API:
             if "url" not in params:
                 # Add API search without params
@@ -291,8 +295,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         try:
             for record_dict in self.__get_ais_query_return():
                 # Note : discard "empty" records
-                if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
+                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
+                    Fields.TITLE, ""
                 ):
                     continue
 
@@ -302,21 +306,21 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     continue
 
                 # prev_record_dict_version = {}
-                # if record_dict["ID"] in ais_feed.feed_records:
+                # if record_dict[Fields.ID] in ais_feed.feed_records:
                 #     prev_record_dict_version = deepcopy(
-                #         ais_feed.feed_records[record_dict["ID"]]
+                #         ais_feed.feed_records[record_dict[Fields.ID]]
                 #     )
 
                 prep_record = colrev.record.PrepRecord(data=record_dict)
 
-                if "colrev_data_provenance" in prep_record.data:
-                    del prep_record.data["colrev_data_provenance"]
+                if Fields.D_PROV in prep_record.data:
+                    del prep_record.data[Fields.D_PROV]
 
                 added = ais_feed.add_record(record=prep_record)
 
                 if added:
                     self.review_manager.logger.info(
-                        " retrieve " + prep_record.data["url"]
+                        " retrieve " + prep_record.data[Fields.URL]
                     )
                 # else:
                 #     search_operation.update_existing_record(
@@ -376,6 +380,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
+        # pylint: disable=colrev-missed-constant-usage
         if self.search_source.filename.suffix in [".txt", ".enl"]:
             enl_loader = colrev.ops.load_utils_enl.ENLLoader(
                 load_operation=load_operation,
@@ -384,7 +389,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
             entries = enl_loader.load_enl_entries()
             for entry in entries.values():
-                entry["ID"] = entry["url"].replace("https://aisel.aisnet.org/", "")
+                entry["ID"] = entry[Fields.URL].replace("https://aisel.aisnet.org/", "")
             records = enl_loader.convert_to_records(entries=entries)
             return records
 
@@ -401,10 +406,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
         if (
-            record.data.get("volume", "UNKNOWN") != "UNKNOWN"
-            or record.data.get("number", "UNKNOWN") != "UNKNOWN"
+            record.data.get(Fields.VOLUME, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
+            or record.data.get(Fields.NUMBER, FieldValues.UNKNOWN)
+            != FieldValues.UNKNOWN
         ) and not any(
-            x in record.data.get("journal", "")
+            x in record.data.get(Fields.JOURNAL, "")
             for x in [
                 "HICSS",
                 "ICIS",
@@ -416,87 +422,89 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         ):
             # Journal articles
             if (
-                "journal" not in record.data
-                and "title" in record.data
-                and "chapter" in record.data
+                Fields.JOURNAL not in record.data
+                and Fields.TITLE in record.data
+                and Fields.CHAPTER in record.data
             ):
-                record.rename_field(key="title", new_key="journal")
-                record.rename_field(key="chapter", new_key="title")
-                record.remove_field(key="publisher")
+                record.rename_field(key=Fields.TITLE, new_key=Fields.JOURNAL)
+                record.rename_field(key=Fields.CHAPTER, new_key=Fields.TITLE)
+                record.remove_field(key=Fields.PUBLISHER)
 
             record.change_entrytype(new_entrytype="article", qm=self.quality_model)
         else:
             # Inproceedings
 
-            record.remove_field(key="publisher")
+            record.remove_field(key=Fields.PUBLISHER)
 
             if (
-                "booktitle" not in record.data
-                and "title" in record.data
-                and "chapter" in record.data
+                Fields.BOOKTITLE not in record.data
+                and Fields.TITLE in record.data
+                and Fields.CHAPTER in record.data
             ):
-                record.rename_field(key="title", new_key="booktitle")
-                record.rename_field(key="chapter", new_key="title")
+                record.rename_field(key=Fields.TITLE, new_key=Fields.BOOKTITLE)
+                record.rename_field(key=Fields.CHAPTER, new_key=Fields.TITLE)
 
             record.change_entrytype(
                 new_entrytype="inproceedings", qm=self.quality_model
             )
 
-            if record.data.get("booktitle", "") in [
+            if record.data.get(Fields.BOOKTITLE, "") in [
                 "Research-in-Progress Papers",
                 "Research Papers",
             ]:
-                if "https://aisel.aisnet.org/ecis" in record.data.get("url", ""):
+                if "https://aisel.aisnet.org/ecis" in record.data.get(Fields.URL, ""):
                     record.update_field(
-                        key="booktitle", value="ECIS", source="prep_ais_source"
+                        key=Fields.BOOKTITLE, value="ECIS", source="prep_ais_source"
                     )
 
     def __unify_container_titles(self, *, record: colrev.record.Record) -> None:
-        if "https://aisel.aisnet.org/misq/" in record.data.get("url", ""):
+        if "https://aisel.aisnet.org/misq/" in record.data.get(Fields.URL, ""):
             record.update_field(
-                key="journal", value="MIS Quarterly", source="prep_ais_source"
+                key=Fields.JOURNAL, value="MIS Quarterly", source="prep_ais_source"
             )
-            record.remove_field(key="booktitle")
+            record.remove_field(key=Fields.BOOKTITLE)
 
-        if "https://aisel.aisnet.org/misqe/" in record.data.get("url", ""):
+        if "https://aisel.aisnet.org/misqe/" in record.data.get(Fields.URL, ""):
             record.update_field(
-                key="journal", value="MIS Quarterly Executive", source="prep_ais_source"
+                key=Fields.JOURNAL,
+                value="MIS Quarterly Executive",
+                source="prep_ais_source",
             )
-            record.remove_field(key="booktitle")
+            record.remove_field(key=Fields.BOOKTITLE)
 
-        if "https://aisel.aisnet.org/bise/" in record.data.get("url", ""):
+        if "https://aisel.aisnet.org/bise/" in record.data.get(Fields.URL, ""):
             record.update_field(
-                key="journal",
+                key=Fields.JOURNAL,
                 value="Business & Information Systems Engineering",
                 source="prep_ais_source",
             )
-            record.remove_field(key="booktitle")
+            record.remove_field(key=Fields.BOOKTITLE)
 
-        if record.data["ENTRYTYPE"] == "inproceedings":
+        if record.data[Fields.ENTRYTYPE] == "inproceedings":
             for conf_abbreviation, conf_name in self.__conference_abbreviations.items():
-                if conf_abbreviation in record.data.get("booktitle", ""):
+                if conf_abbreviation in record.data.get(Fields.BOOKTITLE, ""):
                     record.update_field(
-                        key="booktitle",
+                        key=Fields.BOOKTITLE,
                         value=conf_name,
                         source="prep_ais_source",
                     )
 
         for link_part, conf_name in self.__link_confs.items():
-            if link_part in record.data.get("url", ""):
+            if link_part in record.data.get(Fields.URL, ""):
                 record.update_field(
-                    key="booktitle",
+                    key=Fields.BOOKTITLE,
                     value=conf_name,
                     source="prep_ais_source",
                 )
 
     def __format_fields(self, *, record: colrev.record.Record) -> None:
-        if "abstract" in record.data:
-            if record.data["abstract"] == "N/A":
-                record.remove_field(key="abstract")
-        if "author" in record.data:
+        if Fields.ABSTRACT in record.data:
+            if record.data[Fields.ABSTRACT] == "N/A":
+                record.remove_field(key=Fields.ABSTRACT)
+        if Fields.AUTHOR in record.data:
             record.update_field(
-                key="author",
-                value=record.data["author"].replace("\n", " "),
+                key=Fields.AUTHOR,
+                value=record.data[Fields.AUTHOR].replace("\n", " "),
                 source="prep_ais_source",
                 keep_source_if_equal=True,
             )
@@ -504,7 +512,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def __exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
         if re.match(
             r"MISQ Volume \d{1,2}, Issue \d Table of Contents",
-            record.data.get("title", ""),
+            record.data.get(Fields.TITLE, ""),
         ):
             record.prescreen_exclude(reason="complementary material")
 

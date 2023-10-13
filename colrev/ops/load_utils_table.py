@@ -9,6 +9,7 @@ import pandas as pd
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.settings
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load

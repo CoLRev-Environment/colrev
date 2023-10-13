@@ -15,6 +15,7 @@ import colrev.ops.load_utils_bib
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -106,8 +107,8 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     def __remove_duplicates(self, *, records: dict) -> None:
         to_delete = []
         for record in records.values():
-            if re.search(r"-\d{1,2}$", record["ID"]):
-                original_record_id = re.sub(r"-\d{1,2}$", "", record["ID"])
+            if re.search(r"-\d{1,2}$", record[Fields.ID]):
+                original_record_id = re.sub(r"-\d{1,2}$", "", record[Fields.ID])
                 if original_record_id not in records:
                     continue
                 original_record = records[original_record_id]
@@ -125,7 +126,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
                 if original_record_id not in records:
                     continue
-                to_delete.append(record["ID"])
+                to_delete.append(record[Fields.ID])
         if to_delete:
             for rid in to_delete:
                 self.review_manager.logger.info(f" remove duplicate {rid}")
@@ -162,15 +163,19 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 
-        if record.data.get("journal", "").lower().endswith("conference proceedings."):
+        if (
+            record.data.get(Fields.JOURNAL, "")
+            .lower()
+            .endswith("conference proceedings.")
+        ):
             record.change_entrytype(
                 new_entrytype="inproceedings", qm=self.quality_model
             )
 
-        if "language" in record.data:
-            if record.data["language"] in ["ENG", "English"]:
+        if Fields.LANGUAGE in record.data:
+            if record.data[Fields.LANGUAGE] in ["ENG", "English"]:
                 record.update_field(
-                    key="language",
+                    key=Fields.LANGUAGE,
                     value="eng",
                     source="prep_abi_inform_proquest_source",
                 )

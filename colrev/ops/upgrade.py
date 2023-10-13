@@ -17,6 +17,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -355,28 +356,28 @@ class Upgrade(colrev.operation.Operation):
         # delete the masterdata provenance notes and apply the new quality model
         # replace not_missing > not-missing
         for record_dict in tqdm(records.values()):
-            if "colrev_masterdata_provenance" not in record_dict:
+            if Fields.MD_PROV not in record_dict:
                 continue
             not_missing_fields = []
-            for key, prov in record_dict["colrev_masterdata_provenance"].items():
+            for key, prov in record_dict[Fields.MD_PROV].items():
                 if "not_missing" in prov["note"]:
                     not_missing_fields.append(key)
                 prov["note"] = ""
             for key in not_missing_fields:
-                record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+                record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
             if "cited_by_id" in record_dict:
                 del record_dict["cited_by_id"]
             if "tei_id" in record_dict:
                 del record_dict["tei_id"]
-            if "colrev_data_provenance" in record_dict:
-                if "cited_by_file" in record_dict["colrev_data_provenance"]:
-                    del record_dict["colrev_data_provenance"]["cited_by_file"]
-                if "cited_by_id" in record_dict["colrev_data_provenance"]:
-                    del record_dict["colrev_data_provenance"]["cited_by_id"]
-                if "tei_id" in record_dict["colrev_data_provenance"]:
-                    del record_dict["colrev_data_provenance"]["tei_id"]
+            if Fields.D_PROV in record_dict:
+                if "cited_by_file" in record_dict[Fields.D_PROV]:
+                    del record_dict[Fields.D_PROV]["cited_by_file"]
+                if "cited_by_id" in record_dict[Fields.D_PROV]:
+                    del record_dict[Fields.D_PROV]["cited_by_id"]
+                if "tei_id" in record_dict[Fields.D_PROV]:
+                    del record_dict[Fields.D_PROV]["tei_id"]
 
             record = colrev.record.Record(data=record_dict)
             prior_state = record.data["colrev_status"]
@@ -391,12 +392,12 @@ class Upgrade(colrev.operation.Operation):
     def __migrate_0_8_4(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
-            if "editor" not in record.get("colrev_data_provenance", {}):
+            if Fields.EDITOR not in record.get(Fields.D_PROV, {}):
                 continue
-            ed_val = record["colrev_data_provenance"]["editor"]
-            del record["colrev_data_provenance"]["editor"]
-            if "CURATED" not in record["colrev_masterdata_provenance"]:
-                record["colrev_masterdata_provenance"]["editor"] = ed_val
+            ed_val = record[Fields.D_PROV][Fields.EDITOR]
+            del record[Fields.D_PROV][Fields.EDITOR]
+            if "CURATED" not in record[Fields.MD_PROV]:
+                record[Fields.MD_PROV][Fields.EDITOR] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
 
@@ -414,11 +415,11 @@ class Upgrade(colrev.operation.Operation):
         settings = self.__load_settings_dict()
         for source in settings["sources"]:
             if source["endpoint"] == "colrev.crossref":
-                if "issn" not in source["search_parameters"].get("scope", {}):
+                if Fields.ISSN not in source["search_parameters"].get("scope", {}):
                     continue
-                if isinstance(source["search_parameters"]["scope"]["issn"], str):
-                    source["search_parameters"]["scope"]["issn"] = [
-                        source["search_parameters"]["scope"]["issn"]
+                if isinstance(source["search_parameters"]["scope"][Fields.ISSN], str):
+                    source["search_parameters"]["scope"][Fields.ISSN] = [
+                        source["search_parameters"]["scope"][Fields.ISSN]
                     ]
 
         self.__save_settings(settings)
@@ -453,17 +454,17 @@ class Upgrade(colrev.operation.Operation):
 
             if "dblp_key" in record_dict:
                 record = colrev.record.Record(data=record_dict)
-                record.rename_field(key="dblp_key", new_key="colrev.dblp.dblp_key")
+                record.rename_field(key="dblp_key", new_key=Fields.DBLP_KEY)
             if "wos_accession_number" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(
                     key="wos_accession_number",
-                    new_key="colrev.web_of_science.unique-id",
+                    new_key=Fields.WEB_OF_SCIENCE_ID,
                 )
             if "sem_scholar_id" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(
-                    key="sem_scholar_id", new_key="colrev.semantic_scholar.id"
+                    key="sem_scholar_id", new_key=Fields.SEMANTIC_SCHOLAR_ID
                 )
 
             if "openalex_id" in record_dict:

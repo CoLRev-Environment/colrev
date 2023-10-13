@@ -21,6 +21,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -142,13 +143,13 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         )
 
         keys_to_drop = [
-            "colrev_masterdata_provenance",
-            "colrev_data_provenance",
+            Fields.MD_PROV,
+            Fields.D_PROV,
             "colrev_id",
-            "colrev_status",
-            "colrev_origin",
-            "screening_criteria",
-            "grobid-version",
+            Fields.STATUS,
+            Fields.ORIGIN,
+            Fields.SCREENING_CRITERIA,
+            Fields.GROBID_VERSION,
         ]
 
         self.review_manager.logger.info("Importing selected records")
@@ -178,10 +179,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             # Note : we need local paths for the PDFs
             # to get local_paths, we need to lookup in the registry.json
             # otherwise, we may also consider retrieving PDFs from local_index automatically
-            # if "file" in record_to_import:
-            #     record_to_import["file"] = (
-            #         Path(self.search_source.search_parameters["scope"]["url"])
-            #         / record_to_import["file"]
+            # if Fields.FILE in record_to_import:
+            #     record_to_import[Fields.FILE] = (
+            #         Path(self.search_source.search_parameters["scope"][Fields.URL])
+            #         / record_to_import[Fields.FILE]
             #     )
 
             #     pdf_get_operation.import_pdf(
@@ -239,7 +240,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
-                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                    if k not in [Fields.STATUS, Fields.MD_PROV]
                 }
 
             return records

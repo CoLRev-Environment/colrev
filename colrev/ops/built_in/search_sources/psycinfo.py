@@ -147,8 +147,8 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for PsycINFO"""
 
-        record.rename_field(
-            key="colrev.psycinfo.pubmedid", new_key="colrev.pubmed.pubmedid"
-        )
+        # record.rename_field(
+        #     key="colrev.psycinfo.pubmedid", new_key="colrev.pubmed.pubmedid"
+        # )
 
         return record

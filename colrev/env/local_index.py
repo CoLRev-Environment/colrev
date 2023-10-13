@@ -31,6 +31,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 # import binascii
@@ -41,7 +42,13 @@ from colrev.constants import Fields
 class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
-    global_keys = ["doi", "colrev.dblp.dblp_key", "colrev_pdf_id", "url", "colrev_id"]
+    global_keys = [
+        Fields.DOI,
+        Fields.DBLP_KEY,
+        "colrev_pdf_id",
+        Fields.URL,
+        "colrev_id",
+    ]
     max_len_sha256 = 2**256
     request_timeout = 90
 
@@ -99,13 +106,13 @@ class LocalIndex:
         "id",
         "colrev_id",
         "citation_key",
-        "title",
-        "abstract",
-        "file",
+        Fields.TITLE,
+        Fields.ABSTRACT,
+        Fields.FILE,
         "tei",
-        "fulltext",
-        "url",
-        "doi",
+        Fields.FULLTEXT,
+        Fields.URL,
+        Fields.DOI,
         "dblp_key",  # Note : no dots in key names
         "colrev_pdf_id",
         "bibtex",
@@ -277,7 +284,10 @@ class LocalIndex:
         # pylint: disable=too-many-return-statements
 
         fields_to_remove: typing.List[str] = []
-        if Fields.JOURNAL not in record_dict and record_dict["ENTRYTYPE"] != "article":
+        if (
+            Fields.JOURNAL not in record_dict
+            and record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.ARTICLE
+        ):
             return fields_to_remove
 
         internal_record_dict = deepcopy(record_dict)
@@ -494,7 +504,7 @@ class LocalIndex:
         retrieved_record = self.__retrieve_based_on_colrev_id(
             cids_to_retrieve=cid_to_retrieve
         )
-        if retrieved_record["ENTRYTYPE"] != record_dict["ENTRYTYPE"]:
+        if retrieved_record[Fields.ENTRYTYPE] != record_dict[Fields.ENTRYTYPE]:
             raise colrev_exceptions.RecordNotInIndexException
         return retrieved_record
 
@@ -510,16 +520,14 @@ class LocalIndex:
         # pylint: disable=too-many-branches
 
         # Note : remove fulltext before parsing because it raises errors
-        fulltext_backup = record_dict.get("fulltext", "NA")
+        fulltext_backup = record_dict.get(Fields.FULLTEXT, "NA")
 
         keys_to_remove = (
-            "colrev_origin",
-            "fulltext",
+            Fields.ORIGIN,
+            Fields.FULLTEXT,
             "tei_file",
-            "grobid-version",
-            "excl_criteria",
-            "exclusion_criteria",
-            "screening_criteria",
+            Fields.GROBID_VERSION,
+            Fields.SCREENING_CRITERIA,
             "local_curated_metadata",
             "metadata_source_repository_paths",
         )
@@ -670,8 +678,8 @@ class LocalIndex:
                 not in c.FieldSet.IDENTIFYING_FIELD_KEYS
                 + c.FieldSet.PROVENANCE_KEYS
                 + [
-                    "ID",
-                    "ENTRYTYPE",
+                    Fields.ID,
+                    Fields.ENTRYTYPE,
                     "local_curated_metadata",
                     "metadata_source_repository_paths",
                 ]
@@ -753,9 +761,11 @@ class LocalIndex:
     def __update_toc_index(
         self, *, toc_to_index: dict, copy_for_toc_index: dict, curated_masterdata: bool
     ) -> None:
-        if not curated_masterdata or copy_for_toc_index.get("ENTRYTYPE", "") not in [
-            "article",
-            "inproceedings",
+        if not curated_masterdata or copy_for_toc_index.get(
+            Fields.ENTRYTYPE, ""
+        ) not in [
+            ENTRYTYPES.ARTICLE,
+            ENTRYTYPES.INPROCEEDINGS,
         ]:
             return
 

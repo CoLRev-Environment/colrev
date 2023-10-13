@@ -23,6 +23,8 @@ import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

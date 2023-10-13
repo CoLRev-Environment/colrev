@@ -31,6 +31,7 @@ import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.search

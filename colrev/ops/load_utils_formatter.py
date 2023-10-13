@@ -7,6 +7,8 @@ import re
 from typing import TYPE_CHECKING
 
 import colrev.env.language_service
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -36,20 +38,20 @@ class LoadFormatter:
         self.language_service = colrev.env.language_service.LanguageService()
 
     def __apply_strict_requirements(self, *, record: colrev.record.Record) -> None:
-        if "doi" in record.data:
-            record.data["doi"] = (
-                record.data["doi"].replace("http://dx.doi.org/", "").upper()
+        if Fields.DOI in record.data:
+            record.data[Fields.DOI] = (
+                record.data[Fields.DOI].replace("http://dx.doi.org/", "").upper()
             )
-        if "language" in record.data and len(record.data["language"]) != 3:
+        if Fields.LANGUAGE in record.data and len(record.data[Fields.LANGUAGE]) != 3:
             self.language_service.unify_to_iso_639_3_language_codes(record=record)
-        if "number" not in record.data and "issue" in record.data:
-            record.data["number"] = record.data.pop("issue")
+        if Fields.NUMBER not in record.data and "issue" in record.data:
+            record.data[Fields.NUMBER] = record.data.pop("issue")
 
     def __lower_case_keys(self, *, record: colrev.record.Record) -> None:
         # Consistently set keys to lower case
         lower_keys = [k.lower() for k in list(record.data.keys())]
         for key, n_key in zip(list(record.data.keys()), lower_keys):
-            if key not in ["ID", "ENTRYTYPE"]:
+            if key not in [Fields.ID, Fields.ENTRYTYPE]:
                 record.data[n_key] = record.data.pop(key)
 
     def __unescape_latex(self, *, input_str: str) -> str:
@@ -72,17 +74,17 @@ class LoadFormatter:
 
     def __unescape_field_values(self, *, record: colrev.record.Record) -> None:
         fields_to_process = [
-            "author",
-            "year",
-            "title",
-            "journal",
-            "booktitle",
-            "series",
-            "volume",
-            "number",
-            "pages",
-            "doi",
-            "abstract",
+            Fields.AUTHOR,
+            Fields.YEAR,
+            Fields.TITLE,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.SERIES,
+            Fields.VOLUME,
+            Fields.NUMBER,
+            Fields.PAGES,
+            Fields.DOI,
+            Fields.ABSTRACT,
         ]
 
         for field in record.data:
@@ -103,27 +105,29 @@ class LoadFormatter:
             )
 
     def __standardize_field_values(self, *, record: colrev.record.Record) -> None:
-        if record.data.get("title", "UNKNOWN") != "UNKNOWN":
-            record.data["title"] = re.sub(r"\s+", " ", record.data["title"]).rstrip(".")
+        if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
+            record.data[Fields.TITLE] = re.sub(
+                r"\s+", " ", record.data[Fields.TITLE]
+            ).rstrip(".")
 
-        if "year" in record.data and str(record.data["year"]).endswith(".0"):
-            record.data["year"] = str(record.data["year"])[:-2]
+        if Fields.YEAR in record.data and str(record.data[Fields.YEAR]).endswith(".0"):
+            record.data[Fields.YEAR] = str(record.data[Fields.YEAR])[:-2]
 
-        if "pages" in record.data:
-            record.data["pages"] = record.data["pages"].replace("–", "--")
-            if record.data["pages"].count("-") == 1:
-                record.data["pages"] = record.data["pages"].replace("-", "--")
-            if record.data["pages"].lower() == "n.pag":
-                del record.data["pages"]
+        if Fields.PAGES in record.data:
+            record.data[Fields.PAGES] = record.data[Fields.PAGES].replace("–", "--")
+            if record.data[Fields.PAGES].count("-") == 1:
+                record.data[Fields.PAGES] = record.data[Fields.PAGES].replace("-", "--")
+            if record.data[Fields.PAGES].lower() == "n.pag":
+                del record.data[Fields.PAGES]
 
-        if record.data.get("volume", "") == "ahead-of-print":
-            del record.data["volume"]
-        if record.data.get("number", "") == "ahead-of-print":
-            del record.data["number"]
+        if record.data.get(Fields.VOLUME, "") == "ahead-of-print":
+            del record.data[Fields.VOLUME]
+        if record.data.get(Fields.NUMBER, "") == "ahead-of-print":
+            del record.data[Fields.NUMBER]
 
-        if "url" in record.data and "login?url=https" in record.data["url"]:
-            record.data["url"] = record.data["url"][
-                record.data["url"].find("login?url=https") + 10 :
+        if Fields.URL in record.data and "login?url=https" in record.data[Fields.URL]:
+            record.data[Fields.URL] = record.data[Fields.URL][
+                record.data[Fields.URL].find("login?url=https") + 10 :
             ]
 
     def run(self, *, record: colrev.record.Record) -> None:
@@ -131,7 +135,7 @@ class LoadFormatter:
 
         self.__apply_strict_requirements(record=record)
 
-        if record.data["colrev_status"] != colrev.record.RecordState.md_retrieved:
+        if record.data[Fields.STATUS] != colrev.record.RecordState.md_retrieved:
             return
 
         self.__lower_case_keys(record=record)

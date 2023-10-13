@@ -5,6 +5,7 @@ from pathlib import Path
 import colrev.review_manager
 from colrev.constants import Colors
 from colrev.constants import ExitCodes
+from colrev.constants import Fields
 
 
 def main() -> int:
@@ -24,12 +25,12 @@ def main() -> int:
     # Add IDs to .spelling (if not already in the file)
     if Path(".spelling").is_file():
         if not all(
-            x.data["ID"] in Path(".spelling").read_text(encoding="utf-8")
+            x.data[Fields.ID] in Path(".spelling").read_text(encoding="utf-8")
             for x in sync_operation.records_to_import
         ):
             with open(".spelling", "a", encoding="utf-8") as file:
                 for item in sync_operation.records_to_import:
-                    file.write(item.data["ID"])
+                    file.write(item.data[Fields.ID])
 
     sync_operation.add_to_bib()
 

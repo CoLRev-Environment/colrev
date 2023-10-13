@@ -11,105 +11,108 @@ from rispy import BaseParser
 from rispy.config import LIST_TYPE_TAGS
 from rispy.config import TAG_KEY_MAPPING
 
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
+
 if TYPE_CHECKING:
     import colrev.ops.load
 
 
 # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
 REFERENCE_TYPES = {
-    "JOUR": "article",
-    "JFULL": "article",
-    "ABST": "article",
-    "INPR": "article",  # inpress
-    "CONF": "inproceedings",
-    "CPAPER": "inproceedings",
-    "THES": "phdthesis",
-    "REPT": "techreport",
-    "RPRT": "techreport",
-    "CHAP": "inbook",
-    "BOOK": "book",
-    "NEWS": "misc",
-    "BLOG": "misc",
+    "JOUR": ENTRYTYPES.ARTICLE,
+    "JFULL": ENTRYTYPES.ARTICLE,
+    "ABST": ENTRYTYPES.ARTICLE,
+    "INPR": ENTRYTYPES.ARTICLE,  # inpress
+    "CONF": ENTRYTYPES.INPROCEEDINGS,
+    "CPAPER": ENTRYTYPES.INPROCEEDINGS,
+    "THES": ENTRYTYPES.PHDTHESIS,
+    "REPT": ENTRYTYPES.TECHREPORT,
+    "RPRT": ENTRYTYPES.TECHREPORT,
+    "CHAP": ENTRYTYPES.INBOOK,
+    "BOOK": ENTRYTYPES.BOOK,
+    "NEWS": ENTRYTYPES.MISC,
+    "BLOG": ENTRYTYPES.MISC,
 }
 KEY_MAP = {
-    "article": {
-        "ID": "ID",
-        "ENTRYTYPE": "ENTRYTYPE",
-        "year": "year",
-        "authors": "author",
-        "primary_title": "title",
-        "secondary_title": "journal",
-        "notes_abstract": "abstract",
-        "volume": "volume",
-        "number": "number",
-        "doi": "doi",
-        "publisher": "publisher",
-        "url": "url",
-        "fulltext": "fulltext",
-        "pubmedid": "pubmedid",
-        "keywords": "keywords",
-        "pages": "pages",
+    ENTRYTYPES.ARTICLE: {
+        "ID": Fields.ID,
+        "ENTRYTYPE": Fields.ENTRYTYPE,
+        "year": Fields.YEAR,
+        "authors": Fields.AUTHOR,
+        "primary_title": Fields.TITLE,
+        "secondary_title": Fields.JOURNAL,
+        "notes_abstract": Fields.ABSTRACT,
+        "volume": Fields.VOLUME,
+        "number": Fields.NUMBER,
+        "doi": Fields.DOI,
+        "publisher": Fields.PUBLISHER,
+        "url": Fields.URL,
+        "fulltext": Fields.FULLTEXT,
+        "pubmedid": Fields.PUBMED_ID,
+        "keywords": Fields.KEYWORDS,
+        "pages": Fields.PAGES,
     },
-    "inproceedings": {
-        "ID": "ID",
-        "ENTRYTYPE": "ENTRYTYPE",
-        "year": "year",
-        "authors": "author",
-        "primary_title": "title",
-        "secondary_title": "booktitle",
-        "doi": "doi",
-        "url": "url",
-        "fulltext": "fulltext",
-        "pubmedid": "pubmedid",
-        "keywords": "keywords",
-        "pages": "pages",
+    ENTRYTYPES.INPROCEEDINGS: {
+        "ID": Fields.ID,
+        "ENTRYTYPE": Fields.ENTRYTYPE,
+        "year": Fields.YEAR,
+        "authors": Fields.AUTHOR,
+        "primary_title": Fields.TITLE,
+        "secondary_title": Fields.BOOKTITLE,
+        "doi": Fields.DOI,
+        "url": Fields.URL,
+        "fulltext": Fields.FULLTEXT,
+        "pubmedid": Fields.PUBMED_ID,
+        "keywords": Fields.KEYWORDS,
+        "pages": Fields.PAGES,
     },
-    "inbook": {
-        "ID": "ID",
-        "ENTRYTYPE": "ENTRYTYPE",
-        "year": "year",
-        "authors": "author",
-        "primary_title": "chapter",
-        "secondary_title": "title",
-        "doi": "doi",
-        "publisher": "publisher",
-        "edition": "edition",
-        "url": "url",
-        "fulltext": "fulltext",
-        "keywords": "keywords",
-        "pages": "pages",
+    ENTRYTYPES.INBOOK: {
+        "ID": Fields.ID,
+        "ENTRYTYPE": Fields.ENTRYTYPE,
+        "year": Fields.YEAR,
+        "authors": Fields.AUTHOR,
+        "primary_title": Fields.CHAPTER,
+        "secondary_title": Fields.TITLE,
+        "doi": Fields.DOI,
+        "publisher": Fields.PUBLISHER,
+        "edition": Fields.EDITION,
+        "url": Fields.URL,
+        "fulltext": Fields.FULLTEXT,
+        "keywords": Fields.KEYWORDS,
+        "pages": Fields.PAGES,
     },
-    "phdthesis": {
-        "ID": "ID",
-        "ENTRYTYPE": "ENTRYTYPE",
-        "year": "year",
-        "authors": "author",
-        "primary_title": "title",
-        "url": "url",
+    ENTRYTYPES.PHDTHESIS: {
+        "ID": Fields.ID,
+        "ENTRYTYPE": Fields.ENTRYTYPE,
+        "year": Fields.YEAR,
+        "authors": Fields.AUTHOR,
+        "primary_title": Fields.TITLE,
+        "url": Fields.URL,
     },
-    "techreport": {
-        "ID": "ID",
-        "ENTRYTYPE": "ENTRYTYPE",
-        "year": "year",
-        "authors": "author",
-        "primary_title": "title",
-        "url": "url",
-        "fulltext": "fulltext",
-        "keywords": "keywords",
-        "publisher": "publisher",
-        "pages": "pages",
+    ENTRYTYPES.TECHREPORT: {
+        "ID": Fields.ID,
+        "ENTRYTYPE": Fields.ENTRYTYPE,
+        "year": Fields.YEAR,
+        "authors": Fields.AUTHOR,
+        "primary_title": Fields.TITLE,
+        "url": Fields.URL,
+        "fulltext": Fields.FULLTEXT,
+        "keywords": Fields.KEYWORDS,
+        "publisher": Fields.PUBLISHER,
+        "pages": Fields.PAGES,
     },
-    "misc": {
-        "ID": "ID",
-        "ENTRYTYPE": "ENTRYTYPE",
-        "year": "year",
-        "authors": "author",
-        "primary_title": "title",
-        "url": "url",
-        "fulltext": "fulltext",
-        "keywords": "keywords",
-        "publisher": "publisher",
-        "pages": "pages",
+    ENTRYTYPES.MISC: {
+        "ID": Fields.ID,
+        "ENTRYTYPE": Fields.ENTRYTYPE,
+        "year": Fields.YEAR,
+        "authors": Fields.AUTHOR,
+        "primary_title": Fields.TITLE,
+        "url": Fields.URL,
+        "fulltext": Fields.FULLTEXT,
+        "keywords": Fields.KEYWORDS,
+        "publisher": Fields.PUBLISHER,
+        "pages": Fields.PAGES,
     },
 }
 
@@ -134,7 +137,19 @@ class DefaultRISParser(BaseParser):
 
 class RISLoader:
 
-    """Loads ris files"""
+    """Loads ris files
+
+    RIS Format:
+
+    TI  - Title of a paper
+
+    RIS requires a mapping, which
+    - can involve merging of RIS_FIELDS (e.g. AU / author fields)
+    - can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
+
+    RIS_FIELD - BIB_FIELD
+
+    """
 
     def __init__(
         self,
@@ -180,9 +195,9 @@ class RISLoader:
 
     def __load_ris_entry(self, entry: dict) -> None:
         if "start_page" in entry and "end_page" in entry:
-            entry["pages"] = f"{entry.pop('start_page')}--{entry.pop('end_page')}"
+            entry[Fields.PAGES] = f"{entry.pop('start_page')}--{entry.pop('end_page')}"
         elif "start_page" in entry:
-            entry["pages"] = str(entry.pop("start_page"))
+            entry[Fields.PAGES] = str(entry.pop("start_page"))
 
         for key in [
             self.ris_parser.DEFAULT_MAPPING[k]
@@ -190,18 +205,18 @@ class RISLoader:
         ]:
             if key not in entry:
                 continue
-            if "author" in key:
-                entry[key] = " and ".join(entry[key])
-            elif "url" == key:
-                urls = entry["url"]
+            if key == Fields.URL:
+                urls = entry[Fields.URL]
                 for url in urls:
                     if url.endswith(".pdf"):
-                        entry["fulltext"] = url
+                        entry[Fields.FULLTEXT] = url
                     else:
-                        entry["url"] = url
+                        entry[Fields.URL] = url
                         break
-            else:
+            elif key == Fields.KEYWORDS:
                 entry[key] = ", ".join(entry[key])
+            else:
+                entry[key] = " and ".join(entry[key])
 
     def load_ris_entries(self) -> dict:
         """Load ris entries
@@ -242,8 +257,8 @@ class RISLoader:
                 raise NotImplementedError(f"Undefined reference type: {type_of_ref}")
 
             entry_type = REFERENCE_TYPES[type_of_ref]
-            entry["ID"] = _id
-            entry["ENTRYTYPE"] = entry_type
+            entry[Fields.ID] = _id
+            entry[Fields.ENTRYTYPE] = entry_type
 
             if entry_type not in KEY_MAP:
                 raise NotImplementedError(f"No KEY_MAP defined for {entry_type}")
