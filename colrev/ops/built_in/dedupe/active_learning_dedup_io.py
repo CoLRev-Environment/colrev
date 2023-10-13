@@ -24,7 +24,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -131,7 +132,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         # def title_corpus():
         #     for record in data_d.values():
-        #         yield record["title"]
+        #         yield record[Fields.TITLE]
 
         # def container_corpus():
         #     for record in data_d.values():
@@ -139,7 +140,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         # def author_corpus():
         #     for record in data_d.values():
-        #         yield record["author"]
+        #         yield record[Fields.AUTHOR]
 
         # Training
 
@@ -149,14 +150,14 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         # Define the fields dedupe will pay attention to
         fields = [
             {
-                "field": "author",
+                "field": Fields.AUTHOR,
                 "type": "String",
                 # "corpus": author_corpus(),k
                 "has missing": True,
                 "crf": True,
             },
             {
-                "field": "title",
+                "field": Fields.TITLE,
                 "type": "String",
                 #  "corpus": title_corpus()
                 "has missing": True,
@@ -171,25 +172,25 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "crf": True,
             },
             {
-                "field": "year",
-                "variable name": "year",
+                "field": Fields.YEAR,
+                "variable name": Fields.YEAR,
                 "has missing": True,
                 "type": "DateTime",
             },
             {
-                "field": "volume",
-                "variable name": "volume",
+                "field": Fields.VOLUME,
+                "variable name": Fields.VOLUME,
                 "type": "ShortString",
                 "has missing": True,
             },
             {
-                "field": "number",
-                "variable name": "number",
+                "field": Fields.NUMBER,
+                "variable name": Fields.NUMBER,
                 "type": "ShortString",
                 "has missing": True,
             },
             {
-                "field": "pages",
+                "field": Fields.PAGES,
                 "type": "ShortString",
                 "has missing": True,
                 "crf": True,
@@ -198,9 +199,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "type": "Interaction",
                 "interaction variables": [
                     "container_title",
-                    "year",
-                    "volume",
-                    "number",
+                    Fields.YEAR,
+                    Fields.VOLUME,
+                    Fields.NUMBER,
                 ],
             },
         ]
@@ -221,8 +222,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             raise colrev_exceptions.DedupeError(
                 "Sample size too small for active learning. "
                 "Use simple_dedupe instead:\n"
-                f"{colors.ORANGE}  colrev settings -m 'dedupe.dedupe_package_endpoints="
-                f'[{{"endpoint":"colrev.simple_dedupe"}}]\'{colors.END}'
+                f"{Colors.ORANGE}  colrev settings -m 'dedupe.dedupe_package_endpoints="
+                f'[{{"endpoint":"colrev.simple_dedupe"}}]\'{Colors.END}'
             )
 
         if self.training_file.is_file():
@@ -357,8 +358,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     ) -> None:
         manual_dedupe_decision_list.append(
             {
-                "ID1": record_pair[0]["ID"],
-                "ID2": record_pair[1]["ID"],
+                "ID1": record_pair[0][Fields.ID],
+                "ID2": record_pair[1][Fields.ID],
                 "decision": "duplicate",
             }
         )
@@ -385,8 +386,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         manual_dedupe_decision_list.append(
             {
-                "ID1": record_pair[0]["ID"],
-                "ID2": record_pair[1]["ID"],
+                "ID1": record_pair[0][Fields.ID],
+                "ID2": record_pair[1][Fields.ID],
                 "decision": "no_duplicate",
             }
         )
@@ -769,7 +770,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             if len(prev_row) != 0:
                 for j, val in row.items():
                     # changes in these fields should not be marked
-                    if j in ["error", "confidence_score", "ID"]:
+                    if j in ["error", "confidence_score", Fields.ID]:
                         continue
                     # do not mark changes between different clusters
                     if j == "cluster_id" and prev_row["cluster_id"] != val:
@@ -791,13 +792,13 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         duplicates_df = pd.DataFrame.from_records(collected_duplicates)
         duplicates_df.fillna("", inplace=True)
         duplicates_df["distinct_str"] = (
-            duplicates_df["author"]
-            + duplicates_df["title"]
-            + duplicates_df["year"]
+            duplicates_df[Fields.AUTHOR]
+            + duplicates_df[Fields.TITLE]
+            + duplicates_df[Fields.YEAR]
             + duplicates_df["container_title"]
-            + duplicates_df["volume"]
-            + duplicates_df["number"]
-            + duplicates_df["pages"]
+            + duplicates_df[Fields.VOLUME]
+            + duplicates_df[Fields.NUMBER]
+            + duplicates_df[Fields.PAGES]
         )
         # Only export bibliographically distict cases
         duplicates_df = duplicates_df.groupby("distinct_str").filter(
@@ -810,14 +811,14 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 "error",
                 "confidence_score",
                 "cluster_id",
-                "ID",
-                "author",
-                "title",
-                "year",
+                Fields.ID,
+                Fields.AUTHOR,
+                Fields.TITLE,
+                Fields.YEAR,
                 "container_title",
-                "volume",
-                "number",
-                "pages",
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
             ]
         ]
 
@@ -850,14 +851,14 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 "error",
                 "cluster_id",
                 "confidence_score",
-                "ID",
-                "author",
-                "title",
-                "year",
+                Fields.ID,
+                Fields.AUTHOR,
+                Fields.TITLE,
+                Fields.YEAR,
                 "container_title",
-                "volume",
-                "number",
-                "pages",
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
             ]
         ]
         non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
@@ -1014,7 +1015,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 field_data = (r[field] for r in data_d.values() if field in r)
                 deduper.fingerprinter.index(field_data, field)
 
-            full_data = ((r["ID"], r) for r in data_d.values())
+            full_data = ((r[Fields.ID], r) for r in data_d.values())
 
             # pylint: disable=not-callable
             # fingerprinter is callable according to
@@ -1036,7 +1037,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             cur.execute("""CREATE TABLE blocking_map (block_key text, ID INTEGER)""")
             cur.executemany("""INSERT into blocking_map values (?, ?)""", b_data)
 
-            records_data = {r["ID"]: r for r in data_d.values()}
+            records_data = {r[Fields.ID]: r for r in data_d.values()}
 
             def record_pairs(result_set: list[tuple]) -> typing.Iterator[tuple]:
                 for row in result_set:
@@ -1127,7 +1128,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         info = dedupe_operation.get_info()
         if len(info["same_source_merges"]) > 0:
             dedupe_operation.review_manager.logger.info(
-                f"\n{colors.ORANGE}Same source merges to check:{colors.END}"
+                f"\n{Colors.ORANGE}Same source merges to check:{Colors.END}"
                 "\n- ".join(info["same_source_merges"]) + "\n"
             )
         else:

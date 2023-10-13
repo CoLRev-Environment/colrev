@@ -13,7 +13,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.pdf_get
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_get_man
@@ -51,7 +52,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     ) -> colrev.record.Record:
         # import webbrowser
 
-        title = record.data.get("title", "no title")
+        title = record.data.get(Fields.TITLE, "no title")
         title = urllib.parse.quote_plus(title)
         url = f"  google:   https://www.google.com/search?q={title}+filetype%3Apdf"
         # webbrowser.open_new_tab(url)
@@ -67,7 +68,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         recipient = "TODO"
         subject = f"Copy of a PDF ({record.data['ID']})"
 
-        author_name = record.data.get("author", "").split(",")[0]
+        author_name = record.data.get(Fields.AUTHOR, "").split(",")[0]
         signed, _ = pdf_get_man_operation.review_manager.get_committer()
 
         template = colrev.env.utils.get_template(
@@ -100,7 +101,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         if filepath.is_file():
             return filepath
 
-        if "volume" in record.data:
+        if Fields.VOLUME in record.data:
             filepath = (
                 pdf_get_man_operation.review_manager.pdf_dir
                 / f"{record.data['volume']}/{record.data['ID']}.pdf"
@@ -108,7 +109,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             if filepath.is_file():
                 return filepath
 
-        if "volume" in record.data and "number" in record.data:
+        if Fields.VOLUME in record.data and Fields.NUMBER in record.data:
             filepath = (
                 pdf_get_man_operation.review_manager.pdf_dir
                 / f"{record.data['volume']}_{record.data['number']}/{record.data['ID']}.pdf"
@@ -198,24 +199,24 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         ret_str = f"  ID:       {record_dict['ID']} ({record_dict['ENTRYTYPE']})"
         ret_str += (
-            f"\n  title:    {colors.GREEN}{record_dict.get('title', 'no title')}{colors.END}"
+            f"\n  title:    {Colors.GREEN}{record_dict.get('title', 'no title')}{Colors.END}"
             f"\n  author:   {record_dict.get('author', 'no-author')}"
         )
-        if record_dict["ENTRYTYPE"] == "article":
+        if record_dict[Fields.ENTRYTYPE] == "article":
             ret_str += (
                 f"\n  outlet: {record_dict.get('journal', 'no-journal')} "
                 f"({record_dict.get('year', 'no-year')}) "
                 f"{record_dict.get('volume', 'no-volume')}"
                 f"({record_dict.get('number', '')})"
             )
-        elif record_dict["ENTRYTYPE"] == "inproceedings":
+        elif record_dict[Fields.ENTRYTYPE] == "inproceedings":
             ret_str += f"\n  {record_dict.get('booktitle', 'no-booktitle')}"
-        if "fulltext" in record_dict:
+        if Fields.FULLTEXT in record_dict:
             ret_str += (
-                f"\n  fulltext: {colors.ORANGE}{record_dict['fulltext']}{colors.END}"
+                f"\n  fulltext: {Colors.ORANGE}{record_dict['fulltext']}{Colors.END}"
             )
 
-        if "url" in record_dict:
+        if Fields.URL in record_dict:
             ret_str += f"\n  url:      {record_dict['url']}"
 
         print(ret_str)
@@ -235,7 +236,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         if (
             colrev.record.RecordState.pdf_needs_manual_retrieval
-            != record.data["colrev_status"]
+            != record.data[Fields.STATUS]
         ):
             return
 
@@ -250,7 +251,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         )
         for retrieval_script in retrieval_scripts.values():
             # pdf_get_man_operation.review_manager.logger.debug(
-            #     f'{script_name}({record.data["ID"]}) called'
+            #     f'{script_name}({record.data[Fields.ID]}) called'
             # )
             record = retrieval_script(pdf_get_man_operation, record)
 
@@ -263,7 +264,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                     pdf_get_man_operation=pdf_get_man_operation, record=record
                 )
                 if not filepath.is_file():
-                    print(f'File does not exist: {record.data["ID"]}.pdf')
+                    print(f"File does not exist: {record.data[Fields.ID]}.pdf")
                 else:
                     filepath = self.__get_filepath(
                         pdf_get_man_operation=pdf_get_man_operation, record=record
@@ -315,7 +316,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         for i, item in enumerate(pdf_get_man_data["items"]):
             stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
 
-            record = colrev.record.Record(data=records[item["ID"]])
+            record = colrev.record.Record(data=records[item[Fields.ID]])
 
             print(f"\n\n{stat}")
 

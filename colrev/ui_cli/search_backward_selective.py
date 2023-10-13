@@ -5,25 +5,26 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.record
+from colrev.constants import Fields
 
 
 def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
     """Run a selective backward search (interactively on the cli)"""
 
     items = search_operation.review_manager.dataset.read_next_record(
-        conditions=[{"ID": bws}]
+        conditions=[{Fields.ID: bws}]
     )
     record_dict = list(items)[0]
     record = colrev.record.Record(data=record_dict)
 
-    if not record.data.get("file", "NA").endswith(".pdf"):
+    if not record.data.get(Fields.FILE, "NA").endswith(".pdf"):
         return
     if not record.get_tei_filename().is_file():
         search_operation.review_manager.logger.debug(
             f" creating tei: {record.data['ID']}"
         )
     tei = search_operation.review_manager.get_tei(
-        pdf_path=Path(record.data["file"]),
+        pdf_path=Path(record.data[Fields.FILE]),
         tei_path=record.get_tei_filename(),
     )
 

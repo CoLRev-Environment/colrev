@@ -12,7 +12,8 @@ import colrev.constants as c
 import colrev.dataset
 import colrev.env.local_index
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 
 class Sync:
@@ -146,8 +147,8 @@ class Sync:
             if 0 == len(returned_records):
                 self.logger.info("Not found: %s", citation_key)
             elif 1 == len(returned_records):
-                if returned_records[0].data["ID"] in [
-                    r.data["ID"] for r in self.records_to_import
+                if returned_records[0].data[Fields.ID] in [
+                    r.data[Fields.ID] for r in self.records_to_import
                 ]:
                     continue
                 self.records_to_import.append(returned_records[0])
@@ -174,7 +175,9 @@ class Sync:
 
     def add_to_records_to_import(self, *, record: colrev.record.Record) -> None:
         """Add a record to the records_to_import list"""
-        if record.data["ID"] not in [r.data["ID"] for r in self.records_to_import]:
+        if record.data[Fields.ID] not in [
+            r.data[Fields.ID] for r in self.records_to_import
+        ]:
             self.records_to_import.append(record)
 
     def __save_to_bib(self, *, records: dict, save_path: Path) -> None:
@@ -196,19 +199,19 @@ class Sync:
                 bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
 
                 field_order = [
-                    "doi",
-                    "colrev.dblp.dblp_key",
-                    "colrev.semantic_scholar.id",
-                    "colrev.web_of_science.unique-id",
-                    "author",
-                    "booktitle",
-                    "journal",
-                    "title",
-                    "year",
-                    "volume",
-                    "number",
-                    "pages",
-                    "editor",
+                    Fields.DOI,
+                    Fields.DBLP_KEY,
+                    Fields.SEMANTIC_SCHOLAR_ID,
+                    Fields.WEB_OF_SCIENCE_ID,
+                    Fields.AUTHOR,
+                    Fields.BOOKTITLE,
+                    Fields.JOURNAL,
+                    Fields.TITLE,
+                    Fields.YEAR,
+                    Fields.VOLUME,
+                    Fields.NUMBER,
+                    Fields.PAGES,
+                    Fields.EDITOR,
                 ]
 
                 for ordered_field in field_order:
@@ -222,7 +225,7 @@ class Sync:
                         )
 
                 for key, value in record_dict.items():
-                    if key in field_order + ["ID", "ENTRYTYPE"]:
+                    if key in field_order + [Fields.ID, Fields.ENTRYTYPE]:
                         continue
                     if isinstance(key, (list, dict)):
                         continue
@@ -279,10 +282,10 @@ class Sync:
                 ).values()
             )
 
-        available_ids = [r["ID"] for r in records]
+        available_ids = [r[Fields.ID] for r in records]
         added = []
         for record_to_import in self.records_to_import:
-            if record_to_import.data["ID"] not in available_ids:
+            if record_to_import.data[Fields.ID] not in available_ids:
                 record_to_import = colrev.record.Record(
                     data={
                         k: v
@@ -291,7 +294,7 @@ class Sync:
                     }
                 )
                 records.append(record_to_import.get_data())
-                available_ids.append(record_to_import.data["ID"])
+                available_ids.append(record_to_import.data[Fields.ID])
                 added.append(record_to_import)
 
         if len(added) > 0:
@@ -302,9 +305,11 @@ class Sync:
             print()
 
             self.logger.info(
-                "%s Loaded %s papers%s", colors.GREEN, len(added), colors.END
+                "%s Loaded %s papers%s", Colors.GREEN, len(added), Colors.END
             )
 
-        records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
+        records_dict = {
+            r[Fields.ID]: r for r in records if r[Fields.ID] in self.cited_papers
+        }
 
         self.__save_to_bib(records=records_dict, save_path=references_file)

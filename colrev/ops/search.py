@@ -12,7 +12,8 @@ import inquirer
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 
 class Search(colrev.operation.Operation):
@@ -67,7 +68,7 @@ class Search(colrev.operation.Operation):
                 file.write("")
             if interactive:
                 input(
-                    f"Created {colors.ORANGE}{query_filename}{colors.END}. "
+                    f"Created {Colors.ORANGE}{query_filename}{Colors.END}. "
                     "Please store your query in the file and press Enter to continue."
                 )
             self.review_manager.dataset.add_changes(path=query_filename)
@@ -89,14 +90,14 @@ class Search(colrev.operation.Operation):
             filename = self.get_unique_filename(
                 file_path_string=search_source_cls.endpoint.replace("colrev.", "")
             )
-            print(f"- Go to {colors.ORANGE}{search_source_cls.db_url}{colors.END}")
+            print(f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END}")
             query_file = self.get_query_filename(
                 filename=filename, instantiate=True, interactive=False
             )
             print(
-                f"- Search for your query and store it in {colors.ORANGE}{query_file}{colors.END}"
+                f"- Search for your query and store it in {Colors.ORANGE}{query_file}{Colors.END}"
             )
-            print(f"- Save search results in {colors.ORANGE}{filename}{colors.END}")
+            print(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
             input("Press Enter to complete")
             self.review_manager.dataset.add_changes(path=filename)
 
@@ -136,7 +137,7 @@ class Search(colrev.operation.Operation):
     ) -> colrev.settings.SearchType:
         """Select the SearchType (interactively if neccessary)"""
 
-        if "url" in params:
+        if Fields.URL in params:
             return colrev.settings.SearchType.API
         if "search_file" in params:
             return colrev.settings.SearchType.DB
@@ -167,16 +168,16 @@ class Search(colrev.operation.Operation):
 
         print("DB search (update)")
         print(
-            f"- Go to {colors.ORANGE}{search_source_cls.db_url}{colors.END} "
+            f"- Go to {Colors.ORANGE}{search_source_cls.db_url}{Colors.END} "
             "and run the following query:"
         )
         print()
-        print(f"{colors.ORANGE}{source.get_query()}{colors.END}")
+        print(f"{Colors.ORANGE}{source.get_query()}{Colors.END}")
         print()
         print(
-            f"- Replace search results in {colors.ORANGE}"
+            f"- Replace search results in {Colors.ORANGE}"
             + str(source.filename)
-            + colors.END
+            + Colors.END
         )
         input("Press enter to continue")
         self.review_manager.dataset.add_changes(path=source.filename)
@@ -213,12 +214,14 @@ class Search(colrev.operation.Operation):
 
             record_list = list(records.values())
             before = len(record_list)
-            record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
+            record_list = [
+                r for r in record_list if "forthcoming" != r.get(Fields.YEAR, "")
+            ]
             removed = before - len(record_list)
             self.review_manager.logger.info(
-                f"{colors.GREEN}Removed {removed} forthcoming{colors.END}"
+                f"{Colors.GREEN}Removed {removed} forthcoming{Colors.END}"
             )
-            records = {r["ID"]: r for r in record_list}
+            records = {r[Fields.ID]: r for r in record_list}
             self.review_manager.dataset.save_records_dict_to_file(
                 records=records, save_path=source.filename
             )
@@ -429,7 +432,7 @@ class Search(colrev.operation.Operation):
     ) -> None:
         """Search for records (main entrypoint)"""
 
-        rerun_flag = "" if not rerun else f" ({colors.GREEN}rerun{colors.END})"
+        rerun_flag = "" if not rerun else f" ({Colors.GREEN}rerun{Colors.END})"
         self.review_manager.logger.info(f"Search{rerun_flag}")
         self.review_manager.logger.info(
             "Retrieve new records from an API or files (search sources)."

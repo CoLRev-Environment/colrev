@@ -6,6 +6,7 @@ import re
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -23,13 +24,13 @@ class DOIPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the doi-not-matching-pattern checks"""
 
-        if "doi" not in record.data:
+        if Fields.DOI not in record.data:
             return
 
-        if not re.match(self.__DOI_REGEX, record.data["doi"]):
-            record.add_masterdata_provenance_note(key="doi", note=self.msg)
+        if not re.match(self.__DOI_REGEX, record.data[Fields.DOI]):
+            record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="doi", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

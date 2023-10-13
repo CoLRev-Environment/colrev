@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ui_cli.cli_colors as colors
-from colrev.exit_codes import ExitCodes
+from colrev.constants import Colors
+from colrev.constants import ExitCodes
 
 if TYPE_CHECKING:
     import colrev.ops.status
@@ -28,10 +28,10 @@ def print_review_instructions(review_instructions: dict) -> None:
     # keys = [item for sublist in key_list for item in sublist]
     # priority_item_set = "priority" in keys
     if not review_instructions:
-        print(f"    {colors.GREEN}Review iteration completed{colors.END}")
+        print(f"    {Colors.GREEN}Review iteration completed{Colors.END}")
         print(
-            f"    {colors.ORANGE}To start the next iteration of the review, "
-            f"add new search results (to data/search){colors.END}"
+            f"    {Colors.ORANGE}To start the next iteration of the review, "
+            f"add new search results (to data/search){Colors.END}"
         )
         print()
 
@@ -46,9 +46,9 @@ def print_review_instructions(review_instructions: dict) -> None:
             if "cmd" in review_instruction:
                 if verbose:
                     print("    " + review_instruction["msg"] + ", i.e., use ")
-                print(f'    {colors.ORANGE}{review_instruction["cmd"]}{colors.END}')
+                print(f'    {Colors.ORANGE}{review_instruction["cmd"]}{Colors.END}')
             else:
-                print(f"    {colors.ORANGE}{review_instruction['msg']}{colors.END}")
+                print(f"    {Colors.ORANGE}{review_instruction['msg']}{Colors.END}")
         if "cmd_after" in review_instruction:
             print("    Then use " + review_instruction["cmd_after"])
         print()
@@ -62,9 +62,9 @@ def __print_collaboration_instructions_status(
     if "title" in collaboration_instructions["status"]:
         title = collaboration_instructions["status"]["title"]
         if collaboration_instructions["status"].get("level", "NA") == "WARNING":
-            print(f"  {colors.RED}{title}{colors.END}")
+            print(f"  {Colors.RED}{title}{Colors.END}")
         elif collaboration_instructions["status"].get("level", "NA") == "SUCCESS":
-            print(f"  {colors.GREEN}{title}{colors.END}")
+            print(f"  {Colors.GREEN}{title}{Colors.END}")
         else:
             print("  " + title)
     if "msg" in collaboration_instructions["status"]:
@@ -78,9 +78,9 @@ def __print_collaboration_instructions_items(
         if "title" in item:
             if "level" in item:
                 if item["level"] == "WARNING":
-                    print(f'  {colors.RED}{item["title"]}{colors.END}')
+                    print(f"  {Colors.RED}{item['title']}{Colors.END}")
                 elif item["level"] == "SUCCESS":
-                    print(f'  {colors.GREEN}{item["title"]}{colors.END}')
+                    print(f"  {Colors.GREEN}{item['title']}{Colors.END}")
             else:
                 print("  " + item["title"])
 
@@ -135,7 +135,7 @@ def print_environment_instructions(environment_instructions: dict) -> None:
         if "msg" in environment_instruction:
             if "cmd" in environment_instruction:
                 print("  " + environment_instruction["msg"] + "  i.e., use ")
-                print(f'  {colors.ORANGE}{environment_instruction["cmd"]}{colors.END}')
+                print(f'  {Colors.ORANGE}{environment_instruction["cmd"]}{Colors.END}')
             else:
                 print("  " + environment_instruction["msg"])
         if "cmd_after" in environment_instruction:
@@ -234,10 +234,10 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     # ):
     #     print(
     #         "  ReviewManager.check_repo()  ...  "
-    #         f"{colors.GREEN}Everything ok.{colors.END}"
+    #         f"{Colors.GREEN}Everything ok.{Colors.END}"
     #     )
     if ExitCodes.FAIL == ret_check["status"]:
-        # print(f"  ReviewManager.check_repo()  ...  {colors.RED}FAIL{colors.END}")
+        # print(f"  ReviewManager.check_repo()  ...  {Colors.RED}FAIL{Colors.END}")
         # print(f'{ret_check["msg"]}\n')
         return
 
@@ -249,11 +249,11 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
     #     and status_operation.review_manager.verbose_mode
     # ):
     #     print(
-    #         f"\n  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
+    #         f"\n  {Colors.RED}WARNING{Colors.END} running scripts outside of virtualenv"
     #     )
     #     print(
     #         "  For instructions to set up a virtual environment, run\n"
-    #         f"  {colors.ORANGE}colrev show venv{colors.END}"
+    #         f"  {Colors.ORANGE}colrev show venv{Colors.END}"
     #     )
     #     print()
 
@@ -262,4 +262,4 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
             "Documentation: https://colrev.readthedocs.io/en/latest/manual/manual.html"
         )
     else:
-        print(f"For more details: {colors.ORANGE}colrev status -v{colors.END}")
+        print(f"For more details: {Colors.ORANGE}colrev status -v{Colors.END}")

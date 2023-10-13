@@ -30,7 +30,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 if TYPE_CHECKING:
     import colrev.ops.search
@@ -74,7 +74,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     __crossref_md_filename = Path("data/search/md_crossref.bib")
 
     __availability_exception_message = (
-        f"Crossref ({colors.ORANGE}check https://status.crossref.org/{colors.END})"
+        f"Crossref ({Colors.ORANGE}check https://status.crossref.org/{Colors.END})"
     )
 
     def __init__(

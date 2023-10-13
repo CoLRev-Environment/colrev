@@ -5,6 +5,8 @@ from __future__ import annotations
 import colrev.env.utils
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -19,15 +21,21 @@ class MostlyAllCapsFieldChecker:
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the mostly-all-caps checks"""
-        for key in ["author", "title", "journal", "booktitle", "editor"]:
+        for key in [
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.EDITOR,
+        ]:
             if key not in record.data:
                 continue
-            if record.data[key] == "UNKNOWN":
+            if record.data[key] == FieldValues.UNKNOWN:
                 continue
             if (
                 record.data["ENTRYTYPE"] == "online"
-                and key == "title"
-                and len(record.data["title"]) < 10
+                and key == Fields.TITLE
+                and len(record.data[Fields.TITLE]) < 10
             ):
                 # Online sources/software can be short/have caps
                 continue
@@ -41,7 +49,7 @@ class MostlyAllCapsFieldChecker:
                 continue
 
             # container-title-abbreviated
-            if key in ["journal", "booktitle"] and len(record.data[key]) < 6:
+            if key in [Fields.JOURNAL, Fields.BOOKTITLE] and len(record.data[key]) < 6:
                 continue
 
             if record.data[key] == "PLoS ONE":

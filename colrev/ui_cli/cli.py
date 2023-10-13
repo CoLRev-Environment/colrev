@@ -22,10 +22,11 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.review_manager
-import colrev.ui_cli.cli_colors as colors
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
@@ -771,7 +772,7 @@ def prep(
     except colrev_exceptions.ServiceNotAvailableException as exc:
         print(exc)
         print("You can use the force mode to override")
-        print(f"  {colors.ORANGE}colrev prep -f{colors.END}")
+        print(f"  {Colors.ORANGE}colrev prep -f{Colors.END}")
         return
 
 
@@ -862,7 +863,7 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     info = dedupe_operation.get_info()
 
     if len(info["same_source_merges"]) > 0:
-        print(f"\n\n{colors.RED}Same source merges to check:{colors.END}")
+        print(f"\n\n{Colors.RED}Same source merges to check:{Colors.END}")
         print("\n- " + "\n- ".join(info["same_source_merges"]))
 
 
@@ -1305,7 +1306,7 @@ def __extract_coverpage(*, cover: Path) -> None:
     cp_path.mkdir(exist_ok=True)
 
     assert Path(cover).suffix == ".pdf"
-    record = colrev.record.Record(data={"file": cover})
+    record = colrev.record.Record(data={Fields.FILE: cover})
     record.extract_pages(
         pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
     )
@@ -1620,7 +1621,7 @@ def pdf_get_man(
         pdf_get_man_records = [
             r
             for r in records.values()
-            if r["colrev_status"]
+            if r[Fields.STATUS]
             in [
                 colrev.record.RecordState.pdf_needs_manual_retrieval,
                 colrev.record.RecordState.rev_prescreen_included,
@@ -1630,16 +1631,16 @@ def pdf_get_man(
         pdf_get_man_records_df = pdf_get_man_records_df[
             pdf_get_man_records_df.columns.intersection(
                 [
-                    "ID",
-                    "author",
-                    "year",
-                    "title",
-                    "journal",
-                    "booktitle",
-                    "volume",
-                    "number",
-                    "url",
-                    "doi",
+                    Fields.ID,
+                    Fields.AUTHOR,
+                    Fields.YEAR,
+                    Fields.TITLE,
+                    Fields.JOURNAL,
+                    Fields.BOOKTITLE,
+                    Fields.VOLUME,
+                    Fields.NUMBER,
+                    Fields.URL,
+                    Fields.DOI,
                 ]
             )
         ]
@@ -1820,10 +1821,10 @@ def __delete_first_pages_cli(
     while True:
         if record_id in records:
             record_dict = records[record_id]
-            if "file" in record_dict:
-                print(record_dict["file"])
+            if Fields.FILE in record_dict:
+                print(record_dict[Fields.FILE])
                 pdf_path = pdf_prep_man_operation.review_manager.path / Path(
-                    record_dict["file"]
+                    record_dict[Fields.FILE]
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
                 pdf_prep_man_operation.set_pdf_man_prepared(
@@ -2154,7 +2155,7 @@ def validate(
             threshold=threshold,
         )
 
-    review_manager.logger.info("%sCompleted validation%s", colors.GREEN, colors.END)
+    review_manager.logger.info("%sCompleted validation%s", Colors.GREEN, Colors.END)
 
 
 @main.command(help_priority=18)
@@ -2249,12 +2250,12 @@ def __print_environment_status(
     print("\nCoLRev environment status\n")
     print("Index\n")
     if environment_details["index"]["status"] == "up":
-        print(f" - Status: {colors.GREEN}up{colors.END}")
+        print(f" - Status: {Colors.GREEN}up{Colors.END}")
         print(f' - Path          : {environment_details["index"]["path"]}')
         print(f' - Size          : {environment_details["index"]["size"]} records')
         print(f' - Last modified : {environment_details["index"]["last_modified"]}')
     else:
-        print(f" - Status: {colors.RED}down{colors.END}")
+        print(f" - Status: {Colors.RED}down{Colors.END}")
 
     print("\nCoLRev projects\n")
     project_repos = [
@@ -2851,7 +2852,7 @@ def show(  # type: ignore
         for cmd in cmds:
             print(
                 f"{cmd['date']} ({cmd['committer']}, {cmd['commit_id']}):    "
-                f"{colors.ORANGE}{cmd['cmd']}{colors.END}"
+                f"{Colors.ORANGE}{cmd['cmd']}{Colors.END}"
             )
 
 

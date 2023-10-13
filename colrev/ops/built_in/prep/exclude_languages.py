@@ -14,6 +14,8 @@ import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -80,17 +82,17 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         # Note : other languages are not yet supported
         # because the dedupe does not yet support cross-language merges
 
-        if record.data.get("title", "UNKNOWN") == "UNKNOWN":
-            record.remove_field(key="language")
+        if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:
+            record.remove_field(key=Fields.LANGUAGE)
             return record
 
-        if "language" in record.data:
+        if Fields.LANGUAGE in record.data:
             # Note: classification of non-english titles is not reliable.
             # Other languages should be checked in man-prep.
             # if "eng" != language:
             #     return record
 
-            # if record.data["language"] not in self.languages_to_include:
+            # if record.data[Fields.LANGUAGE] not in self.languages_to_include:
             #     record.prescreen_exclude(
             #         reason=(
             #             "language of title not in "
@@ -100,20 +102,24 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return record
 
         # To avoid misclassifications for short titles
-        if len(record.data.get("title", "")) < 30:
+        if len(record.data.get(Fields.TITLE, "")) < 30:
             # If language not in record, add language
             # (always - needed in dedupe.)
-            record.data["language"] = "eng"
+            record.data[Fields.LANGUAGE] = "eng"
             return record
 
-        if not self.__title_has_multiple_languages(title=record.data.get("title", "")):
-            language = self.language_service.compute_language(text=record.data["title"])
+        if not self.__title_has_multiple_languages(
+            title=record.data.get(Fields.TITLE, "")
+        ):
+            language = self.language_service.compute_language(
+                text=record.data[Fields.TITLE]
+            )
             # Note: classification of non-english titles is not reliable.
             # Other languages should be checked in man-prep.
             if "eng" != language:
                 return record
             record.update_field(
-                key="language",
+                key=Fields.LANGUAGE,
                 value=language,
                 source="LanguageDetector",
                 note="",
@@ -122,7 +128,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         else:
             # Deal with title fields containing titles in two or more languages
             split_titles = [
-                x.rstrip().rstrip("]") for x in record.data["title"].split("[")
+                x.rstrip().rstrip("]") for x in record.data[Fields.TITLE].split("[")
             ]
             for i, split_title in enumerate(split_titles):
                 lang_split_title = self.language_service.compute_language(
@@ -130,12 +136,12 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 )
                 if 0 == i:
                     record.update_field(
-                        key="title",
+                        key=Fields.TITLE,
                         value=split_title.rstrip(),
                         source="LanguageDetector_split",
                     )
                     record.update_field(
-                        key="language",
+                        key=Fields.LANGUAGE,
                         value=lang_split_title,
                         source="LanguageDetector_split",
                     )
@@ -146,10 +152,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                         source="LanguageDetector_split",
                     )
 
-        if record.data.get("language", "") == "":
+        if record.data.get(Fields.LANGUAGE, "") == "":
             record.update_field(
-                key="title",
-                value=record.data.get("title", ""),
+                key=Fields.TITLE,
+                value=record.data.get(Fields.TITLE, ""),
                 source="LanguageDetector",
                 note="language-not-found",
             )
@@ -158,8 +164,8 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             )
             return record
 
-        if record.data.get("language", "") not in self.languages_to_include:
-            record.remove_field(key="language")
+        if record.data.get(Fields.LANGUAGE, "") not in self.languages_to_include:
+            record.remove_field(key=Fields.LANGUAGE)
             # record.prescreen_exclude(
             #     reason=f"language of title not in [{','.join(self.languages_to_include)}]"
             # )

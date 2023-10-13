@@ -12,6 +12,7 @@ import colrev.env.language_service
 import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.record
+from colrev.constants import Fields
 
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
@@ -112,17 +113,17 @@ class ScopePrescreen(JsonSchemaMixin):
 
     def __conditional_prescreen_entrytypes(self, record: colrev.record.Record) -> None:
         if self.settings.ENTRYTYPEScope:
-            if record.data["ENTRYTYPE"] not in self.settings.ENTRYTYPEScope:
+            if record.data[Fields.ENTRYTYPE] not in self.settings.ENTRYTYPEScope:
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
     def __predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
         print(self.settings.ExcludePredatoryJournals)
         if not self.settings.ExcludePredatoryJournals:
             return
-        if "journal" not in record.data:
+        if Fields.JOURNAL not in record.data:
             return
 
-        rankings = self.local_index.search_in_database(record.data["journal"])
+        rankings = self.local_index.search_in_database(record.data[Fields.JOURNAL])
         if any(x["predatory"] == "yes" for x in rankings):
             record.prescreen_exclude(reason="predatory_journals_beal")
 
@@ -156,13 +157,13 @@ class ScopePrescreen(JsonSchemaMixin):
 
     def __conditional_prescreen_timescope(self, record: colrev.record.Record) -> None:
         if self.settings.TimeScopeFrom:
-            if int(record.data.get("year", 0)) < self.settings.TimeScopeFrom:
+            if int(record.data.get(Fields.YEAR, 0)) < self.settings.TimeScopeFrom:
                 record.prescreen_exclude(
                     reason="not in TimeScopeFrom " f"(>{self.settings.TimeScopeFrom})"
                 )
 
         if self.settings.TimeScopeTo:
-            if int(record.data.get("year", 5000)) > self.settings.TimeScopeTo:
+            if int(record.data.get(Fields.YEAR, 5000)) > self.settings.TimeScopeTo:
                 record.prescreen_exclude(
                     reason="not in TimeScopeTo " f"(<{self.settings.TimeScopeTo})"
                 )
@@ -173,9 +174,9 @@ class ScopePrescreen(JsonSchemaMixin):
         if not self.settings.ExcludeComplementaryMaterials:
             return
 
-        if "title" in record.data:
+        if Fields.TITLE in record.data:
             if (
-                record.data["title"].lower()
+                record.data[Fields.TITLE].lower()
                 in self.title_complementary_materials_keywords
             ):
                 record.prescreen_exclude(reason="complementary material")
@@ -197,7 +198,7 @@ class ScopePrescreen(JsonSchemaMixin):
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         record_dict: dict,
     ) -> None:
-        if record_dict["colrev_status"] != colrev.record.RecordState.md_processed:
+        if record_dict[Fields.STATUS] != colrev.record.RecordState.md_processed:
             return
 
         # Note : LanguageScope is covered in prep
@@ -213,11 +214,11 @@ class ScopePrescreen(JsonSchemaMixin):
         self.__conditional_presecreen_not_in_ranking(record=record)
 
         if (
-            record.data["colrev_status"]
+            record.data[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
             self.review_manager.report_logger.info(
-                f' {record.data["ID"]}'.ljust(50, " ")
+                f" {record.data[Fields.ID]}".ljust(50, " ")
                 + "Prescreen excluded (automatically)"
             )
         elif (
@@ -227,7 +228,7 @@ class ScopePrescreen(JsonSchemaMixin):
                 target_state=colrev.record.RecordState.rev_prescreen_included
             )
             self.review_manager.report_logger.info(
-                f' {record.data["ID"]}'.ljust(50, " ")
+                f" {record.data[Fields.ID]}".ljust(50, " ")
                 + "Prescreen included (automatically)"
             )
 

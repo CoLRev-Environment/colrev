@@ -14,6 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -57,34 +58,36 @@ class YearVolIssPrep(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
             # pylint: disable=duplicate-code
-            if record[
-                "colrev_status"
-            ] not in colrev.record.RecordState.get_post_x_states(
+            if record[Fields.STATUS] not in colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.md_processed
             ):
                 continue
-            if not record.get("year", "NA").isdigit():
+            if not record.get(Fields.YEAR, "NA").isdigit():
                 continue
 
-            if "journal" not in record or "volume" not in record:
+            if Fields.JOURNAL not in record or Fields.VOLUME not in record:
                 continue
 
-            if record["journal"] not in vol_nr_dict:
-                vol_nr_dict[record["journal"]] = {}
+            if record[Fields.JOURNAL] not in vol_nr_dict:
+                vol_nr_dict[record[Fields.JOURNAL]] = {}
 
-            if record["volume"] not in vol_nr_dict[record["journal"]]:
-                vol_nr_dict[record["journal"]][record["volume"]] = {}
+            if record[Fields.VOLUME] not in vol_nr_dict[record[Fields.JOURNAL]]:
+                vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]] = {}
 
-            if "number" not in record:
-                vol_nr_dict[record["journal"]][record["volume"]] = record["year"]
+            if Fields.NUMBER not in record:
+                vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]] = record[
+                    Fields.YEAR
+                ]
             else:
-                if isinstance(vol_nr_dict[record["journal"]][record["volume"]], dict):
-                    vol_nr_dict[record["journal"]][record["volume"]][
-                        record["number"]
-                    ] = record["year"]
+                if isinstance(
+                    vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]], dict
+                ):
+                    vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]][
+                        record[Fields.NUMBER]
+                    ] = record[Fields.YEAR]
                 else:
                     # do not use inconsistent data (has/has no number)
-                    del vol_nr_dict[record["journal"]][record["volume"]]
+                    del vol_nr_dict[record[Fields.JOURNAL]][record[Fields.VOLUME]]
 
         return vol_nr_dict
 
@@ -93,7 +96,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         try:
             year = self.local_index.get_year_from_toc(record_dict=record.get_data())
             record.update_field(
-                key="year",
+                key=Fields.YEAR,
                 value=year,
                 source="LocalIndexPrep",
                 note="",
@@ -103,38 +106,45 @@ class YearVolIssPrep(JsonSchemaMixin):
             pass
 
     def __get_year_from_vol_nr_dict(self, *, record: colrev.record.Record) -> None:
-        if "journal" not in record.data or "volume" not in record.data:
+        if Fields.JOURNAL not in record.data or Fields.VOLUME not in record.data:
             return
 
-        if record.data["journal"] not in self.vol_nr_dict:
+        if record.data[Fields.JOURNAL] not in self.vol_nr_dict:
             return
 
-        if record.data["volume"] not in self.vol_nr_dict[record.data["journal"]]:
+        if (
+            record.data[Fields.VOLUME]
+            not in self.vol_nr_dict[record.data[Fields.JOURNAL]]
+        ):
             return
 
-        if "number" in record.data:
+        if Fields.NUMBER in record.data:
             if (
-                record.data["number"]
-                in self.vol_nr_dict[record.data["journal"]][record.data["volume"]]
+                record.data[Fields.NUMBER]
+                in self.vol_nr_dict[record.data[Fields.JOURNAL]][
+                    record.data[Fields.VOLUME]
+                ]
             ):
                 record.update_field(
-                    key="year",
-                    value=self.vol_nr_dict[record.data["journal"]][
-                        record.data["volume"]
-                    ][record.data["number"]],
+                    key=Fields.YEAR,
+                    value=self.vol_nr_dict[record.data[Fields.JOURNAL]][
+                        record.data[Fields.VOLUME]
+                    ][record.data[Fields.NUMBER]],
                     source="year_vol_iss_prep",
                     note="",
                 )
                 record.update_masterdata_provenance(qm=self.quality_model)
         else:
             if isinstance(
-                self.vol_nr_dict[record.data["journal"]][record.data["volume"]],
+                self.vol_nr_dict[record.data[Fields.JOURNAL]][
+                    record.data[Fields.VOLUME]
+                ],
                 (str, int),
             ):
                 record.update_field(
-                    key="year",
-                    value=self.vol_nr_dict[record.data["journal"]][
-                        record.data["volume"]
+                    key=Fields.YEAR,
+                    value=self.vol_nr_dict[record.data[Fields.JOURNAL]][
+                        record.data[Fields.VOLUME]
                     ],
                     source="year_vol_iss_prep",
                     note="",
@@ -169,21 +179,24 @@ class YearVolIssPrep(JsonSchemaMixin):
             retrieved_records = [
                 retrieved_record
                 for retrieved_record in retrieved_records
-                if retrieved_record.data.get("volume", "NA")
-                == record.data.get("volume", "NA")
-                and retrieved_record.data.get("journal", "NA")
-                == record.data.get("journal", "NA")
-                and retrieved_record.data.get("number", "NA")
-                == record.data.get("number", "NA")
+                if retrieved_record.data.get(Fields.VOLUME, "NA")
+                == record.data.get(Fields.VOLUME, "NA")
+                and retrieved_record.data.get(Fields.JOURNAL, "NA")
+                == record.data.get(Fields.JOURNAL, "NA")
+                and retrieved_record.data.get(Fields.NUMBER, "NA")
+                == record.data.get(Fields.NUMBER, "NA")
             ]
 
-            years = [r.data["year"] for r in retrieved_records]
+            years = [r.data[Fields.YEAR] for r in retrieved_records]
             if len(years) == 0:
                 return
             most_common = max(years, key=years.count)
             if years.count(most_common) > 3:
                 record.update_field(
-                    key="year", value=most_common, source="CROSSREF(average)", note=""
+                    key=Fields.YEAR,
+                    value=most_common,
+                    source="CROSSREF(average)",
+                    note="",
                 )
         except requests.exceptions.RequestException:
             pass
@@ -193,17 +206,20 @@ class YearVolIssPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare a record based on year-volume-issue dependency"""
 
-        if record.data.get("year", "NA").isdigit() or record.masterdata_is_curated():
+        if (
+            record.data.get(Fields.YEAR, "NA").isdigit()
+            or record.masterdata_is_curated()
+        ):
             return record
 
         self.__get_year_from_toc(record=record)
 
-        if "year" in record.data:
+        if Fields.YEAR in record.data:
             return record
 
         self.__get_year_from_vol_nr_dict(record=record)
 
-        if "year" in record.data:
+        if Fields.YEAR in record.data:
             return record
 
         self.__get_year_from_crossref(record=record, prep_operation=prep_operation)

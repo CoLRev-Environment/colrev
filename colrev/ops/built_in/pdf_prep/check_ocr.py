@@ -15,6 +15,7 @@ import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -56,7 +57,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.Record:
-        pdf_path = review_manager.path / Path(record.data["file"])
+        pdf_path = review_manager.path / Path(record.data[Fields.FILE])
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
         pdf_path.rename(non_ocred_filename)
         orig_path = (
@@ -84,7 +85,9 @@ class PDFCheckOCR(JsonSchemaMixin):
             volumes=[f"{orig_path}:/home/docker"],
         )
 
-        record.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")
+        record.add_data_provenance_note(
+            key=Fields.FILE, note="pdf_processed with OCRMYPDF"
+        )
         record.set_text_from_pdf(project_path=review_manager.path)
         return record
 
@@ -97,17 +100,17 @@ class PDFCheckOCR(JsonSchemaMixin):
         """Prepare the PDF by checking/applying OCR"""
 
         if colrev.record.RecordState.pdf_imported != record.data.get(
-            "colrev_status", "NA"
+            Fields.STATUS, "NA"
         ):
             return record.data
 
-        if not record.data["file"].endswith(".pdf"):
+        if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
         # We may allow for other languages in this and the following if statement
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
             pdf_prep_operation.review_manager.report_logger.info(
-                f'apply_ocr({record.data["ID"]})'
+                f"apply_ocr({record.data[Fields.ID]})"
             )
             record = self.__apply_ocr(
                 review_manager=pdf_prep_operation.review_manager,
@@ -117,11 +120,13 @@ class PDFCheckOCR(JsonSchemaMixin):
 
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
             msg = (
-                f'{record.data["ID"]}'.ljust(pad, " ")
+                f"{record.data[Fields.ID]}".ljust(pad, " ")
                 + "Validation error (Language not English or OCR problems)"
             )
             pdf_prep_operation.review_manager.report_logger.error(msg)
-            record.add_data_provenance_note(key="file", note="pdf_language_not_english")
+            record.add_data_provenance_note(
+                key=Fields.FILE, note="pdf_language_not_english"
+            )
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )

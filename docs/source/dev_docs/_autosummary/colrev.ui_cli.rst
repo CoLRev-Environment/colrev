@@ -28,7 +28,6 @@ colrev.ui\_cli
 
    colrev.ui_cli.cli
    colrev.ui_cli.cli_add_source
-   colrev.ui_cli.cli_colors
    colrev.ui_cli.cli_status_printer
    colrev.ui_cli.cli_validation
    colrev.ui_cli.dedupe_errors

@@ -7,6 +7,7 @@ import typing
 import pandas as pd
 
 import colrev.ops.dedupe
+from colrev.constants import Fields
 
 
 def load_dedupe_false_positives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -> list:
@@ -18,7 +19,9 @@ def load_dedupe_false_positives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -
         c_to_correct = dupes.loc[dupes["error"] != "", "cluster_id"].to_list()
         dupes = dupes[dupes["cluster_id"].isin(c_to_correct)]
         false_positives = (
-            dupes.groupby(["cluster_id"], group_keys=False)["ID"].apply(list).tolist()
+            dupes.groupby(["cluster_id"], group_keys=False)[Fields.ID]
+            .apply(list)
+            .tolist()
         )
     return false_positives
 
@@ -40,7 +43,7 @@ def load_dedupe_false_negatives(*, dedupe_operation: colrev.ops.dedupe.Dedupe) -
             ].to_list()
             non_dupes = non_dupes[non_dupes["cluster_id"].isin(c_to_correct)]
             ids_to_merge = (
-                non_dupes.groupby(["cluster_id"], group_keys=False)["ID"]
+                non_dupes.groupby(["cluster_id"], group_keys=False)[Fields.ID]
                 .apply(list)
                 .tolist()
             )

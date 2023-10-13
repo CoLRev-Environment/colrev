@@ -17,6 +17,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -62,13 +63,13 @@ class DOIFromURLsPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by retrieving its DOI from the website (url) if available"""
 
-        if ("url" not in record.data and "fulltext" not in record.data) or (
-            "doi" in record.data
+        if (Fields.URL not in record.data and Fields.FULLTEXT not in record.data) or (
+            Fields.DOI in record.data
         ):
             return record
 
         try:
-            url = record.data.get("url", record.data.get("fulltext", "NA"))
+            url = record.data.get(Fields.URL, record.data.get(Fields.FULLTEXT, "NA"))
             headers = {"user-agent": f"{__name__}  " f"(mailto:{self.email})"}
             ret = self.session.request(
                 "GET", url, headers=headers, timeout=prep_operation.timeout
@@ -90,8 +91,8 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             doi, _ = ret_dois[0]
 
             retrieved_record_dict = {
-                "doi": doi.upper(),
-                "ID": record.data["ID"],
+                Fields.DOI: doi.upper(),
+                Fields.ID: record.data[Fields.ID],
             }
             retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
             doi_connector.DOIConnector.retrieve_doi_metadata(

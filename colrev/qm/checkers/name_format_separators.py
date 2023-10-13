@@ -7,6 +7,8 @@ import re
 import colrev.env.utils
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -21,10 +23,10 @@ class NameFormatSeparatorsChecker:
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the name-format-separators checks"""
-        for key in ["author", "editor"]:
+        for key in [Fields.AUTHOR, Fields.EDITOR]:
             if key not in record.data:
                 continue
-            if record.data[key] == "UNKNOWN":
+            if record.data[key] == FieldValues.UNKNOWN:
                 continue
 
             if self.__name_separator_error(record=record, key=key):

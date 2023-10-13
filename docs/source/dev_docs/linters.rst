@@ -29,7 +29,7 @@ The `colrev_status` should not be assigned directly using the `record_dict` dict
 colrev-missed-constant-usage
 ----------------------------------
 
-The use of global CoLRev constants is encouraged.
+The use of global `CoLRev constants <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/constants.py>`_ is encouraged.
 
 **Problematic code**::
 

@@ -17,7 +17,9 @@ from PyPDF2 import PdfFileWriter
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -106,18 +108,18 @@ class ExportManPrep(JsonSchemaMixin):
         prep_man_path_pdfs.mkdir(exist_ok=True, parents=True)
 
         for record in records.values():
-            if "file" in record:
-                target_path = self.review_manager.prep_dir / Path(record["file"])
+            if Fields.FILE in record:
+                target_path = self.review_manager.prep_dir / Path(record[Fields.FILE])
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
                 if self.settings.pdf_handling_mode == "symlink":
                     try:
-                        target_path.symlink_to(Path(record["file"]).resolve())
+                        target_path.symlink_to(Path(record[Fields.FILE]).resolve())
                     except FileExistsError:
                         pass
 
                 if self.settings.pdf_handling_mode == "copy_first_page":
-                    pdf_reader = PdfFileReader(str(record["file"]), strict=False)
+                    pdf_reader = PdfFileReader(str(record[Fields.FILE]), strict=False)
                     if len(pdf_reader.pages) >= 1:
                         writer = PdfFileWriter()
                         writer.addPage(pdf_reader.pages[0])
@@ -132,8 +134,7 @@ class ExportManPrep(JsonSchemaMixin):
         man_prep_recs = {
             k: v
             for k, v in records.items()
-            if colrev.record.RecordState.md_needs_manual_preparation
-            == v["colrev_status"]
+            if colrev.record.RecordState.md_needs_manual_preparation == v[Fields.STATUS]
         }
 
         # Filter out fields that are not needed for manual preparation
@@ -147,7 +148,7 @@ class ExportManPrep(JsonSchemaMixin):
         self.review_manager.dataset.save_records_dict_to_file(
             records=filtered_man_prep_recs, save_path=self.prep_man_bib_path
         )
-        if any("file" in r for r in man_prep_recs.values()):
+        if any(Fields.FILE in r for r in man_prep_recs.values()):
             self.__copy_files_for_man_prep(records=man_prep_recs)
 
     def __create_info_dataframe(
@@ -158,16 +159,19 @@ class ExportManPrep(JsonSchemaMixin):
         man_prep_recs = [
             v
             for _, v in records.items()
-            if colrev.record.RecordState.md_needs_manual_preparation
-            == v["colrev_status"]
+            if colrev.record.RecordState.md_needs_manual_preparation == v[Fields.STATUS]
         ]
 
         man_prep_info = []
         for record in man_prep_recs:
-            for field, value in record["colrev_masterdata_provenance"].items():
+            for field, value in record[Fields.MD_PROV].items():
                 if value["note"]:
                     man_prep_info.append(
-                        {"ID": record["ID"], "field": field, "note": value["note"]}
+                        {
+                            Fields.ID: record[Fields.ID],
+                            "field": field,
+                            "note": value["note"],
+                        }
                     )
 
         man_prep_info_df = pd.DataFrame(man_prep_info)
@@ -183,24 +187,18 @@ class ExportManPrep(JsonSchemaMixin):
         self, *, record: colrev.record.Record
     ) -> None:
         colrev_data_provenance_keys_to_drop = []
-        for key, items in record.data.get("colrev_data_provenance", {}).items():
+        for key, items in record.data.get(Fields.D_PROV, {}).items():
             if key not in record.data and "not-missing" not in items["note"]:
                 colrev_data_provenance_keys_to_drop.append(key)
         for colrev_data_provenance_key_to_drop in colrev_data_provenance_keys_to_drop:
-            del record.data["colrev_data_provenance"][
-                colrev_data_provenance_key_to_drop
-            ]
+            del record.data[Fields.D_PROV][colrev_data_provenance_key_to_drop]
 
-        colrev_masterdata_provenance_keys_to_drop = []
-        for key, items in record.data.get("colrev_masterdata_provenance", {}).items():
+        MD_PROV_keys_to_drop = []
+        for key, items in record.data.get(Fields.MD_PROV, {}).items():
             if key not in record.data and "not-missing" not in items["note"]:
-                colrev_masterdata_provenance_keys_to_drop.append(key)
-        for (
-            colrev_masterdata_provenance_key_to_drop
-        ) in colrev_masterdata_provenance_keys_to_drop:
-            del record.data["colrev_masterdata_provenance"][
-                colrev_masterdata_provenance_key_to_drop
-            ]
+                MD_PROV_keys_to_drop.append(key)
+        for MD_PROV_key_to_drop in MD_PROV_keys_to_drop:
+            del record.data[Fields.MD_PROV][MD_PROV_key_to_drop]
 
     def __update_original_record_based_on_man_prepped(
         self, *, original_record: colrev.record.Record, man_prepped_record_dict: dict
@@ -211,20 +209,31 @@ class ExportManPrep(JsonSchemaMixin):
             if (k not in man_prepped_record_dict) and k in self.__FIELDS_TO_KEEP
         ]
 
-        if original_record.data["ENTRYTYPE"] != man_prepped_record_dict["ENTRYTYPE"]:
+        if (
+            original_record.data[Fields.ENTRYTYPE]
+            != man_prepped_record_dict[Fields.ENTRYTYPE]
+        ):
             original_record.change_entrytype(
-                new_entrytype=man_prepped_record_dict["ENTRYTYPE"],
+                new_entrytype=man_prepped_record_dict[Fields.ENTRYTYPE],
                 qm=self.quality_model,
             )
 
-        if man_prepped_record_dict["ENTRYTYPE"] != original_record.data["ENTRYTYPE"]:
-            original_record.data["ENTRYTYPE"] = man_prepped_record_dict["ENTRYTYPE"]
+        if (
+            man_prepped_record_dict[Fields.ENTRYTYPE]
+            != original_record.data[Fields.ENTRYTYPE]
+        ):
+            original_record.data[Fields.ENTRYTYPE] = man_prepped_record_dict[
+                Fields.ENTRYTYPE
+            ]
             original_record.update_masterdata_provenance(qm=self.quality_model)
 
         for key, value in man_prepped_record_dict.items():
-            if key in ["colrev_status"]:
+            if key in [Fields.STATUS]:
                 continue
-            if value != original_record.data.get(key, "") and value != "UNKNOWN":
+            if (
+                value != original_record.data.get(key, "")
+                and value != FieldValues.UNKNOWN
+            ):
                 original_record.update_field(
                     key=key, value=value, source="man_prep", append_edit=False
                 )
@@ -239,33 +248,32 @@ class ExportManPrep(JsonSchemaMixin):
 
     def __print_stats(self, *, original_record: colrev.record.Record) -> None:
         if (
-            original_record.data["colrev_status"]
+            original_record.data[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
             self.review_manager.logger.info(
-                f" {colors.RED}{original_record.data['ID']}".ljust(46)
+                f" {Colors.RED}{original_record.data['ID']}".ljust(46)
                 + "md_needs_manual_preparation →  rev_prescreen_excluded"
-                + f"{colors.END}"
+                + f"{Colors.END}"
             )
         elif (
-            original_record.data["colrev_status"]
-            == colrev.record.RecordState.md_prepared
+            original_record.data[Fields.STATUS] == colrev.record.RecordState.md_prepared
         ):
             self.review_manager.logger.info(
-                f" {colors.GREEN}{original_record.data['ID']}".ljust(46)
+                f" {Colors.GREEN}{original_record.data['ID']}".ljust(46)
                 + "md_needs_manual_preparation →  md_prepared"
-                + f"{colors.END}"
+                + f"{Colors.END}"
             )
         else:
             man_prep_note = ", ".join(
                 k + ":" + v["note"]
-                for k, v in original_record.data["colrev_masterdata_provenance"].items()
+                for k, v in original_record.data[Fields.MD_PROV].items()
                 if v["note"] != ""
             )
             self.review_manager.logger.info(
-                f" {colors.ORANGE}{original_record.data['ID']}".ljust(46)
+                f" {Colors.ORANGE}{original_record.data['ID']}".ljust(46)
                 + f"{man_prep_note}"
-                + f"{colors.END}"
+                + f"{Colors.END}"
             )
 
     def __import_record(
@@ -275,9 +283,9 @@ class ExportManPrep(JsonSchemaMixin):
         original_record: colrev.record.Record,
         imported_records: list,
     ) -> None:
-        imported_records.append(original_record.data["ID"])
+        imported_records.append(original_record.data[Fields.ID])
         override = (
-            man_prepped_record_dict["colrev_status"]
+            man_prepped_record_dict[Fields.STATUS]
             == colrev.record.RecordState.md_prepared
         )
 
@@ -288,7 +296,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.__drop_unnecessary_provenance_fiels(record=original_record)
         if (
-            man_prepped_record_dict["colrev_status"]
+            man_prepped_record_dict[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
             original_record.set_status(
@@ -323,17 +331,17 @@ class ExportManPrep(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
         for record_id, record_dict in records.items():
             if (
-                record_dict["colrev_status"]
+                record_dict[Fields.STATUS]
                 == colrev.record.RecordState.rev_prescreen_excluded
                 # or record_id not in man_prep_recs
             ):
                 records[record_id][  # pylint: disable=colrev-direct-status-assign
-                    "colrev_status"
+                    Fields.STATUS
                 ] = colrev.record.RecordState.rev_prescreen_excluded
                 self.review_manager.logger.info(
-                    f" {colors.RED}{record_id}".ljust(46)
+                    f" {Colors.RED}{record_id}".ljust(46)
                     + "md_needs_manual_preparation →  rev_prescreen_excluded"
-                    + f"{colors.END}"
+                    + f"{Colors.END}"
                 )
 
         for record_id, man_prepped_record_dict in man_prep_recs.items():
@@ -341,7 +349,7 @@ class ExportManPrep(JsonSchemaMixin):
                 print(f"ID no longer in records: {record_id}")
                 continue
             original_record = colrev.record.Record(
-                data=records[man_prepped_record_dict["ID"]]
+                data=records[man_prepped_record_dict[Fields.ID]]
             )
             self.__import_record(
                 man_prepped_record_dict=man_prepped_record_dict,
@@ -380,7 +388,7 @@ class ExportManPrep(JsonSchemaMixin):
         )
         print()
 
-        print(f"Once completed, run {colors.ORANGE}colrev prep-man{colors.END} again.")
+        print(f"Once completed, run {Colors.ORANGE}colrev prep-man{Colors.END} again.")
 
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict

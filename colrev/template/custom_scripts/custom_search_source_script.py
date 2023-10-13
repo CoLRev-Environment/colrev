@@ -10,6 +10,7 @@ from dacite import from_dict
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.search.Search
@@ -50,18 +51,25 @@ class CustomSearch:
                 )
 
             max_id = (
-                max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
+                max(
+                    [
+                        int(x[Fields.ID])
+                        for x in records.values()
+                        if x[Fields.ID].isdigit()
+                    ]
+                    + [1]
+                )
                 + 1
             )
 
         # Add new records to the dictionary:
         records[max_id] = {
-            "ID": max_id,
-            "ENTRYTYPE": "article",
-            "author": "Smith, M.",
-            "title": "Editorial",
-            "journal": "nature",
-            "year": "2020",
+            Fields.ID: max_id,
+            Fields.ENTRYTYPE: "article",
+            Fields.AUTHOR: "Smith, M.",
+            Fields.TITLE: "Editorial",
+            Fields.JOURNAL: "nature",
+            Fields.YEAR: "2020",
         }
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)

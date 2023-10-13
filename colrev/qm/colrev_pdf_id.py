@@ -11,7 +11,7 @@ import imagehash
 from PIL import Image
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 
 def get_pdf_hash(*, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
@@ -20,7 +20,7 @@ def get_pdf_hash(*, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
     assert hash_size in [16, 32]
     pdf_path = pdf_path.resolve()
     if 0 == os.path.getsize(pdf_path):
-        logging.error("%sPDF with size 0: %s %s", colors.RED, pdf_path, colors.END)
+        logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
         raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
     doc: fitz.Document = fitz.open(pdf_path)

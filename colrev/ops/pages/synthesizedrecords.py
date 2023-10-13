@@ -15,6 +15,7 @@ from dash import Output
 
 import colrev.record
 import colrev.review_manager
+from colrev.constants import Fields
 
 dash.register_page(__name__)
 
@@ -25,14 +26,16 @@ data = pd.DataFrame.from_records(
     [
         r
         for r in records.values()
-        if r["colrev_status"] == colrev.record.RecordState.rev_synthesized
+        if r[Fields.STATUS] == colrev.record.RecordState.rev_synthesized
     ]
 )
 
 if data.empty:
-    data = pd.DataFrame(columns=["author", "title", "year", "journal"])
+    data = pd.DataFrame(
+        columns=[Fields.AUTHOR, Fields.TITLE, Fields.YEAR, Fields.JOURNAL]
+    )
 else:
-    data = data[["author", "title", "year", "journal"]]
+    data = data[[Fields.AUTHOR, Fields.TITLE, Fields.YEAR, Fields.JOURNAL]]
 
 
 def empty_figure() -> object:
@@ -53,16 +56,18 @@ def plot_time(data_input: pd.DataFrame) -> object:
         return empty_figure()
 
     # group data_input for the graph
-    data2 = data_input.groupby(["year"])["year"].count().reset_index(name="count")
+    data2 = (
+        data_input.groupby([Fields.YEAR])[Fields.YEAR].count().reset_index(name="count")
+    )
 
     # make and style the graph
     fig = px.bar(
         data2,
-        x="year",
+        x=Fields.YEAR,
         y="count",
         template="simple_white",
         title="Profile of papers published over time",
-        color="year",
+        color=Fields.YEAR,
     )
     fig.update_traces(marker_color="#fcb61a")
 
@@ -100,14 +105,18 @@ def plot_journals(data_input: pd.DataFrame) -> px.bar:
         return empty_figure()
 
     # group data for the graph
-    data2 = data_input.groupby(["journal"])["journal"].count().reset_index(name="count")
+    data2 = (
+        data_input.groupby([Fields.JOURNAL])[Fields.JOURNAL]
+        .count()
+        .reset_index(name="count")
+    )
     data2 = data2[data2["count"] != 0].sort_values(by="count", ascending=True)
 
     # make and style the graph
     fig = px.bar(
         data2,
         x="count",
-        y="journal",
+        y=Fields.JOURNAL,
         template="simple_white",
         title="Papers Published per Journal",
         orientation="h",
@@ -152,7 +161,11 @@ layout = html.Div(
                     children=[
                         dcc.Dropdown(
                             id="sortby",
-                            options=["title", "year", "author (alphabetically)"],
+                            options=[
+                                Fields.TITLE,
+                                Fields.YEAR,
+                                "author (alphabetically)",
+                            ],
                             placeholder="Sort by...",
                         )
                     ],
@@ -195,11 +208,11 @@ layout = html.Div(
                             },
                             style_cell_conditional=[
                                 {
-                                    "if": {"column_id": "year"},
+                                    "if": {"column_id": Fields.YEAR},
                                     "width": "7%",
                                     "text-align": "center",
                                 },
-                                {"if": {"column_id": "title"}, "width": "53%"},
+                                {"if": {"column_id": Fields.TITLE}, "width": "53%"},
                             ],
                             style_header={
                                 "font-weight": "bold",
@@ -257,12 +270,12 @@ def update_table(searchvalue, sortvalue) -> tuple[dict, str, px.bar, px.bar]:  #
     output = ""
 
     # sort data
-    if sortvalue == "year":
-        sorted_data = sorted_data.sort_values(by=["year"])  # sort by year
-    elif sortvalue == "title":
-        sorted_data = sorted_data.sort_values(by=["title"])  # sort by title
-    elif sortvalue == "author":
-        sorted_data = sorted_data.sort_values(by=["author"])  # sort by author
+    if sortvalue == Fields.YEAR:
+        sorted_data = sorted_data.sort_values(by=[Fields.YEAR])  # sort by year
+    elif sortvalue == Fields.TITLE:
+        sorted_data = sorted_data.sort_values(by=[Fields.TITLE])  # sort by title
+    elif sortvalue == Fields.AUTHOR:
+        sorted_data = sorted_data.sort_values(by=[Fields.AUTHOR])  # sort by author
 
     data2 = sorted_data.copy(deep=True).to_dict("records")
 

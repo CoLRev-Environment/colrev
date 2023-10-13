@@ -16,7 +16,7 @@ from tqdm import tqdm
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -204,7 +204,7 @@ class Upgrade(colrev.operation.Operation):
             for line in filedata.decode("utf-8").split("\n"):
                 if str(selected_version) in line:
                     active = True
-                    print(f"{colors.ORANGE}Release notes v{selected_version}")
+                    print(f"{Colors.ORANGE}Release notes v{selected_version}")
                     continue
                 if line.startswith("## "):
                     active = False
@@ -212,8 +212,8 @@ class Upgrade(colrev.operation.Operation):
                     print(line)
                     printed = True
         if not printed:
-            print(f"{colors.ORANGE}No release notes")
-        print(f"{colors.END}")
+            print(f"{Colors.ORANGE}No release notes")
+        print(f"{Colors.END}")
 
     def __migrate_0_7_0(self) -> bool:
         pre_commit_contents = Path(".pre-commit-config.yaml").read_text(

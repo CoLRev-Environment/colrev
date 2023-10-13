@@ -30,7 +30,8 @@ import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 # import binascii
 
@@ -78,16 +79,16 @@ class LocalIndex:
         (RECORD_INDEX, "id"): "SELECT * FROM record_index WHERE id=?",
         (TOC_INDEX, "toc_key"): "SELECT * FROM toc_index WHERE toc_key=?",
         (RECORD_INDEX, "colrev_id"): "SELECT * FROM record_index WHERE colrev_id=?",
-        (RECORD_INDEX, "doi"): "SELECT * FROM record_index where doi=?",
+        (RECORD_INDEX, Fields.DOI): "SELECT * FROM record_index where doi=?",
         (
             RECORD_INDEX,
-            "colrev.dblp.dblp_key",
+            Fields.DBLP_KEY,
         ): "SELECT * FROM record_index WHERE dblp_key=?",
         (
             RECORD_INDEX,
             "colrev_pdf_id",
         ): "SELECT * FROM record_index WHERE colrev_pdf_id=?",
-        (RECORD_INDEX, "url"): "SELECT * FROM record_index WHERE url=?",
+        (RECORD_INDEX, Fields.URL): "SELECT * FROM record_index WHERE url=?",
     }
 
     # AUTHOR_INDEX = "author_index"
@@ -197,7 +198,7 @@ class LocalIndex:
     #     print("index_author currently not implemented")
     # author_details = tei.get_author_details()
     # # Iterate over curated metadata and enrich it based on TEI (may vary in quality)
-    # for author in record_dict.get("author", "").split(" and "):
+    # for author in record_dict.get(Fields.AUTHOR, "").split(" and "):
     #     if "," not in author:
     #         continue
     #     author_dict = {}
@@ -213,7 +214,7 @@ class LocalIndex:
         if not self.__index_tei:
             return
         for record_dict in recs_to_index:
-            if not Path(record_dict.get("file", "NA")).is_file():
+            if not Path(record_dict.get(Fields.FILE, "NA")).is_file():
                 continue
 
             try:
@@ -224,12 +225,12 @@ class LocalIndex:
                     print(f"Create tei for {record_dict['file']}")
                 tei = colrev.env.tei_parser.TEIParser(
                     environment_manager=self.environment_manager,
-                    pdf_path=Path(record_dict["file"]),
+                    pdf_path=Path(record_dict[Fields.FILE]),
                     tei_path=tei_path,
                 )
 
                 record_dict["tei"] = str(tei_path)
-                record_dict["fulltext"] = tei.get_tei_str()
+                record_dict[Fields.FULLTEXT] = tei.get_tei_str()
 
                 # self.__index_author(tei=tei, record_dict=record_dict)
 
@@ -256,7 +257,7 @@ class LocalIndex:
         for curated_field in curated_fields:
             if curated_field not in record_dict:
                 continue
-            source = record_dict["colrev_data_provenance"][curated_field]["source"]
+            source = record_dict[Fields.D_PROV][curated_field]["source"]
             layered_fields.append(
                 {
                     "key": curated_field,
@@ -276,12 +277,14 @@ class LocalIndex:
         # pylint: disable=too-many-return-statements
 
         fields_to_remove: typing.List[str] = []
-        if "journal" not in record_dict and record_dict["ENTRYTYPE"] != "article":
+        if Fields.JOURNAL not in record_dict and record_dict["ENTRYTYPE"] != "article":
             return fields_to_remove
 
         internal_record_dict = deepcopy(record_dict)
 
-        if all(x in internal_record_dict.keys() for x in ["volume", "number"]):
+        if all(
+            x in internal_record_dict.keys() for x in [Fields.VOLUME, Fields.NUMBER]
+        ):
             try:
                 toc_key_full = colrev.record.Record(
                     data=internal_record_dict
@@ -292,30 +295,30 @@ class LocalIndex:
             except colrev_exceptions.NotTOCIdentifiableException:
                 return fields_to_remove
             wo_nr = deepcopy(internal_record_dict)
-            del wo_nr["number"]
+            del wo_nr[Fields.NUMBER]
             toc_key_wo_nr = colrev.record.Record(data=wo_nr).get_toc_key()
 
             if toc_key_wo_nr != "NA":
                 if self.__toc_exists(toc_item=toc_key_wo_nr):
-                    fields_to_remove.append("number")
+                    fields_to_remove.append(Fields.NUMBER)
                     return fields_to_remove
 
             wo_vol = deepcopy(internal_record_dict)
-            del wo_vol["volume"]
+            del wo_vol[Fields.VOLUME]
             toc_key_wo_vol = colrev.record.Record(data=wo_vol).get_toc_key()
             if toc_key_wo_vol != "NA":
                 if self.__toc_exists(toc_item=toc_key_wo_vol):
-                    fields_to_remove.append("volume")
+                    fields_to_remove.append(Fields.VOLUME)
                     return fields_to_remove
 
             wo_vol_nr = deepcopy(internal_record_dict)
-            del wo_vol_nr["volume"]
-            del wo_vol_nr["number"]
+            del wo_vol_nr[Fields.VOLUME]
+            del wo_vol_nr[Fields.NUMBER]
             toc_key_wo_vol_nr = colrev.record.Record(data=wo_vol_nr).get_toc_key()
             if toc_key_wo_vol_nr != "NA":
                 if self.__toc_exists(toc_item=toc_key_wo_vol_nr):
-                    fields_to_remove.append("number")
-                    fields_to_remove.append("volume")
+                    fields_to_remove.append(Fields.NUMBER)
+                    fields_to_remove.append(Fields.VOLUME)
                     return fields_to_remove
 
         return fields_to_remove
@@ -413,9 +416,9 @@ class LocalIndex:
             layered_fields = json.loads(row["layered_fields"])
             for layered_field in layered_fields:
                 retrieved_record[layered_field["key"]] = layered_field["value"]
-                if "colrev_data_provenance" not in retrieved_record:
-                    retrieved_record["colrev_data_provenance"] = {}
-                retrieved_record["colrev_data_provenance"][layered_field["key"]] = {
+                if Fields.D_PROV not in retrieved_record:
+                    retrieved_record[Fields.D_PROV] = {}
+                retrieved_record[Fields.D_PROV][layered_field["key"]] = {
                     "source": layered_field["source"],
                     "note": "",
                 }
@@ -526,33 +529,33 @@ class LocalIndex:
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex
-        if "file" in record_dict and not Path(record_dict["file"]).is_file():
-            del record_dict["file"]
+        if Fields.FILE in record_dict and not Path(record_dict[Fields.FILE]).is_file():
+            del record_dict[Fields.FILE]
 
         if not include_colrev_ids and "colrev_id" in record_dict:
             del record_dict["colrev_id"]
 
         if include_file:
             if fulltext_backup != "NA":
-                record_dict["fulltext"] = fulltext_backup
+                record_dict[Fields.FULLTEXT] = fulltext_backup
         else:
-            if "file" in record_dict:
-                del record_dict["file"]
-            if "file" in record_dict.get("colrev_data_provenance", {}):
-                del record_dict["colrev_data_provenance"]["file"]
+            if Fields.FILE in record_dict:
+                del record_dict[Fields.FILE]
+            if Fields.FILE in record_dict.get(Fields.D_PROV, {}):
+                del record_dict[Fields.D_PROV][Fields.FILE]
             if "colrev_pdf_id" in record_dict:
                 del record_dict["colrev_pdf_id"]
-            if "colrev_pdf_id" in record_dict.get("colrev_data_provenance", {}):
-                del record_dict["colrev_data_provenance"]["colrev_pdf_id"]
+            if "colrev_pdf_id" in record_dict.get(Fields.D_PROV, {}):
+                del record_dict[Fields.D_PROV]["colrev_pdf_id"]
 
         record = colrev.record.Record(data=record_dict)
         record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
-        if "CURATED" in record_dict.get("colrev_masterdata_provenance", {}):
+        if "CURATED" in record_dict.get(Fields.MD_PROV, {}):
             identifier_string = (
-                record_dict["colrev_masterdata_provenance"]["CURATED"]["source"]
+                record_dict[Fields.MD_PROV]["CURATED"]["source"]
                 + "#"
-                + record_dict["ID"]
+                + record_dict[Fields.ID]
             )
             record_dict["curation_ID"] = identifier_string
 
@@ -607,20 +610,20 @@ class LocalIndex:
         return False
 
     def __apply_status_requirements(self, *, record_dict: dict) -> None:
-        if "colrev_status" not in record_dict:
+        if Fields.STATUS not in record_dict:
             raise colrev_exceptions.RecordNotIndexableException()
 
         # It is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
         if (
-            record_dict["colrev_status"]
+            record_dict[Fields.STATUS]
             in colrev.record.RecordState.get_non_processed_states()
         ):
             raise colrev_exceptions.RecordNotIndexableException()
 
         # Some prescreen_excluded records are not prepared
         if (
-            record_dict["colrev_status"]
+            record_dict[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
             raise colrev_exceptions.RecordNotIndexableException()
@@ -632,29 +635,29 @@ class LocalIndex:
                 print(f"Removing deprecated field: {deprecated_field}")
                 del record_dict[deprecated_field]
 
-        if "screening_criteria" in record_dict:
-            del record_dict["screening_criteria"]
+        if Fields.SCREENING_CRITERIA in record_dict:
+            del record_dict[Fields.SCREENING_CRITERIA]
         # Note: if the colrev_pdf_id has not been checked,
         # we cannot use it for retrieval or preparation.
         post_pdf_prepared_states = colrev.record.RecordState.get_post_x_states(
             state=colrev.record.RecordState.pdf_prepared
         )
-        if record_dict["colrev_status"] not in post_pdf_prepared_states:
+        if record_dict[Fields.STATUS] not in post_pdf_prepared_states:
             if "colrev_pdf_id" in record_dict:
                 del record_dict["colrev_pdf_id"]
 
         # Note : numbers of citations change regularly.
         # They should be retrieved from sources like crossref/doi.org
-        if "cited_by" in record_dict:
-            del record_dict["cited_by"]
-        if record_dict.get("year", "NA").isdigit():
-            record_dict["year"] = int(record_dict["year"])
+        if Fields.CITED_BY in record_dict:
+            del record_dict[Fields.CITED_BY]
+        if record_dict.get(Fields.YEAR, "NA").isdigit():
+            record_dict[Fields.YEAR] = int(record_dict[Fields.YEAR])
         else:
             raise colrev_exceptions.RecordNotIndexableException()
 
-        if "language" in record_dict and len(record_dict["language"]) != 3:
-            print(f'Language not in ISO 639-3 format: {record_dict["language"]}')
-            del record_dict["language"]
+        if Fields.LANGUAGE in record_dict and len(record_dict[Fields.LANGUAGE]) != 3:
+            print(f"Language not in ISO 639-3 format: {record_dict[Fields.LANGUAGE]}")
+            del record_dict[Fields.LANGUAGE]
 
     def __adjust_provenance_for_indexint(self, *, record_dict: dict) -> None:
         # Provenance should point to the original repository path.
@@ -673,15 +676,12 @@ class LocalIndex:
                     "metadata_source_repository_paths",
                 ]
             ):
-                if key not in record.data.get("colrev_data_provenance", {}):
+                if key not in record.data.get(Fields.D_PROV, {}):
                     record.add_data_provenance(
                         key=key,
                         source=record_dict["metadata_source_repository_paths"],
                     )
-                elif (
-                    "CURATED"
-                    not in record.data["colrev_data_provenance"][key]["source"]
-                ):
+                elif "CURATED" not in record.data[Fields.D_PROV][key]["source"]:
                     record.add_data_provenance(
                         key=key,
                         source=record_dict["metadata_source_repository_paths"],
@@ -692,19 +692,17 @@ class LocalIndex:
                 )
 
         # Make sure that we don't add provenance information without corresponding fields
-        if "colrev_data_provenance" in record.data:
-            provenance_keys = list(record.data.get("colrev_data_provenance", {}).keys())
+        if Fields.D_PROV in record.data:
+            provenance_keys = list(record.data.get(Fields.D_PROV, {}).keys())
             for provenance_key in provenance_keys:
                 if provenance_key not in record.data:
-                    del record.data["colrev_data_provenance"][provenance_key]
+                    del record.data[Fields.D_PROV][provenance_key]
         if not record.masterdata_is_curated():
-            if "colrev_masterdata_provenance" in record.data:
-                provenance_keys = list(
-                    record.data.get("colrev_masterdata_provenance", {}).keys()
-                )
+            if Fields.MD_PROV in record.data:
+                provenance_keys = list(record.data.get(Fields.MD_PROV, {}).keys())
                 for provenance_key in provenance_keys:
                     if provenance_key not in record.data:
-                        del record.data["colrev_masterdata_provenance"][provenance_key]
+                        del record.data[Fields.MD_PROV][provenance_key]
 
         record_dict = record.get_data()
 
@@ -716,15 +714,15 @@ class LocalIndex:
             record_dict["local_curated_metadata"] = "yes"
 
         # Note : file paths should be absolute when added to the LocalIndex
-        if "file" in record_dict:
-            pdf_path = Path(record_dict["file"])
+        if Fields.FILE in record_dict:
+            pdf_path = Path(record_dict[Fields.FILE])
             if pdf_path.is_file():
-                record_dict["file"] = str(pdf_path)
+                record_dict[Fields.FILE] = str(pdf_path)
             else:
-                del record_dict["file"]
+                del record_dict[Fields.FILE]
 
-        if "colrev_origin" in record_dict:
-            del record_dict["colrev_origin"]
+        if Fields.ORIGIN in record_dict:
+            del record_dict[Fields.ORIGIN]
 
         self.__adjust_provenance_for_indexint(record_dict=record_dict)
 
@@ -740,7 +738,7 @@ class LocalIndex:
             record_dict = self._prepare_record_for_indexing(record_dict=record_dict)
             cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
             record_dict["colrev_id"] = cid_to_index
-            record_dict["citation_key"] = record_dict["ID"]
+            record_dict["citation_key"] = record_dict[Fields.ID]
             record_dict["id"] = self.__get_record_hash(record_dict=record_dict)
         except colrev_exceptions.NotEnoughDataToIdentifyException as exc:
             missing_key = ""
@@ -765,7 +763,7 @@ class LocalIndex:
         # Note : drop (do not index) tocs where records are missing
         # otherwise, record-not-in-toc will be triggered erroneously.
         drop_toc = copy_for_toc_index[
-            "colrev_status"
+            Fields.STATUS
         ] not in colrev.record.RecordState.get_post_x_states(
             state=colrev.record.RecordState.md_processed
         )
@@ -811,17 +809,15 @@ class LocalIndex:
                             key=curated_field, source=f"CURATED:{curation_url}"
                         )
                 if curated_masterdata:
-                    record_dict.update(
-                        colrev_masterdata_provenance=f"CURATED:{curation_url};;"
-                    )
+                    record_dict[Fields.MD_PROV] = f"CURATED:{curation_url};;"
 
                 # Set absolute file paths and set bibtex field (for simpler retrieval)
-                if "file" in record_dict:
+                if Fields.FILE in record_dict:
                     record_dict.update(
-                        file=repo_source_path / Path(record_dict["file"])
+                        file=repo_source_path / Path(record_dict[Fields.FILE])
                     )
                 record_dict["bibtex"] = colrev.dataset.Dataset.parse_bibtex_str(
-                    recs_dict_in={record_dict["ID"]: record_dict}
+                    recs_dict_in={record_dict[Fields.ID]: record_dict}
                 )
                 record_dict = self.__get_index_record(record_dict=record_dict)
                 recs_to_index.append(record_dict)
@@ -904,7 +900,7 @@ class LocalIndex:
 
             if review_manager.dataset.get_repo().active_branch.name != "main":
                 print(
-                    f"{colors.ORANGE}Warning: {repo_source_path} not on main branch{colors.END}"
+                    f"{Colors.ORANGE}Warning: {repo_source_path} not on main branch{Colors.END}"
                 )
 
             if not check_operation.review_manager.dataset.records_file.is_file():
@@ -1020,7 +1016,7 @@ class LocalIndex:
                 value=toc_records_colrev_id,
             )
 
-            year = record_dict.get("year", "NA")
+            year = record_dict.get(Fields.YEAR, "NA")
 
             return year
 
@@ -1126,12 +1122,12 @@ class LocalIndex:
 
             if not sim_list:
                 raise colrev_exceptions.RecordNotInTOCException(
-                    record_id=record_dict["ID"], toc_key=toc_key
+                    record_id=record_dict[Fields.ID], toc_key=toc_key
                 )
 
             if max(sim_list) < similarity_threshold:
                 raise colrev_exceptions.RecordNotInTOCException(
-                    record_id=record_dict["ID"], toc_key=toc_key
+                    record_id=record_dict[Fields.ID], toc_key=toc_key
                 )
 
             if search_across_tocs:
@@ -1235,8 +1231,8 @@ class LocalIndex:
         record_to_import = self.__prepare_record_for_return(
             record_dict=record_dict, include_file=True
         )
-        if "file" in record_to_import:
-            del record_to_import["file"]
+        if Fields.FILE in record_to_import:
+            del record_to_import[Fields.FILE]
         return record_to_import
 
     def retrieve(
@@ -1280,7 +1276,7 @@ class LocalIndex:
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
             for key, value in record_dict.items():
-                if key not in self.global_keys or "ID" == key:
+                if key not in self.global_keys or Fields.ID == key:
                     continue
 
                 retrieved_record_dict = self.__get_item_from_index(
@@ -1295,7 +1291,7 @@ class LocalIndex:
 
         if not retrieved_record_dict:
             raise colrev_exceptions.RecordNotInIndexException(
-                record_dict.get("ID", "no-key")
+                record_dict.get(Fields.ID, "no-key")
             )
 
         return self.__prepare_record_for_return(
@@ -1382,11 +1378,11 @@ class LocalIndex:
             # see __outlets_duplicated(...)
 
             different_curated_repositories = (
-                "CURATED" in r1_index.get("colrev_masterdata_provenance", "")
-                and "CURATED" in r2_index.get("colrev_masterdata_provenance", "")
+                "CURATED" in r1_index.get(Fields.MD_PROV, "")
+                and "CURATED" in r2_index.get(Fields.MD_PROV, "")
                 and (
-                    r1_index.get("colrev_masterdata_provenance", "a")
-                    != r2_index.get("colrev_masterdata_provenance", "b")
+                    r1_index.get(Fields.MD_PROV, "a")
+                    != r2_index.get(Fields.MD_PROV, "b")
                 )
             )
 

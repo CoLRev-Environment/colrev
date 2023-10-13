@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -108,10 +109,8 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
             r"PMID: \d*", record.data["colrev.taylor_and_francis.note"]
         ):
             record.rename_field(
-                key="colrev.taylor_and_francis.note", new_key="colrev.pubmed.pubmedid"
+                key="colrev.taylor_and_francis.note", new_key=Fields.PUBMED_ID
             )
-            record.data["colrev.pubmed.pubmedid"] = record.data[
-                "colrev.pubmed.pubmedid"
-            ][6:]
+            record.data[Fields.PUBMED_ID] = record.data[Fields.PUBMED_ID][6:]
 
         return record

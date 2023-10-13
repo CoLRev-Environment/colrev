@@ -10,7 +10,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
@@ -48,7 +49,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
     ) -> bool:
         if prescreen_operation.review_manager.settings.prescreen.explanation == "":
             print(
-                f"\n{colors.ORANGE}Provide a short explanation of the prescreen{colors.END} "
+                f"\n{Colors.ORANGE}Provide a short explanation of the prescreen{Colors.END} "
                 "(why should particular papers be included?):"
             )
             print(
@@ -74,7 +75,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         i, quit_pressed = 0, False
         for record_dict in prescreen_data["items"]:
             if len(split) > 0:
-                if record_dict["ID"] not in split:
+                if record_dict[Fields.ID] not in split:
                     continue
 
             record = colrev.record.Record(data=record_dict)

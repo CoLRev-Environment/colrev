@@ -14,7 +14,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.screen.utils as util_cli_screen
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.screen
@@ -52,15 +53,15 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             criterion_name,
             criterion_settings,
         ) in screen_operation.review_manager.settings.screen.criteria.items():
-            color = colors.GREEN
+            color = Colors.GREEN
             if (
                 colrev.settings.ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
-                color = colors.RED
+                color = Colors.RED
             print(
                 f" - {criterion_name} "
-                f"({color}{criterion_settings.criterion_type}{colors.END}): "
+                f"({color}{criterion_settings.criterion_type}{Colors.END}): "
                 f"{criterion_settings.explanation}"
             )
             if criterion_settings.comment != "":
@@ -72,12 +73,12 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         if screen_inclusion:
             print(
                 f"Overall screening decision for {record.data['ID']}: "
-                f"{colors.GREEN}include{colors.END}"
+                f"{Colors.GREEN}include{Colors.END}"
             )
         else:
             print(
                 f"Overall screening decision for {record.data['ID']}: "
-                f"{colors.RED}exclude{colors.END}"
+                f"{Colors.RED}exclude{Colors.END}"
             )
 
     def __screen_record_with_criteria(
@@ -93,19 +94,19 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         for criterion_name, criterion_settings in self.screening_criteria.items():
             decision, ret = "NA", "NA"
             while ret not in ["y", "n", "q", "s"]:
-                color = colors.GREEN
+                color = Colors.GREEN
                 if (
                     colrev.settings.ScreenCriterionType.exclusion_criterion
                     == criterion_settings.criterion_type
                 ):
-                    color = colors.RED
+                    color = Colors.RED
 
                 ret = input(
                     # is relevant / should be in the sample / should be retained
                     # ({self.__i}/{self.__stat_len})
                     f"Record should be included according to"
                     f" {criterion_settings.criterion_type}"
-                    f" {color}{criterion_name}{colors.END}"
+                    f" {color}{criterion_name}{Colors.END}"
                     " [y,n,q,s for yes,no,quit,skip to decide later]? "
                 )
                 if ret == "q":
@@ -135,8 +136,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         )
 
         if abstract_from_tei:
-            if "abstract" in record.data:
-                del record.data["abstract"]
+            if Fields.ABSTRACT in record.data:
+                del record.data[Fields.ABSTRACT]
 
         screen_operation.screen(
             record=record,
@@ -172,8 +173,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             return "quit"
 
         if abstract_from_tei:
-            if "abstract" in record.data:
-                del record.data["abstract"]
+            if Fields.ABSTRACT in record.data:
+                del record.data[Fields.ABSTRACT]
         if decision == "y":
             screen_operation.screen(
                 record=record,
@@ -198,16 +199,16 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         record = colrev.record.Record(data=record_dict)
         abstract_from_tei = False
         if (
-            "abstract" not in record.data
-            and Path(record.data.get("file", "")).suffix == ".pdf"
+            Fields.ABSTRACT not in record.data
+            and Path(record.data.get(Fields.FILE, "")).suffix == ".pdf"
         ):
             try:
                 abstract_from_tei = True
                 tei = screen_operation.review_manager.get_tei(
-                    pdf_path=Path(record.data["file"]),
+                    pdf_path=Path(record.data[Fields.FILE]),
                     tei_path=record.get_tei_filename(),
                 )
-                record.data["abstract"] = tei.get_abstract()
+                record.data[Fields.ABSTRACT] = tei.get_abstract()
             except colrev_exceptions.TEIException:
                 pass
 
@@ -254,7 +255,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self.criteria_available = len(self.screening_criteria.keys())
 
         for record_dict in screen_data["items"]:
-            if record_dict["ID"] not in split:
+            if record_dict[Fields.ID] not in split:
                 continue
 
             ret = self.__screen_record(

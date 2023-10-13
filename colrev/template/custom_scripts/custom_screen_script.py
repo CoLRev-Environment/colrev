@@ -10,6 +10,7 @@ from dacite import from_dict
 
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.screen.Screen
@@ -43,7 +44,7 @@ class CustomScreen:
 
         for record_dict in screen_data["items"]:
             if len(split) > 0:
-                if record_dict["ID"] not in split:
+                if record_dict[Fields.ID] not in split:
                     continue
 
             record = colrev.record.Record(data=record_dict)

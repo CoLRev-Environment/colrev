@@ -328,7 +328,7 @@ class Dataset:
                         # Cast status to Enum
                         k: colrev.record.RecordState[v] if (Fields.STATUS == k)
                         # DOIs are case insensitive -> use upper case.
-                        else v.upper() if ("doi" == k)
+                        else v.upper() if (Fields.DOI == k)
                         # Note : the following two lines are a temporary fix
                         # to converg colrev_origins to list items
                         else [el.rstrip().lstrip() for el in v.split(";") if "" != el]
@@ -418,7 +418,7 @@ class Dataset:
                 item_count = 0
                 continue
 
-            if "@" in line[:2] and record_header_item["ID"] != "NA":
+            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 item_count = 0
@@ -463,7 +463,7 @@ class Dataset:
         'colrev_status': <RecordState.md_imported: 2>,
         'screening_criteria': 'criterion1=in;criterion2=out',
         'file': PosixPath('data/pdfs/Smith2000.pdf'),
-        'colrev_masterdata_provenance': {"author":{"source":"...", "note":"..."}}},
+        'Fields.MD_PROV': {Fields.AUTHOR:{"source":"...", "note":"..."}}},
         }
         """
 
@@ -624,7 +624,7 @@ class Dataset:
                     if b"@" in line[:3]:
                         current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
                         current_id_str = current_id.decode("utf-8")
-                    if current_id_str in [x["ID"] for x in record_list]:
+                    if current_id_str in [x[Fields.ID] for x in record_list]:
                         replacement = [
                             x["record"]
                             for x in record_list
@@ -712,7 +712,9 @@ class Dataset:
             records = self.load_records_dict()
             for record_dict in records.values():
                 if Fields.STATUS not in record_dict:
-                    print(f'Error: no status field in record ({record_dict["ID"]})')
+                    print(
+                        f"Error: no status field in record ({record_dict[Fields.ID]})"
+                    )
                     continue
 
                 record = colrev.record.PrepRecord(data=record_dict)
@@ -850,7 +852,7 @@ class Dataset:
         """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)"""
 
         for record in self.load_records_dict(header_only=True).values():
-            if record["ID"] == record_id:
+            if record[Fields.ID] == record_id:
                 if record[Fields.STATUS] in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.md_processed
                 ):

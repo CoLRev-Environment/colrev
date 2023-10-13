@@ -13,7 +13,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -74,7 +75,7 @@ class SimpleDedupe(JsonSchemaMixin):
         records_batch: list,
     ) -> dict:
         max_similarity_record = {
-            "reference_record": records_batch[len(records_batch) - 1]["ID"],
+            "reference_record": records_batch[len(records_batch) - 1][Fields.ID],
             "record_id": "NA",
             "similarity": 0,
         }
@@ -86,7 +87,7 @@ class SimpleDedupe(JsonSchemaMixin):
 
             if sim_details["score"] > max_similarity_record["similarity"]:
                 max_similarity_record["similarity"] = sim_details["score"]
-                max_similarity_record["record_id"] = records_batch[i]["ID"]
+                max_similarity_record["record_id"] = records_batch[i][Fields.ID]
                 max_similarity_record["details"] = sim_details["details"]
 
         return max_similarity_record
@@ -138,7 +139,7 @@ class SimpleDedupe(JsonSchemaMixin):
             # )
             # details = similarity_dict["details"]
             # dedupe_operation.review_manager.logger.debug(details)
-            # record_a, record_b = sorted([ID, record["ID"]])
+            # record_a, record_b = sorted([ID, record[Fields.ID]])
             msg = (
                 f'{similarity_dict["reference_record"]} - {other_id}'.ljust(35, " ")
                 + f"  - potential duplicate (similarity: {max_similarity})"
@@ -186,14 +187,14 @@ class SimpleDedupe(JsonSchemaMixin):
         record_header_list = list(records_headers.values())
 
         ids_to_dedupe = [
-            x["ID"]
+            x[Fields.ID]
             for x in record_header_list
-            if x["colrev_status"] == colrev.record.RecordState.md_prepared
+            if x[Fields.STATUS] == colrev.record.RecordState.md_prepared
         ]
         processed_ids = [
-            x["ID"]
+            x[Fields.ID]
             for x in record_header_list
-            if x["colrev_status"]
+            if x[Fields.STATUS]
             not in [
                 colrev.record.RecordState.md_imported,
                 colrev.record.RecordState.md_prepared,
@@ -205,13 +206,13 @@ class SimpleDedupe(JsonSchemaMixin):
                 dedupe_operation.review_manager.logger.warning(
                     "Simple duplicate identification selected despite sufficient sample size.\n"
                     "Active learning algorithms may perform better:\n"
-                    f"{colors.ORANGE}   colrev settings -m 'dedupe.dedupe_package_endpoints="
+                    f"{Colors.ORANGE}   colrev settings -m 'dedupe.dedupe_package_endpoints="
                     '[{"endpoint": "colrev.active_learning_training"},'
-                    f'{{"endpoint": "colrev.active_learning_automated"}}]\'{colors.END}'
+                    f'{{"endpoint": "colrev.active_learning_automated"}}]\'{Colors.END}'
                 )
                 raise colrev_exceptions.CoLRevException(
                     "To use simple duplicate identification, use\n"
-                    f"{colors.ORANGE}    colrev dedupe --force{colors.END}"
+                    f"{Colors.ORANGE}    colrev dedupe --force{Colors.END}"
                 )
 
         nr_tasks = len(ids_to_dedupe)
@@ -270,9 +271,9 @@ class SimpleDedupe(JsonSchemaMixin):
 
         keys = list(records_df.columns)
         for key_to_drop in [
-            "ID",
-            "colrev_origin",
-            "colrev_status",
+            Fields.ID,
+            Fields.ORIGIN,
+            Fields.STATUS,
             "colrev_id",
             "container_title",
         ]:
@@ -281,8 +282,12 @@ class SimpleDedupe(JsonSchemaMixin):
 
         n_match, n_distinct = 0, 0
         for potential_duplicate in potential_duplicates:
-            rec1 = records_df.loc[records_df["ID"] == potential_duplicate["ID1"], :]
-            rec2 = records_df.loc[records_df["ID"] == potential_duplicate["ID2"], :]
+            rec1 = records_df.loc[
+                records_df[Fields.ID] == potential_duplicate["ID1"], :
+            ]
+            rec2 = records_df.loc[
+                records_df[Fields.ID] == potential_duplicate["ID2"], :
+            ]
 
             record_pair = [rec1.to_dict("records")[0], rec2.to_dict("records")[0]]
 

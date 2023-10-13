@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import colrev.env.package_manager
 import colrev.record
 import colrev.settings
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.screen
@@ -45,7 +46,7 @@ def get_screening_criteria_from_user_input(
         [
             r
             for r in records.values()
-            if r["colrev_status"]
+            if r[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_excluded,

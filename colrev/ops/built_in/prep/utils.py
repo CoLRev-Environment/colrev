@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+
 NO_CAPS = ["of", "for", "the", "and"]
 ALL_CAPS = ["IEEE", "ACM", "M&A", "B2B", "B2C", "C2C", "I"]
 ALL_CAPS_DICT = {r"U\.S\.": "U.S."}

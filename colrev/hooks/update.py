@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import colrev.review_manager
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 from colrev.constants import ExitCodes
 
 
@@ -16,7 +16,7 @@ def main() -> int:
     if len(sync_operation.non_unique_for_import) > 0:
         # Note: interactive resolution not supported in pre-commit hooks
         print(
-            f"To resolve non-unique cases, run {colors.ORANGE}colrev sync{colors.END}"
+            f"To resolve non-unique cases, run {Colors.ORANGE}colrev sync{Colors.END}"
         )
 
         return ExitCodes.FAIL

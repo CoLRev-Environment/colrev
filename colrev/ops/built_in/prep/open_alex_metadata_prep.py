@@ -12,6 +12,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.open_alex as open_alex_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -68,7 +69,7 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
         if any(
             crossref_prefix in o
             for crossref_prefix in self.open_alex_prefixes
-            for o in record.data["colrev_origin"]
+            for o in record.data[Fields.ORIGIN]
         ):
             # Already linked to an OpenAlex record
             return record

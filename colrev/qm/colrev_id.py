@@ -9,7 +9,9 @@ from nameparser import HumanName
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record  # pylint: disable=cyclic-import
+from colrev.constants import Fields
 from colrev.constants import FieldSet
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -52,18 +54,18 @@ def __get_container_title(*, record: colrev.record.Record) -> str:
 
     # school as the container title for theses
     if record.data["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
-        container_title = record.data["school"]
+        container_title = record.data[Fields.SCHOOL]
     # for technical reports
     elif record.data["ENTRYTYPE"] == "techreport":
         container_title = record.data["institution"]
     elif record.data["ENTRYTYPE"] == "inproceedings":
-        container_title = record.data["booktitle"]
+        container_title = record.data[Fields.BOOKTITLE]
     elif record.data["ENTRYTYPE"] == "article":
-        container_title = record.data["journal"]
-    elif "series" in record.data:
-        container_title = record.data["series"]
-    elif "url" in record.data:
-        container_title = record.data["url"]
+        container_title = record.data[Fields.JOURNAL]
+    elif Fields.SERIES in record.data:
+        container_title = record.data[Fields.SERIES]
+    elif Fields.URL in record.data:
+        container_title = record.data[Fields.URL]
     else:
         raise KeyError
 
@@ -95,7 +97,7 @@ def __check_colrev_id_preconditions(
 ) -> None:
     if assume_complete:
         return
-    if record.data.get("colrev_status", "NA") in [
+    if record.data.get(Fields.STATUS, "NA") in [
         colrev.record.RecordState.md_imported,
         colrev.record.RecordState.md_needs_manual_preparation,
     ]:
@@ -107,7 +109,7 @@ def __check_colrev_id_preconditions(
     # Make sure that colrev_ids are not generated when
     # identifying_field_keys are UNKNOWN but possibly required
     for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
-        if record.data.get(identifying_field_key, "") == "UNKNOWN":
+        if record.data.get(identifying_field_key, "") == FieldValues.UNKNOWN:
             raise colrev_exceptions.NotEnoughDataToIdentifyException(
                 msg=f"{identifying_field_key} unknown (maybe required)",
                 missing_fields=[identifying_field_key],
@@ -137,23 +139,23 @@ def __get_colrev_id_from_record(*, record: colrev.record.Record) -> str:
         if record.data["ENTRYTYPE"] == "article":
             # Note: volume/number may not be required.
             srep = __robust_append(
-                input_string=srep, to_append=record.data.get("volume", "-")
+                input_string=srep, to_append=record.data.get(Fields.VOLUME, "-")
             )
             srep = __robust_append(
-                input_string=srep, to_append=record.data.get("number", "-")
+                input_string=srep, to_append=record.data.get(Fields.NUMBER, "-")
             )
-        srep = __robust_append(input_string=srep, to_append=record.data["year"])
-        author = __format_author_field_for_cid(record.data["author"])
+        srep = __robust_append(input_string=srep, to_append=record.data[Fields.YEAR])
+        author = __format_author_field_for_cid(record.data[Fields.AUTHOR])
         if author.replace("-", "") == "":
             raise colrev_exceptions.NotEnoughDataToIdentifyException(
-                msg="Missing field:", missing_fields=["author"]
+                msg="Missing field:", missing_fields=[Fields.AUTHOR]
             )
         srep = __robust_append(input_string=srep, to_append=author)
-        srep = __robust_append(input_string=srep, to_append=record.data["title"])
+        srep = __robust_append(input_string=srep, to_append=record.data[Fields.TITLE])
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
         # Note : pages not needed.
-        # pages = record_dict.get("pages", "")
+        # pages = record_dict.get(Fields.PAGES, "")
         # srep = __robust_append(srep, pages)
     except KeyError as exc:
         if "ENTRYTYPE" in str(exc):
@@ -176,7 +178,7 @@ def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> 
     # Safeguard against titles that are rarely distinct
     if any(x in srep for x in ["|minitrack-introduction|"]):
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
-            msg="Title typically non-distinct", missing_fields=["title"]
+            msg="Title typically non-distinct", missing_fields=[Fields.TITLE]
         )
 
     return srep

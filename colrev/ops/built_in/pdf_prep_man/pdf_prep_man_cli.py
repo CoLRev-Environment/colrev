@@ -16,7 +16,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep_man
@@ -63,38 +64,40 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             if user_selection == "a":
                 author = input("Authors:")
                 record.update_field(
-                    key="author", value=author, source="manual_correction"
+                    key=Fields.AUTHOR, value=author, source="manual_correction"
                 )
             elif user_selection == "c":
-                if "journal" in record.data:
+                if Fields.JOURNAL in record.data:
                     journal = input("Journal:")
                     record.update_field(
-                        key="journal", value=journal, source="manual_correction"
+                        key=Fields.JOURNAL, value=journal, source="manual_correction"
                     )
-                if "booktitle" in record.data:
+                if Fields.BOOKTITLE in record.data:
                     booktitle = input("Booktitle:")
                     record.update_field(
-                        key="booktitle", value=booktitle, source="manual_correction"
+                        key=Fields.BOOKTITLE,
+                        value=booktitle,
+                        source="manual_correction",
                     )
             elif user_selection == "t":
                 title = input("Title:")
                 record.update_field(
-                    key="title", value=title, source="manual_correction"
+                    key=Fields.TITLE, value=title, source="manual_correction"
                 )
             elif user_selection == "v":
                 volume = input("Volume:")
                 record.update_field(
-                    key="volume", value=volume, source="manual_correction"
+                    key=Fields.VOLUME, value=volume, source="manual_correction"
                 )
             elif user_selection == "n":
                 number = input("Number:")
                 record.update_field(
-                    key="number", value=number, source="manual_correction"
+                    key=Fields.NUMBER, value=number, source="manual_correction"
                 )
             elif user_selection == "p":
                 pages = input("Pages:")
                 record.update_field(
-                    key="pages", value=pages, source="manual_correction"
+                    key=Fields.PAGES, value=pages, source="manual_correction"
                 )
             user_selection = ""
 
@@ -179,7 +182,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             elif user_selection == "y":
                 pdf_prep_man_operation.set_pdf_man_prepared(record=record)
             elif user_selection == "n":
-                record.remove_field(key="file")
+                record.remove_field(key=Fields.FILE)
                 record.set_status(
                     target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
                 )
@@ -211,21 +214,21 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         record = colrev.record.Record(data=item)
         record.print_pdf_prep_man()
 
-        record_dict = records[item["ID"]]
+        record_dict = records[item[Fields.ID]]
         record = colrev.record.Record(data=record_dict)
         if (
             colrev.record.RecordState.pdf_needs_manual_preparation
-            != record_dict["colrev_status"]
+            != record_dict[Fields.STATUS]
         ):
             return record_dict
 
-        file_provenance = record.get_field_provenance(key="file")
+        file_provenance = record.get_field_provenance(key=Fields.FILE)
         print(
             "Manual preparation needed:"
-            f" {colors.RED}{file_provenance['note']}{colors.END}"
+            f" {Colors.RED}{file_provenance['note']}{Colors.END}"
         )
 
-        filepath = self.review_manager.path / Path(record_dict["file"])
+        filepath = self.review_manager.path / Path(record_dict[Fields.FILE])
         if not filepath.is_file():
             filepath = self.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
         record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath))
@@ -237,7 +240,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             )
 
         else:
-            print(f'File does not exist ({record.data["ID"]})')
+            print(f"File does not exist ({record.data[Fields.ID]})")
 
         self.review_manager.dataset.save_records_dict(records=records)
 

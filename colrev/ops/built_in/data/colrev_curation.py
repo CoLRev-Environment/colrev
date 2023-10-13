@@ -17,6 +17,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -76,13 +77,13 @@ class ColrevCuration(JsonSchemaMixin):
             "curated_masterdata": True,
             "masterdata_restrictions": {
                 1900: {
-                    "ENTRYTYPE": "article",
-                    "journal": "TODO",
-                    "volume": True,
-                    "number": True,
+                    Fields.ENTRYTYPE: "article",
+                    Fields.JOURNAL: "TODO",
+                    Fields.VOLUME: True,
+                    Fields.NUMBER: True,
                 }
             },
-            "curated_fields": ["doi", "url"],
+            "curated_fields": [Fields.DOI, Fields.URL],
         }
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
@@ -97,17 +98,17 @@ class ColrevCuration(JsonSchemaMixin):
 
         stats: dict = {}
         for record_dict in records.values():
-            r_status = str(record_dict["colrev_status"])
+            r_status = str(record_dict[Fields.STATUS])
             if r_status == "rev_prescreen_excluded":
                 continue
             if record_dict[
-                "colrev_status"
+                Fields.STATUS
             ] in colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.md_processed
             ):
                 r_status = str(colrev.record.RecordState.md_processed)
             elif record_dict[
-                "colrev_status"
+                Fields.STATUS
             ] in colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.pdf_prepared
             ):
@@ -115,21 +116,21 @@ class ColrevCuration(JsonSchemaMixin):
             else:
                 r_status = str(colrev.record.RecordState.md_imported)
 
-            if "journal" in record_dict:
+            if Fields.JOURNAL in record_dict:
                 key = (
                     f"{record_dict.get('year','-')}-"
                     f"{record_dict.get('volume','-')}-"
                     f"{record_dict.get('number','-')}"
                 )
-            elif "booktitle" in record_dict:
-                key = record_dict.get("year", "-")
+            elif Fields.BOOKTITLE in record_dict:
+                key = record_dict.get(Fields.YEAR, "-")
             else:
                 self.data_operation.review_manager.logger.error(
                     f"TOC not supported: {record_dict}"
                 )
                 continue
             if not all(
-                source in [o.split("/")[0] for o in record_dict["colrev_origin"]]
+                source in [o.split("/")[0] for o in record_dict[Fields.ORIGIN]]
                 for source in sources
             ):
                 if key in stats:
@@ -140,7 +141,7 @@ class ColrevCuration(JsonSchemaMixin):
                 else:
                     stats[key] = {"all_merged": "NO"}
 
-            for origin in record_dict["colrev_origin"]:
+            for origin in record_dict[Fields.ORIGIN]:
                 source = origin.split("/")[0]
                 if key in stats:
                     if source in stats[key]:
@@ -259,7 +260,7 @@ class ColrevCuration(JsonSchemaMixin):
         # alternatively: get sources from search_sources.filename (name/stem?)
         sources = []
         for record_dict in records.values():
-            for origin in record_dict["colrev_origin"]:
+            for origin in record_dict[Fields.ORIGIN]:
                 source = origin.split("/")[0]
                 if source not in sources:
                     sources.append(source)
@@ -290,7 +291,7 @@ class ColrevCuration(JsonSchemaMixin):
         records = {
             k: v
             for k, v in records.items()
-            if not all(x in ";".join(v["colrev_origin"]) for x in str(source_filenames))
+            if not all(x in ";".join(v[Fields.ORIGIN]) for x in str(source_filenames))
         }
         if len(records) == 0:
             if not silent_mode:
@@ -298,7 +299,7 @@ class ColrevCuration(JsonSchemaMixin):
             return
 
         for record in records.values():
-            origins = record["colrev_origin"]
+            origins = record[Fields.ORIGIN]
             for source_filename in source_filenames:
                 if not any(source_filename in origin for origin in origins):
                     record[source_filename] = ""
@@ -354,7 +355,7 @@ class ColrevCuration(JsonSchemaMixin):
         }
 
         records_missing_languages = [
-            r["ID"] for r in records.values() if "language" not in r
+            r[Fields.ID] for r in records.values() if Fields.LANGUAGE not in r
         ]
         if records_missing_languages:
             advice = {
@@ -368,13 +369,13 @@ class ColrevCuration(JsonSchemaMixin):
         for record_dict in records.values():
             try:
                 if record_dict[
-                    "colrev_status"
+                    Fields.STATUS
                 ] not in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.md_prepared
                 ):
                     continue
                 if (
-                    record_dict["colrev_status"]
+                    record_dict[Fields.STATUS]
                     == colrev.record.RecordState.rev_prescreen_excluded
                 ):
                     continue
@@ -383,12 +384,12 @@ class ColrevCuration(JsonSchemaMixin):
                 )
                 if cid in identical_colrev_ids:
                     identical_colrev_ids[cid] = identical_colrev_ids[cid] + [
-                        record_dict["ID"]
+                        record_dict[Fields.ID]
                     ]
                 else:
-                    identical_colrev_ids[cid] = [record_dict["ID"]]
+                    identical_colrev_ids[cid] = [record_dict[Fields.ID]]
             except colrev_exceptions.NotEnoughDataToIdentifyException:
-                non_identifiable_records.append(record_dict["ID"])
+                non_identifiable_records.append(record_dict[Fields.ID])
 
         identical_colrev_ids = {
             k: v for k, v in identical_colrev_ids.items() if len(v) > 1

@@ -18,7 +18,9 @@ from yaml import safe_load
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 from colrev.env.utils import dict_keys_exists
 from colrev.env.utils import dict_set_nested
 from colrev.env.utils import get_by_path
@@ -206,8 +208,8 @@ class EnvironmentManager:
             if "PermissionError" in exc.args[0]:
                 raise colrev_exceptions.DependencyConfigurationError(
                     "Docker: Permission error. Run "
-                    f"{colors.ORANGE}sudo gpasswd -a $USER docker && "
-                    f"newgrp docker{colors.END}"
+                    f"{Colors.ORANGE}sudo gpasswd -a $USER docker && "
+                    f"newgrp docker{Colors.END}"
                 )
             raise colrev_exceptions.MissingDependencyError("Docker")
 
@@ -329,18 +331,18 @@ class EnvironmentManager:
                         # Note : the second part ("journal:"/"booktitle:")
                         # ensures that data provenance fields are skipped
                         if (
-                            "journal" == line.lstrip()[:7]
+                            Fields.JOURNAL == line.lstrip()[:7]
                             and "journal:" != line.lstrip()[:8]
                         ):
                             journal = line[line.find("{") + 1 : line.rfind("}")]
-                            if journal != "UNKNOWN":
+                            if journal != FieldValues.UNKNOWN:
                                 outlets.append(journal)
                         if (
-                            line.lstrip()[:9] == "booktitle"
+                            line.lstrip()[:9] == Fields.BOOKTITLE
                             and line.lstrip()[:10] != "booktitle:"
                         ):
                             booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                            if booktitle != "UNKNOWN":
+                            if booktitle != FieldValues.UNKNOWN:
                                 outlets.append(booktitle)
 
                     if len(set(outlets)) > 1:

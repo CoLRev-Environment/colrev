@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -47,18 +48,18 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
         if prep_operation.polish and not prep_operation.force_mode:
             return record
 
-        if "doi" in record.data:
-            if "doi" in record.data.get("colrev_masterdata_provenance", {}):
-                if "doi-not-matching-pattern" in record.data[
-                    "colrev_masterdata_provenance"
-                ]["doi"]["note"].split(","):
-                    record.remove_field(key="doi")
+        if Fields.DOI in record.data:
+            if Fields.DOI in record.data.get(Fields.MD_PROV, {}):
+                if "doi-not-matching-pattern" in record.data[Fields.MD_PROV][
+                    Fields.DOI
+                ]["note"].split(","):
+                    record.remove_field(key=Fields.DOI)
 
-        if "isbn" in record.data:
-            if "isbn" in record.data.get("colrev_masterdata_provenance", {}):
-                if "isbn-not-matching-pattern" in record.data[
-                    "colrev_masterdata_provenance"
-                ]["isbn"]["note"].split(","):
-                    record.remove_field(key="isbn")
+        if Fields.ISBN in record.data:
+            if Fields.ISBN in record.data.get(Fields.MD_PROV, {}):
+                if "isbn-not-matching-pattern" in record.data[Fields.MD_PROV][
+                    Fields.ISBN
+                ]["note"].split(","):
+                    record.remove_field(key=Fields.ISBN)
 
         return record

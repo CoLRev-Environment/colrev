@@ -16,6 +16,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.screen.utils as util_cli_screen
 import colrev.record
 import colrev.settings
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.screen
@@ -52,24 +53,24 @@ class TableScreen(JsonSchemaMixin):
 
         tbl = []
         for record in records.values():
-            if record["colrev_status"] not in [
+            if record[Fields.STATUS] not in [
                 colrev.record.RecordState.pdf_prepared,
             ]:
                 continue
 
             if len(split) > 0:
-                if record["ID"] not in split:
+                if record[Fields.ID] not in split:
                     continue
 
             inclusion_2 = "NA"
 
-            if colrev.record.RecordState.pdf_prepared == record["colrev_status"]:
+            if colrev.record.RecordState.pdf_prepared == record[Fields.STATUS]:
                 inclusion_2 = "TODO"
             elif self.export_todos_only:
                 continue
-            if colrev.record.RecordState.rev_excluded == record["colrev_status"]:
+            if colrev.record.RecordState.rev_excluded == record[Fields.STATUS]:
                 inclusion_2 = "out"
-            if record["colrev_status"] in [
+            if record[Fields.STATUS] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
             ]:
@@ -77,17 +78,17 @@ class TableScreen(JsonSchemaMixin):
 
             # pylint: disable=duplicate-code
             row = {
-                "ID": record["ID"],
-                "author": record.get("author", ""),
-                "title": record.get("title", ""),
-                "journal": record.get("journal", ""),
-                "booktitle": record.get("booktitle", ""),
-                "year": record.get("year", ""),
-                "volume": record.get("volume", ""),
-                "number": record.get("number", ""),
-                "pages": record.get("pages", ""),
-                "doi": record.get("doi", ""),
-                "abstract": record.get("abstract", ""),
+                Fields.ID: record[Fields.ID],
+                Fields.AUTHOR: record.get(Fields.AUTHOR, ""),
+                Fields.TITLE: record.get(Fields.TITLE, ""),
+                Fields.JOURNAL: record.get(Fields.JOURNAL, ""),
+                Fields.BOOKTITLE: record.get(Fields.BOOKTITLE, ""),
+                Fields.YEAR: record.get(Fields.YEAR, ""),
+                Fields.VOLUME: record.get(Fields.VOLUME, ""),
+                Fields.NUMBER: record.get(Fields.NUMBER, ""),
+                Fields.PAGES: record.get(Fields.PAGES, ""),
+                Fields.DOI: record.get(Fields.DOI, ""),
+                Fields.ABSTRACT: record.get(Fields.ABSTRACT, ""),
             }
 
             if len(screening_criteria) == 0:
@@ -96,7 +97,7 @@ class TableScreen(JsonSchemaMixin):
 
             else:
                 # Code criteria
-                screening_criteria_field = record.get("screening_criteria", "")
+                screening_criteria_field = record.get(Fields.SCREENING_CRITERIA, "")
                 if screening_criteria_field == "":
                     # and inclusion_2 == "in"
                     for criterion_name in screening_criteria.keys():
@@ -178,8 +179,8 @@ class TableScreen(JsonSchemaMixin):
         screening_criteria = screen_operation.review_manager.settings.screen.criteria
 
         for screened_record in screened_records:
-            if screened_record.get("ID", "") in records:
-                record_dict = records[screened_record.get("ID", "")]
+            if screened_record.get(Fields.ID, "") in records:
+                record_dict = records[screened_record.get(Fields.ID, "")]
                 record = colrev.record.Record(data=record_dict)
                 if "screen_inclusion" in screened_record:
                     if screened_record["screen_inclusion"] == "in":
@@ -206,7 +207,7 @@ class TableScreen(JsonSchemaMixin):
                         + ";"
                     )
                 screening_criteria_field = screening_criteria_field.rstrip(";")
-                record.data["screening_criteria"] = screening_criteria_field
+                record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
                 if "=out" in screening_criteria_field:
                     record.set_status(
                         target_state=colrev.record.RecordState.rev_excluded

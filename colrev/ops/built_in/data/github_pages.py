@@ -13,7 +13,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -135,9 +136,9 @@ class GithubPages(JsonSchemaMixin):
         records = data_operation.review_manager.dataset.load_records_dict()
 
         included_records = {
-            r["ID"]: r
+            r[Fields.ID]: r
             for r in records.values()
-            if r["colrev_status"]
+            if r[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_synthesized,
                 colrev.record.RecordState.rev_included,
@@ -182,8 +183,8 @@ class GithubPages(JsonSchemaMixin):
                 except git.exc.GitCommandError:  # pylint: disable=no-member
                     data_operation.review_manager.logger.error(
                         "Could not push branch gh-pages. Please resolve manually, i.e., run "
-                        f"{colors.ORANGE}git switch gh-pages && "
-                        f"git pull --rebase && git push{colors.END}"
+                        f"{Colors.ORANGE}git switch gh-pages && "
+                        f"git pull --rebase && git push{Colors.END}"
                     )
             else:
                 git_repo.git.push(
@@ -219,9 +220,9 @@ class GithubPages(JsonSchemaMixin):
             ):
                 return
         print(
-            f"{colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
+            f"{Colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
             "To make it easier to access the page, add the following to the readme.md file:\n"
-            f"\n    [Github page]({gh_page_link}){colors.END}\n"
+            f"\n    [Github page]({gh_page_link}){Colors.END}\n"
         )
 
     def update_data(

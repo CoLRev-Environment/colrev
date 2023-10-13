@@ -18,7 +18,8 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -113,21 +114,21 @@ Example 2:
         data_df = pd.read_csv(self.data_path, dtype=str)
 
         # Check for duplicate IDs
-        if not data_df["ID"].is_unique:
+        if not data_df[Fields.ID].is_unique:
             raise colrev_exceptions.DataException(
                 msg=f"duplicates in {self.settings.data_path_relative}: "
-                + ",".join(data_df[data_df.duplicated(["ID"])].ID.tolist())
+                + ",".join(data_df[data_df.duplicated([Fields.ID])].ID.tolist())
             )
 
         # Check consistency: data -> inclusion_2
-        data_ids = data_df["ID"].tolist()
+        data_ids = data_df[Fields.ID].tolist()
         records = self.review_manager.dataset.load_records_dict()
         for data_id in data_ids:
             if data_id not in records:
                 raise colrev_exceptions.DataException(
                     msg=f"{data_id} in {self.settings.data_path_relative} not in records"
                 )
-            if records[data_id]["colrev_status"] not in [
+            if records[data_id][Fields.STATUS] not in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
             ]:
@@ -195,8 +196,8 @@ Example 2:
                 self.__set_fields()
 
                 field_names = [f["name"] for f in self.settings.fields]
-                data_df = pd.DataFrame([], columns=["ID"] + field_names)
-                data_df.sort_values(by=["ID"], inplace=True)
+                data_df = pd.DataFrame([], columns=[Fields.ID] + field_names)
+                data_df.sort_values(by=[Fields.ID], inplace=True)
 
                 data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
 
@@ -212,21 +213,21 @@ Example 2:
 
             for record_id in list(synthesized_record_status_matrix.keys()):
                 # skip when already available
-                if 0 < len(data_df[data_df["ID"].str.startswith(record_id)]):
+                if 0 < len(data_df[data_df[Fields.ID].str.startswith(record_id)]):
                     continue
 
-                add_record = pd.DataFrame({"ID": [record_id]})
+                add_record = pd.DataFrame({Fields.ID: [record_id]})
                 add_record = add_record.reindex(
                     columns=data_df.columns, fill_value="TODO"
                 )
                 data_df = pd.concat([data_df, add_record], axis=0, ignore_index=True)
                 review_manager.logger.info(
-                    f" {colors.GREEN}{record_id}".ljust(45)
-                    + f"add to structured_data{colors.END}"
+                    f" {Colors.GREEN}{record_id}".ljust(45)
+                    + f"add to structured_data{Colors.END}"
                 )
                 nr_records_added = nr_records_added + 1
 
-            data_df.sort_values(by=["ID"], inplace=True)
+            data_df.sort_values(by=[Fields.ID], inplace=True)
 
             data_df.to_csv(self.data_path, index=False, quoting=csv.QUOTE_ALL)
 
@@ -269,10 +270,10 @@ Example 2:
             data_df = pd.read_csv(data_path)
 
             for record in records_for_data_extraction:
-                drec = data_df.loc[data_df["ID"] == record]
+                drec = data_df.loc[data_df[Fields.ID] == record]
                 if 1 == drec.shape[0]:
                     if "TODO" not in drec.iloc[0].tolist():
-                        data_extracted.append(drec.loc[drec.index[0], "ID"])
+                        data_extracted.append(drec.loc[drec.index[0], Fields.ID])
 
             data_extracted = [
                 x for x in data_extracted if x in records_for_data_extraction

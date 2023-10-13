@@ -13,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -57,20 +58,24 @@ class LocalIndexPDFGet(JsonSchemaMixin):
         except colrev_exceptions.RecordNotInIndexException:
             return record
 
-        if "file" in retrieved_record:
+        if Fields.FILE in retrieved_record:
             record.update_field(
-                key="file", value=str(retrieved_record["file"]), source="local_index"
+                key=Fields.FILE,
+                value=str(retrieved_record[Fields.FILE]),
+                source="local_index",
             )
             pdf_get_operation.import_pdf(record=record)
-            if "fulltext" in retrieved_record:
+            if Fields.FULLTEXT in retrieved_record:
                 try:
-                    record.get_tei_filename().write_text(retrieved_record["fulltext"])
+                    record.get_tei_filename().write_text(
+                        retrieved_record[Fields.FULLTEXT]
+                    )
                 except FileNotFoundError:
                     pass
-                del retrieved_record["fulltext"]
+                del retrieved_record[Fields.FULLTEXT]
             else:
                 tei_ext_path = Path(
-                    retrieved_record["file"]
+                    retrieved_record[Fields.FILE]
                     .replace("pdfs/", ".tei/")
                     .replace(".pdf", ".tei.xml")
                 )

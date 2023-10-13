@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -41,7 +42,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Get a PDF of the website (screenshot)"""
 
-        if record.data["ENTRYTYPE"] != "online":
+        if record.data[Fields.ENTRYTYPE] != "online":
             return record
 
         screenshot_service = pdf_get_operation.review_manager.get_screenshot_service()
@@ -54,7 +55,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
             record=record, pdf_filepath=pdf_filepath
         )
 
-        if "file" in record.data:
+        if Fields.FILE in record.data:
             pdf_get_operation.import_pdf(record=record)
 
         return record

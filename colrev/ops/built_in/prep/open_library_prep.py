@@ -12,6 +12,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.open_library as open_library_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -60,7 +61,7 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record metadata based on OpenLibrary"""
 
-        if record.data.get("ENTRYTYPE", "NA") != "book":
+        if record.data.get(Fields.ENTRYTYPE, "NA") != "book":
             return record
 
         self.open_library_connector.get_masterdata(

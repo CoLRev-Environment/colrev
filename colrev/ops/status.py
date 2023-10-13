@@ -13,7 +13,8 @@ import yaml
 import colrev.env.utils
 import colrev.operation
 import colrev.record
-import colrev.ui_cli.cli_colors as colrev_colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 
 class Status(colrev.operation.Operation):
@@ -85,7 +86,7 @@ class Status(colrev.operation.Operation):
         )
 
         if colors:
-            content = template.render(status_stats=status_stats, colors=colrev_colors)
+            content = template.render(status_stats=status_stats, colors=Colors)
         else:
             content = template.render(status_stats=status_stats, colors=None)
 
@@ -118,20 +119,20 @@ class StatusStats:
         else:
             self.records = self.review_manager.dataset.load_records_dict()
 
-        self.status_list = [x["colrev_status"] for x in self.records.values()]
+        self.status_list = [x[Fields.STATUS] for x in self.records.values()]
         self.screening_criteria = [
-            x["screening_criteria"]
+            x[Fields.SCREENING_CRITERIA]
             for x in self.records.values()
-            if x.get("screening_criteria", "") not in ["", "NA"]
+            if x.get(Fields.SCREENING_CRITERIA, "") not in ["", "NA"]
         ]
 
         self.md_duplicates_removed = 0
         for item in self.records.values():
             self.md_duplicates_removed += (
-                len([o for o in item["colrev_origin"] if not o.startswith("md_")]) - 1
+                len([o for o in item[Fields.ORIGIN] if not o.startswith("md_")]) - 1
             )
 
-        origin_list = [x["colrev_origin"] for x in self.records.values()]
+        origin_list = [x[Fields.ORIGIN] for x in self.records.values()]
         self.record_links = 0
         for origin in origin_list:
             self.record_links += len([o for o in origin if not o.startswith("md_")])
@@ -175,9 +176,7 @@ class StatusStats:
         self.currently.pdf_needs_retrieval = self.currently.rev_prescreen_included
 
         colrev_masterdata_items = [
-            x["colrev_masterdata_provenance"]
-            for x in self.records.values()
-            if "colrev_masterdata_provenance" in x
+            x[Fields.MD_PROV] for x in self.records.values() if Fields.MD_PROV in x
         ]
 
         self.nr_curated_records = len(

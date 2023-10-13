@@ -6,6 +6,8 @@ import re
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -21,15 +23,15 @@ class YearFormatChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the year-format checks"""
 
-        if "year" not in record.data:
+        if Fields.YEAR not in record.data:
             return
-        if record.data["year"] == "UNKNOWN":
+        if record.data[Fields.YEAR] == FieldValues.UNKNOWN:
             return
 
-        if not re.match(r"^\d{4}$", record.data["year"]):
-            record.add_masterdata_provenance_note(key="year", note=self.msg)
+        if not re.match(r"^\d{4}$", record.data[Fields.YEAR]):
+            record.add_masterdata_provenance_note(key=Fields.YEAR, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="year", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.YEAR, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

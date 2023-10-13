@@ -19,6 +19,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -150,7 +151,7 @@ class BibliographyExport(JsonSchemaMixin):
         ret = requests.post(
             "http://127.0.0.1:1969/import",
             headers=headers,
-            files={"file": str.encode(content)},
+            files={Fields.FILE: str.encode(content)},
             timeout=30,
         )
         headers = {"Content-type": "application/json"}
@@ -216,7 +217,7 @@ class BibliographyExport(JsonSchemaMixin):
         selected_records_original = {
             ID: r
             for ID, r in records.items()
-            if r["colrev_status"]
+            if r[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -226,11 +227,11 @@ class BibliographyExport(JsonSchemaMixin):
         for record in selected_records.values():
             for key_candidate in list(record.keys()):
                 if key_candidate not in c.FieldSet.IDENTIFYING_FIELD_KEYS + [
-                    "ENTRYTYPE",
-                    "ID",
-                    "file",
+                    Fields.ENTRYTYPE,
+                    Fields.ID,
+                    Fields.FILE,
                     "link",
-                    "url",
+                    Fields.URL,
                 ]:
                     del record[key_candidate]
             # TBD: maybe resolve file paths (symlinks to absolute paths)?

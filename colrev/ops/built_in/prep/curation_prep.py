@@ -11,6 +11,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -55,17 +57,17 @@ class CurationPrep(JsonSchemaMixin):
         # pylint: disable=too-many-branches
 
         if (
-            record.data["colrev_status"]
+            record.data[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
         ):
             return record
 
-        if record.data.get("year", "UNKNOWN") == "UNKNOWN":
+        if record.data.get(Fields.YEAR, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:
             record.set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
             colrev.record.Record(data=record.data).add_masterdata_provenance(
-                key="year",
+                key=Fields.YEAR,
                 source="colrev_curation.masterdata_restrictions",
                 note="missing",
             )

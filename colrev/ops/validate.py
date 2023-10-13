@@ -13,6 +13,7 @@ from tqdm import tqdm
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 
 class Validate(colrev.operation.Operation):
@@ -71,21 +72,21 @@ class Validate(colrev.operation.Operation):
             del record_dict["changed_in_target_commit"]
             prescreen_excluded = (
                 colrev.record.RecordState.rev_prescreen_excluded
-                == record_dict["colrev_status"]
+                == record_dict[Fields.STATUS]
             )
-            del record_dict["colrev_status"]
-            for cur_record_link in record_dict["colrev_origin"]:
+            del record_dict[Fields.STATUS]
+            for cur_record_link in record_dict[Fields.ORIGIN]:
                 prior_records = [
                     x
                     for x in prior_records_dict.values()
-                    if cur_record_link in x["colrev_origin"]
+                    if cur_record_link in x[Fields.ORIGIN]
                 ]
                 for prior_record_dict in prior_records:
                     change_score = colrev.record.Record.get_record_change_score(
                         record_a=colrev.record.Record(data=record_dict),
                         record_b=colrev.record.Record(data=prior_record_dict),
                     )
-                    if record_dict["ID"] not in covered_ids:
+                    if record_dict[Fields.ID] not in covered_ids:
                         change_diff.append(
                             {
                                 "prior_record_dict": prior_record_dict,
@@ -94,7 +95,7 @@ class Validate(colrev.operation.Operation):
                                 "prescreen_exclusion_mark": prescreen_excluded,
                             }
                         )
-                        covered_ids.append(record_dict["ID"])
+                        covered_ids.append(record_dict[Fields.ID])
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
@@ -110,7 +111,7 @@ class Validate(colrev.operation.Operation):
                 ref_rec = colrev.record.Record(data=ref_rec_dict)
                 for comp_rec_dict in reversed(records):
                     # Note : due to symmetry, we only need one part of the matrix
-                    if ref_rec_dict["ID"] == comp_rec_dict["ID"]:
+                    if ref_rec_dict[Fields.ID] == comp_rec_dict[Fields.ID]:
                         break
                     comp_rec = colrev.record.Record(data=comp_rec_dict)
                     similarity = colrev.record.Record.get_record_similarity(
@@ -148,18 +149,16 @@ class Validate(colrev.operation.Operation):
                 continue
             del record["changed_in_target_commit"]
 
-            if len(record["colrev_origin"]) == 1:
+            if len(record[Fields.ORIGIN]) == 1:
                 continue
             merged_records = True
 
             merged_records_list = []
 
             for prior_record in prior_records_dict.values():
-                if len(prior_record["colrev_origin"]) == 1:
+                if len(prior_record[Fields.ORIGIN]) == 1:
                     continue
-                if any(
-                    o in record["colrev_origin"] for o in prior_record["colrev_origin"]
-                ):
+                if any(o in record[Fields.ORIGIN] for o in prior_record[Fields.ORIGIN]):
                     merged_records_list.append(prior_record)
 
             if len(merged_records_list) < 2:
@@ -338,10 +337,10 @@ class Validate(colrev.operation.Operation):
         for rid, record_dict in current_branch_records.items():
             prescreen_validation["prescreen"].append(  # type: ignore
                 {
-                    "ID": rid,
-                    "coder1": str(record_dict["colrev_status"]),
-                    "coder2": str(other_branch_records[rid]["colrev_status"]),
-                    "reconciled": str(records_reconciled[rid]["colrev_status"]),
+                    Fields.ID: rid,
+                    "coder1": str(record_dict[Fields.STATUS]),
+                    "coder2": str(other_branch_records[rid][Fields.STATUS]),
+                    "reconciled": str(records_reconciled[rid][Fields.STATUS]),
                 }
             )
         prescreen_validation["statistics"] = {  # type: ignore
@@ -453,9 +452,9 @@ class Validate(colrev.operation.Operation):
     def __deduplicated_records(
         self, *, records: list[dict], prior_records_dict: dict
     ) -> bool:
-        return {",".join(sorted(x)) for x in [r["colrev_origin"] for r in records]} != {
+        return {",".join(sorted(x)) for x in [r[Fields.ORIGIN] for r in records]} != {
             ",".join(sorted(x))
-            for x in [r["colrev_origin"] for r in prior_records_dict.values()]
+            for x in [r[Fields.ORIGIN] for r in prior_records_dict.values()]
         }
 
     def __get_contributor_validation(self, *, contributor: str) -> dict:

@@ -21,7 +21,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -529,9 +529,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 if letter.startswith("  "):
                     letters[i] = letters[i][-1]
                 elif letter.startswith("+ "):
-                    letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
+                    letters[i] = f"{Colors.RED}" + letters[i][-1] + f"{Colors.END}"
                 elif letter.startswith("- "):
-                    letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
+                    letters[i] = f"{Colors.GREEN}" + letters[i][-1] + f"{Colors.END}"
             res = "".join(letters).replace("\n", " ")
             return res
 
@@ -567,7 +567,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     )
                     print(
                         " " * max(len(prefix), 30)
-                        + f"  {colors.ORANGE}{values[1]}{colors.END}"
+                        + f"  {Colors.ORANGE}{values[1]}{Colors.END}"
                     )
                     print(
                         " " * max(len(prefix), 30)
@@ -580,7 +580,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     print(
                         prefix
                         + " " * max(len(prefix), 30 - len(prefix))
-                        + f": {colors.GREEN}{values[0][1]}{colors.END}"
+                        + f": {Colors.GREEN}{values[0][1]}{Colors.END}"
                     )
                 else:
                     self.review_manager.p_printer.pprint(change_item)
@@ -709,7 +709,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 return record_dict
 
         self.review_manager.logger.error(
-            f'{colors.RED}Record not found: {original_record["ID"]}{colors.END}'
+            f'{Colors.RED}Record not found: {original_record["ID"]}{Colors.END}'
         )
         raise colrev_exceptions.RecordNotInIndexException()
 
@@ -865,7 +865,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     pull_request_links.append(link)
                     pull_request_msgs.append(
                         "\nTo create a pull request for your changes go "
-                        f"to \n{colors.ORANGE}{link}{colors.END}"
+                        f"to \n{Colors.ORANGE}{link}{Colors.END}"
                     )
                 success = True
             except colrev_exceptions.RecordNotInIndexException:
@@ -923,6 +923,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         if success:
             print(
-                f"\n{colors.GREEN}Thank you for supporting other researchers "
-                f"by sharing your corrections ❤{colors.END}\n"
+                f"\n{Colors.GREEN}Thank you for supporting other researchers "
+                f"by sharing your corrections ❤{Colors.END}\n"
             )

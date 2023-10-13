@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -45,11 +46,11 @@ class BibTexCrossrefResolutionPrep(JsonSchemaMixin):
 
         # Note : the ID of the crossrefed record_dict may have changed.
         # we need to trace based on the colrev_origin
-        for crossref_origin in record.data["colrev_origin"]:
+        for crossref_origin in record.data[Fields.ORIGIN]:
             crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
             crossref_origin = crossref_origin + "/" + record.data["crossref"]
             for candidate_record_dict in self.review_manager.dataset.read_next_record():
-                if crossref_origin in candidate_record_dict["colrev_origin"]:
+                if crossref_origin in candidate_record_dict[Fields.ORIGIN]:
                     return candidate_record_dict
         return {}
 

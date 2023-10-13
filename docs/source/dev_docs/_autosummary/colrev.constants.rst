@@ -20,8 +20,10 @@ colrev.constants
       :template: custom-class-template.rst
       :nosignatures:
 
+      Colors
       DefectCodes
       ENTRYTYPES
+      ExitCodes
       FieldSet
       FieldValues
       Fields

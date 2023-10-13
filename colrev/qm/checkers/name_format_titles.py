@@ -6,6 +6,7 @@ import re
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -13,7 +14,7 @@ from colrev.constants import DefectCodes
 class NameFormatTitleChecker:
     """The NameFormatTitleChecker"""
 
-    fields_to_check = ["author", "editor"]
+    fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
     titles = ["MD", "Dr", "PhD", "Prof", "Dipl Ing"]
     __words_rgx = re.compile(r"(\w[\w']*\w|\w)")
 

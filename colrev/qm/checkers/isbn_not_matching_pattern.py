@@ -6,6 +6,7 @@ import re
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -26,13 +27,13 @@ class ISBNPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the isbn-not-matching-pattern checks"""
 
-        if "isbn" not in record.data:
+        if Fields.ISBN not in record.data:
             return
 
-        if not re.match(self.__ISBN_REGEX, record.data["isbn"]):
-            record.add_masterdata_provenance_note(key="isbn", note=self.msg)
+        if not re.match(self.__ISBN_REGEX, record.data[Fields.ISBN]):
+            record.add_masterdata_provenance_note(key=Fields.ISBN, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="isbn", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.ISBN, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

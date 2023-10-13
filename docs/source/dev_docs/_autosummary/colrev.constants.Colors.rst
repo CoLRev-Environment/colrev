@@ -1,9 +1,9 @@
-colrev.exit\_codes.ExitCodes
-============================
+colrev.constants.Colors
+=======================
 
-.. currentmodule:: colrev.exit_codes
+.. currentmodule:: colrev.constants
 
-.. autoclass:: ExitCodes
+.. autoclass:: Colors
    :members:
    :show-inheritance:
    :inherited-members:
@@ -25,5 +25,8 @@ colrev.exit\_codes.ExitCodes
 
    .. autosummary::
 
-      ~ExitCodes.FAIL
-      ~ExitCodes.SUCCESS
+      ~Colors.BLUE
+      ~Colors.END
+      ~Colors.GREEN
+      ~Colors.ORANGE
+      ~Colors.RED

@@ -41,6 +41,7 @@ class Fields:
     INSTITUTION = "institution"
     MONTH = "month"
     SERIES = "series"
+    SCHOOL = "school"
     LANGUAGE = "language"
 
     MD_PROV = "colrev_masterdata_provenance"
@@ -60,6 +61,7 @@ class Fields:
     NUMBER = "number"
     PAGES = "pages"
     EDITOR = "editor"
+    EDITION = "edition"
 
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
@@ -72,6 +74,7 @@ class Fields:
     DBLP_KEY = "colrev.dblp.dblp_key"
     SEMANTIC_SCHOLAR_ID = "colrev.semantic_scholar.id"
     WEB_OF_SCIENCE_ID = "colrev.web_of_science.unique-id"
+    PUBMED_ID = "colrev.pubmed.pubmedid"
 
 
 class FieldSet:
@@ -136,6 +139,8 @@ class FieldValues:
     FORTHCOMING = "forthcoming"
 
 
+# TODO : common Languages?
+
 # TODO:
 # class Status():
 #     RETRIEVED = "md_retrieved"
@@ -196,11 +201,17 @@ class Operations:
 # author_not_in_first_pages
 # title_not_in_first_pages
 
-# TODO: integrate colors
-
 
 class ExitCodes:
     """Exit codes"""
 
     SUCCESS = 0
     FAIL = 1
+
+
+class Colors:
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    ORANGE = "\033[93m"
+    BLUE = "\033[94m"
+    END = "\033[0m"

@@ -31,12 +31,14 @@ colrev.constants.Fields
       ~Fields.CHAPTER
       ~Fields.CITED_BY
       ~Fields.COLREV_ID
+      ~Fields.DBLP_KEY
       ~Fields.DOI
       ~Fields.D_PROV
       ~Fields.EDITOR
       ~Fields.ENTRYTYPE
       ~Fields.FILE
       ~Fields.FULLTEXT
+      ~Fields.GROBID_VERSION
       ~Fields.ID
       ~Fields.INSTITUTION
       ~Fields.ISBN
@@ -52,11 +54,14 @@ colrev.constants.Fields
       ~Fields.ORIGIN
       ~Fields.PAGES
       ~Fields.PDF_ID
+      ~Fields.PRESCREEN_EXCLUSION
       ~Fields.PUBLISHER
       ~Fields.SCREENING_CRITERIA
+      ~Fields.SEMANTIC_SCHOLAR_ID
       ~Fields.SERIES
       ~Fields.STATUS
       ~Fields.TITLE
       ~Fields.URL
       ~Fields.VOLUME
+      ~Fields.WEB_OF_SCIENCE_ID
       ~Fields.YEAR

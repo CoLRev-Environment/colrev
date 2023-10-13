@@ -10,6 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
+from colrev.constants import Fields
 
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
@@ -47,10 +48,10 @@ class ConditionalPrescreen(JsonSchemaMixin):
 
         pad = 50
         for record in records.values():
-            if record["colrev_status"] != colrev.record.RecordState.md_processed:
+            if record[Fields.STATUS] != colrev.record.RecordState.md_processed:
                 continue
             prescreen_operation.review_manager.report_logger.info(
-                f' {record["ID"]}'.ljust(pad, " ")
+                f" {record[Fields.ID]}".ljust(pad, " ")
                 + "Included in prescreen (automatically)"
             )
             record.update(

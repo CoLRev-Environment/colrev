@@ -8,6 +8,8 @@ from astroid import nodes
 from pylint import checkers
 from pylint.checkers.utils import only_required_for_messages
 
+from colrev.constants import Fields
+
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
@@ -27,8 +29,8 @@ class MissedConstantUsageChecker(checkers.BaseChecker):
             + "(in colrev/constants.py) ",
         ),
     }
-    # TODO : get from constants.py
-    constants = ["colrev_status", "colrev_origin", "ENTRYTYPE"]
+    # TODO : ENTRYTYPES etc.
+    constants = [getattr(Fields, v) for v in dir(Fields) if not v.startswith("__")]
 
     @only_required_for_messages("direct-status-assign")
     def visit_assign(self, node: nodes.Assign) -> None:

@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Optional
 from typing import TYPE_CHECKING
 
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.record
@@ -42,8 +43,8 @@ class RepoSetupError(CoLRevException):
             self.message = (
                 "Not yet a CoLRev repository. "
                 "To initialize a CoLRev repository (project), run:\n\n"
-                f"   {colors.ORANGE}colrev init --type {colors.END}literature_review\n\n"
-                f"Instead of {colors.ORANGE}literature_review{colors.END},"
+                f"   {Colors.ORANGE}colrev init --type {Colors.END}literature_review\n\n"
+                f"Instead of {Colors.ORANGE}literature_review{Colors.END},"
                 " you can use any of the following review type:\n\n"
                 "  - narrative_review              : "
                 "includes a manuscript\n"
@@ -78,7 +79,7 @@ class BrokenFilesError(CoLRevException):
     def __init__(self, msg: str) -> None:
         self.message = (
             f"Detected broken files ({msg}). To fix use\n     "
-            f"{colors.ORANGE}colrev repair{colors.END}"
+            f"{Colors.ORANGE}colrev repair{Colors.END}"
         )
         super().__init__(self.message)
 
@@ -93,7 +94,7 @@ class CoLRevUpgradeError(CoLRevException):
     def __init__(self, old: str, new: str) -> None:
         self.message = (
             f"Detected upgrade from {old} to {new}. To upgrade use\n     "
-            f"{colors.ORANGE}colrev upgrade{colors.END}"
+            f"{Colors.ORANGE}colrev upgrade{Colors.END}"
         )
         super().__init__(self.message)
 
@@ -133,7 +134,7 @@ class InvalidSettingsError(CoLRevException):
         msg = f"Error in settings.json: {msg}"
         if fix_per_upgrade:
             msg += (
-                "\nTo solve this, use\n  " f"{colors.ORANGE}colrev upgrade{colors.END}"
+                "\nTo solve this, use\n  " f"{Colors.ORANGE}colrev upgrade{Colors.END}"
             )
         self.message = msg
         super().__init__(self.message)
@@ -456,8 +457,8 @@ class InvalidMerge(DedupeError):
     def __init__(
         self, record_a: colrev.record.Record, record_b: colrev.record.Record
     ) -> None:
-        id_a = record_a.data.get("ID", "no-id")
-        id_b = record_b.data.get("ID", "no-id")
+        id_a = record_a.data.get(Fields.ID, "no-id")
+        id_b = record_b.data.get(Fields.ID, "no-id")
         self.message = f"attempted merge: {id_a} - {id_b}"
         super().__init__(self.message)
 

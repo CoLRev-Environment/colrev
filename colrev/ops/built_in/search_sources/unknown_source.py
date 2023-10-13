@@ -21,7 +21,7 @@ import colrev.ops.load_utils_md
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -128,8 +128,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         ) and self.search_source.filename.suffix not in [".enl"]:
             new_filename = self.search_source.filename.with_suffix(".enl")
             self.review_manager.logger.info(
-                f"{colors.GREEN}Rename to {new_filename} "
-                f"(because the format is .enl){colors.END}"
+                f"{Colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .enl){Colors.END}"
             )
             self.search_source.filename.rename(new_filename)
             self.review_manager.dataset.add_changes(
@@ -147,8 +147,8 @@ class UnknownSearchSource(JsonSchemaMixin):
         ) and self.search_source.filename.suffix not in [".ris"]:
             new_filename = self.search_source.filename.with_suffix(".ris")
             self.review_manager.logger.info(
-                f"{colors.GREEN}Rename to {new_filename} "
-                f"(because the format is .ris){colors.END}"
+                f"{Colors.GREEN}Rename to {new_filename} "
+                f"(because the format is .ris){Colors.END}"
             )
             self.search_source.filename.rename(new_filename)
             self.review_manager.dataset.add_changes(

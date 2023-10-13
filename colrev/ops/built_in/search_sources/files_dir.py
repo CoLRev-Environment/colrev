@@ -26,7 +26,7 @@ import colrev.ops.search
 import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -192,8 +192,8 @@ class FilesSearchSource(JsonSchemaMixin):
                         record_dict["colrev_origin"].remove(origin_to_remove)
             if to_remove:
                 self.review_manager.logger.info(
-                    f" {colors.RED}Removed {len(to_remove)} records "
-                    f"(PDFs no longer available){colors.END}"
+                    f" {Colors.RED}Removed {len(to_remove)} records "
+                    f"(PDFs no longer available){Colors.END}"
                 )
                 print(" " + "\n ".join(files_removed))
             records = {k: v for k, v in records.items() if v["colrev_origin"]}
@@ -536,8 +536,8 @@ class FilesSearchSource(JsonSchemaMixin):
         ]
         if potential_duplicates:
             self.review_manager.logger.warning(
-                f" {colors.RED}skip record (PDF potential duplicate): "
-                f"{new_record['file']} {colors.END} "
+                f" {Colors.RED}skip record (PDF potential duplicate): "
+                f"{new_record['file']} {Colors.END} "
                 f"({','.join([r['file'] for r in potential_duplicates])})"
             )
         else:

@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -74,11 +75,11 @@ class PDFCompletenessValidation(JsonSchemaMixin):
         """Prepare the PDF by validating completeness (based on number of pages)"""
 
         if colrev.record.RecordState.pdf_imported != record.data.get(
-            "colrev_status", "NA"
+            Fields.STATUS, "NA"
         ):
             return record.data
 
-        if not record.data["file"].endswith(".pdf"):
+        if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
         def __roman_to_int(*, s: str) -> int:
@@ -127,17 +128,17 @@ class PDFCompletenessValidation(JsonSchemaMixin):
             pages=[0, 1], project_path=pdf_prep_operation.review_manager.path
         ).replace(" ", ""):
             msg = (
-                f'{record.data["ID"]}'.ljust(pad - 1, " ")
+                f"{record.data[Fields.ID]}".ljust(pad - 1, " ")
                 + " Not the full version of the paper"
             )
             pdf_prep_operation.review_manager.report_logger.error(msg)
-            record.add_data_provenance_note(key="file", note="not_full_version")
+            record.add_data_provenance_note(key=Fields.FILE, note="not_full_version")
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )
             return record.data
 
-        pages_metadata = record.data.get("pages", "NA")
+        pages_metadata = record.data.get(Fields.PAGES, "NA")
 
         roman_pages_matched = re.match(self.roman_pages_pattern, pages_metadata)
         if roman_pages_matched:
@@ -152,10 +153,12 @@ class PDFCompletenessValidation(JsonSchemaMixin):
 
         if pages_metadata == "NA" or not re.match(r"^\d+--\d+|\d+$", pages_metadata):
             msg = (
-                f'{record.data["ID"]}'.ljust(pad - 1, " ")
+                f"{record.data[Fields.ID]}".ljust(pad - 1, " ")
                 + "Could not validate completeness: no pages in metadata"
             )
-            record.add_data_provenance_note(key="file", note="no_pages_in_metadata")
+            record.add_data_provenance_note(
+                key=Fields.FILE, note="no_pages_in_metadata"
+            )
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )
@@ -167,7 +170,7 @@ class PDFCompletenessValidation(JsonSchemaMixin):
         if nr_pages_metadata != record.data["pages_in_file"]:
             # this may become a settings option (coverpages: ok)
             # if nr_pages_metadata == int(record.data["pages_in_file"]) - 1:
-            #     record.add_data_provenance_note(key="file", note="more_pages_in_pdf")
+            #     record.add_data_provenance_note(key=Fields.FILE, note="more_pages_in_pdf")
 
             if self.__longer_with_appendix(
                 review_manager=pdf_prep_operation.review_manager,
@@ -177,14 +180,14 @@ class PDFCompletenessValidation(JsonSchemaMixin):
                 pass
             else:
                 msg = (
-                    f'{record.data["ID"]}'.ljust(pad, " ")
+                    f"{record.data[Fields.ID]}".ljust(pad, " ")
                     + f'Nr of pages in file ({record.data["pages_in_file"]}) '
                     + "not identical with record "
                     + f"({nr_pages_metadata} pages)"
                 )
 
                 record.add_data_provenance_note(
-                    key="file", note="nr_pages_not_matching"
+                    key=Fields.FILE, note="nr_pages_not_matching"
                 )
                 record.data.update(
                     colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation

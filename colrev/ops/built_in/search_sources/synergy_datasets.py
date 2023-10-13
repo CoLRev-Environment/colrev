@@ -19,7 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 # pylint: disable=unused-argument
 
@@ -196,11 +196,11 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "Errors in dataset: ambiguous inclusion decisions:"
             )
             msg = (
-                f"{colors.RED}"
+                f"{Colors.RED}"
                 + f"- dois: {', '.join(decisions['doi'])}"
                 + f"- pmid: {', '.join(decisions['pmid'])}"
                 + f"- openalex_id: {', '.join(decisions['openalex_id'])}"
-                + f"{colors.END}"
+                + f"{Colors.END}"
             )
             if self.review_manager.force_mode:
                 print(msg)

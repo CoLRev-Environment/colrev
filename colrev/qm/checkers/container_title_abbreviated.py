@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -11,7 +12,7 @@ from colrev.constants import DefectCodes
 class ContainerTitleAbbreviatedChecker:
     """The ContainerTitleAbbreviatedChecker"""
 
-    fields_to_check = ["journal", "booktitle"]
+    fields_to_check = [Fields.JOURNAL, Fields.BOOKTITLE]
     msg = DefectCodes.CONTAINER_TITLE_ABBREVIATED
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:

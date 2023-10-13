@@ -16,6 +16,7 @@ import git
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -170,7 +171,7 @@ class Commit:
                 debug_part = False
                 while line:
                     # For more efficient debugging (loading of dict with Enum)
-                    if "colrev_status" in line and "<RecordState." in line:
+                    if Fields.STATUS in line and "<RecordState." in line:
                         line = line.replace("<RecordState", "RecordState")
                         line = line[: line.rfind(":")] + line[line.rfind(">") + 1 :]
                     if "[DEBUG]" in line or debug_part:

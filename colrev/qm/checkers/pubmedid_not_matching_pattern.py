@@ -6,6 +6,7 @@ import re
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -23,16 +24,14 @@ class PubmedIDPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the pubmedid-not-matching-pattern checks"""
 
-        if "colrev.pubmed.pubmedid" not in record.data:
+        if Fields.PUBMED_ID not in record.data:
             return
 
-        if not re.match(self.__PMID_REGEX, record.data["colrev.pubmed.pubmedid"]):
-            record.add_masterdata_provenance_note(
-                key="colrev.pubmed.pubmedid", note=self.msg
-            )
+        if not re.match(self.__PMID_REGEX, record.data[Fields.PUBMED_ID]):
+            record.add_masterdata_provenance_note(key=Fields.PUBMED_ID, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(
-                key="colrev.pubmed.pubmedid", note=self.msg
+                key=Fields.PUBMED_ID, note=self.msg
             )
 
 

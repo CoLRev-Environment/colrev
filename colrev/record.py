@@ -37,7 +37,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.prep.utils as prep_utils
 import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -60,7 +60,7 @@ class Record:
     list_fields_keys = [
         Fields.ORIGIN,
         # "colrev_pdf_id",
-        # "screening_criteria",
+        # Fields.SCREENING_CRITERIA,
     ]
     dict_fields_keys = [Fields.MD_PROV, Fields.D_PROV]
 
@@ -1235,23 +1235,23 @@ class Record:
             RecordState.rev_included,
         ]:
             print(
-                f"\n{colors.RED}Warning: setting paper to prescreen_excluded. Please check and "
-                f"remove from synthesis: {self.data['ID']}{colors.END}\n"
+                f"\n{Colors.RED}Warning: setting paper to prescreen_excluded. Please check and "
+                f"remove from synthesis: {self.data['ID']}{Colors.END}\n"
             )
 
         self.set_status(target_state=RecordState.rev_prescreen_excluded)
 
         if (
-            "retracted" not in self.data.get("prescreen_exclusion", "")
+            "retracted" not in self.data.get(Fields.PRESCREEN_EXCLUSION, "")
             and "retracted" == reason
             and print_warning
         ):
             print(
-                f"\n{colors.RED}Paper retracted and prescreen "
-                f"excluded: {self.data['ID']}{colors.END}\n"
+                f"\n{Colors.RED}Paper retracted and prescreen "
+                f"excluded: {self.data['ID']}{Colors.END}\n"
             )
 
-        self.data["prescreen_exclusion"] = reason
+        self.data[Fields.PRESCREEN_EXCLUSION] = reason
 
         # Note: when records are prescreen-excluded during prep:
         to_drop = []
@@ -1417,7 +1417,7 @@ class Record:
 
     def get_tei_filename(self) -> Path:
         """Get the TEI filename associated with the file (PDF)"""
-        tei_filename = Path(f'.tei/{self.data["ID"]}.tei.xml')
+        tei_filename = Path(f".tei/{self.data[Fields.ID]}.tei.xml")
         if Fields.FILE in self.data:
             tei_filename = Path(
                 self.data[Fields.FILE].replace("pdfs/", ".tei/")
@@ -1435,9 +1435,9 @@ class Record:
                 if letter.startswith("  "):
                     letters[i] = letters[i][-1]
                 elif letter.startswith("+ "):
-                    letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
+                    letters[i] = f"{Colors.RED}" + letters[i][-1] + f"{Colors.END}"
                 elif letter.startswith("- "):
-                    letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
+                    letters[i] = f"{Colors.GREEN}" + letters[i][-1] + f"{Colors.END}"
             res = "".join(letters).replace("\n", " ")
             return res
 
@@ -1463,7 +1463,7 @@ class Record:
                         Fields.NUMBER,
                         Fields.YEAR,
                     ]:
-                        line = f"{colors.RED}{rec.get(key, '')}{colors.END}"
+                        line = f"{Colors.RED}{rec.get(key, '')}{Colors.END}"
                     else:
                         line = print_diff((prev_val, rec.get(key, "")))
                 print(f"{key} : {line}")
@@ -1514,7 +1514,7 @@ class Record:
 
         ret_str = f"  ID: {self.data['ID']} ({self.data[Fields.ENTRYTYPE]})"
         ret_str += (
-            f"\n  {colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{colors.END}"
+            f"\n  {Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}"
             f"\n  {self.data.get(Fields.AUTHOR, 'no-author')}"
         )
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
@@ -1548,25 +1548,25 @@ class Record:
         ret_str = ""
         if Fields.FILE in self.data:
             ret_str += (
-                f"\nfile: {colors.ORANGE}{self.data[Fields.FILE]}{colors.END}\n\n"
+                f"\nfile: {Colors.ORANGE}{self.data[Fields.FILE]}{Colors.END}\n\n"
             )
 
         pdf_prep_note = self.get_field_provenance(key=Fields.FILE)
 
         if "author_not_in_first_pages" in pdf_prep_note["note"]:
             ret_str += (
-                f"{colors.RED}{self.data.get(Fields.AUTHOR, 'no-author')}{colors.END}\n"
+                f"{Colors.RED}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
             )
         else:
-            ret_str += f"{colors.GREEN}{self.data.get(Fields.AUTHOR, 'no-author')}{colors.END}\n"
+            ret_str += f"{Colors.GREEN}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
 
         if "title_not_in_first_pages" in pdf_prep_note["note"]:
             ret_str += (
-                f"{colors.RED}{self.data.get(Fields.TITLE, 'no title')}{colors.END}\n"
+                f"{Colors.RED}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
             )
         else:
             ret_str += (
-                f"{colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{colors.END}\n"
+                f"{Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
             )
 
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
@@ -1579,11 +1579,11 @@ class Record:
             if Fields.PAGES in self.data:
                 if "nr_pages_not_matching" in pdf_prep_note["note"]:
                     ret_str += (
-                        f", {colors.RED}pp.{self.data[Fields.PAGES]}{colors.END}\n"
+                        f", {Colors.RED}pp.{self.data[Fields.PAGES]}{Colors.END}\n"
                     )
                 else:
                     ret_str += (
-                        f", pp.{colors.GREEN}{self.data[Fields.PAGES]}{colors.END}\n"
+                        f", pp.{Colors.GREEN}{self.data[Fields.PAGES]}{Colors.END}\n"
                     )
             else:
                 ret_str += "\n"

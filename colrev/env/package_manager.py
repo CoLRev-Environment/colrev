@@ -25,7 +25,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-ancestors
@@ -794,8 +795,8 @@ class PackageManager:
                 except colrev_exceptions.ServiceNotAvailableException as sna_exc:
                     if sna_exc.dep == "docker":
                         print(
-                            f"{colors.ORANGE}Docker not available. Deactivate "
-                            f"{package_identifier}{colors.END}"
+                            f"{Colors.ORANGE}Docker not available. Deactivate "
+                            f"{package_identifier}{Colors.END}"
                         )
                         to_remove.append(package_identifier)
                     else:
@@ -1177,7 +1178,7 @@ class PackageManager:
                 return
 
         operation.review_manager.logger.info(
-            f"{colors.GREEN}Add {operation.type} package:{colors.END} {package_identifier}"
+            f"{Colors.GREEN}Add {operation.type} package:{Colors.END} {package_identifier}"
         )
 
         endpoint_dict = self.load_packages(
@@ -1188,12 +1189,12 @@ class PackageManager:
         )
 
         e_class = endpoint_dict[package_identifier]
-        # TODO : if params.startswith("http"): params_dict = {"url": params}
+        # TODO : if params.startswith("http"): params_dict = {Fields.URL: params}
         # TODO : should parameters generally be key-value pairs separated by ; ?
         if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
             if params:
                 if params.startswith("http"):
-                    params_dict = {"url": params}
+                    params_dict = {Fields.URL: params}
                 else:
                     params_dict = {}
                     for item in params.split(";"):

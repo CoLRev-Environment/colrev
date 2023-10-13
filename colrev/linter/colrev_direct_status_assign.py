@@ -8,6 +8,8 @@ from astroid import nodes
 from pylint import checkers
 from pylint.checkers.utils import only_required_for_messages
 
+from colrev.constants import Fields
+
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
@@ -39,7 +41,7 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
             return
 
         if hasattr(node.targets[0].slice, "value"):
-            if "colrev_status" == node.targets[0].slice.value:
+            if Fields.STATUS == node.targets[0].slice.value:
                 self.add_message(self.name, node=node)  # , confidence=HIGH)
             return
 

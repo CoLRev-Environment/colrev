@@ -10,7 +10,8 @@ from git.exc import GitCommandError
 
 import colrev.env.utils
 import colrev.operation
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -70,9 +71,9 @@ class Merge(colrev.operation.Operation):
             other_record = other_branch_records[current_record_id]
 
             comparison_current_record = current_record.copy()
-            del comparison_current_record["colrev_status"]
+            del comparison_current_record[Fields.STATUS]
             comparison_other_record = other_record.copy()
-            del comparison_other_record["colrev_status"]
+            del comparison_other_record[Fields.STATUS]
 
             if comparison_current_record != comparison_other_record:
                 comparison_diff = self.review_manager.p_printer.pformat(
@@ -180,7 +181,7 @@ class Merge(colrev.operation.Operation):
             [
                 r
                 for r in current_branch_records.values()
-                if other_branch_records[r["ID"]]["colrev_status"] != r["colrev_status"]
+                if other_branch_records[r[Fields.ID]][Fields.STATUS] != r[Fields.STATUS]
             ]
         )
         i = 0
@@ -191,13 +192,13 @@ class Merge(colrev.operation.Operation):
             other_branch_record = other_branch_records[current_branch_record_id]
 
             if (
-                current_branch_record_dict["colrev_status"]
-                != other_branch_record["colrev_status"]
+                current_branch_record_dict[Fields.STATUS]
+                != other_branch_record[Fields.STATUS]
             ):
                 i += 1
                 print(f"{i}/{nr_to_reconcile}")
                 copied_rec = current_branch_record_dict.copy()
-                copied_rec.pop("colrev_status")
+                copied_rec.pop(Fields.STATUS)
                 print(colrev.record.Record(data=copied_rec).format_bib_style())
                 print(
                     f"1 - {current_branch_author} coded on {current_branch}".ljust(
@@ -215,13 +216,13 @@ class Merge(colrev.operation.Operation):
                         f"Reconciliation for {current_branch_record_id}: "
                         f"{current_branch_record_dict['colrev_status']}"
                     )
-                    resolution = current_branch_record_dict["colrev_status"]
+                    resolution = current_branch_record_dict[Fields.STATUS]
                 else:
                     self.review_manager.report_logger.info(
                         f"Reconciliation for {current_branch_record_id}: "
                         f"{other_branch_record['colrev_status']}"
                     )
-                    resolution = other_branch_record["colrev_status"]
+                    resolution = other_branch_record[Fields.STATUS]
                 current_branch_record = colrev.record.Record(
                     data=current_branch_record_dict
                 )
@@ -242,7 +243,7 @@ class Merge(colrev.operation.Operation):
         self.review_manager.p_printer.pprint(validation_details["statistics"])
 
         print(
-            f"\n{colors.ORANGE}Please add (git add .) and commit (git commit){colors.END}"
+            f"\n{Colors.ORANGE}Please add (git add .) and commit (git commit){Colors.END}"
         )
 
         # Note : cannot add/create commit yet - not yet supported by gitpython:

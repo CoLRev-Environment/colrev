@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +13,7 @@ class ErroneousTermInFieldChecker:
     """The ErroneousTermInFieldChecker"""
 
     erroneous_terms = {
-        "author": [
+        Fields.AUTHOR: [
             "http",
             "University",
             "orcid",
@@ -22,7 +23,7 @@ class ErroneousTermInFieldChecker:
             "Mrs",
             "Hochschule",
         ],
-        "title": [
+        Fields.TITLE: [
             "research paper",
             "completed research",
             "research in progress",

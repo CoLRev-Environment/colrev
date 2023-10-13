@@ -22,7 +22,8 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -291,8 +292,8 @@ class PaperMarkdown(JsonSchemaMixin):
         for paper_id_added in paper_ids_added:
             if not silent_mode:
                 self.data_operation.review_manager.logger.info(
-                    f" {colors.GREEN}{paper_id_added}".ljust(45)
-                    + f"add to paper{colors.END}"
+                    f" {Colors.GREEN}{paper_id_added}".ljust(45)
+                    + f"add to paper{Colors.END}"
                 )
 
         if not silent_mode:
@@ -539,16 +540,16 @@ class PaperMarkdown(JsonSchemaMixin):
             duplicated_records = [
                 item
                 for item in records_to_add.values()
-                if item["ID"] in non_sample_records.keys()
+                if item[Fields.ID] in non_sample_records.keys()
             ]
             records_to_add = {
                 k: v for k, v in records_to_add.items() if k not in non_sample_records
             }
             if duplicated_keys:
                 self.data_operation.review_manager.logger.error(
-                    f"{colors.RED}Cannot add {duplicated_keys} to "
+                    f"{Colors.RED}Cannot add {duplicated_keys} to "
                     f"{self.NON_SAMPLE_REFERENCES_RELATIVE}, "
-                    f"please change ID and add manually:{colors.END}"
+                    f"please change ID and add manually:{Colors.END}"
                 )
                 for duplicated_record in duplicated_records:
                     print(colrev.record.Record(data=duplicated_record))
@@ -755,8 +756,8 @@ class PaperMarkdown(JsonSchemaMixin):
         else:
             if not silent_mode:
                 data_operation.review_manager.logger.warning(
-                    f"{colors.RED}Skipping updates of "
-                    f"{self.paper_relative_path} due to unstaged changes{colors.END}"
+                    f"{Colors.RED}Skipping updates of "
+                    f"{self.paper_relative_path} due to unstaged changes{Colors.END}"
                 )
 
         if not data_operation.review_manager.in_ci_environment():

@@ -13,6 +13,8 @@ from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 
 class Advisor:
@@ -52,7 +54,7 @@ class Advisor:
                     found_a_conflict = True
         if found_a_conflict:
             item = {
-                "title": "Git merge conflict detected",
+                Fields.TITLE: "Git merge conflict detected",
                 "level": "WARNING",
                 "msg": "To resolve:\n  1 https://docs.github.com/en/"
                 + "pull-requests/collaborating-with-pull-requests/"
@@ -74,7 +76,7 @@ class Advisor:
         ]
         if len(non_staged) > 0:
             item = {
-                "title": f"Non-staged changes: {','.join(non_staged)}",
+                Fields.TITLE: f"Non-staged changes: {','.join(non_staged)}",
                 "level": "WARNING",
             }
             collaboration_instructions["items"].append(item)
@@ -92,7 +94,7 @@ class Advisor:
 
         if self.review_manager.dataset.behind_remote():
             item = {
-                "title": "Remote changes available on the server",
+                Fields.TITLE: "Remote changes available on the server",
                 "level": "WARNING",
                 "msg": "Once you have committed your changes, get the latest "
                 + "remote changes",
@@ -103,7 +105,7 @@ class Advisor:
 
         if self.review_manager.dataset.remote_ahead():
             item = {
-                "title": "Local changes not yet on the server",
+                Fields.TITLE: "Local changes not yet on the server",
                 "level": "WARNING",
                 "msg": "Once you have committed your changes, upload them "
                 + "to the shared repository.",
@@ -113,7 +115,7 @@ class Advisor:
 
         if share_stat_req == "NONE":
             collaboration_instructions["status"] = {
-                "title": "Sharing: currently ready for sharing",
+                Fields.TITLE: "Sharing: currently ready for sharing",
                 "level": "SUCCESS",
                 "msg": "",
                 # If consistency checks pass -
@@ -128,7 +130,7 @@ class Advisor:
                 and 0 == status_stats.currently.md_prepared
             ):
                 collaboration_instructions["status"] = {
-                    "title": "Sharing: currently ready for sharing",
+                    Fields.TITLE: "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
                     "msg": "",
                     # If consistency checks pass -
@@ -137,7 +139,7 @@ class Advisor:
 
             else:
                 collaboration_instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
+                    Fields.TITLE: "Sharing: currently not ready for sharing",
                     "level": "WARNING",
                     "msg": "All records should be processed before sharing "
                     + "(see instructions above).",
@@ -161,7 +163,7 @@ class Advisor:
                 and 0 == status_stats.currently.pdf_prepared
             ):
                 collaboration_instructions["status"] = {
-                    "title": "Sharing: currently ready for sharing",
+                    Fields.TITLE: "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
                     "msg": "",
                     # If consistency checks pass -
@@ -170,7 +172,7 @@ class Advisor:
 
             else:
                 collaboration_instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
+                    Fields.TITLE: "Sharing: currently not ready for sharing",
                     "level": "WARNING",
                     "msg": "All records should be screened before sharing "
                     + "(see instructions above).",
@@ -179,7 +181,7 @@ class Advisor:
         if share_stat_req == "COMPLETED":
             if 0 == status_stats.currently.non_completed:
                 collaboration_instructions["status"] = {
-                    "title": "Sharing: currently ready for sharing",
+                    Fields.TITLE: "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
                     "msg": "",
                     # If consistency checks pass -
@@ -187,7 +189,7 @@ class Advisor:
                 }
             else:
                 collaboration_instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
+                    Fields.TITLE: "Sharing: currently not ready for sharing",
                     "level": "WARNING",
                     "msg": "All records should be completed before sharing "
                     + "(see instructions above).",
@@ -206,13 +208,13 @@ class Advisor:
 
         remote_connected = 0 != len(git_repo.remotes)
         if remote_connected:
-            collaboration_instructions["title"] = "Versioning and collaboration"
+            collaboration_instructions[Fields.TITLE] = "Versioning and collaboration"
         else:
             collaboration_instructions[
-                "title"
+                Fields.TITLE
             ] = "Versioning (not connected to shared repository)"
             item = {
-                "title": "Project not yet shared",
+                Fields.TITLE: "Project not yet shared",
                 "level": "WARNING",
                 "msg": "Please visit  https://github.com/new\n  "
                 + "create an empty repository called  "
@@ -241,7 +243,7 @@ class Advisor:
 
         if 0 == len(collaboration_instructions["items"]):
             item = {
-                "title": "Up-to-date",
+                Fields.TITLE: "Up-to-date",
                 "level": "SUCCESS",
             }
             collaboration_instructions["items"].append(item)
@@ -470,10 +472,10 @@ class Advisor:
         missing_files = []
         for record_dict in status_stats.records.values():
             if (
-                record_dict["colrev_status"] in file_required_status
-                and "file" not in record_dict
+                record_dict[Fields.STATUS] in file_required_status
+                and Fields.FILE not in record_dict
             ):
-                missing_files.append(record_dict["ID"])
+                missing_files.append(record_dict[Fields.ID])
 
         return missing_files
 
@@ -505,9 +507,11 @@ class Advisor:
 
         pdfs_no_longer_available = []
         for record_dict in status_stats.records.values():
-            if "file" in record_dict:
-                if not (self.review_manager.path / Path(record_dict["file"])).is_file():
-                    pdfs_no_longer_available.append(record_dict["file"])
+            if Fields.FILE in record_dict:
+                if not (
+                    self.review_manager.path / Path(record_dict[Fields.FILE])
+                ).is_file():
+                    pdfs_no_longer_available.append(record_dict[Fields.FILE])
         if pdfs_no_longer_available:
             review_instructions.append(
                 {
@@ -671,7 +675,7 @@ class Advisor:
             selected_journals = [
                 (candidate, freq)
                 for candidate, freq in selected
-                if candidate not in curated_outlets + ["", "UNKNOWN"]
+                if candidate not in curated_outlets + ["", FieldValues.UNKNOWN]
             ]
 
             journals = "\n   - " + "\n   - ".join(
@@ -768,7 +772,7 @@ class Advisor:
 
         msgs = "\n ".join(
             [
-                x["level"] + x["title"] + x.get("msg", "")
+                x["level"] + x[Fields.TITLE] + x.get("msg", "")
                 for x in collaboration_instructions["items"]
             ]
         )

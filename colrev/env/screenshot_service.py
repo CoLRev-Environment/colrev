@@ -14,6 +14,7 @@ import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 
 class ScreenshotService:
@@ -88,13 +89,13 @@ class ScreenshotService:
     ) -> colrev.record.Record:
         """Add a PDF screenshot to the record"""
 
-        if "url" not in record.data:
+        if Fields.URL not in record.data:
             return record
 
         urldate = datetime.today().strftime("%Y-%m-%d")
 
         json_val = {
-            "url": record.data["url"],
+            Fields.URL: record.data[Fields.URL],
             "options": {
                 "displayHeaderFooter": True,
                 "printBackground": False,
@@ -109,7 +110,7 @@ class ScreenshotService:
                 file.write(ret.content)
 
             record.update_field(
-                key="file",
+                key=Fields.FILE,
                 value=str(pdf_filepath),
                 source="chrome (browserless) screenshot",
             )

@@ -14,7 +14,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -62,8 +63,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
             selected_records = [
                 r
                 for r in records.values()
-                if any(source_origin in co for co in r["colrev_origin"])
-                and r["colrev_status"]
+                if any(source_origin in co for co in r[Fields.ORIGIN])
+                and r[Fields.STATUS]
                 in [
                     colrev.record.RecordState.md_prepared,
                     colrev.record.RecordState.md_needs_manual_preparation,
@@ -73,11 +74,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
             records_df = pd.DataFrame.from_records(list(selected_records))
             if records_df.shape[0] == 0:
                 dedupe_operation.review_manager.logger.info(
-                    f"{colors.GREEN}Source {source_origin} fully merged{colors.END}"
+                    f"{Colors.GREEN}Source {source_origin} fully merged{Colors.END}"
                 )
             else:
                 dedupe_operation.review_manager.logger.info(
-                    f"{colors.ORANGE}Source {source_origin} not fully merged{colors.END}"
+                    f"{Colors.ORANGE}Source {source_origin} not fully merged{Colors.END}"
                 )
                 dedupe_operation.review_manager.logger.info(
                     f"Exporting details to dedupe/{source_origin}.xlsx"
@@ -86,28 +87,30 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 records_df = records_df[
                     records_df.columns.intersection(
                         [
-                            "ID",
-                            "colrev_status",
-                            "journal",
-                            "booktitle",
-                            "year",
-                            "volume",
-                            "number",
-                            "title",
-                            "author",
+                            Fields.ID,
+                            Fields.STATUS,
+                            Fields.JOURNAL,
+                            Fields.BOOKTITLE,
+                            Fields.YEAR,
+                            Fields.VOLUME,
+                            Fields.NUMBER,
+                            Fields.TITLE,
+                            Fields.AUTHOR,
                         ]
                     )
                 ]
                 keys = list(
-                    records_df.columns.intersection(["year", "volume", "number"])
+                    records_df.columns.intersection(
+                        [Fields.YEAR, Fields.VOLUME, Fields.NUMBER]
+                    )
                 )
-                if "year" in keys:
+                if Fields.YEAR in keys:
                     records_df.year = pd.to_numeric(records_df.year, errors="coerce")
-                if "volume" in keys:
+                if Fields.VOLUME in keys:
                     records_df.volume = pd.to_numeric(
                         records_df.volume, errors="coerce"
                     )
-                if "number" in keys:
+                if Fields.NUMBER in keys:
                     records_df.number = pd.to_numeric(
                         records_df.number, errors="coerce"
                     )
@@ -118,15 +121,15 @@ class CurationMissingDedupe(JsonSchemaMixin):
         self, *, record: colrev.record.Record, records: dict
     ) -> list:
         if self.review_manager.force_mode:
-            if record.data["colrev_status"] in self.__post_md_prepared_states:
+            if record.data[Fields.STATUS] in self.__post_md_prepared_states:
                 return []
         else:
             # only dedupe md_prepared records
-            if record.data["colrev_status"] not in [
+            if record.data[Fields.STATUS] not in [
                 colrev.record.RecordState.md_prepared
             ]:
                 return []
-        if record.data.get("title", "") == "":
+        if record.data.get(Fields.TITLE, "") == "":
             return []
 
         try:
@@ -144,9 +147,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 continue
             if toc_key != candidate_toc_key:
                 continue
-            if record_candidate["ID"] == record.data["ID"]:
+            if record_candidate[Fields.ID] == record.data[Fields.ID]:
                 continue
-            if record_candidate["colrev_status"] in [
+            if record_candidate[Fields.STATUS] in [
                 colrev.record.RecordState.md_prepared,
                 colrev.record.RecordState.md_needs_manual_preparation,
                 colrev.record.RecordState.md_imported,
@@ -177,7 +180,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             )
 
             if same_toc_rec["similarity"] > 0.8:
-                print(f"{i + 1} - {colors.ORANGE}{author_title_string}{colors.END}")
+                print(f"{i + 1} - {Colors.ORANGE}{author_title_string}{Colors.END}")
 
             else:
                 print(f"{i + 1} - {author_title_string}")
@@ -192,7 +195,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 [
                     x
                     for x in records.values()
-                    if x["colrev_status"] not in self.__post_md_prepared_states
+                    if x[Fields.STATUS] not in self.__post_md_prepared_states
                 ]
             )
         else:
@@ -201,7 +204,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 [
                     x
                     for x in records.values()
-                    if x["colrev_status"] in [colrev.record.RecordState.md_prepared]
+                    if x[Fields.STATUS] in [colrev.record.RecordState.md_prepared]
                 ]
             )
         return nr_recs_to_merge
@@ -230,9 +233,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 continue
 
             print("\n\n\n")
-            print(colors.ORANGE)
+            print(Colors.ORANGE)
             record.print_citation_format()
-            print(colors.END)
+            print(Colors.END)
 
             same_toc_recs = self.__print_same_toc_recs(
                 same_toc_recs=same_toc_recs, record=record
@@ -252,28 +255,28 @@ class CurationMissingDedupe(JsonSchemaMixin):
                     valid_selection = True
                 elif ret == "a":
                     results["add_records_to_md_processed_list"].append(
-                        record.data["ID"]
+                        record.data[Fields.ID]
                     )
                     valid_selection = True
                 elif ret == "p":
-                    results["records_to_prepare"].append(record.data["ID"])
+                    results["records_to_prepare"].append(record.data[Fields.ID])
                     valid_selection = True
                 elif ret.isdigit():
                     if int(ret) - 1 <= i:
                         rec2 = same_toc_recs[int(ret) - 1]
-                        if record.data["colrev_status"] < rec2["colrev_status"]:
+                        if record.data[Fields.STATUS] < rec2[Fields.STATUS]:
                             results["decision_list"].append(
                                 {
-                                    "ID1": rec2["ID"],
-                                    "ID2": record.data["ID"],
+                                    "ID1": rec2[Fields.ID],
+                                    "ID2": record.data[Fields.ID],
                                     "decision": "duplicate",
                                 }
                             )
                         else:
                             results["decision_list"].append(
                                 {
-                                    "ID1": record.data["ID"],
-                                    "ID2": rec2["ID"],
+                                    "ID1": record.data[Fields.ID],
+                                    "ID2": rec2[Fields.ID],
                                     "decision": "duplicate",
                                 }
                             )
@@ -345,7 +348,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             records = dedupe_operation.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in ret["add_records_to_md_processed_list"]:
-                    if record_dict["colrev_status"] in [
+                    if record_dict[Fields.STATUS] in [
                         colrev.record.RecordState.md_prepared,
                         colrev.record.RecordState.md_needs_manual_preparation,
                         colrev.record.RecordState.md_imported,
