@@ -5,6 +5,7 @@ from __future__ import annotations
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +13,7 @@ import colrev.qm.quality_model
 class RecordNotInTOCChecker:
     """The RecordNotInTOCChecker"""
 
-    msg = "record-not-in-toc"
+    msg = DefectCodes.RECORD_NOT_IN_TOC
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

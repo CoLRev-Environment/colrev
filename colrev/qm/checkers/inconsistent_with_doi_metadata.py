@@ -7,6 +7,7 @@ from thefuzz import fuzz
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -14,7 +15,7 @@ import colrev.qm.quality_model
 class InconsistentWithDOIMetadataChecker:
     """The InconsistentWithDOIMetadataChecker"""
 
-    msg = "inconsistent-with-doi-metadata"
+    msg = DefectCodes.INCONSISTENT_WITH_DOI_METADATA
     __fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:

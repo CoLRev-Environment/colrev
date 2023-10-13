@@ -22,6 +22,7 @@ from pybtex.database.input import bibtex
 from thefuzz import fuzz
 from tqdm import tqdm
 
+import colrev.constants as c
 import colrev.dataset
 import colrev.env.environment_manager
 import colrev.env.resources
@@ -30,7 +31,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.ui_cli.cli_colors as colors
-
 
 # import binascii
 
@@ -664,8 +664,8 @@ class LocalIndex:
         for key in list(record.data.keys()):
             if (
                 key
-                not in colrev.record.Record.identifying_field_keys
-                + colrev.record.Record.provenance_keys
+                not in c.FieldSet.IDENTIFYING_FIELD_KEYS
+                + c.FieldSet.PROVENANCE_KEYS
                 + [
                     "ID",
                     "ENTRYTYPE",

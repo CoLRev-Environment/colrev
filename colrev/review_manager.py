@@ -64,6 +64,7 @@ class ReviewManager:
 
     shell_mode = False
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -142,6 +143,7 @@ class ReviewManager:
             if debug_mode:
                 self.logger.debug(exc)
 
+    # pylint: disable=too-many-arguments
     def update_config(
         self,
         *,
@@ -311,6 +313,7 @@ class ReviewManager:
         if add_to_git:
             self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
+    # pylint: disable=too-many-arguments
     def create_commit(
         self,
         *,

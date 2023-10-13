@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +13,7 @@ import colrev.qm.quality_model
 class PubmedIDPatternChecker:
     """The PubmedIDPatternChecker"""
 
-    msg = "pubmedid-not-matching-pattern"
+    msg = DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN
 
     __PMID_REGEX = r"^\d{1,8}(\.\d)?$"
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -16,7 +17,7 @@ class NameFormatTitleChecker:
     titles = ["MD", "Dr", "PhD", "Prof", "Dipl Ing"]
     __words_rgx = re.compile(r"(\w[\w']*\w|\w)")
 
-    msg = "name-format-titles"
+    msg = DefectCodes.NAME_FORMAT_TITLES
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

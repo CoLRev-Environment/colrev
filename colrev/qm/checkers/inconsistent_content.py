@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -10,7 +11,7 @@ import colrev.qm.quality_model
 class InconsistentContentChecker:
     """The InconsistentContentChecker"""
 
-    msg = "inconsistent-content"
+    msg = DefectCodes.INCONSISTENT_CONTENT
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

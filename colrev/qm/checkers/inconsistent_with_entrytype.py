@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -25,7 +26,7 @@ class InconsistentWithEntrytypeChecker:
     }
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
-    msg = "inconsistent-with-entrytype"
+    msg = DefectCodes.INCONSISTENT_WITH_ENTRYTYPE
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

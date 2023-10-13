@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +13,7 @@ import colrev.qm.quality_model
 class ISBNPatternChecker:
     """The ISBNPatternChecker"""
 
-    msg = "isbn-not-matching-pattern"
+    msg = DefectCodes.ISBN_NOT_MATCHING_PATTERN
 
     __ISBN_REGEX = re.compile(
         "^(?:ISBN(?:-1[03])?:? )?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)|"

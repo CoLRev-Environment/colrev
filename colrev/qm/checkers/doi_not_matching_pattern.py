@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +13,7 @@ import colrev.qm.quality_model
 class DOIPatternChecker:
     """The DOIPatternChecker"""
 
-    msg = "doi-not-matching-pattern"
+    msg = DefectCodes.DOI_NOT_MATCHING_PATTERN
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     __DOI_REGEX = r"^10.\d{4,9}\/"
 

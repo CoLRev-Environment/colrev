@@ -28,6 +28,7 @@
 
    colrev.advisor
    colrev.checker
+   colrev.constants
    colrev.dataset
    colrev.env
    colrev.exceptions

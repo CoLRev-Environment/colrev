@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -11,7 +12,7 @@ import colrev.qm.quality_model
 class LanguageFormatChecker:
     """The LanguageFormatChecker"""
 
-    msg = "language-format-error"
+    msg = DefectCodes.LANGUAGE_FORMAT_ERROR
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

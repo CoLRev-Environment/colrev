@@ -327,7 +327,7 @@ class ExportManPrep(JsonSchemaMixin):
                 == colrev.record.RecordState.rev_prescreen_excluded
                 # or record_id not in man_prep_recs
             ):
-                records[record_id][  # pylint: disable=direct-status-assign
+                records[record_id][  # pylint: disable=colrev-direct-status-assign
                     "colrev_status"
                 ] = colrev.record.RecordState.rev_prescreen_excluded
                 self.review_manager.logger.info(

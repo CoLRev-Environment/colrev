@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import colrev.constants as c
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -260,7 +261,7 @@ class Repare(colrev.operation.Operation):
     def __set_provenance_field(
         self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
     ) -> None:
-        if key in colrev.record.Record.identifying_field_keys:
+        if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
             if "CURATED" in record.data["colrev_masterdata_provenance"]:
                 return
             self.__set_non_curated_masterdata_provenance_field(

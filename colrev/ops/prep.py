@@ -1250,6 +1250,7 @@ class Prep(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
+    # pylint: disable=too-many-arguments
     @colrev.operation.Operation.decorate()
     def main(
         self,

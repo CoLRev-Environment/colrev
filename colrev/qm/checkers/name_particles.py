@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +13,7 @@ class NameParticlesChecker:
 
     fields_to_check = ["author", "editor"]
 
-    msg = "name-particles"
+    msg = DefectCodes.NAME_PARTICLES
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

@@ -31,6 +31,7 @@ colrev.record.PrepRecord
       ~PrepRecord.create_colrev_id
       ~PrepRecord.extract_pages
       ~PrepRecord.extract_text_by_page
+      ~PrepRecord.fix_name_particles
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
       ~PrepRecord.format_if_mostly_upper
@@ -52,6 +53,7 @@ colrev.record.PrepRecord
       ~PrepRecord.has_quality_defects
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
+      ~PrepRecord.prefix_non_standardized_field_keys
       ~PrepRecord.preparation_break_condition
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
@@ -86,11 +88,6 @@ colrev.record.PrepRecord
    .. autosummary::
 
       ~PrepRecord.dict_fields_keys
-      ~PrepRecord.identifying_field_keys
       ~PrepRecord.list_fields_keys
       ~PrepRecord.pp
-      ~PrepRecord.preferred_sources
-      ~PrepRecord.provenance_keys
-      ~PrepRecord.standardized_field_keys
-      ~PrepRecord.time_variant_fields
       ~PrepRecord.data

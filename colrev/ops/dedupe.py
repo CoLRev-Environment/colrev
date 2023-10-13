@@ -108,7 +108,7 @@ class Dedupe(colrev.operation.Operation):
 
         records_df["year"] = records_df["year"].astype(str)
         if "colrev_status" in records_df:
-            # pylint: disable=direct-status-assign
+            # pylint: disable=colrev-direct-status-assign
             records_df["colrev_status"] = records_df["colrev_status"].astype(str)
 
         records_df["author"] = records_df["author"].str[:60]

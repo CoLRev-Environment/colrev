@@ -6,6 +6,7 @@ import itertools
 import string
 from pathlib import Path
 
+import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.load_utils_formatter
@@ -99,13 +100,13 @@ class Load(colrev.operation.Operation):
             colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
             for key in sorted(record.data.keys()):
-                if key in colrev.record.Record.identifying_field_keys:
+                if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
                     if key not in colrev_masterdata_provenance:
                         colrev_masterdata_provenance[key] = {
                             "source": record.data["colrev_origin"][0],
                             "note": "",
                         }
-                elif key not in colrev.record.Record.provenance_keys and key not in [
+                elif key not in c.FieldSet.PROVENANCE_KEYS and key not in [
                     "colrev_source_identifier",
                     "ID",
                     "ENTRYTYPE",
@@ -152,7 +153,7 @@ class Load(colrev.operation.Operation):
         record_list = []
         origin_prefix = source_settings.get_origin_prefix()
         for record in search_records.values():
-            for key in colrev.record.Record.provenance_keys + [
+            for key in c.FieldSet.PROVENANCE_KEYS + [
                 "screening_criteria",
             ]:
                 if key == "colrev_status":

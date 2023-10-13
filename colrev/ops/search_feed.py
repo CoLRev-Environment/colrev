@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
 import colrev.ui_cli.cli_colors as colors
+from colrev.constants import FieldSet
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -121,7 +122,7 @@ class GeneralOriginFeed:
         if self.update_only:
             # ignore time_variant_fields
             # (otherwise, fields in recent records would be more up-to-date)
-            for key in colrev.record.Record.time_variant_fields:
+            for key in FieldSet.TIME_VARIANT_FIELDS:
                 if feed_record_dict["ID"] in self.feed_records:
                     if key in self.feed_records[feed_record_dict["ID"]]:
                         feed_record_dict[key] = self.feed_records[
@@ -201,7 +202,7 @@ class GeneralOriginFeed:
         # Note : record_a can have more keys (that's ok)
         changed = False
         for key, value in record_b.items():
-            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
+            if key in FieldSet.PROVENANCE_KEYS + ["ID", "curation_ID"]:
                 continue
             if key not in record_a:
                 return True
@@ -243,6 +244,7 @@ class GeneralOriginFeed:
             main_record_dict["year"] = record.data["year"]
             record = colrev.record.PrepRecord(data=main_record_dict)
 
+    # pylint: disable=too-many-arguments
     def __update_existing_record_fields(
         self,
         *,
@@ -254,16 +256,13 @@ class GeneralOriginFeed:
         source: colrev.settings.SearchSource,
     ) -> None:
         for key, value in record_dict.items():
-            if (
-                not update_time_variant_fields
-                and key in colrev.record.Record.time_variant_fields
-            ):
+            if not update_time_variant_fields and key in FieldSet.TIME_VARIANT_FIELDS:
                 continue
 
             if key in ["curation_ID"]:
                 continue
 
-            if key in colrev.record.Record.provenance_keys + ["ID"]:
+            if key in FieldSet.PROVENANCE_KEYS + ["ID"]:
                 continue
 
             if key not in main_record_dict:
@@ -320,6 +319,7 @@ class GeneralOriginFeed:
             return True
         return False
 
+    # pylint: disable=too-many-arguments
     def update_existing_record(
         self,
         *,

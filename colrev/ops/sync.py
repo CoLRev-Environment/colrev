@@ -8,6 +8,7 @@ from pathlib import Path
 import pybtex.errors
 from pybtex.database.input import bibtex
 
+import colrev.constants as c
 import colrev.dataset
 import colrev.env.local_index
 import colrev.record
@@ -286,7 +287,7 @@ class Sync:
                     data={
                         k: v
                         for k, v in record_to_import.data.items()
-                        if k not in colrev.record.Record.provenance_keys
+                        if k not in c.FieldSet.PROVENANCE_KEYS
                     }
                 )
                 records.append(record_to_import.get_data())

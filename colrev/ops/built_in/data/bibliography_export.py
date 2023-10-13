@@ -14,6 +14,7 @@ import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.constants as c
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -224,7 +225,7 @@ class BibliographyExport(JsonSchemaMixin):
         selected_records = copy.deepcopy(selected_records_original)
         for record in selected_records.values():
             for key_candidate in list(record.keys()):
-                if key_candidate not in colrev.record.Record.identifying_field_keys + [
+                if key_candidate not in c.FieldSet.IDENTIFYING_FIELD_KEYS + [
                     "ENTRYTYPE",
                     "ID",
                     "file",

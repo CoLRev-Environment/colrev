@@ -5,6 +5,7 @@ from __future__ import annotations
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -36,7 +37,7 @@ class MissingFieldChecker:
 
     # book, inbook: author <- editor
 
-    msg = "missing"
+    msg = DefectCodes.MISSING
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -95,7 +96,7 @@ class MissingFieldChecker:
             )
         ):
             if "author" in record.data["colrev_masterdata_provenance"] and any(
-                x == "missing"
+                x == DefectCodes.MISSING
                 for x in record.data["colrev_masterdata_provenance"]["author"][
                     "note"
                 ].split(",")
@@ -106,7 +107,7 @@ class MissingFieldChecker:
 
     def __has_missing_fields(self, *, record: colrev.record.Record) -> bool:
         if any(
-            "missing" in x["note"].split(",")
+            DefectCodes.MISSING in x["note"].split(",")
             for x in record.data["colrev_masterdata_provenance"].values()
         ):
             return True
@@ -121,14 +122,22 @@ class MissingFieldChecker:
         if "year" in record.data["colrev_masterdata_provenance"]:
             source = record.data["colrev_masterdata_provenance"]["year"]["source"]
         if record.data.get("volume", "") in ["", "UNKNOWN"]:
-            record.remove_masterdata_provenance_note(key="volume", note="missing")
-            record.remove_masterdata_provenance_note(key="volume", note="not-missing")
+            record.remove_masterdata_provenance_note(
+                key="volume", note=DefectCodes.MISSING
+            )
+            record.remove_masterdata_provenance_note(
+                key="volume", note=DefectCodes.NOT_MISSING
+            )
             record.add_masterdata_provenance(
                 key="volume", source=source, note="forthcoming"
             )
         if record.data.get("number", "") in ["", "UNKNOWN"]:
-            record.remove_masterdata_provenance_note(key="number", note="missing")
-            record.remove_masterdata_provenance_note(key="number", note="not-missing")
+            record.remove_masterdata_provenance_note(
+                key="number", note=DefectCodes.MISSING
+            )
+            record.remove_masterdata_provenance_note(
+                key="number", note=DefectCodes.NOT_MISSING
+            )
             record.add_masterdata_provenance(
                 key="number", source=source, note="forthcoming"
             )
@@ -155,7 +164,7 @@ class MissingFieldChecker:
             not_missing_note = False
             if required_fields_key in record.data["colrev_masterdata_provenance"]:
                 if (
-                    "not-missing"
+                    DefectCodes.NOT_MISSING
                     in record.data["colrev_masterdata_provenance"][required_fields_key][
                         "note"
                     ]

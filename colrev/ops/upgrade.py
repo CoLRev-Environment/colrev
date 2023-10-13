@@ -382,7 +382,7 @@ class Upgrade(colrev.operation.Operation):
             prior_state = record.data["colrev_status"]
             record.update_masterdata_provenance(qm=quality_model)
             if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
-                record.data[  # pylint: disable=direct-status-assign
+                record.data[  # pylint: disable=colrev-direct-status-assign
                     "colrev_status"
                 ] = colrev.record.RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)

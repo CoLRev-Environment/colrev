@@ -29,6 +29,7 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.abi_inform_proquest
    colrev.ops.built_in.search_sources.acm_digital_library
    colrev.ops.built_in.search_sources.aisel
+   colrev.ops.built_in.search_sources.arxiv
    colrev.ops.built_in.search_sources.colrev_project
    colrev.ops.built_in.search_sources.crossref
    colrev.ops.built_in.search_sources.dblp

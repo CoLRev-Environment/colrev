@@ -6,6 +6,7 @@ from thefuzz import fuzz
 
 import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -13,7 +14,7 @@ import colrev.qm.quality_model
 class InconsistentWithURLMetadataChecker:
     """The InconsistentWithURLMetadataChecker"""
 
-    msg = "inconsistent-with-url-metadata"
+    msg = DefectCodes.INCONSISTENT_WITH_URL_METADATA
     __fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:

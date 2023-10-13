@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
 
 # pylint: disable=too-few-public-methods
 
@@ -10,7 +11,7 @@ import colrev.qm.quality_model
 class IdenticalValuesChecker:
     """The IdenticalValuesChecker"""
 
-    msg = "identical-values-between-title-and-container"
+    msg = DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

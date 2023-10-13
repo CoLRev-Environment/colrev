@@ -9,6 +9,7 @@ from nameparser import HumanName
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record  # pylint: disable=cyclic-import
+from colrev.constants import FieldSet
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -105,7 +106,7 @@ def __check_colrev_id_preconditions(
         )
     # Make sure that colrev_ids are not generated when
     # identifying_field_keys are UNKNOWN but possibly required
-    for identifying_field_key in colrev.record.Record.identifying_field_keys:
+    for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
         if record.data.get(identifying_field_key, "") == "UNKNOWN":
             raise colrev_exceptions.NotEnoughDataToIdentifyException(
                 msg=f"{identifying_field_key} unknown (maybe required)",
