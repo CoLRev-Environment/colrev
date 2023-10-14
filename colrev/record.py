@@ -219,7 +219,7 @@ class Record:
 
     def masterdata_is_curated(self) -> bool:
         """Check whether the record masterdata is curated"""
-        return "CURATED" in self.data.get(Fields.MD_PROV, {})
+        return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
 
     def set_status(self, *, target_state: RecordState, force: bool = False) -> None:
         """Set the record status"""
@@ -280,6 +280,7 @@ class Record:
                 return True
         return False
 
+    # pylint: disable=too-many-arguments
     def update_field(
         self,
         *,
@@ -538,7 +539,6 @@ class Record:
 
         return val
 
-    # TODO : move to DedupeRecord?
     def __prevent_invalid_merges(self, *, merging_record: Record) -> None:
         """Prevents invalid merges like ... part 1 / ... part 2"""
 
@@ -641,7 +641,6 @@ class Record:
                         key=key,
                         val=str(val),
                         source=source,
-                        note=note,
                     )
 
             # Part 2: other fields
@@ -774,7 +773,6 @@ class Record:
         key: str,
         val: str,
         source: str,
-        note: str,  # pylint: disable=unused-argument
     ) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
@@ -948,7 +946,8 @@ class Record:
                 #     if record_a[Fields.PAGES] == record_b[Fields.PAGES]:
                 #         pages_similarity = 1
                 #     else:
-                #         if record_a[Fields.PAGES].split("-")[0] == record_b[Fields.PAGES].split("-")[0]:
+                #         if record_a[Fields.PAGES].split("-")[0] ==
+                #               record_b[Fields.PAGES].split("-")[0]:
                 #             pages_similarity = 1
                 #         else:
                 #            pages_similarity = 0
@@ -1130,7 +1129,7 @@ class Record:
                 continue
             if (
                 key in FieldSet.IDENTIFYING_FIELD_KEYS
-                and "CURATED" not in self.data[Fields.MD_PROV]
+                and FieldValues.CURATED not in self.data[Fields.MD_PROV]
             ):
                 md_p_dict[key] = {"source": source, "note": ""}
             else:
@@ -1244,8 +1243,8 @@ class Record:
         self.set_status(target_state=RecordState.rev_prescreen_excluded)
 
         if (
-            "retracted" not in self.data.get(Fields.PRESCREEN_EXCLUSION, "")
-            and "retracted" == reason
+            FieldValues.RETRACTED not in self.data.get(Fields.PRESCREEN_EXCLUSION, "")
+            and FieldValues.RETRACTED == reason
             and print_warning
         ):
             print(
@@ -1502,11 +1501,11 @@ class Record:
         """Check for potential retracts"""
         # Note : we retrieved metadata in get_masterdata_from_crossref()
         if self.data.get("crossmark", "") == "True":
-            self.prescreen_exclude(reason="retracted", print_warning=True)
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="crossmark")
             return True
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
-            self.prescreen_exclude(reason="retracted", print_warning=True)
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="warning")
             return True
         return False
@@ -1978,7 +1977,6 @@ class RecordState(Enum):
 
     # pylint: disable=invalid-name
 
-    # TODO : how to integrate with constants?
     # without the md_retrieved state, we could not display the load transition
     md_retrieved = 1
     """Record is retrieved and stored in the ./search directory"""

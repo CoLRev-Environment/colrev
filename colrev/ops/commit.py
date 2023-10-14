@@ -30,6 +30,7 @@ class Commit:
 
     __temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,

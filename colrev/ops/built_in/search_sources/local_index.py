@@ -23,6 +23,7 @@ import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -51,18 +52,17 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     __local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [
-        "title",
-        "author",
-        "journal",
-        "year",
-        "booktitle",
-        "number",
-        "volume",
-        "issue",
-        "author",
-        "doi",
-        "colrev.dblp.dblp_key",
-        "url",
+        Fields.TITLE,
+        Fields.AUTHOR,
+        Fields.JOURNAL,
+        Fields.YEAR,
+        Fields.BOOKTITLE,
+        Fields.NUMBER,
+        Fields.VOLUME,
+        Fields.AUTHOR,
+        Fields.DOI,
+        Fields.DBLP_KEY,
+        Fields.URL,
     ]
 
     def __init__(
@@ -139,7 +139,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         params = self.search_source.search_parameters
         query = params["query"]
 
-        if not any(x in query for x in ["title", "abstract"]):
+        if not any(x in query for x in [Fields.TITLE, Fields.ABSTRACT]):
             query = f'title LIKE "%{query}%"'
 
         returned_records = self.local_index.search(query=query)
@@ -147,9 +147,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         records_to_import = [r.get_data() for r in returned_records]
         records_to_import = [r for r in records_to_import if r]
         keys_to_drop = [
-            "colrev_status",
-            "colrev_origin",
-            "screening_criteria",
+            Fields.STATUS,
+            Fields.ORIGIN,
+            Fields.SCREENING_CRITERIA,
         ]
         for record_dict in records_to_import:
             record_dict = {
@@ -184,9 +184,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 continue
 
             prev_record_dict_version = {}
-            if retrieved_record_dict["ID"] in local_index_feed.feed_records:
+            if retrieved_record_dict[Fields.ID] in local_index_feed.feed_records:
                 prev_record_dict_version = local_index_feed.feed_records[
-                    retrieved_record_dict["ID"]
+                    retrieved_record_dict[Fields.ID]
                 ]
 
             local_index_feed.add_record(
@@ -220,9 +220,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 continue
 
             prev_record_dict_version = {}
-            if retrieved_record_dict["ID"] in local_index_feed.feed_records:
+            if retrieved_record_dict[Fields.ID] in local_index_feed.feed_records:
                 prev_record_dict_version = local_index_feed.feed_records[
-                    retrieved_record_dict["ID"]
+                    retrieved_record_dict[Fields.ID]
                 ]
 
             added = local_index_feed.add_record(
@@ -230,7 +230,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             )
             if added:
                 self.review_manager.logger.info(
-                    " retrieve " + retrieved_record_dict["ID"]
+                    " retrieve " + retrieved_record_dict[Fields.ID]
                 )
 
             else:
@@ -317,7 +317,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
-                    if k not in ["colrev_status", "colrev_masterdata_provenance"]
+                    if k not in [Fields.STATUS, Fields.MD_PROV]
                 }
 
             return records
@@ -333,8 +333,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     def __add_cpid(self, *, record: colrev.record.Record) -> bool:
         # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
-        if "file" in record.data and "colrev_pdf_id" not in record.data:
-            pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
+        if Fields.FILE in record.data and "colrev_pdf_id" not in record.data:
+            pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))
             if pdf_path.is_file():
                 try:
                     record.data.update(
@@ -395,8 +395,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if added_colrev_pdf_id:
                 del record.data["colrev_pdf_id"]
 
-        if "colrev_status" in retrieved_record_dict:
-            del retrieved_record_dict["colrev_status"]
+        if Fields.STATUS in retrieved_record_dict:
+            del retrieved_record_dict[Fields.STATUS]
 
         return colrev.record.PrepRecord(data=retrieved_record_dict)
 
@@ -428,14 +428,23 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 default_source=default_source,
             )
             # If volume/number are no longer in the CURATED record
-            if "number" in record.data and "number" not in retrieved_record.data:
-                del record.data["number"]
-            if "volume" in record.data and "volume" not in retrieved_record.data:
-                del record.data["volume"]
+            if (
+                Fields.NUMBER in record.data
+                and Fields.NUMBER not in retrieved_record.data
+            ):
+                del record.data[Fields.NUMBER]
+            if (
+                Fields.VOLUME in record.data
+                and Fields.VOLUME not in retrieved_record.data
+            ):
+                del record.data[Fields.VOLUME]
 
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            if record.data.get("prescreen_exclusion", "NA") == "retracted":
-                record.prescreen_exclude(reason="retracted")
+            if (
+                record.data.get(Fields.PRESCREEN_EXCLUSION, "NA")
+                == FieldValues.RETRACTED
+            ):
+                record.prescreen_exclude(reason=FieldValues.RETRACTED)
 
             git_repo = self.review_manager.dataset.get_repo()
             cur_project_source_paths = [str(self.review_manager.path)]
@@ -479,16 +488,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
-        if "CURATED" not in retrieved_record.data.get(
-            "colrev_masterdata_provenance", ""
-        ):
+        if FieldValues.CURATED not in retrieved_record.data.get(Fields.MD_PROV, ""):
             return record
 
         default_source = "LOCAL_INDEX"
-        if "colrev_masterdata_provenance" in retrieved_record.data:
-            if "CURATED" in retrieved_record.data["colrev_masterdata_provenance"]:
-                default_source = retrieved_record.data["colrev_masterdata_provenance"][
-                    "CURATED"
+        if Fields.MD_PROV in retrieved_record.data:
+            if FieldValues.CURATED in retrieved_record.data[Fields.MD_PROV]:
+                default_source = retrieved_record.data[Fields.MD_PROV][
+                    FieldValues.CURATED
                 ]["source"]
 
         self.__store_retrieved_record_in_feed(
@@ -503,11 +510,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def __get_local_base_repos(self, *, change_itemsets: list) -> dict:
         base_repos = []
         for item in change_itemsets:
-            if "CURATED" in item["original_record"].get(
-                "colrev_masterdata_provenance", {}
-            ):
-                repo_path = item["original_record"]["colrev_masterdata_provenance"][
-                    "CURATED"
+            if FieldValues.CURATED in item["original_record"].get(Fields.MD_PROV, {}):
+                repo_path = item["original_record"][Fields.MD_PROV][
+                    FieldValues.CURATED
                 ]["source"]
                 assert "#" not in repo_path
                 # otherwise: strip the ID at the end if we add an ID...
@@ -541,11 +546,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info(f"Base repository: {local_base_repo}")
         for item in change_itemsets:
             repo_path = "NA"
-            if "CURATED" in item["original_record"].get(
-                "colrev_masterdata_provenance", {}
-            ):
-                repo_path = item["original_record"]["colrev_masterdata_provenance"][
-                    "CURATED"
+            if FieldValues.CURATED in item["original_record"].get(Fields.MD_PROV, {}):
+                repo_path = item["original_record"][Fields.MD_PROV][
+                    FieldValues.CURATED
                 ]["source"]
                 assert "#" not in repo_path
                 # otherwise: strip the ID at the end if we add an ID...
@@ -612,7 +615,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             elif response == "n":
                 if input("Discard all corrections (y/n)?") == "y":
                     for selected_change in selected_changes:
-                        Path(selected_change["file"]).unlink()
+                        Path(selected_change[Fields.FILE]).unlink()
 
     def __apply_corrections_precondition(
         self, *, check_operation: colrev.operation.Operation, source_url: str
@@ -675,7 +678,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         try:
             md_curated_origin_id = [
-                x for x in original_record["colrev_origin"] if "md_curated.bib/" in x
+                x for x in original_record[Fields.ORIGIN] if "md_curated.bib/" in x
             ][0].replace("md_curated.bib/", "")
             curation_origin_record = local_index_feed.feed_records[md_curated_origin_id]
             curation_id = curation_origin_record["curation_ID"]
@@ -694,7 +697,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             matching_doi_rec_l = [
                 r
                 for r in records.values()
-                if original_record.get("doi", "NDOI") == r.get("doi", "NA")
+                if original_record.get(Fields.DOI, "NDOI") == r.get(Fields.DOI, "NA")
             ]
             if len(matching_doi_rec_l) == 1:
                 record_dict = matching_doi_rec_l[0]
@@ -703,21 +706,21 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             matching_url_rec_l = [
                 r
                 for r in records.values()
-                if original_record.get("url", "NURL") == r.get("url", "NA")
+                if original_record.get(Fields.URL, "NURL") == r.get(Fields.URL, "NA")
             ]
             if len(matching_url_rec_l) == 1:
                 record_dict = matching_url_rec_l[0]
                 return record_dict
 
         self.review_manager.logger.error(
-            f'{Colors.RED}Record not found: {original_record["ID"]}{Colors.END}'
+            f"{Colors.RED}Record not found: {original_record[Fields.ID]}{Colors.END}"
         )
         raise colrev_exceptions.RecordNotInIndexException()
 
     def __create_correction_branch(
         self, *, git_repo: git.Repo, record_dict: dict
     ) -> str:
-        record_branch_name = record_dict["ID"]
+        record_branch_name = record_dict[Fields.ID]
         counter = 1
         new_record_branch_name = record_branch_name
         while new_record_branch_name in [ref.name for ref in git_repo.references]:
@@ -739,7 +742,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         for edit_type, key, change in list(change_item["changes"]):
             # Note : by retricting changes to self.essential_md_keys,
             # we also prevent changes in
-            # "colrev_status", "colrev_origin", "file"
+            # Fields.STATUS, Fields.ORIGIN, Fields.FILE
 
             # Note: the most important thing is to update the metadata.
 
@@ -797,8 +800,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         for key in keys_added:
             del record_dict[key]
 
-        if Path(change_item["file"]).is_file():
-            Path(change_item["file"]).unlink()
+        if Path(change_item[Fields.FILE]).is_file():
+            Path(change_item[Fields.FILE]).unlink()
 
     def __apply_change_item_correction(
         self,

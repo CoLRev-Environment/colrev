@@ -526,7 +526,6 @@ def search(
             search_operation=search_operation
         )
         cli_source_adder.add_new_sources()
-        # TODO : pass recently_added DB searches to search.main (to skip updates)
 
     if view:
         for source in search_operation.sources:
@@ -2825,6 +2824,7 @@ def show(  # type: ignore
                     time.gmtime(commit.committed_date),
                 )
                 if not all(x in cmsg for x in ["Command", "Status"]):
+                    # pylint: disable=colrev-missed-constant-usage
                     cmsg = "UNKNOWN"
                 # min(cmsg.find("Status"), cmsg.find("On commit"))
                 if "On commit" in cmsg:
@@ -2838,6 +2838,7 @@ def show(  # type: ignore
                     .replace("\n", " ")
                 )
                 if len(commit_message_first_line) > 800:
+                    # pylint: disable=colrev-missed-constant-usage
                     cmsg = "UNKNOWN"
                 cmds.append(
                     {

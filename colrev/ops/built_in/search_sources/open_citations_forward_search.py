@@ -17,6 +17,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -66,7 +67,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             filename=Path("data/search/forward_search.bib"),
             search_type=colrev.settings.SearchType.FORWARD_SEARCH,
             search_parameters={
-                "scope": {"colrev_status": "rev_included|rev_synthesized"}
+                "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
             },
             comment="",
         )
@@ -86,7 +87,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             )
 
         if (
-            source.search_parameters["scope"]["colrev_status"]
+            source.search_parameters["scope"][Fields.STATUS]
             != "rev_included|rev_synthesized"
         ):
             raise colrev_exceptions.InvalidQueryException(
@@ -96,15 +97,15 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def __fw_search_condition(self, *, record: dict) -> bool:
-        if "doi" not in record:
+        if Fields.DOI not in record:
             return False
 
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
         if (
-            "colrev_status" in self.search_source.search_parameters["scope"]
-            and self.search_source.search_parameters["scope"]["colrev_status"]
+            Fields.STATUS in self.search_source.search_parameters["scope"]
+            and self.search_source.search_parameters["scope"][Fields.STATUS]
             == "rev_included|rev_synthesized"
-            and record["colrev_status"]
+            and record[Fields.STATUS]
             not in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -131,7 +132,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 )
                 # if not crossref_query_return:
                 #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
-                retrieved_record.data["ID"] = retrieved_record.data["doi"]
+                retrieved_record.data[Fields.ID] = retrieved_record.data[Fields.DOI]
                 forward_citations.append(retrieved_record.data)
         except json.decoder.JSONDecodeError:
             self.review_manager.logger.info(
@@ -163,15 +164,17 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             if not self.__fw_search_condition(record=record):
                 continue
 
-            self.review_manager.logger.info(f'Run forward search for {record["ID"]}')
+            self.review_manager.logger.info(
+                f"Run forward search for {record[Fields.ID]}"
+            )
 
             new_records = self.__get_forward_search_records(record_dict=record)
 
             for new_record in new_records:
                 new_record["fwsearch_ref"] = (
-                    record["ID"] + "_forward_search_" + new_record["ID"]
+                    record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
                 )
-                new_record["cites_IDs"] = record["ID"]
+                new_record["cites_IDs"] = record[Fields.ID]
 
                 try:
                     forward_search_feed.set_id(record_dict=new_record)
@@ -179,9 +182,9 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                     continue
 
                 prev_record_dict_version = {}
-                if new_record["ID"] in forward_search_feed.feed_records:
+                if new_record[Fields.ID] in forward_search_feed.feed_records:
                     prev_record_dict_version = forward_search_feed.feed_records[
-                        new_record["ID"]
+                        new_record[Fields.ID]
                     ]
 
                 added = forward_search_feed.add_record(

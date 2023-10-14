@@ -154,11 +154,9 @@ class PDFPrep(colrev.operation.Operation):
                     pdf_prep_package_endpoint["endpoint"]  # type: ignore
                 ]
 
+                msg = f"{endpoint.settings.endpoint}({record.data[Fields.ID]}):"
                 self.review_manager.logger.debug(
-                    f"{endpoint.settings.endpoint}({record.data[Fields.ID]}):".ljust(  # type: ignore
-                        50, " "
-                    )
-                    + "called"
+                    msg.ljust(50, " ") + "called"  # type: ignore
                 )
 
                 record.data = endpoint.prep_pdf(self, record, pad)  # type: ignore

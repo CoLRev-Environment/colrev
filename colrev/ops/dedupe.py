@@ -249,9 +249,9 @@ class Dedupe(colrev.operation.Operation):
         for record_dict in records_queue:
             try:
                 record = colrev.record.Record(data=record_dict)
-                record_dict["colrev_id"] = record.create_colrev_id()
+                record_dict[Fields.COLREV_ID] = record.create_colrev_id()
             except colrev_exceptions.NotEnoughDataToIdentifyException:
-                record_dict["colrev_id"] = "NA"
+                record_dict[Fields.COLREV_ID] = "NA"
 
         records_df = pd.DataFrame.from_records(records_queue)
         records = self.prep_records(records_df=records_df)
@@ -435,6 +435,7 @@ class Dedupe(colrev.operation.Operation):
 
         return gid_conflict
 
+    # pylint: disable=too-many-arguments
     def __print_merge_stats(
         self,
         *,
@@ -859,15 +860,15 @@ class Dedupe(colrev.operation.Operation):
 
         global_keys = [
             Fields.DOI,
-            "colrev_id",
+            Fields.COLREV_ID,
             Fields.PUBMED_ID,
             Fields.DBLP_KEY,
             Fields.URL,
         ]
-        if "colrev_id" in global_keys:
+        if Fields.COLREV_ID in global_keys:
             for record in records.values():
                 try:
-                    record["colrev_id"] = colrev.record.Record(
+                    record[Fields.COLREV_ID] = colrev.record.Record(
                         data=record
                     ).create_colrev_id()
                 except colrev_exceptions.NotEnoughDataToIdentifyException:

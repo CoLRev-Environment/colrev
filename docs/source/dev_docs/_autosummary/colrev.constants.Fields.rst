@@ -26,6 +26,7 @@ colrev.constants.Fields
    .. autosummary::
 
       ~Fields.ABSTRACT
+      ~Fields.ADDRESS
       ~Fields.AUTHOR
       ~Fields.BOOKTITLE
       ~Fields.CHAPTER
@@ -34,8 +35,10 @@ colrev.constants.Fields
       ~Fields.DBLP_KEY
       ~Fields.DOI
       ~Fields.D_PROV
+      ~Fields.EDITION
       ~Fields.EDITOR
       ~Fields.ENTRYTYPE
+      ~Fields.EUROPE_PMC_ID
       ~Fields.FILE
       ~Fields.FULLTEXT
       ~Fields.GROBID_VERSION
@@ -54,8 +57,11 @@ colrev.constants.Fields
       ~Fields.ORIGIN
       ~Fields.PAGES
       ~Fields.PDF_ID
+      ~Fields.PMCID
       ~Fields.PRESCREEN_EXCLUSION
       ~Fields.PUBLISHER
+      ~Fields.PUBMED_ID
+      ~Fields.SCHOOL
       ~Fields.SCREENING_CRITERIA
       ~Fields.SEMANTIC_SCHOLAR_ID
       ~Fields.SERIES

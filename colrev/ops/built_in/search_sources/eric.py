@@ -18,6 +18,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_nbib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -31,6 +32,7 @@ class ERICSearchSource(JsonSchemaMixin):
     """ERIC API"""
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.eric"
@@ -148,6 +150,7 @@ class ERICSearchSource(JsonSchemaMixin):
             add_source = operation.add_db_source(search_source_cls=cls, params=params)
             return add_source
 
+        # pylint: disable=colrev-missed-constant-usage
         if "https://api.ies.ed.gov/eric/?" in params["url"]:
             url_parsed = urllib.parse.urlparse(params["url"])
             new_query = urllib.parse.parse_qs(url_parsed.query)
@@ -199,7 +202,7 @@ class ERICSearchSource(JsonSchemaMixin):
             added = eric_feed.add_record(record=record)
 
             if added:
-                self.review_manager.logger.info(" retrieve " + record.data["ID"])
+                self.review_manager.logger.info(" retrieve " + record.data[Fields.ID])
             else:
                 eric_feed.update_existing_record(
                     records=records,
@@ -238,12 +241,12 @@ class ERICSearchSource(JsonSchemaMixin):
 
     def __create_record(self, doc: dict) -> colrev.record.Record:
         # pylint: disable=too-many-branches
-        record_dict = {"ID": doc["id"]}
-        record_dict["ENTRYTYPE"] = "other"
+        record_dict = {Fields.ID: doc["id"]}
+        record_dict[Fields.ENTRYTYPE] = "other"
         if "Journal Articles" in doc["publicationtype"]:
-            record_dict["ENTRYTYPE"] = "article"
+            record_dict[Fields.ENTRYTYPE] = "article"
         elif "Books" in doc["publicationtype"]:
-            record_dict["ENTRYTYPE"] = "book"
+            record_dict[Fields.ENTRYTYPE] = "book"
 
         for field in self.API_FIELDS:
             field_value = doc.get(field)
@@ -256,28 +259,32 @@ class ERICSearchSource(JsonSchemaMixin):
             record_dict[rec_field] = record_dict.pop(api_field)
 
         if "source" in doc:
-            record_dict["journal"] = doc.pop("source")
+            record_dict[Fields.JOURNAL] = doc.pop("source")
 
         if "subject" in record_dict:
             record_dict["subject"] = ", ".join(record_dict["subject"])
 
-        if "author" in record_dict:
-            record_dict["author"] = " and ".join(record_dict["author"])
-        if "issn" in record_dict:
-            record_dict["issn"] = record_dict["issn"][0].lstrip("EISSN-")
-        if "isbn" in record_dict:
-            record_dict["isbn"] = record_dict["isbn"][0].lstrip("ISBN-")
+        if Fields.AUTHOR in record_dict:
+            # pylint: disable=colrev-missed-constant-usage
+            record_dict[Fields.AUTHOR] = " and ".join(record_dict["author"])
+        if Fields.ISSN in record_dict:
+            # pylint: disable=colrev-missed-constant-usage
+            record_dict[Fields.ISSN] = record_dict["issn"][0].lstrip("EISSN-")
+        if Fields.ISBN in record_dict:
+            # pylint: disable=colrev-missed-constant-usage
+            record_dict[Fields.ISBN] = record_dict["isbn"][0].lstrip("ISBN-")
 
-        if "year" in record_dict:
-            record_dict["year"] = str(record_dict["year"])
+        if Fields.YEAR in record_dict:
+            # pylint: disable=colrev-missed-constant-usage
+            record_dict[Fields.YEAR] = str(record_dict["year"])
 
         record = colrev.record.Record(data=record_dict)
-        if "language" in record.data:
+        if Fields.LANGUAGE in record.data:
             try:
-                record.data["language"] = record.data["language"][0]
+                record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]
                 self.language_service.unify_to_iso_639_3_language_codes(record=record)
             except colrev_exceptions.InvalidLanguageCodeException:
-                del record.data["language"]
+                del record.data[Fields.LANGUAGE]
         return record
 
     def get_masterdata(
@@ -316,7 +323,7 @@ class ERICSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for ERIC"""
 
-        if "issn" in record.data:
-            record.data["issn"] = record.data["issn"].lstrip("ISSN-")
+        if Fields.ISSN in record.data:
+            record.data[Fields.ISSN] = record.data[Fields.ISSN].lstrip("ISSN-")
 
         return record

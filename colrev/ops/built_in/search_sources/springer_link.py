@@ -15,6 +15,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -32,6 +33,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.springer_link"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [colrev.settings.SearchType.DB]
 
@@ -121,7 +123,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         for record_dict in records.values():
             if "item_title" in record_dict:
-                record_dict["title"] = record_dict["item_title"]
+                record_dict[Fields.TITLE] = record_dict["item_title"]
                 del record_dict["item_title"]
 
             if record_dict.get("book_series_title", "") == "nan":
@@ -131,7 +133,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 record = colrev.record.Record(data=record_dict)
                 if record_dict["content_type"] == "Article":
                     if "publication_title" in record_dict:
-                        record_dict["journal"] = record_dict["publication_title"]
+                        record_dict[Fields.JOURNAL] = record_dict["publication_title"]
                         del record_dict["publication_title"]
                     record.change_entrytype(
                         new_entrytype="article", qm=self.quality_model
@@ -139,14 +141,14 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
                 if record_dict["content_type"] == "Book":
                     if "publication_title" in record_dict:
-                        record_dict["series"] = record_dict["publication_title"]
+                        record_dict[Fields.SERIES] = record_dict["publication_title"]
                         del record_dict["publication_title"]
                     record.change_entrytype(new_entrytype="book", qm=self.quality_model)
 
                 if record_dict["content_type"] == "Chapter":
-                    record_dict["chapter"] = record_dict["title"]
+                    record_dict[Fields.CHAPTER] = record_dict[Fields.TITLE]
                     if "publication_title" in record_dict:
-                        record_dict["title"] = record_dict["publication_title"]
+                        record_dict[Fields.TITLE] = record_dict["publication_title"]
                         del record_dict["publication_title"]
                     record.change_entrytype(
                         new_entrytype="inbook", qm=self.quality_model
@@ -155,19 +157,20 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 del record_dict["content_type"]
 
             if "item_doi" in record_dict:
-                record_dict["doi"] = record_dict["item_doi"]
+                record_dict[Fields.DOI] = record_dict["item_doi"]
                 del record_dict["item_doi"]
             if "journal_volume" in record_dict:
-                record_dict["volume"] = record_dict["journal_volume"]
+                record_dict[Fields.VOLUME] = record_dict["journal_volume"]
                 del record_dict["journal_volume"]
             if "journal_issue" in record_dict:
-                record_dict["number"] = record_dict["journal_issue"]
+                record_dict[Fields.NUMBER] = record_dict["journal_issue"]
                 del record_dict["journal_issue"]
 
             # Fix authors
-            if "author" in record_dict:
+            # pylint: disable=colrev-missed-constant-usage
+            if Fields.AUTHOR in record_dict:
                 # a-bd-z: do not match McDonald
-                record_dict["author"] = re.sub(
+                record_dict[Fields.AUTHOR] = re.sub(
                     r"([a-bd-z]{1})([A-Z]{1})",
                     r"\g<1> and \g<2>",
                     record_dict["author"],

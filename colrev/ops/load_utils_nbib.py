@@ -6,6 +6,7 @@ import re
 import typing
 from typing import TYPE_CHECKING
 
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
@@ -152,9 +153,9 @@ class NBIBLoader:
                 entry[list_field] = delimiter.join(entry[list_field])
 
             if "journal article" in entry["type"].lower():
-                entry[Fields.ENTRYTYPE] = "article"
+                entry[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
             else:
-                entry[Fields.ENTRYTYPE] = "misc"
+                entry[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
             entry[Fields.ID] = _id
 

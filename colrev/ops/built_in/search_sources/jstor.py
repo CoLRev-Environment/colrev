@@ -13,7 +13,6 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
-from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -28,6 +27,7 @@ class JSTORSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.jstor"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [colrev.settings.SearchType.DB]
 

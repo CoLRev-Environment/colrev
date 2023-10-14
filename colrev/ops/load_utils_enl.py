@@ -22,6 +22,7 @@ import re
 import typing
 from typing import TYPE_CHECKING
 
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
@@ -153,10 +154,10 @@ class ENLLoader:
         for counter, entry in enumerate(entries.values()):
             if "type" in entry:
                 if "Journal Article" == entry["type"]:
-                    entry[Fields.ENTRYTYPE] = "article"
+                    entry[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
                 del entry["type"]
             else:
-                entry[Fields.ENTRYTYPE] = "misc"
+                entry[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
             for list_tag, delimiter in self.list_tags.items():
                 list_field = self.mapping[list_tag]

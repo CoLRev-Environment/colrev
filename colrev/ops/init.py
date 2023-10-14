@@ -34,6 +34,7 @@ class Initializer:
 
     share_stat_req_options = ["none", "processed", "screened", "completed"]
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,

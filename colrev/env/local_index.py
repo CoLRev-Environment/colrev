@@ -33,6 +33,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # import binascii
 
@@ -377,7 +378,7 @@ class LocalIndex:
                     try:
                         stored_record = self.__get_item_from_index(
                             index_name=self.RECORD_INDEX,
-                            key="colrev_id",
+                            key=Fields.COLREV_ID,
                             value=item["colrev_id"],
                         )
                         stored_colrev_id = colrev.record.Record(
@@ -441,7 +442,7 @@ class LocalIndex:
             try:
                 retrieved_record = self.__get_item_from_index(
                     index_name=self.RECORD_INDEX,
-                    key="colrev_id",
+                    key=Fields.COLREV_ID,
                     value=cid_to_retrieve,
                 )
                 return retrieved_record
@@ -496,7 +497,7 @@ class LocalIndex:
                 return self._retrieve_from_github_curation(record_dict=record_dict)
             raise colrev_exceptions.RecordNotInIndexException
 
-        if "colrev_id" in record.data:
+        if Fields.COLREV_ID in record.data:
             cid_to_retrieve = record.get_colrev_id()
         else:
             cid_to_retrieve = [record.create_colrev_id(assume_complete=True)]
@@ -540,8 +541,8 @@ class LocalIndex:
         if Fields.FILE in record_dict and not Path(record_dict[Fields.FILE]).is_file():
             del record_dict[Fields.FILE]
 
-        if not include_colrev_ids and "colrev_id" in record_dict:
-            del record_dict["colrev_id"]
+        if not include_colrev_ids and Fields.COLREV_ID in record_dict:
+            del record_dict[Fields.COLREV_ID]
 
         if include_file:
             if fulltext_backup != "NA":
@@ -559,9 +560,9 @@ class LocalIndex:
         record = colrev.record.Record(data=record_dict)
         record.set_status(target_state=colrev.record.RecordState.md_prepared)
 
-        if "CURATED" in record_dict.get(Fields.MD_PROV, {}):
+        if FieldValues.CURATED in record_dict.get(Fields.MD_PROV, {}):
             identifier_string = (
-                record_dict[Fields.MD_PROV]["CURATED"]["source"]
+                record_dict[Fields.MD_PROV][FieldValues.CURATED]["source"]
                 + "#"
                 + record_dict[Fields.ID]
             )
@@ -689,7 +690,9 @@ class LocalIndex:
                         key=key,
                         source=record_dict["metadata_source_repository_paths"],
                     )
-                elif "CURATED" not in record.data[Fields.D_PROV][key]["source"]:
+                elif (
+                    FieldValues.CURATED not in record.data[Fields.D_PROV][key]["source"]
+                ):
                     record.add_data_provenance(
                         key=key,
                         source=record_dict["metadata_source_repository_paths"],
@@ -719,7 +722,7 @@ class LocalIndex:
         if "colrev/curated_metadata" in record_dict["metadata_source_repository_paths"]:
             # Note : local_curated_metadata is important to identify non-duplicates
             # between curated_metadata_repositories
-            record_dict["local_curated_metadata"] = "yes"
+            record_dict[Fields.LOCAL_CURATED_METADATA] = "yes"
 
         # Note : file paths should be absolute when added to the LocalIndex
         if Fields.FILE in record_dict:
@@ -745,7 +748,7 @@ class LocalIndex:
         try:
             record_dict = self._prepare_record_for_indexing(record_dict=record_dict)
             cid_to_index = colrev.record.Record(data=record_dict).create_colrev_id()
-            record_dict["colrev_id"] = cid_to_index
+            record_dict[Fields.COLREV_ID] = cid_to_index
             record_dict["citation_key"] = record_dict[Fields.ID]
             record_dict["id"] = self.__get_record_hash(record_dict=record_dict)
         except colrev_exceptions.NotEnoughDataToIdentifyException as exc:
@@ -791,6 +794,7 @@ class LocalIndex:
             else:
                 toc_to_index[toc_item] = colrev_id
 
+    # pylint: disable=too-many-arguments
     def index_records(
         self,
         *,
@@ -1150,7 +1154,7 @@ class LocalIndex:
 
             record_dict = self.__get_item_from_index(
                 index_name=self.RECORD_INDEX,
-                key="colrev_id",
+                key=Fields.COLREV_ID,
                 value=toc_records_colrev_id,
             )
 
@@ -1208,7 +1212,7 @@ class LocalIndex:
             else:
                 retrieved_record = selected_row
 
-            if key == "colrev_id":
+            if key == Fields.COLREV_ID:
                 if (
                     value
                     != colrev.record.Record(data=retrieved_record).create_colrev_id()
@@ -1277,9 +1281,9 @@ class LocalIndex:
         # 2. Try using global-ids
         if not retrieved_record_dict and self.__sqlite_available:
             remove_colrev_id = False
-            if "colrev_id" not in record_dict:
+            if Fields.COLREV_ID not in record_dict:
                 try:
-                    record_dict["colrev_id"] = colrev.record.Record(
+                    record_dict[Fields.COLREV_ID] = colrev.record.Record(
                         data=record_dict
                     ).create_colrev_id()
                     remove_colrev_id = True
@@ -1297,7 +1301,7 @@ class LocalIndex:
                         break
                 retrieved_record_dict = {}
             if remove_colrev_id:
-                del record_dict["colrev_id"]
+                del record_dict[Fields.COLREV_ID]
 
         if not retrieved_record_dict:
             raise colrev_exceptions.RecordNotInIndexException(
@@ -1388,8 +1392,8 @@ class LocalIndex:
             # see __outlets_duplicated(...)
 
             different_curated_repositories = (
-                "CURATED" in r1_index.get(Fields.MD_PROV, "")
-                and "CURATED" in r2_index.get(Fields.MD_PROV, "")
+                FieldValues.CURATED in r1_index.get(Fields.MD_PROV, "")
+                and FieldValues.CURATED in r2_index.get(Fields.MD_PROV, "")
                 and (
                     r1_index.get(Fields.MD_PROV, "a")
                     != r2_index.get(Fields.MD_PROV, "b")

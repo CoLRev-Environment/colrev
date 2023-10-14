@@ -13,6 +13,7 @@ import requests
 
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -48,6 +49,7 @@ class WebsiteConnector:
         self.zotero_lock = Lock()
         self.review_manager = review_manager
 
+    # pylint: disable=colrev-missed-constant-usage
     def __set_url(
         self,
         *,
@@ -58,22 +60,24 @@ class WebsiteConnector:
             return
         host = urlparse(item["url"]).hostname
         if host and host.endswith("doi.org"):
-            record.data["doi"] = item["url"].replace("https://doi.org/", "")
-            dummy_record = colrev.record.PrepRecord(data={"doi": record.data["doi"]})
+            record.data[Fields.DOI] = item["url"].replace("https://doi.org/", "")
+            dummy_record = colrev.record.PrepRecord(
+                data={Fields.DOI: record.data["doi"]}
+            )
             doi_connector.DOIConnector.get_link_from_doi(
                 record=dummy_record,
                 review_manager=self.review_manager,
             )
             if "https://doi.org/" not in dummy_record.data["url"]:
-                record.data["url"] = dummy_record.data["url"]
+                record.data[Fields.URL] = dummy_record.data["url"]
         else:
-            record.data["url"] = item["url"]
+            record.data[Fields.URL] = item["url"]
 
     def __set_keywords(self, *, record: colrev.record.Record, item: dict) -> None:
         if "tags" not in item or len(item["tags"]) == 0:
             return
         keywords = ", ".join([k["tag"] for k in item["tags"]])
-        record.data["keywords"] = keywords
+        record.data[Fields.KEYWORDS] = keywords
 
     def __set_author(self, *, record: colrev.record.Record, item: dict) -> None:
         if "creators" not in item:
@@ -87,51 +91,55 @@ class WebsiteConnector:
                 + creator.get("firstName", "")
             )
         author_str = author_str[5:]  # drop the first " and "
-        record.data["author"] = author_str
+        record.data[Fields.AUTHOR] = author_str
 
+    # pylint: disable=colrev-missed-constant-usage
     def __set_entrytype(self, *, record: colrev.record.Record, item: dict) -> None:
-        record.data["ENTRYTYPE"] = "article"  # default
+        record.data[Fields.ENTRYTYPE] = "article"  # default
         if item.get("itemType", "") == "journalArticle":
-            record.data["ENTRYTYPE"] = "article"
+            record.data[Fields.ENTRYTYPE] = "article"
             if "publicationTitle" in item:
-                record.data["journal"] = item["publicationTitle"]
+                record.data[Fields.JOURNAL] = item["publicationTitle"]
             if "volume" in item:
-                record.data["volume"] = item["volume"]
+                record.data[Fields.VOLUME] = item["volume"]
             if "issue" in item:
-                record.data["number"] = item["issue"]
+                record.data[Fields.NUMBER] = item["issue"]
         if item.get("itemType", "") == "conferencePaper":
-            record.data["ENTRYTYPE"] = "inproceedings"
+            record.data[Fields.ENTRYTYPE] = "inproceedings"
             if "proceedingsTitle" in item:
-                record.data["booktitle"] = item["proceedingsTitle"]
+                record.data[Fields.BOOKTITLE] = item["proceedingsTitle"]
 
+    # pylint: disable=colrev-missed-constant-usage
     def __set_title(self, *, record: colrev.record.Record, item: dict) -> None:
         if "title" not in item:
             return
-        record.data["title"] = item["title"]
+        record.data[Fields.TITLE] = item["title"]
 
+    # pylint: disable=colrev-missed-constant-usage
     def __set_doi(self, *, record: colrev.record.Record, item: dict) -> None:
         if "doi" not in item:
             return
-        record.data["doi"] = item["doi"].upper()
+        record.data[Fields.DOI] = item["doi"].upper()
 
     def __set_date(self, *, record: colrev.record.Record, item: dict) -> None:
         if "date" not in item:
             return
         year = re.search(r"\d{4}", item["date"])
         if year:
-            record.data["year"] = year.group(0)
+            record.data[Fields.YEAR] = year.group(0)
 
+    # pylint: disable=colrev-missed-constant-usage
     def __set_pages(self, *, record: colrev.record.Record, item: dict) -> None:
         if "pages" not in item:
             return
-        record.data["pages"] = item["pages"]
+        record.data[Fields.PAGES] = item["pages"]
 
     def __update_record(
         self,
         record: colrev.record.Record,
         item: dict,
     ) -> None:
-        record.data["ID"] = item["key"]
+        record.data[Fields.ID] = item["key"]
         self.__set_entrytype(record=record, item=item)
         self.__set_author(record=record, item=item)
         self.__set_title(record=record, item=item)
@@ -156,7 +164,7 @@ class WebsiteConnector:
             export = requests.post(
                 "http://127.0.0.1:1969/web",
                 headers=headers,
-                data=record.data["url"],
+                data=record.data[Fields.URL],
                 timeout=60,
             )
 

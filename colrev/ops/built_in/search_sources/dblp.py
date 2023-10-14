@@ -23,6 +23,7 @@ import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -122,28 +123,28 @@ class DBLPSearchSource(JsonSchemaMixin):
         try:
             # pylint: disable=duplicate-code
             test_rec = {
-                "ENTRYTYPE": "article",
-                "doi": "10.17705/1cais.04607",
-                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                Fields.ENTRYTYPE: "article",
+                Fields.DOI: "10.17705/1cais.04607",
+                Fields.AUTHOR: "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
                 "and Paré, Guy",
-                "title": "A Knowledge Development Perspective on Literature Reviews: "
+                Fields.TITLE: "A Knowledge Development Perspective on Literature Reviews: "
                 "Validation of a new Typology in the IS Field",
-                "ID": "SchryenEtAl2021",
-                "journal": "Communications of the Association for Information Systems",
-                "volume": "46",
-                "year": "2020",
-                "colrev_status": colrev.record.RecordState.md_prepared,  # type: ignore
+                Fields.ID: "SchryenEtAl2021",
+                Fields.JOURNAL: "Communications of the Association for Information Systems",
+                Fields.VOLUME: "46",
+                Fields.YEAR: "2020",
+                Fields.STATUS: colrev.record.RecordState.md_prepared,  # type: ignore
             }
 
-            query = "" + str(test_rec.get("title", "")).replace("-", "_")
+            query = "" + str(test_rec.get(Fields.TITLE, "")).replace("-", "_")
 
             dblp_record = self.__retrieve_dblp_records(
                 query=query,
             )[0]
 
             if 0 != len(dblp_record.data):
-                assert dblp_record.data["title"] == test_rec["title"]
-                assert dblp_record.data["author"] == test_rec["author"]
+                assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
+                assert dblp_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
                 if not source_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("DBLP")
@@ -175,6 +176,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             for hit in hits:
                 if hit["info"]["type"] != venue_type:
                     continue
+                # pylint: disable=colrev-missed-constant-usage
                 if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
                     venue = hit["info"]["venue"]
                     break
@@ -190,7 +192,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         ven_key = item["key"][lpos:rpos]
 
         if "corr" == ven_key:
-            item["ENTRYTYPE"] = "techreport"
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.TECHREPORT
 
         elif item["type"] == "Withdrawn Items":
             if item["key"][:8] == "journals":
@@ -200,27 +202,27 @@ class DBLPSearchSource(JsonSchemaMixin):
             item["warning"] = "Withdrawn (according to DBLP)"
 
         elif item["type"] == "Journal Articles":
-            item["ENTRYTYPE"] = "article"
-            item["journal"] = self.__get_dblp_venue(
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            item[Fields.JOURNAL] = self.__get_dblp_venue(
                 session=session,
                 venue_string=ven_key,
                 venue_type="Journal",
             )
         elif item["type"] == "Conference and Workshop Papers":
-            item["ENTRYTYPE"] = "inproceedings"
-            item["booktitle"] = self.__get_dblp_venue(
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            item[Fields.BOOKTITLE] = self.__get_dblp_venue(
                 session=session,
                 venue_string=ven_key,
                 venue_type="Conference or Workshop",
             )
         elif item["type"] == "Informal and Other Publications":
-            item["ENTRYTYPE"] = "misc"
-            item["booktitle"] = item["venue"]
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+            item[Fields.BOOKTITLE] = item["venue"]
         elif item["type"] == "Parts in Books or Collections":
-            item["ENTRYTYPE"] = "inbook"
-            item["booktitle"] = item["venue"]
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.INBOOK
+            item[Fields.BOOKTITLE] = item["venue"]
         else:
-            item["ENTRYTYPE"] = "misc"
+            item[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
             if item["type"] != "Editorship":
                 self.review_manager.logger.warning("DBLP: Unknown type: %s", item)
 
@@ -236,18 +238,18 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         self.__dblp_json_set_type(item=item, session=session)
         if "title" in item:
-            item["title"] = item["title"].rstrip(".").rstrip().replace("\n", " ")
-            item["title"] = re.sub(r"\s+", " ", item["title"])
+            item[Fields.TITLE] = item["title"].rstrip(".").rstrip().replace("\n", " ")
+            item[Fields.TITLE] = re.sub(r"\s+", " ", item[Fields.TITLE])
         if "pages" in item:
-            item["pages"] = item["pages"].replace("-", "--")
+            item[Fields.PAGES] = item[Fields.PAGES].replace("-", "--")
         if "authors" in item:
-            if "author" in item["authors"]:
-                if isinstance(item["authors"]["author"], dict):
-                    author_string = item["authors"]["author"]["text"]
+            if Fields.AUTHOR in item["authors"]:
+                if isinstance(item["authors"][Fields.AUTHOR], dict):
+                    author_string = item["authors"][Fields.AUTHOR]["text"]
                 else:
                     authors_nodes = [
                         author
-                        for author in item["authors"]["author"]
+                        for author in item["authors"][Fields.AUTHOR]
                         if isinstance(author, dict)
                     ]
                     authors = [x["text"] for x in authors_nodes if "text" in x]
@@ -255,21 +257,21 @@ class DBLPSearchSource(JsonSchemaMixin):
                 author_string = colrev.record.PrepRecord.format_author_field(
                     input_string=author_string
                 )
-                item["author"] = author_string
+                item[Fields.AUTHOR] = author_string
 
         if "key" in item:
-            item["dblp_key"] = "https://dblp.org/rec/" + item["key"]
+            item[Fields.DBLP_KEY] = "https://dblp.org/rec/" + item["key"]
 
-        if "doi" in item:
-            item["doi"] = item["doi"].upper()
+        if Fields.DOI in item:
+            item[Fields.DOI] = item[Fields.DOI].upper()
         if "ee" in item:
             if not any(
                 x in item["ee"] for x in ["https://doi.org", "https://dblp.org"]
             ):
-                item["url"] = item["ee"]
-        if "url" in item:
-            if "https://dblp.org" in item["url"]:
-                del item["url"]
+                item[Fields.URL] = item["ee"]
+        if Fields.URL in item:
+            if "https://dblp.org" in item[Fields.URL]:
+                del item[Fields.URL]
 
         item = {
             k: v
@@ -330,10 +332,10 @@ class DBLPSearchSource(JsonSchemaMixin):
             ]
             for retrieved_record in retrieved_records:
                 # Note : DBLP provides number-of-pages (instead of pages start-end)
-                if "pages" in retrieved_record.data:
-                    del retrieved_record.data["pages"]
+                if Fields.PAGES in retrieved_record.data:
+                    del retrieved_record.data[Fields.PAGES]
                 retrieved_record.add_provenance_all(
-                    source=retrieved_record.data["dblp_key"]
+                    source=retrieved_record.data[Fields.DBLP_KEY]
                 )
 
         # pylint: disable=duplicate-code
@@ -389,11 +391,14 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         for feed_record_dict in dblp_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
-            query = "" + feed_record.data.get("title", "").replace("-", "_")
+            query = "" + feed_record.data.get(Fields.TITLE, "").replace("-", "_")
             for retrieved_record in self.__retrieve_dblp_records(
                 query=query,
             ):
-                if retrieved_record.data["dblp_key"] != feed_record.data["dblp_key"]:
+                if (
+                    retrieved_record.data[Fields.DBLP_KEY]
+                    != feed_record.data[Fields.DBLP_KEY]
+                ):
                     continue
                 if retrieved_record.data.get("type", "") == "Editorship":
                     continue
@@ -404,9 +409,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                     continue
 
                 prev_record_dict_version = {}
-                if retrieved_record.data["ID"] in dblp_feed.feed_records:
+                if retrieved_record.data[Fields.ID] in dblp_feed.feed_records:
                     prev_record_dict_version = dblp_feed.feed_records[
-                        retrieved_record.data["ID"]
+                        retrieved_record.data[Fields.ID]
                     ]
 
                 dblp_feed.add_record(record=retrieved_record)
@@ -447,9 +452,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                     "scope" in self.search_source.search_parameters
                     and (
                         f"{self.search_source.search_parameters['scope']['venue_key']}/"
-                        not in retrieved_record.data["dblp_key"]
+                        not in retrieved_record.data[Fields.DBLP_KEY]
                     )
-                ) or retrieved_record.data.get("ENTRYTYPE", "") not in [
+                ) or retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
                     "article",
                     "inproceedings",
                 ]:
@@ -461,9 +466,9 @@ class DBLPSearchSource(JsonSchemaMixin):
                     continue
 
                 prev_record_dict_version = {}
-                if retrieved_record.data["ID"] in dblp_feed.feed_records:
+                if retrieved_record.data[Fields.ID] in dblp_feed.feed_records:
                     prev_record_dict_version = dblp_feed.feed_records[
-                        retrieved_record.data["ID"]
+                        retrieved_record.data[Fields.ID]
                     ]
 
                 added = dblp_feed.add_record(
@@ -472,7 +477,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 if added:
                     self.review_manager.logger.info(
-                        " retrieve " + retrieved_record.data["dblp_key"]
+                        " retrieve " + retrieved_record.data[Fields.DBLP_KEY]
                     )
                 else:
                     dblp_feed.update_existing_record(
@@ -558,6 +563,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         result = {"confidence": 0.0}
         # Simple heuristic:
+        # pylint: disable=colrev-missed-constant-usage
         if "dblp_key" in data:
             result["confidence"] = 1.0
             return result
@@ -585,6 +591,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
 
+            # pylint: disable=colrev-missed-constant-usage
             if "url" in params:
                 query = (
                     params["url"]
@@ -624,17 +631,17 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> colrev.record.PrepRecord:
         """Source-specific preparation for DBLP"""
 
-        if record.data.get("author", "UNKNOWN") != "UNKNOWN":
+        if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
             # DBLP appends identifiers to non-unique authors
             record.update_field(
-                key="author",
-                value=str(re.sub(r"[0-9]{4}", "", record.data["author"])),
+                key=Fields.AUTHOR,
+                value=str(re.sub(r"[0-9]{4}", "", record.data[Fields.AUTHOR])),
                 source="dblp",
                 keep_source_if_equal=True,
             )
         record.remove_field(key="colrev.dblp.bibsource")
-        if any(x in record.data.get("url", "") for x in ["dblp.org", "doi.org"]):
-            record.remove_field(key="url")
+        if any(x in record.data.get(Fields.URL, "") for x in ["dblp.org", "doi.org"]):
+            record.remove_field(key=Fields.URL)
         record.remove_field(key="colrev.dblp.timestamp")
         record.fix_name_particles()
 
@@ -649,7 +656,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Retrieve masterdata from DBLP based on similarity with the record provided"""
 
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
+        if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
             # Already linked to a crossref record
             return record
 
@@ -660,17 +667,14 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         try:
             # Note: queries combining title+author/journal do not seem to work any more
-            query = "" + record.data.get("title", "").replace("-", "_")
+            query = "" + record.data.get(Fields.TITLE, "").replace("-", "_")
             for retrieved_record in self.__retrieve_dblp_records(
                 query=query,
             ):
-                retrieved_record.data[
-                    "colrev.dblp.dblp_key"
-                ] = retrieved_record.data.pop("dblp_key")
-                if "colrev.dblp.dblp_key" in record.data:
+                if Fields.DBLP_KEY in record.data:
                     if (
-                        retrieved_record.data["colrev.dblp.dblp_key"]
-                        != record.data["colrev.dblp.dblp_key"]
+                        retrieved_record.data[Fields.DBLP_KEY]
+                        != record.data[Fields.DBLP_KEY]
                     ):
                         continue
 
@@ -698,10 +702,10 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                     record.merge(
                         merging_record=retrieved_record,
-                        default_source=retrieved_record.data["colrev_origin"][0],
+                        default_source=retrieved_record.data[Fields.ORIGIN][0],
                     )
                     record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0],
+                        source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
                     record.set_status(
@@ -710,7 +714,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     if "Withdrawn (according to DBLP)" in record.data.get(
                         "warning", ""
                     ):
-                        record.prescreen_exclude(reason="retracted")
+                        record.prescreen_exclude(reason=FieldValues.RETRACTED)
                         record.remove_field(key="warning")
 
                     dblp_feed.save_feed_file()

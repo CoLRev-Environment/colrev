@@ -26,6 +26,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 defusedxml.defuse_stdlib()
 
@@ -139,6 +141,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
 
+            # pylint: disable=colrev-missed-constant-usage
             if "url" in params:
                 host = urlparse(params["url"]).hostname
 
@@ -190,11 +193,11 @@ class PubMedSearchSource(JsonSchemaMixin):
         try:
             # pylint: disable=duplicate-code
             test_rec = {
-                "author": "Nazzaro, P and Manzari, M and Merlo, M and Triggiani, R and "
+                Fields.AUTHOR: "Nazzaro, P and Manzari, M and Merlo, M and Triggiani, R and "
                 "Scarano, A and Ciancio, L and Pirrelli, A",
-                "title": "Distinct and combined vascular effects of ACE blockade and "
+                Fields.TITLE: "Distinct and combined vascular effects of ACE blockade and "
                 "HMG-CoA reductase inhibition in hypertensive subjects",
-                "ENTRYTYPE": "article",
+                Fields.ENTRYTYPE: "article",
                 "pubmedid": "10024335",
             }
             returned_record_dict = self.__pubmed_query_id(
@@ -203,8 +206,8 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
             if returned_record_dict:
-                assert returned_record_dict["title"] == test_rec["title"]
-                assert returned_record_dict["author"] == test_rec["author"]
+                assert returned_record_dict[Fields.TITLE] == test_rec[Fields.TITLE]
+                assert returned_record_dict[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
                 if not source_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("Pubmed")
@@ -260,9 +263,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             return ElementTree.tostring(abstract[0], encoding="unicode")
         return ""
 
+    # pylint: disable=colrev-missed-constant-usage
     @classmethod
     def __pubmed_xml_to_record(cls, *, root) -> dict:  # type: ignore
-        retrieved_record_dict: dict = {"ENTRYTYPE": "misc"}
+        retrieved_record_dict: dict = {Fields.ENTRYTYPE: "misc"}
 
         pubmed_article = root.find("PubmedArticle")
         if pubmed_article is None:
@@ -270,28 +274,28 @@ class PubMedSearchSource(JsonSchemaMixin):
         if pubmed_article.find("MedlineCitation") is None:
             return {}
 
-        retrieved_record_dict.update(title=cls.__get_title_string(root=root))
-        retrieved_record_dict.update(author=cls.__get_author_string(root=root))
+        retrieved_record_dict[Fields.TITLE] = cls.__get_title_string(root=root)
+        retrieved_record_dict[Fields.AUTHOR] = cls.__get_author_string(root=root)
 
         journal_path = "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Journal"
         journal_name = root.xpath(journal_path + "/ISOAbbreviation")
         if journal_name:
-            retrieved_record_dict.update(ENTRYTYPE="article")
-            retrieved_record_dict.update(journal=journal_name[0].text)
+            retrieved_record_dict[Fields.ENTRYTYPE] = "article"
+            retrieved_record_dict[Fields.JOURNAL] = journal_name[0].text
 
         volume = root.xpath(journal_path + "/JournalIssue/Volume")
         if volume:
-            retrieved_record_dict.update(volume=volume[0].text)
+            retrieved_record_dict[Fields.VOLUME] = volume[0].text
 
         number = root.xpath(journal_path + "/JournalIssue/Issue")
         if number:
-            retrieved_record_dict.update(number=number[0].text)
+            retrieved_record_dict[Fields.NUMBER] = number[0].text
 
         year = root.xpath(journal_path + "/JournalIssue/PubDate/Year")
         if year:
-            retrieved_record_dict.update(year=year[0].text)
+            retrieved_record_dict[Fields.YEAR] = year[0].text
 
-        retrieved_record_dict.update(abstract=cls.__get_abstract_string(root=root))
+        retrieved_record_dict[Fields.ABSTRACT] = cls.__get_abstract_string(root=root)
 
         article_id_list = root.xpath(
             "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
@@ -299,9 +303,9 @@ class PubMedSearchSource(JsonSchemaMixin):
         for article_id in article_id_list[0]:
             id_type = article_id.attrib.get("IdType")
             if article_id.attrib.get("IdType") == "pubmed":
-                retrieved_record_dict.update(pubmedid=article_id.text.upper())
+                retrieved_record_dict[Fields.PUBMED_ID] = article_id.text.upper()
             elif article_id.attrib.get("IdType") == "doi":
-                retrieved_record_dict.update(doi=article_id.text.upper())
+                retrieved_record_dict[Fields.DOI] = article_id.text.upper()
             else:
                 retrieved_record_dict[id_type] = article_id.text
 
@@ -332,7 +336,6 @@ class PubMedSearchSource(JsonSchemaMixin):
             # )
             return []
 
-        # TODO : change to Beautifulsoup (more robust)
         root = fromstring(str.encode(ret.text))
         return [
             x.text
@@ -447,11 +450,11 @@ class PubMedSearchSource(JsonSchemaMixin):
 
                 record.merge(
                     merging_record=retrieved_record,
-                    default_source=retrieved_record.data["colrev_origin"][0],
+                    default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
                 record.set_masterdata_complete(
-                    source=retrieved_record.data["colrev_origin"][0],
+                    source=retrieved_record.data[Fields.ORIGIN][0],
                     masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
                 record.set_status(target_state=colrev.record.RecordState.md_prepared)
@@ -497,8 +500,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=10075143&rettype=xml&retmode=text
 
         if (
-            len(record.data.get("title", "")) < 35
-            and "colrev.pubmed.pubmedid" not in record.data
+            len(record.data.get(Fields.TITLE, "")) < 35
+            and Fields.PUBMED_ID not in record.data
         ):
             return record
 
@@ -507,7 +510,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         #    record = self.__check_doi_masterdata(record=record)
 
         # remove the following if we match basd on similarity
-        if "colrev.pubmed.pubmedid" not in record.data:
+        if Fields.PUBMED_ID not in record.data:
             return record
 
         record = self.__get_masterdata_record(
@@ -547,8 +550,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         try:
             for record_dict in self.__get_pubmed_query_return():
                 # Note : discard "empty" records
-                if "" == record_dict.get("author", "") and "" == record_dict.get(
-                    "title", ""
+                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
+                    Fields.TITLE, ""
                 ):
                     self.review_manager.logger.warning(f"Skipped record: {record_dict}")
                     continue
@@ -558,15 +561,15 @@ class PubMedSearchSource(JsonSchemaMixin):
                     continue
 
                 prev_record_dict_version = {}
-                if record_dict["ID"] in pubmed_feed.feed_records:
+                if record_dict[Fields.ID] in pubmed_feed.feed_records:
                     prev_record_dict_version = deepcopy(
-                        pubmed_feed.feed_records[record_dict["ID"]]
+                        pubmed_feed.feed_records[record_dict[Fields.ID]]
                     )
 
                 prep_record = colrev.record.PrepRecord(data=record_dict)
 
-                if "colrev_data_provenance" in prep_record.data:
-                    del prep_record.data["colrev_data_provenance"]
+                if Fields.D_PROV in prep_record.data:
+                    del prep_record.data[Fields.D_PROV]
 
                 added = pubmed_feed.add_record(record=prep_record)
 
@@ -630,9 +633,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                 continue
 
             prev_record_dict_version = {}
-            if retrieved_record["ID"] in pubmed_feed.feed_records:
+            if retrieved_record[Fields.ID] in pubmed_feed.feed_records:
                 prev_record_dict_version = pubmed_feed.feed_records[
-                    retrieved_record["ID"]
+                    retrieved_record[Fields.ID]
                 ]
 
             pubmed_feed.add_record(record=colrev.record.Record(data=retrieved_record))
@@ -704,20 +707,23 @@ class PubMedSearchSource(JsonSchemaMixin):
         """Load fixes for Pubmed"""
 
         for record in records.values():
-            if "author" in record and record["author"].count(",") >= 1:
-                author_list = record["author"].split(", ")
+            if Fields.AUTHOR in record and record[Fields.AUTHOR].count(",") >= 1:
+                author_list = record[Fields.AUTHOR].split(", ")
                 for i, author_part in enumerate(author_list):
                     author_field_parts = author_part.split(" ")
                     author_list[i] = (
                         author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
                     )
 
-                record["author"] = " and ".join(author_list)
+                record[Fields.AUTHOR] = " and ".join(author_list)
             if "first_author" in record:
                 del record["first_author"]
-            if record.get("journal", "") != "":
-                record["ENTRYTYPE"] = "article"
-            if record.get("pii", "pii").lower() == record.get("doi", "doi").lower():
+            if record.get(Fields.JOURNAL, "") != "":
+                record[Fields.ENTRYTYPE] = "article"
+            if (
+                record.get("pii", "pii").lower()
+                == record.get(Fields.DOI, Fields.DOI).lower()
+            ):
                 del record["pii"]
             if record.get("nihms_id", "") == "nan":
                 del record["nihms_id"]
@@ -726,15 +732,17 @@ class PubMedSearchSource(JsonSchemaMixin):
                 details_part = details_part[details_part.find(";") + 1 :]
                 details_part = details_part[: details_part.find(".")]
                 if ":" in details_part:
-                    record["pages"] = details_part[details_part.find(":") + 1 :]
+                    record[Fields.PAGES] = details_part[details_part.find(":") + 1 :]
                     details_part = details_part[: details_part.find(":")]
                 if "(" in details_part:
-                    record["number"] = details_part[details_part.find("(") + 1 : -1]
+                    record[Fields.NUMBER] = details_part[
+                        details_part.find("(") + 1 : -1
+                    ]
                     details_part = details_part[: details_part.find("(")]
-                record["volume"] = details_part
+                record[Fields.VOLUME] = details_part
                 del record["citation"]
             if "journal/book" in record:
-                record["journal"] = record.pop("journal/book")
+                record[Fields.JOURNAL] = record.pop("journal/book")
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
@@ -743,20 +751,23 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         if "colrev.pubmed.first_author" in record.data:
             record.remove_field(key="colrev.pubmed.first_author")
-        if record.data.get("author") == "UNKNOWN" and "authors" in record.data:
-            record.remove_field(key="author")
-            record.rename_field(key="authors", new_key="author")
+        if (
+            record.data.get(Fields.AUTHOR) == FieldValues.UNKNOWN
+            and "authors" in record.data
+        ):
+            record.remove_field(key=Fields.AUTHOR)
+            record.rename_field(key="authors", new_key=Fields.AUTHOR)
 
-        if record.data.get("year") == "UNKNOWN":
-            record.remove_field(key="year")
+        if record.data.get(Fields.YEAR) == FieldValues.UNKNOWN:
+            record.remove_field(key=Fields.YEAR)
             if "colrev.pubmed.publication_year" in record.data:
                 record.rename_field(
-                    key="colrev.pubmed.publication_year", new_key="year"
+                    key="colrev.pubmed.publication_year", new_key=Fields.YEAR
                 )
 
-        if "author" in record.data:
-            record.data["author"] = colrev.record.PrepRecord.format_author_field(
-                input_string=record.data["author"]
+        if Fields.AUTHOR in record.data:
+            record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
+                input_string=record.data[Fields.AUTHOR]
             )
 
         # TBD: how to distinguish other types?

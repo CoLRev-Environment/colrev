@@ -15,3 +15,4 @@ EuropePMC linking
 
 - [Europe PMC](https://europepmc.org/)
 - License: [may contain copyrighted material, unless stated otherwise](https://europepmc.org/Copyright)
+- [Field definitions](https://europepmc.org/docs/EBI_Europe_PMC_Web_Service_Reference.pdf)

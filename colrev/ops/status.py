@@ -15,6 +15,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 
 class Status(colrev.operation.Operation):
@@ -180,7 +181,7 @@ class StatusStats:
         ]
 
         self.nr_curated_records = len(
-            [x for x in colrev_masterdata_items if "CURATED" in x]
+            [x for x in colrev_masterdata_items if FieldValues.CURATED in x]
         )
         if review_manager.settings.is_curated_masterdata_repo():
             self.nr_curated_records = self.overall.md_processed

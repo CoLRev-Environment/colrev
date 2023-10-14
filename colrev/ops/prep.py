@@ -27,6 +27,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-many-lines
 
@@ -1082,7 +1083,7 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if "CURATED" in record.get(Fields.MD_PROV, "")
+                if FieldValues.CURATED in record.get(Fields.MD_PROV, "")
             ]
         )
 

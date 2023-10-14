@@ -14,6 +14,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 
 class Load(colrev.operation.Operation):
@@ -173,7 +174,7 @@ class Load(colrev.operation.Operation):
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
                 if "curation_ID" in record:
                     record[Fields.MD_PROV] = {
-                        "CURATED": {
+                        FieldValues.CURATED: {
                             "source": record["curation_ID"].split("#")[0],
                             "note": "",
                         }

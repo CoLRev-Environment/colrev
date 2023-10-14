@@ -32,6 +32,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
     flag = True
     settings_class = colrev.env.package_manager.DefaultSourceSettings
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [colrev.settings.SearchType.API]
     endpoint = "colrev.ieee"
@@ -48,6 +49,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         "api_key": "packages.search_source.colrev.ieee.api_key",
     }
 
+    # pylint: disable=colrev-missed-constant-usage
     API_FIELDS = [
         "abstract",
         "author_url",
@@ -86,10 +88,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
     FIELD_MAPPING = {
         "citing_paper_count": "citations",
-        "publication_year": "year",
-        "html_url": "url",
-        "pdf_url": "fulltext",
-        "issue": "number",
+        "publication_year": Fields.YEAR,
+        "html_url": Fields.URL,
+        "pdf_url": Fields.FULLTEXT,
+        "issue": Fields.NUMBER,
     }
 
     def __init__(
@@ -144,6 +146,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
 
+            # pylint: disable=colrev-missed-constant-usage
             if (
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?"
                 in params["url"]
@@ -210,6 +213,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             )
         return api_key
 
+    # pylint: disable=colrev-missed-constant-usage
     def __run_api_query(self) -> colrev.ops.built_in.search_sources.ieee_api.XPLORE:
         api_key = self.__get_api_key()
         query = colrev.ops.built_in.search_sources.ieee_api.XPLORE(api_key)
@@ -252,7 +256,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 added = ieee_feed.add_record(record=record)
 
                 if added:
-                    self.review_manager.logger.info(" retrieve " + record.data["ID"])
+                    self.review_manager.logger.info(
+                        " retrieve " + record.data[Fields.ID]
+                    )
                 else:
                     changed = ieee_feed.update_existing_record(
                         records=records,
@@ -262,7 +268,9 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                         update_time_variant_fields=rerun,
                     )
                     if changed:
-                        self.review_manager.logger.info(" update " + record.data["ID"])
+                        self.review_manager.logger.info(
+                            " update " + record.data[Fields.ID]
+                        )
 
             query.startRecord += 200
             response = query.callAPI()
@@ -273,15 +281,15 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
     def __update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
         if "start_page" in article:
-            record_dict["pages"] = article.pop("start_page")
+            record_dict[Fields.PAGES] = article.pop("start_page")
             if "end_page" in article:
-                record_dict["pages"] += "--" + article.pop("end_page")
+                record_dict[Fields.PAGES] += "--" + article.pop("end_page")
 
         if "authors" in article and "authors" in article["authors"]:
             author_list = []
             for author in article["authors"]["authors"]:
                 author_list.append(author["full_name"])
-            record_dict["author"] = colrev.record.PrepRecord.format_author_field(
+            record_dict[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
                 input_string=" and ".join(author_list)
             )
 
@@ -290,22 +298,22 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             and "author_terms" in article["index_terms"]
             and "terms" in article["index_terms"]["author_terms"]
         ):
-            record_dict["keywords"] = ", ".join(
+            record_dict[Fields.KEYWORDS] = ", ".join(
                 article["index_terms"]["author_terms"]["terms"]
             )
 
     def __create_record_dict(self, article: dict) -> dict:
-        record_dict = {"ID": article["article_number"]}
+        record_dict = {Fields.ID: article["article_number"]}
         # self.review_manager.p_printer.pprint(article)
 
         if article["content_type"] == "Conferences":
-            record_dict["ENTRYTYPE"] = "inproceedings"
+            record_dict[Fields.ENTRYTYPE] = "inproceedings"
             if "publication_title" in article:
-                record_dict["booktitle"] = article.pop("publication_title")
+                record_dict[Fields.BOOKTITLE] = article.pop("publication_title")
         else:
-            record_dict["ENTRYTYPE"] = "article"
+            record_dict[Fields.ENTRYTYPE] = "article"
             if "publication_title" in article:
-                record_dict["journal"] = article.pop("publication_title")
+                record_dict[Fields.JOURNAL] = article.pop("publication_title")
 
         for field in self.API_FIELDS:
             if article.get(field) is None:
@@ -334,33 +342,34 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     def __ris_fixes(self, *, entries: dict) -> None:
         for entry in entries:
             if entry["type_of_reference"] in ["CONF", "JOUR"]:
+                # pylint: disable=colrev-missed-constant-usage
                 if "title" in entry and "primary_title" not in entry:
                     entry["primary_title"] = entry.pop("title")
-            if "publication_year" in entry and "year" not in entry:
-                entry["year"] = entry.pop("publication_year")
+            if "publication_year" in entry and Fields.YEAR not in entry:
+                entry[Fields.YEAR] = entry.pop("publication_year")
 
     def __fix_csv_records(self, *, records: dict) -> None:
         for record in records.values():
-            record["fulltext"] = record.pop("pdf_link")
+            record[Fields.FULLTEXT] = record.pop("pdf_link")
             if "article_citation_count" in record:
-                record["cited_by"] = record.pop("article_citation_count")
+                record[Fields.CITED_BY] = record.pop("article_citation_count")
             if "author_keywords" in record:
-                record["keywords"] = record.pop("author_keywords")
-            record["title"] = record.pop("document_title")
+                record[Fields.KEYWORDS] = record.pop("author_keywords")
+            record[Fields.TITLE] = record.pop("document_title")
             if "start_page" in record and "end_page" in record:
-                record["pages"] = record["start_page"] + "--" + record["end_page"]
+                record[Fields.PAGES] = record["start_page"] + "--" + record["end_page"]
                 del record["start_page"]
                 del record["end_page"]
             if "isbns" in record:
-                record["isbn"] = record.pop("isbns")
+                record[Fields.ISBN] = record.pop("isbns")
             if record["document_identifier"] == "IEEE Conferences":
-                record["ENTRYTYPE"] = "inproceedings"
-                record["booktitle"] = record.pop("publication_title")
+                record[Fields.ENTRYTYPE] = "inproceedings"
+                record[Fields.BOOKTITLE] = record.pop("publication_title")
             elif record["document_identifier"] == "IEEE Journals":
-                record["ENTRYTYPE"] = "article"
-                record["journal"] = record.pop("publication_title")
+                record[Fields.ENTRYTYPE] = "article"
+                record[Fields.JOURNAL] = record.pop("publication_title")
             elif record["document_identifier"] == "IEEE Standards":
-                record["ENTRYTYPE"] = "techreport"
+                record[Fields.ENTRYTYPE] = "techreport"
                 record["key"] = record.pop("publication_title")
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
@@ -398,9 +407,11 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Source-specific preparation for IEEEXplore"""
 
         if source.filename.suffix == ".csv":
-            if "author" in record.data:
-                record.data["author"] = colrev.record.PrepRecord.format_author_field(
-                    input_string=record.data["author"]
+            if Fields.AUTHOR in record.data:
+                record.data[
+                    Fields.AUTHOR
+                ] = colrev.record.PrepRecord.format_author_field(
+                    input_string=record.data[Fields.AUTHOR]
                 )
             return record
         return record

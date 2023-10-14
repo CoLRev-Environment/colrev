@@ -31,6 +31,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -236,6 +237,7 @@ class Dataset:
 
         return_dict = {}
         if field == Fields.MD_PROV:
+            # pylint: disable=colrev-missed-constant-usage
             if value[:7] == "CURATED":
                 if value.count(";") == 0:
                     value += ";;"  # Note : temporary fix (old format)
@@ -246,7 +248,7 @@ class Dataset:
                     source = value[value.find(":") + 1 : value[:-1].rfind(";")]
                 else:
                     source = ""
-                return_dict["CURATED"] = {
+                return_dict[FieldValues.CURATED] = {
                     "source": source,
                     "note": "",
                 }

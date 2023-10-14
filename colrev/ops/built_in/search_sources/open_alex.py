@@ -18,6 +18,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.ops.search
@@ -93,7 +95,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         """Check status (availability) of the OpenAlex API"""
 
     def __set_author_from_item(self, *, record_dict: dict, item: dict) -> None:
-        ret_str = ""
+        author_list = []
+        # pylint: disable=colrev-missed-constant-usage
         for author in item["authorships"]:
             if "author" not in author:
                 continue
@@ -102,65 +105,69 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             author_string = colrev.record.PrepRecord.format_author_field(
                 input_string=author["author"]["display_name"]
             )
-            if ret_str == "":
-                ret_str = author_string
-            else:
-                ret_str += " and " + author_string
-        if ret_str != "":
-            record_dict["author"] = ret_str
+            author_list.append(author_string)
+
+        record_dict[Fields.AUTHOR] = " and ".join(author_list)
 
     def __parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
         def set_entrytype(*, record_dict: dict, item: dict) -> None:
+            # pylint: disable=colrev-missed-constant-usage
             if "title" in record_dict and record_dict["title"] is None:
                 del record_dict["title"]
             if item.get("type_crossref", "") == "proceedings-article":
-                record_dict["ENTRYTYPE"] = "inproceedings"
+                record_dict[Fields.ENTRYTYPE] = "inproceedings"
                 if (
                     item.get("primary_location", None) is not None
                     and item["primary_location"].get("source", None) is not None
                 ):
                     display_name = item["primary_location"]["source"]["display_name"]
                     if display_name != "Proceedings":
-                        record_dict["booktitle"] = display_name
+                        record_dict[Fields.BOOKTITLE] = display_name
             elif item["type"] in ["journal-article", "article"]:
-                record_dict["ENTRYTYPE"] = "article"
+                record_dict[Fields.ENTRYTYPE] = "article"
                 if (
                     item.get("primary_location", None) is not None
                     and item["primary_location"].get("source", None) is not None
                 ):
-                    record_dict["journal"] = item["primary_location"]["source"][
+                    record_dict[Fields.JOURNAL] = item["primary_location"]["source"][
                         "display_name"
                     ]
             else:
-                record_dict["ENTRYTYPE"] = "misc"
+                record_dict[Fields.ENTRYTYPE] = "misc"
 
         record_dict = {}
         record_dict["id"] = item["id"].replace("https://openalex.org/", "")
+        # pylint: disable=colrev-missed-constant-usage
         if "title" in item and item["title"] is not None:
-            record_dict["title"] = item["title"].lstrip("[").rstrip("].")
+            record_dict[Fields.TITLE] = item["title"].lstrip("[").rstrip("].")
         set_entrytype(record_dict=record_dict, item=item)
 
         if "publication_year" in item and item["publication_year"] is not None:
-            record_dict["year"] = str(item["publication_year"])
+            record_dict[Fields.YEAR] = str(item["publication_year"])
+        # pylint: disable=colrev-missed-constant-usage
         if "language" in item and item["language"] is not None:
-            record_dict["language"] = item["language"]
+            record_dict[Fields.LANGUAGE] = item["language"]
 
         if "is_retracted" in item and item["is_retracted"]:
-            record_dict["retracted"] = item["is_retracted"]
+            record_dict[FieldValues.RETRACTED] = item["is_retracted"]
 
+        # pylint: disable=colrev-missed-constant-usage
         if "doi" in item and item["doi"] is not None:
-            record_dict["doi"] = item["doi"].upper().replace("HTTPS://DOI.ORG/", "")
+            record_dict[Fields.DOI] = (
+                item["doi"].upper().replace("HTTPS://DOI.ORG/", "")
+            )
 
-        record_dict["cited_by"] = item["cited_by_count"]
+        record_dict[Fields.CITED_BY] = item["cited_by_count"]
 
+        # pylint: disable=colrev-missed-constant-usage
         if "volume" in item["biblio"] and item["biblio"]["volume"] is not None:
-            record_dict["volume"] = item["biblio"]["volume"]
+            record_dict[Fields.VOLUME] = item["biblio"]["volume"]
         if "issue" in item["biblio"] and item["biblio"]["issue"] is not None:
-            record_dict["number"] = item["biblio"]["issue"]
+            record_dict[Fields.NUMBER] = item["biblio"]["issue"]
         if "first_page" in item["biblio"] and item["biblio"]["first_page"] is not None:
-            record_dict["pages"] = item["biblio"]["first_page"]
+            record_dict[Fields.PAGES] = item["biblio"]["first_page"]
         if "last_page" in item["biblio"] and item["biblio"]["last_page"] is not None:
-            record_dict["pages"] += "--" + item["biblio"]["last_page"]
+            record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
 
         self.__set_author_from_item(record_dict=record_dict, item=item)
         record = colrev.record.Record(data=record_dict)
@@ -169,12 +176,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         return record
 
     def __fix_errors(self, *, record: colrev.record.Record) -> None:
-        if "PubMed" == record.data.get("journal", ""):
-            record.remove_field(key="journal")
+        if "PubMed" == record.data.get(Fields.JOURNAL, ""):
+            record.remove_field(key=Fields.JOURNAL)
         try:
             self.language_service.unify_to_iso_639_3_language_codes(record=record)
         except colrev_exceptions.InvalidLanguageCodeException:
-            record.remove_field(key="language")
+            record.remove_field(key=Fields.LANGUAGE)
 
     def __get_masterdata_record(
         self, *, record: colrev.record.Record
@@ -196,13 +203,13 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             open_alex_feed.set_id(record_dict=retrieved_record.data)
             open_alex_feed.add_record(record=retrieved_record)
             record.change_entrytype(
-                new_entrytype=retrieved_record.data["ENTRYTYPE"],
+                new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
                 qm=self.review_manager.get_qm(),
             )
 
             record.merge(
                 merging_record=retrieved_record,
-                default_source=retrieved_record.data["colrev_origin"][0],
+                default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
             open_alex_feed.save_feed_file()
         except (
@@ -233,7 +240,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         if "colrev.open_alex.id" not in record.data:
             # Note: not yet implemented
             # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-            # if len(record.data.get("title", "")) < 35 and "doi" not in record.data:
+            # if len(record.data.get(Fields.TITLE, "")) < 35 and Fields.DOI not in record.data:
             #     return record
             # record = self.__check_doi_masterdata(record=record)
             return record

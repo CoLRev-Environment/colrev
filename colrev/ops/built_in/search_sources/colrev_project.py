@@ -53,6 +53,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
 
+    # pylint: disable=colrev-missed-constant-usage
     def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
@@ -70,6 +71,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
+    # pylint: disable=colrev-missed-constant-usage
     @classmethod
     def add_endpoint(
         cls,
@@ -115,6 +117,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         project_review_manager.get_load_operation(
             notify_state_transition_operation=False,
         )
+        # pylint: disable=colrev-missed-constant-usage
         self.review_manager.logger.info(
             f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
         )
@@ -136,6 +139,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
+        # pylint: disable=colrev-missed-constant-usage
         project_url = self.search_source.search_parameters["scope"]["url"]
         project_name = project_url.split("/")[-1].rstrip(".git")
         records_to_import = self.__load_records_to_import(

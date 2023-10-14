@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -120,10 +121,11 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Web of Science"""
 
-        record.format_if_mostly_upper(key="title", case="sentence")
-        record.format_if_mostly_upper(key="journal", case="title")
-        record.format_if_mostly_upper(key="booktitle", case="title")
-        record.format_if_mostly_upper(key="author", case="title")
+        # pylint: disable=colrev-missed-constant-usage
+        record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
+        record.format_if_mostly_upper(key=Fields.JOURNAL, case="title")
+        record.format_if_mostly_upper(key=Fields.BOOKTITLE, case="title")
+        record.format_if_mostly_upper(key=Fields.AUTHOR, case="title")
 
         record.remove_field(key="colrev.web_of_science.researcherid-numbers")
         record.remove_field(key="colrev.web_of_science.orcid-numbers")

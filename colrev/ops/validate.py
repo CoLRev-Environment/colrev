@@ -280,6 +280,7 @@ class Validate(colrev.operation.Operation):
                 if "colrev prep" in msg:
                     scope = "prepare"
                 elif "colrev dedupe" in msg:
+                    # pylint: disable=colrev-missed-constant-usage
                     scope = "dedupe"
                 elif any(
                     x in msg
@@ -317,6 +318,7 @@ class Validate(colrev.operation.Operation):
 
             # Note : still very simple heuristics...
             if len(records) != len(hist_records):
+                # pylint: disable=colrev-missed-constant-usage
                 scope = "dedupe"
 
         return scope

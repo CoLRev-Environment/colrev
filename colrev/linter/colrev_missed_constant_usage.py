@@ -63,7 +63,6 @@ class MissedConstantUsageChecker(checkers.BaseChecker):
         if not hasattr(node.targets[0].slice, "value"):
             return
 
-        # TODO : check similar strings (to catch typos?)
         if node.targets[0].slice.value in self.constant_keys:
             self.add_message(self.name, node=node)  # , confidence=HIGH)
 

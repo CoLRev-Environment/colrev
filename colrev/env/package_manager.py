@@ -37,6 +37,7 @@ from colrev.constants import Fields
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
 
+# pylint: disable=colrev-missed-constant-usage
 class PackageEndpointType(Enum):
     """An enum for the types of PackageEndpoints"""
 
@@ -743,6 +744,7 @@ class PackageManager:
 
         return packages_dict
 
+    # pylint: disable=too-many-arguments
     def load_packages(
         self,
         *,
@@ -831,7 +833,7 @@ class PackageManager:
         file_path = Path(f"{identifier}.rst")
         target = extensions_index_path / file_path
         with open(target, "w", encoding="utf-8") as file:
-            # TODO : at this point, we may add metadata
+            # NOTE: at this point, we may add metadata
             # (such as package status, authors, url etc.)
             file.write(output)
 
@@ -887,6 +889,8 @@ class PackageManager:
             for line in new_doc:
                 file.write(line + "\n")
 
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments
     def __add_package_endpoints(
         self,
         *,
@@ -1104,6 +1108,7 @@ class PackageManager:
 
         self.__write_docs_for_index(docs_for_index)
 
+    # pylint: disable=too-many-locals
     def add_endpoint_for_operation(
         self,
         *,
@@ -1189,8 +1194,6 @@ class PackageManager:
         )
 
         e_class = endpoint_dict[package_identifier]
-        # TODO : if params.startswith("http"): params_dict = {Fields.URL: params}
-        # TODO : should parameters generally be key-value pairs separated by ; ?
         if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
             if params:
                 if params.startswith("http"):

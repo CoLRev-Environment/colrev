@@ -15,6 +15,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -81,8 +82,8 @@ class DOIConnector:
                 masterdata_repository=review_manager.settings.is_curated_repo(),
             )
             record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            if "retracted" in record.data.get("warning", ""):
-                record.prescreen_exclude(reason="retracted")
+            if FieldValues.RETRACTED in record.data.get("warning", ""):
+                record.prescreen_exclude(reason=FieldValues.RETRACTED)
                 record.remove_field(key="warning")
 
             if Fields.TITLE in record.data:

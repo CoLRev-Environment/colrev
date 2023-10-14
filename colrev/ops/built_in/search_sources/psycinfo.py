@@ -55,6 +55,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.psycinfo"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [colrev.settings.SearchType.DB]
 
@@ -146,9 +147,5 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for PsycINFO"""
-
-        # record.rename_field(
-        #     key="colrev.psycinfo.pubmedid", new_key="colrev.pubmed.pubmedid"
-        # )
 
         return record

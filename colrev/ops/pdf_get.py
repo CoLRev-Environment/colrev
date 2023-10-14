@@ -181,7 +181,8 @@ class PDFGet(colrev.operation.Operation):
             if Fields.FILE in record.data:
                 self.review_manager.report_logger.info(
                     f"{endpoint.settings.endpoint}"  # type: ignore
-                    f"({record_dict[Fields.ID]}): retrieved .../{Path(record_dict[Fields.FILE]).name}"
+                    f"({record_dict[Fields.ID]}): retrieved .../"
+                    f"{Path(record_dict[Fields.FILE]).name}"
                 )
                 if (
                     colrev.record.RecordState.rev_prescreen_included

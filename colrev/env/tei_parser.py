@@ -17,6 +17,7 @@ import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 # xpath alternative:
@@ -421,7 +422,7 @@ class TEIParser:
         """Get the metadata of the PDF (title, author, ...) as a dict"""
 
         record = {
-            "ENTRYTYPE": "article",
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.TITLE: self.__get_paper_title(),
             Fields.AUTHOR: self.__get_paper_authors(),
             Fields.JOURNAL: self.__get_paper_journal(),
@@ -664,16 +665,16 @@ class TEIParser:
         return journal_title
 
     def __get_entrytype(self, *, reference: Element) -> str:
-        entrytype = "misc"
+        entrytype = ENTRYTYPES.MISC
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
             if monogr_node is not None:
                 title_node = monogr_node.find(self.ns["tei"] + "title")
                 if title_node is not None:
                     if title_node.get("level", "NA") != "j":
-                        entrytype = "book"
+                        entrytype = ENTRYTYPES.BOOK
                     else:
-                        entrytype = "article"
+                        entrytype = ENTRYTYPES.ARTICLE
         return entrytype
 
     def __get_tei_id_count(self, *, tei_id: str) -> int:
@@ -707,10 +708,10 @@ class TEIParser:
                         ):
                             continue
 
-                    if entrytype == "article":
+                    if entrytype == ENTRYTYPES.ARTICLE:
                         ref_rec = {
                             Fields.ID: tei_id,
-                            "ENTRYTYPE": entrytype,
+                            Fields.ENTRYTYPE: entrytype,
                             "tei_id": tei_id,
                             Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
@@ -734,10 +735,10 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
-                    elif entrytype == "book":
+                    elif entrytype == ENTRYTYPES.BOOK:
                         ref_rec = {
                             Fields.ID: tei_id,
-                            "ENTRYTYPE": entrytype,
+                            Fields.ENTRYTYPE: entrytype,
                             "tei_id": tei_id,
                             Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Constants for CoLRev"""
 # pylint: disable=too-few-public-methods
 # pylint: disable=colrev-missed-constant-usage
 
@@ -63,6 +64,7 @@ class Fields:
     PAGES = "pages"
     EDITOR = "editor"
     EDITION = "edition"
+    ADDRESS = "address"
 
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
@@ -76,6 +78,9 @@ class Fields:
     SEMANTIC_SCHOLAR_ID = "colrev.semantic_scholar.id"
     WEB_OF_SCIENCE_ID = "colrev.web_of_science.unique-id"
     PUBMED_ID = "colrev.pubmed.pubmedid"
+    PMCID = "colrev.pubmed.pmcid"
+    # https://www.nlm.nih.gov/bsd/mms/medlineelements.html#pmc
+    EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
 
 
 class FieldSet:
@@ -130,21 +135,13 @@ class FieldSet:
     TIME_VARIANT_FIELDS = [Fields.CITED_BY]
 
 
-# Field values
-
-
 class FieldValues:
     """Constant field values"""
 
     UNKNOWN = "UNKNOWN"
     FORTHCOMING = "forthcoming"
-
-
-# TODO : common Languages?
-
-# TODO:
-# class Status():
-#     RETRIEVED = "md_retrieved"
+    RETRACTED = "retracted"
+    CURATED = "CURATED"
 
 
 class DefectCodes:
@@ -198,11 +195,6 @@ class Operations:
     DATA = "data"
 
 
-# class PDFDefectCodes()
-# author_not_in_first_pages
-# title_not_in_first_pages
-
-
 class ExitCodes:
     """Exit codes"""
 
@@ -211,6 +203,8 @@ class ExitCodes:
 
 
 class Colors:
+    """Colors for CLI printing"""
+
     RED = "\033[91m"
     GREEN = "\033[92m"
     ORANGE = "\033[93m"

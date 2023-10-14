@@ -195,6 +195,7 @@ class Advisor:
                     + "(see instructions above).",
                 }
 
+    # pylint: disable=colrev-missed-constant-usage
     def __get_collaboration_instructions(
         self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
@@ -208,10 +209,8 @@ class Advisor:
 
         remote_connected = 0 != len(git_repo.remotes)
         if remote_connected:
-            # pylint: disable=colrev-missed-constant-usage
             collaboration_instructions["title"] = "Versioning and collaboration"
         else:
-            # pylint: disable=colrev-missed-constant-usage
             collaboration_instructions[
                 "title"
             ] = "Versioning (not connected to shared repository)"

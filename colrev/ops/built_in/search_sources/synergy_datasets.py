@@ -20,6 +20,7 @@ import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 
@@ -45,6 +46,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.synergy_datasets"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
     search_types = [colrev.settings.SearchType.API]
 
@@ -178,8 +180,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 decisions["openalex_id"][oaid] = [record["label_included"]]
 
     def __check_quality(self, *, decisions: dict) -> None:
-        decisions["doi"] = {
-            d: v for d, v in decisions["doi"].items() if len(v) > 1 and len(set(v)) != 1
+        decisions[Fields.DOI] = {
+            d: v
+            for d, v in decisions[Fields.DOI].items()
+            if len(v) > 1 and len(set(v)) != 1
         }
         decisions["pmid"] = {
             d: v
@@ -191,7 +195,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             for d, v in decisions["openalex_id"].items()
             if len(v) > 1 and len(set(v)) != 1
         }
-        if decisions["doi"] or decisions["pmid"] or decisions["openalex_id"]:
+        if decisions[Fields.DOI] or decisions["pmid"] or decisions["openalex_id"]:
             self.review_manager.logger.error(
                 "Errors in dataset: ambiguous inclusion decisions:"
             )
@@ -208,13 +212,16 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.SearchSourceException(msg)
 
     def __prep_record(self, *, record: dict, ind: int) -> None:
-        record["ID"] = ind
-        record["ENTRYTYPE"] = "article"
+        record[Fields.ID] = ind
+        record[Fields.ENTRYTYPE] = "article"
         for k in list(record.keys()):
             if str(record[k]) == "nan":
                 del record[k]
-        if "doi" in record.keys():
-            record["doi"] = str(record["doi"]).replace("https://doi.org/", "").upper()
+        if Fields.DOI in record.keys():
+            # pylint: disable=colrev-missed-constant-usage
+            record[Fields.DOI] = (
+                str(record["doi"]).replace("https://doi.org/", "").upper()
+            )
         if "pmid" in record.keys():
             record["pmid"] = str(record["pmid"]).replace(
                 "https://pubmed.ncbi.nlm.nih.gov/", ""
@@ -242,7 +249,11 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             update_only=False,
         )
         existing_keys = {
-            "doi": [r["doi"] for r in synergy_feed.feed_records.values() if "doi" in r],
+            Fields.DOI: [
+                r[Fields.DOI]
+                for r in synergy_feed.feed_records.values()
+                if Fields.DOI in r
+            ],
             "pmid": [
                 r["pmid"] for r in synergy_feed.feed_records.values() if "pmid" in r
             ],
@@ -254,7 +265,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         }
 
         decisions: typing.Dict[str, typing.Dict[str, list]] = {
-            "doi": {},
+            Fields.DOI: {},
             "pmid": {},
             "openalex_id": {},
         }
@@ -263,7 +274,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             self.__prep_record(record=record, ind=ind)
             self.__validate_decisions(decisions=decisions, record=record)
             # Skip records without metadata
-            if {"ID", "ENTRYTYPE", "label_included"} == set(record.keys()):
+            if {Fields.ID, Fields.ENTRYTYPE, "label_included"} == set(record.keys()):
                 empty_records += 1
                 continue
 
@@ -271,17 +282,23 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             if any(
                 value in existing_keys[key]
                 for key, value in record.items()
-                if key in ["doi", "pmid", "openalex_id"]
+                if key in [Fields.DOI, "pmid", "openalex_id"]
             ):
                 duplicates += 1
                 continue
 
             for key in list(record.keys()):
-                if key not in ["ID", "doi", "pmid", "openalex_id", "ENTRYTYPE"]:
+                if key not in [
+                    Fields.ID,
+                    Fields.DOI,
+                    "pmid",
+                    "openalex_id",
+                    Fields.ENTRYTYPE,
+                ]:
                     record[f"colrev.synergy_datasets.{key}"] = record.pop(key)
 
-            if "doi" in record:
-                existing_keys["doi"].append(record["doi"])
+            if Fields.DOI in record:
+                existing_keys[Fields.DOI].append(record[Fields.DOI])
             if "pmid" in record:
                 existing_keys["pmid"].append(record["pmid"])
             if "openalex_id" in record:
@@ -334,14 +351,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         """Source-specific preparation for SYNERGY-datasets"""
 
         record.rename_field(
-            key="colrev.synergy_datasets.pubmedid", new_key="colrev.pubmed.pubmedid"
+            key="colrev.synergy_datasets.pubmedid", new_key=Fields.PUBMED_ID
         )
         record.rename_field(
             key="colrev.synergy_datasets.openalex_id", new_key="colrev.open_alex.id"
         )
         if not any(
             x in record.data
-            for x in ["colrev.pubmed.pubmedid", "doi", "colrev.open_alex.id"]
+            for x in [Fields.PUBMED_ID, Fields.DOI, "colrev.open_alex.id"]
         ):
             record.prescreen_exclude(reason="no-metadata-available")
         return record

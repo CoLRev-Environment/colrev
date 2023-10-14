@@ -192,12 +192,12 @@ class ExportManPrep(JsonSchemaMixin):
         for colrev_data_provenance_key_to_drop in colrev_data_provenance_keys_to_drop:
             del record.data[Fields.D_PROV][colrev_data_provenance_key_to_drop]
 
-        MD_PROV_keys_to_drop = []
+        md_prov_keys_to_drop = []
         for key, items in record.data.get(Fields.MD_PROV, {}).items():
             if key not in record.data and "not-missing" not in items["note"]:
-                MD_PROV_keys_to_drop.append(key)
-        for MD_PROV_key_to_drop in MD_PROV_keys_to_drop:
-            del record.data[Fields.MD_PROV][MD_PROV_key_to_drop]
+                md_prov_keys_to_drop.append(key)
+        for md_prov_key_to_drop in md_prov_keys_to_drop:
+            del record.data[Fields.MD_PROV][md_prov_key_to_drop]
 
     def __update_original_record_based_on_man_prepped(
         self, *, original_record: colrev.record.Record, man_prepped_record_dict: dict

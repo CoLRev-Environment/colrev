@@ -242,6 +242,7 @@ class ArXivSource:
 
         return record
 
+    # pylint: disable=too-many-branches
     # pylint: disable=colrev-missed-constant-usage
     def __parse_record(self, entry: dict) -> dict:
         entry[Fields.ENTRYTYPE] = "techreport"
@@ -256,8 +257,7 @@ class ArXivSource:
             entry["arxiv_journal_ref"] = (
                 entry["arxiv_journal_ref"].replace("\n", " ").replace("\r", " ")
             )
-        entry[Fields.TITLE] = entry[Fields.TITLE].replace("\n ", "")
-        entry[Fields.TITLE] = entry[Fields.TITLE].replace("\n ", "")
+        entry[Fields.TITLE] = entry["title"].replace("\n ", "")
         if "arxiv_doi" in entry:
             entry[Fields.DOI] = entry.pop("arxiv_doi")
         if "links" in entry:

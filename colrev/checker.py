@@ -517,6 +517,7 @@ class Checker:
 
         status_transition = {}
         if len(prior_status) == 0:
+            # pylint: disable=colrev-missed-constant-usage
             status_transition[record_id] = "load"
         else:
             proc_transition_list: list = [
@@ -539,6 +540,7 @@ class Checker:
                     f"{record_id}: {prior_status[0]} to {status}"
                 )
             if 0 == len(proc_transition_list):
+                # pylint: disable=colrev-missed-constant-usage
                 status_transition[record_id] = "load"
             else:
                 proc_transition = proc_transition_list.pop()

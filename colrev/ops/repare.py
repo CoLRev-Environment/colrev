@@ -10,7 +10,9 @@ import colrev.constants as c
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+from colrev.constants import DefectCodes
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -140,14 +142,15 @@ class Repare(colrev.operation.Operation):
             ).feed_records
         return source_feeds
 
+    # pylint: disable=too-many-branches
     def __remove_fields(self, *, record: colrev.record.Record) -> None:
         if "pdf_hash" in record.data:
-            record.data["colrev_pdf_id"] = record.data["pdf_hash"]
+            record.data[Fields.PDF_ID] = record.data["pdf_hash"]
             del record.data["pdf_hash"]
         if "pdf_prep_hints" in record.data:
             del record.data["pdf_prep_hints"]
-        if "grobid-version" in record.data:
-            del record.data["grobid-version"]
+        if Fields.GROBID_VERSION in record.data:
+            del record.data[Fields.GROBID_VERSION]
 
         if Fields.D_PROV in record.data:
             mk_to_remove = []
@@ -162,16 +165,17 @@ class Repare(colrev.operation.Operation):
             for key in record.data[Fields.MD_PROV]:
                 if (
                     key not in record.data
-                    and "CURATED" != key
-                    and "not-missing" not in record.data[Fields.MD_PROV][key]["note"]
+                    and FieldValues.CURATED != key
+                    and DefectCodes.NOT_MISSING
+                    not in record.data[Fields.MD_PROV][key]["note"]
                 ):
                     mdk_to_remove += [key]
             for key in mdk_to_remove:
                 del record.data[Fields.MD_PROV][key]
 
         if self.review_manager.settings.is_curated_masterdata_repo():
-            if "CURATED" in record.data[Fields.MD_PROV]:
-                del record.data[Fields.MD_PROV]["CURATED"]
+            if FieldValues.CURATED in record.data[Fields.MD_PROV]:
+                del record.data[Fields.MD_PROV][FieldValues.CURATED]
 
     def __set_data_provenance_field(
         self, *, record: colrev.record.Record, key: str, source_feeds: dict
@@ -262,7 +266,7 @@ class Repare(colrev.operation.Operation):
         self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
     ) -> None:
         if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
-            if "CURATED" in record.data[Fields.MD_PROV]:
+            if FieldValues.CURATED in record.data[Fields.MD_PROV]:
                 return
             self.__set_non_curated_masterdata_provenance_field(
                 record=record, key=key, value=value, source_feeds=source_feeds
@@ -349,7 +353,6 @@ class Repare(colrev.operation.Operation):
 
     def __update_field_names(self, *, records: dict) -> None:
         for record_dict in records.values():
-            # TODO : extract to methods and call from upgrade.py
             # TBD: which parts are in upgrade/repare and which parts are in prepare??
             record = colrev.record.Record(data=record_dict)
             if Fields.FULLTEXT in record_dict.get("link", ""):

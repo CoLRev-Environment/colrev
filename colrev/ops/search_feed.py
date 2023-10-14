@@ -227,7 +227,9 @@ class GeneralOriginFeed:
                 f"{main_record_dict['ID']}{Colors.END}"
             )
             main_record = colrev.record.Record(data=main_record_dict)
-            main_record.prescreen_exclude(reason="retracted", print_warning=True)
+            main_record.prescreen_exclude(
+                reason=FieldValues.RETRACTED, print_warning=True
+            )
             main_record.remove_field(key="warning")
             return True
         return False
@@ -358,7 +360,7 @@ class GeneralOriginFeed:
         )
 
         if (
-            "CURATED" in main_record_dict.get(Fields.MD_PROV, {})
+            FieldValues.CURATED in main_record_dict.get(Fields.MD_PROV, {})
             and "md_curated.bib" != source.get_origin_prefix()
         ):
             return False

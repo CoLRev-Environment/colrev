@@ -17,6 +17,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -38,6 +39,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.open_library"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"
     search_types = [colrev.settings.SearchType.MD]
 
@@ -91,12 +93,12 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         """Check the status (availability) of the OpenLibrary API"""
 
         test_rec = {
-            "ENTRYTYPE": "book",
-            "isbn": "9781446201435",
+            Fields.ENTRYTYPE: "book",
+            Fields.ISBN: "9781446201435",
             # 'author': 'Ridley, Diana',
-            "title": "The Literature Review A Stepbystep Guide For Students",
-            "ID": "Ridley2012",
-            "year": "2012",
+            Fields.TITLE: "The Literature Review A Stepbystep Guide For Students",
+            Fields.ID: "Ridley2012",
+            Fields.YEAR: "2012",
         }
         try:
             url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
@@ -118,6 +120,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                     "OPENLIBRARY"
                 ) from exc
 
+    # pylint: disable=colrev-missed-constant-usage
     @classmethod
     def __open_library_json_to_record(
         cls, *, item: dict, url: str
@@ -131,22 +134,22 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                     for author in item["author_name"]
                 ]
             )
-            retrieved_record.update(author=authors_string)
+            retrieved_record[Fields.AUTHOR] = authors_string
         if "publisher" in item:
-            retrieved_record.update(publisher=str(item["publisher"][0]))
+            retrieved_record[Fields.PUBLISHER] = str(item["publisher"][0])
         if "title" in item:
-            retrieved_record.update(title=str(item["title"]))
+            retrieved_record[Fields.TITLE] = str(item["title"])
         if "publish_year" in item:
-            retrieved_record.update(year=str(item["publish_year"][0]))
+            retrieved_record[Fields.YEAR] = str(item["publish_year"][0])
         if "edition_count" in item:
-            retrieved_record.update(edition=str(item["edition_count"]))
+            retrieved_record[Fields.EDITOR] = str(item["edition_count"])
         if "seed" in item:
             if "/books/" in item["seed"][0]:
-                retrieved_record.update(ENTRYTYPE="book")
+                retrieved_record[Fields.ENTRYTYPE] = "book"
         if "publish_place" in item:
-            retrieved_record.update(address=str(item["publish_place"][0]))
-        if "isbn" in item:
-            retrieved_record.update(isbn=str(item["isbn"][0]))
+            retrieved_record[Fields.ADDRESS] = str(item["publish_place"][0])
+        if Fields.ISBN in item:
+            retrieved_record[Fields.ISBN] = str(item["isbn"][0])
 
         record = colrev.record.PrepRecord(data=retrieved_record)
         record.add_provenance_all(source=url)
@@ -158,8 +161,8 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         session = prep_operation.review_manager.get_cached_session()
 
         url = "NA"
-        if "isbn" in record.data:
-            isbn = record.data["isbn"].replace("-", "").replace(" ", "")
+        if Fields.ISBN in record.data:
+            isbn = record.data[Fields.ISBN].replace("-", "").replace(" ", "")
             url = f"https://openlibrary.org/isbn/{isbn}.json"
             ret = session.request(
                 "GET",
@@ -170,32 +173,37 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret.raise_for_status()
             # prep_operation.review_manager.logger.debug(url)
             if '"error": "notfound"' in ret.text:
-                record.remove_field(key="isbn")
+                record.remove_field(key=Fields.ISBN)
 
             item = json.loads(ret.text)
 
         else:
             base_url = "https://openlibrary.org/search.json?"
             url = ""
-            if record.data.get("author", "NA").split(",")[0]:
+            if record.data.get(Fields.AUTHOR, "NA").split(",")[0]:
                 url = (
                     base_url
                     + "&author="
-                    + record.data.get("author", "NA").split(",")[0]
+                    + record.data.get(Fields.AUTHOR, "NA").split(",")[0]
                 )
-            if record.data["ENTRYTYPE"] == "inbook" and "editor" in record.data:
-                if record.data.get("editor", "NA").split(",")[0]:
+            if (
+                record.data[Fields.ENTRYTYPE] == "inbook"
+                and Fields.EDITOR in record.data
+            ):
+                if record.data.get(Fields.EDITOR, "NA").split(",")[0]:
                     url = (
                         base_url
                         + "&author="
-                        + record.data.get("editor", "NA").split(",")[0]
+                        + record.data.get(Fields.EDITOR, "NA").split(",")[0]
                     )
             if base_url not in url:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                     msg="OpenLibrary: base_url not in url"
                 )
 
-            title = record.data.get("title", record.data.get("booktitle", "NA"))
+            title = record.data.get(
+                Fields.TITLE, record.data.get(Fields.BOOKTITLE, "NA")
+            )
             if len(title) < 10:
                 raise colrev_exceptions.RecordNotFoundInPrepSourceException(
                     msg="OpenLibrary: len(title) < 10"
@@ -265,7 +273,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Retrieve masterdata from OpenLibrary based on similarity with the record provided"""
 
-        if any(self.origin_prefix in o for o in record.data["colrev_origin"]):
+        if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
             # Already linked to an open-library record
             return record
 
@@ -287,7 +295,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
             record.merge(
                 merging_record=retrieved_record,
-                default_source=retrieved_record.data["colrev_origin"][0],
+                default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
             open_library_feed.save_feed_file()
             self.open_library_lock.release()

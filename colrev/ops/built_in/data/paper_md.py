@@ -224,6 +224,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         return list(set(record_id_list) - set(available))
 
+    # pylint: disable=too-many-arguments
     def __create_new_records_source_section(
         self,
         *,
@@ -256,6 +257,7 @@ class PaperMarkdown(JsonSchemaMixin):
                     f" {missing_record} added"
                 )
 
+    # pylint: disable=too-many-arguments
     def __update_new_records_source_section(
         self,
         *,

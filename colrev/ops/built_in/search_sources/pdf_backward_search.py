@@ -18,6 +18,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -116,7 +118,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             "colrev_status" in self.search_source.search_parameters["scope"]
             and self.search_source.search_parameters["scope"]["colrev_status"]
             == "rev_included|rev_synthesized"
-            and record["colrev_status"]
+            and record[Fields.STATUS]
             not in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -128,11 +130,11 @@ class BackwardSearchSource(JsonSchemaMixin):
         if "file" in self.search_source.search_parameters["scope"]:
             if (
                 self.search_source.search_parameters["scope"]["file"] == "paper.pdf"
-            ) and "data/pdfs/paper.pdf" != record.get("file", ""):
+            ) and "data/pdfs/paper.pdf" != record.get(Fields.FILE, ""):
                 return False
 
-        if not (self.review_manager.path / Path(record["file"])).is_file():
-            self.review_manager.logger.error(f'File not found for {record["ID"]}')
+        if not (self.review_manager.path / Path(record[Fields.FILE])).is_file():
+            self.review_manager.logger.error(f"File not found for {record[Fields.ID]}")
             return False
 
         return True
@@ -154,7 +156,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                     )
                     # if not crossref_query_return:
                     #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
-                    retrieved_record.data["ID"] = retrieved_record.data["doi"]
+                    retrieved_record.data[Fields.ID] = retrieved_record.data[Fields.DOI]
                     references.append(retrieved_record.data)
                 except (
                     colrev_exceptions.RecordNotFoundInPrepSourceException,
@@ -172,8 +174,8 @@ class BackwardSearchSource(JsonSchemaMixin):
         self, *, record: colrev.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
-            retrieved_record_dict.get("title", "NA").lower(),
-            record.data.get("title", "").lower(),
+            retrieved_record_dict.get(Fields.TITLE, "NA").lower(),
+            record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
             colrev.record.PrepRecord(data=retrieved_record_dict)
@@ -201,7 +203,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 parent_record_id[: parent_record_id.find("_backward_search_")]
             ]
 
-            if "doi" not in parent_record:
+            if Fields.DOI not in parent_record:
                 continue
 
             backward_references = self.__get_reference_records(
@@ -243,9 +245,9 @@ class BackwardSearchSource(JsonSchemaMixin):
         # may change across grobid versions
         # -> challenge for key-handling/updating searches...
 
-        self.review_manager.logger.info(f' run backward search for {record["ID"]}')
+        self.review_manager.logger.info(f" run backward search for {record[Fields.ID]}")
 
-        pdf_path = self.review_manager.path / Path(record["file"])
+        pdf_path = self.review_manager.path / Path(record[Fields.FILE])
         tei = self.review_manager.get_tei(
             pdf_path=pdf_path,
         )
@@ -260,7 +262,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             if "tei_id" in new_record:
                 del new_record["tei_id"]
             new_record["bwsearch_ref"] = (
-                record["ID"] + "_backward_search_" + new_record["ID"]
+                record[Fields.ID] + "_backward_search_" + new_record[Fields.ID]
             )
             try:
                 pdf_backward_search_feed.set_id(record_dict=new_record)
@@ -268,9 +270,9 @@ class BackwardSearchSource(JsonSchemaMixin):
                 continue
 
             prev_record_dict_version = {}
-            if new_record["ID"] in pdf_backward_search_feed.feed_records:
+            if new_record[Fields.ID] in pdf_backward_search_feed.feed_records:
                 prev_record_dict_version = pdf_backward_search_feed.feed_records[
-                    new_record["ID"]
+                    new_record[Fields.ID]
                 ]
 
             added = pdf_backward_search_feed.add_record(
@@ -397,19 +399,22 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 
-        record.format_if_mostly_upper(key="title", case="sentence")
-        record.format_if_mostly_upper(key="journal", case="title")
-        record.format_if_mostly_upper(key="booktitle", case="title")
-        record.format_if_mostly_upper(key="author", case="title")
+        record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
+        record.format_if_mostly_upper(key=Fields.JOURNAL, case=Fields.TITLE)
+        record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
+        record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
 
         if (
             "multimedia appendix"
-            in record.data.get("title", "").lower()
-            + record.data.get("journal", "").lower()
+            in record.data.get(Fields.TITLE, "").lower()
+            + record.data.get(Fields.JOURNAL, "").lower()
         ):
             record.prescreen_exclude(reason="grobid-error")
 
-        if record.data["ENTRYTYPE"] == "misc" and "publisher" in record.data:
-            record.data["ENTRYTYPE"] = "book"
+        if (
+            record.data[Fields.ENTRYTYPE] == ENTRYTYPES.MISC
+            and Fields.PUBLISHER in record.data
+        ):
+            record.data[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
 
         return record

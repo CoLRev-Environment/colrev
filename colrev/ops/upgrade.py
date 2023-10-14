@@ -17,7 +17,9 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Colors
+from colrev.constants import DefectCodes
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -320,6 +322,7 @@ class Upgrade(colrev.operation.Operation):
 
             pdf_path = Path(record_dict["file"])
             colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
+            # pylint: disable=colrev-missed-constant-usage
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
         self.review_manager.dataset.save_records_dict(records=records)
@@ -360,11 +363,11 @@ class Upgrade(colrev.operation.Operation):
                 continue
             not_missing_fields = []
             for key, prov in record_dict[Fields.MD_PROV].items():
-                if "not_missing" in prov["note"]:
+                if DefectCodes.NOT_MISSING in prov["note"]:
                     not_missing_fields.append(key)
                 prov["note"] = ""
             for key in not_missing_fields:
-                record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
+                record_dict[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
             if "cited_by_id" in record_dict:
@@ -380,11 +383,11 @@ class Upgrade(colrev.operation.Operation):
                     del record_dict[Fields.D_PROV]["tei_id"]
 
             record = colrev.record.Record(data=record_dict)
-            prior_state = record.data["colrev_status"]
+            prior_state = record.data[Fields.STATUS]
             record.update_masterdata_provenance(qm=quality_model)
             if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
                 record.data[  # pylint: disable=colrev-direct-status-assign
-                    "colrev_status"
+                    Fields.STATUS
                 ] = colrev.record.RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)
         return self.repo.is_dirty()
@@ -396,7 +399,7 @@ class Upgrade(colrev.operation.Operation):
                 continue
             ed_val = record[Fields.D_PROV][Fields.EDITOR]
             del record[Fields.D_PROV][Fields.EDITOR]
-            if "CURATED" not in record[Fields.MD_PROV]:
+            if FieldValues.CURATED not in record[Fields.MD_PROV]:
                 record[Fields.MD_PROV][Fields.EDITOR] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
@@ -411,6 +414,7 @@ class Upgrade(colrev.operation.Operation):
         self.__save_settings(settings)
         return self.repo.is_dirty()
 
+    # pylint: disable=too-many-branches
     def __migrate_0_9_3(self) -> bool:
         settings = self.__load_settings_dict()
         for source in settings["sources"]:
@@ -426,8 +430,6 @@ class Upgrade(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            # TODO : call methods in repare.py
-
             if "pubmedid" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="pubmedid", new_key="colrev.pubmed.pubmedid")
@@ -474,6 +476,7 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         return self.repo.is_dirty()
 
+    # pylint: disable=too-many-branches
     def __migrate_0_10_1(self) -> bool:
         prep_replacements = {
             "colrev.open_alex_prep": "colrev.open_alex",
