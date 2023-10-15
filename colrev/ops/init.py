@@ -431,6 +431,17 @@ class Initializer:
         settings["dedupe"]["dedupe_package_endpoints"] = [
             {"endpoint": "colrev.simple_dedupe"}
         ]
+        settings["sources"] = [
+            {
+                "endpoint": "colrev.unknown_source",
+                "filename": str(Path("data/search/30_example_records.bib")),
+                "search_type": "DB",
+                "search_parameters": {
+                    "query_file": str(Path("data/search/30_example_records_query.txt"))
+                },
+                "comment": "",
+            }
+        ]
 
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
