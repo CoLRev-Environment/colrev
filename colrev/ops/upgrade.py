@@ -149,6 +149,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_10_1,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.10.1"),
+                "target_version": CoLRevVersion("0.10.2"),
+                "script": self.__migrate_0_10_2,
+                "released": True,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -523,8 +529,18 @@ class Upgrade(colrev.operation.Operation):
                 source["search_type"] = "FILES"
 
         self.__save_settings(settings)
+        return self.repo.is_dirty()
 
-        return False
+    def __migrate_0_10_2(self) -> bool:
+        paper_md_path = Path("data/data/paper.md")
+        paper_md_content = paper_md_path.read_text(encoding="utf-8")
+        paper_md_content = paper_md_content.replace(
+            "data/records.bib", "data/data/sample_references.bib"
+        )
+        paper_md_path.write_text(paper_md_content, encoding="utf-8")
+        self.repo.index.add([str(paper_md_path)])
+
+        return self.repo.is_dirty()
 
 
 # Note: we can ask users to make decisions (when defaults are not clear)

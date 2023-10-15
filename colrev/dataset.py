@@ -60,6 +60,7 @@ class Dataset:
         "data/prep_man/records_prep_man.bib",
         "data/prep/",
         "data/dedupe/",
+        "data/data/sample_references.bib",
     ]
     DEPRECATED_GIT_IGNORE_ITEMS = [
         "missing_pdf_files.csv",

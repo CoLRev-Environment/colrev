@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.10.2 - 2023-10-15
+
+### Fixed
+
+- paper_md: export BibTeX file and replace keys containing `.` to prevent pandoc error
+
 ## 0.10.1 - 2023-10-06
 
 ### Changed

@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     import colrev.ops.data
 
 
+# pylint: disable=too-many-instance-attributes
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
 @dataclass
 class PaperMarkdown(JsonSchemaMixin):
@@ -53,6 +54,7 @@ class PaperMarkdown(JsonSchemaMixin):
     the corresponding record will be marked as rev_synthesized."""
 
     NON_SAMPLE_REFERENCES_RELATIVE = Path("non_sample_references.bib")
+    SAMPLE_REFERENCES_RELATIVE = Path("sample_references.bib")
 
     ci_supported: bool = False
 
@@ -109,6 +111,9 @@ class PaperMarkdown(JsonSchemaMixin):
         self.non_sample_references = (
             data_operation.review_manager.data_dir / self.NON_SAMPLE_REFERENCES_RELATIVE
         )
+        self.sample_references = (
+            data_operation.review_manager.data_dir / self.SAMPLE_REFERENCES_RELATIVE
+        )
         self.data_operation = data_operation
 
         self.settings.paper_output = (
@@ -127,6 +132,8 @@ class PaperMarkdown(JsonSchemaMixin):
             data_operation.review_manager.path
         )
         self.__temp_path.mkdir(exist_ok=True, parents=True)
+
+        self.review_manager = data_operation.review_manager
 
     # pylint: disable=unused-argument
     @classmethod
@@ -651,6 +658,15 @@ class PaperMarkdown(JsonSchemaMixin):
             except AttributeError:
                 pass
 
+    def __copy_references_bib(self) -> None:
+        records = self.review_manager.dataset.load_records_dict()
+        for record_id, record_dict in records.items():
+            record_dict = {k.replace(".", "_"): v for k, v in record_dict.items()}
+            records[record_id] = record_dict
+        self.review_manager.dataset.save_records_dict_to_file(
+            records=records, save_path=self.sample_references
+        )
+
     def __call_docker_build_process(
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
@@ -700,6 +716,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self.__retrieve_default_csl()
         self.__create_non_sample_references_bib()
+        self.__copy_references_bib()
 
         word_template = self.settings.word_template
 
