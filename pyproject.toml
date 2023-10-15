@@ -2,7 +2,7 @@
 name = "colrev"
 version = "0.10.1"
 description = "CoLRev: An open-source environment for collaborative reviews"
-authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
+authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
 readme = "README.md"
 homepage="https://colrev.readthedocs.io/en/latest/"

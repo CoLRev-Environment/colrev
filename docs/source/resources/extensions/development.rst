@@ -94,7 +94,7 @@ Following steps might be a good starting point.
    ..  code-block:: diff
 
        ...
-         authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
+         authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
          readme = "README.md"
        + include = ["colrev_asreview/.colrev_endpoints.json"]
 

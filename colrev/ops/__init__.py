@@ -1,4 +1,4 @@
 """CoLRev operations."""
 
 __author__ = """Gerit Wagner"""
-__email__ = "gerit.wagner@hec.ca"
+__email__ = "gerit.wagner@uni-bamberg.de"
