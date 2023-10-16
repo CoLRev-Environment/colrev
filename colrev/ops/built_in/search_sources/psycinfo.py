@@ -2,48 +2,23 @@
 """SearchSource: PsycINFO"""
 from __future__ import annotations
 
-import re
-from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from rispy import BaseParser
-from rispy.config import LIST_TYPE_TAGS
-from rispy.config import TAG_KEY_MAPPING
 
 import colrev.env.package_manager
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
-
-
-class PsycInfoRISParser(BaseParser):
-    """Parser for Psycinfo RIS files."""
-
-    START_TAG = "TY"
-    IGNORE = ["FN", "VR", "EF"]
-    PATTERN = r"^[A-Z][A-Z0-9]+ |^ER\s?|^EF\s?"
-    mapping = deepcopy(TAG_KEY_MAPPING)
-    # mapping["A1"] = "authors"
-    mapping["PM"] = "pubmedid"
-    # mapping["T1"] = "primary_title"
-    # mapping["JF"] = "secondary_title"
-    DEFAULT_MAPPING = mapping
-    DEFAULT_LIST_TAGS = LIST_TYPE_TAGS
-
-    def get_content(self, line: str) -> str:
-        "Get the content from a line."
-        return line[line.find(" - ") + 2 :].strip()
-
-    def is_header(self, line: str) -> bool:
-        "Check whether the line is a header element"
-        return not re.match("[A-Z0-9]+  - ", line)
 
 
 @zope.interface.implementer(
@@ -73,6 +48,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.operation = source_operation
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -118,28 +94,70 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __ris_fixes(self, *, entries: dict) -> None:
-        for entry in entries:
-            if "alternate_title3" in entry and entry["type_of_reference"] in ["JOUR"]:
-                entry["secondary_title"] = entry.pop("alternate_title3")
-            if "publication_year" in entry:
-                entry["year"] = entry.pop("publication_year")
-            if "first_authors" in entry and "authors" not in entry:
-                entry["authors"] = entry.pop("first_authors")
+    def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+        references_types = {
+            "JOUR": ENTRYTYPES.ARTICLE,
+            "RPRT": ENTRYTYPES.TECHREPORT,
+            "CHAP": ENTRYTYPES.INBOOK,
+        }
+        key_map = {
+            ENTRYTYPES.ARTICLE: {
+                "Y1": Fields.YEAR,
+                "A1": Fields.AUTHOR,
+                "T1": Fields.TITLE,
+                "JF": Fields.JOURNAL,
+                "N2": Fields.ABSTRACT,
+                "VL": Fields.VOLUME,
+                "IS": Fields.NUMBER,
+                "KW": Fields.KEYWORDS,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "SP": Fields.PAGES,
+                "PMID": Fields.PUBMED_ID,
+                "SN": Fields.ISSN,
+            },
+        }
+        list_fields = {"A1": " and ", "KW": ", "}
+        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields=list_fields,
+        )
+        records = ris_loader.load_ris_records()
+
+        for counter, record_dict in enumerate(records.values()):
+            _id = str(counter + 1).zfill(5)
+            record_dict[Fields.ID] = _id
+
+            if record_dict["TY"] not in references_types:
+                msg = (
+                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
+                )
+                if not self.review_manager.force_mode:
+                    raise NotImplementedError(msg)
+                self.review_manager.logger.error(msg)
+                continue
+            entrytype = references_types[record_dict["TY"]]
+            record_dict[Fields.ENTRYTYPE] = entrytype
+
+            # RIS-keys > standard keys
+            for ris_key in list(record_dict.keys()):
+                if ris_key in ["ENTRYTYPE", "ID"]:
+                    continue
+                if ris_key not in key_map[entrytype]:
+                    del record_dict[ris_key]
+                    # print/notify: ris_key
+                    continue
+                standard_key = key_map[entrytype][ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
+        return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                ris_parser=PsycInfoRISParser,
-            )
-            ris_entries = ris_loader.load_ris_entries()
-            self.__ris_fixes(entries=ris_entries)
-            records = ris_loader.convert_to_records(entries=ris_entries)
-            return records
+            return self.__load_ris(load_operation)
 
         raise NotImplementedError
 

@@ -16,8 +16,9 @@ import colrev.ops.load_utils_ris
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -339,14 +340,71 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __ris_fixes(self, *, entries: dict) -> None:
-        for entry in entries:
-            if entry["type_of_reference"] in ["CONF", "JOUR"]:
-                # pylint: disable=colrev-missed-constant-usage
-                if "title" in entry and "primary_title" not in entry:
-                    entry["primary_title"] = entry.pop("title")
-            if "publication_year" in entry and Fields.YEAR not in entry:
-                entry[Fields.YEAR] = entry.pop("publication_year")
+    def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+        references_types = {
+            "JOUR": ENTRYTYPES.ARTICLE,
+            "CONF": ENTRYTYPES.INPROCEEDINGS,
+        }
+        key_map = {
+            ENTRYTYPES.ARTICLE: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "T2": Fields.JOURNAL,
+                "AB": Fields.ABSTRACT,
+                "VL": Fields.VOLUME,
+                "IS": Fields.NUMBER,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "UR": Fields.URL,
+                "SP": Fields.PAGES,
+            },
+            ENTRYTYPES.INPROCEEDINGS: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "T2": Fields.BOOKTITLE,
+                "DO": Fields.DOI,
+                "SP": Fields.PAGES,
+            },
+        }
+        list_fields = {"AU": " and "}
+        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields=list_fields,
+        )
+        records = ris_loader.load_ris_records()
+
+        for record_dict in records.values():
+            if record_dict["TY"] not in references_types:
+                msg = (
+                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
+                )
+                if not self.review_manager.force_mode:
+                    raise NotImplementedError(msg)
+                self.review_manager.logger.error(msg)
+                continue
+            entrytype = references_types[record_dict["TY"]]
+            record_dict[Fields.ENTRYTYPE] = entrytype
+
+            # fixes
+            if entrytype == ENTRYTYPES.ARTICLE:
+                if "T1" in record_dict and "TI" not in record_dict:
+                    record_dict["TI"] = record_dict.pop("T1")
+
+            # RIS-keys > standard keys
+            for ris_key in list(record_dict.keys()):
+                if ris_key in ["ENTRYTYPE", "ID"]:
+                    continue
+                if ris_key not in key_map[entrytype]:
+                    del record_dict[ris_key]
+                    # print/notify: ris_key
+                    continue
+                standard_key = key_map[entrytype][ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
+        return records
 
     def __fix_csv_records(self, *, records: dict) -> None:
         for record in records.values():
@@ -376,13 +434,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            ris_entries = ris_loader.load_ris_entries()
-            self.__ris_fixes(entries=ris_entries)
-            records = ris_loader.convert_to_records(entries=ris_entries)
-            return records
+            return self.__load_ris(load_operation)
 
         if self.search_source.filename.suffix == ".csv":
             csv_loader = colrev.ops.load_utils_table.CSVLoader(

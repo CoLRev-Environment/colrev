@@ -66,7 +66,7 @@ class NBIBLoader:
         return bool(self.pattern.match(line))
 
     def get_tag(self, line: str) -> str:
-        """Get the tag from a line in the ENL file."""
+        """Get the tag from a line in the NBIB file."""
         return line[: line.find(" - ")].rstrip()
 
     def get_content(self, line: str) -> str:
@@ -86,7 +86,7 @@ class NBIBLoader:
 
     def _add_tag(self, tag: str, line: str) -> None:
         if tag not in self.mapping:
-            print(f"load_utils_enl error: tag {tag} not in mapping")
+            print(f"load_utils_nbib error: tag {tag} not in mapping")
             return
         name = self.mapping[tag]
         new_value = self.get_content(line)
@@ -122,7 +122,7 @@ class NBIBLoader:
         # based on
         # https://github.com/MrTango/rispy/blob/main/rispy/parser.py
         # Note: skip-tags and unknown-tags can be handled
-        # between load_enl_entries and convert_to_records.
+        # between load_nbib_entries and convert_to_records.
 
         text = self.source.filename.read_text(encoding="utf-8")
         # clean_text?

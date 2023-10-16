@@ -3,136 +3,22 @@
 from __future__ import annotations
 
 import re
+import typing
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import rispy
-from rispy import BaseParser
-from rispy.config import LIST_TYPE_TAGS
-from rispy.config import TAG_KEY_MAPPING
-
-from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
 
 
-# Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
-REFERENCE_TYPES = {
-    "JOUR": ENTRYTYPES.ARTICLE,
-    "JFULL": ENTRYTYPES.ARTICLE,
-    "ABST": ENTRYTYPES.ARTICLE,
-    "INPR": ENTRYTYPES.ARTICLE,  # inpress
-    "CONF": ENTRYTYPES.INPROCEEDINGS,
-    "CPAPER": ENTRYTYPES.INPROCEEDINGS,
-    "THES": ENTRYTYPES.PHDTHESIS,
-    "REPT": ENTRYTYPES.TECHREPORT,
-    "RPRT": ENTRYTYPES.TECHREPORT,
-    "CHAP": ENTRYTYPES.INBOOK,
-    "BOOK": ENTRYTYPES.BOOK,
-    "NEWS": ENTRYTYPES.MISC,
-    "BLOG": ENTRYTYPES.MISC,
-}
-KEY_MAP = {
-    ENTRYTYPES.ARTICLE: {
-        "ID": Fields.ID,
-        "ENTRYTYPE": Fields.ENTRYTYPE,
-        "year": Fields.YEAR,
-        "authors": Fields.AUTHOR,
-        "primary_title": Fields.TITLE,
-        "secondary_title": Fields.JOURNAL,
-        "notes_abstract": Fields.ABSTRACT,
-        "volume": Fields.VOLUME,
-        "number": Fields.NUMBER,
-        "doi": Fields.DOI,
-        "publisher": Fields.PUBLISHER,
-        "url": Fields.URL,
-        "fulltext": Fields.FULLTEXT,
-        "pubmedid": Fields.PUBMED_ID,
-        "keywords": Fields.KEYWORDS,
-        "pages": Fields.PAGES,
-    },
-    ENTRYTYPES.INPROCEEDINGS: {
-        "ID": Fields.ID,
-        "ENTRYTYPE": Fields.ENTRYTYPE,
-        "year": Fields.YEAR,
-        "authors": Fields.AUTHOR,
-        "primary_title": Fields.TITLE,
-        "secondary_title": Fields.BOOKTITLE,
-        "doi": Fields.DOI,
-        "url": Fields.URL,
-        "fulltext": Fields.FULLTEXT,
-        "pubmedid": Fields.PUBMED_ID,
-        "keywords": Fields.KEYWORDS,
-        "pages": Fields.PAGES,
-    },
-    ENTRYTYPES.INBOOK: {
-        "ID": Fields.ID,
-        "ENTRYTYPE": Fields.ENTRYTYPE,
-        "year": Fields.YEAR,
-        "authors": Fields.AUTHOR,
-        "primary_title": Fields.CHAPTER,
-        "secondary_title": Fields.TITLE,
-        "doi": Fields.DOI,
-        "publisher": Fields.PUBLISHER,
-        "edition": Fields.EDITION,
-        "url": Fields.URL,
-        "fulltext": Fields.FULLTEXT,
-        "keywords": Fields.KEYWORDS,
-        "pages": Fields.PAGES,
-    },
-    ENTRYTYPES.PHDTHESIS: {
-        "ID": Fields.ID,
-        "ENTRYTYPE": Fields.ENTRYTYPE,
-        "year": Fields.YEAR,
-        "authors": Fields.AUTHOR,
-        "primary_title": Fields.TITLE,
-        "url": Fields.URL,
-    },
-    ENTRYTYPES.TECHREPORT: {
-        "ID": Fields.ID,
-        "ENTRYTYPE": Fields.ENTRYTYPE,
-        "year": Fields.YEAR,
-        "authors": Fields.AUTHOR,
-        "primary_title": Fields.TITLE,
-        "url": Fields.URL,
-        "fulltext": Fields.FULLTEXT,
-        "keywords": Fields.KEYWORDS,
-        "publisher": Fields.PUBLISHER,
-        "pages": Fields.PAGES,
-    },
-    ENTRYTYPES.MISC: {
-        "ID": Fields.ID,
-        "ENTRYTYPE": Fields.ENTRYTYPE,
-        "year": Fields.YEAR,
-        "authors": Fields.AUTHOR,
-        "primary_title": Fields.TITLE,
-        "url": Fields.URL,
-        "fulltext": Fields.FULLTEXT,
-        "keywords": Fields.KEYWORDS,
-        "publisher": Fields.PUBLISHER,
-        "pages": Fields.PAGES,
-    },
-}
+class NextLine(Exception):
+    """NextLineException"""
 
 
-class DefaultRISParser(BaseParser):
-    """Default parser for RIS files."""
-
-    START_TAG = "TY"
-    IGNORE = ["FN", "VR", "EF"]
-    PATTERN = r"^[A-Z][A-Z0-9]+ |^ER\s?|^EF\s?"
-    DEFAULT_MAPPING = TAG_KEY_MAPPING
-    DEFAULT_LIST_TAGS = LIST_TYPE_TAGS + ["UR"]
-
-    def get_content(self, line: str) -> str:
-        "Get the content from a line."
-        return line[line.find(" - ") + 2 :].strip()
-
-    def is_header(self, line: str) -> bool:
-        "Check whether the line is a header element"
-        return not re.match("[A-Z0-9]+  - ", line)
+class ParseError(Exception):
+    """Parsing error"""
 
 
 class RISLoader:
@@ -151,18 +37,22 @@ class RISLoader:
 
     """
 
+    PATTERN = r"^[A-Z0-9]{2,4} "
+
     def __init__(
         self,
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
-        ris_parser: BaseParser = DefaultRISParser,
+        list_fields: dict,
         unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
-        self.ris_parser = ris_parser
         self.unique_id_field = unique_id_field
+        self.list_fields = list_fields
+        self.current: dict = {}
+        self.pattern = re.compile(self.PATTERN)
 
     def apply_ris_fixes(self, *, filename: Path) -> None:
         """Fix common defects in RIS files"""
@@ -193,32 +83,70 @@ class RISLoader:
             for line in lines:
                 file.write(f"{line}\n")
 
-    def __load_ris_entry(self, entry: dict) -> None:
-        if "start_page" in entry and "end_page" in entry:
-            entry[Fields.PAGES] = f"{entry.pop('start_page')}--{entry.pop('end_page')}"
-        elif "start_page" in entry:
-            entry[Fields.PAGES] = str(entry.pop("start_page"))
+    def is_tag(self, line: str) -> bool:
+        """Determine if the line has a tag using regex."""
+        return bool(self.pattern.match(line))
 
-        for key in [
-            self.ris_parser.DEFAULT_MAPPING[k]
-            for k in self.ris_parser.DEFAULT_LIST_TAGS
-        ]:
-            if key not in entry:
+    def get_tag(self, line: str) -> str:
+        """Get the tag from a line in the RIS file."""
+        return line[0 : line.find(" ")].rstrip()
+
+    def get_content(self, line: str) -> str:
+        """Get the content from a line"""
+        return line[line.find(" - ") + 3 :].strip()
+
+    def _add_single_value(self, name: str, value: str) -> None:
+        """Process a single line."""
+        self.current[name] = value
+
+    def _add_list_value(self, name: str, value: str) -> None:
+        """Process tags with multiple values."""
+        try:
+            self.current[name].append(value)
+        except KeyError:
+            self.current[name] = [value]
+
+    def _add_tag(self, tag: str, line: str) -> None:
+        new_value = self.get_content(line)
+
+        if tag in self.list_fields:
+            self._add_list_value(tag, new_value)
+        else:
+            self._add_single_value(tag, new_value)
+
+    def _parse_tag(self, line: str) -> dict:
+        tag = self.get_tag(line)
+
+        if tag.strip() == "":
+            return self.current
+
+        self._add_tag(tag, line)
+        raise NextLine
+
+    def __parse_lines(self, lines: list) -> typing.Iterator[dict]:
+        for line in lines:
+            try:
+                yield self._parse_tag(line)
+                self.current = {}
+            except NextLine:
                 continue
-            if key == Fields.URL:
-                urls = entry[Fields.URL]
-                for url in urls:
-                    if url.endswith(".pdf"):
-                        entry[Fields.FULLTEXT] = url
-                    else:
-                        entry[Fields.URL] = url
-                        break
-            elif key == Fields.KEYWORDS:
-                entry[key] = ", ".join(entry[key])
-            else:
-                entry[key] = " and ".join(entry[key])
 
-    def load_ris_entries(self) -> dict:
+    def __clean_text(self, text: str) -> str:
+        # Example:
+        # Provider: JSTOR http://www.jstor.org
+        # Database: JSTOR
+        # Content: text/plain; charset="UTF-8"
+
+        lines = []
+        for line in text.split("\n"):
+            if re.match(self.pattern, line):
+                lines.append(line)
+            if line.strip() in ["", "\n"]:
+                lines.append(line)
+        lines.append("")
+        return "\n".join(lines)
+
+    def load_ris_records(self, *, combine_sp_ep: bool = True) -> dict:
         """Load ris entries
 
         The resulting keys should coincide with those in the KEY_MAP
@@ -230,44 +158,19 @@ class RISLoader:
         if self.unique_id_field == "":
             self.load_operation.ensure_append_only(file=self.source.filename)
 
-        with open(self.source.filename, encoding="utf-8") as ris_file:
-            entries = rispy.load(file=ris_file, implementation=self.ris_parser)
+        text = self.source.filename.read_text(encoding="utf-8")
+        text = self.__clean_text(text)
+        lines = text.split("\n")
+        records_list = list(r for r in self.__parse_lines(lines) if r)
+        for counter, entry in enumerate(records_list):
+            _id = str(counter + 1).zfill(5)
 
-        for entry in entries:
-            self.__load_ris_entry(entry)
-
-        return entries
-
-    def convert_to_records(self, *, entries: dict) -> dict:
-        """Converts ris entries it to bib records"""
-
-        # Note : REFERENCE_TYPES and KEY_MAP are hard-coded (standard)
-        # This function intentionally fails when the input does not comply
-        # with this standard
-
-        records: dict = {}
-        for counter, entry in enumerate(entries):
-            if self.unique_id_field == "":
-                _id = str(counter + 1).zfill(5)
-            else:
-                _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
-
-            type_of_ref = entry["type_of_reference"]
-            if type_of_ref not in REFERENCE_TYPES:
-                raise NotImplementedError(f"Undefined reference type: {type_of_ref}")
-
-            entry_type = REFERENCE_TYPES[type_of_ref]
             entry[Fields.ID] = _id
-            entry[Fields.ENTRYTYPE] = entry_type
+            for list_field, connective in self.list_fields.items():
+                if list_field in entry:
+                    entry[list_field] = connective.join(entry[list_field])
+            if combine_sp_ep:
+                if "SP" in entry and "EP" in entry:
+                    entry["SP"] = f"{entry.pop('SP')}--{entry.pop('EP')}"
 
-            if entry_type not in KEY_MAP:
-                raise NotImplementedError(f"No KEY_MAP defined for {entry_type}")
-
-            record: dict = {}
-            for ris_key, key in KEY_MAP[entry_type].items():
-                if ris_key in entry:
-                    record[key] = entry[ris_key]
-
-            records[_id] = record
-
-        return records
+        return {r["ID"]: r for r in records_list}

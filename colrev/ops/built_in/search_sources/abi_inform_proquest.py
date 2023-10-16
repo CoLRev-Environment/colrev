@@ -15,6 +15,8 @@ import colrev.ops.load_utils_bib
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 # pylint: disable=unused-argument
@@ -94,16 +96,6 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 source=self.search_source,
             )
 
-    def get_masterdata(
-        self,
-        prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
-        save_feed: bool = True,
-        timeout: int = 10,
-    ) -> colrev.record.Record:
-        """Not implemented"""
-        return record
-
     def __remove_duplicates(self, *, records: dict) -> None:
         to_delete = []
         for record in records.values():
@@ -136,6 +128,86 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 records=records, save_path=self.search_source.filename
             )
 
+    def get_masterdata(
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 10,
+    ) -> colrev.record.Record:
+        """Not implemented"""
+        return record
+
+    def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+        references_types = {
+            "JOUR": ENTRYTYPES.ARTICLE,
+            "BOOK": ENTRYTYPES.BOOK,
+            "THES": ENTRYTYPES.PHDTHESIS,
+        }
+        key_map = {
+            ENTRYTYPES.ARTICLE: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "T1": Fields.TITLE,
+                "JF": Fields.JOURNAL,
+                "AB": Fields.ABSTRACT,
+                "VL": Fields.VOLUME,
+                "IS": Fields.NUMBER,
+                "KW": Fields.KEYWORDS,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "SP": Fields.PAGES,
+                "PMID": Fields.PUBMED_ID,
+                "SN": Fields.ISSN,
+                "AN": "accession_number",
+            },
+            ENTRYTYPES.PHDTHESIS: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "T1": Fields.TITLE,
+                "UR": Fields.URL,
+                "PB": Fields.PUBLISHER,
+                "KW": Fields.KEYWORDS,
+                "AN": "accession_number",
+            },
+        }
+        list_fields = {"AU": " and ", "KW": ", "}
+        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields=list_fields,
+            unique_id_field="accession_number",
+        )
+        records = ris_loader.load_ris_records()
+
+        for counter, record_dict in enumerate(records.values()):
+            _id = str(counter + 1).zfill(5)
+            record_dict[Fields.ID] = _id
+
+            if record_dict["TY"] not in references_types:
+                msg = (
+                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
+                )
+                if not self.review_manager.force_mode:
+                    raise NotImplementedError(msg)
+                self.review_manager.logger.error(msg)
+                continue
+            entrytype = references_types[record_dict["TY"]]
+            record_dict[Fields.ENTRYTYPE] = entrytype
+
+            # RIS-keys > standard keys
+            for ris_key in list(record_dict.keys()):
+                if ris_key in ["ENTRYTYPE", "ID", "accession_number"]:
+                    continue
+                if ris_key not in key_map[entrytype]:
+                    del record_dict[ris_key]
+                    # print/notify: ris_key
+                    continue
+                standard_key = key_map[entrytype][ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
@@ -147,14 +219,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             return records
 
         if self.search_source.filename.suffix == ".ris":
-            ris_loader = colrev.ops.load_utils_ris.RISLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                unique_id_field="accession_number",
-            )
-            ris_entries = ris_loader.load_ris_entries()
-            records = ris_loader.convert_to_records(entries=ris_entries)
-            return records
+            return self.__load_ris(load_operation)
 
         raise NotImplementedError
 

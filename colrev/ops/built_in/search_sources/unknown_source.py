@@ -22,6 +22,7 @@ import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -112,14 +113,6 @@ class UnknownSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __ris_fixes(self, *, entries: dict) -> None:
-        for entry in entries:
-            if Fields.TITLE in entry and "primary_title" not in entry:
-                entry["primary_title"] = entry.pop(Fields.TITLE)
-
-            if "publication_year" in entry and Fields.YEAR not in entry:
-                entry[Fields.YEAR] = entry.pop("publication_year")
-
     def __rename_erroneous_extensions(self) -> None:
         if self.search_source.filename.suffix in [".xls", ".xlsx"]:
             return
@@ -163,13 +156,143 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
 
     def __load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
+        reference_types = {
+            "JOUR": ENTRYTYPES.ARTICLE,
+            "JFULL": ENTRYTYPES.ARTICLE,
+            "ABST": ENTRYTYPES.ARTICLE,
+            "INPR": ENTRYTYPES.ARTICLE,  # inpress
+            "CONF": ENTRYTYPES.INPROCEEDINGS,
+            "CPAPER": ENTRYTYPES.INPROCEEDINGS,
+            "THES": ENTRYTYPES.PHDTHESIS,
+            "REPT": ENTRYTYPES.TECHREPORT,
+            "RPRT": ENTRYTYPES.TECHREPORT,
+            "CHAP": ENTRYTYPES.INBOOK,
+            "BOOK": ENTRYTYPES.BOOK,
+            "NEWS": ENTRYTYPES.MISC,
+            "BLOG": ENTRYTYPES.MISC,
+        }
+        key_map = {
+            ENTRYTYPES.ARTICLE: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "T2": Fields.JOURNAL,
+                "AB": Fields.ABSTRACT,
+                "VL": Fields.VOLUME,
+                "IS": Fields.NUMBER,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                "UR": Fields.URL,
+                "fulltext": Fields.FULLTEXT,
+                "PMID": Fields.PUBMED_ID,
+                "KW": Fields.KEYWORDS,
+                "SP": Fields.PAGES,
+            },
+            ENTRYTYPES.INPROCEEDINGS: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                # "secondary_title": Fields.BOOKTITLE,
+                "DO": Fields.DOI,
+                "UR": Fields.URL,
+                # "fulltext": Fields.FULLTEXT,
+                "PMID": Fields.PUBMED_ID,
+                "KW": Fields.KEYWORDS,
+                "SP": Fields.PAGES,
+            },
+            ENTRYTYPES.INBOOK: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                # "primary_title": Fields.CHAPTER,
+                # "secondary_title": Fields.TITLE,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                # "edition": Fields.EDITION,
+                "UR": Fields.URL,
+                # "fulltext": Fields.FULLTEXT,
+                "KW": Fields.KEYWORDS,
+                "SP": Fields.PAGES,
+            },
+            ENTRYTYPES.BOOK: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                # "primary_title": Fields.CHAPTER,
+                # "secondary_title": Fields.TITLE,
+                "DO": Fields.DOI,
+                "PB": Fields.PUBLISHER,
+                # "edition": Fields.EDITION,
+                "UR": Fields.URL,
+                # "fulltext": Fields.FULLTEXT,
+                "KW": Fields.KEYWORDS,
+                "SP": Fields.PAGES,
+            },
+            ENTRYTYPES.PHDTHESIS: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "UR": Fields.URL,
+            },
+            ENTRYTYPES.TECHREPORT: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "UR": Fields.URL,
+                # "fulltext": Fields.FULLTEXT,
+                "KW": Fields.KEYWORDS,
+                "PB": Fields.PUBLISHER,
+                "SP": Fields.PAGES,
+            },
+            ENTRYTYPES.MISC: {
+                "PY": Fields.YEAR,
+                "AU": Fields.AUTHOR,
+                "TI": Fields.TITLE,
+                "UR": Fields.URL,
+                # "fulltext": Fields.FULLTEXT,
+                "KW": Fields.KEYWORDS,
+                "PB": Fields.PUBLISHER,
+                "SP": Fields.PAGES,
+            },
+        }
+
+        list_fields = {"AU": " and "}
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation, source=self.search_source
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields=list_fields,
         )
-        ris_loader.apply_ris_fixes(filename=self.search_source.filename)
-        ris_entries = ris_loader.load_ris_entries()
-        self.__ris_fixes(entries=ris_entries)
-        records = ris_loader.convert_to_records(entries=ris_entries)
+        records = ris_loader.load_ris_records()
+
+        for record_dict in records.values():
+            # pylint: disable=colrev-missed-constant-usage
+            record_dict["ID"] = record_dict["UR"].split("/")[-1]
+            if record_dict["TY"] not in reference_types:
+                msg = (
+                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
+                )
+                if not self.review_manager.force_mode:
+                    raise NotImplementedError(msg)
+                self.review_manager.logger.error(msg)
+                continue
+            entrytype = reference_types[record_dict["TY"]]
+            record_dict[Fields.ENTRYTYPE] = entrytype
+
+            # fixes
+            if entrytype == ENTRYTYPES.ARTICLE:
+                if "T1" in record_dict and "TI" not in record_dict:
+                    record_dict["TI"] = record_dict.pop("T1")
+
+            # RIS-keys > standard keys
+            for ris_key in list(record_dict.keys()):
+                if ris_key in ["ENTRYTYPE", "ID"]:
+                    continue
+                if ris_key not in key_map[entrytype]:
+                    del record_dict[ris_key]
+                    # print/notify: ris_key
+                    continue
+                standard_key = key_map[entrytype][ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
         return records
 
     def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
