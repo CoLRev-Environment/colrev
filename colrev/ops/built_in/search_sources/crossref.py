@@ -728,8 +728,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
             return True
         if (
             int(year_from)
-            <= int(retrieved_record_dict.get(Fields.YEAR, -1000))
-            <= int(year_to)
+            < int(retrieved_record_dict.get(Fields.YEAR, -1000))
+            < int(year_to)
         ):
             return False
         return True
@@ -831,6 +831,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
             for item in self.__get_crossref_query_return(rerun=rerun):
                 try:
                     retrieved_record_dict = connector_utils.json_to_record(item=item)
+                    if self.__scope_excluded(
+                        retrieved_record_dict=retrieved_record_dict
+                    ):
+                        continue
+
                     crossref_feed.set_id(record_dict=retrieved_record_dict)
                     prev_record_dict_version = {}
                     if retrieved_record_dict[Fields.ID] in crossref_feed.feed_records:
@@ -838,10 +843,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                             crossref_feed.feed_records[retrieved_record_dict[Fields.ID]]
                         )
 
-                    if self.__scope_excluded(
-                        retrieved_record_dict=retrieved_record_dict
-                    ):
-                        continue
                     retrieved_record = colrev.record.Record(data=retrieved_record_dict)
                     self.__prep_crossref_record(
                         record=retrieved_record, prep_main_record=False

@@ -269,6 +269,7 @@ class Search(colrev.operation.Operation):
             for f in files
             if f not in [s.filename for s in self.review_manager.settings.sources]
             and not str(f).endswith("_query.txt")
+            and not str(f).endswith(".tmp")
             and ".~lock" not in str(f)
         ]
 
