@@ -20,11 +20,15 @@ Install WSL2 via PowerShell:
   Enter the following command:
   wsl --install -d ubuntu
 
-Restart your machine and setup a new user:
+Restart your machine and and launch Ubuntu:
 
 ::
 
   Press "WIN + S", type "ubuntu" and start "Ubuntu"
   Setup a new user and assign a password
+  Create the default folder for ssh keys
+  mkdir ~/.ssh
+  Create the "Desktop" folder as workspace
+  mkdir ~/Desktop
 
 Afterwards, follow the steps in :doc:`"Setup part 2: Git and SS" <dev_docs/setup/part_2_git_ssh>`.
