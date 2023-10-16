@@ -1,14 +1,15 @@
 MacOS: VirtualBox
 ===========================
 
-A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/de/download/29146e80c3ec3e691e35b4866e9573c9>`__.
+A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/de/download/a513ac5f4f6c626499811bf72030d942>`__.
 If the link has expired, please contact `Gerit Wagner <mailto:gerit.wagner@uni-bamberg.de>`__.
 
 -  VirtualBox: `Version 7.0.10 <https://www.virtualbox.org/wiki/Downloads>`__ (no unattended installation)
 -  Distro ISO: `Ubuntu 22.04.3 LTS <https://ubuntu.com/download/desktop>`__
 
-After unpacking the VirtualBox Image, open the ``colrev_dev.vbox`` file in `VirtualBox <https://www.virtualbox.org/>`__.
-To avoid performance issues, the following settings are recommended:
+After unpacking the VirtualBox Image, add the ``colrev_dev.vbox`` file in VirtualBox. Start the machine, and log in (user ``ubuntu``, password ``ubuntu``). Please execute the steps described in the file ``colrev_final_setup_steps.md`` on the desktop.
+
+To avoid performance issues, the following settings are recommended and are already preset for this image:
 
 ::
 
@@ -27,9 +28,7 @@ To avoid performance issues, the following settings are recommended:
    If you encounter any graphical glitches or errors, consider turning off 3D acceleration temporarily:
    Settings > Display > Screen > uncheck "Enabale 3D Acceleration"
 
-Start the machine, and log in (pre-built VM image: user ``ubuntu`` with password ``ubuntu``).
-
-Install the guest additions for a better integration between host and guest system:
+Install the guest additions (if missing) for a better integration between host and guest system:
 
 ::
 
@@ -38,8 +37,6 @@ Install the guest additions for a better integration between host and guest syst
 
    Activate copy-paste between the VM (guest) and your OS (host):
    Devices > Shared Clipboard > Bidirectional
-
-Afterwards, please update :doc:`git and SSH <dev_docs/setup/part_2_git_ssh>`.
 
 **Setup your own virtual machine from scratch**
 
