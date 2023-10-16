@@ -21,4 +21,3 @@ colrev.ops.built\_in.search\_sources.psycinfo
       :nosignatures:
 
       PsycINFOSearchSource
-      PsycInfoRISParser

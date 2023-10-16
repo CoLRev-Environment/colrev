@@ -3,13 +3,13 @@ colrev search
 
 .. |EXPERIMENTAL| image:: https://img.shields.io/badge/status-experimental-blue
    :height: 12pt
-   :target: :doc:`/dev_docs/dev_status`
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 .. |MATURING| image:: https://img.shields.io/badge/status-maturing-yellowgreen
    :height: 12pt
-   :target: :doc:`/dev_docs/dev_status`
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 .. |STABLE| image:: https://img.shields.io/badge/status-stable-brightgreen
    :height: 12pt
-   :target: :doc:`/dev_docs/dev_status`
+   :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 
 In the ``colrev search`` operation, the SearchSource is added to the project settings, and record metadata are retrieved.
 SearchSources keep track of the associated queries, as well as the search results files in the `data/search` directory (see :doc:`SearchSources </foundations/cep/cep_3_search_sources>`).

@@ -20,5 +20,16 @@ colrev.ops.load\_utils\_ris
       :template: custom-class-template.rst
       :nosignatures:
 
-      DefaultRISParser
       RISLoader
+
+
+
+
+
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+
+      NextLine
+      ParseError

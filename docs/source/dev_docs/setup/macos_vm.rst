@@ -1,6 +1,7 @@
 MacOS: VirtualBox
 ===========================
 
+
 A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/de/download/a513ac5f4f6c626499811bf72030d942>`__.
 If the link has expired, please contact `Gerit Wagner <mailto:gerit.wagner@uni-bamberg.de>`__.
 
@@ -40,4 +41,4 @@ Install the guest additions (if missing) for a better integration between host a
 
 **Setup your own virtual machine from scratch**
 
-If you want to setup your own virtual machine from scratch, please contiue with the steps in :doc:`"Setup part 1: Docker" <dev_docs/setup/part_1_docker>`.
+If you want to setup your own virtual machine from scratch, please contiue with the :doc:`setup </dev_docs/setup/part_1_docker>`.

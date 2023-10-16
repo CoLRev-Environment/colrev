@@ -17,5 +17,17 @@ colrev.ops.load\_utils\_ris.RISLoader
       :nosignatures:
 
       ~RISLoader.apply_ris_fixes
-      ~RISLoader.convert_to_records
-      ~RISLoader.load_ris_entries
+      ~RISLoader.get_content
+      ~RISLoader.get_tag
+      ~RISLoader.is_tag
+      ~RISLoader.load_ris_records
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~RISLoader.PATTERN

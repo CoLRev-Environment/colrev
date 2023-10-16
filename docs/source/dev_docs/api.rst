@@ -12,7 +12,7 @@ API reference
    :alt: Logo
 
 
-The extension interfaces are documented :doc:`here </dev_dos/extensions>`.
+The extension interfaces are documented :doc:`here </dev_docs/extensions>`.
 
 .. autosummary::
    :toctree: _autosummary
