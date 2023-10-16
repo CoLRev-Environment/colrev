@@ -533,12 +533,13 @@ class Upgrade(colrev.operation.Operation):
 
     def __migrate_0_10_2(self) -> bool:
         paper_md_path = Path("data/data/paper.md")
-        paper_md_content = paper_md_path.read_text(encoding="utf-8")
-        paper_md_content = paper_md_content.replace(
-            "data/records.bib", "data/data/sample_references.bib"
-        )
-        paper_md_path.write_text(paper_md_content, encoding="utf-8")
-        self.repo.index.add([str(paper_md_path)])
+        if paper_md_path.is_file():
+            paper_md_content = paper_md_path.read_text(encoding="utf-8")
+            paper_md_content = paper_md_content.replace(
+                "data/records.bib", "data/data/sample_references.bib"
+            )
+            paper_md_path.write_text(paper_md_content, encoding="utf-8")
+            self.repo.index.add([str(paper_md_path)])
 
         return self.repo.is_dirty()
 
