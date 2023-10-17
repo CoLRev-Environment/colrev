@@ -200,22 +200,41 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 msg="Record not found in crossref (based on doi)"
             ) from exc
 
-    def __query_journal(self, *, issn: str, rerun: bool) -> typing.Iterator[dict]:
+    def __query_journal(self, *, rerun: bool) -> typing.Iterator[dict]:
         """Get records of a selected journal from Crossref"""
 
-        assert re.match(self.__ISSN_REGEX, issn)
-
         journals = Journals(etiquette=self.etiquette)
-        if rerun:
-            # Note : the "deposited" field is not always provided.
-            # only the general query will return all records.
-            crossref_query_return = journals.works(issn).query()
-        else:
-            crossref_query_return = (
-                journals.works(issn).query().sort("deposited").order("desc")
-            )
 
-        yield from crossref_query_return
+        scope_filters = {}
+        if (
+            "scope" in self.search_source.search_parameters
+            and "years" in self.search_source.search_parameters["scope"]
+        ):
+            year_from, year_to = self.search_source.search_parameters["scope"][
+                "years"
+            ].split("-")
+            scope_filters["from-pub-date"] = year_from
+            scope_filters["until-pub-date"] = year_to
+
+        for issn in self.search_source.search_parameters["scope"][Fields.ISSN]:
+            print(issn)
+            assert re.match(self.__ISSN_REGEX, issn)
+            if rerun:
+                # Note : the "deposited" field is not always provided.
+                # only the general query will return all records.
+                crossref_query_return = (
+                    journals.works(issn).query().filter(**scope_filters)
+                )
+            else:
+                crossref_query_return = (
+                    journals.works(issn)
+                    .query()
+                    .filter(**scope_filters)
+                    .sort("deposited")
+                    .order("desc")
+                )
+
+            yield from crossref_query_return
 
     def __create_query_url(
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool
@@ -648,8 +667,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
             yield from self.__query(**crossref_query)
         elif "scope" in params and Fields.ISSN in params["scope"]:
             if Fields.ISSN in params["scope"]:
-                for issn in params["scope"][Fields.ISSN]:
-                    yield from self.__query_journal(issn=issn, rerun=rerun)
+                yield from self.__query_journal(rerun=rerun)
+            # raise NotImplemented
 
     def __restore_url(
         self,
@@ -810,6 +829,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self.review_manager.dataset.add_changes(path=self.search_source.filename)
         self.review_manager.create_commit(msg="Run search")
 
+    def __potentially_overlapping_issn_search(self) -> bool:
+        params = self.search_source.search_parameters
+        if "scope" not in params:
+            return False
+        if Fields.ISSN not in params["scope"]:
+            return False
+        return len(params["scope"][Fields.ISSN]) > 1
+
     def __run_api_search(
         self,
         *,
@@ -866,9 +893,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         )
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                    if not added and not rerun:
+                    if (
+                        not added
+                        and not rerun
+                        and not self.__potentially_overlapping_issn_search()
+                    ):
                         # problem: some publishers don't necessarily
                         # deposit papers chronologically
+                        self.review_manager.logger.info("Break condition")
                         break
                 except (
                     colrev_exceptions.RecordNotParsableException,
@@ -914,16 +946,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             else:
                 raise NotImplementedError
 
-        except (requests.exceptions.RequestException,) as exc:
-            # watch github issue:
-            # https://github.com/fabiobatalha/crossrefapi/issues/46
-            if "504 Gateway Time-out" in str(exc):
-                raise colrev_exceptions.ServiceNotAvailableException(
-                    self.__availability_exception_message
-                )
+        except requests.exceptions.RequestException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self.__availability_exception_message
-            )
+            ) from exc
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
