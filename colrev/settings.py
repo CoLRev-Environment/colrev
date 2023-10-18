@@ -219,6 +219,10 @@ class SearchSource(JsonSchemaMixin):
 
     def get_query(self) -> str:
         """Get the query filepath"""
+        if "query_file" not in self.search_parameters:
+            return "no query_file"
+        if not Path(self.search_parameters["query_file"]).is_file():
+            return "query_file does not exist"
         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
 
     def get_dict(self) -> dict:
