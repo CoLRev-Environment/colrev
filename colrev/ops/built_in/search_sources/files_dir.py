@@ -846,6 +846,9 @@ class FilesSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for files"""
 
+        if Fields.FILE not in record.data:
+            return record
+
         if Path(record.data[Fields.FILE]).suffix == ".mp4":
             if Fields.URL in record.data:
                 self.zotero_lock = Lock()

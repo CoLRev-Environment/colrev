@@ -1903,11 +1903,21 @@ class PrepRecord(Record):
                 "von",
             ]:
                 if name.startswith(f"{prefix} "):
-                    name = "{" + name.replace(", ", "}, ")
+                    if "," in name:
+                        name = "{" + name.replace(", ", "}, ")
+                    else:
+                        name = "{" + name + "}"
                 if name.endswith(f" {prefix}"):
-                    name = (
-                        "{" + prefix + " " + name[: -len(prefix)].replace(", ", "}, ")
-                    )
+                    if "," in name:
+                        name = (
+                            "{"
+                            + prefix
+                            + " "
+                            + name[: -len(prefix)].replace(", ", "}, ")
+                        )
+                    else:
+                        name = "{" + prefix + " " + name[: -len(prefix)] + "}"
+
                 names[ind] = name
         self.data[Fields.AUTHOR] = " and ".join(names)
 

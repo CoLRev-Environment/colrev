@@ -1145,6 +1145,8 @@ class LocalIndex:
                 )
 
             if search_across_tocs:
+                if len(list(set(sim_list))) < 2:
+                    raise colrev_exceptions.RecordNotInIndexException()
                 second_highest = list(set(sim_list))[-2]
                 # Require a minimum difference to the next most similar record
                 if (max(sim_list) - second_highest) < 0.2:
