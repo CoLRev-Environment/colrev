@@ -24,6 +24,7 @@ colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
       ~WebsiteScreenshot.get_pdf
       ~WebsiteScreenshot.json_schema
       ~WebsiteScreenshot.register_field_encoders
+      ~WebsiteScreenshot.screenshot_service_available
       ~WebsiteScreenshot.to_dict
       ~WebsiteScreenshot.to_json
 

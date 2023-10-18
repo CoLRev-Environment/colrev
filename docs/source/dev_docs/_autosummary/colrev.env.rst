@@ -32,7 +32,6 @@ colrev.env
    colrev.env.local_index
    colrev.env.package_manager
    colrev.env.resources
-   colrev.env.screenshot_service
    colrev.env.tei_parser
    colrev.env.utils
    colrev.env.zotero_translation_service

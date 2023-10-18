@@ -217,7 +217,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
             scope_filters["until-pub-date"] = year_to
 
         for issn in self.search_source.search_parameters["scope"][Fields.ISSN]:
-            print(issn)
             assert re.match(self.__ISSN_REGEX, issn)
             if rerun:
                 # Note : the "deposited" field is not always provided.

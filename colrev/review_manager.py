@@ -473,12 +473,6 @@ class ReviewManager:
             environment_manager=environment_manager
         )
 
-    def get_screenshot_service(self) -> colrev.env.screenshot_service.ScreenshotService:
-        """Get the screenshot-service object"""
-        import colrev.env.screenshot_service
-
-        return colrev.env.screenshot_service.ScreenshotService(review_manager=self)
-
     @classmethod
     def get_resources(cls) -> colrev.env.resources.Resources:
         """Get a resources object"""
