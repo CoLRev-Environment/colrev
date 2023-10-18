@@ -2,10 +2,10 @@ MacOS: VirtualBox
 ===========================
 
 
-A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/de/download/a513ac5f4f6c626499811bf72030d942>`__.
+A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/en/download/a0dc5c130b24636165a5772921ebff40>`__.
 If the link has expired, please contact `Gerit Wagner <mailto:gerit.wagner@uni-bamberg.de>`__.
 
--  VirtualBox: `Version 7.0.10 <https://www.virtualbox.org/wiki/Downloads>`__ (no unattended installation)
+-  VirtualBox: `Version 7.0.12 <https://www.virtualbox.org/wiki/Downloads>`__ (no unattended installation)
 -  Distro ISO: `Ubuntu 22.04.3 LTS <https://ubuntu.com/download/desktop>`__
 
 After unpacking the VirtualBox Image, add the ``colrev_dev.vbox`` file in VirtualBox. Start the machine, and log in (user ``ubuntu``, password ``ubuntu``). Please execute the steps described in the file ``colrev_final_setup_steps.md`` on the desktop.
