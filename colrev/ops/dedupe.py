@@ -530,6 +530,10 @@ class Dedupe(colrev.operation.Operation):
             self.__same_source_merge(main_record=main_record, dupe_record=dupe_record)
             and self.policy == colrev.settings.SameSourceMergePolicy.prevent
         ):
+            self.review_manager.logger.info(
+                "Prevented same-source merge: "
+                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+            )
             return True
 
         return False
