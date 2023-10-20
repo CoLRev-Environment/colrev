@@ -899,7 +899,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     ):
                         # problem: some publishers don't necessarily
                         # deposit papers chronologically
-                        self.review_manager.logger.info("Break condition")
+                        self.review_manager.logger.debug("Break condition")
                         break
                 except (
                     colrev_exceptions.RecordNotParsableException,
