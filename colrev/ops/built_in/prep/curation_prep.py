@@ -73,8 +73,6 @@ class CurationPrep(JsonSchemaMixin):
             )
             return record
 
-        colrev.record.Record(data=record.data).update_masterdata_provenance(
-            qm=self.quality_model
-        )
+        colrev.record.Record(data=record.data).run_quality_model(qm=self.quality_model)
 
         return record

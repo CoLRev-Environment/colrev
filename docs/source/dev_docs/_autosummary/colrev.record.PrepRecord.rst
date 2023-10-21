@@ -66,6 +66,7 @@ colrev.record.PrepRecord
       ~PrepRecord.rename_field
       ~PrepRecord.rename_fields_based_on_mapping
       ~PrepRecord.reset_pdf_provenance_notes
+      ~PrepRecord.run_quality_model
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
       ~PrepRecord.set_pages_in_pdf
@@ -76,8 +77,6 @@ colrev.record.PrepRecord
       ~PrepRecord.unify_pages_field
       ~PrepRecord.update_by_record
       ~PrepRecord.update_field
-      ~PrepRecord.update_masterdata_provenance
-      ~PrepRecord.update_metadata_status
 
 
 

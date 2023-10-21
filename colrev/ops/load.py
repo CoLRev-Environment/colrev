@@ -123,7 +123,7 @@ class Load(colrev.operation.Operation):
 
         if not record.masterdata_is_curated():
             set_initial_import_provenance(record=record)
-            record.update_masterdata_provenance(qm=self.quality_model)
+            record.run_quality_model(qm=self.quality_model)
 
     def __import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")

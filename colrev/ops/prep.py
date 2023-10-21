@@ -425,38 +425,9 @@ class Prep(colrev.operation.Operation):
                     elif record.data[key] in ["", "NA"]:
                         record.remove_field(key=key)
                 record.update_by_record(update_record=preparation_record)
-                # Note: update_masterdata_provenance sets to md_needs_manual_preparation
-                record.update_masterdata_provenance(
-                    qm=self.quality_model, set_prepared=True
-                )
 
-        if self.polish:
-            errors_prior = {
-                k: y
-                for k, v in record.data.get(Fields.MD_PROV, {}).items()
-                for y in v["note"].split(",")
-                if y not in ["not-missing", "forthcoming"]
-            }
-            record.update_masterdata_provenance(qm=self.quality_model)
-            errors_post = {
-                k: y
-                for k, v in record.data.get(Fields.MD_PROV, {}).items()
-                for y in v["note"].split(",")
-                if y not in ["not-missing", "forthcoming"]
-            }
-            additional_errors = set(errors_post.items()) - set(errors_prior.items())
-            if (
-                additional_errors
-                and prior_state != colrev.record.RecordState.rev_prescreen_excluded
-            ):
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation,
-                    force=True,
-                )
-            elif prior_state == colrev.record.RecordState.md_needs_manual_preparation:
-                record.set_status(target_state=colrev.record.RecordState.md_prepared)
-            else:
-                record.set_status(target_state=prior_state, force=True)
+        # Note: run_quality_model sets to md_needs_manual_preparation
+        record.run_quality_model(qm=self.quality_model, set_prepared=not self.polish)
 
         if not self.review_manager.verbose_mode:
             self.__print_post_package_prep_info(
@@ -1002,13 +973,6 @@ class Prep(colrev.operation.Operation):
             i == len(self.review_manager.settings.prep.prep_rounds) - 1
         )
 
-        # Note : we add the endpoint automatically (not as part of the settings.json)
-        # because it must always be executed at the end
-        if prep_round.name not in ["source_specific_prep", "exclusion"]:
-            prep_round.prep_package_endpoints.append(
-                {"endpoint": "colrev.update_metadata_status"}
-            )
-
         if self.debug_mode:
             print("\n\n")
 
@@ -1020,23 +984,18 @@ class Prep(colrev.operation.Operation):
             f"Set retrieval_similarity={self.retrieval_similarity}"
         )
 
-        required_prep_package_endpoints = list(prep_round.prep_package_endpoints)
-        required_prep_package_endpoints.append(
-            {"endpoint": "colrev.update_metadata_status"}
-        )
-
         package_manager = self.review_manager.get_package_manager()
         self.prep_package_endpoints: dict[
             str, typing.Any
         ] = package_manager.load_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.prep,
-            selected_packages=required_prep_package_endpoints,
+            selected_packages=prep_round.prep_package_endpoints,
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),
         )
         non_available_endpoints = [
             x["endpoint"].lower()
-            for x in required_prep_package_endpoints
+            for x in prep_round.prep_package_endpoints
             if x["endpoint"].lower() not in self.prep_package_endpoints
         ]
         if non_available_endpoints:

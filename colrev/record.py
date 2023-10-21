@@ -394,7 +394,7 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.update_masterdata_provenance(qm=qm)
+        self.run_quality_model(qm=qm)
 
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source: str = ""
@@ -1478,7 +1478,7 @@ class Record:
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
 
-    def update_masterdata_provenance(
+    def run_quality_model(
         self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False
     ) -> None:
         """Update the masterdata provenance"""
@@ -1486,11 +1486,21 @@ class Record:
         if Fields.MD_PROV not in self.data:
             self.data[Fields.MD_PROV] = {}
 
+        self.check_potential_retracts()
+
         if self.masterdata_is_curated():
+            if set_prepared:
+                self.set_status(target_state=RecordState.md_prepared)
             return
 
         # Apply the checkers (including field key requirements etc.)
         qm.run(record=self)
+
+        if (
+            Fields.STATUS in self.data
+            and self.data[Fields.STATUS] == RecordState.rev_prescreen_excluded
+        ):
+            return
 
         if self.has_quality_defects():
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
@@ -1959,26 +1969,6 @@ class PrepRecord(Record):
             RecordState.md_imported,
             RecordState.md_prepared,
         ]
-
-    def update_metadata_status(
-        self,
-    ) -> None:
-        """Update the metadata status (retracts, incompleteness, inconsistencies, etc.)
-        and setting the status accordingly"""
-
-        self.check_potential_retracts()
-
-        if colrev.record.RecordState.rev_prescreen_excluded == self.data[Fields.STATUS]:
-            return
-
-        if self.masterdata_is_curated():
-            self.set_status(target_state=RecordState.md_prepared)
-            return
-
-        if self.has_quality_defects():
-            self.set_status(target_state=RecordState.md_needs_manual_preparation)
-        else:
-            self.set_status(target_state=RecordState.md_prepared)
 
 
 class RecordState(Enum):

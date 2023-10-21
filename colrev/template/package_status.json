@@ -253,10 +253,6 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.update_metadata_status",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.general_polish",
             "status": "EXPERIMENTAL"
         },

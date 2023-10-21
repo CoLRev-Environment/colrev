@@ -224,7 +224,7 @@ class ExportManPrep(JsonSchemaMixin):
             original_record.data[Fields.ENTRYTYPE] = man_prepped_record_dict[
                 Fields.ENTRYTYPE
             ]
-            original_record.update_masterdata_provenance(qm=self.quality_model)
+            original_record.run_quality_model(qm=self.quality_model)
 
         for key, value in man_prepped_record_dict.items():
             if key in [Fields.STATUS]:
@@ -304,9 +304,7 @@ class ExportManPrep(JsonSchemaMixin):
             )
 
         else:
-            original_record.update_masterdata_provenance(
-                qm=self.quality_model, set_prepared=True
-            )
+            original_record.run_quality_model(qm=self.quality_model, set_prepared=True)
 
         if override:
             original_record.set_status(

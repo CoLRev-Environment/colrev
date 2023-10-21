@@ -724,8 +724,7 @@ class Dataset:
                 if record_dict[Fields.STATUS] in [
                     colrev.record.RecordState.md_needs_manual_preparation,
                 ]:
-                    record.update_masterdata_provenance(qm=quality_model)
-                    record.update_metadata_status()
+                    record.run_quality_model(qm=quality_model)
 
                 if record_dict[Fields.STATUS] == colrev.record.RecordState.pdf_prepared:
                     record.reset_pdf_provenance_notes()

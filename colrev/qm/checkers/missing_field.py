@@ -95,7 +95,7 @@ class MissingFieldChecker:
 
         if not self.__has_missing_fields(record=record):
             record.set_masterdata_complete(
-                source="update_masterdata_provenance",
+                source="MissingFieldChecker",
                 masterdata_repository=False,
                 replace_source=False,
             )

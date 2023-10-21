@@ -58,6 +58,7 @@ colrev.record.Record
       ~Record.remove_masterdata_provenance_note
       ~Record.rename_field
       ~Record.reset_pdf_provenance_notes
+      ~Record.run_quality_model
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
       ~Record.set_pages_in_pdf
@@ -66,7 +67,6 @@ colrev.record.Record
       ~Record.shares_origins
       ~Record.update_by_record
       ~Record.update_field
-      ~Record.update_masterdata_provenance
 
 
 

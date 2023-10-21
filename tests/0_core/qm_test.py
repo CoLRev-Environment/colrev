@@ -6,6 +6,7 @@ import pytest
 
 import colrev.qm.quality_model
 import colrev.record
+from colrev.constants import Fields
 
 
 @pytest.mark.parametrize(
@@ -76,7 +77,7 @@ def test_get_quality_defects_author(
 ) -> None:
     """Test record.get_quality_defects() - author field"""
     v_t_record.data["author"] = author_str
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -109,7 +110,7 @@ def test_get_quality_defects_title(
     """Test record.get_quality_defects() - title field"""
     v_t_record.data["title"] = title_str
 
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -140,7 +141,7 @@ def test_get_quality_defects_journal(
     """Test record.get_quality_defects() - journal field"""
     v_t_record.data["journal"] = journal_str
 
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -168,7 +169,7 @@ def test_thesis_multiple_authors(
     v_t_record.data["ENTRYTYPE"] = "thesis"
     v_t_record.data["author"] = name_str
 
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -195,7 +196,7 @@ def test_year(
     """Test record.get_quality_defects() - thesis with multiple authors"""
     v_t_record.data["year"] = year
 
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -234,7 +235,7 @@ def test_get_quality_defects_identical_title(
         v_t_record.data["ENTRYTYPE"] = "incollection"
         v_t_record.data["publisher"] = "not missing"
 
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -255,7 +256,7 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
     v_t_record.data["year"] = "forthcoming"
     del v_t_record.data["volume"]
     del v_t_record.data["number"]
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     assert (
         v_t_record.data["colrev_masterdata_provenance"]["volume"]["note"]
         == "not-missing"
@@ -286,7 +287,7 @@ def test_get_quality_defects_book_title_abbr(
     v_t_record.data["chapter"] = 10
     v_t_record.data["publisher"] = "nobody"
     del v_t_record.data["journal"]
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -313,7 +314,7 @@ def test_get_quality_defects_language_format(
     """Tests for invalid language code"""
 
     v_t_record.data["language"] = language
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
 
     if not defects:
         assert not v_t_record.has_quality_defects()
@@ -345,7 +346,7 @@ def test_get_quality_defects_missing_fields(
     """Tests for missing and inconsistent data for ENTRYTYPE"""
 
     v_t_record.data["ENTRYTYPE"] = entrytype
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not missing:
         assert not v_t_record.has_quality_defects()
         return
@@ -381,7 +382,7 @@ def test_doi_not_matching_pattern(
 ) -> None:
     """Test the doi-not-matching-pattern checker"""
     v_t_record.data["doi"] = doi
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     # Ignore defects that should be tested separately
     v_t_record.remove_masterdata_provenance_note(
         key="doi", note="inconsistent-with-doi-metadata"
@@ -412,7 +413,7 @@ def test_isbn_not_matching_pattern(
 ) -> None:
     """Test the isbn-not-matching-pattern checker"""
     book_record.data["isbn"] = isbn
-    book_record.update_masterdata_provenance(qm=quality_model)
+    book_record.run_quality_model(qm=quality_model)
     if not defect:
         print(book_record.data)
         assert not book_record.has_quality_defects()
@@ -441,7 +442,7 @@ def test_pubmedid_not_matching_pattern(
 ) -> None:
     """Test the doi-not-matching-pattern checker"""
     v_t_record.data["colrev.pubmed.pubmedid"] = pmid
-    v_t_record.update_masterdata_provenance(qm=quality_model)
+    v_t_record.run_quality_model(qm=quality_model)
     if not defect:
         assert not v_t_record.has_quality_defects()
         return
@@ -452,3 +453,47 @@ def test_pubmedid_not_matching_pattern(
         == "pubmedid-not-matching-pattern"
     )
     assert v_t_record.has_quality_defects()
+
+
+def test_retracted(
+    quality_model: colrev.qm.quality_model.QualityModel,
+    v_t_record: colrev.record.Record,
+) -> None:
+    """Test whether run_quality_model detects retracts"""
+
+    # Retracted (crossmark)
+    r1_mod = v_t_record.copy_prep_rec()
+    r1_mod.data["crossmark"] = "True"
+    r1_mod.data["language"] = "eng"
+    r1_mod.run_quality_model(qm=quality_model)
+    expected = v_t_record.copy_prep_rec()
+    expected.data["prescreen_exclusion"] = "retracted"
+    expected.data[Fields.STATUS] = colrev.record.RecordState.rev_prescreen_excluded
+    expected.data["colrev_masterdata_provenance"] = {}
+    # expected = {
+    #     "ID": "r1",
+    #     "ENTRYTYPE": "article",
+    #     "colrev_masterdata_provenance": {
+    #         "year": {"source": "import.bib/id_0001", "note": ""},
+    #         "title": {"source": "import.bib/id_0001", "note": ""},
+    #         "author": {"source": "import.bib/id_0001", "note": ""},
+    #         "journal": {"source": "import.bib/id_0001", "note": ""},
+    #         "volume": {"source": "import.bib/id_0001", "note": ""},
+    #         "number": {"source": "import.bib/id_0001", "note": ""},
+    #         "pages": {"source": "import.bib/id_0001", "note": ""},
+    #     },
+    #     "colrev_data_provenance": {},
+    #     "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
+    #     "colrev_origin": ["import.bib/id_0001"],
+    #     "year": "2020",
+    #     "title": "EDITORIAL",
+    #     "author": "Rai, Arun",
+    #     "journal": "MIS Quarterly",
+    #     "volume": "45",
+    #     "number": "1",
+    #     "pages": "1--3",
+    #     "prescreen_exclusion": "retracted",
+    #     "language": "eng",
+    # }
+    actual = r1_mod.data
+    assert expected.data == actual
