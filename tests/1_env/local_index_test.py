@@ -7,6 +7,8 @@ import pytest
 import colrev.env.local_index
 import colrev.env.tei_parser
 import colrev.review_manager
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # pylint: disable=line-too-long
 
@@ -47,14 +49,18 @@ def test_get_year_from_toc(local_index) -> None:  # type: ignore
     with pytest.raises(
         colrev.exceptions.TOCNotAvailableException,
     ):
-        record_dict = {"ENTRYTYPE": "article", "volume": "42", "number": "2"}
+        record_dict = {
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+            Fields.VOLUME: "42",
+            Fields.NUMBER: "2",
+        }
         local_index.get_year_from_toc(record_dict=record_dict)
 
     record_dict = {
-        "ENTRYTYPE": "article",
-        "journal": "MIS Quarterly",
-        "volume": "42",
-        "number": "2",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "42",
+        Fields.NUMBER: "2",
     }
     expected = "2018"
     actual = local_index.get_year_from_toc(record_dict=record_dict)
@@ -67,27 +73,25 @@ def test_search(local_index) -> None:  # type: ignore
     expected = [
         colrev.record.Record(
             data={
-                "ENTRYTYPE": "article",
-                "ID": "AbbasZhouDengEtAl2018",
-                "author": "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
-                "colrev_data_provenance": {
-                    "doi": {"note": "", "source": "pdfs.bib/0000000089"},
-                    "url": {"note": "", "source": "DBLP.bib/001187"},
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.ID: "AbbasZhouDengEtAl2018",
+                Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
+                Fields.D_PROV: {
+                    Fields.DOI: {"note": "", "source": "pdfs.bib/0000000089"},
+                    Fields.URL: {"note": "", "source": "DBLP.bib/001187"},
                 },
-                "colrev_masterdata_provenance": {
-                    "CURATED": {"note": "", "source": "gh..."}
-                },
-                "colrev_status": colrev.record.RecordState.md_prepared,
+                Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
+                Fields.STATUS: colrev.record.RecordState.md_prepared,
                 "curation_ID": "gh...#AbbasZhouDengEtAl2018",
-                "doi": "10.25300/MISQ/2018/13239",
-                "journal": "MIS Quarterly",
-                "language": "eng",
-                "number": "2",
-                "pages": "427--464",
-                "title": "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
-                "url": "https://misq.umn.edu/skin/frontend/default/misq/pdf/appendices/2018/V42I2Appendices/04_13239_RA_AbbasiZhou.pdf",
-                "volume": "42",
-                "year": "2018",
+                Fields.DOI: "10.25300/MISQ/2018/13239",
+                Fields.JOURNAL: "MIS Quarterly",
+                Fields.LANGUAGE: "eng",
+                Fields.NUMBER: "2",
+                Fields.PAGES: "427--464",
+                Fields.TITLE: "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
+                Fields.URL: "https://misq.umn.edu/skin/frontend/default/misq/pdf/appendices/2018/V42I2Appendices/04_13239_RA_AbbasiZhou.pdf",
+                Fields.VOLUME: "42",
+                Fields.YEAR: "2018",
             }
         )
     ]
@@ -97,27 +101,25 @@ def test_search(local_index) -> None:  # type: ignore
     expected = [
         colrev.record.Record(
             data={
-                "ENTRYTYPE": "article",
-                "ID": "AlaviLeidner2001",
-                "author": "Alavi, Maryam and Leidner, Dorothy E.",
-                "colrev_data_provenance": {
-                    "doi": {"note": "", "source": "CROSSREF.bib/000516"},
-                    "url": {"note": "", "source": "DBLP.bib/000528"},
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.ID: "AlaviLeidner2001",
+                Fields.AUTHOR: "Alavi, Maryam and Leidner, Dorothy E.",
+                Fields.D_PROV: {
+                    Fields.DOI: {"note": "", "source": "CROSSREF.bib/000516"},
+                    Fields.URL: {"note": "", "source": "DBLP.bib/000528"},
                 },
-                "colrev_masterdata_provenance": {
-                    "CURATED": {"note": "", "source": "gh..."}
-                },
-                "colrev_status": colrev.record.RecordState.md_prepared,
+                Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
+                Fields.STATUS: colrev.record.RecordState.md_prepared,
                 "curation_ID": "gh...#AlaviLeidner2001",
-                "doi": "10.2307/3250961",
-                "journal": "MIS Quarterly",
+                Fields.DOI: "10.2307/3250961",
+                Fields.JOURNAL: "MIS Quarterly",
                 # TODO : should expect literature_review = True (layered field?!)
-                "language": "eng",
-                "number": "1",
-                "title": "Review: Knowledge Management and Knowledge Management Systems: Conceptual Foundations and Research Issues",
-                "url": "https://www.doi.org/10.2307/3250961",
-                "volume": "25",
-                "year": "2001",
+                Fields.LANGUAGE: "eng",
+                Fields.NUMBER: "1",
+                Fields.TITLE: "Review: Knowledge Management and Knowledge Management Systems: Conceptual Foundations and Research Issues",
+                Fields.URL: "https://www.doi.org/10.2307/3250961",
+                Fields.VOLUME: "25",
+                Fields.YEAR: "2001",
             }
         )
     ]
@@ -131,22 +133,22 @@ def test_get_fields_to_remove(local_index) -> None:  # type: ignore
     """Test get_fields_to_remove()"""
 
     record_dict = {
-        "ENTRYTYPE": "article",
-        "journal": "Communications of the Association for Information Systems",
-        "year": "2021",
-        "volume": "48",
-        "number": "2",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.JOURNAL: "Communications of the Association for Information Systems",
+        Fields.YEAR: "2021",
+        Fields.VOLUME: "48",
+        Fields.NUMBER: "2",
     }
-    expected = ["number"]
+    expected = [Fields.NUMBER]
     actual = local_index.get_fields_to_remove(record_dict=record_dict)
     assert expected == actual
 
     record_dict = {
-        "ENTRYTYPE": "inproceedings",
+        Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
         "booktitle": "Communications of the Association for Information Systems",
-        "year": "2021",
-        "volume": "48",
-        "number": "2",
+        Fields.YEAR: "2021",
+        Fields.VOLUME: "48",
+        Fields.NUMBER: "2",
     }
     expected = []
     actual = local_index.get_fields_to_remove(record_dict=record_dict)
@@ -157,37 +159,37 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
     """Test retrieve_from_toc()"""
 
     record_dict = {
-        "ENTRYTYPE": "article",
-        "ID": "AbbasZhouDengEtAl2018",
-        "author": "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
-        "journal": "MIS Quarterly",
-        "language": "eng",
-        "number": "2",
-        "pages": "427-64",
+        Fields.ID: "AbbasZhouDengEtAl2018",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.LANGUAGE: "eng",
+        Fields.NUMBER: "2",
+        Fields.PAGES: "427-64",
         "curation_ID": "gh...#AbbasZhouDengEtAl2018",
-        "title": "Text Analytics to Support Sense-Making in Social Media: A Language Perspective",
-        "volume": "42",
-        "year": "2018",
+        Fields.TITLE: "Text Analytics to Support Sense-Making in Social Media: A Language Perspective",
+        Fields.VOLUME: "42",
+        Fields.YEAR: "2018",
     }
     expected = {
-        "ID": "AbbasZhouDengEtAl2018",
-        "ENTRYTYPE": "article",
-        "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_masterdata_provenance": {"CURATED": {"source": "gh...", "note": ""}},
-        "colrev_data_provenance": {
-            "doi": {"source": "pdfs.bib/0000000089", "note": ""},
-            "url": {"source": "DBLP.bib/001187", "note": ""},
+        Fields.ID: "AbbasZhouDengEtAl2018",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.MD_PROV: {"CURATED": {"source": "gh...", "note": ""}},
+        Fields.D_PROV: {
+            Fields.DOI: {"source": "pdfs.bib/0000000089", "note": ""},
+            Fields.URL: {"source": "DBLP.bib/001187", "note": ""},
         },
-        "doi": "10.25300/MISQ/2018/13239",
-        "journal": "MIS Quarterly",
-        "title": "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
-        "year": "2018",
-        "volume": "42",
-        "number": "2",
-        "pages": "427--464",
-        "url": "https://misq.umn.edu/skin/frontend/default/misq/pdf/appendices/2018/V42I2Appendices/04_13239_RA_AbbasiZhou.pdf",
-        "language": "eng",
-        "author": "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
+        Fields.DOI: "10.25300/MISQ/2018/13239",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.TITLE: "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
+        Fields.YEAR: "2018",
+        Fields.VOLUME: "42",
+        Fields.NUMBER: "2",
+        Fields.PAGES: "427--464",
+        Fields.URL: "https://misq.umn.edu/skin/frontend/default/misq/pdf/appendices/2018/V42I2Appendices/04_13239_RA_AbbasiZhou.pdf",
+        Fields.LANGUAGE: "eng",
+        Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
         "curation_ID": "gh...#AbbasZhouDengEtAl2018",
     }
     actual = local_index.retrieve_from_toc(
@@ -201,26 +203,26 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
 
     colrev_pdf_id = "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff"
     expected = {
-        "ID": "AbbasiAlbrechtVanceEtAl2012",
-        "ENTRYTYPE": "article",
-        "colrev_status": colrev.record.RecordState.md_prepared,
-        "colrev_masterdata_provenance": {"CURATED": {"source": "gh...", "note": ""}},
-        "colrev_data_provenance": {
-            "colrev_pdf_id": {"source": "file|pdf_hash", "note": ""},
-            "file": {"source": "pdfs.bib/0000001378", "note": ""},
-            "dblp_key": {"source": "DBLP.bib/000869", "note": ""},
-            "url": {"source": "DBLP.bib/000869", "note": ""},
+        Fields.ID: "AbbasiAlbrechtVanceEtAl2012",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.MD_PROV: {"CURATED": {"source": "gh...", "note": ""}},
+        Fields.D_PROV: {
+            Fields.PDF_ID: {"source": "file|pdf_hash", "note": ""},
+            Fields.FILE: {"source": "pdfs.bib/0000001378", "note": ""},
+            Fields.DBLP_KEY: {"source": "DBLP.bib/000869", "note": ""},
+            Fields.URL: {"source": "DBLP.bib/000869", "note": ""},
         },
-        "colrev_pdf_id": "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
-        "dblp_key": "https://dblp.org/rec/journals/misq/AbbasiAVH12",
-        "journal": "MIS Quarterly",
-        "title": "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
-        "year": "2012",
-        "volume": "36",
-        "number": "4",
-        "url": "http://misq.org/metafraud-a-meta-learning-framework-for-detecting-financial-fraud.html",
-        "language": "eng",
-        "author": "Abbasi, Ahmed and Albrecht, Conan and Vance, Anthony and Hansen, James",
+        Fields.PDF_ID: "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
+        Fields.DBLP_KEY: "https://dblp.org/rec/journals/misq/AbbasiAVH12",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.TITLE: "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
+        Fields.YEAR: "2012",
+        Fields.VOLUME: "36",
+        Fields.NUMBER: "4",
+        Fields.URL: "http://misq.org/metafraud-a-meta-learning-framework-for-detecting-financial-fraud.html",
+        Fields.LANGUAGE: "eng",
+        Fields.AUTHOR: "Abbasi, Ahmed and Albrecht, Conan and Vance, Anthony and Hansen, James",
         "curation_ID": "gh...#AbbasiAlbrechtVanceEtAl2012",
     }
     actual = local_index.retrieve_based_on_colrev_pdf_id(colrev_pdf_id=colrev_pdf_id)
@@ -230,7 +232,7 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
 # next tests: index_tei:
 # we could leave the file field for WagnerLukyanenkoParEtAl2022
 # but if the PDF does not exist, the field is removed
-# del record_dict["file"]
+# del record_dict[Fields.FILE]
 # and the index_tei immediately returns.
 
 # def method(): # pragma: no cover

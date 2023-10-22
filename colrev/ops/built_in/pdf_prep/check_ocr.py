@@ -55,7 +55,6 @@ class PDFCheckOCR(JsonSchemaMixin):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
-        pad: int,  # pylint: disable=unused-argument
     ) -> colrev.record.Record:
         pdf_path = review_manager.path / Path(record.data[Fields.FILE])
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
@@ -115,7 +114,6 @@ class PDFCheckOCR(JsonSchemaMixin):
             record = self.__apply_ocr(
                 review_manager=pdf_prep_operation.review_manager,
                 record=record,
-                pad=pad,
             )
 
         if not self.__text_is_english(text=record.data["text_from_pdf"]):

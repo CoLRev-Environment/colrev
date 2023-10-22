@@ -42,7 +42,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
     def validates_based_on_metadata(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
     ) -> dict:
         """Validates the PDF based on the metadata (record)"""
@@ -162,9 +161,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
         except colrev_exceptions.RecordNotInIndexException:
             pass
 
-        validation_info = self.validates_based_on_metadata(
-            review_manager=pdf_prep_operation.review_manager, record=record
-        )
+        validation_info = self.validates_based_on_metadata(record=record)
         if not validation_info["validates"]:
             for msg in validation_info["msgs"]:
                 pdf_prep_operation.review_manager.report_logger.error(msg)

@@ -47,6 +47,7 @@ class QualityModel:
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the checkers"""
+
         for checker in self.checkers:
             if checker.msg in self.defects_to_ignore:
                 continue

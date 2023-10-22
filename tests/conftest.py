@@ -14,6 +14,8 @@ from pybtex.database.input import bibtex
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -298,9 +300,9 @@ def record_with_pdf() -> colrev.record.Record:
     """Fixture returning a record containing a file (PDF)"""
     return colrev.record.Record(
         data={
-            "ID": "WagnerLukyanenkoParEtAl2022",
-            "ENTRYTYPE": "article",
-            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+            Fields.ID: "WagnerLukyanenkoParEtAl2022",
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+            Fields.FILE: Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
         }
     )
 
@@ -325,14 +327,14 @@ def get_local_index_test_records_dict(  # type: ignore
             )
             # Note : we only select one example for the TEI-indexing
             for loaded_record in loaded_records.values():
-                if "file" not in loaded_record:
+                if Fields.FILE not in loaded_record:
                     continue
 
-                if loaded_record["ID"] != "WagnerLukyanenkoParEtAl2022":
-                    del loaded_record["file"]
+                if loaded_record[Fields.ID] != "WagnerLukyanenkoParEtAl2022":
+                    del loaded_record[Fields.FILE]
                 else:
-                    loaded_record["file"] = str(
-                        test_local_index_dir / Path(loaded_record["file"])
+                    loaded_record[Fields.FILE] = str(
+                        test_local_index_dir / Path(loaded_record[Fields.FILE])
                     )
 
             local_index_test_records_dict[path] = loaded_records
@@ -447,16 +449,16 @@ def fixture_v_t_record() -> colrev.record.Record:
     """Record for testing quality defects"""
     return colrev.record.Record(
         data={
-            "ID": "WagnerLukyanenkoParEtAl2022",
-            "ENTRYTYPE": "article",
-            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
-            "journal": "Journal of Information Technology",
-            "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
-            "title": "Artificial intelligence and the conduct of literature reviews",
-            "year": "2022",
-            "volume": "37",
-            "number": "2",
-            "language": "eng",
+            Fields.ID: "WagnerLukyanenkoParEtAl2022",
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+            Fields.FILE: Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+            Fields.JOURNAL: "Journal of Information Technology",
+            Fields.AUTHOR: "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
+            Fields.TITLE: "Artificial intelligence and the conduct of literature reviews",
+            Fields.YEAR: "2022",
+            Fields.VOLUME: "37",
+            Fields.NUMBER: "2",
+            Fields.LANGUAGE: "eng",
         }
     )
 
@@ -466,13 +468,13 @@ def fixture_book_record() -> colrev.record.Record:
     """Book record for testing quality defects"""
     return colrev.record.Record(
         data={
-            "ID": "Popper2014",
-            "ENTRYTYPE": "book",
-            "title": "Conjectures and refutations: The growth of scientific knowledge",
-            "author": "Popper, Karl",
-            "year": "2014",
-            "isbn": "978-0-415-28594-0",
-            "publisher": "Routledge",
-            "language": "eng",
+            Fields.ID: "Popper2014",
+            Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
+            Fields.TITLE: "Conjectures and refutations: The growth of scientific knowledge",
+            Fields.AUTHOR: "Popper, Karl",
+            Fields.YEAR: "2014",
+            Fields.ISBN: "978-0-415-28594-0",
+            Fields.PUBLISHER: "Routledge",
+            Fields.LANGUAGE: "eng",
         }
     )
