@@ -4,6 +4,7 @@ import pytest
 
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import Fields
 
 
 def test_search_feed(  # type: ignore
@@ -12,23 +13,23 @@ def test_search_feed(  # type: ignore
 ) -> None:
     """Test the search feed"""
 
-    record_dict = {"ID": "0001", "ENTRYTYPE": "article"}
+    record_dict = {Fields.ID: "0001", Fields.ENTRYTYPE: "article"}
     with pytest.raises(
         colrev.exceptions.NotFeedIdentifiableException,
     ):
         search_feed.set_id(record_dict=record_dict)
 
-    record_dict["doi"] = "10.111/2222"
+    record_dict[Fields.DOI] = "10.111/2222"
     search_feed.set_id(record_dict=record_dict)
     search_feed.set_id(record_dict=record_dict)
 
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
-    record_dict["colrev_masterdata_provenance"] = {}  # type: ignore
-    record_dict["colrev_data_provenance"] = {}  # type: ignore
-    record_dict["colrev_status"] = "content"
-    record_dict["cited_by"] = 10  # type: ignore
+    record_dict[Fields.MD_PROV] = {}  # type: ignore
+    record_dict[Fields.D_PROV] = {}  # type: ignore
+    record_dict[Fields.STATUS] = "content"
+    record_dict[Fields.CITED_BY] = 10  # type: ignore
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
-    record_dict["cited_by"] = 12  # type: ignore
+    record_dict[Fields.CITED_BY] = 12  # type: ignore
     search_feed.add_record(record=colrev.record.Record(data=record_dict))
     assert len(search_feed.feed_records) == 1
 

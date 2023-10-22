@@ -52,6 +52,8 @@ class Fields:
     STATUS = "colrev_status"
     PDF_ID = "colrev_pdf_id"
 
+    TEI_ID = "tei_id"
+
     TITLE = "title"
     AUTHOR = "author"
     YEAR = "year"

@@ -399,7 +399,6 @@ class CurationDedupe(JsonSchemaMixin):
 
         record = colrev.record.Record(data=updated_record)
         validation_info = self.pdf_metadata_validation.validates_based_on_metadata(
-            review_manager=dedupe_operation.review_manager,
             record=record,
         )
         return validation_info

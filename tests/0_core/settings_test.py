@@ -5,7 +5,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 import colrev.env.utils
-import colrev.review_manager
 import colrev.settings
 
 # expected_printout: in settings-expected-printout.txt

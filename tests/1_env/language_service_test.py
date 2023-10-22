@@ -4,32 +4,34 @@ import pytest
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 VALID = True
 INVALID = False
 
 v1 = {
-    "ID": "R1",
-    "ENTRYTYPE": "article",
-    "colrev_masterdata_provenance": {
-        "year": {"source": "import.bib/id_0001", "note": ""},
-        "title": {"source": "import.bib/id_0001", "note": ""},
-        "author": {"source": "import.bib/id_0001", "note": ""},
-        "journal": {"source": "import.bib/id_0001", "note": ""},
-        "volume": {"source": "import.bib/id_0001", "note": ""},
-        "number": {"source": "import.bib/id_0001", "note": ""},
-        "pages": {"source": "import.bib/id_0001", "note": ""},
+    Fields.ID: "R1",
+    Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+    Fields.MD_PROV: {
+        Fields.YEAR: {"source": "import.bib/id_0001", "note": ""},
+        Fields.TITLE: {"source": "import.bib/id_0001", "note": ""},
+        Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
+        Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
+        Fields.VOLUME: {"source": "import.bib/id_0001", "note": ""},
+        Fields.NUMBER: {"source": "import.bib/id_0001", "note": ""},
+        Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
     },
-    "colrev_data_provenance": {},
-    "colrev_status": colrev.record.RecordState.md_prepared,
-    "colrev_origin": ["import.bib/id_0001"],
-    "year": "2020",
-    "title": "EDITORIAL",
-    "author": "Rai, Arun",
-    "journal": "MIS Quarterly",
-    "volume": "45",
-    "number": "1",
-    "pages": "1--3",
+    Fields.D_PROV: {},
+    Fields.STATUS: colrev.record.RecordState.md_prepared,
+    Fields.ORIGIN: ["import.bib/id_0001"],
+    Fields.YEAR: "2020",
+    Fields.TITLE: "EDITORIAL",
+    Fields.AUTHOR: "Rai, Arun",
+    Fields.JOURNAL: "MIS Quarterly",
+    Fields.VOLUME: "45",
+    Fields.NUMBER: "1",
+    Fields.PAGES: "1--3",
 }
 
 R1 = colrev.record.Record(data=v1)
@@ -151,8 +153,8 @@ def test_unify_to_iso_639_3_language_codes(
     language_service: colrev.env.language_service.LanguageService,
 ) -> None:
     """Test the unify_to_iso_639_3_language_codes"""
-    R1.data["language"] = language_code
+    R1.data[Fields.LANGUAGE] = language_code
     language_service.unify_to_iso_639_3_language_codes(record=R1)
-    actual = R1.data["language"]
+    actual = R1.data[Fields.LANGUAGE]
 
     assert expected == actual

@@ -6,6 +6,7 @@ import pytest
 
 import colrev.ops.built_in.prep.add_journal_ranking
 import colrev.ops.prep
+from colrev.constants import Fields
 
 
 @pytest.fixture(scope="package", name="ajr_instance")
@@ -34,13 +35,13 @@ def elp(  # type: ignore
     [
         (
             {
-                "journal": "MIS Quarterly",
+                Fields.JOURNAL: "MIS Quarterly",
             },
             {
-                "colrev_data_provenance": {
+                Fields.D_PROV: {
                     "journal_ranking": {"note": "", "source": "add_journal_ranking"}
                 },
-                "journal": "MIS Quarterly",
+                Fields.JOURNAL: "MIS Quarterly",
                 "journal_ranking": "Senior Scholar's List of Premier Journals,FT-50",
             },
         )
