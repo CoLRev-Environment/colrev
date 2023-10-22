@@ -300,7 +300,7 @@ def record_with_pdf() -> colrev.record.Record:
         data={
             "ID": "WagnerLukyanenkoParEtAl2022",
             "ENTRYTYPE": "article",
-            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
         }
     )
 
@@ -449,7 +449,7 @@ def fixture_v_t_record() -> colrev.record.Record:
         data={
             "ID": "WagnerLukyanenkoParEtAl2022",
             "ENTRYTYPE": "article",
-            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
             "journal": "Journal of Information Technology",
             "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
             "title": "Artificial intelligence and the conduct of literature reviews",

@@ -88,7 +88,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         record.add_data_provenance_note(
             key=Fields.FILE, note="pdf_processed with OCRMYPDF"
         )
-        record.set_text_from_pdf(project_path=review_manager.path)
+        record.set_text_from_pdf()
         return record
 
     def prep_pdf(

@@ -1285,9 +1285,7 @@ def test_extract_text_by_page(  # type: ignore
     expected = (
         helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt")
     ).read_text(encoding="utf-8")
-    actual = record_with_pdf.extract_text_by_page(
-        pages=[0], project_path=helpers.test_data_path
-    )
+    actual = record_with_pdf.extract_text_by_page(pages=[0])
     actual = actual.rstrip()
     assert expected == actual
 
@@ -1296,7 +1294,7 @@ def test_set_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> Non
     """Test record.set_pages_in_pdf()"""
 
     expected = 18
-    record_with_pdf.set_pages_in_pdf(project_path=helpers.test_data_path)
+    record_with_pdf.set_pages_in_pdf()
     actual = record_with_pdf.data["pages_in_file"]
     assert expected == actual
 
@@ -1309,7 +1307,7 @@ def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> No
         .read_text(encoding="utf-8")
         .replace("\n", " ")
     )
-    record_with_pdf.set_text_from_pdf(project_path=helpers.test_data_path)
+    record_with_pdf.set_text_from_pdf()
     actual = record_with_pdf.data["text_from_pdf"]
     actual = actual[0:4234]
     assert expected == actual

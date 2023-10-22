@@ -49,7 +49,6 @@ class PDFCompletenessValidation(JsonSchemaMixin):
     def __longer_with_appendix(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
         nr_pages_metadata: int,
     ) -> bool:
@@ -60,7 +59,6 @@ class PDFCompletenessValidation(JsonSchemaMixin):
                     record.data["pages_in_file"] - 2,
                     record.data["pages_in_file"] - 1,
                 ],
-                project_path=review_manager.path,
             )
             if "appendi" in text.lower():
                 return True
@@ -125,7 +123,7 @@ class PDFCompletenessValidation(JsonSchemaMixin):
             "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
         )
         if full_version_purchase_notice in record.extract_text_by_page(
-            pages=[0, 1], project_path=pdf_prep_operation.review_manager.path
+            pages=[0, 1]
         ).replace(" ", ""):
             msg = (
                 f"{record.data[Fields.ID]}".ljust(pad - 1, " ")
@@ -166,14 +164,13 @@ class PDFCompletenessValidation(JsonSchemaMixin):
 
         nr_pages_metadata = __get_nr_pages_in_metadata(pages_metadata=pages_metadata)
 
-        record.set_pages_in_pdf(project_path=pdf_prep_operation.review_manager.path)
+        record.set_pages_in_pdf()
         if nr_pages_metadata != record.data["pages_in_file"]:
             # this may become a settings option (coverpages: ok)
             # if nr_pages_metadata == int(record.data["pages_in_file"]) - 1:
             #     record.add_data_provenance_note(key=Fields.FILE, note="more_pages_in_pdf")
 
             if self.__longer_with_appendix(
-                review_manager=pdf_prep_operation.review_manager,
                 record=record,
                 nr_pages_metadata=nr_pages_metadata,
             ):

@@ -1263,11 +1263,13 @@ class Record:
             self.remove_field(key=key)
 
     def extract_text_by_page(
-        self, *, pages: Optional[list] = None, project_path: Path
+        self,
+        *,
+        pages: Optional[list] = None,
     ) -> str:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
-        pdf_path = project_path / Path(self.data[Fields.FILE])
+        pdf_path = Path(self.data[Fields.FILE]).absolute()
 
         # https://stackoverflow.com/questions/49457443/python-pdfminer-converts-pdf-file-into-one-chunk-of-string-with-no-spaces-betwee
         laparams = pdfminer.layout.LAParams()
@@ -1299,21 +1301,21 @@ class Record:
                 pass
         return "".join(text_list)
 
-    def set_pages_in_pdf(self, *, project_path: Path) -> None:
+    def set_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
-        pdf_path = project_path / Path(self.data[Fields.FILE])
+        pdf_path = Path(self.data[Fields.FILE]).absolute()
         with open(pdf_path, "rb") as file:
             parser = PDFParser(file)
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
         self.data["pages_in_file"] = pages_in_file
 
-    def set_text_from_pdf(self, *, project_path: Path) -> None:
+    def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data["text_from_pdf"] = ""
         try:
-            self.set_pages_in_pdf(project_path=project_path)
-            text = self.extract_text_by_page(pages=[0, 1, 2], project_path=project_path)
+            self.set_pages_in_pdf()
+            text = self.extract_text_by_page(pages=[0, 1, 2])
             self.data["text_from_pdf"] = text.replace("\n", " ").replace("\x0c", "")
 
         except PDFSyntaxError:  # pragma: no cover

@@ -50,7 +50,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
         validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
 
         if "text_from_pdf" not in record.data:
-            record.set_text_from_pdf(project_path=review_manager.path)
+            record.set_text_from_pdf()
 
         text = record.data["text_from_pdf"]
         text = text.replace(" ", "").replace("\n", "").lower()
