@@ -111,6 +111,7 @@
     "pdf_get": {
         "pdf_path_type": "symlink",
         "pdf_required_for_screen_and_synthesis": true,
+        "defects_to_ignore": [],
         "rename_pdfs": true,
         "pdf_get_package_endpoints": [
             {
@@ -140,12 +141,6 @@
             },
             {
                 "endpoint": "colrev.remove_last_page"
-            },
-            {
-                "endpoint": "colrev.validate_pdf_metadata"
-            },
-            {
-                "endpoint": "colrev.validate_completeness"
             },
             {
                 "endpoint": "colrev.create_tei"

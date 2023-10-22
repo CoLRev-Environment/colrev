@@ -39,6 +39,8 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.pdf_dir.mkdir(exist_ok=True, parents=True)
 
+        self.pdf_qm = self.review_manager.get_pdf_qm()
+
         self.filepath_directory_pattern = ""
         pdf_endpoints = [
             s
@@ -196,6 +198,8 @@ class PDFGet(colrev.operation.Operation):
                         + f"rev_prescreen_included → pdf_imported{Colors.END}"
                     )
                 return record.get_data()
+
+        record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
 
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
             self.review_manager.logger.info(

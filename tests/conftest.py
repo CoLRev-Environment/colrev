@@ -278,6 +278,14 @@ def fixture_quality_model(
     return base_repo_review_manager.get_qm()
 
 
+@pytest.fixture(scope="session", name="pdf_quality_model")
+def fixture_pdf_quality_model(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.qm.quality_model.QualityModel:
+    """Fixture returning the pdf quality model"""
+    return base_repo_review_manager.get_pdf_qm()
+
+
 @pytest.fixture(scope="module")
 def language_service() -> colrev.env.language_service.LanguageService:  # type: ignore
     """Return a language service object"""
@@ -300,7 +308,7 @@ def record_with_pdf() -> colrev.record.Record:
         data={
             "ID": "WagnerLukyanenkoParEtAl2022",
             "ENTRYTYPE": "article",
-            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
         }
     )
 
@@ -449,7 +457,7 @@ def fixture_v_t_record() -> colrev.record.Record:
         data={
             "ID": "WagnerLukyanenkoParEtAl2022",
             "ENTRYTYPE": "article",
-            "file": Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
             "journal": "Journal of Information Technology",
             "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
             "title": "Artificial intelligence and the conduct of literature reviews",

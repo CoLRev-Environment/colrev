@@ -1088,6 +1088,17 @@ class Record:
                 "note": note,
             }
 
+    def remove_data_provenance_note(self, *, key: str, note: str) -> None:
+        """Remove a masterdata provenance note"""
+        if Fields.D_PROV not in self.data:
+            return
+        if key not in self.data[Fields.D_PROV]:
+            return
+        notes = self.data[Fields.D_PROV][key]["note"].split(",")
+        if note not in notes:
+            return
+        self.data[Fields.D_PROV][key]["note"] = ",".join(n for n in notes if n != note)
+
     def add_masterdata_provenance(
         self, *, key: str, source: str, note: str = ""
     ) -> None:
@@ -1173,6 +1184,17 @@ class Record:
                 self.add_data_provenance(key=key, source=source_info, note="")
 
         return True
+
+    def has_pdf_defects(self) -> bool:
+        """Check whether the PDF has quality defects"""
+
+        if (
+            Fields.D_PROV not in self.data
+            or Fields.FILE not in self.data[Fields.D_PROV]
+        ):
+            return False
+
+        return self.data[Fields.D_PROV][Fields.FILE]["note"] != ""
 
     def has_quality_defects(self, *, field: str = "") -> bool:
         """Check whether a record has quality defects"""
@@ -1477,6 +1499,20 @@ class Record:
             del self.data["text_from_pdf"]
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
+
+    def run_pdf_quality_model(
+        self,
+        *,
+        pdf_qm: colrev.qm.quality_model.QualityModel,
+        set_prepared: bool = False,
+    ) -> None:
+        """Run the PDF quality model"""
+
+        pdf_qm.run(record=self)
+        if self.has_pdf_defects():
+            self.set_status(target_state=RecordState.pdf_needs_manual_preparation)
+        elif set_prepared:
+            self.set_status(target_state=RecordState.pdf_prepared)
 
     def run_quality_model(
         self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False

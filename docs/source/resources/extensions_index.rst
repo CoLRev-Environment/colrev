@@ -153,8 +153,6 @@ pdf_prep
    extensions_index/colrev.pdf_check_ocr.rst
    extensions_index/colrev.remove_coverpage.rst
    extensions_index/colrev.remove_last_page.rst
-   extensions_index/colrev.validate_completeness.rst
-   extensions_index/colrev.validate_pdf_metadata.rst
 
 pdf_prep_man
 -----------------------------

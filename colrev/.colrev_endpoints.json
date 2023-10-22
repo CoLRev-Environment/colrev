@@ -140,12 +140,6 @@
             {"package_endpoint_identifier": "colrev.remove_last_page",
              "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage"
             },
-            {"package_endpoint_identifier": "colrev.validate_pdf_metadata",
-             "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation"
-            },
-            {"package_endpoint_identifier": "colrev.validate_completeness",
-             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation"
-            },
             {"package_endpoint_identifier": "colrev.create_tei",
              "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep"
             }

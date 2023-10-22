@@ -357,14 +357,6 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.validate_pdf_metadata",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.validate_completeness",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.create_tei",
             "status": "MATURING"
         }

@@ -155,6 +155,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_10_2,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.10.2"),
+                "target_version": CoLRevVersion("0.10.3"),
+                "script": self.__migrate_0_10_3,
+                "released": False,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -540,6 +546,21 @@ class Upgrade(colrev.operation.Operation):
             )
             paper_md_path.write_text(paper_md_content, encoding="utf-8")
             self.repo.index.add([str(paper_md_path)])
+
+        return self.repo.is_dirty()
+
+    def __migrate_0_10_3(self) -> bool:
+        settings = self.__load_settings_dict()
+        settings["pdf_get"]["defects_to_ignore"] = []
+        self.__save_settings(settings)
+
+        # TODO (nothing to do for update_masterdata_status)
+
+        # pdf_check_ocr should be apply_ocr (pdf_check_ocr should be a checker)
+        # drop colrev.validate_completeness - create check: pdf-incomplete
+        # remove validate_pdf_metadata
+        # check-first-page / check-last-page
+        # no-text-in-pdf vs no-text-embedded / apply_ocr
 
         return self.repo.is_dirty()
 

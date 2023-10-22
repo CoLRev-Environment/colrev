@@ -384,6 +384,11 @@ class ReviewManager:
 
         return colrev.qm.quality_model.QualityModel(review_manager=self)
 
+    def get_pdf_qm(self) -> colrev.qm.quality_model.QualityModel:
+        """Get the PDF quality model"""
+
+        return colrev.qm.quality_model.QualityModel(review_manager=self, pdf_mode=True)
+
     def get_status_stats(
         self, *, records: Optional[dict] = None
     ) -> colrev.ops.status.StatusStats:

@@ -12,10 +12,15 @@ import colrev.record
 class QualityModel:
     """The quality model for records"""
 
-    __checker_path = Path(__file__).parent / Path("checkers")
     checkers = []  # type: ignore
 
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def __init__(
+        self,
+        *,
+        review_manager: colrev.review_manager.ReviewManager,
+        pdf_mode: bool = False,
+    ) -> None:
+        self.pdf_mode = pdf_mode
         self.review_manager = review_manager
         self.defects_to_ignore = self.review_manager.settings.prep.defects_to_ignore
         self.__register_checkers()
@@ -25,18 +30,27 @@ class QualityModel:
         'register' function in each one.
         """
 
-        for filename in self.__checker_path.glob("*.py"):
+        self.checkers = []
+        if self.pdf_mode:
+            module_path = "colrev.qm.pdf_checkers."
+        else:
+            module_path = "colrev.qm.checkers."
+
+        if self.pdf_mode:
+            checker_path = Path(__file__).parent / Path("pdf_checkers/")
+        else:
+            checker_path = Path(__file__).parent / Path("checkers")
+
+        for filename in checker_path.glob("*.py"):
             if "__init__" in str(filename):
                 continue
 
             try:
-                module = importlib.import_module("colrev.qm.checkers." + filename.stem)
+                module = importlib.import_module(module_path + filename.stem)
             except ValueError as exc:
                 print(exc)
             except ImportError as exc:
-                print(
-                    f"Problem importing module {filename}: {exc}"
-                )  # , file=sys.stderr
+                print(f"Problem importing module {filename}: {exc}")
             else:
                 if hasattr(module, "register"):
                     module.register(self)
@@ -47,7 +61,19 @@ class QualityModel:
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the checkers"""
+
+        if self.pdf_mode:
+            if "file" not in record.data or not Path(record.data["file"]).is_file():
+                return
+            # text_from_pdf is already set in tests
+            if "text_from_pdf" not in record.data:
+                record.set_text_from_pdf(project_path=self.review_manager.path)
+
         for checker in self.checkers:
             if checker.msg in self.defects_to_ignore:
                 continue
             checker.run(record=record)
+
+        if self.pdf_mode:
+            if "text_from_pdf" in record.data:
+                del record.data["text_from_pdf"]
