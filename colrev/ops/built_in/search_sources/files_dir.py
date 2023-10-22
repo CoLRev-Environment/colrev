@@ -325,7 +325,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_text_from_pdf(project_path=self.review_manager.path)
+                    record.set_text_from_pdf()
                     record_dict = record.get_data()
                     if "text_from_pdf" in record_dict:
                         text: str = record_dict["text_from_pdf"]
@@ -639,7 +639,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if Fields.DOI in record_dict:
             return
         record = colrev.record.Record(data=record_dict)
-        record.set_text_from_pdf(project_path=self.review_manager.path)
+        record.set_text_from_pdf()
         res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
         if res:
             record.data[Fields.DOI] = res[0].upper()
