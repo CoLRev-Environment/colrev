@@ -195,7 +195,6 @@ class ScopePrescreen(JsonSchemaMixin):
     def __conditional_prescreen(
         self,
         *,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         record_dict: dict,
     ) -> None:
         if record_dict[Fields.STATUS] != colrev.record.RecordState.md_processed:
@@ -265,22 +264,22 @@ class ScopePrescreen(JsonSchemaMixin):
             0, {**{"endpoint": "colrev.scope_prescreen"}, **params_dict}
         )
 
+    # pylint: disable=unused-argument
     def run_prescreen(
         self,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
-        split: list,  # pylint: disable=unused-argument
+        split: list,
     ) -> dict:
         """Prescreen records based on the scope parameters"""
 
         for record_dict in records.values():
             self.__conditional_prescreen(
-                prescreen_operation=prescreen_operation,
                 record_dict=record_dict,
             )
 
-        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
-        prescreen_operation.review_manager.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.create_commit(
             msg="Pre-screen (scope)",
             manual_author=False,
         )

@@ -60,6 +60,8 @@ class Obsidian(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
+        self.review_manager = data_operation.review_manager
+
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -68,16 +70,13 @@ class Obsidian(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.endpoint_path = (
-            data_operation.review_manager.path / self.OBSIDIAN_PATH_RELATIVE
-        )
+        self.endpoint_path = self.review_manager.path / self.OBSIDIAN_PATH_RELATIVE
         self.endpoint_paper_path = (
-            data_operation.review_manager.path / self.OBSIDIAN_PAPER_PATH_RELATIVE
+            self.review_manager.path / self.OBSIDIAN_PAPER_PATH_RELATIVE
         )
         self.endpoint_inbox_path = (
-            data_operation.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
+            self.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
         )
-        self.review_manager = data_operation.review_manager
         if hasattr(self.review_manager, "dataset"):
             self.review_manager.dataset.update_gitignore(add=self.GITIGNORE_LIST)
 
@@ -131,7 +130,7 @@ class Obsidian(JsonSchemaMixin):
         missing_records = self.__get_obsidian_missing(included=included)
         if len(missing_records) == 0:
             if not silent_mode:
-                data_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     "All records included. Nothing to export."
                 )
             return
@@ -212,7 +211,7 @@ class Obsidian(JsonSchemaMixin):
         # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
-        # data_operation.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
+        # self.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
     def update_data(
         self,
@@ -223,7 +222,7 @@ class Obsidian(JsonSchemaMixin):
     ) -> None:
         """Update the obsidian vault"""
 
-        data_operation.review_manager.logger.debug("Export to obsidian endpoint")
+        self.review_manager.logger.debug("Export to obsidian endpoint")
 
         self.__append_missing_records(
             data_operation=data_operation, records=records, silent_mode=silent_mode

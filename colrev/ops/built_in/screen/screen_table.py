@@ -36,19 +36,19 @@ class TableScreen(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        screen_operation: colrev.ops.screen.Screen,  # pylint: disable=unused-argument
+        screen_operation: colrev.ops.screen.Screen,
         settings: dict,
     ) -> None:
+        self.review_manager = screen_operation.review_manager
+        self.screen_operation = screen_operation
         self.settings = self.settings_class.load_settings(data=settings)
 
-    def __create_screening_table(
-        self, *, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
-    ) -> list:
+    def __create_screening_table(self, *, records: dict, split: list) -> list:
         # pylint: disable=too-many-branches
-        screen_operation.review_manager.logger.info("Loading records for export")
+        self.review_manager.logger.info("Loading records for export")
 
         screening_criteria = util_cli_screen.get_screening_criteria_from_user_input(
-            screen_operation=screen_operation, records=records
+            screen_operation=self.screen_operation, records=records
         )
 
         tbl = []
@@ -112,7 +112,6 @@ class TableScreen(JsonSchemaMixin):
 
     def export_table(
         self,
-        screen_operation: colrev.ops.screen.Screen,
         records: dict,
         split: list,
         export_table_format: str = "csv",
@@ -128,18 +127,14 @@ class TableScreen(JsonSchemaMixin):
             print("File already exists. Please rename it.")
             return
 
-        tbl = self.__create_screening_table(
-            screen_operation=screen_operation, records=records, split=split
-        )
+        tbl = self.__create_screening_table(records=records, split=split)
 
         self.screen_table_path.parents[0].mkdir(parents=True, exist_ok=True)
 
         if export_table_format.lower() == "csv":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv(self.screen_table_path, index=False, quoting=csv.QUOTE_ALL)
-            screen_operation.review_manager.logger.info(
-                f"Created {self.screen_table_path}"
-            )
+            self.review_manager.logger.info(f"Created {self.screen_table_path}")
 
         if export_table_format.lower() == "xlsx":
             screen_df = pd.DataFrame(tbl)
@@ -148,7 +143,7 @@ class TableScreen(JsonSchemaMixin):
                 index=False,
                 sheet_name="screen",
             )
-            screen_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 f"Created {self.screen_table_path.with_suffix('.xlsx')}"
             )
 
@@ -156,7 +151,6 @@ class TableScreen(JsonSchemaMixin):
 
     def import_table(
         self,
-        screen_operation: colrev.ops.screen.Screen,
         records: dict,
         import_table_path: Optional[Path] = None,
     ) -> None:
@@ -167,7 +161,7 @@ class TableScreen(JsonSchemaMixin):
             import_table_path = self.screen_table_path
 
         if not Path(import_table_path).is_file():
-            screen_operation.review_manager.logger.error(
+            self.review_manager.logger.error(
                 f"Did not find {import_table_path} - exiting."
             )
             return
@@ -176,7 +170,7 @@ class TableScreen(JsonSchemaMixin):
         screen_df.fillna("", inplace=True)
         screened_records = screen_df.to_dict("records")
 
-        screening_criteria = screen_operation.review_manager.settings.screen.criteria
+        screening_criteria = self.review_manager.settings.screen.criteria
 
         for screened_record in screened_records:
             if screened_record.get(Fields.ID, "") in records:
@@ -217,22 +211,21 @@ class TableScreen(JsonSchemaMixin):
                         target_state=colrev.record.RecordState.rev_included
                     )
 
-        screen_operation.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records=records)
 
+    # pylint: disable=unused-argument
     def run_screen(
         self, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
     ) -> dict:
         """Screen records based on screening tables"""
 
         if input("create screen table [y,n]?") == "y":
-            self.export_table(screen_operation, records, split)
+            self.export_table(records, split)
 
         if input("import screen table [y,n]?") == "y":
-            self.import_table(screen_operation, records)
+            self.import_table(records)
 
-        if screen_operation.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_changes():
             if input("create commit [y,n]?") == "y":
-                screen_operation.review_manager.create_commit(
-                    msg="Screen", manual_author=True
-                )
+                self.review_manager.create_commit(msg="Screen", manual_author=True)
         return records

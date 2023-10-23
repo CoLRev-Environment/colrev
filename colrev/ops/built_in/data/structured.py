@@ -78,6 +78,8 @@ Example 2:
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
+        self.review_manager = data_operation.review_manager
+
         if "version" not in settings:
             settings["version"] = "0.1"
 
@@ -87,10 +89,8 @@ Example 2:
             settings["data_path_relative"] = Path("data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.data_path = (
-            data_operation.review_manager.data_dir / self.settings.data_path_relative
-        )
-        self.review_manager = data_operation.review_manager
+        self.data_path = self.review_manager.data_dir / self.settings.data_path_relative
+        self.review_manager = self.review_manager
 
     # pylint: disable=unused-argument
     @classmethod
@@ -247,13 +247,11 @@ Example 2:
 
         self.validate_structured_data()
         records = update_structured_data(
-            review_manager=data_operation.review_manager,
+            review_manager=self.review_manager,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        data_operation.review_manager.dataset.add_changes(
-            path=self.settings.data_path_relative
-        )
+        self.review_manager.dataset.add_changes(path=self.settings.data_path_relative)
 
     def update_record_status_matrix(
         self,

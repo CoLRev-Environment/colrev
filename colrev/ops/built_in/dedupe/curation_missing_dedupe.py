@@ -46,19 +46,17 @@ class CurationMissingDedupe(JsonSchemaMixin):
             state=colrev.record.RecordState.md_processed
         )
 
-    def __create_dedupe_source_stats(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
-    ) -> None:
+    def __create_dedupe_source_stats(self) -> None:
         # Note : reload to generate correct statistics
 
         Path("dedupe").mkdir(exist_ok=True)
 
         source_origins = [
             str(source.filename).replace("data/search/", "")
-            for source in dedupe_operation.review_manager.settings.sources
+            for source in self.review_manager.settings.sources
         ]
 
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         for source_origin in source_origins:
             selected_records = [
                 r
@@ -73,14 +71,14 @@ class CurationMissingDedupe(JsonSchemaMixin):
             ]
             records_df = pd.DataFrame.from_records(list(selected_records))
             if records_df.shape[0] == 0:
-                dedupe_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     f"{Colors.GREEN}Source {source_origin} fully merged{Colors.END}"
                 )
             else:
-                dedupe_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     f"{Colors.ORANGE}Source {source_origin} not fully merged{Colors.END}"
                 )
-                dedupe_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     f"Exporting details to dedupe/{source_origin}.xlsx"
                 )
 
@@ -209,10 +207,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
             )
         return nr_recs_to_merge
 
-    def __process_missing_duplicates(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
-    ) -> dict:
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
+    def __process_missing_duplicates(self) -> dict:
+        records = self.review_manager.dataset.load_records_dict()
 
         nr_recs_to_merge = self.__get_nr_recs_to_merge(records=records)
 
@@ -312,14 +308,14 @@ class CurationMissingDedupe(JsonSchemaMixin):
         )
         print("\n\n")
 
-        ret = self.__process_missing_duplicates(dedupe_operation=dedupe_operation)
+        ret = self.__process_missing_duplicates()
 
         if len(ret["decision_list"]) > 0:
             print("Duplicates identified:")
             print(ret["decision_list"])
             preferred_masterdata_sources = [
                 s
-                for s in dedupe_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if s.endpoint != "colrev.files_dir"
             ]
 
@@ -329,7 +325,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             )
 
         if len(ret["records_to_prepare"]) > 0:
-            records = dedupe_operation.review_manager.dataset.load_records_dict()
+            records = self.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in ret["records_to_prepare"]:
                     record = colrev.record.Record(data=record_dict)
@@ -337,15 +333,15 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         target_state=colrev.record.RecordState.md_needs_manual_preparation
                     )
 
-            dedupe_operation.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records=records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-            dedupe_operation.review_manager.create_commit(
+            self.review_manager.create_commit(
                 msg="Merge duplicate records",
             )
 
         if len(ret["add_records_to_md_processed_list"]) > 0:
-            records = dedupe_operation.review_manager.dataset.load_records_dict()
+            records = self.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in ret["add_records_to_md_processed_list"]:
                     if record_dict[Fields.STATUS] in [
@@ -358,11 +354,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
                             target_state=colrev.record.RecordState.md_processed
                         )
 
-            dedupe_operation.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records=records)
             input("Edit records (if any), add to git, and press Enter")
 
-            dedupe_operation.review_manager.create_commit(
+            self.review_manager.create_commit(
                 msg="Add non-duplicate records",
             )
 
-        self.__create_dedupe_source_stats(dedupe_operation=dedupe_operation)
+        self.__create_dedupe_source_stats()

@@ -52,16 +52,15 @@ class BackwardSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if "min_intext_citations" not in settings["search_parameters"]:
             settings["search_parameters"]["min_intext_citations"] = 3
 
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         # Do not run in continuous-integration environment
-        if not source_operation.review_manager.in_ci_environment():
-            self.grobid_service = source_operation.review_manager.get_grobid_service()
+        if not self.review_manager.in_ci_environment():
+            self.grobid_service = self.review_manager.get_grobid_service()
             self.grobid_service.start()
-
-        self.review_manager = source_operation.review_manager
 
         self.crossref_connector = (
             colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource(

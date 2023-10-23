@@ -251,11 +251,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare PDF manually based on a cli"""
 
-        pdf_prep_man_operation.review_manager.logger.info(
-            "Loading data for pdf_prep_man"
-        )
+        self.review_manager.logger.info("Loading data for pdf_prep_man")
         pdf_prep_man_data = pdf_prep_man_operation.get_data()
-        records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         for i, item in enumerate(pdf_prep_man_data["items"]):
             if self.__to_skip > 0:
@@ -272,16 +270,16 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             except QuitPressedException:
                 break
 
-        pdf_prep_man_operation.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records=records)
 
         if pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":
-                pdf_prep_man_operation.review_manager.create_commit(
+                self.review_manager.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,
                 )
         else:
-            pdf_prep_man_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Prepare PDFs manually. Afterwards, use colrev pdf-get-man"
             )
 

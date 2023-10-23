@@ -85,6 +85,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # Crossref as a search_source
             self.search_source = from_dict(
@@ -94,7 +95,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             # Crossref as an md-prep source
             crossref_md_source_l = [
                 s
-                for s in source_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if s.filename == self.__crossref_md_filename
             ]
             if crossref_md_source_l:
@@ -112,7 +113,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.review_manager = source_operation.review_manager
         self.etiquette = self.get_etiquette(review_manager=self.review_manager)
         self.email = self.review_manager.get_committer()
 
