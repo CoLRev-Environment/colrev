@@ -66,6 +66,7 @@ colrev.constants.Fields
       ~Fields.SEMANTIC_SCHOLAR_ID
       ~Fields.SERIES
       ~Fields.STATUS
+      ~Fields.TEI_ID
       ~Fields.TITLE
       ~Fields.URL
       ~Fields.VOLUME

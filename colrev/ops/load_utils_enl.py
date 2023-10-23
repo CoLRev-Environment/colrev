@@ -1,20 +1,23 @@
 #! /usr/bin/env python
 """Convenience functions to load enl files
 
-%T How Trust Leads to Commitment on Microsourcing Platforms
-%0 Journal Article
-%A Guo, Wenbo
-%A Straub, Detmar W.
-%A Zhang, Pengzhu
-%A Cai, Zhao
-%B Management Information Systems Quarterly
-%D 2021
-%8 September  1, 2021
-%V 45
-%N 3
-%P 1309-1348
-%U https://aisel.aisnet.org/misq/vol45/iss3/13
-%X IS research has extensively examined the role of trust in client-vendor relationships...
+Example enl record::
+
+    %T How Trust Leads to Commitment on Microsourcing Platforms
+    %0 Journal Article
+    %A Guo, Wenbo
+    %A Straub, Detmar W.
+    %A Zhang, Pengzhu
+    %A Cai, Zhao
+    %B Management Information Systems Quarterly
+    %D 2021
+    %8 September  1, 2021
+    %V 45
+    %N 3
+    %P 1309-1348
+    %U https://aisel.aisnet.org/misq/vol45/iss3/13
+    %X IS research has extensively examined the role of trust in client-vendor relationships...
+
 """
 from __future__ import annotations
 

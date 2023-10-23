@@ -1,5 +1,20 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files"""
+"""Convenience functions to load nbib files
+
+Example nbib record::
+
+    OWN - ERIC
+    TI  - How Trust Leads to Commitment on Microsourcing Platforms
+    AU  - Guo, Wenbo
+    AU  - Straub, Detmar W.
+    AU  - Zhang, Pengzhu
+    AU  - Cai, Zhao
+    JT  - MIS Quarterly
+    DP  - 2021
+    VI  - 45
+    IP  - 3
+    PG  - 1309-1348
+"""
 from __future__ import annotations
 
 import re

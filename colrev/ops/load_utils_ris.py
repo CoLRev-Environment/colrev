@@ -1,5 +1,27 @@
 #! /usr/bin/env python
-"""Convenience functions to load ris files (based on rispy)"""
+"""Convenience functions to load ris files
+
+Example ris record::
+
+    TY  - JOUR
+    AU  - Guo, Wenbo
+    AU  - Straub, Detmar W.
+    AU  - Zhang, Pengzhu
+    AU  - Cai, Zhao
+    DA  - 2021/09/01
+    DO  - 10.25300/MISQ/2021/16100
+    ID  - Guo2021
+    T2  - Management Information Systems Quarterly
+    TI  - How Trust Leads to Commitment on Microsourcing Platforms
+    VL  - 45
+    IS  - 3
+    SP  - 1309
+    EP  - 1348
+    UR  - https://aisel.aisnet.org/misq/vol45/iss3/13
+    PB  - Association for Information Systems
+    ER  -
+
+"""
 from __future__ import annotations
 
 import re

@@ -64,7 +64,7 @@ class Load(colrev.operation.Operation):
     def ensure_append_only(self, *, file: Path) -> None:
         """Ensure that the file was only appended to.
 
-        This method must be called for all extensions that work
+        This method must be called for all packages that work
         with an ex-post assignment of incremental IDs."""
 
         git_repo = self.review_manager.dataset.get_repo()

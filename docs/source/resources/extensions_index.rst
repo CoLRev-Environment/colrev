@@ -1,9 +1,9 @@
-Extension Index
+Package Index
 =====================
 
 .. toctree::
    :maxdepth: 1
-   :caption: Extension Index
+   :caption: Package Index
 
 
 review_type

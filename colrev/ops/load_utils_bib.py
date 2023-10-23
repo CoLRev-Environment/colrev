@@ -1,5 +1,21 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files"""
+"""Convenience functions to load bib files
+
+Example BibTeX record::
+
+    @article{Guo2021,
+        title    = {How Trust Leads to Commitment on Microsourcing Platforms},
+        author   = {Guo, Wenbo and Straub, Detmar W. and Zhang, Pengzhu and Cai, Zhao},
+        journal  = {MIS Quarterly},
+        year     = {2021}
+        volume   = {45},
+        number   = {3},
+        pages    = {1309--1348},
+        url      = {https://aisel.aisnet.org/misq/vol45/iss3/13},
+        doi      = {10.25300/MISQ/2021/16100},
+    }
+
+"""
 from __future__ import annotations
 
 import os

@@ -1,5 +1,12 @@
 #! /usr/bin/env python
-"""Convenience functions to load tabular files (csv, xlsx)"""
+"""Convenience functions to load tabular files (csv, xlsx)
+
+Example csv/xlsx records::
+
+    title;author;year;
+    How Trust Leads to Commitment;Guo, W. and Straub, D.;2021;
+
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
