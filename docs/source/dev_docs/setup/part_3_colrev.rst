@@ -12,7 +12,7 @@ Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\
 
    # Install visual studio code (via snap)
    sudo snap install --classic code
-   # If you are using Ubuntu with WSL2, please run the command "code" afterwards 
+   # If you are using Ubuntu with WSL2, please run the command "code" afterwards
    # It will add Visual Studio Code (aka VS Code Server for x64) to your Windows Start Menu with WSL2 compatibility
 
    # Add $HOME/.local/bin to PATH and load it into the current terminal session with source
