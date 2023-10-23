@@ -71,6 +71,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # LocalIndex as a search_source
             self.search_source = from_dict(
@@ -81,7 +82,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # LocalIndex as an md-prep source
             li_md_source_l = [
                 s
-                for s in source_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if s.filename == self.__local_index_md_filename
             ]
             if li_md_source_l:
@@ -99,8 +100,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         self.origin_prefix = self.search_source.get_origin_prefix()
 
-        self.local_index = source_operation.review_manager.get_local_index()
-        self.review_manager = source_operation.review_manager
+        self.local_index = self.review_manager.get_local_index()
 
     def __validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""

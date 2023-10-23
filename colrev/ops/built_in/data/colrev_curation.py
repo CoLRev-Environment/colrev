@@ -62,6 +62,7 @@ class ColrevCuration(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = data_operation.review_manager
 
         self.data_operation = data_operation
 
@@ -125,9 +126,7 @@ class ColrevCuration(JsonSchemaMixin):
             elif Fields.BOOKTITLE in record_dict:
                 key = record_dict.get(Fields.YEAR, "-")
             else:
-                self.data_operation.review_manager.logger.error(
-                    f"TOC not supported: {record_dict}"
-                )
+                self.review_manager.logger.error(f"TOC not supported: {record_dict}")
                 continue
             if not all(
                 source in [o.split("/")[0] for o in record_dict[Fields.ORIGIN]]
@@ -276,18 +275,18 @@ class ColrevCuration(JsonSchemaMixin):
         """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
 
-        self.data_operation.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
-        source_comparison_xlsx = self.data_operation.review_manager.dedupe_dir / Path(
+        self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
+        source_comparison_xlsx = self.review_manager.dedupe_dir / Path(
             "source_comparison.xlsx"
         )
 
         source_filenames = [
-            str(x.filename) for x in self.data_operation.review_manager.settings.sources
+            str(x.filename) for x in self.review_manager.settings.sources
         ]
         if not silent_mode:
             print("sources: " + ",".join([str(x) for x in source_filenames]))
 
-        records = self.data_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         records = {
             k: v
             for k, v in records.items()
@@ -326,7 +325,7 @@ class ColrevCuration(JsonSchemaMixin):
         if self.settings.curated_masterdata:
             self.__update_stats_in_readme(
                 records=records,
-                review_manager=data_operation.review_manager,
+                review_manager=self.review_manager,
                 silent_mode=silent_mode,
             )
             self.__source_comparison(silent_mode=silent_mode)

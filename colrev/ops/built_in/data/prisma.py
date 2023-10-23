@@ -47,6 +47,8 @@ class PRISMA(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        self.review_manager = data_operation.review_manager
+
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -58,17 +60,16 @@ class PRISMA(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.csv_path = data_operation.review_manager.output_dir / Path("PRISMA.csv")
+        self.csv_path = self.review_manager.output_dir / Path("PRISMA.csv")
         self.data_operation = data_operation
 
         self.settings.diagram_path = [
-            data_operation.review_manager.output_dir / path
-            for path in self.settings.diagram_path
+            self.review_manager.output_dir / path for path in self.settings.diagram_path
         ]
 
-        if not data_operation.review_manager.in_ci_environment():
+        if not self.review_manager.in_ci_environment():
             self.prisma_image = "colrev/prisma:latest"
-            data_operation.review_manager.environment_manager.build_docker_image(
+            self.review_manager.environment_manager.build_docker_image(
                 imagename=self.prisma_image
             )
 
@@ -96,7 +97,7 @@ class PRISMA(JsonSchemaMixin):
             template_file=csv_resource_path, target=self.csv_path
         )
 
-        status_stats = data_operation.review_manager.get_status_stats()
+        status_stats = self.review_manager.get_status_stats()
 
         prisma_data = pd.read_csv(self.csv_path)
         prisma_data["ind"] = prisma_data["data"]
@@ -128,34 +129,26 @@ class PRISMA(JsonSchemaMixin):
         ] = status_stats.overall.rev_prescreen_included
 
         prisma_data.to_csv(self.csv_path, index=False)
-        data_operation.review_manager.logger.debug(f"Exported {self.csv_path}")
+        self.review_manager.logger.debug(f"Exported {self.csv_path}")
 
         if not status_stats.completeness_condition and not silent_mode:
-            data_operation.review_manager.logger.info("Review not (yet) complete")
+            self.review_manager.logger.info("Review not (yet) complete")
 
     def __export_diagram(
         self, data_operation: colrev.ops.data.Data, silent_mode: bool
     ) -> None:
         if not self.csv_path.is_file():
-            data_operation.review_manager.logger.error(
-                "File %s does not exist.", self.csv_path
-            )
-            data_operation.review_manager.logger.info(
-                "Complete processing and use colrev data"
-            )
+            self.review_manager.logger.error("File %s does not exist.", self.csv_path)
+            self.review_manager.logger.info("Complete processing and use colrev data")
             return
 
-        csv_relative_path = self.csv_path.relative_to(
-            data_operation.review_manager.path
-        )
+        csv_relative_path = self.csv_path.relative_to(self.review_manager.path)
 
         if not silent_mode:
-            data_operation.review_manager.logger.info("Create PRISMA diagram")
+            self.review_manager.logger.info("Create PRISMA diagram")
 
         for diagram_path in self.settings.diagram_path:
-            diagram_relative_path = diagram_path.relative_to(
-                data_operation.review_manager.path
-            )
+            diagram_relative_path = diagram_path.relative_to(self.review_manager.path)
 
             script = (
                 "Rscript "
@@ -164,7 +157,7 @@ class PRISMA(JsonSchemaMixin):
                 + f"/data/{diagram_relative_path}"
             )
             # Users can place a custom script in src/prisma.R
-            if (data_operation.review_manager.path / Path("src/prisma.R")).is_file():
+            if (self.review_manager.path / Path("src/prisma.R")).is_file():
                 script = (
                     "Rscript "
                     + "-e \"source('/data/src/prisma.R')\" "
@@ -181,14 +174,14 @@ class PRISMA(JsonSchemaMixin):
         self, *, data_operation: colrev.ops.data.Data, script: str
     ) -> None:
         try:
-            uid = os.stat(data_operation.review_manager.settings_path).st_uid
-            gid = os.stat(data_operation.review_manager.settings_path).st_gid
+            uid = os.stat(self.review_manager.settings_path).st_uid
+            gid = os.stat(self.review_manager.settings_path).st_gid
             user = f"{uid}:{gid}"
 
             client = docker.from_env()
 
             msg = f"Running docker container created from image {self.prisma_image}"
-            data_operation.review_manager.report_logger.info(msg)
+            self.review_manager.report_logger.info(msg)
 
             client.containers.run(
                 image=self.prisma_image,
@@ -197,7 +190,7 @@ class PRISMA(JsonSchemaMixin):
                 volumes=[os.getcwd() + ":/data"],
             )
         except docker.errors.ImageNotFound:
-            data_operation.review_manager.logger.error("Docker image not found")
+            self.review_manager.logger.error("Docker image not found")
         except docker.errors.ContainerError as exc:
             if "Temporary failure in name resolution" in str(exc):
                 raise colrev_exceptions.ServiceNotAvailableException(

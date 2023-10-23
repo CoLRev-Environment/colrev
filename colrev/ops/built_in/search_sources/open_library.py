@@ -58,6 +58,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # OpenLibrary as a search_source
             self.search_source = from_dict(
@@ -68,7 +69,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             # OpenLibrary as an md-prep source
             open_library_md_source_l = [
                 s
-                for s in source_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if s.filename == self.__open_library_md_filename
             ]
             if open_library_md_source_l:
@@ -85,7 +86,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             self.open_library_lock = Lock()
 
         self.origin_prefix = self.search_source.get_origin_prefix()
-        self.review_manager = source_operation.review_manager
 
     def check_availability(
         self, *, source_operation: colrev.operation.Operation

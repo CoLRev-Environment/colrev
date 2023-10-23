@@ -58,6 +58,7 @@ class ArXivSource:
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # arXiv as a search_source
             self.search_source = from_dict(
@@ -67,7 +68,7 @@ class ArXivSource:
             # arXiv as an md-prep source
             arxiv_md_source_l = [
                 s
-                for s in source_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if s.filename == self.__arxiv_md_filename
             ]
             if arxiv_md_source_l:
@@ -83,10 +84,9 @@ class ArXivSource:
 
             self.arxiv_lock = Lock()
 
-        self.review_manager = source_operation.review_manager
         self.operation = source_operation
         self.quality_model = self.review_manager.get_qm()
-        _, self.email = source_operation.review_manager.get_committer()
+        _, self.email = self.review_manager.get_committer()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

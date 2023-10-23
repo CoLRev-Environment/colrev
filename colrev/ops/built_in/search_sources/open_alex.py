@@ -57,6 +57,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         # Note: not yet implemented
         # Note : once this is implemented, add "colrev.open_alex" to the default settings
         # if settings:
@@ -68,7 +69,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         # OpenAlex as an md-prep source
         open_alex_md_source_l = [
             s
-            for s in source_operation.review_manager.settings.sources
+            for s in self.review_manager.settings.sources
             if s.filename == self.__open_alex_md_filename
         ]
         if open_alex_md_source_l:
@@ -86,7 +87,6 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.review_manager = source_operation.review_manager
         _, pyalex.config.email = self.review_manager.get_committer()
 
     def check_availability(

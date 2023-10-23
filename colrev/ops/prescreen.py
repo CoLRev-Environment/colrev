@@ -39,7 +39,6 @@ class Prescreen(colrev.operation.Operation):
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.export_table(
-            prescreen_operation=self,
             records=records,
             split=[],
             export_table_format=export_table_format,
@@ -53,7 +52,6 @@ class Prescreen(colrev.operation.Operation):
         )
         records = self.review_manager.dataset.load_records_dict()
         endpoint.import_table(
-            prescreen_operation=self,
             records=records,
             import_table_path=import_table_path,
         )

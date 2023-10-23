@@ -61,9 +61,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.quality_model = source_operation.review_manager.get_qm()
         self.review_manager = source_operation.review_manager
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.quality_model = self.review_manager.get_qm()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

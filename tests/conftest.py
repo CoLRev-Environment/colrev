@@ -457,18 +457,6 @@ def fixture_v_t_record() -> colrev.record.Record:
     """Record for testing quality defects"""
     return colrev.record.Record(
         data={
-<<<<<<< HEAD
-            "ID": "WagnerLukyanenkoParEtAl2022",
-            "ENTRYTYPE": "article",
-            "file": Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
-            "journal": "Journal of Information Technology",
-            "author": "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy",
-            "title": "Artificial intelligence and the conduct of literature reviews",
-            "year": "2022",
-            "volume": "37",
-            "number": "2",
-            "language": "eng",
-=======
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.FILE: Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
@@ -479,7 +467,6 @@ def fixture_v_t_record() -> colrev.record.Record:
             Fields.VOLUME: "37",
             Fields.NUMBER: "2",
             Fields.LANGUAGE: "eng",
->>>>>>> main
         }
     )
 

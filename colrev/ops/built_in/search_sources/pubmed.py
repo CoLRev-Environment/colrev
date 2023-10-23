@@ -68,6 +68,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         source_operation: colrev.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
+        self.review_manager = source_operation.review_manager
         if settings:
             # Pubmed as a search_source
             self.search_source = from_dict(
@@ -77,7 +78,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             # Pubmed as an md-prep source
             pubmed_md_source_l = [
                 s
-                for s in source_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if s.filename == self.__pubmed_md_filename
             ]
             if pubmed_md_source_l:
@@ -93,10 +94,9 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             self.pubmed_lock = Lock()
 
-        self.review_manager = source_operation.review_manager
         self.operation = source_operation
         self.quality_model = self.review_manager.get_qm()
-        _, self.email = source_operation.review_manager.get_committer()
+        _, self.email = self.review_manager.get_committer()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

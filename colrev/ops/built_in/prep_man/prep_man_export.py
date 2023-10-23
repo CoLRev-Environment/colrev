@@ -387,6 +387,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         print(f"Once completed, run {Colors.ORANGE}colrev prep-man{Colors.END} again.")
 
+    # pylint: disable=unused-argument
     def prepare_manual(
         self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
     ) -> dict:
@@ -397,9 +398,7 @@ class ExportManPrep(JsonSchemaMixin):
             self.__export_prep_man(records=records)
             self.__print_export_prep_man_instructions()
         else:
-            selected_path = self.prep_man_bib_path.relative_to(
-                prep_man_operation.review_manager.path
-            )
+            selected_path = self.prep_man_bib_path.relative_to(self.review_manager.path)
             if input(f"Import changes from {selected_path} [y,n]?") == "y":
                 self.__import_prep_man()
 

@@ -62,20 +62,19 @@ class FilesSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
 
-        if not source_operation.review_manager.in_ci_environment():
-            self.pdf_preparation_operation = (
-                source_operation.review_manager.get_pdf_prep_operation(
-                    notify_state_transition_operation=False
-                )
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+
+        if not self.review_manager.in_ci_environment():
+            self.pdf_preparation_operation = self.review_manager.get_pdf_prep_operation(
+                notify_state_transition_operation=False
             )
 
-        self.pdfs_path = source_operation.review_manager.path / Path(
+        self.pdfs_path = self.review_manager.path / Path(
             self.search_source.search_parameters["scope"]["path"]
         )
-        self.review_manager = source_operation.review_manager
 
         self.subdir_pattern: re.Pattern = re.compile("")
         self.r_subdir_pattern: re.Pattern = re.compile("")
@@ -83,7 +82,7 @@ class FilesSearchSource(JsonSchemaMixin):
             self.subdir_pattern = self.search_source.search_parameters["scope"][
                 "subdir_pattern"
             ]
-            source_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 f"Activate subdir_pattern: {self.subdir_pattern}"
             )
             if self.subdir_pattern == Fields.YEAR:

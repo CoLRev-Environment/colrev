@@ -39,10 +39,11 @@ class PDFCheckOCR(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = pdf_prep_operation.review_manager
 
-        if not pdf_prep_operation.review_manager.in_ci_environment():
+        if not self.review_manager.in_ci_environment():
             self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
-            pdf_prep_operation.review_manager.environment_manager.build_docker_image(
+            self.review_manager.environment_manager.build_docker_image(
                 imagename=self.ocrmypdf_image
             )
         self.language_service = colrev.env.language_service.LanguageService()
@@ -90,6 +91,7 @@ class PDFCheckOCR(JsonSchemaMixin):
         record.set_text_from_pdf()
         return record
 
+    # pylint: disable=unused-argument
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
@@ -108,11 +110,11 @@ class PDFCheckOCR(JsonSchemaMixin):
 
         # We may allow for other languages in this and the following if statement
         if not self.__text_is_english(text=record.data["text_from_pdf"]):
-            pdf_prep_operation.review_manager.report_logger.info(
+            self.review_manager.report_logger.info(
                 f"apply_ocr({record.data[Fields.ID]})"
             )
             record = self.__apply_ocr(
-                review_manager=pdf_prep_operation.review_manager,
+                review_manager=self.review_manager,
                 record=record,
             )
 
@@ -121,7 +123,7 @@ class PDFCheckOCR(JsonSchemaMixin):
                 f"{record.data[Fields.ID]}".ljust(pad, " ")
                 + "Validation error (Language not English or OCR problems)"
             )
-            pdf_prep_operation.review_manager.report_logger.error(msg)
+            self.review_manager.report_logger.error(msg)
             record.add_data_provenance_note(
                 key=Fields.FILE, note="pdf_language_not_english"
             )
