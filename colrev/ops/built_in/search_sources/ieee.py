@@ -16,7 +16,6 @@ import colrev.ops.load_utils_ris
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.record
-from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
@@ -341,7 +340,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return record
 
     def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
-        references_types = {
+        entrytype_map = {
             "JOUR": ENTRYTYPES.ARTICLE,
             "CONF": ENTRYTYPES.INPROCEEDINGS,
         }
@@ -368,41 +367,25 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 "SP": Fields.PAGES,
             },
         }
-        list_fields = {"AU": " and "}
+
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
             load_operation=load_operation,
             source=self.search_source,
-            list_fields=list_fields,
+            list_fields={"AU": " and "},
         )
         records = ris_loader.load_ris_records()
 
         for record_dict in records.values():
-            if record_dict["TY"] not in references_types:
-                msg = (
-                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-                )
-                if not self.review_manager.force_mode:
-                    raise NotImplementedError(msg)
-                self.review_manager.logger.error(msg)
-                continue
-            entrytype = references_types[record_dict["TY"]]
-            record_dict[Fields.ENTRYTYPE] = entrytype
+            ris_loader.apply_entrytype_mapping(
+                record_dict=record_dict, entrytype_map=entrytype_map
+            )
 
             # fixes
-            if entrytype == ENTRYTYPES.ARTICLE:
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
                 if "T1" in record_dict and "TI" not in record_dict:
                     record_dict["TI"] = record_dict.pop("T1")
 
-            # RIS-keys > standard keys
-            for ris_key in list(record_dict.keys()):
-                if ris_key in ["ENTRYTYPE", "ID"]:
-                    continue
-                if ris_key not in key_map[entrytype]:
-                    del record_dict[ris_key]
-                    # print/notify: ris_key
-                    continue
-                standard_key = key_map[entrytype][ris_key]
-                record_dict[standard_key] = record_dict.pop(ris_key)
+            ris_loader.map_keys(record_dict=record_dict, key_map=key_map)
 
         return records
 

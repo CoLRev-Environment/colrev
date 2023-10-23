@@ -93,10 +93,34 @@ Search parameters are stored in the `SearchSource.search_parameters` field and s
 TODO
 ------------------
 
-- SearchSource-specific translation of search queries
-- Retrieval of PDFs
-- Coverage reports
 - SearchSource-specific namespaces (see CEP2)
 - Experimental/mature: parameters must be validated (before adding source and before running search), tests, docs implemented, unique_ids should be tested/recommended
 - settings should implement a get_query_dict() (similar to get_query())
 - print statistics after DB search (validate new file against file in history)
+
+.. list-table:: Load
+   :widths: 40 60
+   :header-rows: 1
+
+   * - Format
+     - Utility
+   * - BibTeX
+     - :doc:`colrev.ops.load_utils_bib </dev_docs/_autosummary/colrev.ops.load_utils_bib>`
+   * - CSV/XLSX
+     - :doc:`colrev.ops.load_utils_table </dev_docs/_autosummary/colrev.ops.load_utils_table>`
+   * - ENL
+     - :doc:`colrev.ops.load_utils_enl </dev_docs/_autosummary/colrev.ops.load_utils_enl>`
+   * - Markdown (reference section as unstructured text)
+     - :doc:`colrev.ops.load_utils_md </dev_docs/_autosummary/colrev.ops.load_utils_md>`
+   * - NBIB
+     - :doc:`colrev.ops.load_utils_nbib </dev_docs/_autosummary/colrev.ops.load_utils_nbib>`
+   * - RIS
+     - :doc:`colrev.ops.load_utils_ris </dev_docs/_autosummary/colrev.ops.load_utils_ris>`
+
+
+TODO : implement load_utils for csl/xml/json...
+
+Development roadmap:
+- SearchSource-specific translation of search queries
+- Retrieval of PDFs
+- Coverage reports

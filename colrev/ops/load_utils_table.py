@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """Convenience functions to load tabular files (csv, xlsx)
 
-Example csv/xlsx records::
+Example csv records::
 
     title;author;year;
     How Trust Leads to Commitment;Guo, W. and Straub, D.;2021;

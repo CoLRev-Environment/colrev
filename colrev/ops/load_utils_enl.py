@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 """Convenience functions to load enl files
 
+
+Usage::
+
+    TODO
+
 Example enl record::
 
     %T How Trust Leads to Commitment on Microsourcing Platforms

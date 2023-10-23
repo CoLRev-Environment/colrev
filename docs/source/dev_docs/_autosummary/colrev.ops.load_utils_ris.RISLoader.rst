@@ -16,11 +16,10 @@ colrev.ops.load\_utils\_ris.RISLoader
    .. autosummary::
       :nosignatures:
 
+      ~RISLoader.apply_entrytype_mapping
       ~RISLoader.apply_ris_fixes
-      ~RISLoader.get_content
-      ~RISLoader.get_tag
-      ~RISLoader.is_tag
       ~RISLoader.load_ris_records
+      ~RISLoader.map_keys
 
 
 

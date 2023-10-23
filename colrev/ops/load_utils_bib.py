@@ -1,6 +1,14 @@
 #! /usr/bin/env python
 """Convenience functions to load bib files
 
+Usage::
+
+    import colrev.ops.load_utils_bib
+
+    records = colrev.ops.load_utils_bib.load_bib_file(
+        load_operation=load_operation, source=self.search_source
+    )
+
 Example BibTeX record::
 
     @article{Guo2021,
