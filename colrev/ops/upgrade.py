@@ -550,12 +550,13 @@ class Upgrade(colrev.operation.Operation):
         return self.repo.is_dirty()
 
     def __migrate_0_10_3(self) -> bool:
-
         settings = self.__load_settings_dict()
         if settings["project"]["review_type"] == "curated_masterdata":
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/review_type/curated_masterdata/curations_github_colrev_update.yml"),
+                template_file=Path(
+                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                ),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
@@ -568,7 +569,6 @@ class Upgrade(colrev.operation.Operation):
             self.repo.index.add([".github/workflows/colrev_update.yml"])
 
         return self.repo.is_dirty()
-
 
 
 # Note: we can ask users to make decisions (when defaults are not clear)
