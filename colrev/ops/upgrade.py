@@ -155,6 +155,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_10_2,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.10.2"),
+                "target_version": CoLRevVersion("0.10.3"),
+                "script": self.__migrate_0_10_3,
+                "released": True,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -542,6 +548,27 @@ class Upgrade(colrev.operation.Operation):
             self.repo.index.add([str(paper_md_path)])
 
         return self.repo.is_dirty()
+
+    def __migrate_0_10_3(self) -> bool:
+
+        settings = self.__load_settings_dict()
+        if settings["project"]["review_type"] == "curated_masterdata":
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/review_type/curated_masterdata/curations_github_colrev_update.yml"),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.repo.index.add([".github/workflows/colrev_update.yml"])
+        else:
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/init/colrev_update.yml"),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.repo.index.add([".github/workflows/colrev_update.yml"])
+
+        return self.repo.is_dirty()
+
 
 
 # Note: we can ask users to make decisions (when defaults are not clear)
