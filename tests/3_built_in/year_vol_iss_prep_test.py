@@ -41,22 +41,22 @@ def get_yvip(
             },
         ),
         # Note : the first case requires crossref
-        (
-            {
-                Fields.JOURNAL: "MIS Quarterly",
-                Fields.VOLUME: "40",
-                Fields.NUMBER: "2",
-            },
-            {
-                Fields.MD_PROV: {
-                    Fields.YEAR: {"note": "", "source": "CROSSREF(average)"}
-                },
-                Fields.JOURNAL: "MIS Quarterly",
-                Fields.YEAR: "2016",
-                Fields.VOLUME: "40",
-                Fields.NUMBER: "2",
-            },
-        ),
+        # (
+        #     {
+        #         Fields.JOURNAL: "MIS Quarterly",
+        #         Fields.VOLUME: "40",
+        #         Fields.NUMBER: "2",
+        #     },
+        #     {
+        #         Fields.MD_PROV: {
+        #             Fields.YEAR: {"note": "", "source": "CROSSREF(average)"}
+        #         },
+        #         Fields.JOURNAL: "MIS Quarterly",
+        #         Fields.YEAR: "2016",
+        #         Fields.VOLUME: "40",
+        #         Fields.NUMBER: "2",
+        #     },
+        # ),
     ],
 )
 def test_prep_year_vol_iss(

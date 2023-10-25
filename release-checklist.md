@@ -23,8 +23,8 @@ For all releases:
 - Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Check whether the tests pass locally (``pytest tests``).
 - Test `colrev upgrade` in local repositories (see `COLREV-UPDATE_ALL.txt`).
-- Run `git push` and wait for the GitHub actions to complete successfully.
 - Run `git push --atomic origin main $VERSION`.
+- Run `git push` and wait for the GitHub actions to complete successfully.
 
 - Create [new release on Github](https://github.com/CoLRev-Environment/colrev/releases/new)
     - Select new tag
