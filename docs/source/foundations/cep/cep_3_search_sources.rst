@@ -36,6 +36,7 @@ Knowing the source matters because many aspects are source-specific, including:
 - field definitions, including the associated mapping to the standard fields and namespaced fields
 - metadata preparation
 - metadata correction
+- correction paths (if any)
 
 SearchSource packages (classes): instances and methods
 
