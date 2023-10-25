@@ -31,7 +31,10 @@ class ErroneousTitleFieldChecker:
 
     def __title_has_errors(self, *, title: str) -> bool:
         # Cover common errors
-        if title == "A I S ssociation for nformation ystems":
+        if title in {
+            "A I S ssociation for nformation ystems",
+            "The International Journal of Information Systems Applications Chairman of the Editorial Board",
+        }:
             return True
 
         if " " not in title and (
