@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.10.4 - 2023-10-15
+
+### Fixed
+
+- Removed unstable test case
 
 ## 0.10.3 - 2023-10-25
 
