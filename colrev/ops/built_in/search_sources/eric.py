@@ -323,7 +323,9 @@ class ERICSearchSource(JsonSchemaMixin):
                 unique_id_field="eric_id",
             )
             entries = nbib_loader.load_nbib_entries()
-            records = nbib_loader.convert_to_records(entries=entries, mapping=self.NBIB_MAPPING)
+            records = nbib_loader.convert_to_records(
+                entries=entries, mapping=self.NBIB_MAPPING
+            )
             return records
 
         if self.search_source.filename.suffix == ".bib":

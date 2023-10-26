@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import re
 import typing
-from hmac import new
 from typing import TYPE_CHECKING
 
 from colrev.constants import ENTRYTYPES
@@ -153,7 +152,11 @@ class NBIBLoader:
             if self.unique_id_field == "":
                 _id = key
             else:
-                _id = updated_entry[self.unique_id_field].replace(" ", "").replace(";", "_")
+                _id = (
+                    updated_entry[self.unique_id_field]
+                    .replace(" ", "")
+                    .replace(";", "_")
+                )
             updated_entry[Fields.ID] = _id
             records[_id] = updated_entry
 
