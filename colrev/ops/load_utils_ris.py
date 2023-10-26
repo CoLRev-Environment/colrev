@@ -213,7 +213,7 @@ class RISLoader:
         but they can be adapted before calling the convert_to_records()"""
 
         # Note : depending on the source, a specific ris_parser implementation may be selected.
-        # its DEFAULT_LIST_TAGS can be extended with list fiels that should be joined automatically
+        # its DEFAULT_LIST_TAGS can be extended with list files that should be joined automatically
 
         if self.unique_id_field == "":
             self.load_operation.ensure_append_only(file=self.source.filename)

@@ -80,6 +80,22 @@ class ERICSearchSource(JsonSchemaMixin):
         "url",
     ]
     FIELD_MAPPING = {"publicationdateyear": "year", "description": "abstract"}
+    NBIB_MAPPING = {
+        "TI": Fields.TITLE,
+        "AU": Fields.AUTHOR,
+        "DP": Fields.YEAR,
+        "JT": Fields.JOURNAL,
+        "VI": Fields.VOLUME,
+        "IP": Fields.NUMBER,
+        "PG": Fields.PAGES,
+        "AB": Fields.ABSTRACT,
+        "AID": Fields.DOI,
+        "ISSN": Fields.ISSN,
+        "OID": "eric_id",
+        "OT": Fields.KEYWORDS,
+        "LA": Fields.LANGUAGE,
+        "PT": "type",
+    }
 
     def __init__(
         self,
@@ -307,7 +323,7 @@ class ERICSearchSource(JsonSchemaMixin):
                 unique_id_field="eric_id",
             )
             entries = nbib_loader.load_nbib_entries()
-            records = nbib_loader.convert_to_records(entries=entries)
+            records = nbib_loader.convert_to_records(entries=entries, mapping=self.NBIB_MAPPING)
             return records
 
         if self.search_source.filename.suffix == ".bib":
