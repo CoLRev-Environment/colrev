@@ -152,6 +152,8 @@ def load_bib_file(
 ) -> dict:
     """Load a bib file and return records dict"""
 
+    # TODO (Tarin): create class (which handles the load_operation) and extract the following functions 
+
     def drop_empty_fields(*, records: dict) -> None:
         for record_id in records:
             records[record_id] = {
