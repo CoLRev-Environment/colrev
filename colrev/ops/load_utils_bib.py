@@ -177,7 +177,7 @@ def load_bib_file(
                 while line:
                     if "@" in line[:3]:
                         record_id = line[line.find("{") + 1 : line.rfind(",")]
-                        if record_id not in [x[Fields.ID] for x in records]:
+                        if record_id not in [x[Fields.ID] for x in records.values()]:
                             load_operation.review_manager.logger.error(
                                 f"{record_id} not imported"
                             )
@@ -219,6 +219,30 @@ def load_bib_file(
                 if not key.islower():
                     record[key.lower()] = record.pop(key)
 
+    def resolve_crossref(*, records: dict) -> None:
+        # https://bibtex.eu/fields/crossref/
+        crossref_ids = []
+        for record_dict in records.values():
+            if "crossref" not in record_dict:
+                continue
+
+            crossref_record = records[record_dict["crossref"]]
+
+            if not crossref_record:
+                print(
+                    f"crossref record (ID={record_dict['crossref']}) "
+                    f"not found in {source.filename.name}"
+                )
+                continue
+            crossref_ids.append(crossref_record["ID"])
+            for key, value in crossref_record.items():
+                if key not in record_dict:
+                    record_dict[key] = value
+            del record_dict["crossref"]
+
+        for crossref_id in crossref_ids:
+            del records[crossref_id]
+
     __apply_file_fixes(load_operation=load_operation, source=source)
 
     records = __load_records(source=source)
@@ -227,6 +251,7 @@ def load_bib_file(
 
     lower_case_keys(records=records)
     drop_empty_fields(records=records)
+    resolve_crossref(records=records)
     records = dict(sorted(records.items()))
     check_nr_in_bib(source=source, records=records)
     if check_bib_file:

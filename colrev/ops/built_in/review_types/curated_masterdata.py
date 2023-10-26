@@ -62,7 +62,6 @@ class CuratedMasterdata(JsonSchemaMixin):
         settings.search.retrieve_forthcoming = False
 
         settings.prep.prep_rounds[0].prep_package_endpoints = [
-            {"endpoint": "colrev.resolve_crossrefs"},
             {"endpoint": "colrev.source_specific_prep"},
             {"endpoint": "colrev.exclude_non_latin_alphabets"},
             {"endpoint": "colrev.exclude_collections"},

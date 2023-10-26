@@ -89,7 +89,6 @@ prep
    extensions_index/colrev.pubmed.rst
    extensions_index/colrev.remove_broken_ids.rst
    extensions_index/colrev.remove_urls_with_500_errors.rst
-   extensions_index/colrev.resolve_crossrefs.rst
    extensions_index/colrev.source_specific_prep.rst
 
 prep_man

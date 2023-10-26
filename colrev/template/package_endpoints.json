@@ -612,14 +612,6 @@
             "ci_supported": true
         },
         {
-            "package_endpoint_identifier": "colrev.resolve_crossrefs",
-            "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings) (:doc:`instructions </resources/extensions_index/colrev.resolve_crossrefs>`)",
-            "ci_supported": true
-        },
-        {
             "package_endpoint_identifier": "colrev.source_specific_prep",
             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep",
             "status": "|MATURING|",

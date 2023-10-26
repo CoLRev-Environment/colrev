@@ -28,9 +28,6 @@
             {"package_endpoint_identifier": "colrev.remove_broken_ids",
              "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep"
             },
-            {"package_endpoint_identifier": "colrev.resolve_crossrefs",
-             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep"
-            },
             {"package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
              "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep"
             },

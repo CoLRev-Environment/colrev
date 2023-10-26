@@ -161,6 +161,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_10_3,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.10.3"),
+                "target_version": CoLRevVersion("0.11.0"),
+                "script": self.__migrate_0_11_0,
+                "released": False,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -568,6 +574,19 @@ class Upgrade(colrev.operation.Operation):
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
 
+        return self.repo.is_dirty()
+
+    def __migrate_0_11_0(self) -> bool:
+        settings = self.__load_settings_dict()
+
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.resolve_crossrefs"
+            ]
+
+        self.__save_settings(settings)
         return self.repo.is_dirty()
 
 
