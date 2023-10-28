@@ -43,7 +43,7 @@ class AuthorNotInPDFChecker:
         if "editorial" in record.data.get(Fields.TITLE, "").lower():
             return True
 
-        text = record.data["text_from_pdf"].lower()
+        text = record.data[Fields.TEXT_FROM_PDF].lower()
         text = colrev.env.utils.remove_accents(input_str=text)
         text = re.sub("[^a-zA-Z ]+", "", text)
         text = text.replace("ue", "u").replace("ae", "a").replace("oe", "o")

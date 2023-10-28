@@ -53,12 +53,12 @@ class NrPagesNotMatchingChecker:
         record: colrev.record.Record,
         nr_pages_metadata: int,
     ) -> bool:
-        if 10 < nr_pages_metadata < record.data["pages_in_file"]:
+        if 10 < nr_pages_metadata < record.data[Fields.PAGES_IN_FILE]:
             text = record.extract_text_by_page(
                 pages=[
-                    record.data["pages_in_file"] - 3,
-                    record.data["pages_in_file"] - 2,
-                    record.data["pages_in_file"] - 1,
+                    record.data[Fields.PAGES_IN_FILE] - 3,
+                    record.data[Fields.PAGES_IN_FILE] - 2,
+                    record.data[Fields.PAGES_IN_FILE] - 1,
                 ],
             )
             if "appendi" in text.lower():
@@ -148,7 +148,7 @@ class NrPagesNotMatchingChecker:
         nr_pages_metadata = __get_nr_pages_in_metadata(pages_metadata=pages_metadata)
 
         record.set_pages_in_pdf()
-        if nr_pages_metadata == record.data["pages_in_file"]:
+        if nr_pages_metadata == record.data[Fields.PAGES_IN_FILE]:
             return True
 
         if self.__longer_with_appendix(

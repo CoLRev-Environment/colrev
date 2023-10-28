@@ -109,7 +109,7 @@ class PDFCheckOCR(JsonSchemaMixin):
             return record.data
 
         # We may allow for other languages in this and the following if statement
-        if not self.__text_is_english(text=record.data["text_from_pdf"]):
+        if not self.__text_is_english(text=record.data[Fields.TEXT_FROM_PDF]):
             self.review_manager.report_logger.info(
                 f"apply_ocr({record.data[Fields.ID]})"
             )
@@ -118,7 +118,7 @@ class PDFCheckOCR(JsonSchemaMixin):
                 record=record,
             )
 
-        if not self.__text_is_english(text=record.data["text_from_pdf"]):
+        if not self.__text_is_english(text=record.data[Fields.TEXT_FROM_PDF]):
             msg = (
                 f"{record.data[Fields.ID]}".ljust(pad, " ")
                 + "Validation error (Language not English or OCR problems)"

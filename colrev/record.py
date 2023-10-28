@@ -1330,15 +1330,17 @@ class Record:
             parser = PDFParser(file)
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-        self.data["pages_in_file"] = pages_in_file
+        self.data[Fields.PAGES_IN_FILE] = pages_in_file
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
-        self.data["text_from_pdf"] = ""
+        self.data[Fields.TEXT_FROM_PDF] = ""
         try:
             self.set_pages_in_pdf()
             text = self.extract_text_by_page(pages=[0, 1, 2])
-            self.data["text_from_pdf"] = text.replace("\n", " ").replace("\x0c", "")
+            self.data[Fields.TEXT_FROM_PDF] = text.replace("\n", " ").replace(
+                "\x0c", ""
+            )
 
         except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
@@ -1497,10 +1499,10 @@ class Record:
 
     def cleanup_pdf_processing_fields(self) -> None:
         """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""
-        if "text_from_pdf" in self.data:
-            del self.data["text_from_pdf"]
-        if "pages_in_file" in self.data:
-            del self.data["pages_in_file"]
+        if Fields.TEXT_FROM_PDF in self.data:
+            del self.data[Fields.TEXT_FROM_PDF]
+        if Fields.PAGES_IN_FILE in self.data:
+            del self.data[Fields.PAGES_IN_FILE]
 
     def run_pdf_quality_model(
         self,

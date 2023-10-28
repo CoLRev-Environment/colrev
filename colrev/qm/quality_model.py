@@ -7,6 +7,7 @@ from pathlib import Path
 
 import colrev.qm.checkers
 import colrev.record
+from colrev.constants import Fields
 
 
 class QualityModel:
@@ -66,7 +67,7 @@ class QualityModel:
             if "file" not in record.data or not Path(record.data["file"]).is_file():
                 return
             # text_from_pdf is already set in tests
-            if "text_from_pdf" not in record.data:
+            if Fields.TEXT_FROM_PDF not in record.data:
                 record.set_text_from_pdf()
 
         for checker in self.checkers:
@@ -75,5 +76,5 @@ class QualityModel:
             checker.run(record=record)
 
         if self.pdf_mode:
-            if "text_from_pdf" in record.data:
-                del record.data["text_from_pdf"]
+            if Fields.TEXT_FROM_PDF in record.data:
+                del record.data[Fields.TEXT_FROM_PDF]

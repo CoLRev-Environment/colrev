@@ -71,6 +71,9 @@ class Fields:
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
 
+    TEXT_FROM_PDF = "text_from_pdf"
+    PAGES_IN_FILE = "pages_in_file"
+
     COLREV_ID = "colrev_id"
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"
     LOCAL_CURATED_METADATA = "local_curated_metadata"

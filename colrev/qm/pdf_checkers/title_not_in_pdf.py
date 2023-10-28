@@ -39,7 +39,7 @@ class TitleNotInPDFChecker:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
     def __title_in_pdf(self, *, record: colrev.record.Record) -> bool:
-        text = record.data["text_from_pdf"]
+        text = record.data[Fields.TEXT_FROM_PDF]
         text = text.replace(" ", "").replace("\n", "").lower()
         text = colrev.env.utils.remove_accents(input_str=text)
         text = re.sub("[^a-zA-Z ]+", "", text)
