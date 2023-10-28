@@ -28,7 +28,7 @@ class TitleNotInPDFChecker:
 
         if (
             Fields.FILE not in record.data
-            or not Path(record.data[Fields.FILE]).suffix == ".pdf"
+            or Path(record.data[Fields.FILE]).suffix != ".pdf"
             or Fields.TITLE not in record.data
         ):
             return
