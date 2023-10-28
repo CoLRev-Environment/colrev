@@ -67,7 +67,7 @@ class QualityModel:
                 return
             # text_from_pdf is already set in tests
             if "text_from_pdf" not in record.data:
-                record.set_text_from_pdf(project_path=self.review_manager.path)
+                record.set_text_from_pdf()
 
         for checker in self.checkers:
             if checker.msg in self.defects_to_ignore:
