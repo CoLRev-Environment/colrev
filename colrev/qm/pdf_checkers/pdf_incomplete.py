@@ -126,20 +126,6 @@ class PDFIncompletenessChecker:
             page = roman_page_matched.group()
             pages_metadata = f"{__roman_to_int(s=page)}"
 
-        # TODO : document what happens when the checker does not apply
-        # if pages_metadata == "NA" or not re.match(r"^\d+--\d+|\d+$", pages_metadata):
-        #     msg = (
-        #         f"{record.data[Fields.ID]}".ljust(pad - 1, " ")
-        #         + "Could not validate completeness: no pages in metadata"
-        #     )
-        #     record.add_data_provenance_note(
-        #         key=Fields.FILE, note="no_pages_in_metadata"
-        #     )
-        #     record.data.update(
-        #         colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
-        #     )
-        #     return record.data
-
         nr_pages_metadata = __get_nr_pages_in_metadata(pages_metadata=pages_metadata)
 
         record.set_pages_in_pdf()

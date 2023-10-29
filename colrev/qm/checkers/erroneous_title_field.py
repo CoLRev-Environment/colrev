@@ -33,7 +33,8 @@ class ErroneousTitleFieldChecker:
         # Cover common errors
         if title in {
             "A I S ssociation for nformation ystems",
-            "The International Journal of Information Systems Applications Chairman of the Editorial Board",
+            "The International Journal of Information Systems "
+            + "Applications Chairman of the Editorial Board",
         }:
             return True
 
