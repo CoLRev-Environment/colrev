@@ -757,11 +757,6 @@ class FilesSearchSource(JsonSchemaMixin):
             records = colrev.ops.load_utils_bib.load_bib_file(
                 load_operation=load_operation, source=self.search_source
             )
-            missing_field_checker = (
-                colrev.qm.checkers.missing_field.MissingFieldChecker(
-                    quality_model=load_operation.review_manager.get_qm()
-                )
-            )
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
@@ -774,8 +769,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 record_dict = self.__update_fields_based_on_pdf_dirs(
                     record_dict=record_dict, params=self.search_source.search_parameters
                 )
-                record = colrev.record.Record(data=record_dict)
-                missing_field_checker.apply_curation_restrictions(record=record)
+
             return records
 
         raise NotImplementedError
