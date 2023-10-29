@@ -130,34 +130,35 @@ class NBIBLoader:
             records[record[Fields.ID]] = record
         return records
 
-    def convert_to_records(self, *, entries: dict, mapping: dict) -> dict:
+    def apply_entrytype_mapping(
+        self, *, record_dict: dict, entrytype_map: dict
+    ) -> None:
+        """Apply the mapping of RIS TY fields to CoLRev ENTRYTYPES"""
+        pt = " ".join(record_dict["PT"]).lower()
+        if "journal article" in pt:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+        else:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+    def map_keys(self, *, record_dict: dict, key_map: dict) -> None:
         """Converts nbib entries it to bib records"""
 
-        records: dict = {}
-        for key, entry in entries.items():
-            # Convert tags to mapping
-            updated_entry = {}
-            for list_tag, record in entry.items():
-                if list_tag not in mapping:
-                    continue
-                list_field = mapping[list_tag]
-                if list_tag in self.list_tags:
-                    updated_entry[list_field] = self.list_tags[list_tag].join(record)
-                else:
-                    updated_entry[list_field] = record
-            if "journal article" in updated_entry["type"].lower():
-                updated_entry[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-            else:
-                updated_entry[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-            if self.unique_id_field == "":
-                _id = key
-            else:
-                _id = (
-                    updated_entry[self.unique_id_field]
-                    .replace(" ", "")
-                    .replace(";", "_")
-                )
-            updated_entry[Fields.ID] = _id
-            records[_id] = updated_entry
+        for list_tag, record in list(record_dict.items()):
+            if list_tag in [Fields.ENTRYTYPE]:
+                continue
 
-        return records
+            # delete first ask if exists later
+            del record_dict[list_tag]
+
+            if list_tag not in key_map:
+                continue
+
+            list_field = key_map[list_tag]
+            if list_tag in self.list_tags:
+                record_dict[list_field] = self.list_tags[list_tag].join(record)
+            else:
+                record_dict[list_field] = record
+
+        if self.unique_id_field != "":
+            _id = record_dict[self.unique_id_field].replace(" ", "").replace(";", "_")
+            record_dict[Fields.ID] = _id

@@ -18,7 +18,9 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_nbib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -80,22 +82,6 @@ class ERICSearchSource(JsonSchemaMixin):
         "url",
     ]
     FIELD_MAPPING = {"publicationdateyear": "year", "description": "abstract"}
-    NBIB_MAPPING = {
-        "TI": Fields.TITLE,
-        "AU": Fields.AUTHOR,
-        "DP": Fields.YEAR,
-        "JT": Fields.JOURNAL,
-        "VI": Fields.VOLUME,
-        "IP": Fields.NUMBER,
-        "PG": Fields.PAGES,
-        "AB": Fields.ABSTRACT,
-        "AID": Fields.DOI,
-        "ISSN": Fields.ISSN,
-        "OID": "eric_id",
-        "OT": Fields.KEYWORDS,
-        "LA": Fields.LANGUAGE,
-        "PT": "type",
-    }
 
     def __init__(
         self,
@@ -315,6 +301,27 @@ class ERICSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
+        nbib_mapping = {
+            "TI": Fields.TITLE,
+            "AU": Fields.AUTHOR,
+            "DP": Fields.YEAR,
+            "JT": Fields.JOURNAL,
+            "VI": Fields.VOLUME,
+            "IP": Fields.NUMBER,
+            "PG": Fields.PAGES,
+            "AB": Fields.ABSTRACT,
+            "AID": Fields.DOI,
+            "ISSN": Fields.ISSN,
+            "OID": "eric_id",
+            "OT": Fields.KEYWORDS,
+            "LA": Fields.LANGUAGE,
+            "PT": "type",
+        }
+
+        entrytype_map = {
+            "article": ENTRYTYPES.ARTICLE,
+            "misc": ENTRYTYPES.MISC,
+        }
 
         if self.search_source.filename.suffix == ".nbib":
             nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
@@ -322,10 +329,17 @@ class ERICSearchSource(JsonSchemaMixin):
                 source=self.search_source,
                 unique_id_field="eric_id",
             )
-            entries = nbib_loader.load_nbib_entries()
-            records = nbib_loader.convert_to_records(
-                entries=entries, mapping=self.NBIB_MAPPING
-            )
+            records = nbib_loader.load_nbib_entries()
+
+            for key in list(records.keys()):
+                record_dict = records[key]
+                nbib_loader.apply_entrytype_mapping(
+                    record_dict=record_dict, entrytype_map=entrytype_map
+                )
+                nbib_loader.map_keys(record_dict=record_dict, key_map=nbib_mapping)
+                if record_dict[Fields.ID] != key:
+                    del records[key]
+                    records[record_dict[Fields.ID]] = record_dict
             return records
 
         if self.search_source.filename.suffix == ".bib":

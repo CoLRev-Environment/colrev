@@ -257,7 +257,7 @@ class RISLoader:
 
         # RIS-keys > standard keys
         for ris_key in list(record_dict.keys()):
-            if ris_key in ["ENTRYTYPE", "ID"]:
+            if ris_key in [Fields.ENTRYTYPE, Fields.ID]:
                 continue
             if ris_key not in key_map[entrytype]:
                 del record_dict[ris_key]
