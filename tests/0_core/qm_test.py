@@ -272,8 +272,14 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
     del v_t_record.data[Fields.VOLUME]
     del v_t_record.data[Fields.NUMBER]
     v_t_record.run_quality_model(qm=quality_model)
-    assert v_t_record.data[Fields.MD_PROV][Fields.VOLUME]["note"] == "not-missing"
-    assert v_t_record.data[Fields.MD_PROV][Fields.NUMBER]["note"] == "not-missing"
+    assert (
+        v_t_record.data[Fields.MD_PROV][Fields.VOLUME]["note"]
+        == f"IGNORE:{DefectCodes.MISSING}"
+    )
+    assert (
+        v_t_record.data[Fields.MD_PROV][Fields.NUMBER]["note"]
+        == f"IGNORE:{DefectCodes.MISSING}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -503,3 +509,15 @@ def test_retracted(
     # }
     actual = r1_mod.data
     assert expected.data == actual
+
+
+def test_defect_ignore(
+    v_t_record: colrev.record.Record,
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+    v_t_record.data["journal"] = "JOURNAL OF INFORMATION TECHNOLOGY"
+    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.ignore_defect(field="journal", defect=DefectCodes.MOSTLY_ALL_CAPS)
+    v_t_record.run_quality_model(qm=quality_model, set_prepared=True)
+    assert v_t_record.data[Fields.STATUS] == colrev.record.RecordState.md_prepared
+    assert not v_t_record.has_quality_defects()

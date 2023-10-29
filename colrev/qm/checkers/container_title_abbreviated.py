@@ -22,7 +22,9 @@ class ContainerTitleAbbreviatedChecker:
         """Run the container-title-abbreviated checks"""
 
         for key in self.fields_to_check:
-            if key not in record.data:
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
 
             if len(record.data[key]) < 6 and record.data[key].isupper():

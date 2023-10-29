@@ -24,7 +24,9 @@ class NameAbbreviatedChecker:
         """Run the name-abbreviated checks"""
 
         for key in self.fields_to_check:
-            if key not in record.data:
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
 
             if any(

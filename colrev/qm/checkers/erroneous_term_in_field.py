@@ -39,7 +39,9 @@ class ErroneousTermInFieldChecker:
         """Run the erroneous-term-in-field checks"""
 
         for key, erroneous_term_list in self.erroneous_terms.items():
-            if key not in record.data:
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
 
             if any(x.lower() in record.data[key].lower() for x in erroneous_term_list):

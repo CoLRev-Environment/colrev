@@ -28,6 +28,7 @@ class TextInPDFChecker:
         if (
             Fields.FILE not in record.data
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
+            or record.ignored_defect(field=Fields.FILE, defect=self.msg)
         ):
             return
 

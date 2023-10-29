@@ -166,7 +166,7 @@ class Repare(colrev.operation.Operation):
                 if (
                     key not in record.data
                     and FieldValues.CURATED != key
-                    and DefectCodes.NOT_MISSING
+                    and f"IGNORE:{DefectCodes.MISSING}"
                     not in record.data[Fields.MD_PROV][key]["note"]
                 ):
                     mdk_to_remove += [key]

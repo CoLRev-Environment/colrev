@@ -70,6 +70,8 @@ class InconsistentWithEntrytypeChecker:
             record.data["ENTRYTYPE"]
         ]
         for key in record.data:
+            if record.ignored_defect(field=key, defect=self.msg):
+                continue
             if key in inconsistent_fields:
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:

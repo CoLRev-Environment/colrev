@@ -24,7 +24,9 @@ class PubmedIDPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the pubmedid-not-matching-pattern checks"""
 
-        if Fields.PUBMED_ID not in record.data:
+        if Fields.PUBMED_ID not in record.data or record.ignored_defect(
+            field=Fields.PUBMED_ID, defect=self.msg
+        ):
             return
 
         if not re.match(self.__PMID_REGEX, record.data[Fields.PUBMED_ID]):

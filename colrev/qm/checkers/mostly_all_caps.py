@@ -28,34 +28,43 @@ class MostlyAllCapsFieldChecker:
             Fields.BOOKTITLE,
             Fields.EDITOR,
         ]:
-            if key not in record.data:
-                continue
-            if record.data[key] == FieldValues.UNKNOWN:
-                continue
             if (
-                record.data["ENTRYTYPE"] == "online"
-                and key == Fields.TITLE
-                and len(record.data[Fields.TITLE]) < 10
+                key not in record.data
+                or record.ignored_defect(field=key, defect=self.msg)
+                or record.data[key] == FieldValues.UNKNOWN
             ):
-                # Online sources/software can be short/have caps
                 continue
-            if (
-                colrev.env.utils.percent_upper_chars(
-                    record.data[key].replace(" and ", "")
-                )
-                < 0.7
-            ):
+
+            if self.__is_mostly_all_caps(record=record, key=key):
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
+            else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
-                continue
 
-            # container-title-abbreviated
-            if key in [Fields.JOURNAL, Fields.BOOKTITLE] and len(record.data[key]) < 6:
-                continue
+    def __is_mostly_all_caps(self, *, record: colrev.record.Record, key: str) -> bool:
+        """Check if the field is mostly all caps"""
 
-            if record.data[key] == "PLoS ONE":
-                continue
+        # Online sources/software can be short/have caps
+        if (
+            record.data["ENTRYTYPE"] == "online"
+            and key == Fields.TITLE
+            and len(record.data[Fields.TITLE]) < 10
+        ):
+            return False
 
-            record.add_masterdata_provenance_note(key=key, note=self.msg)
+        if (
+            colrev.env.utils.percent_upper_chars(record.data[key].replace(" and ", ""))
+            < 0.7
+        ):
+            return False
+
+        # container-title-abbreviated
+        if key in [Fields.JOURNAL, Fields.BOOKTITLE] and len(record.data[key]) < 6:
+            return False
+
+        if record.data[key] == "PLoS ONE":
+            return False
+
+        return True
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
