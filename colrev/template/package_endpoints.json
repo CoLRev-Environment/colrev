@@ -760,24 +760,24 @@
     ],
     "pdf_prep": [
         {
-            "package_endpoint_identifier": "colrev.create_tei",
-            "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </resources/extensions_index/colrev.create_tei>`)",
+            "package_endpoint_identifier": "colrev.grobid_tei",
+            "endpoint": "colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </resources/extensions_index/colrev.grobid_tei>`)",
             "ci_supported": false
         },
         {
-            "package_endpoint_identifier": "colrev.pdf_check_ocr",
-            "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR",
+            "package_endpoint_identifier": "colrev.ocrmypdf",
+            "endpoint": "colrev.ops.built_in.pdf_prep.ocrmypdf.OCRMyPDF",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF (:doc:`instructions </resources/extensions_index/colrev.pdf_check_ocr>`)",
+            "short_description": "Prepare PDFs by applying OCR based on OCRmyPDF (:doc:`instructions </resources/extensions_index/colrev.ocrmypdf>`)",
             "ci_supported": false
         },
         {
             "package_endpoint_identifier": "colrev.remove_coverpage",
-            "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage",
+            "endpoint": "colrev.ops.built_in.pdf_prep.remove_cover_page.PDFCoverPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers) (:doc:`instructions </resources/extensions_index/colrev.remove_coverpage>`)",
@@ -785,26 +785,10 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_last_page",
-            "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage",
+            "endpoint": "colrev.ops.built_in.pdf_prep.remove_last_page.PDFLastPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos) (:doc:`instructions </resources/extensions_index/colrev.remove_last_page>`)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.validate_completeness",
-            "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by validating its completeness (based on the number of pages) (:doc:`instructions </resources/extensions_index/colrev.validate_completeness>`)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.validate_pdf_metadata",
-            "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by validating it against its associated metadata (:doc:`instructions </resources/extensions_index/colrev.validate_pdf_metadata>`)",
             "ci_supported": false
         }
     ],

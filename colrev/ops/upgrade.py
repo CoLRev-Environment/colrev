@@ -157,12 +157,6 @@ class Upgrade(colrev.operation.Operation):
             },
             {
                 "version": CoLRevVersion("0.10.2"),
-                "target_version": CoLRevVersion("0.10.3"),
-                "script": self.__migrate_0_10_3,
-                "released": True,
-            },
-            {
-                "version": CoLRevVersion("0.10.3"),
                 "target_version": CoLRevVersion("0.11.0"),
                 "script": self.__migrate_0_11_0,
                 "released": False,
@@ -555,8 +549,26 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_10_3(self) -> bool:
+    def __migrate_0_11_0(self) -> bool:
         settings = self.__load_settings_dict()
+        settings["pdf_get"]["defects_to_ignore"] = []
+
+        settings["pdf_prep"]["pdf_prep_package_endpoints"] = [
+            {"endpoint": "colrev.ocrmypdf"},
+            {"endpoint": "colrev.grobid_tei"},
+        ] + [
+            x
+            for x in settings["pdf_prep"]["pdf_prep_package_endpoints"]
+            if x["endpoint"]
+            not in [
+                "colrev.check_ocr",
+                "colrev.pdf_check_ocr",
+                "colrev.validate_pdf_metadata",
+                "colrev.validate_completeness",
+                "colrev.tei_prep",
+            ]
+        ]
+
         if settings["project"]["review_type"] == "curated_masterdata":
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
@@ -574,11 +586,6 @@ class Upgrade(colrev.operation.Operation):
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
 
-        return self.repo.is_dirty()
-
-    def __migrate_0_11_0(self) -> bool:
-        settings = self.__load_settings_dict()
-
         for p_round in settings["prep"]["prep_rounds"]:
             p_round["prep_package_endpoints"] = [
                 x
@@ -587,6 +594,7 @@ class Upgrade(colrev.operation.Operation):
             ]
 
         self.__save_settings(settings)
+
         return self.repo.is_dirty()
 
 

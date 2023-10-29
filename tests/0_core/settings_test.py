@@ -84,6 +84,7 @@ def test_settings_load() -> None:
         "pdf_get": {
             "pdf_path_type": colrev.settings.PDFPathType.symlink,
             "pdf_required_for_screen_and_synthesis": True,
+            "defects_to_ignore": [],
             "rename_pdfs": True,
             "pdf_get_package_endpoints": [
                 {"endpoint": "colrev.local_index"},
@@ -97,11 +98,9 @@ def test_settings_load() -> None:
         "pdf_prep": {
             "keep_backup_of_pdfs": True,
             "pdf_prep_package_endpoints": [
-                {"endpoint": "colrev.pdf_check_ocr"},
+                {"endpoint": "colrev.ocrmypdf"},
                 {"endpoint": "colrev.remove_coverpage"},
                 {"endpoint": "colrev.remove_last_page"},
-                {"endpoint": "colrev.validate_pdf_metadata"},
-                {"endpoint": "colrev.validate_completeness"},
                 {"endpoint": "colrev.create_tei"},
             ],
             "pdf_prep_man_package_endpoints": [

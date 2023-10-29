@@ -29,4 +29,5 @@ colrev.qm
    colrev.qm.checkers
    colrev.qm.colrev_id
    colrev.qm.colrev_pdf_id
+   colrev.qm.pdf_checkers
    colrev.qm.quality_model

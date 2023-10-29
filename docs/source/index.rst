@@ -99,9 +99,10 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :caption: Additional resources
    :maxdepth: 1
 
+   resources/quality_model
+   resources/pdf_quality_model
    resources/extensions
    resources/extensions_index
-   resources/quality_model
    resources/curation
    resources/reference_manager
    resources/help

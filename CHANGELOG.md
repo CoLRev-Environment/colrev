@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.11.0 - TBA
+
+### Changed
+
+- Integrated `colrev.resolve_crossrefs` into `load_utils_bib.py`
+
 ## 0.10.4 - 2023-10-15
 
 ### Fixed

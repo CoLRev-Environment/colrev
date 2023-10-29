@@ -108,6 +108,7 @@
     "pdf_get": {
         "pdf_path_type": "symlink",
         "pdf_required_for_screen_and_synthesis": true,
+        "defects_to_ignore": [],
         "rename_pdfs": true,
         "pdf_get_package_endpoints": [
             {
@@ -130,19 +131,13 @@
         "keep_backup_of_pdfs": true,
         "pdf_prep_package_endpoints": [
             {
-                "endpoint": "colrev.pdf_check_ocr"
+                "endpoint": "colrev.ocrmypdf"
             },
             {
                 "endpoint": "colrev.remove_coverpage"
             },
             {
                 "endpoint": "colrev.remove_last_page"
-            },
-            {
-                "endpoint": "colrev.validate_pdf_metadata"
-            },
-            {
-                "endpoint": "colrev.validate_completeness"
             },
             {
                 "endpoint": "colrev.create_tei"

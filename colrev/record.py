@@ -1088,6 +1088,17 @@ class Record:
                 "note": note,
             }
 
+    def remove_data_provenance_note(self, *, key: str, note: str) -> None:
+        """Remove a masterdata provenance note"""
+        if Fields.D_PROV not in self.data:
+            return
+        if key not in self.data[Fields.D_PROV]:
+            return
+        notes = self.data[Fields.D_PROV][key]["note"].split(",")
+        if note not in notes:
+            return
+        self.data[Fields.D_PROV][key]["note"] = ",".join(n for n in notes if n != note)
+
     def add_masterdata_provenance(
         self, *, key: str, source: str, note: str = ""
     ) -> None:
@@ -1173,6 +1184,25 @@ class Record:
                 self.add_data_provenance(key=key, source=source_info, note="")
 
         return True
+
+    def defects(self, field: str) -> typing.List[str]:
+        """Get a list of defects for a field"""
+        if field in self.data[Fields.MD_PROV]:
+            return self.data[Fields.MD_PROV][field]["note"].split(",")
+        if field in self.data[Fields.D_PROV]:
+            return self.data[Fields.D_PROV][field]["note"].split(",")
+        raise KeyError
+
+    def has_pdf_defects(self) -> bool:
+        """Check whether the PDF has quality defects"""
+
+        if (
+            Fields.D_PROV not in self.data
+            or Fields.FILE not in self.data[Fields.D_PROV]
+        ):
+            return False
+
+        return self.data[Fields.D_PROV][Fields.FILE]["note"] != ""
 
     def has_quality_defects(self, *, field: str = "") -> bool:
         """Check whether a record has quality defects"""
@@ -1308,15 +1338,17 @@ class Record:
             parser = PDFParser(file)
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-        self.data["pages_in_file"] = pages_in_file
+        self.data[Fields.PAGES_IN_FILE] = pages_in_file
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
-        self.data["text_from_pdf"] = ""
+        self.data[Fields.TEXT_FROM_PDF] = ""
         try:
             self.set_pages_in_pdf()
             text = self.extract_text_by_page(pages=[0, 1, 2])
-            self.data["text_from_pdf"] = text.replace("\n", " ").replace("\x0c", "")
+            self.data[Fields.TEXT_FROM_PDF] = text.replace("\n", " ").replace(
+                "\x0c", ""
+            )
 
         except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
@@ -1475,10 +1507,24 @@ class Record:
 
     def cleanup_pdf_processing_fields(self) -> None:
         """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""
-        if "text_from_pdf" in self.data:
-            del self.data["text_from_pdf"]
-        if "pages_in_file" in self.data:
-            del self.data["pages_in_file"]
+        if Fields.TEXT_FROM_PDF in self.data:
+            del self.data[Fields.TEXT_FROM_PDF]
+        if Fields.PAGES_IN_FILE in self.data:
+            del self.data[Fields.PAGES_IN_FILE]
+
+    def run_pdf_quality_model(
+        self,
+        *,
+        pdf_qm: colrev.qm.quality_model.QualityModel,
+        set_prepared: bool = False,
+    ) -> None:
+        """Run the PDF quality model"""
+
+        pdf_qm.run(record=self)
+        if self.has_pdf_defects():
+            self.set_status(target_state=RecordState.pdf_needs_manual_preparation)
+        elif set_prepared:
+            self.set_status(target_state=RecordState.pdf_prepared)
 
     def run_quality_model(
         self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False

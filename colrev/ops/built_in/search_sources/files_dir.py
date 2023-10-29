@@ -326,8 +326,8 @@ class FilesSearchSource(JsonSchemaMixin):
                     record = colrev.record.Record(data=record_dict)
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
-                    if "text_from_pdf" in record_dict:
-                        text: str = record_dict["text_from_pdf"]
+                    if Fields.TEXT_FROM_PDF in record_dict:
+                        text: str = record_dict[Fields.TEXT_FROM_PDF]
                         if "bookreview" in text.replace(" ", "").lower():
                             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                             record_dict["note"] = "Book review"
@@ -343,11 +343,11 @@ class FilesSearchSource(JsonSchemaMixin):
                         if "withdrawal" in text.replace(" ", "").lower():
                             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                             record_dict["note"] = "Withdrawal"
-                        del record_dict["text_from_pdf"]
+                        del record_dict[Fields.TEXT_FROM_PDF]
                     # else:
                     #     print(f'text extraction error in {record_dict[Fields.ID]}')
-                    if "pages_in_file" in record_dict:
-                        del record_dict["pages_in_file"]
+                    if Fields.PAGES_IN_FILE in record_dict:
+                        del record_dict[Fields.PAGES_IN_FILE]
 
                 record_dict = {k: v for k, v in record_dict.items() if v is not None}
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
@@ -639,10 +639,10 @@ class FilesSearchSource(JsonSchemaMixin):
             return
         record = colrev.record.Record(data=record_dict)
         record.set_text_from_pdf()
-        res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
+        res = re.findall(self.__doi_regex, record.data[Fields.TEXT_FROM_PDF])
         if res:
             record.data[Fields.DOI] = res[0].upper()
-        del record.data["text_from_pdf"]
+        del record.data[Fields.TEXT_FROM_PDF]
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""

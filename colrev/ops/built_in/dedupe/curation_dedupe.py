@@ -13,7 +13,6 @@ from thefuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager
-import colrev.ops.built_in.pdf_prep.metadata_validation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -61,13 +60,7 @@ class CurationDedupe(JsonSchemaMixin):
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
 
-        pdf_prep_operation = self.review_manager.get_pdf_prep_operation()
-        self.pdf_metadata_validation = (
-            colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation(
-                pdf_prep_operation=pdf_prep_operation,
-                settings={"endpoint": "dedupe_pdf_md_validation"},
-            )
-        )
+        self.pdf_qm = self.review_manager.get_pdf_qm()
 
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
         author_similarity = fuzz.ratio(df_a[Fields.AUTHOR], df_b[Fields.AUTHOR]) / 100
@@ -379,21 +372,19 @@ class CurationDedupe(JsonSchemaMixin):
 
         return decision_list
 
-    def __validate_potential_merge(self, *, rec1: dict, rec2: dict) -> dict:
+    def __validate_potential_merge(self, *, rec1: dict, rec2: dict) -> bool:
         if Fields.FILE in rec2:
-            updated_record = rec1.copy()
-            updated_record[Fields.FILE] = rec2[Fields.FILE]
+            updated_record_dict = rec1.copy()
+            updated_record_dict[Fields.FILE] = rec2[Fields.FILE]
         elif Fields.FILE in rec1:
-            updated_record = rec2.copy()
-            updated_record[Fields.FILE] = rec1[Fields.FILE]
+            updated_record_dict = rec2.copy()
+            updated_record_dict[Fields.FILE] = rec1[Fields.FILE]
         else:  # None of the records is curated
             raise FileNotFoundError
 
-        record = colrev.record.Record(data=updated_record)
-        validation_info = self.pdf_metadata_validation.validates_based_on_metadata(
-            record=record,
-        )
-        return validation_info
+        updated_record = colrev.record.Record(data=updated_record_dict)
+        updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
+        return updated_record.has_pdf_defects()
 
     def __process_pdf_tuple(
         self,
@@ -418,14 +409,14 @@ class CurationDedupe(JsonSchemaMixin):
             return
 
         try:
-            validation_info = self.__validate_potential_merge(rec1=rec1, rec2=rec2)
+            validated = self.__validate_potential_merge(rec1=rec1, rec2=rec2)
         except FileNotFoundError:
             return
 
         overlapping_colrev_ids = colrev.record.Record(
             data=rec1
         ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
-        if validation_info["validates"] or overlapping_colrev_ids:
+        if validated or overlapping_colrev_ids:
             # Note : make sure that we merge into the CURATED record
             if Fields.FILE in rec1:
                 if tuple_to_process[0] in [x["ID1"] for x in decision_list]:
