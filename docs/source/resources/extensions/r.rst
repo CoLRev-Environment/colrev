@@ -1,7 +1,7 @@
 R
 =================================
 
-For analytical extensions:
+For analytical packages:
 
 .. code-block:: R
 
@@ -11,7 +11,7 @@ For analytical extensions:
     df <- bib2df("references.bib")
     df
 
-For extensions aimed at changing records:
+For packages aimed at changing records:
 
 .. code-block:: R
 

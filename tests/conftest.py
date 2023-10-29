@@ -196,7 +196,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
-        {"endpoint": "colrev.resolve_crossrefs"},
         {"endpoint": "colrev.source_specific_prep"},
         # {"endpoint": "colrev.exclude_non_latin_alphabets"},
         # {"endpoint": "colrev.exclude_collections"},

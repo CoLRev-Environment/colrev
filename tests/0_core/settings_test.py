@@ -48,7 +48,6 @@ def test_settings_load() -> None:
                     "name": "prep",
                     "similarity": 0.8,
                     "prep_package_endpoints": [
-                        {"endpoint": "colrev.resolve_crossrefs"},
                         {"endpoint": "colrev.source_specific_prep"},
                         {"endpoint": "colrev.exclude_non_latin_alphabets"},
                         {"endpoint": "colrev.exclude_collections"},

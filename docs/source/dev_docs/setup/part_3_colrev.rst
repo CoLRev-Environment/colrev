@@ -1,7 +1,7 @@
 Setup part 3: CoLRev
 ------------------------------------
 
-Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+Install the following tools mandatory for CoLRev (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
 
 ::
 
@@ -12,16 +12,23 @@ Install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt
 
    # Install visual studio code (via snap)
    sudo snap install --classic code
+   # If you are using Ubuntu with WSL2, please run the command "code" afterwards
+   # It will add Visual Studio Code (aka VS Code Server for x64) to your Windows Start Menu with WSL2 compatibility
 
    # Add $HOME/.local/bin to PATH and load it into the current terminal session with source
    echo 'export PATH="$PATH:$HOME/.local/bin"' >> $HOME/.bashrc
    source ~/.bashrc
 
+   # Setup python and pip package manager
    sudo apt install python-is-python3
    sudo apt install python3-pip
    python3 -m pip install --upgrade pip
    python3 -m pip install poetry
    python3 -m pip install --upgrade paramiko
+
+Clone and install CoLRev with the following commands (using the shell / ``Ctrl``\ +\ ``Alt``\ +\ ``T``):
+
+::
 
    # Clone and install CoLRev on your Desktop
    # Make sure you have registered your SSH key on GitHub beforehand

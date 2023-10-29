@@ -47,27 +47,13 @@ Projects that power CoLRev:
 .. |asreviewactivity| image:: https://img.shields.io/github/commit-activity/y/asreview/asreview?color=green&style=plastic
    :height: 12pt
 
-.. list-table::
-   :widths: 54 24 22
-   :header-rows: 1
-   :class: fullwidthtable
-
-   * - Load
-     - License
-     - Activity
-   * - `Zotero translators <https://github.com/zotero/translators>`_ \*: record import
-     - GPL
-     - |zoterotranslatoractivity|
-   * - `Bibutils <http://bibutils.refbase.org/>`_ \*: record import
-     - `GPL 2 <https://sourceforge.net/p/bibutils/home/Bibutils/>`__
-     - Unknown
 
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
    :class: fullwidthtable
 
-   * - Preparation (metadata sources)
+   * - SearchSources (search, load, prep)
      - Field
      - Size
    * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)

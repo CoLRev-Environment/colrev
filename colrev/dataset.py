@@ -471,7 +471,7 @@ class Dataset:
         """
 
         if self.review_manager.notified_next_operation is None:
-            raise colrev_exceptions.ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNotifiedError()
 
         pybtex.errors.set_strict_mode(False)
         if header_only:
@@ -982,7 +982,7 @@ class Dataset:
         """Get the git repository object (requires review_manager.notify(...))"""
 
         if self.review_manager.notified_next_operation is None:
-            raise colrev_exceptions.ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNotifiedError()
         return self.__git_repo
 
     def has_changes(

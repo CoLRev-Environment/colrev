@@ -2330,7 +2330,7 @@ def __print_environment_status(
     "--update_package_list",
     is_flag=True,
     default=False,
-    help="Update the package list (extensions).",
+    help="Update the package list (packages).",
 )
 @click.option(
     "-v",

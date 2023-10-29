@@ -1,5 +1,14 @@
 #! /usr/bin/env python
-"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID"""
+"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID
+
+Example reference section::
+
+    # References
+
+    Guo, W. and Straub, D. W. and Zhang, P. and Cai, Z. (2021). How Trust Leads to Commitment
+          on Microsourcing Platforms. MIS Quarterly, 45(3), 1309--1348.
+
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,4 +1,4 @@
-Extension interfaces
+Package interfaces
 ========================================
 
 .. autointerface:: colrev.env.package_manager.GeneralInterface

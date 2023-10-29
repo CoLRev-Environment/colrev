@@ -99,7 +99,7 @@ class CoLRevUpgradeError(CoLRevException):
         super().__init__(self.message)
 
 
-class ReviewManagerNotNofiedError(CoLRevException):
+class ReviewManagerNotNotifiedError(CoLRevException):
     """
     The ReviewManager was not notified about the operation.
     """

@@ -105,18 +105,13 @@ class PDFIncompletenessChecker:
                 nr_pages_metadata = 1
             return nr_pages_metadata
 
-        # TODO : extract to separate checker:
-
-        # full_version_purchase_notice = (
-        #     "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
-        # )
-        # if full_version_purchase_notice in record.extract_text_by_page(pages=[0, 1]).replace(" ", ""):
-
-        #     record.add_data_provenance_note(key=Fields.FILE, note="not_full_version")
-        #     record.data.update(
-        #         colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
-        #     )
-        #     return record.data
+        full_version_purchase_notice = (
+            "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
+        )
+        if full_version_purchase_notice in record.extract_text_by_page(
+            pages=[0, 1]
+        ).replace(" ", ""):
+            return False
 
         pages_metadata = record.data.get(Fields.PAGES, "NA")
 

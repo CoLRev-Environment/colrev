@@ -1,4 +1,4 @@
-colrev.constants.Fields
+﻿colrev.constants.Fields
 =======================
 
 .. currentmodule:: colrev.constants

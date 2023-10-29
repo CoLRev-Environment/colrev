@@ -569,13 +569,31 @@ class Upgrade(colrev.operation.Operation):
             ]
         ]
 
+        if settings["project"]["review_type"] == "curated_masterdata":
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path(
+                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                ),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.repo.index.add([".github/workflows/colrev_update.yml"])
+        else:
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/init/colrev_update.yml"),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.repo.index.add([".github/workflows/colrev_update.yml"])
+
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.resolve_crossrefs"
+            ]
+
         self.__save_settings(settings)
-
-        # create check: pdf-incomplete
-
-        # check-first-page / check-last-page
-
-        # no-text-in-pdf vs no-text-embedded / apply_ocr
 
         return self.repo.is_dirty()
 

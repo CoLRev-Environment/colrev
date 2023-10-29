@@ -75,7 +75,7 @@ class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non
     Each package endpoint must implement the following attributes (methods)"""
 
     ci_supported = zope.interface.Attribute(
-        """Flag indicating whether the extension can be run in
+        """Flag indicating whether the package can be run in
         continuous integration environments (e.g. GitHub Actions)"""
     )
 

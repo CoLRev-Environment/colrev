@@ -205,10 +205,6 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.resolve_crossrefs",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
             "status": "EXPERIMENTAL"
         },

@@ -15,6 +15,8 @@ Proposals under active discussion and revision:
 +-----+--------------------------------------------------------------+------------------------------+
 | 2   | :doc:`Data standardization <cep/cep_2_data_standardization>` | Carlo Tang, Gerit Wagner     |
 +-----+--------------------------------------------------------------+------------------------------+
+| 3   | :doc:`SearchSources <cep/cep_3_search_sources>`              | Gerit Wagner                 |
++-----+--------------------------------------------------------------+------------------------------+
 
 
 .. toctree::
@@ -23,3 +25,4 @@ Proposals under active discussion and revision:
 
     cep/cep_1_framework
     cep/cep_2_data_standardization
+    cep/cep_3_search_sources

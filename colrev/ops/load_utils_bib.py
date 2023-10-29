@@ -1,5 +1,29 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files"""
+"""Convenience functions to load bib files
+
+Usage::
+
+    import colrev.ops.load_utils_bib
+
+    records = colrev.ops.load_utils_bib.load_bib_file(
+        load_operation=load_operation, source=self.search_source
+    )
+
+Example BibTeX record::
+
+    @article{Guo2021,
+        title    = {How Trust Leads to Commitment on Microsourcing Platforms},
+        author   = {Guo, Wenbo and Straub, Detmar W. and Zhang, Pengzhu and Cai, Zhao},
+        journal  = {MIS Quarterly},
+        year     = {2021}
+        volume   = {45},
+        number   = {3},
+        pages    = {1309--1348},
+        url      = {https://aisel.aisnet.org/misq/vol45/iss3/13},
+        doi      = {10.25300/MISQ/2021/16100},
+    }
+
+"""
 from __future__ import annotations
 
 import os
@@ -128,6 +152,8 @@ def load_bib_file(
 ) -> dict:
     """Load a bib file and return records dict"""
 
+    # TODO (Tarin): create class (which handles the load_operation) and extract the following functions
+
     def drop_empty_fields(*, records: dict) -> None:
         for record_id in records:
             records[record_id] = {
@@ -153,7 +179,7 @@ def load_bib_file(
                 while line:
                     if "@" in line[:3]:
                         record_id = line[line.find("{") + 1 : line.rfind(",")]
-                        if record_id not in [x[Fields.ID] for x in records]:
+                        if record_id not in [x[Fields.ID] for x in records.values()]:
                             load_operation.review_manager.logger.error(
                                 f"{record_id} not imported"
                             )
@@ -195,6 +221,30 @@ def load_bib_file(
                 if not key.islower():
                     record[key.lower()] = record.pop(key)
 
+    def resolve_crossref(*, records: dict) -> None:
+        # https://bibtex.eu/fields/crossref/
+        crossref_ids = []
+        for record_dict in records.values():
+            if "crossref" not in record_dict:
+                continue
+
+            crossref_record = records[record_dict["crossref"]]
+
+            if not crossref_record:
+                print(
+                    f"crossref record (ID={record_dict['crossref']}) "
+                    f"not found in {source.filename.name}"
+                )
+                continue
+            crossref_ids.append(crossref_record["ID"])
+            for key, value in crossref_record.items():
+                if key not in record_dict:
+                    record_dict[key] = value
+            del record_dict["crossref"]
+
+        for crossref_id in crossref_ids:
+            del records[crossref_id]
+
     __apply_file_fixes(load_operation=load_operation, source=source)
 
     records = __load_records(source=source)
@@ -203,6 +253,7 @@ def load_bib_file(
 
     lower_case_keys(records=records)
     drop_empty_fields(records=records)
+    resolve_crossref(records=records)
     records = dict(sorted(records.items()))
     check_nr_in_bib(source=source, records=records)
     if check_bib_file:
