@@ -1,20 +1,16 @@
-
-Remove PDF last page
-====================
+# Remove PDF last page
 
 This package removes pages appended by publishers or registries.
 
 Examples are:
 
+- CAIS
+- ME Sharpe
 
-* CAIS
-* ME Sharpe
-
-pdf-prep
---------
+## pdf-prep
 
 This package is included in many default setups. To add it to a project, run
 
-.. code-block::
-
-   colrev pdf-prep -a colrev.remove_last_page
+```
+colrev pdf-prep -a colrev.remove_last_page
+```

@@ -99,7 +99,7 @@ def test_settings_load() -> None:
         "pdf_prep": {
             "keep_backup_of_pdfs": True,
             "pdf_prep_package_endpoints": [
-                {"endpoint": "colrev.pdf_check_ocr"},
+                {"endpoint": "colrev.ocrmypdf"},
                 {"endpoint": "colrev.remove_coverpage"},
                 {"endpoint": "colrev.remove_last_page"},
                 {"endpoint": "colrev.create_tei"},

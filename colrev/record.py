@@ -1185,6 +1185,14 @@ class Record:
 
         return True
 
+    def defects(self, field: str) -> typing.List[str]:
+        """Get a list of defects for a field"""
+        if field in self.data[Fields.MD_PROV]:
+            return self.data[Fields.MD_PROV][field]["note"].split(",")
+        if field in self.data[Fields.D_PROV]:
+            return self.data[Fields.D_PROV][field]["note"].split(",")
+        raise KeyError
+
     def has_pdf_defects(self) -> bool:
         """Check whether the PDF has quality defects"""
 

@@ -1,7 +1,7 @@
-colrev.ops.built\_in.pdf\_prep.cover\_page.PDFCoverPage
-=======================================================
+colrev.ops.built\_in.pdf\_prep.remove\_cover\_page.PDFCoverPage
+===============================================================
 
-.. currentmodule:: colrev.ops.built_in.pdf_prep.cover_page
+.. currentmodule:: colrev.ops.built_in.pdf_prep.remove_cover_page
 
 .. autoclass:: PDFCoverPage
    :members:

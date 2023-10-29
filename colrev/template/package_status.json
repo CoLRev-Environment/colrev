@@ -345,7 +345,7 @@
     ],
     "pdf_prep": [
         {
-            "package_endpoint_identifier": "colrev.pdf_check_ocr",
+            "package_endpoint_identifier": "colrev.ocrmypdf",
             "status": "MATURING"
         },
         {
@@ -359,6 +359,10 @@
         {
             "package_endpoint_identifier": "colrev.create_tei",
             "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev.grobid_tei",
+            "status": "RED"
         }
     ],
     "pdf_prep_man": [

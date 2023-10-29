@@ -183,6 +183,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 pdf_prep_man_operation.set_pdf_man_prepared(record=record)
             elif user_selection == "n":
                 record.remove_field(key=Fields.FILE)
+                record.remove_field(key=Fields.PDF_ID)
                 record.set_status(
                     target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
                 )

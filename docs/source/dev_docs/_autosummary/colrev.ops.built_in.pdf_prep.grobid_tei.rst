@@ -1,7 +1,7 @@
-colrev.ops.built\_in.pdf\_prep.cover\_page
+colrev.ops.built\_in.pdf\_prep.grobid\_tei
 ==========================================
 
-.. automodule:: colrev.ops.built_in.pdf_prep.cover_page
+.. automodule:: colrev.ops.built_in.pdf_prep.grobid_tei
 
 
 
@@ -20,4 +20,4 @@ colrev.ops.built\_in.pdf\_prep.cover\_page
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFCoverPage
+      GROBIDTEI

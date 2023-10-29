@@ -11,11 +11,11 @@ import docker
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import PDFDefectCodes
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -26,8 +26,8 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 @dataclass
-class PDFCheckOCR(JsonSchemaMixin):
-    """Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF"""
+class OCRMyPDF(JsonSchemaMixin):
+    """Prepare PDFs by applying OCR based on OCRmyPDF"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
@@ -46,10 +46,6 @@ class PDFCheckOCR(JsonSchemaMixin):
             self.review_manager.environment_manager.build_docker_image(
                 imagename=self.ocrmypdf_image
             )
-        self.language_service = colrev.env.language_service.LanguageService()
-
-    def __text_is_english(self, *, text: str) -> bool:
-        return "eng" == self.language_service.compute_language(text=text)
 
     def __apply_ocr(
         self,
@@ -98,36 +94,19 @@ class PDFCheckOCR(JsonSchemaMixin):
         record: colrev.record.Record,
         pad: int,
     ) -> dict:
-        """Prepare the PDF by checking/applying OCR"""
+        """Prepare the PDF by applying OCR"""
 
-        if colrev.record.RecordState.pdf_imported != record.data.get(
-            Fields.STATUS, "NA"
+        if (
+            Fields.FILE not in record.data
+            or not record.data[Fields.FILE].endswith(".pdf")
+            or PDFDefectCodes.NO_TEXT_IN_PDF not in record.defects("file")
         ):
             return record.data
 
-        if not record.data[Fields.FILE].endswith(".pdf"):
-            return record.data
+        self.review_manager.report_logger.info(f"apply_ocr({record.data[Fields.ID]})")
+        record = self.__apply_ocr(
+            review_manager=self.review_manager,
+            record=record,
+        )
 
-        # We may allow for other languages in this and the following if statement
-        if not self.__text_is_english(text=record.data[Fields.TEXT_FROM_PDF]):
-            self.review_manager.report_logger.info(
-                f"apply_ocr({record.data[Fields.ID]})"
-            )
-            record = self.__apply_ocr(
-                review_manager=self.review_manager,
-                record=record,
-            )
-
-        if not self.__text_is_english(text=record.data[Fields.TEXT_FROM_PDF]):
-            msg = (
-                f"{record.data[Fields.ID]}".ljust(pad, " ")
-                + "Validation error (Language not English or OCR problems)"
-            )
-            self.review_manager.report_logger.error(msg)
-            record.add_data_provenance_note(
-                key=Fields.FILE, note="pdf_language_not_english"
-            )
-            record.data.update(
-                colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
-            )
         return record.data

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
 @dataclass
-class TEIPDFPrep(JsonSchemaMixin):
+class GROBIDTEI(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""
 
     settings_class = colrev.env.package_manager.DefaultSettings

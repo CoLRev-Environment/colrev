@@ -39,3 +39,4 @@ colrev.settings.PDFGetSettings
       ~PDFGetSettings.rename_pdfs
       ~PDFGetSettings.pdf_get_package_endpoints
       ~PDFGetSettings.pdf_get_man_package_endpoints
+      ~PDFGetSettings.defects_to_ignore

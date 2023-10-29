@@ -131,17 +131,17 @@
             }
         ],
         "pdf_prep": [
-            {"package_endpoint_identifier": "colrev.pdf_check_ocr",
-             "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR"
+            {"package_endpoint_identifier": "colrev.ocrmypdf",
+             "endpoint": "colrev.ops.built_in.pdf_prep.ocrmypdf.OCRMyPDF"
             },
             {"package_endpoint_identifier": "colrev.remove_coverpage",
-             "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage"
+             "endpoint": "colrev.ops.built_in.pdf_prep.remove_cover_page.PDFCoverPage"
             },
             {"package_endpoint_identifier": "colrev.remove_last_page",
-             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage"
+             "endpoint": "colrev.ops.built_in.pdf_prep.remove_last_page.PDFLastPage"
             },
-            {"package_endpoint_identifier": "colrev.create_tei",
-             "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep"
+            {"package_endpoint_identifier": "colrev.grobid_tei",
+             "endpoint": "colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI"
             }
         ],
         "pdf_prep_man": [

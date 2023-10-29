@@ -134,7 +134,7 @@
         "keep_backup_of_pdfs": true,
         "pdf_prep_package_endpoints": [
             {
-                "endpoint": "colrev.pdf_check_ocr"
+                "endpoint": "colrev.ocrmypdf"
             },
             {
                 "endpoint": "colrev.remove_coverpage"

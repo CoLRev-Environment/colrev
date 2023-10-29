@@ -56,6 +56,7 @@ colrev.constants.Fields
       ~Fields.NUMBER
       ~Fields.ORIGIN
       ~Fields.PAGES
+      ~Fields.PAGES_IN_FILE
       ~Fields.PDF_ID
       ~Fields.PMCID
       ~Fields.PRESCREEN_EXCLUSION
@@ -66,6 +67,8 @@ colrev.constants.Fields
       ~Fields.SEMANTIC_SCHOLAR_ID
       ~Fields.SERIES
       ~Fields.STATUS
+      ~Fields.TEI_ID
+      ~Fields.TEXT_FROM_PDF
       ~Fields.TITLE
       ~Fields.URL
       ~Fields.VOLUME

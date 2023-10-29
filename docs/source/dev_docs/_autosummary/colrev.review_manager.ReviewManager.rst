@@ -42,6 +42,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_pdf_get_operation
       ~ReviewManager.get_pdf_prep_man_operation
       ~ReviewManager.get_pdf_prep_operation
+      ~ReviewManager.get_pdf_qm
       ~ReviewManager.get_prep_man_operation
       ~ReviewManager.get_prep_operation
       ~ReviewManager.get_prescreen_operation

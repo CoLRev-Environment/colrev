@@ -17,10 +17,21 @@ from colrev.constants import PDFDefectCodes
     "changes, defects",
     [
         (
-            {"text_from_pdf": "TODO"},
+            {Fields.TEXT_FROM_PDF: ""},
+            {PDFDefectCodes.NO_TEXT_IN_PDF},
+        ),
+        (
+            {Fields.TEXT_FROM_PDF: "This paper focuses on a different topic"},
             {PDFDefectCodes.AUTHOR_NOT_IN_PDF, PDFDefectCodes.TITLE_NOT_IN_PDF},
         ),
-        ({"text_from_pdf": Path("WagnerLukyanenkoParEtAl2022_content.txt")}, {}),
+        ({Fields.TEXT_FROM_PDF: Path("WagnerLukyanenkoParEtAl2022_content.txt")}, {}),
+        (
+            {
+                Fields.TEXT_FROM_PDF: Path("WagnerLukyanenkoParEtAl2022_content.txt"),
+                Fields.PAGES: "209--211",
+            },
+            {PDFDefectCodes.PDF_INCOMPLETE},
+        ),
     ],
 )
 def test_get_quality_defects_author(  # type: ignore

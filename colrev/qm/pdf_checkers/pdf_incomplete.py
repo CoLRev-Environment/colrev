@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Checker for nr-pages-not-matching."""
+"""Checker for pdf-incomplete."""
 from __future__ import annotations
 
 import re
@@ -15,10 +15,10 @@ from colrev.constants import PDFDefectCodes
 # Note: replaces author_not_in_first_pages
 
 
-class NrPagesNotMatchingChecker:
-    """The NrPagesNotMatchingChecker"""
+class PDFIncompletenessChecker:
+    """The PDFIncompletenessChecker"""
 
-    msg = PDFDefectCodes.NR_PAGES_NOT_MATCHING
+    msg = PDFDefectCodes.PDF_INCOMPLETE
 
     roman_pages_pattern = re.compile(
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
@@ -33,11 +33,11 @@ class NrPagesNotMatchingChecker:
         self.quality_model = quality_model
 
     def run(self, *, record: colrev.record.Record) -> None:
-        """Run the nr-pages-not-matching checks"""
+        """Run the pdf-incomplete checks"""
 
         if (
             Fields.FILE not in record.data
-            or not Path(record.data[Fields.FILE]).suffix == ".pdf"
+            or Path(record.data[Fields.FILE]).suffix != ".pdf"
             or Fields.PAGES not in record.data
         ):
             return
@@ -162,4 +162,4 @@ class NrPagesNotMatchingChecker:
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:
     """Register the checker"""
-    quality_model.register_checker(NrPagesNotMatchingChecker(quality_model))
+    quality_model.register_checker(PDFIncompletenessChecker(quality_model))

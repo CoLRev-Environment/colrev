@@ -30,6 +30,7 @@ class TitleNotInPDFChecker:
             Fields.FILE not in record.data
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
             or Fields.TITLE not in record.data
+            or record.data[Fields.TEXT_FROM_PDF] == ""
         ):
             return
 

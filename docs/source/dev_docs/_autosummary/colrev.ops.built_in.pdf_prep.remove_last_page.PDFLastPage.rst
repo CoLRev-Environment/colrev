@@ -1,7 +1,7 @@
-colrev.ops.built\_in.pdf\_prep.last\_page.PDFLastPage
-=====================================================
+colrev.ops.built\_in.pdf\_prep.remove\_last\_page.PDFLastPage
+=============================================================
 
-.. currentmodule:: colrev.ops.built_in.pdf_prep.last_page
+.. currentmodule:: colrev.ops.built_in.pdf_prep.remove_last_page
 
 .. autoclass:: PDFLastPage
    :members:

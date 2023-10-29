@@ -186,12 +186,11 @@ class DefectCodes:
 class PDFDefectCodes:
     """Constant PDF defect codes"""
 
-    AUTHOR_NOT_IN_PDF = "author-not-in-pdf"
-    TITLE_NOT_IN_PDF = "title-not-in-pdf"
-    NR_PAGES_NOT_MATCHING = "nr-pages-not-matching"
     NO_TEXT_IN_PDF = "no-text-in-pdf"
     PDF_INCOMPLETE = "pdf-incomplete"
-    COVERPAGE_INCLUDED = "pdf-coverpage-included"
+    AUTHOR_NOT_IN_PDF = "author-not-in-pdf"
+    TITLE_NOT_IN_PDF = "title-not-in-pdf"
+    COVERPAGE_INCLUDED = "coverpage-included"
     LAST_PAGE_APPENDED = "last-page-appended"
 
 

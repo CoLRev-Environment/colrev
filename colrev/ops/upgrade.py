@@ -157,8 +157,8 @@ class Upgrade(colrev.operation.Operation):
             },
             {
                 "version": CoLRevVersion("0.10.2"),
-                "target_version": CoLRevVersion("0.10.3"),
-                "script": self.__migrate_0_10_3,
+                "target_version": CoLRevVersion("0.11.0"),
+                "script": self.__migrate_0_11_0,
                 "released": False,
             },
         ]
@@ -549,17 +549,32 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_10_3(self) -> bool:
+    def __migrate_0_11_0(self) -> bool:
         settings = self.__load_settings_dict()
         settings["pdf_get"]["defects_to_ignore"] = []
+
+        settings["pdf_prep"]["pdf_prep_package_endpoints"] = [
+            {"endpoint": "colrev.ocrmypdf"},
+            {"endpoint": "colrev.grobid_tei"},
+        ] + [
+            x
+            for x in settings["pdf_prep"]["pdf_prep_package_endpoints"]
+            if x["endpoint"]
+            not in [
+                "colrev.check_ocr",
+                "colrev.pdf_check_ocr",
+                "colrev.validate_pdf_metadata",
+                "colrev.validate_completeness",
+                "colrev.tei_prep",
+            ]
+        ]
+
         self.__save_settings(settings)
 
-        # TODO (nothing to do for update_masterdata_status)
+        # create check: pdf-incomplete
 
-        # pdf_check_ocr should be apply_ocr (pdf_check_ocr should be a checker)
-        # drop colrev.validate_completeness - create check: pdf-incomplete
-        # remove validate_pdf_metadata
         # check-first-page / check-last-page
+
         # no-text-in-pdf vs no-text-embedded / apply_ocr
 
         return self.repo.is_dirty()

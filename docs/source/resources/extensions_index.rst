@@ -149,8 +149,8 @@ pdf_prep
 .. toctree::
    :maxdepth: 1
 
-   extensions_index/colrev.create_tei.rst
-   extensions_index/colrev.pdf_check_ocr.rst
+   extensions_index/colrev.grobid_tei.rst
+   extensions_index/colrev.ocrmypdf.rst
    extensions_index/colrev.remove_coverpage.rst
    extensions_index/colrev.remove_last_page.rst
 
