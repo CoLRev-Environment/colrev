@@ -29,7 +29,9 @@ class ErroneousSymbolInFieldChecker:
         """Run the erroneous-symbol-in-field checks"""
 
         for key in self.fields_to_check:
-            if key not in record.data:
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
 
             if any(x in record.data[key] for x in self.erroneous_symbols):

@@ -18,6 +18,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -187,14 +188,20 @@ class ExportManPrep(JsonSchemaMixin):
     ) -> None:
         colrev_data_provenance_keys_to_drop = []
         for key, items in record.data.get(Fields.D_PROV, {}).items():
-            if key not in record.data and "not-missing" not in items["note"]:
+            if (
+                key not in record.data
+                and f"IGNORE:{DefectCodes.MISSING}" not in items["note"]
+            ):
                 colrev_data_provenance_keys_to_drop.append(key)
         for colrev_data_provenance_key_to_drop in colrev_data_provenance_keys_to_drop:
             del record.data[Fields.D_PROV][colrev_data_provenance_key_to_drop]
 
         md_prov_keys_to_drop = []
         for key, items in record.data.get(Fields.MD_PROV, {}).items():
-            if key not in record.data and "not-missing" not in items["note"]:
+            if (
+                key not in record.data
+                and f"IGNORE:{DefectCodes.MISSING}" not in items["note"]
+            ):
                 md_prov_keys_to_drop.append(key)
         for md_prov_key_to_drop in md_prov_keys_to_drop:
             del record.data[Fields.MD_PROV][md_prov_key_to_drop]

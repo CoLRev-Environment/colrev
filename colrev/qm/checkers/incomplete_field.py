@@ -28,7 +28,11 @@ class IncompleteFieldChecker:
             Fields.AUTHOR,
             Fields.ABSTRACT,
         ]:
-            if record.data.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:
+            if record.data.get(
+                key, FieldValues.UNKNOWN
+            ) == FieldValues.UNKNOWN or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
             if self.__incomplete_field(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)

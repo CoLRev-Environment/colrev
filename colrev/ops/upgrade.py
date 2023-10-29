@@ -17,7 +17,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Colors
-from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -375,11 +374,11 @@ class Upgrade(colrev.operation.Operation):
                 continue
             not_missing_fields = []
             for key, prov in record_dict[Fields.MD_PROV].items():
-                if DefectCodes.NOT_MISSING in prov["note"]:
+                if "not-missing" in prov["note"]:
                     not_missing_fields.append(key)
                 prov["note"] = ""
             for key in not_missing_fields:
-                record_dict[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
+                record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
             if "cited_by_id" in record_dict:
@@ -594,6 +593,15 @@ class Upgrade(colrev.operation.Operation):
             ]
 
         self.__save_settings(settings)
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
+            if Fields.MD_PROV in record_dict:
+                for key, value in record_dict[Fields.MD_PROV]:
+                    record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
+                        "not-missing", "IGNORE:missing"
+                    )
+        self.review_manager.dataset.save_records_dict(records=records)
 
         return self.repo.is_dirty()
 

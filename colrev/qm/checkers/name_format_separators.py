@@ -24,9 +24,11 @@ class NameFormatSeparatorsChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the name-format-separators checks"""
         for key in [Fields.AUTHOR, Fields.EDITOR]:
-            if key not in record.data:
-                continue
-            if record.data[key] == FieldValues.UNKNOWN:
+            if (
+                key not in record.data
+                or record.ignored_defect(field=key, defect=self.msg)
+                or record.data[key] == FieldValues.UNKNOWN
+            ):
                 continue
 
             if self.__name_separator_error(record=record, key=key):

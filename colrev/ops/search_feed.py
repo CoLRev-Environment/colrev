@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
@@ -274,8 +275,8 @@ class GeneralOriginFeed:
                     if (
                         main_record_dict[Fields.MD_PROV][key]["source"]
                         == "colrev_curation.masterdata_restrictions"
-                        and main_record_dict[Fields.MD_PROV][key]["note"]
-                        == "not-missing"
+                        and f"IGNORE:{DefectCodes.MISSING}"
+                        in main_record_dict[Fields.MD_PROV][key]["note"]
                     ):
                         continue
                 main_record = colrev.record.Record(data=main_record_dict)

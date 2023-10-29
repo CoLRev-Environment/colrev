@@ -35,7 +35,9 @@ class InconsistentWithURLMetadataChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the inconsistent-with-url-metadata checks"""
 
-        if Fields.URL not in record.data:
+        if Fields.URL not in record.data or record.ignored_defect(
+            field=Fields.URL, defect=self.msg
+        ):
             return
         if any(x in record.data[Fields.URL] for x in ["search.ebscohost.com/login"]):
             return

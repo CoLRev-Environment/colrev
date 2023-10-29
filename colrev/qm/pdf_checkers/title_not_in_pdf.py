@@ -31,6 +31,7 @@ class TitleNotInPDFChecker:
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
             or Fields.TITLE not in record.data
             or record.data[Fields.TEXT_FROM_PDF] == ""
+            or record.ignored_defect(field=Fields.FILE, defect=self.msg)
         ):
             return
 

@@ -46,7 +46,6 @@ colrev.constants.DefectCodes
       ~DefectCodes.NAME_FORMAT_SEPARTORS
       ~DefectCodes.NAME_FORMAT_TITLES
       ~DefectCodes.NAME_PARTICLES
-      ~DefectCodes.NOT_MISSING
       ~DefectCodes.PAGE_RANGE
       ~DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN
       ~DefectCodes.RECORD_NOT_IN_TOC

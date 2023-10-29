@@ -22,9 +22,11 @@ class PageRangeChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the page-range checks"""
 
-        if Fields.PAGES not in record.data:
-            return
-        if not re.match(r"^\d+\-\-\d+$", record.data[Fields.PAGES]):
+        if (
+            Fields.PAGES not in record.data
+            or record.ignored_defect(field=Fields.PAGES, defect=self.msg)
+            or not re.match(r"^\d+\-\-\d+$", record.data[Fields.PAGES])
+        ):
             return
 
         if self.__pages_descending(pages=record.data[Fields.PAGES]):

@@ -22,7 +22,9 @@ class LanguageFormatChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the language-format-error checks"""
 
-        if Fields.LANGUAGE not in record.data:
+        if Fields.LANGUAGE not in record.data or record.ignored_defect(
+            field=Fields.LANGUAGE, defect=self.msg
+        ):
             return
 
         try:

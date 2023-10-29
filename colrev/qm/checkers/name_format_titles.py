@@ -27,7 +27,9 @@ class NameFormatTitleChecker:
         """Run the name-format-titles checks"""
 
         for key in self.fields_to_check:
-            if key not in record.data:
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
 
             if self.__title_in_name(name=record.data[key]):

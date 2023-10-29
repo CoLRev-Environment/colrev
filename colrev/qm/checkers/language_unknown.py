@@ -21,7 +21,11 @@ class LanguageChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the language-unknown checks"""
 
-        if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:
+        if record.data.get(
+            Fields.TITLE, FieldValues.UNKNOWN
+        ) == FieldValues.UNKNOWN or record.ignored_defect(
+            field=Fields.TITLE, defect=self.msg
+        ):
             return
 
         if self.__language_unknown(record=record):

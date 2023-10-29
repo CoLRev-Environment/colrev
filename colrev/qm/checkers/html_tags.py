@@ -31,11 +31,14 @@ class HTMLTagChecker:
         """Run the html-tags checks"""
 
         for key in self.__fields_to_check:
-            if key in record.data:
-                if re.search(r"&#\d+;", record.data[key]):
-                    record.add_masterdata_provenance_note(key=key, note=self.msg)
-                else:
-                    record.remove_masterdata_provenance_note(key=key, note=self.msg)
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
+                continue
+            if re.search(r"&#\d+;", record.data[key]):
+                record.add_masterdata_provenance_note(key=key, note=self.msg)
+            else:
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

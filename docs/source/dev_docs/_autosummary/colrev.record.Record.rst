@@ -48,6 +48,8 @@ colrev.record.Record
       ~Record.has_overlapping_colrev_id
       ~Record.has_pdf_defects
       ~Record.has_quality_defects
+      ~Record.ignore_defect
+      ~Record.ignored_defect
       ~Record.masterdata_is_curated
       ~Record.merge
       ~Record.prefix_non_standardized_field_keys

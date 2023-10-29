@@ -53,6 +53,8 @@ colrev.record.PrepRecord
       ~PrepRecord.has_overlapping_colrev_id
       ~PrepRecord.has_pdf_defects
       ~PrepRecord.has_quality_defects
+      ~PrepRecord.ignore_defect
+      ~PrepRecord.ignored_defect
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.prefix_non_standardized_field_keys

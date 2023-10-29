@@ -23,6 +23,7 @@ class ENTRYTYPES:
     MISC = "misc"
     SOFTWARE = "software"
     ONLINE = "online"
+    CONFERENCE = "conference"
 
 
 class Fields:
@@ -112,6 +113,7 @@ class FieldSet:
         Fields.NUMBER,
         Fields.PAGES,
         Fields.EDITOR,
+        Fields.INSTITUTION,
     ]
 
     STANDARDIZED_FIELD_KEYS = (
@@ -153,7 +155,6 @@ class DefectCodes:
     """Constant defect codes"""
 
     MISSING = "missing"
-    NOT_MISSING = "not-missing"
     RECORD_NOT_IN_TOC = "record-not-in-toc"
     INCONSISTENT_WITH_ENTRYTYPE = "inconsistent-with-entrytype"
     CONTAINER_TITLE_ABBREVIATED = "container-title-abbreviated"
