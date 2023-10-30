@@ -21,7 +21,7 @@ import re
 import typing
 from typing import TYPE_CHECKING
 
-from colrev.constants import ENTRYTYPES
+from colrev.constants import Colors
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
@@ -49,6 +49,7 @@ class NBIBLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        list_fields: dict,
         unique_id_field: str = "",
     ):
         self.load_operation = load_operation
@@ -57,7 +58,7 @@ class NBIBLoader:
 
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
-        self.list_tags = {"AU": " and ", "OT": ", ", "PT": ", "}
+        self.list_fields = list_fields
 
     def is_tag(self, line: str) -> bool:
         """Determine if the line has a tag using regex."""
@@ -86,7 +87,7 @@ class NBIBLoader:
         name = tag
         new_value = self.get_content(line)
 
-        if tag in self.list_tags:
+        if tag in self.list_fields:
             self._add_list_value(name, new_value)
         else:
             self._add_single_value(tag, new_value)
@@ -127,38 +128,43 @@ class NBIBLoader:
         records = {}
         for ind, record in enumerate(records_list):
             record[Fields.ID] = str(ind + 1).rjust(6, "0")
+            for list_field, connective in self.list_fields.items():
+                if list_field in record:
+                    record[list_field] = connective.join(record[list_field])
             records[record[Fields.ID]] = record
         return records
 
     def apply_entrytype_mapping(
         self, *, record_dict: dict, entrytype_map: dict
     ) -> None:
-        """Apply the mapping of RIS TY fields to CoLRev ENTRYTYPES"""
-        pt = " ".join(record_dict["PT"]).lower()
-        if "journal article" in pt:
-            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-        else:
-            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+        """Apply the mapping of nbib PT fields to CoLRev ENTRYTYPES"""
+
+        if record_dict["PT"] not in entrytype_map:
+            msg = f"{Colors.RED}PT={record_dict['PT']} not yet supported{Colors.END}"
+            if not self.load_operation.review_manager.force_mode:
+                raise NotImplementedError(msg)
+            self.load_operation.review_manager.logger.error(msg)
+            return
+
+        entrytype = entrytype_map[record_dict["PT"]]
+        record_dict[Fields.ENTRYTYPE] = entrytype
 
     def map_keys(self, *, record_dict: dict, key_map: dict) -> None:
         """Converts nbib entries it to bib records"""
+        entrytype = record_dict[Fields.ENTRYTYPE]
 
-        for list_tag, record in list(record_dict.items()):
-            if list_tag in [Fields.ENTRYTYPE]:
+        # NBIB-keys > standard keys
+        for ris_key in list(record_dict.keys()):
+            if ris_key in [Fields.ENTRYTYPE, Fields.ID]:
                 continue
-
-            # delete first ask if exists later
-            del record_dict[list_tag]
-
-            if list_tag not in key_map:
+            if ris_key not in key_map[entrytype]:
+                del record_dict[ris_key]
+                # print/notify: ris_key
                 continue
+            standard_key = key_map[entrytype][ris_key]
+            record_dict[standard_key] = record_dict.pop(ris_key)
 
-            list_field = key_map[list_tag]
-            if list_tag in self.list_tags:
-                record_dict[list_field] = self.list_tags[list_tag].join(record)
-            else:
-                record_dict[list_field] = record
-
+        # Set unique_id (if any)
         if self.unique_id_field != "":
             _id = record_dict[self.unique_id_field].replace(" ", "").replace(";", "_")
             record_dict[Fields.ID] = _id
