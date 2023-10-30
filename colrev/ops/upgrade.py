@@ -551,6 +551,9 @@ class Upgrade(colrev.operation.Operation):
 
     def __migrate_0_11_0(self) -> bool:
         settings = self.__load_settings_dict()
+        if settings["project"]["review_type"] == "curated_masterdata":
+            settings["project"]["review_type"] = "colrev.curated_masterdata"
+
         settings["pdf_get"]["defects_to_ignore"] = []
 
         settings["pdf_prep"]["pdf_prep_package_endpoints"] = [
@@ -592,6 +595,10 @@ class Upgrade(colrev.operation.Operation):
                 for x in p_round["prep_package_endpoints"]
                 if x["endpoint"] != "colrev.resolve_crossrefs"
             ]
+            if settings["project"]["review_type"] == "colrev.curated_masterdata":
+                p_round["prep_package_endpoints"] = [
+                    {"endpoint": "colrev.colrev_curation"}
+                ] + p_round["prep_package_endpoints"]
 
         self.__save_settings(settings)
 
