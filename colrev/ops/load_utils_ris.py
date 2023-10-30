@@ -213,7 +213,7 @@ class RISLoader:
         but they can be adapted before calling the convert_to_records()"""
 
         # Note : depending on the source, a specific ris_parser implementation may be selected.
-        # its DEFAULT_LIST_TAGS can be extended with list fiels that should be joined automatically
+        # its DEFAULT_LIST_TAGS can be extended with list fields that should be joined automatically
 
         if self.unique_id_field == "":
             self.load_operation.ensure_append_only(file=self.source.filename)
@@ -257,7 +257,7 @@ class RISLoader:
 
         # RIS-keys > standard keys
         for ris_key in list(record_dict.keys()):
-            if ris_key in ["ENTRYTYPE", "ID"]:
+            if ris_key in [Fields.ENTRYTYPE, Fields.ID]:
                 continue
             if ris_key not in key_map[entrytype]:
                 del record_dict[ris_key]
