@@ -14,15 +14,6 @@ CEP003 - SearchSources
 Table of contents
 ------------------------------
 
-<<<<<<< HEAD:docs/source/foundations/cep/cep003_search_sources.rst
-:any:`abstract`
-
-:any:`search types`
-
-:any:`search parameters`
-
-.. _abstract:
-=======
 - :any:`summary`
 - :any:`data`
 - :any:`methods`
@@ -30,7 +21,8 @@ Table of contents
 - :any:`tests`
 - :any:`maturity`
 - :any:`roadmap`
->>>>>>> origin:docs/source/foundations/cep/cep_3_search_sources.rst
+
+.. _abstract:
 
 Abstract
 ------------------------------
