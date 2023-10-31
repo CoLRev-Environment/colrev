@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -68,15 +69,15 @@ class GeneralPolishPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record by applying polishing rules"""
 
-        if "title" in record.data:
+        if Fields.TITLE in record.data:
             acronyms = [
                 x
                 for x in self.frequent_acronyms
-                if x.lower() in record.data["title"].lower().split()
+                if x.lower() in record.data[Fields.TITLE].lower().split()
             ]
             for acronym in acronyms:
-                record.data["title"] = re.sub(
-                    acronym, acronym, record.data["title"], flags=re.I
+                record.data[Fields.TITLE] = re.sub(
+                    acronym, acronym, record.data[Fields.TITLE], flags=re.I
                 )
 
         return record

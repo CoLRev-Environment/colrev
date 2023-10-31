@@ -1,10 +1,28 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files"""
+"""Convenience functions to load nbib files
+
+Example nbib record::
+
+    OWN - ERIC
+    TI  - How Trust Leads to Commitment on Microsourcing Platforms
+    AU  - Guo, Wenbo
+    AU  - Straub, Detmar W.
+    AU  - Zhang, Pengzhu
+    AU  - Cai, Zhao
+    JT  - MIS Quarterly
+    DP  - 2021
+    VI  - 45
+    IP  - 3
+    PG  - 1309-1348
+"""
 from __future__ import annotations
 
 import re
 import typing
 from typing import TYPE_CHECKING
+
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -40,19 +58,19 @@ class NBIBLoader:
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
         self.mapping = {
-            "TI": "title",
-            "AU": "author",
-            "DP": "year",
-            "JT": "journal",
-            "VI": "volume",
-            "IP": "number",
-            "PG": "pages",
-            "AB": "abstract",
-            "AID": "doi",
-            "ISSN": "issn",
+            "TI": Fields.TITLE,
+            "AU": Fields.AUTHOR,
+            "DP": Fields.YEAR,
+            "JT": Fields.JOURNAL,
+            "VI": Fields.VOLUME,
+            "IP": Fields.NUMBER,
+            "PG": Fields.PAGES,
+            "AB": Fields.ABSTRACT,
+            "AID": Fields.DOI,
+            "ISSN": Fields.ISSN,
             "OID": "eric_id",
-            "OT": "keywords",
-            "LA": "language",
+            "OT": Fields.KEYWORDS,
+            "LA": Fields.LANGUAGE,
             "PT": "type",
             # "OWN": "owner",
         }
@@ -63,7 +81,7 @@ class NBIBLoader:
         return bool(self.pattern.match(line))
 
     def get_tag(self, line: str) -> str:
-        """Get the tag from a line in the ENL file."""
+        """Get the tag from a line in the NBIB file."""
         return line[: line.find(" - ")].rstrip()
 
     def get_content(self, line: str) -> str:
@@ -83,7 +101,7 @@ class NBIBLoader:
 
     def _add_tag(self, tag: str, line: str) -> None:
         if tag not in self.mapping:
-            print(f"load_utils_enl error: tag {tag} not in mapping")
+            print(f"load_utils_nbib error: tag {tag} not in mapping")
             return
         name = self.mapping[tag]
         new_value = self.get_content(line)
@@ -119,7 +137,7 @@ class NBIBLoader:
         # based on
         # https://github.com/MrTango/rispy/blob/main/rispy/parser.py
         # Note: skip-tags and unknown-tags can be handled
-        # between load_enl_entries and convert_to_records.
+        # between load_nbib_entries and convert_to_records.
 
         text = self.source.filename.read_text(encoding="utf-8")
         # clean_text?
@@ -128,8 +146,8 @@ class NBIBLoader:
 
         records = {}
         for ind, record in enumerate(records_list):
-            record["ID"] = str(ind).rjust(6, "0")
-            records[record["ID"]] = record
+            record[Fields.ID] = str(ind).rjust(6, "0")
+            records[record[Fields.ID]] = record
 
         return records
 
@@ -150,11 +168,11 @@ class NBIBLoader:
                 entry[list_field] = delimiter.join(entry[list_field])
 
             if "journal article" in entry["type"].lower():
-                entry["ENTRYTYPE"] = "article"
+                entry[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
             else:
-                entry["ENTRYTYPE"] = "misc"
+                entry[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-            entry["ID"] = _id
+            entry[Fields.ID] = _id
 
             records[_id] = entry
 

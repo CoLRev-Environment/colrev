@@ -6,6 +6,8 @@ import pytest
 
 import colrev.ops.built_in.prep.bibtex_crossref_resolution
 import colrev.ops.prep
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 
 @pytest.fixture(name="bcr")
@@ -25,28 +27,28 @@ def get_bcr(
     [
         (
             {
-                "ID": "001",
-                "ENTRYTYPE": "inproceedings",
-                "colrev_origin": ["crossref.bib/001"],
-                "title": "An Integrated Framework for Understanding Digital Work in Organizations",
+                Fields.ID: "001",
+                Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+                Fields.ORIGIN: ["crossref.bib/001"],
+                Fields.TITLE: "An Integrated Framework for Understanding Digital Work in Organizations",
                 "crossref": "002",
             },
             {
                 "002": {
-                    "ID": "002",
-                    "ENTRYTYPE": "inproceedings",
-                    "booktitle": "First Conference on Crossref Records",
-                    "colrev_origin": ["crossref.bib/002"],
+                    Fields.ID: "002",
+                    Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+                    Fields.BOOKTITLE: "First Conference on Crossref Records",
+                    Fields.ORIGIN: ["crossref.bib/002"],
                 }
             },
             {
-                "ID": "001",
-                "colrev_origin": ["crossref.bib/001"],
-                "ENTRYTYPE": "inproceedings",
-                "title": "An Integrated Framework for Understanding Digital Work in Organizations",
-                "booktitle": "First Conference on Crossref Records",
-                "colrev_masterdata_provenance": {
-                    "booktitle": {"note": "", "source": "crossref_resolution"}
+                Fields.ID: "001",
+                Fields.ORIGIN: ["crossref.bib/001"],
+                Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+                Fields.TITLE: "An Integrated Framework for Understanding Digital Work in Organizations",
+                Fields.BOOKTITLE: "First Conference on Crossref Records",
+                Fields.MD_PROV: {
+                    Fields.BOOKTITLE: {"note": "", "source": "crossref_resolution"}
                 },
             },
         ),

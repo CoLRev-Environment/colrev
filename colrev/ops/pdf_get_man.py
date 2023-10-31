@@ -12,6 +12,7 @@ import pandas as pd
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 
 class PDFGetMan(colrev.operation.Operation):
@@ -42,7 +43,7 @@ class PDFGetMan(colrev.operation.Operation):
         missing_records = []
         for record in records.values():
             if (
-                record["colrev_status"]
+                record[Fields.STATUS]
                 == colrev.record.RecordState.pdf_needs_manual_retrieval
             ):
                 missing_records.append(record)
@@ -57,16 +58,16 @@ class PDFGetMan(colrev.operation.Operation):
             missing_records_df = pd.DataFrame.from_records(missing_records)
             # pylint: disable=duplicate-code
             col_order = [
-                "ID",
-                "author",
-                "title",
-                "journal",
-                "booktitle",
-                "year",
-                "volume",
-                "number",
-                "pages",
-                "doi",
+                Fields.ID,
+                Fields.AUTHOR,
+                Fields.TITLE,
+                Fields.JOURNAL,
+                Fields.BOOKTITLE,
+                Fields.YEAR,
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
+                Fields.DOI,
             ]
             missing_records_df = missing_records_df.reindex(col_order, axis=1)
             self.missing_pdf_files_csv.parent.mkdir(exist_ok=True, parents=True)
@@ -85,7 +86,7 @@ class PDFGetMan(colrev.operation.Operation):
         for record_dict in records.values():
             record = colrev.record.Record(data=record_dict)
             if (
-                record.data["colrev_status"]
+                record.data[Fields.STATUS]
                 == colrev.record.RecordState.pdf_needs_manual_retrieval
             ):
                 record.set_status(
@@ -111,13 +112,13 @@ class PDFGetMan(colrev.operation.Operation):
                 x
                 for x in record_header_list
                 if colrev.record.RecordState.pdf_needs_manual_retrieval
-                == x["colrev_status"]
+                == x[Fields.STATUS]
             ]
         )
-        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
+        pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 40)
         items = self.review_manager.dataset.read_next_record(
             conditions=[
-                {"colrev_status": colrev.record.RecordState.pdf_needs_manual_retrieval}
+                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_retrieval}
             ]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
@@ -166,7 +167,7 @@ class PDFGetMan(colrev.operation.Operation):
                 record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
 
                 record.add_data_provenance(
-                    key="file", source="pdf-get-man", note="not_available"
+                    key=Fields.FILE, source="pdf-get-man", note="not_available"
                 )
 
                 self.review_manager.report_logger.info(
@@ -180,7 +181,7 @@ class PDFGetMan(colrev.operation.Operation):
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict["ID"]: record_dict}, partial=True
+            records={record_dict[Fields.ID]: record_dict}, partial=True
         )
 
     @colrev.operation.Operation.decorate()

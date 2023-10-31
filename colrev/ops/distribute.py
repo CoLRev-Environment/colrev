@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import colrev.operation
 import colrev.settings
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -109,11 +110,11 @@ class Distribute(colrev.operation.Operation):
                         )
                     )
 
-                record["ID"] = f"{record_id}".rjust(10, "0")
+                record[Fields.ID] = f"{record_id}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))
                 import_records.append(record)
 
-                import_records_dict = {r["ID"]: r for r in import_records}
+                import_records_dict = {r[Fields.ID]: r for r in import_records}
                 self.review_manager.dataset.save_records_dict_to_file(
                     records=import_records_dict, save_path=target_bib_file
                 )

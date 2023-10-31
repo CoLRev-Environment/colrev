@@ -1,26 +1,37 @@
 #! /usr/bin/env python
 """Convenience functions to load enl files
 
-%T How Trust Leads to Commitment on Microsourcing Platforms
-%0 Journal Article
-%A Guo, Wenbo
-%A Straub, Detmar W.
-%A Zhang, Pengzhu
-%A Cai, Zhao
-%B Management Information Systems Quarterly
-%D 2021
-%8 September  1, 2021
-%V 45
-%N 3
-%P 1309-1348
-%U https://aisel.aisnet.org/misq/vol45/iss3/13
-%X IS research has extensively examined the role of trust in client-vendor relationships...
+
+Usage::
+
+    TODO
+
+Example enl record::
+
+    %T How Trust Leads to Commitment on Microsourcing Platforms
+    %0 Journal Article
+    %A Guo, Wenbo
+    %A Straub, Detmar W.
+    %A Zhang, Pengzhu
+    %A Cai, Zhao
+    %B Management Information Systems Quarterly
+    %D 2021
+    %8 September  1, 2021
+    %V 45
+    %N 3
+    %P 1309-1348
+    %U https://aisel.aisnet.org/misq/vol45/iss3/13
+    %X IS research has extensively examined the role of trust in client-vendor relationships...
+
 """
 from __future__ import annotations
 
 import re
 import typing
 from typing import TYPE_CHECKING
+
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -55,15 +66,15 @@ class ENLLoader:
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
         self.mapping = {
-            "T": "title",
-            "A": "author",
-            "D": "year",
-            "B": "journal",
-            "V": "volume",
-            "N": "number",
-            "P": "pages",
-            "X": "abstract",
-            "U": "url",
+            "T": Fields.TITLE,
+            "A": Fields.AUTHOR,
+            "D": Fields.YEAR,
+            "B": Fields.JOURNAL,
+            "V": Fields.VOLUME,
+            "N": Fields.NUMBER,
+            "P": Fields.PAGES,
+            "X": Fields.ABSTRACT,
+            "U": Fields.URL,
             "8": "date",
             "0": "type",
         }
@@ -139,8 +150,8 @@ class ENLLoader:
 
         records = {}
         for ind, record in enumerate(records_list):
-            record["ID"] = str(ind).rjust(6, "0")
-            records[record["ID"]] = record
+            record[Fields.ID] = str(ind).rjust(6, "0")
+            records[record[Fields.ID]] = record
 
         return records
 
@@ -151,10 +162,10 @@ class ENLLoader:
         for counter, entry in enumerate(entries.values()):
             if "type" in entry:
                 if "Journal Article" == entry["type"]:
-                    entry["ENTRYTYPE"] = "article"
+                    entry[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
                 del entry["type"]
             else:
-                entry["ENTRYTYPE"] = "misc"
+                entry[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
             for list_tag, delimiter in self.list_tags.items():
                 list_field = self.mapping[list_tag]
@@ -166,7 +177,7 @@ class ENLLoader:
                 _id = str(counter + 1).zfill(5)
             else:
                 _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
-            entry["ID"] = _id
+            entry[Fields.ID] = _id
             records[_id] = entry
 
         return records

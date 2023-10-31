@@ -15,7 +15,8 @@ from tqdm import tqdm
 import colrev.env.package_manager
 import colrev.ops.built_in.pdf_prep.metadata_validation
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -57,8 +58,10 @@ class CurationDedupe(JsonSchemaMixin):
         settings: dict,
     ):
         self.settings = self.settings_class.load_settings(data=settings)
+        self.dedupe_operation = dedupe_operation
+        self.review_manager = dedupe_operation.review_manager
 
-        pdf_prep_operation = dedupe_operation.review_manager.get_pdf_prep_operation()
+        pdf_prep_operation = self.review_manager.get_pdf_prep_operation()
         self.pdf_metadata_validation = (
             colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation(
                 pdf_prep_operation=pdf_prep_operation,
@@ -67,10 +70,10 @@ class CurationDedupe(JsonSchemaMixin):
         )
 
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
-        author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
+        author_similarity = fuzz.ratio(df_a[Fields.AUTHOR], df_b[Fields.AUTHOR]) / 100
 
         title_similarity = (
-            fuzz.ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
+            fuzz.ratio(df_a[Fields.TITLE].lower(), df_b[Fields.TITLE].lower()) / 100
         )
 
         # Note : the toc-based processing means that we are robust against
@@ -120,8 +123,8 @@ class CurationDedupe(JsonSchemaMixin):
                 similarity_array[cord] = 0  # ie., has been processed
                 tuples_to_process.append(
                     [
-                        references.iloc[cord[0]]["ID"],
-                        references.iloc[cord[1]]["ID"],
+                        references.iloc[cord[0]][Fields.ID],
+                        references.iloc[cord[1]][Fields.ID],
                         maximum_similarity,
                         "not_processed",
                     ]
@@ -133,18 +136,18 @@ class CurationDedupe(JsonSchemaMixin):
         toc_items = []
         for record in records_list:
             toc_item = {}
-            if record["ENTRYTYPE"] == "article":
-                if "journal" in record:
-                    toc_item["journal"] = record["journal"]
-                if "volume" in record:
-                    toc_item["volume"] = record["volume"]
-                if "number" in record:
-                    toc_item["number"] = record["number"]
+            if record[Fields.ENTRYTYPE] == "article":
+                if Fields.JOURNAL in record:
+                    toc_item[Fields.JOURNAL] = record[Fields.JOURNAL]
+                if Fields.VOLUME in record:
+                    toc_item[Fields.VOLUME] = record[Fields.VOLUME]
+                if Fields.NUMBER in record:
+                    toc_item[Fields.NUMBER] = record[Fields.NUMBER]
 
-            if record["ENTRYTYPE"] == "inproceedings":
-                if "booktitle" in record:
-                    toc_item["booktitle"] = record["booktitle"]
-                    toc_item["year"] = record["year"]
+            if record[Fields.ENTRYTYPE] == "inproceedings":
+                if Fields.BOOKTITLE in record:
+                    toc_item[Fields.BOOKTITLE] = record[Fields.BOOKTITLE]
+                    toc_item[Fields.YEAR] = record[Fields.YEAR]
             if len(toc_item) > 0:
                 toc_items.append(toc_item)
 
@@ -152,34 +155,32 @@ class CurationDedupe(JsonSchemaMixin):
         toc_items = list(map(dict, temp))  # type: ignore
         return toc_items
 
-    def __warn_on_missing_sources(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, first_source: bool
-    ) -> None:
+    def __warn_on_missing_sources(self, *, first_source: bool) -> None:
         # warn if not all SOURCE.filenames are included in a dedupe script
         if first_source:
             available_sources = [
                 str(s.filename)
-                for s in dedupe_operation.review_manager.settings.sources
+                for s in self.review_manager.settings.sources
                 if "md_" not in str(s.filename)
             ]
             dedupe_sources = [
                 s["selected_source"]
-                for s in dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints
+                for s in self.review_manager.settings.dedupe.dedupe_package_endpoints
                 if "colrev.curation_full_outlet_dedupe" == s["endpoint"]
             ]
             sources_missing_in_dedupe = [
                 x for x in available_sources if x not in dedupe_sources
             ]
             if len(sources_missing_in_dedupe) > 0:
-                dedupe_operation.review_manager.logger.warning(
-                    f"{colors.ORANGE}Sources missing in "
+                self.review_manager.logger.warning(
+                    f"{Colors.ORANGE}Sources missing in "
                     "dedupe.scripts.colrev.curation_full_outlet_dedupe: "
-                    f"{','.join(sources_missing_in_dedupe)}{colors.END}"
+                    f"{','.join(sources_missing_in_dedupe)}{Colors.END}"
                 )
                 if input("Add sources [y,n]?") == "y":
                     for source_missing_in_dedupe in sources_missing_in_dedupe:
                         dedupe_package_endpoints = (
-                            dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints
+                            self.review_manager.settings.dedupe.dedupe_package_endpoints
                         )
                         penultimate_position = len(dedupe_package_endpoints) - 1
                         dedupe_script_to_add = {
@@ -189,16 +190,14 @@ class CurationDedupe(JsonSchemaMixin):
                         dedupe_package_endpoints.insert(
                             penultimate_position, dedupe_script_to_add
                         )
-                        dedupe_operation.review_manager.save_settings()
-                        dedupe_operation.review_manager.logger.info(
-                            f"{colors.GREEN}Added {source_missing_in_dedupe} "
-                            f"to dedupe.scripts{colors.END}"
+                        self.review_manager.save_settings()
+                        self.review_manager.logger.info(
+                            f"{Colors.GREEN}Added {source_missing_in_dedupe} "
+                            f"to dedupe.scripts{Colors.END}"
                         )
 
-    def __add_first_source_if_deduplicated(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
-    ) -> None:
-        dedupe_operation.review_manager.logger.info(
+    def __add_first_source_if_deduplicated(self, *, records: dict) -> None:
+        self.review_manager.logger.info(
             f"Starting with records from {self.settings.selected_source}"
             " (setting to md_processed as the initial records)"
         )
@@ -206,10 +205,10 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r["colrev_status"] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
-                for co in r["colrev_origin"]
+                for co in r[Fields.ORIGIN]
             )
         ]
 
@@ -222,7 +221,7 @@ class CurationDedupe(JsonSchemaMixin):
                 r
                 for r in records.values()
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                and r["colrev_status"]
+                and r[Fields.STATUS]
                 not in [
                     colrev.record.RecordState.md_prepared,
                     colrev.record.RecordState.md_needs_manual_preparation,
@@ -231,7 +230,7 @@ class CurationDedupe(JsonSchemaMixin):
                 ]
                 and any(
                     self.settings.selected_source.replace("data/search/", "") in co
-                    for co in r["colrev_origin"]
+                    for co in r[Fields.ORIGIN]
                 )
             ]
             if 0 == len(processed_same_toc_same_source_records):
@@ -239,7 +238,7 @@ class CurationDedupe(JsonSchemaMixin):
                 print(toc_item)
 
                 for source_record_dict in sorted(
-                    source_records, key=lambda d: d["author"]
+                    source_records, key=lambda d: d[Fields.AUTHOR]
                 ):
                     if all(
                         source_record_dict.get(k, "NA") == v
@@ -250,7 +249,7 @@ class CurationDedupe(JsonSchemaMixin):
                             f"{source_record_dict.get('author', 'NO_AUTHOR')} : "
                             f"{source_record_dict.get('title', 'NO_TITLE')}"
                         )
-                recs_unique = dedupe_operation.review_manager.force_mode
+                recs_unique = self.review_manager.force_mode
                 if not recs_unique:
                     recs_unique = "y" == input(
                         "No existing records (md_processed*) found. "
@@ -275,13 +274,11 @@ class CurationDedupe(JsonSchemaMixin):
 
         for record in records.values():
             record.pop("container_title")
-        dedupe_operation.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records=records)
 
-        if dedupe_operation.review_manager.dataset.has_changes():
-            dedupe_operation.review_manager.logger.info(
-                f"{colors.GREEN}Commit changes{colors.END}"
-            )
-            dedupe_operation.review_manager.create_commit(
+        if self.review_manager.dataset.has_changes():
+            self.review_manager.logger.info(f"{Colors.GREEN}Commit changes{Colors.END}")
+            self.review_manager.create_commit(
                 msg=(
                     "Merge duplicate records (set unique records from "
                     f"{self.settings.selected_source} "
@@ -289,27 +286,27 @@ class CurationDedupe(JsonSchemaMixin):
                 ),
             )
         else:
-            dedupe_operation.review_manager.logger.info(
-                f"{colors.GREEN}No duplicates found{colors.END}"
+            self.review_manager.logger.info(
+                f"{Colors.GREEN}No duplicates found{Colors.END}"
             )
 
     def __prep_records(self, *, records: dict) -> dict:
         required_fields = [
-            "title",
-            "author",
-            "year",
-            "journal",
-            "volume",
-            "number",
-            "pages",
-            "booktitle",
+            Fields.TITLE,
+            Fields.AUTHOR,
+            Fields.YEAR,
+            Fields.JOURNAL,
+            Fields.VOLUME,
+            Fields.NUMBER,
+            Fields.PAGES,
+            Fields.BOOKTITLE,
         ]
         for record in records.values():
             if "container_title" not in record:
                 record["container_title"] = (
-                    record.get("journal", "")
-                    + record.get("booktitle", "")
-                    + record.get("series", "")
+                    record.get(Fields.JOURNAL, "")
+                    + record.get(Fields.BOOKTITLE, "")
+                    + record.get(Fields.SERIES, "")
                 )
 
             for required_field in required_fields:
@@ -317,20 +314,18 @@ class CurationDedupe(JsonSchemaMixin):
                     record[required_field] = ""
         return records
 
-    def __dedupe_source(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
-    ) -> list[dict]:
-        dedupe_operation.review_manager.logger.info(
+    def __dedupe_source(self, *, records: dict) -> list[dict]:
+        self.review_manager.logger.info(
             "Processing as a non-pdf source (matching exact colrev_ids)"
         )
 
         source_records = [
             r
             for r in records.values()
-            if r["colrev_status"] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
-                for co in r["colrev_origin"]
+                for co in r[Fields.ORIGIN]
             )
         ]
 
@@ -345,7 +340,7 @@ class CurationDedupe(JsonSchemaMixin):
                 r
                 for r in records.values()
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
-                and r["colrev_status"]
+                and r[Fields.STATUS]
                 not in [
                     colrev.record.RecordState.md_imported,
                     colrev.record.RecordState.md_needs_manual_preparation,
@@ -354,7 +349,7 @@ class CurationDedupe(JsonSchemaMixin):
                 ]
                 and not any(
                     self.settings.selected_source.replace("data/search/", "") in co
-                    for co in r["colrev_origin"]
+                    for co in r[Fields.ORIGIN]
                 )
             ]
             new_same_toc_records = [
@@ -374,8 +369,8 @@ class CurationDedupe(JsonSchemaMixin):
                         if overlapping_colrev_ids:
                             decision_list.append(
                                 {
-                                    "ID1": new_same_toc_record["ID"],
-                                    "ID2": rec2["ID"],
+                                    "ID1": new_same_toc_record[Fields.ID],
+                                    "ID2": rec2[Fields.ID],
                                     "decision": "duplicate",
                                 }
                             )
@@ -384,21 +379,18 @@ class CurationDedupe(JsonSchemaMixin):
 
         return decision_list
 
-    def __validate_potential_merge(
-        self, *, rec1: dict, rec2: dict, dedupe_operation: colrev.ops.dedupe.Dedupe
-    ) -> dict:
-        if "file" in rec2:
+    def __validate_potential_merge(self, *, rec1: dict, rec2: dict) -> dict:
+        if Fields.FILE in rec2:
             updated_record = rec1.copy()
-            updated_record["file"] = rec2["file"]
-        elif "file" in rec1:
+            updated_record[Fields.FILE] = rec2[Fields.FILE]
+        elif Fields.FILE in rec1:
             updated_record = rec2.copy()
-            updated_record["file"] = rec1["file"]
+            updated_record[Fields.FILE] = rec1[Fields.FILE]
         else:  # None of the records is curated
             raise FileNotFoundError
 
         record = colrev.record.Record(data=updated_record)
         validation_info = self.pdf_metadata_validation.validates_based_on_metadata(
-            review_manager=dedupe_operation.review_manager,
             record=record,
         )
         return validation_info
@@ -411,7 +403,6 @@ class CurationDedupe(JsonSchemaMixin):
         decision_list: list,
         curated_record_ids: list,
         pdf_record_ids: list,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
     ) -> None:
         rec1 = records[tuple_to_process[0]]
         rec2 = records[tuple_to_process[1]]
@@ -420,15 +411,14 @@ class CurationDedupe(JsonSchemaMixin):
         # curated_records and pdf_same_toc_records
         # Note : this should also ensure that pdf groups are not merged
         # until a corresponding curated record group is available.
-        if (rec1["ID"] in curated_record_ids and rec2["ID"] in curated_record_ids) or (
-            rec1["ID"] in pdf_record_ids and rec2["ID"] in pdf_record_ids
-        ):
+        if (
+            rec1[Fields.ID] in curated_record_ids
+            and rec2[Fields.ID] in curated_record_ids
+        ) or (rec1[Fields.ID] in pdf_record_ids and rec2[Fields.ID] in pdf_record_ids):
             return
 
         try:
-            validation_info = self.__validate_potential_merge(
-                rec1=rec1, rec2=rec2, dedupe_operation=dedupe_operation
-            )
+            validation_info = self.__validate_potential_merge(rec1=rec1, rec2=rec2)
         except FileNotFoundError:
             return
 
@@ -437,10 +427,10 @@ class CurationDedupe(JsonSchemaMixin):
         ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
         if validation_info["validates"] or overlapping_colrev_ids:
             # Note : make sure that we merge into the CURATED record
-            if "file" in rec1:
+            if Fields.FILE in rec1:
                 if tuple_to_process[0] in [x["ID1"] for x in decision_list]:
                     return
-                if rec1["colrev_status"] < rec2["colrev_status"]:
+                if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
                     decision_list.append(
                         {
                             "ID1": tuple_to_process[1],
@@ -459,7 +449,7 @@ class CurationDedupe(JsonSchemaMixin):
             else:
                 if tuple_to_process[1] in [x["ID1"] for x in decision_list]:
                     return
-                if rec1["colrev_status"] < rec2["colrev_status"]:
+                if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
                     decision_list.append(
                         {
                             "ID1": tuple_to_process[1],
@@ -483,13 +473,12 @@ class CurationDedupe(JsonSchemaMixin):
         toc_item: dict,
         records: dict,
         source_records: list,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
     ) -> None:
         processed_same_toc_records = [
             r
             for r in records.values()
             if all(r.get(k, "NA") == v for k, v in toc_item.items())
-            and r["colrev_status"]
+            and r[Fields.STATUS]
             not in [
                 colrev.record.RecordState.md_imported,
                 colrev.record.RecordState.md_needs_manual_preparation,
@@ -498,7 +487,7 @@ class CurationDedupe(JsonSchemaMixin):
             ]
             and not any(
                 self.settings.selected_source.replace("data/search/", "") in co
-                for co in r["colrev_origin"]
+                for co in r[Fields.ORIGIN]
             )
         ]
         pdf_same_toc_records = [
@@ -524,8 +513,8 @@ class CurationDedupe(JsonSchemaMixin):
             min_similarity=0.7,
         )
 
-        curated_record_ids = [r["ID"] for r in processed_same_toc_records]
-        pdf_record_ids = [r["ID"] for r in pdf_same_toc_records]
+        curated_record_ids = [r[Fields.ID] for r in processed_same_toc_records]
+        pdf_record_ids = [r[Fields.ID] for r in pdf_same_toc_records]
         for tuple_to_process in tuples_to_process:
             self.__process_pdf_tuple(
                 tuple_to_process=tuple_to_process,
@@ -533,21 +522,18 @@ class CurationDedupe(JsonSchemaMixin):
                 decision_list=decision_list,
                 curated_record_ids=curated_record_ids,
                 pdf_record_ids=pdf_record_ids,
-                dedupe_operation=dedupe_operation,
             )
 
-    def __dedupe_pdf_source(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, records: dict
-    ) -> list[dict]:
-        dedupe_operation.review_manager.logger.info("Processing as a pdf source")
+    def __dedupe_pdf_source(self, *, records: dict) -> list[dict]:
+        self.review_manager.logger.info("Processing as a pdf source")
 
         source_records = [
             r
             for r in records.values()
-            if r["colrev_status"] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
-                for co in r["colrev_origin"]
+                for co in r[Fields.ORIGIN]
             )
         ]
 
@@ -560,80 +546,68 @@ class CurationDedupe(JsonSchemaMixin):
                 toc_item=toc_item,
                 records=records,
                 source_records=source_records,
-                dedupe_operation=dedupe_operation,
             )
 
         return decision_list
 
-    def __pdf_source_selected(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
-    ) -> bool:
+    def __pdf_source_selected(self) -> bool:
         pdf_source = False
         relevant_source = [
             s
-            for s in dedupe_operation.review_manager.settings.sources
+            for s in self.review_manager.settings.sources
             if str(s.filename) == self.settings.selected_source
         ]
         if len(relevant_source) > 0:
             pdf_source = "colrev.files_dir" == relevant_source[0].endpoint
         return pdf_source
 
-    def __first_source_selected(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe
-    ) -> bool:
+    def __first_source_selected(self) -> bool:
         return (
             self.settings.selected_source
-            == dedupe_operation.review_manager.settings.dedupe.dedupe_package_endpoints[
-                0
-            ]["selected_source"]
+            == self.review_manager.settings.dedupe.dedupe_package_endpoints[0][
+                "selected_source"
+            ]
         )
 
+    # pylint: disable=unused-argument
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Run the curation dedupe procedure"""
 
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         records = self.__prep_records(records=records)
 
         # first_source should be the highest quality source
         # (which moves to md_processed first)
-        first_source = self.__first_source_selected(dedupe_operation=dedupe_operation)
+        first_source = self.__first_source_selected()
 
-        self.__warn_on_missing_sources(
-            dedupe_operation=dedupe_operation, first_source=first_source
-        )
+        self.__warn_on_missing_sources(first_source=first_source)
 
         if first_source:
-            self.__add_first_source_if_deduplicated(
-                dedupe_operation=dedupe_operation, records=records
-            )
+            self.__add_first_source_if_deduplicated(records=records)
             return
 
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             "Identify duplicates between "
             f"curated_records and {self.settings.selected_source} (within toc_items)"
         )
 
         decision_list: list[dict] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
-        if not self.__pdf_source_selected(dedupe_operation=dedupe_operation):
-            decision_list = self.__dedupe_source(
-                dedupe_operation=dedupe_operation, records=records
-            )
+        if not self.__pdf_source_selected():
+            decision_list = self.__dedupe_source(records=records)
         else:
-            decision_list = self.__dedupe_pdf_source(
-                dedupe_operation=dedupe_operation, records=records
-            )
+            decision_list = self.__dedupe_pdf_source(records=records)
 
         # Note : dedupe.apply_merges reloads the records and
         # thereby discards previous changes
         if len(decision_list) == 0:
-            dedupe_operation.review_manager.logger.info(
-                f"{colors.GREEN}No merge-candidates identified between sets{colors.END}"
+            self.review_manager.logger.info(
+                f"{Colors.GREEN}No merge-candidates identified between sets{Colors.END}"
             )
             return
 
-        dedupe_operation.review_manager.logger.info(
-            f"{colors.GREEN}Duplicates identified{colors.END}"
+        self.review_manager.logger.info(
+            f"{Colors.GREEN}Duplicates identified{Colors.END}"
         )
 
         # decision_list =
@@ -641,13 +615,13 @@ class CurationDedupe(JsonSchemaMixin):
 
         preferred_masterdata_sources = [
             s
-            for s in dedupe_operation.review_manager.settings.sources
+            for s in self.review_manager.settings.sources
             if s.endpoint != "colrev.files_dir"
         ]
-        dedupe_operation.apply_merges(
+        self.dedupe_operation.apply_merges(
             results=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
-        dedupe_operation.review_manager.create_commit(
+        self.review_manager.create_commit(
             msg="Merge duplicate records",
         )

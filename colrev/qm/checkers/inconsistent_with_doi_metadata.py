@@ -7,6 +7,9 @@ from thefuzz import fuzz
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -14,8 +17,15 @@ import colrev.qm.quality_model
 class InconsistentWithDOIMetadataChecker:
     """The InconsistentWithDOIMetadataChecker"""
 
-    msg = "inconsistent-with-doi-metadata"
-    __fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
+    msg = DefectCodes.INCONSISTENT_WITH_DOI_METADATA
+    __fields_to_check = [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.JOURNAL,
+        Fields.YEAR,
+        Fields.VOLUME,
+        Fields.NUMBER,
+    ]
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -26,26 +36,23 @@ class InconsistentWithDOIMetadataChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""
 
-        if "doi" not in record.data:
+        if Fields.DOI not in record.data:
             return
-        if "doi" in record.data.get("colrev_data_provenance", {}):
-            if (
-                "md_curated.bib"
-                in record.data["colrev_data_provenance"]["doi"]["source"]
-            ):
+        if Fields.DOI in record.data.get(Fields.D_PROV, {}):
+            if "md_curated.bib" in record.data[Fields.D_PROV][Fields.DOI]["source"]:
                 return
 
         if self.__doi_metadata_conflicts(record=record):
-            record.add_masterdata_provenance_note(key="doi", note=self.msg)
+            record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="doi", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
 
     def __doi_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
         record_copy = record.copy_prep_rec()
 
         try:
             crossref_md = crossref_connector.CrossrefSearchSource.query_doi(
-                doi=record_copy.data["doi"], etiquette=self.__etiquette
+                doi=record_copy.data[Fields.DOI], etiquette=self.__etiquette
             )
 
             for key, value in crossref_md.data.items():
@@ -55,9 +62,9 @@ class InconsistentWithDOIMetadataChecker:
                     continue
                 if key not in record.data:
                     continue
-                if record.data[key] == "UNKNOWN":
+                if record.data[key] == FieldValues.UNKNOWN:
                     continue
-                if key not in ["author", "title", "journal"]:
+                if key not in [Fields.AUTHOR, Fields.TITLE, Fields.JOURNAL]:
                     continue
                 if len(crossref_md.data[key]) < 5 or len(record.data[key]) < 5:
                     continue

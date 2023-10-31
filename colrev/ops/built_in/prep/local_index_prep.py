@@ -12,6 +12,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -54,8 +55,8 @@ class LocalIndexPrep(JsonSchemaMixin):
         # don't move to  jour_iss_number_year prep
         # because toc-retrieval relies on adequate toc items!
         if (
-            "volume" in record.data
-            and "number" in record.data
+            Fields.VOLUME in record.data
+            and Fields.NUMBER in record.data
             and not record.masterdata_is_curated()
         ):
             # Note : cannot use local_index as an attribute of PrepProcess

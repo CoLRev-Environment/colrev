@@ -135,8 +135,6 @@ class SearchType(Enum):
     API = "API"  # Keyword-searches
     DB = "DB"  # search-results-file with search query
     TOC = "TOC"
-    # Note : backward/forward searches are based on APIs/tools by definition.
-    # otherwise, use OTHER
     BACKWARD_SEARCH = "BACKWARD_SEARCH"
     FORWARD_SEARCH = "FORWARD_SEARCH"
     FILES = "FILES"  # Replaces PDFS
@@ -170,6 +168,7 @@ class SearchSource(JsonSchemaMixin):
     search_parameters: dict
     comment: typing.Optional[str]
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -220,6 +219,10 @@ class SearchSource(JsonSchemaMixin):
 
     def get_query(self) -> str:
         """Get the query filepath"""
+        if "query_file" not in self.search_parameters:
+            return "no query_file"
+        if not Path(self.search_parameters["query_file"]).is_file():
+            return "query_file does not exist"
         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
 
     def get_dict(self) -> dict:

@@ -16,7 +16,10 @@ from tqdm import tqdm
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -146,6 +149,18 @@ class Upgrade(colrev.operation.Operation):
                 "script": self.__migrate_0_10_1,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.10.1"),
+                "target_version": CoLRevVersion("0.10.2"),
+                "script": self.__migrate_0_10_2,
+                "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.10.2"),
+                "target_version": CoLRevVersion("0.10.3"),
+                "script": self.__migrate_0_10_3,
+                "released": True,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -204,7 +219,7 @@ class Upgrade(colrev.operation.Operation):
             for line in filedata.decode("utf-8").split("\n"):
                 if str(selected_version) in line:
                     active = True
-                    print(f"{colors.ORANGE}Release notes v{selected_version}")
+                    print(f"{Colors.ORANGE}Release notes v{selected_version}")
                     continue
                 if line.startswith("## "):
                     active = False
@@ -212,8 +227,8 @@ class Upgrade(colrev.operation.Operation):
                     print(line)
                     printed = True
         if not printed:
-            print(f"{colors.ORANGE}No release notes")
-        print(f"{colors.END}")
+            print(f"{Colors.ORANGE}No release notes")
+        print(f"{Colors.END}")
 
     def __migrate_0_7_0(self) -> bool:
         pre_commit_contents = Path(".pre-commit-config.yaml").read_text(
@@ -319,6 +334,7 @@ class Upgrade(colrev.operation.Operation):
 
             pdf_path = Path(record_dict["file"])
             colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
+            # pylint: disable=colrev-missed-constant-usage
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
         self.review_manager.dataset.save_records_dict(records=records)
@@ -355,35 +371,35 @@ class Upgrade(colrev.operation.Operation):
         # delete the masterdata provenance notes and apply the new quality model
         # replace not_missing > not-missing
         for record_dict in tqdm(records.values()):
-            if "colrev_masterdata_provenance" not in record_dict:
+            if Fields.MD_PROV not in record_dict:
                 continue
             not_missing_fields = []
-            for key, prov in record_dict["colrev_masterdata_provenance"].items():
-                if "not_missing" in prov["note"]:
+            for key, prov in record_dict[Fields.MD_PROV].items():
+                if DefectCodes.NOT_MISSING in prov["note"]:
                     not_missing_fields.append(key)
                 prov["note"] = ""
             for key in not_missing_fields:
-                record_dict["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+                record_dict[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
             if "cited_by_id" in record_dict:
                 del record_dict["cited_by_id"]
             if "tei_id" in record_dict:
                 del record_dict["tei_id"]
-            if "colrev_data_provenance" in record_dict:
-                if "cited_by_file" in record_dict["colrev_data_provenance"]:
-                    del record_dict["colrev_data_provenance"]["cited_by_file"]
-                if "cited_by_id" in record_dict["colrev_data_provenance"]:
-                    del record_dict["colrev_data_provenance"]["cited_by_id"]
-                if "tei_id" in record_dict["colrev_data_provenance"]:
-                    del record_dict["colrev_data_provenance"]["tei_id"]
+            if Fields.D_PROV in record_dict:
+                if "cited_by_file" in record_dict[Fields.D_PROV]:
+                    del record_dict[Fields.D_PROV]["cited_by_file"]
+                if "cited_by_id" in record_dict[Fields.D_PROV]:
+                    del record_dict[Fields.D_PROV]["cited_by_id"]
+                if "tei_id" in record_dict[Fields.D_PROV]:
+                    del record_dict[Fields.D_PROV]["tei_id"]
 
             record = colrev.record.Record(data=record_dict)
-            prior_state = record.data["colrev_status"]
-            record.update_masterdata_provenance(qm=quality_model)
+            prior_state = record.data[Fields.STATUS]
+            record.run_quality_model(qm=quality_model)
             if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
-                record.data[  # pylint: disable=direct-status-assign
-                    "colrev_status"
+                record.data[  # pylint: disable=colrev-direct-status-assign
+                    Fields.STATUS
                 ] = colrev.record.RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)
         return self.repo.is_dirty()
@@ -391,12 +407,12 @@ class Upgrade(colrev.operation.Operation):
     def __migrate_0_8_4(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
-            if "editor" not in record.get("colrev_data_provenance", {}):
+            if Fields.EDITOR not in record.get(Fields.D_PROV, {}):
                 continue
-            ed_val = record["colrev_data_provenance"]["editor"]
-            del record["colrev_data_provenance"]["editor"]
-            if "CURATED" not in record["colrev_masterdata_provenance"]:
-                record["colrev_masterdata_provenance"]["editor"] = ed_val
+            ed_val = record[Fields.D_PROV][Fields.EDITOR]
+            del record[Fields.D_PROV][Fields.EDITOR]
+            if FieldValues.CURATED not in record[Fields.MD_PROV]:
+                record[Fields.MD_PROV][Fields.EDITOR] = ed_val
 
         self.review_manager.dataset.save_records_dict(records=records)
 
@@ -410,23 +426,22 @@ class Upgrade(colrev.operation.Operation):
         self.__save_settings(settings)
         return self.repo.is_dirty()
 
+    # pylint: disable=too-many-branches
     def __migrate_0_9_3(self) -> bool:
         settings = self.__load_settings_dict()
         for source in settings["sources"]:
             if source["endpoint"] == "colrev.crossref":
-                if "issn" not in source["search_parameters"].get("scope", {}):
+                if Fields.ISSN not in source["search_parameters"].get("scope", {}):
                     continue
-                if isinstance(source["search_parameters"]["scope"]["issn"], str):
-                    source["search_parameters"]["scope"]["issn"] = [
-                        source["search_parameters"]["scope"]["issn"]
+                if isinstance(source["search_parameters"]["scope"][Fields.ISSN], str):
+                    source["search_parameters"]["scope"][Fields.ISSN] = [
+                        source["search_parameters"]["scope"][Fields.ISSN]
                     ]
 
         self.__save_settings(settings)
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            # TODO : call methods in repare.py
-
             if "pubmedid" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="pubmedid", new_key="colrev.pubmed.pubmedid")
@@ -453,17 +468,17 @@ class Upgrade(colrev.operation.Operation):
 
             if "dblp_key" in record_dict:
                 record = colrev.record.Record(data=record_dict)
-                record.rename_field(key="dblp_key", new_key="colrev.dblp.dblp_key")
+                record.rename_field(key="dblp_key", new_key=Fields.DBLP_KEY)
             if "wos_accession_number" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(
                     key="wos_accession_number",
-                    new_key="colrev.web_of_science.unique-id",
+                    new_key=Fields.WEB_OF_SCIENCE_ID,
                 )
             if "sem_scholar_id" in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(
-                    key="sem_scholar_id", new_key="colrev.semantic_scholar.id"
+                    key="sem_scholar_id", new_key=Fields.SEMANTIC_SCHOLAR_ID
                 )
 
             if "openalex_id" in record_dict:
@@ -473,6 +488,7 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         return self.repo.is_dirty()
 
+    # pylint: disable=too-many-branches
     def __migrate_0_10_1(self) -> bool:
         prep_replacements = {
             "colrev.open_alex_prep": "colrev.open_alex",
@@ -519,8 +535,40 @@ class Upgrade(colrev.operation.Operation):
                 source["search_type"] = "FILES"
 
         self.__save_settings(settings)
+        return self.repo.is_dirty()
 
-        return False
+    def __migrate_0_10_2(self) -> bool:
+        paper_md_path = Path("data/data/paper.md")
+        if paper_md_path.is_file():
+            paper_md_content = paper_md_path.read_text(encoding="utf-8")
+            paper_md_content = paper_md_content.replace(
+                "data/records.bib", "data/data/sample_references.bib"
+            )
+            paper_md_path.write_text(paper_md_content, encoding="utf-8")
+            self.repo.index.add([str(paper_md_path)])
+
+        return self.repo.is_dirty()
+
+    def __migrate_0_10_3(self) -> bool:
+        settings = self.__load_settings_dict()
+        if settings["project"]["review_type"] == "curated_masterdata":
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path(
+                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                ),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.repo.index.add([".github/workflows/colrev_update.yml"])
+        else:
+            Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
+            colrev.env.utils.retrieve_package_file(
+                template_file=Path("template/init/colrev_update.yml"),
+                target=Path(".github/workflows/colrev_update.yml"),
+            )
+            self.repo.index.add([".github/workflows/colrev_update.yml"])
+
+        return self.repo.is_dirty()
 
 
 # Note: we can ask users to make decisions (when defaults are not clear)

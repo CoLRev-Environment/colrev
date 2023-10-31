@@ -1,5 +1,29 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files"""
+"""Convenience functions to load bib files
+
+Usage::
+
+    import colrev.ops.load_utils_bib
+
+    records = colrev.ops.load_utils_bib.load_bib_file(
+        load_operation=load_operation, source=self.search_source
+    )
+
+Example BibTeX record::
+
+    @article{Guo2021,
+        title    = {How Trust Leads to Commitment on Microsourcing Platforms},
+        author   = {Guo, Wenbo and Straub, Detmar W. and Zhang, Pengzhu and Cai, Zhao},
+        journal  = {MIS Quarterly},
+        year     = {2021}
+        volume   = {45},
+        number   = {3},
+        pages    = {1309--1348},
+        url      = {https://aisel.aisnet.org/misq/vol45/iss3/13},
+        doi      = {10.25300/MISQ/2021/16100},
+    }
+
+"""
 from __future__ import annotations
 
 import os
@@ -8,6 +32,7 @@ import typing
 from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -152,7 +177,7 @@ def load_bib_file(
                 while line:
                     if "@" in line[:3]:
                         record_id = line[line.find("{") + 1 : line.rfind(",")]
-                        if record_id not in [x["ID"] for x in records]:
+                        if record_id not in [x[Fields.ID] for x in records]:
                             load_operation.review_manager.logger.error(
                                 f"{record_id} not imported"
                             )
@@ -163,12 +188,12 @@ def load_bib_file(
     ) -> None:
         if len(records.items()) <= 3:
             return
-        if not any("author" in r for r in records.values()):
+        if not any(Fields.AUTHOR in r for r in records.values()):
             raise colrev_exceptions.ImportException(
                 f"Import failed (no record with author field): {source.filename.name}"
             )
 
-        if not any("title" in r for ID, r in records.items()):
+        if not any(Fields.TITLE in r for ID, r in records.items()):
             raise colrev_exceptions.ImportException(
                 f"Import failed (no record with title field): {source.filename.name}"
             )
@@ -189,7 +214,7 @@ def load_bib_file(
     def lower_case_keys(*, records: dict) -> None:
         for record in records.values():
             for key in list(record.keys()):
-                if key in ["ID", "ENTRYTYPE"]:
+                if key in [Fields.ID, Fields.ENTRYTYPE]:
                     continue
                 if not key.islower():
                     record[key.lower()] = record.pop(key)

@@ -15,6 +15,7 @@ from PyPDF2 import PdfFileReader
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -48,7 +49,7 @@ class PDFLastPage(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by removing additional materials (if any)"""
 
-        if not record.data["file"].endswith(".pdf"):
+        if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
@@ -114,15 +115,15 @@ class PDFLastPage(JsonSchemaMixin):
 
             return list(set(last_pages))
 
-        last_pages = __get_last_pages(pdf=record.data["file"])
+        last_pages = __get_last_pages(pdf=record.data[Fields.FILE])
         if not last_pages:
             return record.data
         if last_pages:
             original = pdf_prep_operation.review_manager.path / Path(
-                record.data["file"]
+                record.data[Fields.FILE]
             )
             file_copy = pdf_prep_operation.review_manager.path / Path(
-                record.data["file"].replace(".pdf", "_wo_lp.pdf")
+                record.data[Fields.FILE].replace(".pdf", "_wo_lp.pdf")
             )
             shutil.copy(original, file_copy)
 
@@ -132,6 +133,6 @@ class PDFLastPage(JsonSchemaMixin):
                 save_to_path=lp_path,
             )
             pdf_prep_operation.review_manager.report_logger.info(
-                f'removed last page for ({record.data["ID"]})'
+                f"removed last page for ({record.data[Fields.ID]})"
             )
         return record.data

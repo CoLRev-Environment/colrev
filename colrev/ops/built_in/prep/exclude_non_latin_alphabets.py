@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -63,10 +64,10 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
         # TB:D join or check independently?
         str_to_check = " ".join(
             [
-                record.data.get("title", ""),
-                record.data.get("author", ""),
-                record.data.get("journal", ""),
-                record.data.get("booktitle", ""),
+                record.data.get(Fields.TITLE, ""),
+                record.data.get(Fields.AUTHOR, ""),
+                record.data.get(Fields.JOURNAL, ""),
+                record.data.get(Fields.BOOKTITLE, ""),
             ]
         )
         if mostly_latin_alphabet(str_to_check):

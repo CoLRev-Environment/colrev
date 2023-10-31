@@ -112,6 +112,7 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    dev_docs/setup
+   dev_docs/linters
    dev_docs/api
    dev_docs/extensions
    dev_docs/dev_status

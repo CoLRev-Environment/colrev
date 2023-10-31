@@ -1,5 +1,12 @@
 #! /usr/bin/env python
-"""Convenience functions to load tabular files (csv, xlsx)"""
+"""Convenience functions to load tabular files (csv, xlsx)
+
+Example csv records::
+
+    title;author;year;
+    How Trust Leads to Commitment;Guo, W. and Straub, D.;2021;
+
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -9,6 +16,8 @@ import pandas as pd
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.settings
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -23,51 +32,57 @@ class TableLoadUtility:
 
     @classmethod
     def __rename_fields(cls, *, record_dict: dict) -> dict:
-        if "issue" in record_dict and "number" not in record_dict:
-            record_dict["number"] = record_dict["issue"]
-            if record_dict["number"] == "no issue":
-                del record_dict["number"]
+        if "issue" in record_dict and Fields.NUMBER not in record_dict:
+            record_dict[Fields.NUMBER] = record_dict["issue"]
+            if record_dict[Fields.NUMBER] == "no issue":
+                del record_dict[Fields.NUMBER]
             del record_dict["issue"]
 
-        if "authors" in record_dict and "author" not in record_dict:
-            record_dict["author"] = record_dict["authors"]
+        if "authors" in record_dict and Fields.AUTHOR not in record_dict:
+            record_dict[Fields.AUTHOR] = record_dict["authors"]
             del record_dict["authors"]
 
-        if "publication_year" in record_dict and "year" not in record_dict:
-            record_dict["year"] = record_dict["publication_year"]
+        if "publication_year" in record_dict and Fields.YEAR not in record_dict:
+            record_dict[Fields.YEAR] = record_dict["publication_year"]
             del record_dict["publication_year"]
 
         # Note: this is a simple heuristic:
         if (
             "journal/book" in record_dict
-            and "journal" not in record_dict
-            and "doi" in record_dict
+            and Fields.JOURNAL not in record_dict
+            and Fields.DOI in record_dict
         ):
-            record_dict["journal"] = record_dict["journal/book"]
+            record_dict[Fields.JOURNAL] = record_dict["journal/book"]
             del record_dict["journal/book"]
 
         return record_dict
 
     @classmethod
     def __set_entrytype(cls, *, record_dict: dict) -> dict:
-        record_dict["ENTRYTYPE"] = "misc"
+        record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
         if "type" in record_dict:
-            record_dict["ENTRYTYPE"] = record_dict["type"]
+            record_dict[Fields.ENTRYTYPE] = record_dict["type"]
             del record_dict["type"]
-            if record_dict["ENTRYTYPE"] == "inproceedings":
-                if "journal" in record_dict and "booktitle" not in record_dict:
-                    record_dict["booktitle"] = record_dict["journal"]
-                    del record_dict["journal"]
-            if record_dict["ENTRYTYPE"] == "article":
-                if "booktitle" in record_dict and "journal" not in record_dict:
-                    record_dict["journal"] = record_dict["booktitle"]
-                    del record_dict["booktitle"]
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+                if (
+                    Fields.JOURNAL in record_dict
+                    and Fields.BOOKTITLE not in record_dict
+                ):
+                    record_dict[Fields.BOOKTITLE] = record_dict[Fields.JOURNAL]
+                    del record_dict[Fields.JOURNAL]
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                if (
+                    Fields.BOOKTITLE in record_dict
+                    and Fields.JOURNAL not in record_dict
+                ):
+                    record_dict[Fields.JOURNAL] = record_dict[Fields.BOOKTITLE]
+                    del record_dict[Fields.BOOKTITLE]
 
-        if "ENTRYTYPE" not in record_dict:
-            if record_dict.get("journal", "") != "":
-                record_dict["ENTRYTYPE"] = "article"
-            if record_dict.get("booktitle", "") != "":
-                record_dict["ENTRYTYPE"] = "inproceedings"
+        if Fields.ENTRYTYPE not in record_dict:
+            if record_dict.get(Fields.JOURNAL, "") != "":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            if record_dict.get(Fields.BOOKTITLE, "") != "":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
         return record_dict
 
     @classmethod
@@ -85,16 +100,16 @@ class TableLoadUtility:
     def __get_records_dict(cls, *, records: list) -> dict:
         next_id = 1
         for record_dict in records:
-            if "ID" not in record_dict:
+            if Fields.ID not in record_dict:
                 if "citation_key" in record_dict:
-                    record_dict["ID"] = record_dict["citation_key"]
+                    record_dict[Fields.ID] = record_dict["citation_key"]
                 else:
-                    record_dict["ID"] = next_id
+                    record_dict[Fields.ID] = next_id
                     next_id += 1
             record_dict = cls.__parse_record_dict(record_dict=record_dict)
 
-        if all("ID" in r for r in records):
-            records_dict = {r["ID"]: r for r in records}
+        if all(Fields.ID in r for r in records):
+            records_dict = {r[Fields.ID]: r for r in records}
         else:
             records_dict = {}
             for i, record in enumerate(records):
@@ -102,6 +117,7 @@ class TableLoadUtility:
 
         return records_dict
 
+    # pylint: disable=colrev-missed-constant-usage
     @classmethod
     def __drop_fields(cls, *, records_dict: dict) -> dict:
         for r_dict in records_dict.values():
@@ -123,8 +139,8 @@ class TableLoadUtility:
 
             if "author_count" in r_dict:
                 del r_dict["author_count"]
-            if "entrytype" in r_dict:
-                del r_dict["entrytype"]
+            if "ENTRYTYPE" in r_dict:
+                del r_dict["ENTRYTYPE"]
             if "citation_key" in r_dict:
                 del r_dict["citation_key"]
 
@@ -137,6 +153,7 @@ class TableLoadUtility:
                 record["author"] = record["author"].replace("; ", " and ")
         return records_dict
 
+    # pylint: disable=colrev-missed-constant-usage
     @classmethod
     def preprocess_records(cls, *, records: list) -> dict:
         """Preprocess records imported from a table"""
@@ -192,9 +209,9 @@ class CSVLoader:
                 _id = str(i + 1).zfill(6)
             else:
                 _id = record[self.unique_id_field].replace(" ", "").replace(";", "_")
-            record["ID"] = _id
+            record[Fields.ID] = _id
 
-        records = {r["ID"]: r for r in entries.values()}
+        records = {r[Fields.ID]: r for r in entries.values()}
 
         return records
 
@@ -244,8 +261,8 @@ class ExcelLoader:
                 _id = str(i + 1).zfill(6)
             else:
                 _id = record[self.unique_id_field].replace(" ", "").replace(";", "_")
-            record["ID"] = _id
+            record[Fields.ID] = _id
 
-        records = {r["ID"]: r for r in entries.values()}
+        records = {r[Fields.ID]: r for r in entries.values()}
 
         return records

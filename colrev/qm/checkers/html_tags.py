@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -12,14 +14,14 @@ import colrev.qm.quality_model
 class HTMLTagChecker:
     """The HTMLTagChecker"""
 
-    msg = "html-tags"
+    msg = DefectCodes.HTML_TAGS
     __fields_to_check = [
-        "title",
-        "journal",
-        "booktitle",
-        "author",
-        "publisher",
-        "editor",
+        Fields.TITLE,
+        Fields.JOURNAL,
+        Fields.BOOKTITLE,
+        Fields.AUTHOR,
+        Fields.PUBLISHER,
+        Fields.EDITOR,
     ]
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:

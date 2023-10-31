@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -27,6 +28,7 @@ class ScopusSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.scopus"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [colrev.settings.SearchType.DB]
 
@@ -42,8 +44,9 @@ class ScopusSearchSource(JsonSchemaMixin):
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
+        self.review_manager = source_operation.review_manager
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.quality_model = source_operation.review_manager.get_qm()
+        self.quality_model = self.review_manager.get_qm()
         self.operation = source_operation
 
     @classmethod
@@ -106,13 +109,13 @@ class ScopusSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Scopus"""
 
-        if "conference" == record.data["ENTRYTYPE"]:
-            record.data["ENTRYTYPE"] = "inproceedings"
+        if "conference" == record.data[Fields.ENTRYTYPE]:
+            record.data[Fields.ENTRYTYPE] = "inproceedings"
 
-        if "book" == record.data["ENTRYTYPE"]:
-            if "journal" in record.data and "booktitle" not in record.data:
-                record.rename_field(key="title", new_key="booktitle")
-                record.rename_field(key="journal", new_key="title")
+        if "book" == record.data[Fields.ENTRYTYPE]:
+            if Fields.JOURNAL in record.data and Fields.BOOKTITLE not in record.data:
+                record.rename_field(key=Fields.TITLE, new_key=Fields.BOOKTITLE)
+                record.rename_field(key=Fields.JOURNAL, new_key=Fields.TITLE)
 
         if "colrev.scopus.document_type" in record.data:
             if record.data["colrev.scopus.document_type"] == "Conference Paper":
@@ -138,24 +141,26 @@ class ScopusSearchSource(JsonSchemaMixin):
                 record.data["colrev.scopus.Start_Page"] != "nan"
                 and record.data["colrev.scopus.End_Page"] != "nan"
             ):
-                record.data["pages"] = (
+                record.data[Fields.PAGES] = (
                     record.data["colrev.scopus.Start_Page"]
                     + "--"
                     + record.data["colrev.scopus.End_Page"]
                 )
-                record.data["pages"] = record.data["pages"].replace(".0", "")
+                record.data[Fields.PAGES] = record.data[Fields.PAGES].replace(".0", "")
                 record.remove_field(key="colrev.scopus.Start_Page")
                 record.remove_field(key="colrev.scopus.End_Page")
 
         if "colrev.scopus.note" in record.data:
             if "cited By " in record.data["colrev.scopus.note"]:
-                record.rename_field(key="colrev.scopus.note", new_key="cited_by")
-                record.data["cited_by"] = record.data["cited_by"].replace(
+                record.rename_field(key="colrev.scopus.note", new_key=Fields.CITED_BY)
+                record.data[Fields.CITED_BY] = record.data[Fields.CITED_BY].replace(
                     "cited By ", ""
                 )
 
-        if "author" in record.data:
-            record.data["author"] = record.data["author"].replace("; ", " and ")
+        if Fields.AUTHOR in record.data:
+            record.data[Fields.AUTHOR] = record.data[Fields.AUTHOR].replace(
+                "; ", " and "
+            )
 
         record.remove_field(key="colrev.scopus.source")
 

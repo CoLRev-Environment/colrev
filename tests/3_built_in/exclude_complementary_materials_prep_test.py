@@ -6,6 +6,7 @@ import pytest
 
 import colrev.ops.built_in.prep.exclude_complementary_materials
 import colrev.ops.prep
+from colrev.constants import Fields
 
 ECMPrep = (
     colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep
@@ -31,19 +32,19 @@ PRESCREEN_INCLUDED = False
     [
         (
             {
-                "title": "About our authors",
+                Fields.TITLE: "About our authors",
             },
             PRESCREEN_EXCLUDED,
         ),
         (
             {
-                "title": "Editorial board",
+                Fields.TITLE: "Editorial board",
             },
             PRESCREEN_EXCLUDED,
         ),
         (
             {
-                "title": "A survey of dditorial boards",
+                Fields.TITLE: "A survey of dditorial boards",
             },
             PRESCREEN_INCLUDED,
         ),
@@ -60,7 +61,7 @@ def test_prep_exclude_complementary_materials(
     actual = returned_record.data
     expected = deepcopy(input_value)
     if expected_outcome == PRESCREEN_EXCLUDED:
-        expected["colrev_status"] = colrev.record.RecordState.rev_prescreen_excluded
-        expected["prescreen_exclusion"] = "complementary material"
+        expected[Fields.STATUS] = colrev.record.RecordState.rev_prescreen_excluded
+        expected[Fields.PRESCREEN_EXCLUSION] = "complementary material"
 
     assert expected == actual

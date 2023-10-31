@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -52,8 +53,8 @@ class CiteAsPrep(JsonSchemaMixin):
         retrieved_record: dict = {}
         data = json.loads(json_str)
 
-        if "author" in data["metadata"]:
-            authors = data["metadata"]["author"]
+        if Fields.AUTHOR in data["metadata"]:
+            authors = data["metadata"][Fields.AUTHOR]
             authors_string = ""
             for author in authors:
                 authors_string += author.get("family", "") + ", "
@@ -71,8 +72,8 @@ class CiteAsPrep(JsonSchemaMixin):
             retrieved_record.update(note=data["metadata"]["note"])
         if "type" in data["metadata"]:
             retrieved_record.update(ENTRYTYPE=data["metadata"]["type"])
-        if "year" in data["metadata"]:
-            retrieved_record.update(year=data["metadata"]["year"])
+        if Fields.YEAR in data["metadata"]:
+            retrieved_record.update(year=data["metadata"][Fields.YEAR])
         if "DOI" in data["metadata"]:
             retrieved_record.update(doi=data["metadata"]["DOI"])
 
@@ -85,9 +86,9 @@ class CiteAsPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare the record based on citeas"""
 
-        if record.data.get("ENTRYTYPE", "NA") not in ["misc", "software"]:
+        if record.data.get(Fields.ENTRYTYPE, "NA") not in ["misc", "software"]:
             return record
-        if "title" not in record.data:
+        if Fields.TITLE not in record.data:
             return record
 
         try:

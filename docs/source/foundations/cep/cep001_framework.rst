@@ -480,7 +480,7 @@ CoLRev builds on a comprehensive vision of reusing community-curated data. This 
 - Fingerprints (hashes) to identify and verify PDFs
 - Any other label or data associated with the curated records
 
-The colrev_cml_assistant extension provides an environment supporting researchers in curating shared repositories based on crowdsourcing and machine-learning.
+The colrev_cml_assistant package provides an environment supporting researchers in curating shared repositories based on crowdsourcing and machine-learning.
 
 .. _curation_layers:
 

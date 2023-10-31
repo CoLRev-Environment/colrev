@@ -48,6 +48,7 @@ colrev.record.Record
       ~Record.has_quality_defects
       ~Record.masterdata_is_curated
       ~Record.merge
+      ~Record.prefix_non_standardized_field_keys
       ~Record.prescreen_exclude
       ~Record.print_citation_format
       ~Record.print_diff_pair
@@ -57,6 +58,7 @@ colrev.record.Record
       ~Record.remove_masterdata_provenance_note
       ~Record.rename_field
       ~Record.reset_pdf_provenance_notes
+      ~Record.run_quality_model
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
       ~Record.set_pages_in_pdf
@@ -65,7 +67,6 @@ colrev.record.Record
       ~Record.shares_origins
       ~Record.update_by_record
       ~Record.update_field
-      ~Record.update_masterdata_provenance
 
 
 
@@ -76,11 +77,6 @@ colrev.record.Record
    .. autosummary::
 
       ~Record.dict_fields_keys
-      ~Record.identifying_field_keys
       ~Record.list_fields_keys
       ~Record.pp
-      ~Record.preferred_sources
-      ~Record.provenance_keys
-      ~Record.standardized_field_keys
-      ~Record.time_variant_fields
       ~Record.data

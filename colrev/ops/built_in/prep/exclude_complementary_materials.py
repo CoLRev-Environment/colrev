@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -65,15 +66,17 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
 
         if (
             any(
-                complementary_materials_keyword in record.data.get("title", "").lower()
+                complementary_materials_keyword
+                in record.data.get(Fields.TITLE, "").lower()
                 for complementary_materials_keyword in self.complementary_materials_keywords
             )
             or any(
-                complementary_materials_string == record.data.get("title", "").lower()
+                complementary_materials_string
+                == record.data.get(Fields.TITLE, "").lower()
                 for complementary_materials_string in self.complementary_materials_strings
             )
             or any(
-                record.data.get("title", "").lower().startswith(prefix)
+                record.data.get(Fields.TITLE, "").lower().startswith(prefix)
                 for prefix in self.complementary_material_prefixes
             )
         ):

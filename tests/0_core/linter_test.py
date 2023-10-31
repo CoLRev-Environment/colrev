@@ -2,13 +2,15 @@
 import astroid
 import pylint.testutils
 
-import colrev.linter.colrev_lint
+import colrev.linter.colrev_direct_status_assign
 
 
 class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
     """TestDirectStatusAssignmentChecker class"""
 
-    CHECKER_CLASS = colrev.linter.colrev_lint.DirectStatusAssignmentChecker
+    CHECKER_CLASS = (
+        colrev.linter.colrev_direct_status_assign.DirectStatusAssignmentChecker
+    )
 
     def test_finds_direct_status_assignment(self) -> None:
         """Test whether the pylint checker finds direct colrev_status assignments"""
@@ -23,7 +25,7 @@ class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
 
         with self.assertAddsMessages(
             pylint.testutils.MessageTest(
-                msg_id="direct-status-assign",
+                msg_id="colrev-direct-status-assign",
                 node=assignment_node,
                 line=3,
                 col_offset=4,

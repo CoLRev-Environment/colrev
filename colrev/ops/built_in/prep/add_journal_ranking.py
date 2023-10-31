@@ -11,6 +11,7 @@ import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
@@ -46,10 +47,10 @@ class AddJournalRanking(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Add Journalranking to Metadata"""
 
-        if record.data.get("journal", "") == "":
+        if record.data.get(Fields.JOURNAL, "") == "":
             return record
 
-        rankings = self.local_index.search_in_database(record.data["journal"])
+        rankings = self.local_index.search_in_database(record.data[Fields.JOURNAL])
         # extend: include journal-impact factor or ranking category
         if rankings:
             rankings_str = ",".join(r["ranking"] for r in rankings)

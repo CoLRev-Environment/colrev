@@ -14,10 +14,12 @@ import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.constants as c
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -73,6 +75,8 @@ class BibliographyExport(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
+        self.review_manager = data_operation.review_manager
+
         if "bib_format" not in settings:
             settings["bib_format"] = "endnote"
         settings["bib_format"] = BibFormats[settings["bib_format"]]
@@ -80,17 +84,13 @@ class BibliographyExport(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.endpoint_path = data_operation.review_manager.output_dir
+        self.endpoint_path = self.review_manager.output_dir
 
-        if not data_operation.review_manager.in_ci_environment():
-            data_operation.review_manager.get_zotero_translation_service()
+        if not self.review_manager.in_ci_environment():
+            self.review_manager.get_zotero_translation_service()
 
-    def __pybtex_conversion(
-        self, *, data_operation: colrev.ops.data.Data, selected_records: dict
-    ) -> None:
-        data_operation.review_manager.logger.info(
-            f"Export {self.settings.bib_format.name}"
-        )
+    def __pybtex_conversion(self, *, selected_records: dict) -> None:
+        self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
 
         if self.settings.bib_format is BibFormats.zotero:
             export_filepath = self.endpoint_path / Path("zotero.bib")
@@ -101,20 +101,16 @@ class BibliographyExport(JsonSchemaMixin):
         elif self.settings.bib_format is BibFormats.citavi:
             export_filepath = self.endpoint_path / Path("citavi.bib")
 
-        data_operation.review_manager.dataset.save_records_dict_to_file(
+        self.review_manager.dataset.save_records_dict_to_file(
             records=selected_records, save_path=export_filepath
         )
-        data_operation.review_manager.dataset.add_changes(path=export_filepath)
-        data_operation.review_manager.create_commit(
+        self.review_manager.dataset.add_changes(path=export_filepath)
+        self.review_manager.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
         )
 
-    def __zotero_conversion(
-        self, *, data_operation: colrev.ops.data.Data, selected_records: dict
-    ) -> None:
-        data_operation.review_manager.logger.info(
-            f"Export {self.settings.bib_format.name}"
-        )
+    def __zotero_conversion(self, *, selected_records: dict) -> None:
+        self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
 
         # https://github.com/zotero/translation-server/blob/master/src/formats.js
         if self.settings.bib_format is BibFormats.endnote:
@@ -122,7 +118,7 @@ class BibliographyExport(JsonSchemaMixin):
             # https://docs.fileformat.com/misc/enl/
             export_filepath = self.endpoint_path / Path("endnote.xml")
             selected_format = "endnote_xml"
-            data_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Import as Endnote-generated XML into an existing database"
             )
 
@@ -131,17 +127,17 @@ class BibliographyExport(JsonSchemaMixin):
             selected_format = "ris"
 
         else:
-            data_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 f"Format {self.settings.bib_format} not supported."
             )
             return
 
-        content = data_operation.review_manager.dataset.parse_bibtex_str(
+        content = self.review_manager.dataset.parse_bibtex_str(
             recs_dict_in=selected_records
         )
 
         zotero_translation_service = (
-            data_operation.review_manager.get_zotero_translation_service()
+            self.review_manager.get_zotero_translation_service()
         )
         zotero_translation_service.start()
 
@@ -149,7 +145,7 @@ class BibliographyExport(JsonSchemaMixin):
         ret = requests.post(
             "http://127.0.0.1:1969/import",
             headers=headers,
-            files={"file": str.encode(content)},
+            files={Fields.FILE: str.encode(content)},
             timeout=30,
         )
         headers = {"Content-type": "application/json"}
@@ -169,9 +165,9 @@ class BibliographyExport(JsonSchemaMixin):
             # overwrite the file if it exists
             with open(export_filepath, "w", encoding="utf-8") as export_file:
                 export_file.write(export.content.decode("utf-8"))
-            data_operation.review_manager.dataset.add_changes(path=export_filepath)
+            self.review_manager.dataset.add_changes(path=export_filepath)
 
-            data_operation.review_manager.create_commit(
+            self.review_manager.create_commit(
                 msg=f"Create {self.settings.bib_format.name} bibliography",
             )
 
@@ -201,12 +197,13 @@ class BibliographyExport(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
+    # pylint: disable=unused-argument
     def update_data(
         self,
         data_operation: colrev.ops.data.Data,
         records: dict,
-        synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
-        silent_mode: bool,  # pylint: disable=unused-argument
+        synthesized_record_status_matrix: dict,
+        silent_mode: bool,
     ) -> None:
         """Update the data/bibliography"""
 
@@ -215,7 +212,7 @@ class BibliographyExport(JsonSchemaMixin):
         selected_records_original = {
             ID: r
             for ID, r in records.items()
-            if r["colrev_status"]
+            if r[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -224,28 +221,24 @@ class BibliographyExport(JsonSchemaMixin):
         selected_records = copy.deepcopy(selected_records_original)
         for record in selected_records.values():
             for key_candidate in list(record.keys()):
-                if key_candidate not in colrev.record.Record.identifying_field_keys + [
-                    "ENTRYTYPE",
-                    "ID",
-                    "file",
+                if key_candidate not in c.FieldSet.IDENTIFYING_FIELD_KEYS + [
+                    Fields.ENTRYTYPE,
+                    Fields.ID,
+                    Fields.FILE,
                     "link",
-                    "url",
+                    Fields.URL,
                 ]:
                     del record[key_candidate]
             # TBD: maybe resolve file paths (symlinks to absolute paths)?
 
         if any(self.settings.bib_format is x for x in self.ZOTERO_FORMATS):
-            self.__zotero_conversion(
-                data_operation=data_operation, selected_records=selected_records
-            )
+            self.__zotero_conversion(selected_records=selected_records)
 
         elif any(self.settings.bib_format is x for x in self.PYBTEX_FORMATS):
-            self.__pybtex_conversion(
-                data_operation=data_operation, selected_records=selected_records
-            )
+            self.__pybtex_conversion(selected_records=selected_records)
 
         else:
-            data_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 f"Not yet implemented ({self.settings.bib_format})"
             )
 

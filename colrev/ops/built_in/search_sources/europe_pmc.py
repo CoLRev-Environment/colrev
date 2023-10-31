@@ -28,6 +28,8 @@ import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # defuse std xml lib
 defusedxml.defuse_stdlib()
@@ -45,7 +47,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     """Europe PMC"""
 
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "europe_pmc_id"
+    source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
         colrev.settings.SearchType.API,
         colrev.settings.SearchType.DB,
@@ -128,53 +130,51 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             return_string = selected_node.text
         return return_string
 
+    # pylint: disable=colrev-missed-constant-usage
     @classmethod
     def __europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
-        retrieved_record_dict: dict = {"ENTRYTYPE": "article"}
-
-        retrieved_record_dict.update(
-            author=cls.__get_string_from_item(item=item, key="authorString")
+        retrieved_record_dict: dict = {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE}
+        retrieved_record_dict[Fields.AUTHOR] = cls.__get_string_from_item(
+            item=item, key="authorString"
         )
-        retrieved_record_dict.update(
-            journal=cls.__get_string_from_item(item=item, key="journalTitle")
+        retrieved_record_dict[Fields.JOURNAL] = cls.__get_string_from_item(
+            item=item, key="journalTitle"
         )
-        retrieved_record_dict.update(
-            doi=cls.__get_string_from_item(item=item, key="doi")
+        retrieved_record_dict[Fields.DOI] = cls.__get_string_from_item(
+            item=item, key="doi"
         )
-        retrieved_record_dict.update(
-            title=cls.__get_string_from_item(item=item, key="title")
+        retrieved_record_dict[Fields.TITLE] = cls.__get_string_from_item(
+            item=item, key="title"
         )
-        retrieved_record_dict.update(
-            title=cls.__get_string_from_item(item=item, key="title")
+        retrieved_record_dict[Fields.YEAR] = cls.__get_string_from_item(
+            item=item, key="pubYear"
         )
-        retrieved_record_dict.update(
-            year=cls.__get_string_from_item(item=item, key="pubYear")
+        retrieved_record_dict[Fields.VOLUME] = cls.__get_string_from_item(
+            item=item, key="journalVolume"
         )
-        retrieved_record_dict.update(
-            volume=cls.__get_string_from_item(item=item, key="journalVolume")
+        retrieved_record_dict[Fields.NUMBER] = cls.__get_string_from_item(
+            item=item, key="issue"
         )
-
-        retrieved_record_dict.update(
-            number=cls.__get_string_from_item(item=item, key="issue")
+        retrieved_record_dict[Fields.PUBMED_ID] = cls.__get_string_from_item(
+            item=item, key="pmid"
         )
-        retrieved_record_dict.update(
-            pmid=cls.__get_string_from_item(item=item, key="pmid")
-        )
-        retrieved_record_dict.update(
-            epmc_source=cls.__get_string_from_item(item=item, key="source")
+        retrieved_record_dict[Fields.PMCID] = cls.__get_string_from_item(
+            item=item, key="pmcid"
         )
 
-        retrieved_record_dict.update(
-            epmc_id=cls.__get_string_from_item(item=item, key="id")
+        retrieved_record_dict["epmc_source"] = cls.__get_string_from_item(
+            item=item, key="source"
         )
-
-        retrieved_record_dict["europe_pmc_id"] = (
+        retrieved_record_dict["epmc_id"] = cls.__get_string_from_item(
+            item=item, key="id"
+        )
+        retrieved_record_dict[Fields.EUROPE_PMC_ID] = (
             retrieved_record_dict.get("epmc_source", "NO_SOURCE")
             + "/"
             + retrieved_record_dict.get("epmc_id", "NO_ID")
         )
+        retrieved_record_dict[Fields.ID] = retrieved_record_dict[Fields.EUROPE_PMC_ID]
 
-        retrieved_record_dict["ID"] = retrieved_record_dict["europe_pmc_id"]
         retrieved_record_dict = {
             k: v
             for k, v in retrieved_record_dict.items()
@@ -182,11 +182,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         }
 
         record = colrev.record.PrepRecord(data=retrieved_record_dict)
-
-        # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
-        source = f"{cls.__SOURCE_URL}{record.data['europe_pmc_id']}"
-
-        record.add_provenance_all(source=source)
         return record
 
     @classmethod
@@ -197,8 +192,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         retrieved_record: colrev.record.Record,
     ) -> float:
         title_similarity = fuzz.partial_ratio(
-            retrieved_record.data["title"].lower(),
-            record.data.get("title", "").lower(),
+            retrieved_record.data[Fields.TITLE].lower(),
+            record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
             retrieved_record.get_container_title().lower(),
@@ -245,7 +240,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
             url = (
                 "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="
-                + quote(record.data["title"])
+                + quote(record.data[Fields.TITLE])
             )
 
             record_list = []
@@ -255,16 +250,14 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 for result_item in result_list:
                     retrieved_record = self.__europe_pmc_xml_to_record(item=result_item)
 
-                    if "title" not in retrieved_record.data:
+                    if Fields.TITLE not in retrieved_record.data:
                         continue
 
                     similarity = self.__get_similarity(
                         record=record, retrieved_record=retrieved_record
                     )
 
-                    source = (
-                        f"{self.__SOURCE_URL}{retrieved_record.data['europe_pmc_id']}"
-                    )
+                    source = f"{self.__SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
                     retrieved_record.set_masterdata_complete(
                         source=source,
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
@@ -311,7 +304,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         # https://www.ebi.ac.uk/europepmc/webservices/rest/article/MED/23245604
 
         try:
-            if len(record.data.get("title", "")) > 35:
+            if len(record.data.get(Fields.TITLE, "")) > 35:
                 retries = 0
                 while retries < prep_operation.max_retries_on_error:
                     retries += 1
@@ -352,11 +345,11 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
                     record.merge(
                         merging_record=retrieved_record,
-                        default_source=retrieved_record.data["colrev_origin"][0],
+                        default_source=retrieved_record.data[Fields.ORIGIN][0],
                     )
 
                     record.set_masterdata_complete(
-                        source=retrieved_record.data["colrev_origin"][0],
+                        source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
                     record.set_status(
@@ -459,19 +452,19 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     retrieved_record = self.__europe_pmc_xml_to_record(item=result_item)
 
                     prev_record_dict_version = {}
-                    if retrieved_record.data["ID"] in europe_pmc_feed.feed_records:
+                    if retrieved_record.data[Fields.ID] in europe_pmc_feed.feed_records:
                         prev_record_dict_version = deepcopy(
-                            europe_pmc_feed.feed_records[retrieved_record.data["ID"]]
+                            europe_pmc_feed.feed_records[
+                                retrieved_record.data[Fields.ID]
+                            ]
                         )
-                    if "title" not in retrieved_record.data:
+                    if Fields.TITLE not in retrieved_record.data:
                         self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
                         )
                         continue
 
-                    source = (
-                        f"{self.__SOURCE_URL}{retrieved_record.data['europe_pmc_id']}"
-                    )
+                    source = f"{self.__SOURCE_URL}{retrieved_record.data[Fields.EUROPE_PMC_ID]}"
                     retrieved_record.set_masterdata_complete(
                         source=source,
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
@@ -483,7 +476,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     if added:
                         self.review_manager.logger.info(
                             " retrieve europe_pmc_id="
-                            + retrieved_record.data["europe_pmc_id"]
+                            + retrieved_record.data[Fields.EUROPE_PMC_ID]
                         )
                     else:
                         europe_pmc_feed.update_existing_record(
@@ -517,6 +510,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         """Source heuristic for Europe PMC"""
 
         result = {"confidence": 0.0}
+        # pylint: disable=colrev-missed-constant-usage
         if "europe_pmc_id" in data:
             result["confidence"] = 1.0
 
@@ -538,6 +532,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             add_source = operation.add_api_source(endpoint=cls.endpoint)
             return add_source
 
+        # pylint: disable=colrev-missed-constant-usage
         if "url" in params:
             host = urlparse(params["url"]).hostname
 
@@ -570,6 +565,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Europe PMC"""
-        record.data["author"].rstrip(".")
-        record.data["title"].rstrip(".")
+        record.data[Fields.AUTHOR].rstrip(".")
+        record.data[Fields.TITLE].rstrip(".")
         return record

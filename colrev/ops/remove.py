@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import colrev.env.utils
 import colrev.operation
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -38,8 +39,8 @@ class Remove(colrev.operation.Operation):
         for record_id in ids.split(","):
             if record_id in records:
                 self.review_manager.logger.info(f" remove {record_id}")
-                origins = records[record_id]["colrev_origin"]
-                if "file" in records[record_id]:
+                origins = records[record_id][Fields.ORIGIN]
+                if Fields.FILE in records[record_id]:
                     print(f"manually remove file: {records[record_id]['file']}")
                 del records[record_id]
                 for origin in origins:

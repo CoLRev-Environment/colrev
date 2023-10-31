@@ -2,14 +2,16 @@
 Website screenshot
 ==================
 
+This package takes a PDF screenshot of websites (for ``ONLINE`` ENTRYTYPES).
+
 pdf-get
 -------
 
-Note: This document is currently under development. It will contain the following elements.
+To add this package, run
 
+.. code-block::
 
-* description
-* example
+   colrev pdf-get -a colrev.website_screenshot
 
 Links
 -----

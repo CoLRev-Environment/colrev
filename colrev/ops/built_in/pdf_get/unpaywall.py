@@ -15,6 +15,7 @@ from pdfminer.pdftypes import PDFException
 
 import colrev.env.package_manager
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -109,13 +110,13 @@ class Unpaywall(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Get PDFs from unpaywall"""
 
-        if "doi" not in record.data:
+        if Fields.DOI not in record.data:
             return record
 
         pdf_filepath = pdf_get_operation.get_target_filepath(record=record)
 
         url = self.__unpaywall(
-            review_manager=pdf_get_operation.review_manager, doi=record.data["doi"]
+            review_manager=pdf_get_operation.review_manager, doi=record.data[Fields.DOI]
         )
         if url == "NA":
             return record
@@ -146,15 +147,15 @@ class Unpaywall(JsonSchemaMixin):
                         + f"?email={self.email}"
                     )
                     record.update_field(
-                        key="file", value=str(pdf_filepath), source=source
+                        key=Fields.FILE, value=str(pdf_filepath), source=source
                     )
                     pdf_get_operation.import_pdf(record=record)
 
                 else:
                     os.remove(pdf_filepath)
             else:
-                if "fulltext" not in record.data:
-                    record.data["fulltext"] = url
+                if Fields.FULLTEXT not in record.data:
+                    record.data[Fields.FULLTEXT] = url
                 if pdf_get_operation.review_manager.verbose_mode:
                     pdf_get_operation.review_manager.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code} - {url}"

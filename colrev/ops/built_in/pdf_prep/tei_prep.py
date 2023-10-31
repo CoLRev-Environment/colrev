@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -50,7 +51,7 @@ class TEIPDFPrep(JsonSchemaMixin):
     ) -> dict:
         """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""
 
-        if not record.data.get("file", "NA").endswith(".pdf"):
+        if not record.data.get(Fields.FILE, "NA").endswith(".pdf"):
             return record.data
 
         if not record.get_tei_filename().is_file():
@@ -58,7 +59,7 @@ class TEIPDFPrep(JsonSchemaMixin):
                 f" creating tei: {record.data['ID']}"
             )
             _ = pdf_prep_operation.review_manager.get_tei(
-                pdf_path=Path(record.data["file"]),
+                pdf_path=Path(record.data[Fields.FILE]),
                 tei_path=record.get_tei_filename(),
             )
 

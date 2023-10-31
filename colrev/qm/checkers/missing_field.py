@@ -5,6 +5,9 @@ from __future__ import annotations
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -14,29 +17,48 @@ class MissingFieldChecker:
 
     # Based on https://en.wikipedia.org/wiki/BibTeX
     record_field_requirements = {
-        "article": ["author", "title", "journal", "year", "volume", "number"],
-        "inproceedings": ["author", "title", "booktitle", "year"],
-        "incollection": ["author", "title", "booktitle", "publisher", "year"],
-        "inbook": ["author", "title", "chapter", "publisher", "year"],
-        "proceedings": ["booktitle", "editor", "year"],
-        "conference": ["booktitle", "editor", "year"],
-        "book": ["author", "title", "publisher", "year"],
-        "phdthesis": ["author", "title", "school", "year"],
-        "bachelorthesis": ["author", "title", "school", "year"],
-        "thesis": ["author", "title", "school", "year"],
-        "masterthesis": ["author", "title", "school", "year"],
-        "techreport": ["author", "title", "institution", "year"],
-        "unpublished": ["title", "author", "year"],
-        "misc": ["author", "title", "year"],
-        "software": ["author", "title", "url"],
-        "online": ["author", "title", "url"],
-        "other": ["author", "title", "year"],
+        "article": [
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.JOURNAL,
+            Fields.YEAR,
+            Fields.VOLUME,
+            Fields.NUMBER,
+        ],
+        "inproceedings": [Fields.AUTHOR, Fields.TITLE, Fields.BOOKTITLE, Fields.YEAR],
+        "incollection": [
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.BOOKTITLE,
+            Fields.PUBLISHER,
+            Fields.YEAR,
+        ],
+        "inbook": [
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.CHAPTER,
+            Fields.PUBLISHER,
+            Fields.YEAR,
+        ],
+        "proceedings": [Fields.BOOKTITLE, Fields.EDITOR, Fields.YEAR],
+        "conference": [Fields.BOOKTITLE, Fields.EDITOR, Fields.YEAR],
+        "book": [Fields.AUTHOR, Fields.TITLE, Fields.PUBLISHER, Fields.YEAR],
+        "phdthesis": [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
+        "bachelorthesis": [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
+        "thesis": [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
+        "masterthesis": [Fields.AUTHOR, Fields.TITLE, Fields.SCHOOL, Fields.YEAR],
+        "techreport": [Fields.AUTHOR, Fields.TITLE, "institution", Fields.YEAR],
+        "unpublished": [Fields.TITLE, Fields.AUTHOR, Fields.YEAR],
+        "misc": [Fields.AUTHOR, Fields.TITLE, Fields.YEAR],
+        "software": [Fields.AUTHOR, Fields.TITLE, Fields.URL],
+        "online": [Fields.AUTHOR, Fields.TITLE, Fields.URL],
+        "other": [Fields.AUTHOR, Fields.TITLE, Fields.YEAR],
     }
     """Fields requirements for respective ENTRYTYPE"""
 
     # book, inbook: author <- editor
 
-    msg = "missing"
+    msg = DefectCodes.MISSING
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -73,7 +95,7 @@ class MissingFieldChecker:
 
         if not self.__has_missing_fields(record=record):
             record.set_masterdata_complete(
-                source="update_masterdata_provenance",
+                source="MissingFieldChecker",
                 masterdata_repository=False,
                 replace_source=False,
             )
@@ -82,55 +104,65 @@ class MissingFieldChecker:
         # No authors for complementary materials or errata required
         if (
             any(
-                x == record.data.get("title", "UNKNOWN").lower()
+                x == record.data.get(Fields.TITLE, FieldValues.UNKNOWN).lower()
                 for x in self.__complementary_material_strings
             )
             or any(
-                x in record.data.get("title", "UNKNOWN").lower()
+                x in record.data.get(Fields.TITLE, FieldValues.UNKNOWN).lower()
                 for x in self.__complementary_material_keywords
             )
             or any(
-                x in record.data.get("title", "UNKNOWN").lower()
+                x in record.data.get(Fields.TITLE, FieldValues.UNKNOWN).lower()
                 for x in ["errata", "erratum", "corrigendum"]
             )
         ):
-            if "author" in record.data["colrev_masterdata_provenance"] and any(
-                x == "missing"
-                for x in record.data["colrev_masterdata_provenance"]["author"][
-                    "note"
-                ].split(",")
+            if Fields.AUTHOR in record.data[Fields.MD_PROV] and any(
+                x == DefectCodes.MISSING
+                for x in record.data[Fields.MD_PROV][Fields.AUTHOR]["note"].split(",")
             ):
                 record.remove_field(
-                    key="author", not_missing_note=True, source="ignored_exception"
+                    key=Fields.AUTHOR, not_missing_note=True, source="ignored_exception"
                 )
 
     def __has_missing_fields(self, *, record: colrev.record.Record) -> bool:
         if any(
-            "missing" in x["note"].split(",")
-            for x in record.data["colrev_masterdata_provenance"].values()
+            DefectCodes.MISSING in x["note"].split(",")
+            for x in record.data[Fields.MD_PROV].values()
         ):
             return True
         return False
 
     def __check_forthcoming(self, *, record: colrev.record.Record) -> None:
-        if record.data.get("year", "") != "forthcoming":
-            record.remove_masterdata_provenance_note(key="volume", note="forthcoming")
-            record.remove_masterdata_provenance_note(key="number", note="forthcoming")
+        if record.data.get(Fields.YEAR, "") != "forthcoming":
+            record.remove_masterdata_provenance_note(
+                key=Fields.VOLUME, note="forthcoming"
+            )
+            record.remove_masterdata_provenance_note(
+                key=Fields.NUMBER, note="forthcoming"
+            )
             return
         source = "NA"
-        if "year" in record.data["colrev_masterdata_provenance"]:
-            source = record.data["colrev_masterdata_provenance"]["year"]["source"]
-        if record.data.get("volume", "") in ["", "UNKNOWN"]:
-            record.remove_masterdata_provenance_note(key="volume", note="missing")
-            record.remove_masterdata_provenance_note(key="volume", note="not-missing")
-            record.add_masterdata_provenance(
-                key="volume", source=source, note="forthcoming"
+        if Fields.YEAR in record.data[Fields.MD_PROV]:
+            source = record.data[Fields.MD_PROV][Fields.YEAR]["source"]
+        if record.data.get(Fields.VOLUME, "") in ["", FieldValues.UNKNOWN]:
+            record.remove_masterdata_provenance_note(
+                key=Fields.VOLUME, note=DefectCodes.MISSING
             )
-        if record.data.get("number", "") in ["", "UNKNOWN"]:
-            record.remove_masterdata_provenance_note(key="number", note="missing")
-            record.remove_masterdata_provenance_note(key="number", note="not-missing")
+            record.remove_masterdata_provenance_note(
+                key=Fields.VOLUME, note=DefectCodes.NOT_MISSING
+            )
             record.add_masterdata_provenance(
-                key="number", source=source, note="forthcoming"
+                key=Fields.VOLUME, source=source, note="forthcoming"
+            )
+        if record.data.get(Fields.NUMBER, "") in ["", FieldValues.UNKNOWN]:
+            record.remove_masterdata_provenance_note(
+                key=Fields.NUMBER, note=DefectCodes.MISSING
+            )
+            record.remove_masterdata_provenance_note(
+                key=Fields.NUMBER, note=DefectCodes.NOT_MISSING
+            )
+            record.add_masterdata_provenance(
+                key=Fields.NUMBER, source=source, note="forthcoming"
             )
 
     def __check_completeness(
@@ -153,28 +185,27 @@ class MissingFieldChecker:
 
         for required_fields_key in required_fields_keys:
             not_missing_note = False
-            if required_fields_key in record.data["colrev_masterdata_provenance"]:
+            if required_fields_key in record.data[Fields.MD_PROV]:
                 if (
-                    "not-missing"
-                    in record.data["colrev_masterdata_provenance"][required_fields_key][
-                        "note"
-                    ]
+                    DefectCodes.NOT_MISSING
+                    in record.data[Fields.MD_PROV][required_fields_key]["note"]
                 ):
                     not_missing_note = True
 
             if (
-                record.data.get(required_fields_key, "UNKNOWN") == "UNKNOWN"
+                record.data.get(required_fields_key, FieldValues.UNKNOWN)
+                == FieldValues.UNKNOWN
                 and not not_missing_note
             ):
                 record.update_field(
                     key=required_fields_key,
-                    value="UNKNOWN",
+                    value=FieldValues.UNKNOWN,
                     source=source,
                     note=self.msg,
                     append_edit=False,
                 )
 
-        for required_field in ["author", "title", "year"]:
+        for required_field in [Fields.AUTHOR, Fields.TITLE, Fields.YEAR]:
             if required_field in record.data:
                 continue
             colrev.record.Record(data=record.data).add_masterdata_provenance(
@@ -192,13 +223,13 @@ class MissingFieldChecker:
 
         self.__check_completeness(record=record, curation_restrictions=True)
 
-        if "volume" in applicable_curation_restrictions:
+        if Fields.VOLUME in applicable_curation_restrictions:
             if (
-                applicable_curation_restrictions["volume"]
-                and "volume" not in record.data
+                applicable_curation_restrictions[Fields.VOLUME]
+                and Fields.VOLUME not in record.data
             ):
                 colrev.record.Record(data=record.data).add_masterdata_provenance(
-                    key="volume",
+                    key=Fields.VOLUME,
                     source="colrev_curation.curation_restrictions",
                     note=self.msg,
                 )
@@ -206,17 +237,17 @@ class MissingFieldChecker:
                 colrev.record.Record(
                     data=record.data
                 ).remove_masterdata_provenance_note(
-                    key="volume",
+                    key=Fields.VOLUME,
                     note=self.msg,
                 )
 
-        if "number" in applicable_curation_restrictions:
+        if Fields.NUMBER in applicable_curation_restrictions:
             if (
-                applicable_curation_restrictions["number"]
-                and "number" not in record.data
+                applicable_curation_restrictions[Fields.NUMBER]
+                and Fields.NUMBER not in record.data
             ):
                 colrev.record.Record(data=record.data).add_masterdata_provenance(
-                    key="number",
+                    key=Fields.NUMBER,
                     source="colrev_curation.curation_restrictions",
                     note=self.msg,
                 )
@@ -224,7 +255,7 @@ class MissingFieldChecker:
                 colrev.record.Record(
                     data=record.data
                 ).remove_masterdata_provenance_note(
-                    key="volume",
+                    key=Fields.VOLUME,
                     note=self.msg,
                 )
 
@@ -235,12 +266,12 @@ class MissingFieldChecker:
     ) -> dict:
         """Get the applicable curation restrictions"""
 
-        if not str(record.data.get("year", "NA")).isdigit():
+        if not str(record.data.get(Fields.YEAR, "NA")).isdigit():
             return {}
 
         start_year_values = list(self.curation_restrictions.keys())
         year_index_diffs = [
-            int(record.data["year"]) - int(x) for x in start_year_values
+            int(record.data[Fields.YEAR]) - int(x) for x in start_year_values
         ]
         year_index_diffs = [x if x >= 0 else 2000 for x in year_index_diffs]
 
@@ -271,7 +302,7 @@ class MissingFieldChecker:
                 except colrev_exceptions.MissingRecordQualityRuleSpecification as exc:
                     print(exc)
 
-        for field in ["journal", "booktitle"]:
+        for field in [Fields.JOURNAL, Fields.BOOKTITLE]:
             if field not in applicable_curation_restrictions:
                 continue
             if applicable_curation_restrictions[field] == record.data.get(field, ""):
@@ -282,12 +313,12 @@ class MissingFieldChecker:
                 source="colrev_curation.curation_restrictions",
             )
         if (
-            "number" in applicable_curation_restrictions
-            and not applicable_curation_restrictions["number"]
-            and "number" in record.data
+            Fields.NUMBER in applicable_curation_restrictions
+            and not applicable_curation_restrictions[Fields.NUMBER]
+            and Fields.NUMBER in record.data
         ):
             record.remove_field(
-                key="number",
+                key=Fields.NUMBER,
                 not_missing_note=True,
                 source="colrev_curation.curation_restrictions",
             )

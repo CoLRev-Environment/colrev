@@ -10,6 +10,7 @@ from dacite import from_dict
 
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -40,7 +41,9 @@ class CustomPDFPrep:
         """Prepare the PDF"""
 
         if random.random() < 0.8:  # nosec
-            record.add_data_provenance_note(key="file", note="custom_issue_detected")
+            record.add_data_provenance_note(
+                key=Fields.FILE, note="custom_issue_detected"
+            )
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )

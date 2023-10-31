@@ -1,9 +1,9 @@
-Extension Index
+Package Index
 =====================
 
 .. toctree::
    :maxdepth: 1
-   :caption: Extension Index
+   :caption: Package Index
 
 
 review_type
@@ -35,6 +35,7 @@ search_source
    extensions_index/colrev.abi_inform_proquest.rst
    extensions_index/colrev.acm_digital_library.rst
    extensions_index/colrev.ais_library.rst
+   extensions_index/colrev.arxiv.rst
    extensions_index/colrev.colrev_project.rst
    extensions_index/colrev.crossref.rst
    extensions_index/colrev.dblp.rst
@@ -90,7 +91,6 @@ prep
    extensions_index/colrev.remove_urls_with_500_errors.rst
    extensions_index/colrev.resolve_crossrefs.rst
    extensions_index/colrev.source_specific_prep.rst
-   extensions_index/colrev.update_metadata_status.rst
 
 prep_man
 -----------------------------

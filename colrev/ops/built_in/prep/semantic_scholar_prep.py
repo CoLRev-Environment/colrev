@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -60,24 +61,24 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 input_string=authors_string
             )
             retrieved_record.update(author=authors_string)
-        if "abstract" in item:
-            retrieved_record.update(abstract=item["abstract"])
-        if "doi" in item:
-            if str(item["doi"]).lower() != "none":
-                retrieved_record.update(doi=str(item["doi"]).upper())
-        if "title" in item:
-            retrieved_record.update(title=item["title"])
-        if "year" in item:
-            retrieved_record.update(year=item["year"])
+        if Fields.ABSTRACT in item:
+            retrieved_record.update(abstract=item[Fields.ABSTRACT])
+        if Fields.DOI in item:
+            if str(item[Fields.DOI]).lower() != "none":
+                retrieved_record.update(doi=str(item[Fields.DOI]).upper())
+        if Fields.TITLE in item:
+            retrieved_record.update(title=item[Fields.TITLE])
+        if Fields.YEAR in item:
+            retrieved_record.update(year=item[Fields.YEAR])
         # Note: semantic scholar does not provide data on the type of venue.
         # we therefore use the original ENTRYTYPE
         if "venue" in item:
-            if "journal" in record_in.data:
+            if Fields.JOURNAL in record_in.data:
                 retrieved_record.update(journal=item["venue"])
-            if "booktitle" in record_in.data:
+            if Fields.BOOKTITLE in record_in.data:
                 retrieved_record.update(booktitle=item["venue"])
-        if "url" in item:
-            retrieved_record["colrev.semantic_scholar.id"] = item["url"]
+        if Fields.URL in item:
+            retrieved_record[Fields.SEMANTIC_SCHOLAR_ID] = item[Fields.URL]
 
         keys_to_drop = []
         for key, value in retrieved_record.items():
@@ -141,18 +142,18 @@ class SemanticScholarPrep(JsonSchemaMixin):
             search_api_url = (
                 "https://api.semanticscholar.org/graph/v1/paper/search?query="
             )
-            url = search_api_url + record.data.get("title", "").replace(" ", "+")
+            url = search_api_url + record.data.get(Fields.TITLE, "").replace(" ", "+")
 
             retrieved_record = self.retrieve_record_from_semantic_scholar(
                 prep_operation=prep_operation, url=url, record_in=record
             )
-            if "colrev.semantic_scholar.id" not in retrieved_record.data:
+            if Fields.SEMANTIC_SCHOLAR_ID not in retrieved_record.data:
                 return record
 
             # Remove fields that are not/rarely available before
             # calculating similarity metrics
             orig_record = record.copy_prep_rec()
-            for key in ["volume", "number", "number", "pages"]:
+            for key in [Fields.VOLUME, Fields.NUMBER, Fields.NUMBER, Fields.PAGES]:
                 if key in orig_record.data:
                     record.remove_field(key=key)
 
@@ -170,7 +171,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
                 record.merge(
                     merging_record=retrieved_record,
-                    default_source=retrieved_record.data["colrev.semantic_scholar.id"],
+                    default_source=retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID],
                 )
 
             else:

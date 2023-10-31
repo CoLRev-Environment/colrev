@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import colrev.operation
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 # pylint: disable=too-few-public-methods
 
@@ -36,20 +36,20 @@ class Pull(colrev.operation.Operation):
             res = origin.pull()
         except AttributeError:
             self.review_manager.logger.info(
-                f"{colors.RED}No remote detected for pull{colors.END}"
+                f"{Colors.RED}No remote detected for pull{Colors.END}"
             )
             return
 
         if 4 == res[0].flags:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Project up-to-date{colors.END}"
+                f"{Colors.GREEN}Project up-to-date{Colors.END}"
             )
         elif 64 == res[0].flags:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated CoLRev repository{colors.END}"
+                f"{Colors.GREEN}Updated CoLRev repository{Colors.END}"
             )
         else:
             self.review_manager.logger.info(
-                f"{colors.RED}Returned flag {res[0].flags}{colors.END}"
+                f"{Colors.RED}Returned flag {res[0].flags}{Colors.END}"
             )
         print()

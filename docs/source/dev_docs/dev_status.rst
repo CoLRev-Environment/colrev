@@ -64,7 +64,7 @@ Packages |EXPERIMENTAL|
     - it should become clear whether there are mature packages for each operation (which ones)
 
 
-The status of each package is provided in the operations subpages (:doc:`init </manual/problem_formulation/init>`, :doc:`search </manual/metadata_retrieval/search>`, :doc:`load </manual/metadata_retrieval/load>`, :doc:`prep </manual/metadata_retrieval/prep>`, :doc:`dedupe </manual/metadata_retrieval/dedupe>`, :doc:`prescreen </manual/metadata_prescreen/prescreen>`, :doc:`pdf-get </manual/pdf_retrieval/pdf_get>`, :doc:`pdf-prep </manual/pdf_retrieval/pdf_prep>`, :doc:`screen </manual/pdf_screen/screen>`, :doc:`data </manual/data/data>`). Instructions on adding new packages and having them reviewed are provided in the :doc:`extension development </manual/extensions/extensions>` section.
+The status of each package is provided in the operations subpages (:doc:`init </manual/problem_formulation/init>`, :doc:`search </manual/metadata_retrieval/search>`, :doc:`load </manual/metadata_retrieval/load>`, :doc:`prep </manual/metadata_retrieval/prep>`, :doc:`dedupe </manual/metadata_retrieval/dedupe>`, :doc:`prescreen </manual/metadata_prescreen/prescreen>`, :doc:`pdf-get </manual/pdf_retrieval/pdf_get>`, :doc:`pdf-prep </manual/pdf_retrieval/pdf_prep>`, :doc:`screen </manual/pdf_screen/screen>`, :doc:`data </manual/data/data>`). Instructions on adding new packages and having them reviewed are provided in the :doc:`package development </manual/extensions/extensions>` section.
 
 ..
     -> TODO : link to criteria

@@ -17,6 +17,8 @@ import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 # xpath alternative:
 # tree.xpath("//tei:sourceDesc/tei:biblStruct/tei:monogr/tei:idno",
@@ -420,19 +422,19 @@ class TEIParser:
         """Get the metadata of the PDF (title, author, ...) as a dict"""
 
         record = {
-            "ENTRYTYPE": "article",
-            "title": self.__get_paper_title(),
-            "author": self.__get_paper_authors(),
-            "journal": self.__get_paper_journal(),
-            "year": self.__get_paper_year(),
-            "volume": self.__get_paper_journal_volume(),
-            "number": self.__get_paper_journal_issue(),
-            "pages": self.__get_paper_journal_pages(),
-            "doi": self.__get_paper_doi(),
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+            Fields.TITLE: self.__get_paper_title(),
+            Fields.AUTHOR: self.__get_paper_authors(),
+            Fields.JOURNAL: self.__get_paper_journal(),
+            Fields.YEAR: self.__get_paper_year(),
+            Fields.VOLUME: self.__get_paper_journal_volume(),
+            Fields.NUMBER: self.__get_paper_journal_issue(),
+            Fields.PAGES: self.__get_paper_journal_pages(),
+            Fields.DOI: self.__get_paper_doi(),
         }
 
         for key, value in record.items():
-            if key != "file":
+            if key != Fields.FILE:
                 record[key] = value.replace("}", "").replace("{", "").rstrip("\\")
             else:
                 print(f"problem in filename: {key}")
@@ -663,16 +665,16 @@ class TEIParser:
         return journal_title
 
     def __get_entrytype(self, *, reference: Element) -> str:
-        entrytype = "misc"
+        entrytype = ENTRYTYPES.MISC
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
             if monogr_node is not None:
                 title_node = monogr_node.find(self.ns["tei"] + "title")
                 if title_node is not None:
                     if title_node.get("level", "NA") != "j":
-                        entrytype = "book"
+                        entrytype = ENTRYTYPES.BOOK
                     else:
-                        entrytype = "article"
+                        entrytype = ENTRYTYPES.ARTICLE
         return entrytype
 
     def __get_tei_id_count(self, *, tei_id: str) -> int:
@@ -706,57 +708,57 @@ class TEIParser:
                         ):
                             continue
 
-                    if entrytype == "article":
+                    if entrytype == ENTRYTYPES.ARTICLE:
                         ref_rec = {
-                            "ID": tei_id,
-                            "ENTRYTYPE": entrytype,
+                            Fields.ID: tei_id,
+                            Fields.ENTRYTYPE: entrytype,
                             "tei_id": tei_id,
-                            "author": self.__get_reference_author_string(
+                            Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
                             ),
-                            "title": self.__get_reference_title_string(
+                            Fields.TITLE: self.__get_reference_title_string(
                                 reference=reference
                             ),
-                            "year": self.__get_reference_year_string(
+                            Fields.YEAR: self.__get_reference_year_string(
                                 reference=reference
                             ),
-                            "journal": self.__get_reference_journal_string(
+                            Fields.JOURNAL: self.__get_reference_journal_string(
                                 reference=reference
                             ),
-                            "volume": self.__get_reference_volume_string(
+                            Fields.VOLUME: self.__get_reference_volume_string(
                                 reference=reference
                             ),
-                            "number": self.__get_reference_number_string(
+                            Fields.NUMBER: self.__get_reference_number_string(
                                 reference=reference
                             ),
-                            "pages": self.__get_reference_page_string(
+                            Fields.PAGES: self.__get_reference_page_string(
                                 reference=reference
                             ),
                         }
-                    elif entrytype == "book":
+                    elif entrytype == ENTRYTYPES.BOOK:
                         ref_rec = {
-                            "ID": tei_id,
-                            "ENTRYTYPE": entrytype,
+                            Fields.ID: tei_id,
+                            Fields.ENTRYTYPE: entrytype,
                             "tei_id": tei_id,
-                            "author": self.__get_reference_author_string(
+                            Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
                             ),
-                            "title": self.__get_reference_title_string(
+                            Fields.TITLE: self.__get_reference_title_string(
                                 reference=reference
                             ),
-                            "year": self.__get_reference_year_string(
+                            Fields.YEAR: self.__get_reference_year_string(
                                 reference=reference
                             ),
                         }
                     elif entrytype == "misc":
                         ref_rec = {
-                            "ID": tei_id,
+                            Fields.ID: tei_id,
                             "ENTRYTYPE": entrytype,
                             "tei_id": tei_id,
-                            "author": self.__get_reference_author_string(
+                            Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
                             ),
-                            "title": self.__get_reference_title_string(
+                            Fields.TITLE: self.__get_reference_title_string(
                                 reference=reference
                             ),
                         }
@@ -795,13 +797,13 @@ class TEIParser:
 
         tei_records = self.get_bibliography()
         for record_dict in tei_records:
-            if "title" not in record_dict:
+            if Fields.TITLE not in record_dict:
                 continue
 
             max_sim = 0.9
             max_sim_record = {}
             for local_record_dict in records.values():
-                if local_record_dict["colrev_status"] not in [
+                if local_record_dict[Fields.STATUS] not in [
                     colrev.record.RecordState.rev_included,
                     colrev.record.RecordState.rev_synthesized,
                 ]:
@@ -821,12 +823,12 @@ class TEIParser:
             # mark reference in bibliography
             for ref in bibliography:
                 if ref.get(f'{self.ns["w3"]}id') == record_dict["tei_id"]:
-                    ref.set("ID", max_sim_record["ID"])
+                    ref.set(Fields.ID, max_sim_record[Fields.ID])
             # mark reference in in-text citations
             for reference in self.root.iter(f'{self.ns["tei"]}ref'):
                 if "target" in reference.keys():
                     if reference.get("target") == f"#{record_dict['tei_id']}":
-                        reference.set("ID", max_sim_record["ID"])
+                        reference.set(Fields.ID, max_sim_record[Fields.ID])
 
             # if settings file available: dedupe_io match agains records
 

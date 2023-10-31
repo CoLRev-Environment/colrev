@@ -8,6 +8,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.operation
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -38,10 +39,10 @@ class CustomPrep:
     ) -> colrev.record.Record:
         """Update record (metadata)"""
 
-        if "journal" in record.data:
-            if record.data["journal"] == "MISQ":
+        if Fields.JOURNAL in record.data:
+            if record.data[Fields.JOURNAL] == "MISQ":
                 record.update_field(
-                    key="journal", value="MIS Quarterly", source="custom_prep"
+                    key=Fields.JOURNAL, value="MIS Quarterly", source="custom_prep"
                 )
 
         return record

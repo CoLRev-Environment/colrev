@@ -6,6 +6,8 @@ import html
 import re
 
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=duplicate-code
 
@@ -28,6 +30,7 @@ def __get_year(*, item: dict) -> str:
     return year
 
 
+# pylint: disable=colrev-missed-constant-usage
 def __get_authors(*, item: dict) -> str:
     authors_strings = []
     for author in item.get("author", "NA"):
@@ -58,12 +61,13 @@ def __get_fulltext(*, item: dict) -> str:
     return fulltext_link
 
 
+# pylint: disable=colrev-missed-constant-usage
 def __item_to_record(*, item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
 
     if isinstance(item["title"], list):
-        item["title"] = str(item["title"][0])
-    assert isinstance(item["title"], str)
+        item[Fields.TITLE] = str(item["title"][0])
+    assert isinstance(item[Fields.TITLE], str)
 
     if isinstance(item.get("container-title", ""), list):
         if len(item["container-title"]) > 0:
@@ -72,25 +76,25 @@ def __item_to_record(*, item: dict) -> dict:
             item["container-title"] = ""
     assert isinstance(item.get("container-title", ""), str)
 
-    item["ENTRYTYPE"] = "misc"
+    item[Fields.ENTRYTYPE] = "misc"
     if item.get("type", "NA") == "journal-article":
-        item.update(ENTRYTYPE="article")
-        item.update(journal=item.get("container-title", ""))
+        item[Fields.ENTRYTYPE] = "article"
+        item[Fields.JOURNAL] = item.get("container-title", "")
     elif item.get("type", "NA") == "proceedings-article":
-        item.update(ENTRYTYPE="inproceedings")
-        item.update(booktitle=item.get("container-title", ""))
+        item[Fields.ENTRYTYPE] = "inproceedings"
+        item[Fields.BOOKTITLE] = item.get("container-title", "")
     elif item.get("type", "NA") == "book":
-        item.update(ENTRYTYPE="book")
-        item.update(series=item.get("container-title", ""))
+        item[Fields.BOOKTITLE] = "book"
+        item[Fields.SERIES] = item.get("container-title", "")
 
-    item.update(author=__get_authors(item=item))
-    item.update(year=__get_year(item=item))
-    item.update(volume=str(item.get("volume", "")))
-    item.update(number=__get_number(item=item))
-    item.update(pages=item.get("page", "").replace("-", "--"))
-    item.update(cited_by=item.get("is-referenced-by-count", ""))
-    item.update(doi=item.get("DOI", "").upper())
-    item.update(fulltext=__get_fulltext(item=item))
+    item[Fields.AUTHOR] = __get_authors(item=item)
+    item[Fields.YEAR] = __get_year(item=item)
+    item[Fields.VOLUME] = str(item.get(Fields.VOLUME, ""))
+    item[Fields.NUMBER] = __get_number(item=item)
+    item[Fields.PAGES] = item.get("page", "").replace("-", "--")
+    item[Fields.CITED_BY] = item.get("is-referenced-by-count", "")
+    item[Fields.DOI] = item.get("DOI", "").upper()
+    item[Fields.FULLTEXT] = __get_fulltext(item=item)
 
     return item
 
@@ -99,9 +103,9 @@ def __flag_retracts(*, record_dict: dict) -> dict:
     if "update-to" in record_dict:
         for update_item in record_dict["update-to"]:
             if update_item["type"] == "retraction":
-                record_dict["warning"] = "retracted"
-    if "(retracted)" in record_dict.get("title", "").lower():
-        record_dict["warning"] = "retracted"
+                record_dict["warning"] = FieldValues.RETRACTED
+    if "(retracted)" in record_dict.get(Fields.TITLE, "").lower():
+        record_dict["warning"] = FieldValues.RETRACTED
     return record_dict
 
 
@@ -109,7 +113,7 @@ def __format_fields(*, record_dict: dict) -> dict:
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")
         # Note : some dois (and their provenance) contain html entities
-        if key in ["colrev_masterdata_provenance", "colrev_data_provenance", "doi"]:
+        if key in [Fields.MD_PROV, Fields.D_PROV, Fields.DOI]:
             continue
         if not isinstance(value, str):
             continue
@@ -119,7 +123,7 @@ def __format_fields(*, record_dict: dict) -> dict:
         value = re.sub(TAG_RE, " ", value)
         value = value.replace("\n", " ")
         value = re.sub(r"\s+", " ", value).rstrip().lstrip("▪ ")
-        if key == "abstract":
+        if key == Fields.ABSTRACT:
             if value.startswith("Abstract "):
                 value = value[8:]
         record_dict[key] = value.lstrip().rstrip()
@@ -129,39 +133,42 @@ def __format_fields(*, record_dict: dict) -> dict:
 
 def __set_forthcoming(*, record_dict: dict) -> dict:
     if not any(x in record_dict for x in ["published-print", "published"]) or not any(
-        x in record_dict for x in ["volume", "number"]
+        x in record_dict for x in [Fields.VOLUME, Fields.NUMBER]
     ):
         record_dict.update(year="forthcoming")
-        if "year" in record_dict:
-            record_dict.update(published_online=record_dict["year"])
+        if Fields.YEAR in record_dict:
+            record_dict.update(published_online=record_dict[Fields.YEAR])
     return record_dict
 
 
 def __remove_fields(*, record_dict: dict) -> dict:
     # Drop empty and non-supported fields
     supported_fields = [
-        "ENTRYTYPE",
-        "ID",
-        "title",
-        "author",
-        "year",
-        "journal",
-        "booktitle",
-        "volume",
-        "number",
-        "pages",
-        "doi",
-        "fulltext",
-        "abstract",
+        Fields.ENTRYTYPE,
+        Fields.ID,
+        Fields.TITLE,
+        Fields.AUTHOR,
+        Fields.YEAR,
+        Fields.JOURNAL,
+        Fields.BOOKTITLE,
+        Fields.VOLUME,
+        Fields.NUMBER,
+        Fields.PAGES,
+        Fields.DOI,
+        Fields.FULLTEXT,
+        Fields.ABSTRACT,
         "warning",
-        "language",
+        Fields.LANGUAGE,
     ]
     record_dict = {
         k: v for k, v in record_dict.items() if k in supported_fields and v != ""
     }
 
-    if record_dict.get("abstract", "") == "No abstract is available for this article.":
-        del record_dict["abstract"]
+    if (
+        record_dict.get(Fields.ABSTRACT, "")
+        == "No abstract is available for this article."
+    ):
+        del record_dict[Fields.ABSTRACT]
 
     return record_dict
 

@@ -29,7 +29,9 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
-from colrev.exit_codes import ExitCodes
+from colrev.constants import ExitCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -58,6 +60,7 @@ class Dataset:
         "data/prep_man/records_prep_man.bib",
         "data/prep/",
         "data/dedupe/",
+        "data/data/sample_references.bib",
     ]
     DEPRECATED_GIT_IGNORE_ITEMS = [
         "missing_pdf_files.csv",
@@ -126,9 +129,9 @@ class Dataset:
             for record_header_item in self.__read_record_header_items(
                 file_object=file_object
             ):
-                for origin in record_header_item["colrev_origin"]:
+                for origin in record_header_item[Fields.ORIGIN]:
                     current_origin_states_dict[origin] = record_header_item[
-                        "colrev_status"
+                        Fields.STATUS
                     ]
         return current_origin_states_dict
 
@@ -218,7 +221,7 @@ class Dataset:
             prior_record_l = [
                 rec
                 for rec in prior_records_dict.values()
-                if any(x in record["colrev_origin"] for x in rec["colrev_origin"])
+                if any(x in record[Fields.ORIGIN] for x in rec[Fields.ORIGIN])
             ]
             if not prior_record_l:
                 continue
@@ -234,7 +237,8 @@ class Dataset:
         # pylint: disable=too-many-branches
 
         return_dict = {}
-        if field == "colrev_masterdata_provenance":
+        if field == Fields.MD_PROV:
+            # pylint: disable=colrev-missed-constant-usage
             if value[:7] == "CURATED":
                 if value.count(";") == 0:
                     value += ";;"  # Note : temporary fix (old format)
@@ -245,7 +249,7 @@ class Dataset:
                     source = value[value.find(":") + 1 : value[:-1].rfind(";")]
                 else:
                     source = ""
-                return_dict["CURATED"] = {
+                return_dict[FieldValues.CURATED] = {
                     "source": source,
                     "note": "",
                 }
@@ -270,7 +274,7 @@ class Dataset:
                     else:
                         print(f"problem with masterdata_provenance_item {item}")
 
-        elif field == "colrev_data_provenance":
+        elif field == Fields.D_PROV:
             if value != "":
                 # Note : pybtex replaces \n upon load
                 for item in (value + " ").split("; "):
@@ -320,18 +324,18 @@ class Dataset:
         # but pybtex is still the most efficient solution.
         records_dict = {
             k: {
-                **{"ID": k},
-                **{"ENTRYTYPE": v.type},
+                **{Fields.ID: k},
+                **{Fields.ENTRYTYPE: v.type},
                 **dict(
                     {
                         # Cast status to Enum
-                        k: colrev.record.RecordState[v] if ("colrev_status" == k)
+                        k: colrev.record.RecordState[v] if (Fields.STATUS == k)
                         # DOIs are case insensitive -> use upper case.
-                        else v.upper() if ("doi" == k)
+                        else v.upper() if (Fields.DOI == k)
                         # Note : the following two lines are a temporary fix
                         # to converg colrev_origins to list items
                         else [el.rstrip().lstrip() for el in v.split(";") if "" != el]
-                        if k == "colrev_origin"
+                        if k == Fields.ORIGIN
                         else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
                         if k in colrev.record.Record.list_fields_keys
                         else Dataset.__load_field_dict(value=v, field=k)
@@ -357,20 +361,20 @@ class Dataset:
             if " = " in item_string:
                 key, value = item_string.split(" = ", 1)
             else:
-                key = "ID"
+                key = Fields.ID
                 value = item_string.split("{")[1]
 
             key = key.lstrip().rstrip()
             value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-            if key == "colrev_origin":
+            if key == Fields.ORIGIN:
                 value_list = value.replace("\n", "").split(";")
                 value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
                 return key, value_list
-            if key == "colrev_status":
+            if key == Fields.STATUS:
                 return key, colrev.record.RecordState[value]
-            if key == "colrev_masterdata_provenance":
+            if key == Fields.MD_PROV:
                 return key, self.__load_field_dict(value=value, field=key)
-            if key == "file":
+            if key == Fields.FILE:
                 return key, Path(value)
         except IndexError as exc:
             raise colrev_exceptions.BrokenFilesError(msg="parsing records.bib") from exc
@@ -388,12 +392,12 @@ class Dataset:
 
         # Fields required
         default = {
-            "ID": "NA",
-            "colrev_origin": "NA",
-            "colrev_status": "NA",
-            "file": "NA",
-            "screening_criteria": "NA",
-            "colrev_masterdata_provenance": "NA",
+            Fields.ID: "NA",
+            Fields.ORIGIN: "NA",
+            Fields.STATUS: "NA",
+            Fields.FILE: "NA",
+            Fields.SCREENING_CRITERIA: "NA",
+            Fields.MD_PROV: "NA",
         }
         number_required_header_items = len(default)
 
@@ -417,7 +421,7 @@ class Dataset:
                 item_count = 0
                 continue
 
-            if "@" in line[:2] and record_header_item["ID"] != "NA":
+            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 item_count = 0
@@ -425,7 +429,7 @@ class Dataset:
             item_string += line
             if "}," in line or "@" in line[:2]:
                 key, value = self.__parse_k_v(item_string)
-                if key == "colrev_masterdata_provenance":
+                if key == Fields.MD_PROV:
                     if value == "NA":
                         value = {}
                 if value == "NA":
@@ -436,7 +440,7 @@ class Dataset:
                     item_count += 1
                     record_header_item[key] = value
 
-        if record_header_item["colrev_origin"] != "NA":
+        if record_header_item[Fields.ORIGIN] != "NA":
             record_header_items.append(record_header_item)
 
         return [
@@ -462,7 +466,7 @@ class Dataset:
         'colrev_status': <RecordState.md_imported: 2>,
         'screening_criteria': 'criterion1=in;criterion2=out',
         'file': PosixPath('data/pdfs/Smith2000.pdf'),
-        'colrev_masterdata_provenance': {"author":{"source":"...", "note":"..."}}},
+        'Fields.MD_PROV': {Fields.AUTHOR:{"source":"...", "note":"..."}}},
         }
         """
 
@@ -476,7 +480,7 @@ class Dataset:
             record_header_list = (
                 self.__read_record_header_items() if self.records_file.is_file() else []
             )
-            record_header_dict = {r["ID"]: r for r in record_header_list}
+            record_header_dict = {r[Fields.ID]: r for r in record_header_list}
             return record_header_dict
 
         if file_path:
@@ -521,41 +525,41 @@ class Dataset:
                 bibtex_str += "\n"
             first = False
 
-            bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
+            bibtex_str += f"@{record_dict[Fields.ENTRYTYPE]}{{{record_id}"
 
             try:
                 language_service.unify_to_iso_639_3_language_codes(
                     record=colrev.record.Record(data=record_dict)
                 )
             except colrev_exceptions.InvalidLanguageCodeException:
-                del record_dict["language"]
+                del record_dict[Fields.LANGUAGE]
 
             field_order = [
-                "colrev_origin",  # must be in second line
-                "colrev_status",
-                "colrev_masterdata_provenance",
-                "colrev_data_provenance",
-                "colrev_pdf_id",
-                "screening_criteria",
-                "file",  # Note : do not change this order (parsers rely on it)
-                "prescreen_exclusion",
-                "doi",
-                "grobid-version",
-                "colrev.dblp.dblp_key",
-                "colrev.semantic_scholar.id",
-                "colrev.web_of_science.unique-id",
-                "author",
-                "booktitle",
-                "journal",
-                "title",
-                "year",
-                "volume",
-                "number",
-                "pages",
-                "editor",
-                "publisher",
-                "url",
-                "abstract",
+                Fields.ORIGIN,  # must be in second line
+                Fields.STATUS,
+                Fields.MD_PROV,
+                Fields.D_PROV,
+                Fields.PDF_ID,
+                Fields.SCREENING_CRITERIA,
+                Fields.FILE,  # Note : do not change this order (parsers rely on it)
+                Fields.PRESCREEN_EXCLUSION,
+                Fields.DOI,
+                Fields.GROBID_VERSION,
+                Fields.DBLP_KEY,
+                Fields.SEMANTIC_SCHOLAR_ID,
+                Fields.WEB_OF_SCIENCE_ID,
+                Fields.AUTHOR,
+                Fields.BOOKTITLE,
+                Fields.JOURNAL,
+                Fields.TITLE,
+                Fields.YEAR,
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
+                Fields.EDITOR,
+                Fields.PUBLISHER,
+                Fields.URL,
+                Fields.ABSTRACT,
             ]
 
             record = colrev.record.Record(data=record_dict)
@@ -570,7 +574,7 @@ class Dataset:
                     )
 
             for key in sorted(record_dict.keys()):
-                if key in field_order + ["ID", "ENTRYTYPE"]:
+                if key in field_order + [Fields.ID, Fields.ENTRYTYPE]:
                     continue
 
                 bibtex_str += format_field(key, record_dict[key])
@@ -606,7 +610,7 @@ class Dataset:
         parsed = self.parse_bibtex_str(recs_dict_in=records)
         record_list = [
             {
-                "ID": item[item.find("{") + 1 : item.find(",")],
+                Fields.ID: item[item.find("{") + 1 : item.find(",")],
                 "record": "@" + item + "\n",
             }
             for item in parsed.split("\n@")
@@ -623,14 +627,14 @@ class Dataset:
                     if b"@" in line[:3]:
                         current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
                         current_id_str = current_id.decode("utf-8")
-                    if current_id_str in [x["ID"] for x in record_list]:
+                    if current_id_str in [x[Fields.ID] for x in record_list]:
                         replacement = [
                             x["record"]
                             for x in record_list
-                            if x["ID"] == current_id_str
+                            if x[Fields.ID] == current_id_str
                         ][0]
                         record_list = [
-                            x for x in record_list if x["ID"] != current_id_str
+                            x for x in record_list if x[Fields.ID] != current_id_str
                         ]
                         line = file.readline()
                         while (
@@ -657,7 +661,8 @@ class Dataset:
                         m_refs.write(item["record"])
             else:
                 self.review_manager.report_logger.error(
-                    "records not written to file: " f'{[x["ID"] for x in record_list]}'
+                    "records not written to file: "
+                    f"{[x[Fields.ID] for x in record_list]}"
                 )
 
         self.__add_record_changes()
@@ -709,21 +714,19 @@ class Dataset:
             quality_model = self.review_manager.get_qm()
             records = self.load_records_dict()
             for record_dict in records.values():
-                if "colrev_status" not in record_dict:
-                    print(f'Error: no status field in record ({record_dict["ID"]})')
+                if Fields.STATUS not in record_dict:
+                    print(
+                        f"Error: no status field in record ({record_dict[Fields.ID]})"
+                    )
                     continue
 
                 record = colrev.record.PrepRecord(data=record_dict)
-                if record_dict["colrev_status"] in [
+                if record_dict[Fields.STATUS] in [
                     colrev.record.RecordState.md_needs_manual_preparation,
                 ]:
-                    record.update_masterdata_provenance(qm=quality_model)
-                    record.update_metadata_status()
+                    record.run_quality_model(qm=quality_model)
 
-                if (
-                    record_dict["colrev_status"]
-                    == colrev.record.RecordState.pdf_prepared
-                ):
+                if record_dict[Fields.STATUS] == colrev.record.RecordState.pdf_prepared:
                     record.reset_pdf_provenance_notes()
 
             self.save_records_dict(records=records)
@@ -776,7 +779,7 @@ class Dataset:
 
         try:
             retrieved_record = local_index.retrieve(record_dict=record_dict)
-            temp_id = retrieved_record["ID"]
+            temp_id = retrieved_record[Fields.ID]
 
             # Do not use IDs from local_index for curated_metadata repositories
             if "curated_metadata" in str(self.review_manager.path):
@@ -786,9 +789,9 @@ class Dataset:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
-            if record_dict.get("author", record_dict.get("editor", "")) != "":
+            if record_dict.get(Fields.AUTHOR, record_dict.get(Fields.EDITOR, "")) != "":
                 authors_string = record_dict.get(
-                    "author", record_dict.get("editor", "Anonymous")
+                    Fields.AUTHOR, record_dict.get(Fields.EDITOR, "Anonymous")
                 )
                 authors = colrev.record.PrepRecord.format_author_field(
                     input_string=authors_string
@@ -805,9 +808,7 @@ class Dataset:
 
             id_pattern = self.review_manager.settings.project.id_pattern
             if colrev.settings.IDPattern.first_author_year == id_pattern:
-                temp_id = (
-                    f'{author.replace(" ", "")}{str(record_dict.get("year", "NoYear"))}'
-                )
+                temp_id = f'{author.replace(" ", "")}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
             elif colrev.settings.IDPattern.three_authors_year == id_pattern:
                 temp_id = ""
                 indices = len(authors)
@@ -817,7 +818,7 @@ class Dataset:
                     temp_id = temp_id + f'{authors[ind].split(",")[0].replace(" ", "")}'
                 if len(authors) > 3:
                     temp_id = temp_id + "EtAl"
-                temp_id = temp_id + str(record_dict.get("year", "NoYear"))
+                temp_id = temp_id + str(record_dict.get(Fields.YEAR, "NoYear"))
 
             if temp_id.isupper():
                 temp_id = temp_id.capitalize()
@@ -853,10 +854,8 @@ class Dataset:
         """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)"""
 
         for record in self.load_records_dict(header_only=True).values():
-            if record["ID"] == record_id:
-                if record[
-                    "colrev_status"
-                ] in colrev.record.RecordState.get_post_x_states(
+            if record[Fields.ID] == record_id:
+                if record[Fields.STATUS] in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.md_processed
                 ):
                     return True
@@ -873,10 +872,10 @@ class Dataset:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
         # Only change IDs that are before md_processed
-        if record_dict["colrev_status"] in colrev.record.RecordState.get_post_x_states(
+        if record_dict[Fields.STATUS] in colrev.record.RecordState.get_post_x_states(
             state=colrev.record.RecordState.md_processed
         ):
-            raise colrev_exceptions.PropagatedIDChange([record_dict["ID"]])
+            raise colrev_exceptions.PropagatedIDChange([record_dict[Fields.ID]])
         # Alternatively, we could change IDs except for those
         # that have been propagated to the
         # screen or data will not be replaced
@@ -918,7 +917,7 @@ class Dataset:
                     if record_id not in selected_ids:
                         continue
                 if (
-                    record_dict["colrev_status"]
+                    record_dict[Fields.STATUS]
                     not in [
                         colrev.record.RecordState.md_imported,
                         colrev.record.RecordState.md_prepared,
@@ -928,7 +927,7 @@ class Dataset:
                     continue
                 old_id = record_id
 
-                temp_stat = record_dict["colrev_status"]
+                temp_stat = record_dict[Fields.STATUS]
                 if selected_ids:
                     record = colrev.record.Record(data=record_dict)
                     record.set_status(

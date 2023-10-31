@@ -12,6 +12,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.pubmed as pubmed_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -69,7 +70,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
         if any(
             pubmed_prefix in o
             for pubmed_prefix in self.pubmed_prefixes
-            for o in record.data["colrev_origin"]
+            for o in record.data[Fields.ORIGIN]
         ):
             # Already linked to a pubmed record
             return record

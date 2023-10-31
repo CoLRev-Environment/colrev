@@ -107,6 +107,10 @@
             "status": "EXPERIMENTAL"
         },
         {
+            "package_endpoint_identifier": "colrev.arxiv",
+            "status": "EXPERIMENTAL"
+        },
+        {
             "package_endpoint_identifier": "colrev.psycinfo",
             "status": "EXPERIMENTAL"
         },
@@ -246,10 +250,6 @@
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.update_metadata_status",
             "status": "MATURING"
         },
         {

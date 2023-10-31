@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +14,7 @@ import colrev.qm.quality_model
 class PageRangeChecker:
     """The PageRangeChecker"""
 
-    msg = "page-range"
+    msg = DefectCodes.PAGE_RANGE
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -20,15 +22,15 @@ class PageRangeChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the page-range checks"""
 
-        if "pages" not in record.data:
+        if Fields.PAGES not in record.data:
             return
-        if not re.match(r"^\d+\-\-\d+$", record.data["pages"]):
+        if not re.match(r"^\d+\-\-\d+$", record.data[Fields.PAGES]):
             return
 
-        if self.__pages_descending(pages=record.data["pages"]):
-            record.add_masterdata_provenance_note(key="pages", note=self.msg)
+        if self.__pages_descending(pages=record.data[Fields.PAGES]):
+            record.add_masterdata_provenance_note(key=Fields.PAGES, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="pages", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.PAGES, note=self.msg)
 
     def __pages_descending(self, *, pages: str) -> bool:
         from_page, to_page = re.findall(r"(\d+)", pages)

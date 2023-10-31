@@ -1,5 +1,14 @@
 #! /usr/bin/env python
-"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID"""
+"""Load conversion of reference sections (bibliographies) in md-documents based on GROBID
+
+Example reference section::
+
+    # References
+
+    Guo, W. and Straub, D. W. and Zhang, P. and Cai, Z. (2021). How Trust Leads to Commitment
+          on Microsourcing Platforms. MIS Quarterly, 45(3), 1309--1348.
+
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,6 +16,7 @@ from typing import TYPE_CHECKING
 import requests
 
 import colrev.env.package_manager
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.load
@@ -65,7 +75,7 @@ class MarkdownLoader:
             load_str=data
         )
         for record in records.values():
-            if record.get("year", "a") == record.get("date", "b"):
+            if record.get(Fields.YEAR, "a") == record.get("date", "b"):
                 del record["date"]
 
         return records

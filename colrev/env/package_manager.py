@@ -25,7 +25,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-ancestors
@@ -36,6 +37,7 @@ import colrev.ui_cli.cli_colors as colors
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
 
+# pylint: disable=colrev-missed-constant-usage
 class PackageEndpointType(Enum):
     """An enum for the types of PackageEndpoints"""
 
@@ -73,7 +75,7 @@ class GeneralInterface(zope.interface.Interface):  # pylint: disable=inherit-non
     Each package endpoint must implement the following attributes (methods)"""
 
     ci_supported = zope.interface.Attribute(
-        """Flag indicating whether the extension can be run in
+        """Flag indicating whether the package can be run in
         continuous integration environments (e.g. GitHub Actions)"""
     )
 
@@ -742,6 +744,7 @@ class PackageManager:
 
         return packages_dict
 
+    # pylint: disable=too-many-arguments
     def load_packages(
         self,
         *,
@@ -794,8 +797,8 @@ class PackageManager:
                 except colrev_exceptions.ServiceNotAvailableException as sna_exc:
                     if sna_exc.dep == "docker":
                         print(
-                            f"{colors.ORANGE}Docker not available. Deactivate "
-                            f"{package_identifier}{colors.END}"
+                            f"{Colors.ORANGE}Docker not available. Deactivate "
+                            f"{package_identifier}{Colors.END}"
                         )
                         to_remove.append(package_identifier)
                     else:
@@ -830,7 +833,7 @@ class PackageManager:
         file_path = Path(f"{identifier}.rst")
         target = extensions_index_path / file_path
         with open(target, "w", encoding="utf-8") as file:
-            # TODO : at this point, we may add metadata
+            # NOTE: at this point, we may add metadata
             # (such as package status, authors, url etc.)
             file.write(output)
 
@@ -886,6 +889,8 @@ class PackageManager:
             for line in new_doc:
                 file.write(line + "\n")
 
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments
     def __add_package_endpoints(
         self,
         *,
@@ -1103,6 +1108,7 @@ class PackageManager:
 
         self.__write_docs_for_index(docs_for_index)
 
+    # pylint: disable=too-many-locals
     def add_endpoint_for_operation(
         self,
         *,
@@ -1177,7 +1183,7 @@ class PackageManager:
                 return
 
         operation.review_manager.logger.info(
-            f"{colors.GREEN}Add {operation.type} package:{colors.END} {package_identifier}"
+            f"{Colors.GREEN}Add {operation.type} package:{Colors.END} {package_identifier}"
         )
 
         endpoint_dict = self.load_packages(
@@ -1191,7 +1197,7 @@ class PackageManager:
         if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
             if params:
                 if params.startswith("http"):
-                    params_dict = {"url": params}
+                    params_dict = {Fields.URL: params}
                 else:
                     params_dict = {}
                     for item in params.split(";"):

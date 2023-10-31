@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -97,7 +98,7 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
             for record_dict in records.values():
                 if "eprint" not in record_dict:
                     continue
-                record_dict["fulltext"] = record_dict.pop("eprint")
+                record_dict[Fields.FULLTEXT] = record_dict.pop("eprint")
             return records
 
         raise NotImplementedError
@@ -107,8 +108,8 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for Wiley"""
 
-        if record.data.get("ENTRYTYPE", "") == "inbook":
-            record.rename_field(key="title", new_key="chapter")
-            record.rename_field(key="booktitle", new_key="title")
+        if record.data.get(Fields.ENTRYTYPE, "") == "inbook":
+            record.rename_field(key=Fields.TITLE, new_key=Fields.CHAPTER)
+            record.rename_field(key=Fields.BOOKTITLE, new_key=Fields.TITLE)
 
         return record

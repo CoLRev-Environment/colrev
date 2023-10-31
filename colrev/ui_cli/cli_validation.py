@@ -7,21 +7,22 @@ import subprocess  # nosec
 from typing import TYPE_CHECKING
 
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.status
 
 # pylint: disable=duplicate-code
 keys = [
-    "author",
-    "title",
-    "journal",
-    "booktitle",
-    "year",
-    "volume",
-    "number",
-    "pages",
+    Fields.AUTHOR,
+    Fields.TITLE,
+    Fields.JOURNAL,
+    Fields.BOOKTITLE,
+    Fields.YEAR,
+    Fields.VOLUME,
+    Fields.NUMBER,
+    Fields.PAGES,
 ]
 
 
@@ -47,7 +48,7 @@ def __validate_dedupe(
 
         if user_selection == "n":
             dedupe_operation.unmerge_records(
-                current_record_ids=validation_item["record"]["ID"]
+                current_record_ids=validation_item["record"][Fields.ID]
             )
 
         if user_selection == "q":
@@ -84,8 +85,8 @@ def __validate_prep(
         # Escape sequence to clear terminal output for each new comparison
         os.system("cls" if os.name == "nt" else "clear")
         if (
-            validation_element["prior_record_dict"]["ID"]
-            == validation_element["record_dict"]["ID"]
+            validation_element["prior_record_dict"][Fields.ID]
+            == validation_element["record_dict"][Fields.ID]
         ):
             print(
                 f"difference: {str(round(validation_element['change_score'], 4))} "
@@ -111,9 +112,9 @@ def __validate_prep(
         if user_selection == "n":
             validate_operation.review_manager.dataset.save_records_dict(
                 records={
-                    validation_element["prior_record_dict"]["ID"]: validation_element[
-                        "prior_record_dict"
-                    ]
+                    validation_element["prior_record_dict"][
+                        Fields.ID
+                    ]: validation_element["prior_record_dict"]
                 },
                 partial=True,
             )
@@ -181,7 +182,7 @@ def validate(
                     print(
                         f"  committer {item_values['committer']} ({item_values['committer_email']})"
                     )
-                    print(f"  {colors.ORANGE}{item_values['validate']}{colors.END}")
+                    print(f"  {Colors.ORANGE}{item_values['validate']}{Colors.END}")
 
             print()
         elif key == "general":
@@ -192,12 +193,12 @@ def validate(
             )
             validate_operation.review_manager.logger.info(
                 "To undo minor changes, edit the corresponding files directly and run "
-                f"{colors.ORANGE}git add FILENAME && "
-                f"git commit -m 'DESCRIPTION OF CHANGES UNDONE'{colors.END}"
+                f"{Colors.ORANGE}git add FILENAME && "
+                f"git commit -m 'DESCRIPTION OF CHANGES UNDONE'{Colors.END}"
             )
             validate_operation.review_manager.logger.info(
                 "To undo all changes introduced in a commit, run "
-                f"{colors.ORANGE}git revert COMMIT_ID{colors.END}"
+                f"{Colors.ORANGE}git revert COMMIT_ID{Colors.END}"
             )
             input("Enter to continue")
             if "commit_relative" in details:

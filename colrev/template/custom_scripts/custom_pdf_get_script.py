@@ -8,6 +8,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.operation
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_get
@@ -37,7 +38,7 @@ class CustomPDFGet:
     ) -> colrev.record.Record:
         """Get the PDF"""
 
-        record.data["file"] = "filepath"
+        record.data[Fields.FILE] = "filepath"
         pdf_get_operation.import_pdf(record=record)
 
         return record

@@ -10,6 +10,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -116,13 +117,13 @@ class CuratedMasterdata(JsonSchemaMixin):
                 "curated_masterdata": True,
                 "masterdata_restrictions": {
                     # "1900": {
-                    #     "ENTRYTYPE": "article",
-                    #     "volume": True,
-                    #     "number": True,
-                    #     "journal": "Journal Name",
+                    #     Fields.ENTRYTYPE: "article",
+                    #     Fields.VOLUME: True,
+                    #     Fields.NUMBER: True,
+                    #     Fields.JOURNAL: "Journal Name",
                     # }
                 },
-                "curated_fields": ["doi", "url"],
+                "curated_fields": [Fields.DOI, Fields.URL],
             }
         ]
 

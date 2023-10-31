@@ -22,7 +22,8 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 
 # pylint: disable=too-few-public-methods
@@ -33,6 +34,7 @@ class Initializer:
 
     share_stat_req_options = ["none", "processed", "screened", "completed"]
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -102,7 +104,7 @@ class Initializer:
         self.__post_commit_edits()
 
         self.review_manager.logger.info(
-            "%sCompleted init operation%s", colors.GREEN, colors.END
+            "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
 
     def __check_init_precondition(self) -> None:
@@ -132,7 +134,7 @@ class Initializer:
                     "For more information, see "
                     "https://colrev.readthedocs.io/en/latest/manual/manual.html"
                     "To init a repository without Docker, run "
-                    f"{colors.ORANGE}colrev init --light{colors.END}"
+                    f"{Colors.ORANGE}colrev init --light{Colors.END}"
                 ) from exc
 
     def __setup_init_logger(self, *, level: int = logging.INFO) -> logging.Logger:
@@ -324,7 +326,11 @@ class Initializer:
         if self.review_type == "colrev.curated_masterdata":
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
-            self.review_manager.settings.project.curated_fields = ["url", "doi", "TODO"]
+            self.review_manager.settings.project.curated_fields = [
+                Fields.URL,
+                Fields.DOI,
+                "TODO",
+            ]
 
             pdf_source_l = [
                 s
@@ -336,7 +342,7 @@ class Initializer:
                 pdf_source.search_parameters = {
                     "scope": {
                         "path": "pdfs",
-                        "journal": "TODO",
+                        Fields.JOURNAL: "TODO",
                         "subdir_pattern": "TODO:volume_number|year",
                     }
                 }
@@ -400,9 +406,9 @@ class Initializer:
                 else:
                     self.logger.error(
                         "%sFailed: %s%s",
-                        colors.RED,
+                        Colors.RED,
                         " ".join(script_to_call),
-                        colors.END,
+                        Colors.END,
                     )
 
     def __create_example_repo(self) -> None:
@@ -424,6 +430,17 @@ class Initializer:
 
         settings["dedupe"]["dedupe_package_endpoints"] = [
             {"endpoint": "colrev.simple_dedupe"}
+        ]
+        settings["sources"] = [
+            {
+                "endpoint": "colrev.unknown_source",
+                "filename": str(Path("data/search/30_example_records.bib")),
+                "search_type": "DB",
+                "search_parameters": {
+                    "query_file": str(Path("data/search/30_example_records_query.txt"))
+                },
+                "comment": "",
+            }
         ]
 
         with open("settings.json", "w", encoding="utf-8") as outfile:

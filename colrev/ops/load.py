@@ -6,12 +6,15 @@ import itertools
 import string
 from pathlib import Path
 
+import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.load_utils_formatter
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 
 class Load(colrev.operation.Operation):
@@ -54,14 +57,14 @@ class Load(colrev.operation.Operation):
         )
         record_header_list = list(records_headers.values())
         imported_origins = [
-            item for x in record_header_list for item in x["colrev_origin"]
+            item for x in record_header_list for item in x[Fields.ORIGIN]
         ]
         return imported_origins
 
     def ensure_append_only(self, *, file: Path) -> None:
         """Ensure that the file was only appended to.
 
-        This method must be called for all extensions that work
+        This method must be called for all packages that work
         with an ex-post assignment of incremental IDs."""
 
         git_repo = self.review_manager.dataset.get_repo()
@@ -95,35 +98,35 @@ class Load(colrev.operation.Operation):
         """Set the provenance for an imported record"""
 
         def set_initial_import_provenance(*, record: colrev.record.Record) -> None:
-            # Initialize colrev_masterdata_provenance
+            # Initialize Fields.MD_PROV
             colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
             for key in sorted(record.data.keys()):
-                if key in colrev.record.Record.identifying_field_keys:
+                if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
                     if key not in colrev_masterdata_provenance:
                         colrev_masterdata_provenance[key] = {
-                            "source": record.data["colrev_origin"][0],
+                            "source": record.data[Fields.ORIGIN][0],
                             "note": "",
                         }
-                elif key not in colrev.record.Record.provenance_keys and key not in [
+                elif key not in c.FieldSet.PROVENANCE_KEYS and key not in [
                     "colrev_source_identifier",
-                    "ID",
-                    "ENTRYTYPE",
+                    Fields.ID,
+                    Fields.ENTRYTYPE,
                 ]:
                     colrev_data_provenance[key] = {
-                        "source": record.data["colrev_origin"][0],
+                        "source": record.data[Fields.ORIGIN][0],
                         "note": "",
                     }
 
-            record.data["colrev_data_provenance"] = colrev_data_provenance
-            record.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
+            record.data[Fields.D_PROV] = colrev_data_provenance
+            record.data[Fields.MD_PROV] = colrev_masterdata_provenance
 
         if not record.masterdata_is_curated():
             set_initial_import_provenance(record=record)
-            record.update_masterdata_provenance(qm=self.quality_model)
+            record.run_quality_model(qm=self.quality_model)
 
     def __import_record(self, *, record_dict: dict) -> dict:
-        self.review_manager.logger.debug(f'import_record {record_dict["ID"]}: ')
+        self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
         record = colrev.record.Record(data=record_dict)
 
@@ -132,7 +135,7 @@ class Load(colrev.operation.Operation):
 
         self.__import_provenance(record=record)
 
-        if record.data["colrev_status"] in [
+        if record.data[Fields.STATUS] in [
             colrev.record.RecordState.md_retrieved,
             colrev.record.RecordState.md_needs_manual_preparation,
         ]:
@@ -140,8 +143,8 @@ class Load(colrev.operation.Operation):
 
         if record.check_potential_retracts():
             self.review_manager.logger.info(
-                f"{colors.GREEN}Found paper retract: "
-                f"{record.data['ID']}{colors.END}"
+                f"{Colors.GREEN}Found paper retract: "
+                f"{record.data['ID']}{Colors.END}"
             )
 
         return record.get_data()
@@ -152,10 +155,10 @@ class Load(colrev.operation.Operation):
         record_list = []
         origin_prefix = source_settings.get_origin_prefix()
         for record in search_records.values():
-            for key in colrev.record.Record.provenance_keys + [
-                "screening_criteria",
+            for key in c.FieldSet.PROVENANCE_KEYS + [
+                Fields.SCREENING_CRITERIA,
             ]:
-                if key == "colrev_status":
+                if key == Fields.STATUS:
                     continue
                 if key in record:
                     del record[key]
@@ -170,20 +173,18 @@ class Load(colrev.operation.Operation):
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev.record.RecordState.md_prepared)
                 if "curation_ID" in record:
-                    record.update(
-                        colrev_masterdata_provenance={
-                            "CURATED": {
-                                "source": record["curation_ID"].split("#")[0],
-                                "note": "",
-                            }
+                    record[Fields.MD_PROV] = {
+                        FieldValues.CURATED: {
+                            "source": record["curation_ID"].split("#")[0],
+                            "note": "",
                         }
-                    )
+                    }
             else:
                 record.update(colrev_status=colrev.record.RecordState.md_retrieved)
 
-            if "doi" in record:
+            if Fields.DOI in record:
                 formatted_doi = (
-                    record["doi"]
+                    record[Fields.DOI]
                     .lower()
                     .replace("https://", "http://")
                     .replace("dx.doi.org", "doi.org")
@@ -193,7 +194,7 @@ class Load(colrev.operation.Operation):
                 record.update(doi=formatted_doi)
 
             self.review_manager.logger.debug(
-                f'append record {record["ID"]} '
+                f"append record {record[Fields.ID]} "
                 # f"\n{self.review_manager.p_printer.pformat(record)}\n\n"
             )
             record_list.append(record)
@@ -211,7 +212,7 @@ class Load(colrev.operation.Operation):
         source_records_list = [
             x
             for x in source_records_list
-            if x["colrev_origin"][0] not in imported_origins
+            if x[Fields.ORIGIN][0] not in imported_origins
         ]
         source.search_source.setup_for_load(
             source_records_list=source_records_list, imported_origins=imported_origins
@@ -230,33 +231,31 @@ class Load(colrev.operation.Operation):
         self.__setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
         for source_record in source.search_source.source_records_list:
-            # prefix non-standardized field keys
-            for key in list(source_record.keys()):
-                if key in colrev.record.Record.standardized_field_keys:
-                    continue
-                source_record[
-                    f"{source.search_source.endpoint}.{key}"
-                ] = source_record.pop(key)
+            colrev.record.Record(data=source_record).prefix_non_standardized_field_keys(
+                prefix=source.search_source.endpoint
+            )
 
             source_record = self.__import_record(record_dict=source_record)
 
             # Make sure not to replace existing records
             order = 0
             letters = list(string.ascii_lowercase)
-            next_unique_id = source_record["ID"]
+            next_unique_id = source_record[Fields.ID]
             appends: list = []
             while next_unique_id in records:
                 if len(appends) == 0:
                     order += 1
                     appends = list(itertools.product(letters, repeat=order))
-                next_unique_id = source_record["ID"] + "".join(list(appends.pop(0)))
-            source_record["ID"] = next_unique_id
+                next_unique_id = source_record[Fields.ID] + "".join(
+                    list(appends.pop(0))
+                )
+            source_record[Fields.ID] = next_unique_id
 
-            records[source_record["ID"]] = source_record
+            records[source_record[Fields.ID]] = source_record
 
             self.review_manager.logger.info(
-                f" {colors.GREEN}{source_record['ID']}".ljust(46)
-                + f"md_retrieved →  {source_record['colrev_status']}{colors.END}"
+                f" {Colors.GREEN}{source_record['ID']}".ljust(46)
+                + f"md_retrieved →  {source_record['colrev_status']}{Colors.END}"
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
@@ -269,7 +268,7 @@ class Load(colrev.operation.Operation):
             records = self.review_manager.dataset.set_ids(
                 records=records,
                 selected_ids=[
-                    r["ID"] for r in source.search_source.source_records_list
+                    r[Fields.ID] for r in source.search_source.source_records_list
                 ],
             )
 
@@ -340,31 +339,31 @@ class Load(colrev.operation.Operation):
         self.review_manager.logger.error(f"len_after: {len(imported_origins)}")
 
         origins_to_import = [
-            o["colrev_origin"] for o in source.search_source.source_records_list
+            o[Fields.ORIGIN] for o in source.search_source.source_records_list
         ]
         if source.search_source.to_import - imported > 0:
             self.review_manager.logger.error(
-                f"{colors.RED}PROBLEM: delta: "
-                f"{source.search_source.to_import - imported} records missing{colors.END}"
+                f"{Colors.RED}PROBLEM: delta: "
+                f"{source.search_source.to_import - imported} records missing{Colors.END}"
             )
 
             missing_origins = [
                 o for o in origins_to_import if o not in imported_origins
             ]
             self.review_manager.logger.error(
-                f"{colors.RED}Records not yet imported: {missing_origins}{colors.END}"
+                f"{Colors.RED}Records not yet imported: {missing_origins}{Colors.END}"
             )
         else:
             self.review_manager.logger.error(
-                f"{colors.RED}PROBLEM: "
+                f"{Colors.RED}PROBLEM: "
                 f"{-1*(source.search_source.to_import - imported)}"
-                f" records too much{colors.END}"
+                f" records too much{Colors.END}"
             )
             additional_origins = [
                 o for o in imported_origins if o not in origins_to_import
             ]
             self.review_manager.logger.error(
-                f"{colors.RED}Records additionally imported: {additional_origins}{colors.END}"
+                f"{Colors.RED}Records additionally imported: {additional_origins}{Colors.END}"
             )
 
     def __create_load_commit(self, source: colrev.settings.SearchSource) -> None:
@@ -406,5 +405,5 @@ class Load(colrev.operation.Operation):
                 print(exc)
 
         self.review_manager.logger.info(
-            f"{colors.GREEN}Completed load operation{colors.END}"
+            f"{Colors.GREEN}Completed load operation{Colors.END}"
         )

@@ -142,6 +142,17 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.arxiv",
+            "endpoint": "colrev.ops.built_in.search_sources.arxiv.ArXivSource",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "SearchSource for arXiv (:doc:`instructions </resources/extensions_index/colrev.arxiv>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.colrev_project",
             "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
             "status": "|MATURING|",
@@ -614,14 +625,6 @@
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on the prepare scripts specified by the SearchSource (:doc:`instructions </resources/extensions_index/colrev.source_specific_prep>`)",
-            "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.update_metadata_status",
-            "endpoint": "colrev.ops.built_in.prep.update_masterdata_status.UpdateMetadataStatusPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records by updating the metadata status (:doc:`instructions </resources/extensions_index/colrev.update_metadata_status>`)",
             "ci_supported": true
         }
     ],

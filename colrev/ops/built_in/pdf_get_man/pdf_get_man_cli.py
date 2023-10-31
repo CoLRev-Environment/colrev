@@ -13,7 +13,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.pdf_get
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_get_man
@@ -41,6 +42,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = pdf_get_man_operation.review_manager
 
         self.__get_from_downloads_folder = False
 
@@ -51,7 +53,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     ) -> colrev.record.Record:
         # import webbrowser
 
-        title = record.data.get("title", "no title")
+        title = record.data.get(Fields.TITLE, "no title")
         title = urllib.parse.quote_plus(title)
         url = f"  google:   https://www.google.com/search?q={title}+filetype%3Apdf"
         # webbrowser.open_new_tab(url)
@@ -67,8 +69,8 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         recipient = "TODO"
         subject = f"Copy of a PDF ({record.data['ID']})"
 
-        author_name = record.data.get("author", "").split(",")[0]
-        signed, _ = pdf_get_man_operation.review_manager.get_committer()
+        author_name = record.data.get(Fields.AUTHOR, "").split(",")[0]
+        signed, _ = self.review_manager.get_committer()
 
         template = colrev.env.utils.get_template(
             template_path="template/ops/pdf_get_man_mail.txt"
@@ -94,38 +96,36 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         record: colrev.record.Record,
     ) -> Path:
         filepath = (
-            pdf_get_man_operation.review_manager.pdf_dir
+            self.review_manager.pdf_dir
             / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
         )
         if filepath.is_file():
             return filepath
 
-        if "volume" in record.data:
+        if Fields.VOLUME in record.data:
             filepath = (
-                pdf_get_man_operation.review_manager.pdf_dir
+                self.review_manager.pdf_dir
                 / f"{record.data['volume']}/{record.data['ID']}.pdf"
             )
             if filepath.is_file():
                 return filepath
 
-        if "volume" in record.data and "number" in record.data:
+        if Fields.VOLUME in record.data and Fields.NUMBER in record.data:
             filepath = (
-                pdf_get_man_operation.review_manager.pdf_dir
+                self.review_manager.pdf_dir
                 / f"{record.data['volume']}_{record.data['number']}/{record.data['ID']}.pdf"
             )
             if filepath.is_file():
                 return filepath
 
             filepath = (
-                pdf_get_man_operation.review_manager.pdf_dir
+                self.review_manager.pdf_dir
                 / f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
             )
             if filepath.is_file():
                 return filepath
 
-        filepath = (
-            pdf_get_man_operation.review_manager.pdf_dir / f"{record.data['ID']}.pdf"
-        )
+        filepath = self.review_manager.pdf_dir / f"{record.data['ID']}.pdf"
 
         return filepath
 
@@ -156,7 +156,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             pdf_in_downloads_folder = pdfs_in_downloads_folder[0]
 
         # simple heuristics:
-        vol_slash_nr_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
+        vol_slash_nr_path = self.review_manager.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
         )
         if vol_slash_nr_path.is_dir():
@@ -165,7 +165,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
             return
 
-        vol_underscore_nr_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
+        vol_underscore_nr_path = self.review_manager.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}_{record.data.get('number', 'NA')}"
         )
         if vol_underscore_nr_path.is_dir():
@@ -174,14 +174,14 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
             return
 
-        vol_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
+        vol_path = self.review_manager.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}"
         )
         if vol_path.is_dir():
             pdf_in_downloads_folder.rename(vol_path / Path(f"{record.data['ID']}.pdf"))
             return
 
-        year_path = pdf_get_man_operation.review_manager.pdf_dir / Path(
+        year_path = self.review_manager.pdf_dir / Path(
             f"{record.data.get('year', 'NA')}"
         )
         if year_path.is_dir():
@@ -189,8 +189,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             return
 
         pdf_in_downloads_folder.rename(
-            pdf_get_man_operation.review_manager.pdf_dir
-            / Path(f"{record.data['ID']}.pdf")
+            self.review_manager.pdf_dir / Path(f"{record.data['ID']}.pdf")
         )
 
     def print_record(self, *, record_dict: dict) -> None:
@@ -198,24 +197,24 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         ret_str = f"  ID:       {record_dict['ID']} ({record_dict['ENTRYTYPE']})"
         ret_str += (
-            f"\n  title:    {colors.GREEN}{record_dict.get('title', 'no title')}{colors.END}"
+            f"\n  title:    {Colors.GREEN}{record_dict.get('title', 'no title')}{Colors.END}"
             f"\n  author:   {record_dict.get('author', 'no-author')}"
         )
-        if record_dict["ENTRYTYPE"] == "article":
+        if record_dict[Fields.ENTRYTYPE] == "article":
             ret_str += (
                 f"\n  outlet: {record_dict.get('journal', 'no-journal')} "
                 f"({record_dict.get('year', 'no-year')}) "
                 f"{record_dict.get('volume', 'no-volume')}"
                 f"({record_dict.get('number', '')})"
             )
-        elif record_dict["ENTRYTYPE"] == "inproceedings":
+        elif record_dict[Fields.ENTRYTYPE] == "inproceedings":
             ret_str += f"\n  {record_dict.get('booktitle', 'no-booktitle')}"
-        if "fulltext" in record_dict:
+        if Fields.FULLTEXT in record_dict:
             ret_str += (
-                f"\n  fulltext: {colors.ORANGE}{record_dict['fulltext']}{colors.END}"
+                f"\n  fulltext: {Colors.ORANGE}{record_dict['fulltext']}{Colors.END}"
             )
 
-        if "url" in record_dict:
+        if Fields.URL in record_dict:
             ret_str += f"\n  url:      {record_dict['url']}"
 
         print(ret_str)
@@ -226,7 +225,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan,
         record: colrev.record.Record,
     ) -> None:
-        # pdf_get_man_operation.review_manager.logger.debug(
+        # self.review_manager.logger.debug(
         #     f"called pdf_get_man_cli for {record}"
         # )
 
@@ -235,7 +234,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         if (
             colrev.record.RecordState.pdf_needs_manual_retrieval
-            != record.data["colrev_status"]
+            != record.data[Fields.STATUS]
         ):
             return
 
@@ -249,8 +248,8 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             pdf_get_man_operation=pdf_get_man_operation, record=record
         )
         for retrieval_script in retrieval_scripts.values():
-            # pdf_get_man_operation.review_manager.logger.debug(
-            #     f'{script_name}({record.data["ID"]}) called'
+            # self.review_manager.logger.debug(
+            #     f'{script_name}({record.data[Fields.ID]}) called'
             # )
             record = retrieval_script(pdf_get_man_operation, record)
 
@@ -263,7 +262,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                     pdf_get_man_operation=pdf_get_man_operation, record=record
                 )
                 if not filepath.is_file():
-                    print(f'File does not exist: {record.data["ID"]}.pdf')
+                    print(f"File does not exist: {record.data[Fields.ID]}.pdf")
                 else:
                     filepath = self.__get_filepath(
                         pdf_get_man_operation=pdf_get_man_operation, record=record
@@ -281,18 +280,18 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                     filepath=None,
                 )
 
-        pdf_get_man_operation.review_manager.update_status_yaml()
+        self.review_manager.update_status_yaml()
 
     def pdf_get_man(
         self, pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
     ) -> dict:
         """Get the PDF manually based on a cli"""
 
-        pdf_get_man_operation.review_manager.logger.info("Retrieve PDFs manually")
-        pdf_get_operation = pdf_get_man_operation.review_manager.get_pdf_get_operation()
-        pdf_dir = pdf_get_man_operation.review_manager.pdf_dir
+        self.review_manager.logger.info("Retrieve PDFs manually")
+        pdf_get_operation = self.review_manager.get_pdf_get_operation()
+        pdf_dir = self.review_manager.pdf_dir
 
-        records = pdf_get_man_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         if input("Check existing unlinked PDFs (y/n)?") == "y":
             records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
 
@@ -315,7 +314,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         for i, item in enumerate(pdf_get_man_data["items"]):
             stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
 
-            record = colrev.record.Record(data=records[item["ID"]])
+            record = colrev.record.Record(data=records[item[Fields.ID]])
 
             print(f"\n\n{stat}")
 
@@ -323,14 +322,14 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
                 pdf_get_man_operation=pdf_get_man_operation, record=record
             )
 
-        if pdf_get_man_operation.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_changes():
             if input("Create commit (y/n)?") == "y":
-                pdf_get_man_operation.review_manager.create_commit(
+                self.review_manager.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,
                 )
         else:
-            pdf_get_man_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Retrieve PDFs manually and copy the files to "
                 f"the {pdf_dir}. Afterwards, use "
                 "colrev pdf-get-man"

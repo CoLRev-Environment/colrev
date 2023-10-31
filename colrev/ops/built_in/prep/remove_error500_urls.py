@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -47,27 +48,27 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
         session = prep_operation.review_manager.get_cached_session()
 
         try:
-            if "url" in record.data:
+            if Fields.URL in record.data:
                 ret = session.request(
                     "GET",
-                    record.data["url"],
+                    record.data[Fields.URL],
                     headers=prep_operation.requests_headers,
                     timeout=60,
                 )
                 if ret.status_code >= 500:
-                    record.remove_field(key="url")
+                    record.remove_field(key=Fields.URL)
         except requests.exceptions.RequestException:
             pass
         try:
-            if "fulltext" in record.data:
+            if Fields.FULLTEXT in record.data:
                 ret = session.request(
                     "GET",
-                    record.data["fulltext"],
+                    record.data[Fields.FULLTEXT],
                     headers=prep_operation.requests_headers,
                     timeout=prep_operation.timeout,
                 )
                 if ret.status_code >= 500:
-                    record.remove_field(key="fulltext")
+                    record.remove_field(key=Fields.FULLTEXT)
         except requests.exceptions.RequestException:
             pass
 

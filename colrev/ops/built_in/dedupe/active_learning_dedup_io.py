@@ -24,7 +24,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -74,6 +75,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         self.local_index = dedupe_operation.review_manager.get_local_index()
         self.review_manager = dedupe_operation.review_manager
+        self.dedupe_operation = dedupe_operation
 
         if hasattr(dedupe_operation.review_manager, "dataset"):
             dedupe_operation.review_manager.dataset.update_gitignore(
@@ -83,7 +85,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     def setup_active_learning_dedupe(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
         retrain: bool,
         in_memory: bool,
     ) -> None:
@@ -100,12 +101,12 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             # self.training_file.unlink(missing_ok=True)
             self.settings_file.unlink(missing_ok=True)
 
-        dedupe_operation.review_manager.logger.info("Import data ...")
+        self.review_manager.logger.info("Import data ...")
 
         # Possible extension: in the read_data, we may want to append the colrev_status
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
-        data_d = dedupe_operation.read_data()
+        data_d = self.dedupe_operation.read_data()
 
         # to address memory issues, we select a sample from data_d
         # and feed it to prepare_training:
@@ -116,7 +117,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             # the not-in-memory mode is used for duplicate clustering
             # otherwise, non-sampled duplicates will not be identified
             max_training_sample_size = min(1500, len(list(data_d.keys())))
-            dedupe_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 f"Selecting a random sample of {max_training_sample_size}"
                 " to avoid memory problems"
             )
@@ -125,13 +126,13 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
 
-        # dedupe_operation.review_manager.logger.debug(
-        #     dedupe_operation.review_manager.p_printer.pformat(data_d)
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(data_d)
         # )
 
         # def title_corpus():
         #     for record in data_d.values():
-        #         yield record["title"]
+        #         yield record[Fields.TITLE]
 
         # def container_corpus():
         #     for record in data_d.values():
@@ -139,7 +140,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         # def author_corpus():
         #     for record in data_d.values():
-        #         yield record["author"]
+        #         yield record[Fields.AUTHOR]
 
         # Training
 
@@ -149,14 +150,14 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         # Define the fields dedupe will pay attention to
         fields = [
             {
-                "field": "author",
+                "field": Fields.AUTHOR,
                 "type": "String",
                 # "corpus": author_corpus(),k
                 "has missing": True,
                 "crf": True,
             },
             {
-                "field": "title",
+                "field": Fields.TITLE,
                 "type": "String",
                 #  "corpus": title_corpus()
                 "has missing": True,
@@ -171,25 +172,25 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "crf": True,
             },
             {
-                "field": "year",
-                "variable name": "year",
+                "field": Fields.YEAR,
+                "variable name": Fields.YEAR,
                 "has missing": True,
                 "type": "DateTime",
             },
             {
-                "field": "volume",
-                "variable name": "volume",
+                "field": Fields.VOLUME,
+                "variable name": Fields.VOLUME,
                 "type": "ShortString",
                 "has missing": True,
             },
             {
-                "field": "number",
-                "variable name": "number",
+                "field": Fields.NUMBER,
+                "variable name": Fields.NUMBER,
                 "type": "ShortString",
                 "has missing": True,
             },
             {
-                "field": "pages",
+                "field": Fields.PAGES,
                 "type": "ShortString",
                 "has missing": True,
                 "crf": True,
@@ -198,9 +199,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 "type": "Interaction",
                 "interaction variables": [
                     "container_title",
-                    "year",
-                    "volume",
-                    "number",
+                    Fields.YEAR,
+                    Fields.VOLUME,
+                    Fields.NUMBER,
                 ],
             },
         ]
@@ -221,29 +222,27 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             raise colrev_exceptions.DedupeError(
                 "Sample size too small for active learning. "
                 "Use simple_dedupe instead:\n"
-                f"{colors.ORANGE}  colrev settings -m 'dedupe.dedupe_package_endpoints="
-                f'[{{"endpoint":"colrev.simple_dedupe"}}]\'{colors.END}'
+                f"{Colors.ORANGE}  colrev settings -m 'dedupe.dedupe_package_endpoints="
+                f'[{{"endpoint":"colrev.simple_dedupe"}}]\'{Colors.END}'
             )
 
         if self.training_file.is_file():
-            dedupe_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Reading pre-labeled training data from "
                 f"{self.training_file.name} "
                 "and preparing data"
             )
-            dedupe_operation.review_manager.logger.info("Prepare training data")
+            self.review_manager.logger.info("Prepare training data")
             with open(self.training_file, "rb") as file:
                 self.deduper.prepare_training(data_d, file)
         else:
-            dedupe_operation.review_manager.logger.info("Prepare training data")
+            self.review_manager.logger.info("Prepare training data")
             # TBD: maybe use the sample_size parameter here?
             self.deduper.prepare_training(data_d)
 
         del data_d
 
-        dedupe_operation.review_manager.logger.info(
-            "Reading and preparation completed."
-        )
+        self.review_manager.logger.info("Reading and preparation completed.")
 
     def __get_nr_duplicates(self, *, result_list: list) -> int:
         return len([i for i in result_list if "duplicate" == i["decision"]])
@@ -254,7 +253,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     def apply_active_learning(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
         results: list,
     ) -> None:
         """Apply the active learning results"""
@@ -262,9 +260,9 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             self.__get_nr_duplicates(result_list=results) > 10
             and self.__get_nr_non_duplicates(result_list=results) > 10
         ):
-            dedupe_operation.apply_merges(results=results, complete_dedupe=False)
+            self.dedupe_operation.apply_merges(results=results, complete_dedupe=False)
 
-            dedupe_operation.review_manager.logger.info("Training deduper.")
+            self.review_manager.logger.info("Training deduper.")
 
             # Using the examples we just labeled, train the deduper and learn
             # blocking predicates
@@ -275,7 +273,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             # When finished, save our training to disk
             with open(self.training_file, "w", encoding="utf-8") as train_file:
                 self.deduper.write_training(train_file)
-            dedupe_operation.review_manager.dataset.add_changes(path=self.training_file)
+            self.review_manager.dataset.add_changes(path=self.training_file)
 
             # Save our weights and predicates to disk.  If the settings file
             # exists, we will skip all the training and learning next time we run
@@ -284,13 +282,13 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                 self.deduper.write_settings(sett_file)
             # self.cleanup_training()
 
-            dedupe_operation.review_manager.create_commit(
+            self.review_manager.create_commit(
                 msg="Labeling of duplicates (active learning)",
                 manual_author=True,
             )
 
         else:
-            dedupe_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Not enough duplicates/non-duplicates to train deduper."
             )
             if self.__get_nr_duplicates(result_list=results) > 0:
@@ -300,8 +298,10 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
                     "Set remaining records to non-duplicated "
                     "(at least 50 non-duplicates recommended) (y,n)?"
                 ):
-                    dedupe_operation.apply_merges(results=results, complete_dedupe=True)
-                    dedupe_operation.review_manager.create_commit(
+                    self.dedupe_operation.apply_merges(
+                        results=results, complete_dedupe=True
+                    )
+                    self.review_manager.create_commit(
                         msg="Set remaining records to non-duplicated (not enough to train ML)",
                         manual_author=True,
                     )
@@ -312,8 +312,10 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             and self.__get_nr_non_duplicates(result_list=results) > 100
         ):
             if input("Set remaining records to md_processed (no duplicates)?") == "y":
-                dedupe_operation.apply_merges(results=results, complete_dedupe=True)
-                dedupe_operation.review_manager.create_commit(
+                self.dedupe_operation.apply_merges(
+                    results=results, complete_dedupe=True
+                )
+                self.review_manager.create_commit(
                     msg="Set remaining records to non-duplicated",
                     manual_author=True,
                 )
@@ -357,8 +359,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     ) -> None:
         manual_dedupe_decision_list.append(
             {
-                "ID1": record_pair[0]["ID"],
-                "ID2": record_pair[1]["ID"],
+                "ID1": record_pair[0][Fields.ID],
+                "ID2": record_pair[1][Fields.ID],
                 "decision": "duplicate",
             }
         )
@@ -385,8 +387,8 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         manual_dedupe_decision_list.append(
             {
-                "ID1": record_pair[0]["ID"],
-                "ID2": record_pair[1]["ID"],
+                "ID1": record_pair[0][Fields.ID],
+                "ID2": record_pair[1][Fields.ID],
                 "decision": "no_duplicate",
             }
         )
@@ -529,7 +531,6 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
     def __adapted_console_label(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
         manual: bool,
         max_associations_to_check: int = 1000,
     ) -> None:
@@ -544,11 +545,11 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
         > dedupe.console_label(deduper)
         """
 
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             "Note: duplicate associations available in the LocalIndex "
             "are applied automatically."
         )
-        dedupe_operation.review_manager.logger.info("Press Enter to start.")
+        self.review_manager.logger.info("Press Enter to start.")
         input()
         self.__manual = manual
 
@@ -582,27 +583,25 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
 
         # Apply and commit
         self.apply_active_learning(
-            dedupe_operation=dedupe_operation,
             results=manual_dedupe_decision_list,
         )
 
+    # pylint: disable=unused-argument
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Run the console labeling to train the active learning model"""
 
         # Setting in-memory mode depending on system RAM
-        records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
+        records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
         sample_size = len(list(records_headers.values()))
         ram = psutil.virtual_memory().total
         in_memory = sample_size * 5000000 < ram
 
-        self.setup_active_learning_dedupe(
-            dedupe_operation=dedupe_operation, retrain=False, in_memory=in_memory
-        )
+        self.setup_active_learning_dedupe(retrain=False, in_memory=in_memory)
 
         dedupe_io.console_label = self.__adapted_console_label
-        dedupe_io.console_label(dedupe_operation=dedupe_operation, manual=True)
+        dedupe_io.console_label(manual=True)
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
@@ -640,6 +639,8 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         logging.getLogger("dedupe.canopy_index").setLevel(logging.WARNING)
 
         self.settings = self.settings_class.load_settings(data=settings)
+        self.dedupe_operation = dedupe_operation
+        self.review_manager = dedupe_operation.review_manager
 
         self.settings_file = (
             dedupe_operation.review_manager.path
@@ -651,13 +652,11 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         assert self.settings.partition_threshold >= 0.0
         assert self.settings.partition_threshold <= 1.0
 
-    def __get_duplicates_from_clusters(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, clustered_dupes: list
-    ) -> list[dict]:
-        dedupe_operation.review_manager.report_logger.info(
+    def __get_duplicates_from_clusters(self, *, clustered_dupes: list) -> list[dict]:
+        self.review_manager.report_logger.info(
             f"set merge_threshold: {self.settings.merge_threshold}"
         )
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             f"set merge_threshold: {self.settings.merge_threshold}"
         )
         results = []
@@ -689,10 +688,10 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 continue
 
             for dupe_rec in dedupe_decision["records"]:
-                orig_propagated = dedupe_operation.review_manager.dataset.propagated_id(
+                orig_propagated = self.review_manager.dataset.propagated_id(
                     record_id=orig_rec
                 )
-                dupe_propagated = dedupe_operation.review_manager.dataset.propagated_id(
+                dupe_propagated = self.review_manager.dataset.propagated_id(
                     record_id=dupe_rec
                 )
 
@@ -708,7 +707,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
 
                     if orig_propagated and dupe_propagated:
                         # both_IDs_propagated
-                        dedupe_operation.review_manager.logger.error(
+                        self.review_manager.logger.error(
                             f"Both IDs propagated: {orig_rec}, {dupe_rec}"
                         )
                         continue
@@ -769,7 +768,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             if len(prev_row) != 0:
                 for j, val in row.items():
                     # changes in these fields should not be marked
-                    if j in ["error", "confidence_score", "ID"]:
+                    if j in ["error", "confidence_score", Fields.ID]:
                         continue
                     # do not mark changes between different clusters
                     if j == "cluster_id" and prev_row["cluster_id"] != val:
@@ -781,9 +780,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
 
         return dataframe
 
-    def __export_duplicates_excel(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, collected_duplicates: list
-    ) -> None:
+    def __export_duplicates_excel(self, *, collected_duplicates: list) -> None:
         if len(collected_duplicates) == 0:
             print("No duplicates found")
             return
@@ -791,13 +788,13 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         duplicates_df = pd.DataFrame.from_records(collected_duplicates)
         duplicates_df.fillna("", inplace=True)
         duplicates_df["distinct_str"] = (
-            duplicates_df["author"]
-            + duplicates_df["title"]
-            + duplicates_df["year"]
+            duplicates_df[Fields.AUTHOR]
+            + duplicates_df[Fields.TITLE]
+            + duplicates_df[Fields.YEAR]
             + duplicates_df["container_title"]
-            + duplicates_df["volume"]
-            + duplicates_df["number"]
-            + duplicates_df["pages"]
+            + duplicates_df[Fields.VOLUME]
+            + duplicates_df[Fields.NUMBER]
+            + duplicates_df[Fields.PAGES]
         )
         # Only export bibliographically distict cases
         duplicates_df = duplicates_df.groupby("distinct_str").filter(
@@ -810,14 +807,14 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 "error",
                 "confidence_score",
                 "cluster_id",
-                "ID",
-                "author",
-                "title",
-                "year",
+                Fields.ID,
+                Fields.AUTHOR,
+                Fields.TITLE,
+                Fields.YEAR,
                 "container_title",
-                "volume",
-                "number",
-                "pages",
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
             ]
         ]
 
@@ -829,12 +826,11 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         # to adjust column widths in ExcelWriter:
         # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
         duplicates_df.style.apply(self.__highlight_cells, axis=None)
-        duplicates_df.to_excel(dedupe_operation.dupe_file, index=False)
+        duplicates_df.to_excel(self.dedupe_operation.dupe_file, index=False)
 
     def __export_non_duplicates_excel(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
         collected_non_duplicates: list,
     ) -> None:
         if len(collected_non_duplicates) == 0:
@@ -850,14 +846,14 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 "error",
                 "cluster_id",
                 "confidence_score",
-                "ID",
-                "author",
-                "title",
-                "year",
+                Fields.ID,
+                Fields.AUTHOR,
+                Fields.TITLE,
+                Fields.YEAR,
                 "container_title",
-                "volume",
-                "number",
-                "pages",
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
             ]
         ]
         non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
@@ -872,7 +868,9 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         # to adjust column widths in ExcelWriter:
         # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
         non_duplicates_df.style.apply(self.__highlight_cells, axis=None)
-        non_duplicates_df.to_excel(dedupe_operation.non_dupe_file_xlsx, index=False)
+        non_duplicates_df.to_excel(
+            self.dedupe_operation.non_dupe_file_xlsx, index=False
+        )
 
     def __get_collected_dupes_non_dupes_from_clusters(
         self, *, clustered_dupes: list, data_d: dict
@@ -938,7 +936,6 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
     def __export_validation_excel(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,
         clustered_dupes: list,
         data_d: dict,
     ) -> None:
@@ -947,27 +944,23 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         )
 
         self.__export_duplicates_excel(
-            dedupe_operation=dedupe_operation,
             collected_duplicates=results["collected_duplicates"],
         )
 
         self.__export_non_duplicates_excel(
-            dedupe_operation=dedupe_operation,
             collected_non_duplicates=results["collected_non_duplicates"],
         )
 
-    def __cluster_duplicates(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, data_d: dict
-    ) -> list:
+    def __cluster_duplicates(self, *, data_d: dict) -> list:
         # pylint: disable=too-many-locals
 
-        dedupe_operation.review_manager.logger.info("Clustering duplicates...")
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info("Clustering duplicates...")
+        self.review_manager.logger.info(
             f"Number of records (before): {len(data_d.items())}"
         )
 
         # Setting in-memory mode depending on system RAM
-        records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
+        records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
         sample_size = len(list(records_headers.values()))
@@ -981,7 +974,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         # believes are all referring to the same entity.
 
         if in_memory:
-            dedupe_operation.review_manager.report_logger.info(
+            self.review_manager.report_logger.info(
                 f"set partition_threshold: {self.settings.partition_threshold}"
             )
 
@@ -992,14 +985,14 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             # from dedupe.core import BlockingError
             # except BlockingError:
 
-            #     dedupe_operation.review_manager.logger.info(
+            #     self.review_manager.logger.info(
             #         "No duplicates found (please check carefully)"
             #     )
-            #     dedupe_operation.apply_merges(results=[], complete_dedupe=True)
-            #     dedupe_operation.review_manager.create_commit(
+            #     self.dedupe_operation.apply_merges(results=[], complete_dedupe=True)
+            #     self.review_manager.create_commit(
             #         msg="Merge duplicate records (no duplicates detected)",
             #     )
-            #     dedupe_operation.review_manager.logger.info(
+            #     self.review_manager.logger.info(
             #         "If there are errors, it could be necessary to remove the "
             #         ".records_dedupe_training.json to train a fresh dedupe model."
             #     )
@@ -1014,7 +1007,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
                 field_data = (r[field] for r in data_d.values() if field in r)
                 deduper.fingerprinter.index(field_data, field)
 
-            full_data = ((r["ID"], r) for r in data_d.values())
+            full_data = ((r[Fields.ID], r) for r in data_d.values())
 
             # pylint: disable=not-callable
             # fingerprinter is callable according to
@@ -1036,7 +1029,7 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             cur.execute("""CREATE TABLE blocking_map (block_key text, ID INTEGER)""")
             cur.executemany("""INSERT into blocking_map values (?, ?)""", b_data)
 
-            records_data = {r["ID"]: r for r in data_d.values()}
+            records_data = {r[Fields.ID]: r for r in data_d.values()}
 
             def record_pairs(result_set: list[tuple]) -> typing.Iterator[tuple]:
                 for row in result_set:
@@ -1074,44 +1067,38 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
             con.close()
             dedupe_db.unlink(missing_ok=True)
 
-        dedupe_operation.review_manager.report_logger.info(
+        self.review_manager.report_logger.info(
             f"Number of duplicate sets {len(clustered_dupes)}"
         )
         return clustered_dupes
 
+    # pylint: disable=unused-argument
     def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         """Cluster potential duplicates, merge, and export validation tables"""
 
         if not self.settings_file.is_file():
-            dedupe_operation.review_manager.logger.info(
-                "No settings file. Skip ML-clustering."
-            )
+            self.review_manager.logger.info("No settings file. Skip ML-clustering.")
             return
 
-        data_d = dedupe_operation.read_data()
+        data_d = self.dedupe_operation.read_data()
 
-        clustered_dupes = self.__cluster_duplicates(
-            dedupe_operation=dedupe_operation, data_d=data_d
-        )
+        clustered_dupes = self.__cluster_duplicates(data_d=data_d)
 
-        results = self.__get_duplicates_from_clusters(
-            dedupe_operation=dedupe_operation, clustered_dupes=clustered_dupes
-        )
+        results = self.__get_duplicates_from_clusters(clustered_dupes=clustered_dupes)
 
-        dedupe_operation.apply_merges(results=results, complete_dedupe=True)
+        self.dedupe_operation.apply_merges(results=results, complete_dedupe=True)
 
         self.__export_validation_excel(
-            dedupe_operation=dedupe_operation,
             clustered_dupes=clustered_dupes,
             data_d=data_d,
         )
 
-        dedupe_operation.review_manager.create_commit(
+        self.review_manager.create_commit(
             msg="Merge duplicate records (based on active-learning clusters)",
             script_call="colrev dedupe",
         )
 
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             "Successfully completed the deduplication. Please check the "
             "duplicates_to_validate.xlsx and non_duplicates_to_validate.xlsx for "
             'potential errors.\nTo fix them, mark them in the "error" column and '
@@ -1119,18 +1106,16 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         )
 
         if Path("same_source_merges.txt").is_file():
-            dedupe_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 "Detected and prevented same-source merges. Please check potential"
                 "duplicates in same_source_merges.txt"
             )
 
-        info = dedupe_operation.get_info()
+        info = self.dedupe_operation.get_info()
         if len(info["same_source_merges"]) > 0:
-            dedupe_operation.review_manager.logger.info(
-                f"\n{colors.ORANGE}Same source merges to check:{colors.END}"
+            self.review_manager.logger.info(
+                f"\n{Colors.ORANGE}Same source merges to check:{Colors.END}"
                 "\n- ".join(info["same_source_merges"]) + "\n"
             )
         else:
-            dedupe_operation.review_manager.logger.info(
-                "\nNo same-origin merges detected."
-            )
+            self.review_manager.logger.info("\nNo same-origin merges detected.")

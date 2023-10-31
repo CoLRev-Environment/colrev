@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -10,7 +12,7 @@ import colrev.qm.quality_model
 class ErroneousTitleFieldChecker:
     """The ErroneousTitleFieldChecker"""
 
-    msg = "erroneous-title-field"
+    msg = DefectCodes.ERRONEOUS_TITLE_FIELD
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -18,18 +20,21 @@ class ErroneousTitleFieldChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the erroneous-title-field checks"""
 
-        if "title" not in record.data:
+        if Fields.TITLE not in record.data:
             return
 
-        if self.__title_has_errors(title=record.data["title"]):
-            record.add_masterdata_provenance_note(key="title", note=self.msg)
+        if self.__title_has_errors(title=record.data[Fields.TITLE]):
+            record.add_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
 
         else:
-            record.remove_masterdata_provenance_note(key="title", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
 
     def __title_has_errors(self, *, title: str) -> bool:
         # Cover common errors
-        if title == "A I S ssociation for nformation ystems":
+        if title in {
+            "A I S ssociation for nformation ystems",
+            "The International Journal of Information Systems Applications Chairman of the Editorial Board",
+        }:
             return True
 
         if " " not in title and (

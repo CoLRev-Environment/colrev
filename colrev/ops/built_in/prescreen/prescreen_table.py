@@ -13,7 +13,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if typing.TYPE_CHECKING:
     import colrev.ops.prescreen.Prescreen
@@ -40,12 +41,12 @@ class TablePrescreen(JsonSchemaMixin):
         prescreen_operation: colrev.ops.prescreen.Prescreen,  # pylint: disable=unused-argument
         settings: dict,
     ) -> None:
+        self.review_manager = prescreen_operation.review_manager
         self.settings = self.settings_class.load_settings(data=settings)
 
     def export_table(
         self,
         *,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,
         export_table_format: str = "csv",
@@ -57,11 +58,11 @@ class TablePrescreen(JsonSchemaMixin):
         # instead of overwriting
         # export_table_format as a settings parameter
 
-        prescreen_operation.review_manager.logger.info("Loading records for export")
+        self.review_manager.logger.info("Loading records for export")
 
         tbl = []
         for record in records.values():
-            if record["colrev_status"] not in [
+            if record[Fields.STATUS] not in [
                 colrev.record.RecordState.md_processed,
                 colrev.record.RecordState.rev_prescreen_excluded,
                 colrev.record.RecordState.rev_prescreen_included,
@@ -77,16 +78,16 @@ class TablePrescreen(JsonSchemaMixin):
                 continue
 
             if len(split) > 0:
-                if record["ID"] not in split:
+                if record[Fields.ID] not in split:
                     continue
 
-            if colrev.record.RecordState.md_processed == record["colrev_status"]:
+            if colrev.record.RecordState.md_processed == record[Fields.STATUS]:
                 inclusion_1 = "TODO"
             elif self.export_todos_only:
                 continue
             elif (
                 colrev.record.RecordState.rev_prescreen_excluded
-                == record["colrev_status"]
+                == record[Fields.STATUS]
             ):
                 inclusion_1 = "out"
             else:
@@ -94,17 +95,17 @@ class TablePrescreen(JsonSchemaMixin):
 
             # pylint: disable=duplicate-code
             row = {
-                "ID": record["ID"],
-                "author": record.get("author", ""),
-                "title": record.get("title", ""),
-                "journal": record.get("journal", ""),
-                "booktitle": record.get("booktitle", ""),
-                "year": record.get("year", ""),
-                "volume": record.get("volume", ""),
-                "number": record.get("number", ""),
-                "pages": record.get("pages", ""),
-                "doi": record.get("doi", ""),
-                "abstract": record.get("abstract", ""),
+                Fields.ID: record[Fields.ID],
+                Fields.AUTHOR: record.get(Fields.AUTHOR, ""),
+                Fields.TITLE: record.get(Fields.TITLE, ""),
+                Fields.JOURNAL: record.get(Fields.JOURNAL, ""),
+                Fields.BOOKTITLE: record.get(Fields.BOOKTITLE, ""),
+                Fields.YEAR: record.get(Fields.YEAR, ""),
+                Fields.VOLUME: record.get(Fields.VOLUME, ""),
+                Fields.NUMBER: record.get(Fields.NUMBER, ""),
+                Fields.PAGES: record.get(Fields.PAGES, ""),
+                Fields.DOI: record.get(Fields.DOI, ""),
+                Fields.ABSTRACT: record.get(Fields.ABSTRACT, ""),
                 "presceen_inclusion": inclusion_1,
             }
             tbl.append(row)
@@ -112,26 +113,25 @@ class TablePrescreen(JsonSchemaMixin):
         if export_table_format.lower() == "csv":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv("prescreen.csv", index=False, quoting=csv.QUOTE_ALL)
-            prescreen_operation.review_manager.logger.info("Created prescreen.csv")
+            self.review_manager.logger.info("Created prescreen.csv")
 
         if export_table_format.lower() == "xlsx":
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel("prescreen.xlsx", index=False, sheet_name="screen")
-            prescreen_operation.review_manager.logger.info("Created prescreen.xlsx")
+            self.review_manager.logger.info("Created prescreen.xlsx")
 
-        prescreen_operation.review_manager.logger.info(
-            f"To prescreen records, {colors.ORANGE}enter [in|out] "
-            f"in the presceen_inclusion column.{colors.END}"
+        self.review_manager.logger.info(
+            f"To prescreen records, {Colors.ORANGE}enter [in|out] "
+            f"in the presceen_inclusion column.{Colors.END}"
         )
-        prescreen_operation.review_manager.logger.info(
-            f"Afterwards, run {colors.ORANGE}colrev prescreen --import_table "
-            f"prescreen.{export_table_format.lower()}{colors.END}"
+        self.review_manager.logger.info(
+            f"Afterwards, run {Colors.ORANGE}colrev prescreen --import_table "
+            f"prescreen.{export_table_format.lower()}{Colors.END}"
         )
 
     def import_table(
         self,
         *,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         import_table_path: str = "prescreen.csv",
     ) -> None:
@@ -139,11 +139,11 @@ class TablePrescreen(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
 
-        prescreen_operation.review_manager.logger.info(f"Load {import_table_path}")
+        self.review_manager.logger.info(f"Load {import_table_path}")
 
         # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
-            prescreen_operation.review_manager.logger.error(
+            self.review_manager.logger.error(
                 f"Did not find {import_table_path} - exiting."
             )
             return
@@ -152,35 +152,33 @@ class TablePrescreen(JsonSchemaMixin):
         prescreened_records = prescreen_df.to_dict("records")
 
         if "presceen_inclusion" not in prescreened_records[0]:
-            prescreen_operation.review_manager.logger.warning(
-                "presceen_inclusion column missing"
-            )
+            self.review_manager.logger.warning("presceen_inclusion column missing")
             return
 
         prescreen_included = 0
         prescreen_excluded = 0
         nr_todo = 0
-        prescreen_operation.review_manager.logger.info("Update prescreen results")
+        self.review_manager.logger.info("Update prescreen results")
         for prescreened_record in prescreened_records:
-            if prescreened_record.get("ID", "") in records:
+            if prescreened_record.get(Fields.ID, "") in records:
                 record = colrev.record.Record(
-                    data=records[prescreened_record.get("ID", "")]
+                    data=records[prescreened_record.get(Fields.ID, "")]
                 )
                 if record.data[
-                    "colrev_status"
+                    Fields.STATUS
                 ] in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.rev_prescreen_included
                 ):
                     if (
                         "in" == prescreened_record.data.get("presceen_inclusion", "")
                         and colrev.record.RecordState.rev_prescreen_excluded
-                        != record.data["colrev_status"]
+                        != record.data[Fields.STATUS]
                     ):
                         continue
 
                 if prescreened_record.get("presceen_inclusion", "") == "out":
                     if (
-                        record.data["colrev_status"]
+                        record.data[Fields.STATUS]
                         != colrev.record.RecordState.rev_prescreen_excluded
                     ):
                         prescreen_excluded += 1
@@ -190,7 +188,7 @@ class TablePrescreen(JsonSchemaMixin):
 
                 elif prescreened_record.get("presceen_inclusion", "") == "in":
                     if (
-                        record.data["colrev_status"]
+                        record.data[Fields.STATUS]
                         != colrev.record.RecordState.rev_prescreen_included
                     ):
                         prescreen_included += 1
@@ -200,31 +198,32 @@ class TablePrescreen(JsonSchemaMixin):
                 elif prescreened_record.get("presceen_inclusion", "") == "TODO":
                     nr_todo += 1
                 else:
-                    prescreen_operation.review_manager.logger.warning(
+                    self.review_manager.logger.warning(
                         "Invalid value in prescreen_inclusion: "
                         f"{prescreened_record.get('presceen_inclusion', '')} "
                         f"({prescreened_record.get('ID', 'NO_ID')})"
                     )
 
             else:
-                prescreen_operation.review_manager.logger.warning(
+                self.review_manager.logger.warning(
                     f"ID not in records: {prescreened_record.get('ID', '')}"
                 )
 
-        prescreen_operation.review_manager.logger.info(
-            f" {colors.GREEN}{prescreen_included} records prescreen_included{colors.END}"
+        self.review_manager.logger.info(
+            f" {Colors.GREEN}{prescreen_included} records prescreen_included{Colors.END}"
         )
-        prescreen_operation.review_manager.logger.info(
-            f" {colors.RED}{prescreen_excluded} records prescreen_excluded{colors.END}"
-        )
-
-        prescreen_operation.review_manager.logger.info(
-            f" {colors.ORANGE}{nr_todo} records to prescreen{colors.END}"
+        self.review_manager.logger.info(
+            f" {Colors.RED}{prescreen_excluded} records prescreen_excluded{Colors.END}"
         )
 
-        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
-        prescreen_operation.review_manager.logger.info("Completed import")
+        self.review_manager.logger.info(
+            f" {Colors.ORANGE}{nr_todo} records to prescreen{Colors.END}"
+        )
 
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.logger.info("Completed import")
+
+    # pylint: disable=unused-argument
     def run_prescreen(
         self,
         prescreen_operation: colrev.ops.prescreen.Prescreen,
@@ -234,16 +233,14 @@ class TablePrescreen(JsonSchemaMixin):
         """Prescreen records based on screening tables"""
 
         if input("create prescreen table [y,n]?") == "y":
-            self.export_table(
-                prescreen_operation=prescreen_operation, records=records, split=split
-            )
+            self.export_table(records=records, split=split)
 
         if input("import prescreen table [y,n]?") == "y":
-            self.import_table(prescreen_operation=prescreen_operation, records=records)
+            self.import_table(records=records)
 
-        if prescreen_operation.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_changes():
             if input("create commit [y,n]?") == "y":
-                prescreen_operation.review_manager.create_commit(
+                self.review_manager.create_commit(
                     msg="Pre-screen (table)",
                     manual_author=True,
                 )

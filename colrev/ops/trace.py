@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import dictdiffer
 
 import colrev.operation
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 if TYPE_CHECKING:
     import git.objects.commit
@@ -55,30 +55,30 @@ class Trace(colrev.operation.Operation):
             for diff in diffs:
                 if diff[0] == "add":
                     print(
-                        colors.GREEN
+                        Colors.GREEN
                         + self.__lpad_multiline(
                             s=self.review_manager.p_printer.pformat(diff),
                             lpad=5,
                         )
-                        + colors.END
+                        + Colors.END
                     )
                 if diff[0] == "change":
                     print(
-                        colors.ORANGE
+                        Colors.ORANGE
                         + self.__lpad_multiline(
                             s=self.review_manager.p_printer.pformat(diff),
                             lpad=5,
                         )
-                        + colors.END
+                        + Colors.END
                     )
                 if diff[0] == "delete":
                     print(
-                        colors.RED
+                        Colors.RED
                         + self.__lpad_multiline(
                             s=self.review_manager.p_printer.pformat(diff),
                             lpad=5,
                         )
-                        + colors.END
+                        + Colors.END
                     )
 
         prev_record = record

@@ -13,7 +13,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -79,7 +80,7 @@ class GithubPages(JsonSchemaMixin):
         self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo
     ) -> None:
         # if branch does not exist: create and add index.html
-        data_operation.review_manager.logger.info("Setup gh-pages branch")
+        self.review_manager.logger.info("Setup gh-pages branch")
         git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
         git_repo.git.rm("-rf", Path("."))
 
@@ -87,19 +88,19 @@ class GithubPages(JsonSchemaMixin):
             template_file=Path("template/github_pages/README.md"),
             target=Path("README.md"),
         )
-        project_title = data_operation.review_manager.settings.project.title
+        project_title = self.review_manager.settings.project.title
         colrev.env.utils.inplace_change(
             filename=Path("README.md"),
             old_string="{{project_title}}",
             new_string=project_title.rstrip(" ").capitalize(),
         )
-        data_operation.review_manager.dataset.add_changes(path=Path("README.md"))
+        self.review_manager.dataset.add_changes(path=Path("README.md"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/index.html"),
             target=Path("index.html"),
         )
-        data_operation.review_manager.dataset.add_changes(path=Path("index.html"))
+        self.review_manager.dataset.add_changes(path=Path("index.html"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/_config.yml"),
@@ -110,15 +111,15 @@ class GithubPages(JsonSchemaMixin):
             old_string="{{project_title}}",
             new_string=project_title,
         )
-        data_operation.review_manager.dataset.add_changes(path=Path("_config.yml"))
+        self.review_manager.dataset.add_changes(path=Path("_config.yml"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/about.md"),
             target=Path("about.md"),
         )
-        data_operation.review_manager.dataset.add_changes(path=Path("about.md"))
+        self.review_manager.dataset.add_changes(path=Path("about.md"))
 
-        data_operation.review_manager.create_commit(
+        self.review_manager.create_commit(
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
@@ -130,14 +131,14 @@ class GithubPages(JsonSchemaMixin):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            data_operation.review_manager.logger.info("Update data on github pages")
+            self.review_manager.logger.info("Update data on github pages")
 
-        records = data_operation.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         included_records = {
-            r["ID"]: r
+            r[Fields.ID]: r
             for r in records.values()
-            if r["colrev_status"]
+            if r[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_synthesized,
                 colrev.record.RecordState.rev_included,
@@ -150,19 +151,17 @@ class GithubPages(JsonSchemaMixin):
                 template_file=Path("template/github_pages/pre-commit-config.yaml"),
                 target=Path(".pre-commit-config.yaml"),
             )
-            data_operation.review_manager.dataset.add_changes(
+            self.review_manager.dataset.add_changes(
                 path=Path(".pre-commit-config.yaml")
             )
 
         data_file = Path("data.bib")
-        data_operation.review_manager.dataset.save_records_dict_to_file(
+        self.review_manager.dataset.save_records_dict_to_file(
             records=included_records, save_path=data_file
         )
-        data_operation.review_manager.dataset.add_changes(path=data_file)
+        self.review_manager.dataset.add_changes(path=data_file)
 
-        data_operation.review_manager.create_commit(
-            msg="Update sample", skip_status_yaml=True
-        )
+        self.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
 
     def __push_branch(
         self,
@@ -172,7 +171,7 @@ class GithubPages(JsonSchemaMixin):
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            data_operation.review_manager.logger.info("Push to github pages")
+            self.review_manager.logger.info("Push to github pages")
         if "origin" in git_repo.remotes:
             if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
                 try:
@@ -180,10 +179,10 @@ class GithubPages(JsonSchemaMixin):
                         refspec=f"{self.GH_PAGES_BRANCH_NAME}:{self.GH_PAGES_BRANCH_NAME}"
                     )
                 except git.exc.GitCommandError:  # pylint: disable=no-member
-                    data_operation.review_manager.logger.error(
+                    self.review_manager.logger.error(
                         "Could not push branch gh-pages. Please resolve manually, i.e., run "
-                        f"{colors.ORANGE}git switch gh-pages && "
-                        f"git pull --rebase && git push{colors.END}"
+                        f"{Colors.ORANGE}git switch gh-pages && "
+                        f"git pull --rebase && git push{Colors.END}"
                     )
             else:
                 git_repo.git.push(
@@ -199,12 +198,12 @@ class GithubPages(JsonSchemaMixin):
                 .split("/")
             )
             if not silent_mode:
-                data_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     f"Data available at: https://{username}.github.io/{project}/"
                 )
         else:
             if not silent_mode:
-                data_operation.review_manager.logger.info("No remotes specified")
+                self.review_manager.logger.info("No remotes specified")
 
     def __check_gh_pages_setup(self, *, git_repo: git.Repo) -> None:
         username, project = (
@@ -219,9 +218,9 @@ class GithubPages(JsonSchemaMixin):
             ):
                 return
         print(
-            f"{colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
+            f"{Colors.ORANGE}The Github page is not yet linked in the readme.md file.\n"
             "To make it easier to access the page, add the following to the readme.md file:\n"
-            f"\n    [Github page]({gh_page_link}){colors.END}\n"
+            f"\n    [Github page]({gh_page_link}){Colors.END}\n"
         )
 
     def update_data(
@@ -235,19 +234,19 @@ class GithubPages(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
 
-        if data_operation.review_manager.in_ci_environment():
-            data_operation.review_manager.logger.error(
+        if self.review_manager.in_ci_environment():
+            self.review_manager.logger.error(
                 "Running in CI environment. Skipping github-pages generation."
             )
             return
 
-        if data_operation.review_manager.dataset.has_changes():
-            data_operation.review_manager.logger.error(
+        if self.review_manager.dataset.has_changes():
+            self.review_manager.logger.error(
                 "Cannot update github pages because there are uncommited changes."
             )
             return
 
-        git_repo = data_operation.review_manager.dataset.get_repo()
+        git_repo = self.review_manager.dataset.get_repo()
         active_branch = git_repo.active_branch
 
         # check if there is an "origin" remote
@@ -315,7 +314,7 @@ class GithubPages(JsonSchemaMixin):
             git_repo.git.checkout(active_branch)
             self.__check_gh_pages_setup(git_repo=git_repo)
         else:
-            data_operation.review_manager.logger.warning(
+            self.review_manager.logger.warning(
                 "Cannot push github pages because there is no remote origin. "
                 "gh-pages branch will only be created locally."
             )

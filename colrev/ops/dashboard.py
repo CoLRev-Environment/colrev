@@ -6,6 +6,7 @@ import dash
 from dash import Dash
 from dash import html
 
+
 # pylint: disable=too-few-public-methods
 
 

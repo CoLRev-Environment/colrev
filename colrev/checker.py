@@ -15,7 +15,8 @@ from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-from colrev.exit_codes import ExitCodes
+from colrev.constants import ExitCodes
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -266,6 +267,7 @@ class Checker:
         #         + "\n    ".join(status_data["invalid_state_transitions"])
         #     )
 
+    # pylint: disable=too-many-arguments
     def __check_individual_record_screen(
         self,
         *,
@@ -361,6 +363,7 @@ class Checker:
                 "\n    " + "\n    ".join(field_errors)
             )
 
+    # pylint: disable=too-many-arguments
     def __check_change_in_propagated_id_in_file(
         self,
         *,
@@ -483,19 +486,20 @@ class Checker:
                 )
 
     def __retrieve_prior(self) -> dict:
-        prior: dict = {"colrev_status": [], "persisted_IDs": []}
+        prior: dict = {Fields.STATUS: [], "persisted_IDs": []}
         prior_records = next(self.review_manager.dataset.load_records_from_history())
         for prior_record in prior_records.values():
-            for orig in prior_record["colrev_origin"]:
-                prior["colrev_status"].append([orig, prior_record["colrev_status"]])
+            for orig in prior_record[Fields.ORIGIN]:
+                prior[Fields.STATUS].append([orig, prior_record[Fields.STATUS]])
                 if prior_record[
-                    "colrev_status"
+                    Fields.STATUS
                 ] in colrev.record.RecordState.get_post_x_states(
                     state=colrev.record.RecordState.md_processed
                 ):
-                    prior["persisted_IDs"].append([orig, prior_record["ID"]])
+                    prior["persisted_IDs"].append([orig, prior_record[Fields.ID]])
         return prior
 
+    # pylint: disable=too-many-arguments
     def __get_status_transitions(
         self,
         *,
@@ -506,13 +510,14 @@ class Checker:
         status_data: dict,
     ) -> dict:
         prior_status = []
-        if "colrev_status" in prior:
+        if Fields.STATUS in prior:
             prior_status = [
-                stat for (org, stat) in prior["colrev_status"] if org in origin
+                stat for (org, stat) in prior[Fields.STATUS] if org in origin
             ]
 
         status_transition = {}
         if len(prior_status) == 0:
+            # pylint: disable=colrev-missed-constant-usage
             status_transition[record_id] = "load"
         else:
             proc_transition_list: list = [
@@ -524,17 +529,18 @@ class Checker:
                 status_data["start_states"].append(prior_status[0])
                 if prior_status[0] not in colrev.record.RecordState:
                     raise colrev_exceptions.StatusFieldValueError(
-                        record_id, "colrev_status", prior_status[0]
+                        record_id, Fields.STATUS, prior_status[0]
                     )
                 if status not in colrev.record.RecordState:
                     raise colrev_exceptions.StatusFieldValueError(
-                        record_id, "colrev_status", str(status)
+                        record_id, Fields.STATUS, str(status)
                     )
 
                 status_data["invalid_state_transitions"].append(
                     f"{record_id}: {prior_status[0]} to {status}"
                 )
             if 0 == len(proc_transition_list):
+                # pylint: disable=colrev-missed-constant-usage
                 status_transition[record_id] = "load"
             else:
                 proc_transition = proc_transition_list.pop()
@@ -557,48 +563,48 @@ class Checker:
         }
 
         for record_dict in records.values():
-            status_data["IDs"].append(record_dict["ID"])
+            status_data["IDs"].append(record_dict[Fields.ID])
 
-            for org in record_dict["colrev_origin"]:
+            for org in record_dict[Fields.ORIGIN]:
                 if org in status_data["origin_ID_list"]:
-                    status_data["origin_ID_list"][org].append(record_dict["ID"])
+                    status_data["origin_ID_list"][org].append(record_dict[Fields.ID])
                 else:
-                    status_data["origin_ID_list"][org] = [record_dict["ID"]]
+                    status_data["origin_ID_list"][org] = [record_dict[Fields.ID]]
 
             post_md_processed_states = colrev.record.RecordState.get_post_x_states(
                 state=colrev.record.RecordState.md_processed
             )
-            if record_dict["colrev_status"] in post_md_processed_states:
-                for origin_part in record_dict["colrev_origin"]:
+            if record_dict[Fields.STATUS] in post_md_processed_states:
+                for origin_part in record_dict[Fields.ORIGIN]:
                     status_data["persisted_IDs"].append(
-                        [origin_part, record_dict["ID"]]
+                        [origin_part, record_dict[Fields.ID]]
                     )
 
-            if "file" in record_dict:
-                if Path(record_dict["file"]).is_file():
-                    status_data["pdf_not_exists"].append(record_dict["ID"])
+            if Fields.FILE in record_dict:
+                if Path(record_dict[Fields.FILE]).is_file():
+                    status_data["pdf_not_exists"].append(record_dict[Fields.ID])
 
-            if [] != record_dict.get("colrev_origin", []):
-                for org in record_dict["colrev_origin"]:
+            if [] != record_dict.get(Fields.ORIGIN, []):
+                for org in record_dict[Fields.ORIGIN]:
                     status_data["record_links_in_bib"].append(org)
             else:
-                status_data["entries_without_origin"].append(record_dict["ID"])
+                status_data["entries_without_origin"].append(record_dict[Fields.ID])
 
-            status_data["status_fields"].append(record_dict["colrev_status"])
+            status_data["status_fields"].append(record_dict[Fields.STATUS])
 
-            if "screening_criteria" in record_dict:
+            if Fields.SCREENING_CRITERIA in record_dict:
                 ec_case = [
-                    record_dict["ID"],
-                    record_dict["colrev_status"],
-                    record_dict["screening_criteria"],
+                    record_dict[Fields.ID],
+                    record_dict[Fields.STATUS],
+                    record_dict[Fields.SCREENING_CRITERIA],
                 ]
                 status_data["screening_criteria_list"].append(ec_case)
 
             status_transition = self.__get_status_transitions(
-                record_id=record_dict["ID"],
-                origin=record_dict["colrev_origin"],
+                record_id=record_dict[Fields.ID],
+                origin=record_dict[Fields.ORIGIN],
                 prior=prior,
-                status=record_dict["colrev_status"],
+                status=record_dict[Fields.STATUS],
                 status_data=status_data,
             )
 

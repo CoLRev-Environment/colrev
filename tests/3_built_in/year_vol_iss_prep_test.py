@@ -4,6 +4,8 @@ import pytest
 
 import colrev.ops.built_in.prep.year_vol_iss_prep
 import colrev.ops.prep
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 
 @pytest.fixture(name="yvip")
@@ -24,39 +26,37 @@ def get_yvip(
         # Note : the first case is indexed in local_index
         (
             {
-                "ENTRYTYPE": "article",
-                "journal": "MIS Quarterly",
-                "volume": "42",
-                "number": "2",
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.JOURNAL: "MIS Quarterly",
+                Fields.VOLUME: "42",
+                Fields.NUMBER: "2",
             },
             {
-                "ENTRYTYPE": "article",
-                "colrev_masterdata_provenance": {
-                    "year": {"note": "", "source": "LocalIndexPrep"}
-                },
-                "journal": "MIS Quarterly",
-                "year": "2018",
-                "volume": "42",
-                "number": "2",
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+                Fields.MD_PROV: {Fields.YEAR: {"note": "", "source": "LocalIndexPrep"}},
+                Fields.JOURNAL: "MIS Quarterly",
+                Fields.YEAR: "2018",
+                Fields.VOLUME: "42",
+                Fields.NUMBER: "2",
             },
         ),
         # Note : the first case requires crossref
-        (
-            {
-                "journal": "MIS Quarterly",
-                "volume": "40",
-                "number": "2",
-            },
-            {
-                "colrev_masterdata_provenance": {
-                    "year": {"note": "", "source": "CROSSREF(average)"}
-                },
-                "journal": "MIS Quarterly",
-                "year": "2016",
-                "volume": "40",
-                "number": "2",
-            },
-        ),
+        # (
+        #     {
+        #         Fields.JOURNAL: "MIS Quarterly",
+        #         Fields.VOLUME: "40",
+        #         Fields.NUMBER: "2",
+        #     },
+        #     {
+        #         Fields.MD_PROV: {
+        #             Fields.YEAR: {"note": "", "source": "CROSSREF(average)"}
+        #         },
+        #         Fields.JOURNAL: "MIS Quarterly",
+        #         Fields.YEAR: "2016",
+        #         Fields.VOLUME: "40",
+        #         Fields.NUMBER: "2",
+        #     },
+        # ),
     ],
 )
 def test_prep_year_vol_iss(

@@ -13,7 +13,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.dedupe.utils
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -57,10 +58,12 @@ class SimpleDedupe(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
+        dedupe_operation: colrev.ops.dedupe.Dedupe,
         settings: dict,
     ):
         self.settings = self.settings_class.load_settings(data=settings)
+        self.dedupe_operation = dedupe_operation
+        self.review_manager = dedupe_operation.review_manager
 
         assert self.settings.merging_non_dup_threshold >= 0.0
         assert self.settings.merging_non_dup_threshold <= 1.0
@@ -70,11 +73,10 @@ class SimpleDedupe(JsonSchemaMixin):
     def __get_maximum_similarity_record(
         self,
         *,
-        dedupe_operation: colrev.ops.dedupe.Dedupe,  # pylint: disable=unused-argument
         records_batch: list,
     ) -> dict:
         max_similarity_record = {
-            "reference_record": records_batch[len(records_batch) - 1]["ID"],
+            "reference_record": records_batch[len(records_batch) - 1][Fields.ID],
             "record_id": "NA",
             "similarity": 0,
         }
@@ -86,14 +88,12 @@ class SimpleDedupe(JsonSchemaMixin):
 
             if sim_details["score"] > max_similarity_record["similarity"]:
                 max_similarity_record["similarity"] = sim_details["score"]
-                max_similarity_record["record_id"] = records_batch[i]["ID"]
+                max_similarity_record["record_id"] = records_batch[i][Fields.ID]
                 max_similarity_record["details"] = sim_details["details"]
 
         return max_similarity_record
 
-    def __append_merges(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, batch_item: dict
-    ) -> dict:
+    def __append_merges(self, *, batch_item: dict) -> dict:
         records_batch = batch_item["queue"]
 
         # if the record is the first one added to the records
@@ -108,7 +108,7 @@ class SimpleDedupe(JsonSchemaMixin):
 
         # df to get_similarities for each other record
         similarity_dict = self.__get_maximum_similarity_record(
-            dedupe_operation=dedupe_operation, records_batch=records_batch
+            records_batch=records_batch
         )
 
         max_similarity = similarity_dict["similarity"]
@@ -117,7 +117,7 @@ class SimpleDedupe(JsonSchemaMixin):
         if max_similarity <= self.settings.merging_non_dup_threshold:
             # Note: if no other record has a similarity exceeding the threshold,
             # it is considered a non-duplicate (in relation to all other records)
-            # dedupe_operation.review_manager.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity})"
             # )
             ret = {
@@ -133,18 +133,18 @@ class SimpleDedupe(JsonSchemaMixin):
             < self.settings.merging_dup_threshold
         ):
             other_id = similarity_dict["record_id"]
-            # dedupe_operation.review_manager.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             # )
             # details = similarity_dict["details"]
-            # dedupe_operation.review_manager.logger.debug(details)
-            # record_a, record_b = sorted([ID, record["ID"]])
+            # self.review_manager.logger.debug(details)
+            # record_a, record_b = sorted([ID, record[Fields.ID]])
             msg = (
                 f'{similarity_dict["reference_record"]} - {other_id}'.ljust(35, " ")
                 + f"  - potential duplicate (similarity: {max_similarity})"
             )
-            # dedupe_operation.review_manager.report_logger.info(msg)
-            dedupe_operation.review_manager.logger.info(msg)
+            # self.review_manager.report_logger.info(msg)
+            self.review_manager.logger.info(msg)
             ret = {
                 "ID1": similarity_dict["reference_record"],
                 "ID2": other_id,
@@ -158,19 +158,19 @@ class SimpleDedupe(JsonSchemaMixin):
             # in the end)
             other_id = similarity_dict["record_id"]
 
-            # dedupe_operation.review_manager.logger.debug(
+            # self.review_manager.logger.debug(
             #     f"max_similarity ({max_similarity}): {batch_item['record']} {other_id}"
             # )
             # details = similarity_dict["details"]
 
-            # dedupe_operation.review_manager.logger.debug(details)
+            # self.review_manager.logger.debug(details)
             msg = (
                 "Dropped duplicate: "
                 f'{similarity_dict["reference_record"]} (duplicate of {other_id})'
                 # + f" (similarity: {max_similarity})\nDetails: {details}"
             )
-            dedupe_operation.review_manager.report_logger.info(msg)
-            dedupe_operation.review_manager.logger.info(msg)
+            self.review_manager.report_logger.info(msg)
+            self.review_manager.logger.info(msg)
             ret = {
                 "ID1": similarity_dict["reference_record"],
                 "ID2": other_id,
@@ -179,21 +179,21 @@ class SimpleDedupe(JsonSchemaMixin):
             }
         return ret
 
-    def __get_dedupe_data(self, *, dedupe_operation: colrev.ops.dedupe.Dedupe) -> dict:
-        records_headers = dedupe_operation.review_manager.dataset.load_records_dict(
+    def __get_dedupe_data(self) -> dict:
+        records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
         record_header_list = list(records_headers.values())
 
         ids_to_dedupe = [
-            x["ID"]
+            x[Fields.ID]
             for x in record_header_list
-            if x["colrev_status"] == colrev.record.RecordState.md_prepared
+            if x[Fields.STATUS] == colrev.record.RecordState.md_prepared
         ]
         processed_ids = [
-            x["ID"]
+            x[Fields.ID]
             for x in record_header_list
-            if x["colrev_status"]
+            if x[Fields.STATUS]
             not in [
                 colrev.record.RecordState.md_imported,
                 colrev.record.RecordState.md_prepared,
@@ -201,17 +201,17 @@ class SimpleDedupe(JsonSchemaMixin):
             ]
         ]
         if len(ids_to_dedupe) > 40:
-            if not dedupe_operation.review_manager.force_mode:
-                dedupe_operation.review_manager.logger.warning(
+            if not self.review_manager.force_mode:
+                self.review_manager.logger.warning(
                     "Simple duplicate identification selected despite sufficient sample size.\n"
                     "Active learning algorithms may perform better:\n"
-                    f"{colors.ORANGE}   colrev settings -m 'dedupe.dedupe_package_endpoints="
+                    f"{Colors.ORANGE}   colrev settings -m 'dedupe.dedupe_package_endpoints="
                     '[{"endpoint": "colrev.active_learning_training"},'
-                    f'{{"endpoint": "colrev.active_learning_automated"}}]\'{colors.END}'
+                    f'{{"endpoint": "colrev.active_learning_automated"}}]\'{Colors.END}'
                 )
                 raise colrev_exceptions.CoLRevException(
                     "To use simple duplicate identification, use\n"
-                    f"{colors.ORANGE}    colrev dedupe --force{colors.END}"
+                    f"{Colors.ORANGE}    colrev dedupe --force{Colors.END}"
                 )
 
         nr_tasks = len(ids_to_dedupe)
@@ -220,15 +220,13 @@ class SimpleDedupe(JsonSchemaMixin):
             "queue": processed_ids + ids_to_dedupe,
             "items_start": len(processed_ids),
         }
-        # dedupe_operation.review_manager.logger.debug(
-        #     dedupe_operation.review_manager.p_printer.pformat(dedupe_data)
+        # self.review_manager.logger.debug(
+        #     self.review_manager.p_printer.pformat(dedupe_data)
         # )
         return dedupe_data
 
-    def __get_record_batch(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, dedupe_data: dict
-    ) -> list:
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
+    def __get_record_batch(self, *, dedupe_data: dict) -> list:
+        records = self.review_manager.dataset.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
         # there should be no semicolons in colrev_origin!
@@ -239,7 +237,7 @@ class SimpleDedupe(JsonSchemaMixin):
         ]
 
         records_df_queue = pd.DataFrame.from_records(records_queue)
-        records = dedupe_operation.prep_records(records_df=records_df_queue)
+        records = self.dedupe_operation.prep_records(records_df=records_df_queue)
         # dedupe.review_manager.p_printer.pprint(records.values())
 
         items_start = dedupe_data["items_start"]
@@ -254,15 +252,13 @@ class SimpleDedupe(JsonSchemaMixin):
             )
         return batch_data
 
-    def __process_potential_duplicates(
-        self, *, dedupe_operation: colrev.ops.dedupe.Dedupe, dedupe_batch_results: list
-    ) -> list:
+    def __process_potential_duplicates(self, *, dedupe_batch_results: list) -> list:
         potential_duplicates = [
             r for r in dedupe_batch_results if "potential_duplicate" == r["decision"]
         ]
 
-        records = dedupe_operation.review_manager.dataset.load_records_dict()
-        records = dedupe_operation.prep_records(
+        records = self.review_manager.dataset.load_records_dict()
+        records = self.dedupe_operation.prep_records(
             records_df=pd.DataFrame.from_records(list(records.values()))
         )
         # dedupe.review_manager.p_printer.pprint(records.values())
@@ -270,9 +266,9 @@ class SimpleDedupe(JsonSchemaMixin):
 
         keys = list(records_df.columns)
         for key_to_drop in [
-            "ID",
-            "colrev_origin",
-            "colrev_status",
+            Fields.ID,
+            Fields.ORIGIN,
+            Fields.STATUS,
             "colrev_id",
             "container_title",
         ]:
@@ -281,8 +277,12 @@ class SimpleDedupe(JsonSchemaMixin):
 
         n_match, n_distinct = 0, 0
         for potential_duplicate in potential_duplicates:
-            rec1 = records_df.loc[records_df["ID"] == potential_duplicate["ID1"], :]
-            rec2 = records_df.loc[records_df["ID"] == potential_duplicate["ID2"], :]
+            rec1 = records_df.loc[
+                records_df[Fields.ID] == potential_duplicate["ID1"], :
+            ]
+            rec2 = records_df.loc[
+                records_df[Fields.ID] == potential_duplicate["ID2"], :
+            ]
 
             record_pair = [rec1.to_dict("records")[0], rec2.to_dict("records")[0]]
 
@@ -312,32 +312,26 @@ class SimpleDedupe(JsonSchemaMixin):
         # default='warn'
         pd.options.mode.chained_assignment = None  # type: ignore  # noqa
 
-        dedupe_operation.review_manager.logger.info(
-            "Dedupe operation [colrev.simple_dedupe]"
-        )
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info("Dedupe operation [colrev.simple_dedupe]")
+        self.review_manager.logger.info(
             "Duplicate identification based on static similarity measure and record pairs"
         )
 
-        dedupe_data = self.__get_dedupe_data(dedupe_operation=dedupe_operation)
+        dedupe_data = self.__get_dedupe_data()
 
         # the queue (order) matters for the incremental merging (make sure that each
         # additional record is compared to/merged with all prior records in
         # the queue)
 
         if not dedupe_data["queue"]:
-            dedupe_operation.review_manager.logger.error("No records to dedupe")
+            self.review_manager.logger.error("No records to dedupe")
             return
 
-        batch_data = self.__get_record_batch(
-            dedupe_operation=dedupe_operation, dedupe_data=dedupe_data
-        )
+        batch_data = self.__get_record_batch(dedupe_data=dedupe_data)
 
         dedupe_batch_results = []
         for item in batch_data:
-            merge_item = self.__append_merges(
-                dedupe_operation=dedupe_operation, batch_item=item
-            )
+            merge_item = self.__append_merges(batch_item=item)
             dedupe_batch_results.append(merge_item)
 
         # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
@@ -346,26 +340,24 @@ class SimpleDedupe(JsonSchemaMixin):
             results=dedupe_batch_results, complete_dedupe=True
         )
         if [x for x in dedupe_batch_results if x["decision"] == "duplicate"]:
-            dedupe_operation.review_manager.logger.info(
-                "Completed application of merges"
-            )
+            self.review_manager.logger.info("Completed application of merges")
 
-        dedupe_operation.review_manager.create_commit(
+        self.review_manager.create_commit(
             msg="Merge duplicate records",
         )
 
-        dedupe_operation.review_manager.logger.info(
+        self.review_manager.logger.info(
             "Potential duplicate identification based on static similarity measure and record pairs"
         )
         potential_duplicates = self.__process_potential_duplicates(
-            dedupe_operation=dedupe_operation, dedupe_batch_results=dedupe_batch_results
+            dedupe_batch_results=dedupe_batch_results
         )
 
         # apply:
         dedupe_operation.apply_merges(results=potential_duplicates)
 
         # commit
-        dedupe_operation.review_manager.create_commit(
+        self.review_manager.create_commit(
             msg="Manual labeling of remaining duplicate candidates",
             manual_author=False,
         )

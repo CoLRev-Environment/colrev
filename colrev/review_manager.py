@@ -24,7 +24,7 @@ import colrev.operation
 import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 
 class ReviewManager:
@@ -64,6 +64,7 @@ class ReviewManager:
 
     shell_mode = False
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -134,7 +135,7 @@ class ReviewManager:
                 if git.Repo().active_branch.name == "gh-pages":
                     raise colrev_exceptions.RepoSetupError(
                         msg="Currently on gh-pages branch. Switch to main: "
-                        + f"{colors.ORANGE}git switch main{colors.END}"
+                        + f"{Colors.ORANGE}git switch main{Colors.END}"
                     )
 
             if not force_mode:
@@ -142,6 +143,7 @@ class ReviewManager:
             if debug_mode:
                 self.logger.debug(exc)
 
+    # pylint: disable=too-many-arguments
     def update_config(
         self,
         *,
@@ -311,6 +313,7 @@ class ReviewManager:
         if add_to_git:
             self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
+    # pylint: disable=too-many-arguments
     def create_commit(
         self,
         *,
@@ -469,12 +472,6 @@ class ReviewManager:
         return colrev.env.zotero_translation_service.ZoteroTranslationService(
             environment_manager=environment_manager
         )
-
-    def get_screenshot_service(self) -> colrev.env.screenshot_service.ScreenshotService:
-        """Get the screenshot-service object"""
-        import colrev.env.screenshot_service
-
-        return colrev.env.screenshot_service.ScreenshotService(review_manager=self)
 
     @classmethod
     def get_resources(cls) -> colrev.env.resources.Resources:

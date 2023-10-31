@@ -12,6 +12,7 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 
 class PrepMan(colrev.operation.Operation):
@@ -38,34 +39,35 @@ class PrepMan(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.info("Calculate statistics")
-        stats: dict = {"ENTRYTYPE": {}}
-        overall_types: dict = {"ENTRYTYPE": {}}
+        stats: dict = {Fields.ENTRYTYPE: {}}
+        overall_types: dict = {Fields.ENTRYTYPE: {}}
         prep_man_hints, origins, crosstab = [], [], []
         for record_dict in records.values():
-            if colrev.record.RecordState.md_imported != record_dict["colrev_status"]:
-                if record_dict["ENTRYTYPE"] in overall_types["ENTRYTYPE"]:
-                    overall_types["ENTRYTYPE"][record_dict["ENTRYTYPE"]] = (
-                        overall_types["ENTRYTYPE"][record_dict["ENTRYTYPE"]] + 1
+            if colrev.record.RecordState.md_imported != record_dict[Fields.STATUS]:
+                if record_dict[Fields.ENTRYTYPE] in overall_types[Fields.ENTRYTYPE]:
+                    overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = (
+                        overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]]
+                        + 1
                     )
                 else:
-                    overall_types["ENTRYTYPE"][record_dict["ENTRYTYPE"]] = 1
+                    overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
             if (
                 colrev.record.RecordState.md_needs_manual_preparation
-                != record_dict["colrev_status"]
+                != record_dict[Fields.STATUS]
             ):
                 continue
 
-            if record_dict["ENTRYTYPE"] in stats["ENTRYTYPE"]:
-                stats["ENTRYTYPE"][record_dict["ENTRYTYPE"]] = (
-                    stats["ENTRYTYPE"][record_dict["ENTRYTYPE"]] + 1
+            if record_dict[Fields.ENTRYTYPE] in stats[Fields.ENTRYTYPE]:
+                stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = (
+                    stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] + 1
                 )
             else:
-                stats["ENTRYTYPE"][record_dict["ENTRYTYPE"]] = 1
+                stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
-            if "colrev_masterdata_provenance" in record_dict:
+            if Fields.MD_PROV in record_dict:
                 record = colrev.record.Record(data=record_dict)
-                prov_d = record.data["colrev_masterdata_provenance"]
+                prov_d = record.data[Fields.MD_PROV]
                 hints = []
                 for key, value in prov_d.items():
                     if value["note"] != "":
@@ -77,20 +79,20 @@ class PrepMan(colrev.operation.Operation):
                         continue
                     # Note: if something causes the needs_manual_preparation
                     # it is caused by all colrev_origins
-                    for orig in record_dict.get("colrev_origin", ["NA"]):
+                    for orig in record_dict.get(Fields.ORIGIN, ["NA"]):
                         crosstab.append([orig[: orig.rfind("/")], hint.lstrip()])
 
             origins.append(
-                [x[: x.rfind("/")] for x in record_dict.get("colrev_origin", ["NA"])]
+                [x[: x.rfind("/")] for x in record_dict.get(Fields.ORIGIN, ["NA"])]
             )
 
         print("Entry type statistics overall:")
-        self.review_manager.p_printer.pprint(overall_types["ENTRYTYPE"])
+        self.review_manager.p_printer.pprint(overall_types[Fields.ENTRYTYPE])
 
         print("Entry type statistics (needs_manual_preparation):")
-        self.review_manager.p_printer.pprint(stats["ENTRYTYPE"])
+        self.review_manager.p_printer.pprint(stats[Fields.ENTRYTYPE])
 
-        return pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
+        return pd.DataFrame(crosstab, columns=[Fields.ORIGIN, "hint"])
 
     def prep_man_langs(self) -> None:
         """Add missing language fields based on spreadsheets"""
@@ -110,19 +112,19 @@ class PrepMan(colrev.operation.Operation):
                 "Calculate most likely languages for records without language field"
             )
             for record in tqdm(records.values()):
-                if "title" not in record:
+                if Fields.TITLE not in record:
                     continue
-                if "language" not in record:
+                if Fields.LANGUAGE not in record:
                     confidence_values = (
                         language_service.compute_language_confidence_values(
-                            text=record["title"]
+                            text=record[Fields.TITLE]
                         )
                     )
                     predicted_language, conf = confidence_values.pop(0)
 
                     lang_rec = {
-                        "ID": record["ID"],
-                        "title": record["title"],
+                        Fields.ID: record[Fields.ID],
+                        Fields.TITLE: record[Fields.TITLE],
                         "most_likely_language": predicted_language,
                         "confidence": conf,
                     }
@@ -146,27 +148,25 @@ class PrepMan(colrev.operation.Operation):
             for language_record in language_records:
                 if language_record["most_likely_language"] == "":
                     continue
-                if language_record["ID"] not in records:
+                if language_record[Fields.ID] not in records:
                     # warn
                     continue
-                record_dict = records[language_record["ID"]]
+                record_dict = records[language_record[Fields.ID]]
                 record = colrev.record.Record(data=record_dict)
                 record.update_field(
-                    key="language",
+                    key=Fields.LANGUAGE,
                     value=language_record["most_likely_language"],
                     source="LanguageDetector/Manual",
                     note="",
                 )
                 if "language of title not in [eng]" == record.data.get(
-                    "prescreen_exclusion", ""
+                    Fields.PRESCREEN_EXCLUSION, ""
                 ):
-                    record.remove_field(key="prescreen_exclusion")
-                    if "title" in record.data["colrev_masterdata_provenance"]:
-                        record.data["colrev_masterdata_provenance"]["title"][
-                            "note"
-                        ] = ""
+                    record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
+                    if Fields.TITLE in record.data[Fields.MD_PROV]:
+                        record.data[Fields.MD_PROV][Fields.TITLE]["note"] = ""
                     if (
-                        record.data["colrev_status"]
+                        record.data[Fields.STATUS]
                         == colrev.record.RecordState.md_needs_manual_preparation
                     ):
                         # by resetting to md_imported,
@@ -188,8 +188,8 @@ class PrepMan(colrev.operation.Operation):
         else:
             # pylint: disable=duplicate-code
             tabulated = pd.pivot_table(
-                crosstab_df[["colrev_origin", "hint"]],
-                index=["colrev_origin"],
+                crosstab_df[[Fields.ORIGIN, "hint"]],
+                index=[Fields.ORIGIN],
                 columns=["hint"],
                 aggfunc=len,
                 fill_value=0,
@@ -218,17 +218,17 @@ class PrepMan(colrev.operation.Operation):
                 x
                 for x in record_header_list
                 if colrev.record.RecordState.md_needs_manual_preparation
-                == x["colrev_status"]
+                == x[Fields.STATUS]
             ]
         )
 
-        all_ids = [x["ID"] for x in record_header_list]
+        all_ids = [x[Fields.ID] for x in record_header_list]
 
-        pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 35)
+        pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 35)
 
         items = self.review_manager.dataset.read_next_record(
             conditions=[
-                {"colrev_status": colrev.record.RecordState.md_needs_manual_preparation}
+                {Fields.STATUS: colrev.record.RecordState.md_needs_manual_preparation}
             ]
         )
 
@@ -257,7 +257,7 @@ class PrepMan(colrev.operation.Operation):
         record_dict = record.get_data()
 
         self.review_manager.dataset.save_records_dict(
-            records={record_dict["ID"]: record_dict}, partial=True
+            records={record_dict[Fields.ID]: record_dict}, partial=True
         )
 
     @colrev.operation.Operation.decorate()

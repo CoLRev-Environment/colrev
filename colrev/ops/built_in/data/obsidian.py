@@ -13,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.data
@@ -59,6 +60,8 @@ class Obsidian(JsonSchemaMixin):
         data_operation: colrev.ops.data.Data,
         settings: dict,
     ) -> None:
+        self.review_manager = data_operation.review_manager
+
         # Set default values (if necessary)
         if "version" not in settings:
             settings["version"] = "0.1"
@@ -67,16 +70,13 @@ class Obsidian(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.endpoint_path = (
-            data_operation.review_manager.path / self.OBSIDIAN_PATH_RELATIVE
-        )
+        self.endpoint_path = self.review_manager.path / self.OBSIDIAN_PATH_RELATIVE
         self.endpoint_paper_path = (
-            data_operation.review_manager.path / self.OBSIDIAN_PAPER_PATH_RELATIVE
+            self.review_manager.path / self.OBSIDIAN_PAPER_PATH_RELATIVE
         )
         self.endpoint_inbox_path = (
-            data_operation.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
+            self.review_manager.path / self.OBSIDIAN_INBOX_PATH_RELATIVE
         )
-        self.review_manager = data_operation.review_manager
         if hasattr(self.review_manager, "dataset"):
             self.review_manager.dataset.update_gitignore(add=self.GITIGNORE_LIST)
 
@@ -118,7 +118,7 @@ class Obsidian(JsonSchemaMixin):
         except Exception as exc:  # pylint: disable=broad-except
             print(exc)
 
-        if int(record_dict.get("cited_by", 0)) > 100:
+        if int(record_dict.get(Fields.CITED_BY, 0)) > 100:
             keywords.append("highly_cited")
 
         return keywords
@@ -130,7 +130,7 @@ class Obsidian(JsonSchemaMixin):
         missing_records = self.__get_obsidian_missing(included=included)
         if len(missing_records) == 0:
             if not silent_mode:
-                data_operation.review_manager.logger.info(
+                self.review_manager.logger.info(
                     "All records included. Nothing to export."
                 )
             return
@@ -152,10 +152,12 @@ class Obsidian(JsonSchemaMixin):
             paper_summary_path = self.endpoint_paper_path / Path(f"{missing_record}.md")
 
             missing_record_entities[paper_summary_path] = {
-                "keywords": self.__get_keywords(record_dict=records[missing_record])
+                Fields.KEYWORDS: self.__get_keywords(
+                    record_dict=records[missing_record]
+                )
             }
 
-        all_keywords = [x["keywords"] for x in missing_record_entities.values()]
+        all_keywords = [x[Fields.KEYWORDS] for x in missing_record_entities.values()]
         all_keywords = [item for sublist in all_keywords for item in sublist]
 
         cnt = Counter(all_keywords)
@@ -198,18 +200,18 @@ class Obsidian(JsonSchemaMixin):
         #         with open(paper_summary_path, "w", encoding="utf-8") as paper_summary:
         #             selected_keywords = [
         #                 x
-        #                 for x in missing_record_entity["keywords"]
+        #                 for x in missing_record_entity[Fields.KEYWORDS]
         #                 if x in frequent_keywords and x not in ["highly_cited"]
         #             ]
         #             # paper_summary.write(f"#paper {' #'.join(selected_keywords)} #todo\n\n")
         #             paper_summary.write(f"#{' #'.join(selected_keywords)}\n\n")
-        #             if "highly_cited" in missing_record_entity["keywords"]:
+        #             if "highly_cited" in missing_record_entity[Fields.KEYWORDS]:
         #                 paper_summary.write("highly_cited")
 
         # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
-        # data_operation.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
+        # self.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
     def update_data(
         self,
@@ -220,7 +222,7 @@ class Obsidian(JsonSchemaMixin):
     ) -> None:
         """Update the obsidian vault"""
 
-        data_operation.review_manager.logger.debug("Export to obsidian endpoint")
+        self.review_manager.logger.debug("Export to obsidian endpoint")
 
         self.__append_missing_records(
             data_operation=data_operation, records=records, silent_mode=silent_mode

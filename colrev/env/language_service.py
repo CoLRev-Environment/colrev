@@ -7,6 +7,7 @@ from lingua.builder import LanguageDetectorBuilder
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Fields
 
 
 class LanguageService:
@@ -77,25 +78,27 @@ class LanguageService:
     ) -> None:
         """Unifies a language_code string to the ISO 639-3 standard"""
 
-        if "language" not in record.data:
+        if Fields.LANGUAGE not in record.data:
             return
 
-        if record.data["language"].lower() in ["en"]:
-            record.data["language"] = "eng"
+        if record.data[Fields.LANGUAGE].lower() in ["en"]:
+            record.data[Fields.LANGUAGE] = "eng"
 
-        elif record.data["language"].lower() in ["fr"]:
-            record.data["language"] = "fra"
+        elif record.data[Fields.LANGUAGE].lower() in ["fr"]:
+            record.data[Fields.LANGUAGE] = "fra"
 
-        elif record.data["language"].lower() in ["ar"]:
-            record.data["language"] = "ara"
+        elif record.data[Fields.LANGUAGE].lower() in ["ar"]:
+            record.data[Fields.LANGUAGE] = "ara"
 
-        elif record.data["language"].lower() in ["de"]:
-            record.data["language"] = "deu"
+        elif record.data[Fields.LANGUAGE].lower() in ["de"]:
+            record.data[Fields.LANGUAGE] = "deu"
 
-        if len(record.data["language"]) != 3:
-            if record.data["language"].lower() in self.__lang_code_mapping:
-                record.data["language"] = self.__lang_code_mapping[
-                    record.data["language"].lower()
+        if len(record.data[Fields.LANGUAGE]) != 3:
+            if record.data[Fields.LANGUAGE].lower() in self.__lang_code_mapping:
+                record.data[Fields.LANGUAGE] = self.__lang_code_mapping[
+                    record.data[Fields.LANGUAGE].lower()
                 ]
 
-        self.validate_iso_639_3_language_codes(lang_code_list=[record.data["language"]])
+        self.validate_iso_639_3_language_codes(
+            lang_code_list=[record.data[Fields.LANGUAGE]]
+        )

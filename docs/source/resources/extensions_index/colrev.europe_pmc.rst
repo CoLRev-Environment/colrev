@@ -23,3 +23,4 @@ Links
 
 * `Europe PMC <https://europepmc.org/>`_
 * License: `may contain copyrighted material, unless stated otherwise <https://europepmc.org/Copyright>`_
+* `Field definitions <https://europepmc.org/docs/EBI_Europe_PMC_Web_Service_Reference.pdf>`_

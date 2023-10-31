@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from dictdiffer import diff
 
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -21,35 +22,34 @@ class Corrections:
 
     # pylint: disable=duplicate-code
     essential_md_keys = [
-        "title",
-        "author",
-        "journal",
-        "year",
-        "booktitle",
-        "number",
-        "volume",
-        "issue",
-        "author",
-        "doi",
-        "colrev_origin",  # Note : for merges
+        Fields.TITLE,
+        Fields.AUTHOR,
+        Fields.JOURNAL,
+        Fields.YEAR,
+        Fields.BOOKTITLE,
+        Fields.NUMBER,
+        Fields.VOLUME,
+        Fields.AUTHOR,
+        Fields.DOI,
+        Fields.ORIGIN,  # Note : for merges
     ]
 
     keys_to_ignore = [
-        "ID",
-        "screening_criteria",
-        "colrev_status",
+        Fields.ID,
+        Fields.SCREENING_CRITERIA,
+        Fields.STATUS,
         "source_url",
         "metadata_source_repository_paths",
         "grobid-version",
         "colrev_pdf_id",
-        "file",
-        "colrev_origin",
-        "colrev_data_provenance",
-        "colrev_masterdata_provenance",
-        "colrev.semantic_scholar.id",
-        "cited_by",
-        "abstract",
-        "pages",
+        Fields.FILE,
+        Fields.ORIGIN,
+        Fields.D_PROV,
+        Fields.MD_PROV,
+        Fields.SEMANTIC_SCHOLAR_ID,
+        Fields.CITED_BY,
+        Fields.ABSTRACT,
+        Fields.PAGES,
     ]
 
     def __init__(
@@ -77,13 +77,13 @@ class Corrections:
         # Note : removing the fields is a temporary fix
         # because the subsetting of change_items does not seem to
         # work properly
-        keys_to_drop = ["pages", "colrev_status"]
+        keys_to_drop = [Fields.PAGES, Fields.STATUS]
         for k in keys_to_drop:
             original_record.pop(k, None)
             corrected_record.pop(k, None)
 
-        # if "colrev.dblp.dblp_key" in corrected_record:
-        #     del corrected_record["colrev.dblp.dblp_key"]
+        # if Fields.DBLP_KEY in corrected_record:
+        #     del corrected_record[Fields.DBLP_KEY]
 
     def __create_change_item(
         self,
@@ -130,40 +130,40 @@ class Corrections:
         if len(selected_change_items) == 0:
             return
 
-        if len(corrected_record.get("colrev_origin", [])) > len(
-            original_record.get("colrev_origin", [])
+        if len(corrected_record.get(Fields.ORIGIN, [])) > len(
+            original_record.get(Fields.ORIGIN, [])
         ):
             if (
-                "colrev.dblp.dblp_key" in corrected_record
-                and "colrev.dblp.dblp_key" in original_record
+                Fields.DBLP_KEY in corrected_record
+                and Fields.DBLP_KEY in original_record
             ):
                 if (
-                    corrected_record["colrev.dblp.dblp_key"]
-                    != original_record["colrev.dblp.dblp_key"]
+                    corrected_record[Fields.DBLP_KEY]
+                    != original_record[Fields.DBLP_KEY]
                 ):
                     selected_change_items = {  # type: ignore
                         "merge": [
-                            corrected_record["colrev.dblp.dblp_key"],
-                            original_record["colrev.dblp.dblp_key"],
+                            corrected_record[Fields.DBLP_KEY],
+                            original_record[Fields.DBLP_KEY],
                         ]
                     }
             # else:
             #     selected_change_items = {
             #         "merge": [
-            #             corrected_record["ID"],
-            #             original_record["ID"],
+            #             corrected_record[Fields.ID],
+            #             original_record[Fields.ID],
             #         ]
             #     }
 
         # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
         # cover non-masterdata corrections
-        if "colrev_masterdata_provenance" not in original_record:
+        if Fields.MD_PROV not in original_record:
             return
 
         dict_to_save = {
-            # "source_url": original_record["colrev_masterdata_provenance"],
+            # "source_url": original_record[Fields.MD_PROV],
             "original_record": {
-                k: v for k, v in original_record.items() if k not in ["colrev_status"]
+                k: v for k, v in original_record.items() if k not in [Fields.STATUS]
             },
             "changes": selected_change_items,
         }
@@ -205,7 +205,7 @@ class Corrections:
             record_prior = [
                 x
                 for x in prior_records_dict.values()
-                if any(y in record_dict["colrev_origin"] for y in x["colrev_origin"])
+                if any(y in record_dict[Fields.ORIGIN] for y in x[Fields.ORIGIN])
             ]
 
             if len(record_prior) == 0:

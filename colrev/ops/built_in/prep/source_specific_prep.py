@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -51,7 +52,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
 
         # Note : we take the first origin (ie., the source-specific prep should
         # be one of the first in the prep-list)
-        origin_source = record.data["colrev_origin"][0].split("/")[0]
+        origin_source = record.data[Fields.ORIGIN][0].split("/")[0]
 
         sources = [
             s
@@ -69,20 +70,21 @@ class SourceSpecificPrep(JsonSchemaMixin):
             else:
                 print(f"error: {source.endpoint}")
 
-        if "howpublished" in record.data and "url" not in record.data:
-            if "url" in record.data["howpublished"]:
-                record.rename_field(key="howpublished", new_key="url")
+        if "howpublished" in record.data and Fields.URL not in record.data:
+            if Fields.URL in record.data["howpublished"]:
+                record.rename_field(key="howpublished", new_key=Fields.URL)
                 record.update_field(
-                    key="url",
-                    value=record.data["url"].replace("\\url{", "").rstrip("}"),
+                    key=Fields.URL,
+                    value=record.data[Fields.URL].replace("\\url{", "").rstrip("}"),
                     source="source_specific_prep",
                 )
 
-        if "webpage" == record.data["ENTRYTYPE"].lower() or (
-            "misc" == record.data["ENTRYTYPE"].lower() and "url" in record.data
+        if "webpage" == record.data[Fields.ENTRYTYPE].lower() or (
+            "misc" == record.data[Fields.ENTRYTYPE].lower()
+            and Fields.URL in record.data
         ):
             record.update_field(
-                key="ENTRYTYPE", value="online", source="source_specific_prep"
+                key=Fields.ENTRYTYPE, value="online", source="source_specific_prep"
             )
 
         return record

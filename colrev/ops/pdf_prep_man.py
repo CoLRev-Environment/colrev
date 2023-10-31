@@ -12,6 +12,7 @@ from PyPDF2.errors import PdfReadError
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
+from colrev.constants import Fields
 
 
 class PDFPrepMan(colrev.operation.Operation):
@@ -37,7 +38,7 @@ class PDFPrepMan(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if (
-                record_dict["colrev_status"]
+                record_dict[Fields.STATUS]
                 == colrev.record.RecordState.pdf_needs_manual_preparation
             ):
                 record = colrev.record.Record(data=record_dict)
@@ -62,18 +63,16 @@ class PDFPrepMan(colrev.operation.Operation):
                 x
                 for x in record_header_list
                 if colrev.record.RecordState.pdf_needs_manual_preparation
-                == x["colrev_status"]
+                == x[Fields.STATUS]
             ]
         )
         pad = 0
         if record_header_list:
-            pad = min((max(len(x["ID"]) for x in record_header_list) + 2), 40)
+            pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 40)
 
         items = self.review_manager.dataset.read_next_record(
             conditions=[
-                {
-                    "colrev_status": colrev.record.RecordState.pdf_needs_manual_preparation
-                }
+                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_preparation}
             ]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
@@ -96,44 +95,44 @@ class PDFPrepMan(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.info("Calculate statistics")
-        stats: dict = {"ENTRYTYPE": {}}
+        stats: dict = {Fields.ENTRYTYPE: {}}
 
         prep_man_hints = []
         crosstab = []
         for record_dict in records.values():
             if (
                 colrev.record.RecordState.pdf_needs_manual_preparation
-                != record_dict["colrev_status"]
+                != record_dict[Fields.STATUS]
             ):
                 continue
 
-            if record_dict["ENTRYTYPE"] in stats["ENTRYTYPE"]:
-                stats["ENTRYTYPE"][record_dict["ENTRYTYPE"]] = (
-                    stats["ENTRYTYPE"][record_dict["ENTRYTYPE"]] + 1
+            if record_dict[Fields.ENTRYTYPE] in stats[Fields.ENTRYTYPE]:
+                stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = (
+                    stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] + 1
                 )
             else:
-                stats["ENTRYTYPE"][record_dict["ENTRYTYPE"]] = 1
+                stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
             record = colrev.record.Record(data=record_dict)
-            prov_d = record.data["colrev_data_provenance"]
+            prov_d = record.data[Fields.D_PROV]
 
-            if "file" in prov_d:
-                if prov_d["file"]["note"] != "":
-                    for hint in prov_d["file"]["note"].split(","):
+            if Fields.FILE in prov_d:
+                if prov_d[Fields.FILE]["note"] != "":
+                    for hint in prov_d[Fields.FILE]["note"].split(","):
                         prep_man_hints.append(hint.lstrip())
 
             for hint in prep_man_hints:
-                crosstab.append([record_dict["journal"], hint.lstrip()])
+                crosstab.append([record_dict[Fields.JOURNAL], hint.lstrip()])
 
-        crosstab_df = pd.DataFrame(crosstab, columns=["journal", "hint"])
+        crosstab_df = pd.DataFrame(crosstab, columns=[Fields.JOURNAL, "hint"])
 
         if crosstab_df.empty:
             print("No records to prepare manually.")
         else:
             # pylint: disable=duplicate-code
             tabulated = pd.pivot_table(
-                crosstab_df[["journal", "hint"]],
-                index=["journal"],
+                crosstab_df[[Fields.JOURNAL, "hint"]],
+                index=[Fields.JOURNAL],
                 columns=["hint"],
                 aggfunc=len,
                 fill_value=0,
@@ -169,10 +168,10 @@ class PDFPrepMan(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         records = {
-            record["ID"]: record
+            record[Fields.ID]: record
             for record in records.values()
             if colrev.record.RecordState.pdf_needs_manual_preparation
-            == record["colrev_status"]
+            == record[Fields.STATUS]
         }
         self.review_manager.dataset.save_records_dict_to_file(
             records=records, save_path=prep_bib_path
@@ -182,17 +181,17 @@ class PDFPrepMan(colrev.operation.Operation):
 
         # pylint: disable=duplicate-code
         col_names = [
-            "ID",
-            "colrev_origin",
-            "author",
-            "title",
-            "year",
-            "journal",
-            # "booktitle",
-            "volume",
-            "number",
-            "pages",
-            "doi",
+            Fields.ID,
+            Fields.ORIGIN,
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.YEAR,
+            Fields.JOURNAL,
+            # Fields.BOOKTITLE,
+            Fields.VOLUME,
+            Fields.NUMBER,
+            Fields.PAGES,
+            Fields.DOI,
         ]
         for col_name in col_names:
             if col_name not in bib_db_df:
@@ -223,9 +222,7 @@ class PDFPrepMan(colrev.operation.Operation):
         for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
-                x
-                for x in records_changed
-                if x["colrev_origin"] == record["colrev_origin"]
+                x for x in records_changed if x[Fields.ORIGIN] == record[Fields.ORIGIN]
             ]
             if len(changed_record_l) == 1:
                 changed_record = changed_record_l.pop()
@@ -310,15 +307,15 @@ class PDFPrepMan(colrev.operation.Operation):
         record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
         record.reset_pdf_provenance_notes()
 
-        pdf_path = Path(self.review_manager.path / Path(record.data["file"]))
+        pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))
         prev_cpid = record.data.get("colrev_pdf_id", "NA")
         record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=pdf_path))
         if prev_cpid != record.data.get("colrev_pdf_id", "NA"):
-            record.add_data_provenance(key="file", source="manual")
+            record.add_data_provenance(key=Fields.FILE, source="manual")
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict["ID"]: record_dict}, partial=True
+            records={record_dict[Fields.ID]: record_dict}, partial=True
         )
         self.review_manager.dataset.add_changes(
             path=self.review_manager.dataset.RECORDS_FILE_RELATIVE

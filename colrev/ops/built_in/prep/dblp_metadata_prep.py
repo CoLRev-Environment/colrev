@@ -12,6 +12,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.dblp as dblp_connector
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.prep
@@ -69,7 +70,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         if any(
             dblp_prefix in o
             for dblp_prefix in self.dblp_prefixes
-            for o in record.data["colrev_origin"]
+            for o in record.data[Fields.ORIGIN]
         ):
             # Already linked to a dblp record
             return record

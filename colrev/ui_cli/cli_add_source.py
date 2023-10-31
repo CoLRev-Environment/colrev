@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
 
 # pylint: disable=too-few-public-methods
 
@@ -23,17 +23,17 @@ class CLISourceAdder:
         *,
         source_candidates: list,
     ) -> dict:
-        print(f"{colors.ORANGE}Select search source{colors.END}:")
+        print(f"{Colors.ORANGE}Select search source{Colors.END}:")
         for i, heuristic_source in enumerate(source_candidates):
             highlight_color = ""
             if heuristic_source["confidence"] >= 0.7:
-                highlight_color = colors.GREEN
+                highlight_color = Colors.GREEN
             elif heuristic_source["confidence"] >= 0.5:
-                highlight_color = colors.ORANGE
+                highlight_color = Colors.ORANGE
             print(
                 f"{highlight_color}{i+1} "
                 f"(confidence: {round(heuristic_source['confidence'], 2)}):"
-                f" {heuristic_source['source_candidate'].endpoint}{colors.END}"
+                f" {heuristic_source['source_candidate'].endpoint}{Colors.END}"
             )
 
         while True:

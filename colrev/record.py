@@ -37,7 +37,13 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.prep.utils as prep_utils
 import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import DefectCodes
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
+from colrev.constants import FieldSet
+from colrev.constants import FieldValues
+from colrev.constants import Operations
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -50,67 +56,13 @@ if TYPE_CHECKING:
 class Record:
     """The Record class provides a range of basic convenience functions"""
 
-    identifying_field_keys = [
-        "title",
-        "author",
-        "year",
-        "journal",
-        "booktitle",
-        "chapter",
-        "publisher",
-        "volume",
-        "number",
-        "pages",
-        "editor",
-    ]
-    """Keys of identifying fields considered for masterdata provenance"""
-
-    provenance_keys = [
-        "colrev_masterdata_provenance",
-        "colrev_origin",
-        "colrev_status",
-        "colrev_data_provenance",
-        "colrev_pdf_id",
-        "MOVED_DUPE_ID",
-    ]
-
-    preferred_sources = ["https://api.crossref.org/works/", "citeas.org"]
-
     # Fields that are stored as lists (items separated by newlines)
     list_fields_keys = [
-        "colrev_origin",
+        Fields.ORIGIN,
         # "colrev_pdf_id",
-        # "screening_criteria",
+        # Fields.SCREENING_CRITERIA,
     ]
-    dict_fields_keys = [
-        "colrev_masterdata_provenance",
-        "colrev_data_provenance",
-    ]
-
-    time_variant_fields = ["cited_by"]
-
-    standardized_field_keys = (
-        identifying_field_keys
-        + provenance_keys
-        + [
-            "ID",
-            "ENTRYTYPE",
-            "doi",
-            "url",
-            "issn",
-            "isbn",
-            "fulltext",
-            "abstract",
-            "keywords",
-            "cited_by",
-            "file",
-            "institution",
-            "month",
-            "series",
-            "language",
-        ]
-    )
-    """Standardized field keys"""
+    dict_fields_keys = [Fields.MD_PROV, Fields.D_PROV]
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -124,8 +76,8 @@ class Record:
         return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
-        identifying_keys_order = ["ID", "ENTRYTYPE"] + [
-            k for k in self.identifying_field_keys if k in self.data
+        identifying_keys_order = [Fields.ID, Fields.ENTRYTYPE] + [
+            k for k in FieldSet.IDENTIFYING_FIELD_KEYS if k in self.data
         ]
         complementary_keys_order = [
             k for k, v in self.data.items() if k not in identifying_keys_order
@@ -169,19 +121,19 @@ class Record:
                 dictdiffer.diff(self.get_data(), other_record.get_data())
             ):
                 if selected_tuple[0] == "change":
-                    if selected_tuple[1] in self.identifying_field_keys:
+                    if selected_tuple[1] in FieldSet.IDENTIFYING_FIELD_KEYS:
                         diff.append(selected_tuple)
                 if selected_tuple[0] == "add":
                     addition_list: typing.Tuple = ("add", "", [])
                     for addition_item in selected_tuple[2]:
-                        if addition_item[0] in self.identifying_field_keys:
+                        if addition_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
                             addition_list[2].append(addition_item)
                     if addition_list[2]:
                         diff.append(addition_list)
                 if selected_tuple[0] == "remove":
                     removal_list: typing.Tuple = ("remove", "", [])
                     for removal_item in selected_tuple[2]:
-                        if removal_item[0] in self.identifying_field_keys:
+                        if removal_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
                             removal_list[2].append(removal_item)
                     if removal_list[2]:
                         diff.append(removal_list)
@@ -193,25 +145,25 @@ class Record:
     def format_bib_style(self) -> str:
         """Simple formatter for bibliography-style output"""
         bib_formatted = (
-            self.data.get("author", "")
+            self.data.get(Fields.AUTHOR, "")
             + " ("
-            + self.data.get("year", "")
+            + self.data.get(Fields.YEAR, "")
             + ") "
-            + self.data.get("title", "")
+            + self.data.get(Fields.TITLE, "")
             + ". "
-            + self.data.get("journal", "")
-            + self.data.get("booktitle", "")
+            + self.data.get(Fields.JOURNAL, "")
+            + self.data.get(Fields.BOOKTITLE, "")
             + ", ("
-            + self.data.get("volume", "")
+            + self.data.get(Fields.VOLUME, "")
             + ") "
-            + self.data.get("number", "")
+            + self.data.get(Fields.NUMBER, "")
         )
         return bib_formatted
 
     def __save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
         list_to_return = []
-        assert input_key in ["colrev_masterdata_provenance", "colrev_data_provenance"]
-        if input_key == "colrev_masterdata_provenance":
+        assert input_key in [Fields.MD_PROV, Fields.D_PROV]
+        if input_key == Fields.MD_PROV:
             for key, value in input_dict.items():
                 if isinstance(value, dict):
                     formated_node = ",".join(
@@ -219,7 +171,7 @@ class Record:
                     )
                     list_to_return.append(f"{key}:{value['source']};{formated_node};")
 
-        elif input_key == "colrev_data_provenance":
+        elif input_key == Fields.D_PROV:
             for key, value in input_dict.items():
                 if isinstance(value, dict):
                     list_to_return.append(f"{key}:{value['source']};{value['note']};")
@@ -237,7 +189,7 @@ class Record:
 
             for key in self.list_fields_keys:
                 if key in data_copy:
-                    if key in ["colrev_origin"]:
+                    if key in [Fields.ORIGIN]:
                         data_copy[key] = sorted(list(set(data_copy[key])))
                     for ind, val in enumerate(data_copy[key]):
                         if len(val) > 0:
@@ -256,11 +208,9 @@ class Record:
 
             return data_copy
 
-        if not isinstance(self.data.get("colrev_origin", []), list):
-            self.data["colrev_origin"] = (
-                self.data["colrev_origin"].rstrip(";").split(";")
-            )
-        assert isinstance(self.data.get("colrev_origin", []), list)
+        if not isinstance(self.data.get(Fields.ORIGIN, []), list):
+            self.data[Fields.ORIGIN] = self.data[Fields.ORIGIN].rstrip(";").split(";")
+        assert isinstance(self.data.get(Fields.ORIGIN, []), list)
 
         if stringify:
             return __get_stringified_record()
@@ -269,21 +219,31 @@ class Record:
 
     def masterdata_is_curated(self) -> bool:
         """Check whether the record masterdata is curated"""
-        return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
+        return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
 
     def set_status(self, *, target_state: RecordState, force: bool = False) -> None:
         """Set the record status"""
+
         if RecordState.md_prepared == target_state and not force:
             if self.has_quality_defects():
                 target_state = RecordState.md_needs_manual_preparation
-        # pylint: disable=direct-status-assign
-        self.data["colrev_status"] = target_state
+        # pylint: disable=colrev-direct-status-assign
+        self.data[Fields.STATUS] = target_state
+
+    def prefix_non_standardized_field_keys(self, *, prefix: str) -> None:
+        """Prefix non-standardized field keys"""
+        for key in list(self.data.keys()):
+            if key in FieldSet.STANDARDIZED_FIELD_KEYS:
+                continue
+            if key.startswith("colrev."):
+                continue
+            self.data[f"{prefix}.{key}"] = self.data.pop(key)
 
     def shares_origins(self, *, other_record: Record) -> bool:
         """Check at least one origin is shared with the other record"""
         return any(
-            x in other_record.data.get("colrev_origin", [])
-            for x in self.data.get("colrev_origin", [])
+            x in other_record.data.get(Fields.ORIGIN, [])
+            for x in self.data.get(Fields.ORIGIN, [])
         )
 
     def get_value(self, *, key: str, default: Optional[str] = None) -> str:
@@ -302,11 +262,13 @@ class Record:
         # Note : do not automatically create colrev_ids
         # or at least keep in mind that this will not be possible for some records
         colrev_id = []
-        if "colrev_id" in self.data:
-            if isinstance(self.data["colrev_id"], str):
-                colrev_id = [cid.lstrip() for cid in self.data["colrev_id"].split(";")]
-            elif isinstance(self.data["colrev_id"], list):
-                colrev_id = self.data["colrev_id"]
+        if Fields.COLREV_ID in self.data:
+            if isinstance(self.data[Fields.COLREV_ID], str):
+                colrev_id = [
+                    cid.lstrip() for cid in self.data[Fields.COLREV_ID].split(";")
+                ]
+            elif isinstance(self.data[Fields.COLREV_ID], list):
+                colrev_id = self.data[Fields.COLREV_ID]
         return [c for c in colrev_id if len(c) > 20]
 
     def has_overlapping_colrev_id(self, *, record: Record) -> bool:
@@ -318,6 +280,7 @@ class Record:
                 return True
         return False
 
+    # pylint: disable=too-many-arguments
     def update_field(
         self,
         *,
@@ -334,26 +297,18 @@ class Record:
                 if self.data[key] == value:
                     return
 
-        if key in self.identifying_field_keys:
+        if key in FieldSet.IDENTIFYING_FIELD_KEYS:
             if not self.masterdata_is_curated():
                 if append_edit and key in self.data:
-                    if key in self.data.get("colrev_masterdata_provenance", {}):
-                        source = (
-                            self.data["colrev_masterdata_provenance"][key]["source"]
-                            + "|"
-                            + source
-                        )
+                    if key in self.data.get(Fields.MD_PROV, {}):
+                        source = self.data[Fields.MD_PROV][key]["source"] + "|" + source
                     else:
                         source = "original|" + source
                 self.add_masterdata_provenance(key=key, source=source, note=note)
         else:
             if append_edit and key in self.data:
-                if key in self.data.get("colrev_data_provenance", {}):
-                    source = (
-                        self.data["colrev_data_provenance"][key]["source"]
-                        + "|"
-                        + source
-                    )
+                if key in self.data.get(Fields.D_PROV, {}):
+                    source = self.data[Fields.D_PROV][key]["source"] + "|" + source
                 else:
                     source = "original|" + source
             self.add_data_provenance(key=key, source=source, note=note)
@@ -366,11 +321,11 @@ class Record:
         value = self.data[key]
         self.data[new_key] = value
 
-        if key in self.identifying_field_keys:
-            if "colrev_masterdata_provenance" not in self.data:
-                self.data["colrev_masterdata_provenance"] = {}
-            if key in self.data["colrev_masterdata_provenance"]:
-                value_provenance = self.data["colrev_masterdata_provenance"][key]
+        if key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if Fields.MD_PROV not in self.data:
+                self.data[Fields.MD_PROV] = {}
+            if key in self.data[Fields.MD_PROV]:
+                value_provenance = self.data[Fields.MD_PROV][key]
                 if "source" in value_provenance:
                     value_provenance["source"] += f"|rename-from:{key}"
             else:
@@ -378,17 +333,17 @@ class Record:
                     "source": f"|rename-from:{key}",
                     "note": "",
                 }
-            self.data["colrev_masterdata_provenance"][new_key] = value_provenance
+            self.data[Fields.MD_PROV][new_key] = value_provenance
         else:
-            if "colrev_data_provenance" not in self.data:
-                self.data["colrev_data_provenance"] = {}
-            if key in self.data["colrev_data_provenance"]:
-                value_provenance = self.data["colrev_data_provenance"][key]
+            if Fields.D_PROV not in self.data:
+                self.data[Fields.D_PROV] = {}
+            if key in self.data[Fields.D_PROV]:
+                value_provenance = self.data[Fields.D_PROV][key]
                 if "source" in value_provenance:
                     value_provenance["source"] += f"|rename-from:{key}"
             else:
                 value_provenance = {"source": f"|rename-from:{key}", "note": ""}
-            self.data["colrev_data_provenance"][new_key] = value_provenance
+            self.data[Fields.D_PROV][new_key] = value_provenance
 
         self.remove_field(key=key)
 
@@ -399,39 +354,39 @@ class Record:
         qm: colrev.qm.quality_model.QualityModel,
     ) -> None:
         """Change the ENTRYTYPE"""
-        for value in self.data.get("colrev_masterdata_provenance", {}).values():
-            if "inconsistent-with-entrytype" in value["note"]:
+        for value in self.data.get(Fields.MD_PROV, {}).values():
+            if DefectCodes.INCONSISTENT_WITH_ENTRYTYPE in value["note"]:
                 value["note"] = ""
-            if "missing" in value["note"]:
+            if DefectCodes.MISSING in value["note"]:
                 value["note"] = ""
-        missing_fields = [k for k, v in self.data.items() if v == "UNKNOWN"]
+        missing_fields = [k for k, v in self.data.items() if v == FieldValues.UNKNOWN]
         for missing_field in missing_fields:
             self.remove_field(key=missing_field)
 
-        self.data["ENTRYTYPE"] = new_entrytype
-        if new_entrytype in ["inproceedings", "proceedings"]:
-            if self.data.get("volume", "") == "UNKNOWN":
-                self.remove_field(key="volume")
-            if self.data.get("number", "") == "UNKNOWN":
-                self.remove_field(key="number")
-            if "journal" in self.data and "booktitle" not in self.data:
-                self.rename_field(key="journal", new_key="booktitle")
-        elif new_entrytype == "article":
-            if "booktitle" in self.data:
-                self.rename_field(key="booktitle", new_key="journal")
+        self.data[Fields.ENTRYTYPE] = new_entrytype
+        if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
+            if self.data.get(Fields.VOLUME, "") == FieldValues.UNKNOWN:
+                self.remove_field(key=Fields.VOLUME)
+            if self.data.get(Fields.NUMBER, "") == FieldValues.UNKNOWN:
+                self.remove_field(key=Fields.NUMBER)
+            if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
+                self.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
+        elif new_entrytype == ENTRYTYPES.ARTICLE:
+            if Fields.BOOKTITLE in self.data:
+                self.rename_field(key=Fields.BOOKTITLE, new_key=Fields.JOURNAL)
         elif new_entrytype in [
-            "inbook",
-            "book",
-            "incollection",
-            "phdthesis",
-            "thesis",
-            "masterthesis",
-            "bachelorthesis",
-            "techreport",
-            "unpublished",
-            "misc",
-            "software",
-            "online",
+            ENTRYTYPES.INBOOK,
+            ENTRYTYPES.BOOK,
+            ENTRYTYPES.INCOLLECTION,
+            ENTRYTYPES.PHDTHESIS,
+            ENTRYTYPES.THESIS,
+            ENTRYTYPES.MASTERSTHESIS,
+            ENTRYTYPES.BACHELORTHESIS,
+            ENTRYTYPES.TECHREPORT,
+            ENTRYTYPES.UNPUBLISHED,
+            ENTRYTYPES.MISC,
+            ENTRYTYPES.SOFTWARE,
+            ENTRYTYPES.ONLINE,
         ]:
             pass
         else:
@@ -439,7 +394,7 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.update_masterdata_provenance(qm=qm)
+        self.run_quality_model(qm=qm)
 
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source: str = ""
@@ -449,23 +404,23 @@ class Record:
         if key in self.data:
             del self.data[key]
 
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
 
-        if not_missing_note and key in self.identifying_field_keys:
+        if not_missing_note and key in FieldSet.IDENTIFYING_FIELD_KEYS:
             # Example: journal without number
             # we should keep that information that a particular masterdata
             # field is not required
-            if key not in self.data["colrev_masterdata_provenance"]:
-                self.data["colrev_masterdata_provenance"][key] = {}
-            self.data["colrev_masterdata_provenance"][key]["note"] = "not-missing"
+            if key not in self.data[Fields.MD_PROV]:
+                self.data[Fields.MD_PROV][key] = {}
+            self.data[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
             if source != "":
-                self.data["colrev_masterdata_provenance"][key]["source"] = source
+                self.data[Fields.MD_PROV][key]["source"] = source
         else:
-            if key in self.data.get("colrev_masterdata_provenance", {}):
-                del self.data["colrev_masterdata_provenance"][key]
-            if key in self.data.get("colrev_data_provenance", {}):
-                del self.data["colrev_data_provenance"][key]
+            if key in self.data.get(Fields.MD_PROV, {}):
+                del self.data[Fields.MD_PROV][key]
+            if key in self.data.get(Fields.D_PROV, {}):
+                del self.data[Fields.D_PROV][key]
 
     def set_masterdata_complete(
         self, *, source: str, masterdata_repository: bool, replace_source: bool = True
@@ -475,76 +430,72 @@ class Record:
         if self.masterdata_is_curated() or masterdata_repository:
             return
 
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
-        md_p_dict = self.data["colrev_masterdata_provenance"]
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        md_p_dict = self.data[Fields.MD_PROV]
 
-        for identifying_field_key in self.identifying_field_keys:
-            if identifying_field_key in ["author", "title", "year"]:
+        for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if identifying_field_key in [Fields.AUTHOR, Fields.TITLE, Fields.YEAR]:
                 continue
-            if self.data.get(identifying_field_key, "NA") == "UNKNOWN":
+            if self.data.get(identifying_field_key, "NA") == FieldValues.UNKNOWN:
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if "missing" in note and "not-missing" not in note:
+                if DefectCodes.MISSING in note and DefectCodes.NOT_MISSING not in note:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
-                        "missing", ""
+                        DefectCodes.MISSING, ""
                     )
 
-        if self.data["ENTRYTYPE"] == "article":
-            if "volume" not in self.data:
-                if "volume" in self.data["colrev_masterdata_provenance"]:
-                    self.data["colrev_masterdata_provenance"]["volume"][
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            if Fields.VOLUME not in self.data:
+                if Fields.VOLUME in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][Fields.VOLUME][
                         "note"
-                    ] = "not-missing"
+                    ] = DefectCodes.NOT_MISSING
                     if replace_source:
-                        self.data["colrev_masterdata_provenance"]["volume"][
-                            "source"
-                        ] = source
+                        self.data[Fields.MD_PROV][Fields.VOLUME]["source"] = source
                 else:
-                    self.data["colrev_masterdata_provenance"]["volume"] = {
+                    self.data[Fields.MD_PROV][Fields.VOLUME] = {
                         "source": source,
-                        "note": "not-missing",
+                        "note": DefectCodes.NOT_MISSING,
                     }
 
-            if "number" not in self.data:
-                if "number" in self.data["colrev_masterdata_provenance"]:
-                    self.data["colrev_masterdata_provenance"]["number"][
+            if Fields.NUMBER not in self.data:
+                if Fields.NUMBER in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][Fields.NUMBER][
                         "note"
-                    ] = "not-missing"
+                    ] = DefectCodes.NOT_MISSING
                     if replace_source:
-                        self.data["colrev_masterdata_provenance"]["number"][
-                            "source"
-                        ] = source
+                        self.data[Fields.MD_PROV][Fields.NUMBER]["source"] = source
                 else:
-                    self.data["colrev_masterdata_provenance"]["number"] = {
+                    self.data[Fields.MD_PROV][Fields.NUMBER] = {
                         "source": source,
-                        "note": "not-missing",
+                        "note": DefectCodes.NOT_MISSING,
                     }
 
     def set_masterdata_consistent(self) -> None:
         """Set the masterdata to consistent"""
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
-        md_p_dict = self.data["colrev_masterdata_provenance"]
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        md_p_dict = self.data[Fields.MD_PROV]
 
-        for identifying_field_key in self.identifying_field_keys:
+        for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if "inconsistent-with-entrytype" in note:
+                if DefectCodes.INCONSISTENT_WITH_ENTRYTYPE in note:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
-                        "inconsistent-with-entrytype", ""
+                        DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, ""
                     )
 
     def reset_pdf_provenance_notes(self) -> None:
         """Reset the PDF (file) provenance notes"""
-        if "colrev_data_provenance" not in self.data:
-            self.add_data_provenance_note(key="file", note="")
+        if Fields.D_PROV not in self.data:
+            self.add_data_provenance_note(key=Fields.FILE, note="")
         else:
-            if "file" in self.data["colrev_data_provenance"]:
-                self.data["colrev_data_provenance"]["file"]["note"] = ""
+            if Fields.FILE in self.data[Fields.D_PROV]:
+                self.data[Fields.D_PROV][Fields.FILE]["note"] = ""
             else:
-                self.data["colrev_data_provenance"]["file"] = {
+                self.data[Fields.D_PROV][Fields.FILE] = {
                     "source": "NA",
                     "note": "",
                 }
@@ -552,19 +503,19 @@ class Record:
     def __merge_origins(self, *, merging_record: Record) -> None:
         """Merge the origins with those of the merging_record"""
 
-        if "colrev_origin" in merging_record.data:
-            origins = self.data["colrev_origin"] + merging_record.data["colrev_origin"]
-            self.data["colrev_origin"] = sorted(list(set(origins)))
+        if Fields.ORIGIN in merging_record.data:
+            origins = self.data[Fields.ORIGIN] + merging_record.data[Fields.ORIGIN]
+            self.data[Fields.ORIGIN] = sorted(list(set(origins)))
 
     def __merge_status(self, *, merging_record: Record) -> None:
         """Merge the status with the merging_record"""
 
-        if "colrev_status" in merging_record.data:
+        if Fields.STATUS in merging_record.data:
             # Set both status to the latter in the state model
-            if self.data["colrev_status"] < merging_record.data["colrev_status"]:
-                self.set_status(target_state=merging_record.data["colrev_status"])
+            if self.data[Fields.STATUS] < merging_record.data[Fields.STATUS]:
+                self.set_status(target_state=merging_record.data[Fields.STATUS])
             else:
-                merging_record.set_status(target_state=self.data["colrev_status"])
+                merging_record.set_status(target_state=self.data[Fields.STATUS])
 
     def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")
@@ -576,12 +527,12 @@ class Record:
 
         # do not override provenance, ID, ... fields
         if key in [
-            "ID",
-            "colrev_masterdata_provenance",
-            "colrev_data_provenance",
-            "colrev_id",
-            "colrev_status",
-            "colrev_origin",
+            Fields.ID,
+            Fields.MD_PROV,
+            Fields.D_PROV,
+            Fields.COLREV_ID,
+            Fields.STATUS,
+            Fields.ORIGIN,
             "MOVED_DUPE_ID",
         ]:
             return ""
@@ -591,8 +542,8 @@ class Record:
     def __prevent_invalid_merges(self, *, merging_record: Record) -> None:
         """Prevents invalid merges like ... part 1 / ... part 2"""
 
-        lower_title_a = self.data.get("title", "").lower()
-        lower_title_b = merging_record.data.get("title", "").lower()
+        lower_title_a = self.data.get(Fields.TITLE, "").lower()
+        lower_title_b = merging_record.data.get(Fields.TITLE, "").lower()
 
         part_match_a = re.findall(r"part [A-Za-z0-9]+$", lower_title_a)
         part_match_b = re.findall(r"part [A-Za-z0-9]+$", lower_title_b)
@@ -634,7 +585,7 @@ class Record:
         if preferred_masterdata_source_prefixes:
             if any(
                 any(ps in origin for ps in preferred_masterdata_source_prefixes)
-                for origin in merging_record.data["colrev_origin"]
+                for origin in merging_record.data[Fields.ORIGIN]
             ):
                 merging_record_preferred = True
 
@@ -643,14 +594,12 @@ class Record:
         self.__merge_status(merging_record=merging_record)
 
         if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
-            self.data["colrev_masterdata_provenance"] = merging_record.data[
-                "colrev_masterdata_provenance"
-            ]
+            self.data[Fields.MD_PROV] = merging_record.data[Fields.MD_PROV]
             # Note : remove all masterdata fields
             # because the curated record may have fewer masterdata fields
             # and we iterate over the curated record (merging_record) in the next step
             for k in list(self.data.keys()):
-                if k in Record.identifying_field_keys and k != "pages":
+                if k in FieldSet.IDENTIFYING_FIELD_KEYS and k != Fields.PAGES:
                     del self.data[k]
 
         for key in list(merging_record.data.keys()):
@@ -667,7 +616,7 @@ class Record:
             # Always update from curated merging_records
             if merging_record.masterdata_is_curated():
                 self.data[key] = merging_record.data[key]
-                if key not in Record.identifying_field_keys + ["ENTRYTYPE"]:
+                if key not in FieldSet.IDENTIFYING_FIELD_KEYS + [Fields.ENTRYTYPE]:
                     self.add_data_provenance(key=key, source=source, note=note)
 
             # Do not change if MERGING_RECORD is not curated
@@ -678,7 +627,7 @@ class Record:
                 continue
 
             # Part 1: identifying fields
-            if key in Record.identifying_field_keys:
+            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
                 if preferred_masterdata_source_prefixes:
                     if merging_record_preferred:
                         self.update_field(
@@ -692,7 +641,6 @@ class Record:
                         key=key,
                         val=str(val),
                         source=source,
-                        note=note,
                     )
 
             # Part 2: other fields
@@ -710,61 +658,33 @@ class Record:
                 )
 
     @classmethod
-    def __select_best_author(
-        cls, *, record: Record, merging_record: Record, preferred_sources: list
-    ) -> str:
-        # pylint: disable=too-many-return-statements
-        if "colrev_masterdata_provenance" not in record.data:
-            record.data["colrev_masterdata_provenance"] = {}
-        record_a_prov = record.data["colrev_masterdata_provenance"]
+    def __select_best_author(cls, *, record: Record, merging_record: Record) -> str:
+        if not record.has_quality_defects(
+            field=Fields.AUTHOR
+        ) and merging_record.has_quality_defects(field=Fields.AUTHOR):
+            return record.data[Fields.AUTHOR]
+        if record.has_quality_defects(
+            field=Fields.AUTHOR
+        ) and not merging_record.has_quality_defects(field=Fields.AUTHOR):
+            return merging_record.data[Fields.AUTHOR]
 
-        if "colrev_masterdata_provenance" not in merging_record.data:
-            merging_record.data["colrev_masterdata_provenance"] = {}
-        merging_record_a_prov = merging_record.data["colrev_masterdata_provenance"]
-
-        if "author" in record_a_prov and "author" not in merging_record_a_prov:
-            # Prefer non-defect version
-            if "quality_defect" in record_a_prov["author"].get("note", ""):
-                return merging_record.data["author"]
-            # Prefer complete version
-            if "incomplete" in record_a_prov["author"].get("note", ""):
-                return merging_record.data["author"]
-        elif "author" in record_a_prov and "author" in merging_record_a_prov:
-            # Prefer non-defect version
-            if "quality_defect" in record_a_prov["author"].get(
-                "note", ""
-            ) and "quality_defect" not in merging_record_a_prov["author"].get(
-                "note", ""
-            ):
-                return merging_record.data["author"]
-
-            # Prefer complete version
-            if "incomplete" in record_a_prov["author"].get(
-                "note", ""
-            ) and "incomplete" not in merging_record_a_prov["author"].get("note", ""):
-                return merging_record.data["author"]
-
-        if len(record.data["author"]) > 0 and len(merging_record.data["author"]) > 0:
+        if (
+            len(record.data[Fields.AUTHOR]) > 0
+            and len(merging_record.data[Fields.AUTHOR]) > 0
+        ):
             default_mostly_upper = (
-                colrev.env.utils.percent_upper_chars(record.data["author"]) > 0.8
+                colrev.env.utils.percent_upper_chars(record.data[Fields.AUTHOR]) > 0.8
             )
             candidate_mostly_upper = (
-                colrev.env.utils.percent_upper_chars(merging_record.data["author"])
+                colrev.env.utils.percent_upper_chars(merging_record.data[Fields.AUTHOR])
                 > 0.8
             )
 
             # Prefer title case (not all-caps)
             if default_mostly_upper and not candidate_mostly_upper:
-                return merging_record.data["author"]
+                return merging_record.data[Fields.AUTHOR]
 
-        # Prefer sources
-        if "author" in merging_record_a_prov:
-            if any(
-                x in merging_record_a_prov["author"]["source"]
-                for x in preferred_sources
-            ):
-                return merging_record.data["author"]
-        return record.data["author"]
+        return record.data[Fields.AUTHOR]
 
     @classmethod
     def __select_best_pages(
@@ -772,11 +692,13 @@ class Record:
         *,
         record: Record,
         merging_record: Record,
-        preferred_sources: list,  # pylint: disable=unused-argument
     ) -> str:
-        best_pages = record.data["pages"]
-        if "--" in merging_record.data["pages"] and "--" not in record.data["pages"]:
-            best_pages = merging_record.data["pages"]
+        best_pages = record.data[Fields.PAGES]
+        if (
+            "--" in merging_record.data[Fields.PAGES]
+            and "--" not in record.data[Fields.PAGES]
+        ):
+            best_pages = merging_record.data[Fields.PAGES]
         return best_pages
 
     @classmethod
@@ -785,11 +707,10 @@ class Record:
         *,
         record: Record,
         merging_record: Record,
-        preferred_sources: list,  # pylint: disable=unused-argument
     ) -> str:
-        default = record.data["title"]
-        candidate = merging_record.data["title"]
-        best_title = record.data["title"]
+        default = record.data[Fields.TITLE]
+        candidate = merging_record.data[Fields.TITLE]
+        best_title = record.data[Fields.TITLE]
 
         # Note : avoid switching titles
         if default.replace(" - ", ": ") == candidate.replace(" - ", ": "):
@@ -811,10 +732,10 @@ class Record:
         *,
         record: Record,
         merging_record: Record,
-        preferred_sources: list,  # pylint: disable=unused-argument
     ) -> str:
         return cls.__select_best_container_title(
-            default=record.data["journal"], candidate=merging_record.data["journal"]
+            default=record.data[Fields.JOURNAL],
+            candidate=merging_record.data[Fields.JOURNAL],
         )
 
     @classmethod
@@ -823,10 +744,10 @@ class Record:
         *,
         record: Record,
         merging_record: Record,
-        preferred_sources: list,  # pylint: disable=unused-argument
     ) -> str:
         return cls.__select_best_container_title(
-            default=record.data["booktitle"], candidate=merging_record.data["booktitle"]
+            default=record.data[Fields.BOOKTITLE],
+            candidate=merging_record.data[Fields.BOOKTITLE],
         )
 
     @classmethod
@@ -852,17 +773,16 @@ class Record:
         key: str,
         val: str,
         source: str,
-        note: str,  # pylint: disable=unused-argument
     ) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
 
         custom_field_selectors = {
-            "author": self.__select_best_author,
-            "pages": self.__select_best_pages,
-            "title": self.__select_best_title,
-            "journal": self.__select_best_journal,
-            "booktitle": self.__select_best_booktitle,
+            Fields.AUTHOR: self.__select_best_author,
+            Fields.PAGES: self.__select_best_pages,
+            Fields.TITLE: self.__select_best_title,
+            Fields.JOURNAL: self.__select_best_journal,
+            Fields.BOOKTITLE: self.__select_best_booktitle,
         }
 
         if key in custom_field_selectors:
@@ -870,7 +790,6 @@ class Record:
                 best_value = custom_field_selectors[key](
                     record=self,
                     merging_record=merging_record,
-                    preferred_sources=self.preferred_sources,
                 )
                 if self.data[key] != best_value:
                     self.update_field(
@@ -879,12 +798,12 @@ class Record:
             else:
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
-        elif key == "file":
+        elif key == Fields.FILE:
             if key in self.data:
                 self.data[key] = self.data[key] + ";" + merging_record.data.get(key, "")
             else:
                 self.data[key] = merging_record.data[key]
-        elif key in ["url", "link"]:
+        elif key in [Fields.URL]:
             if (
                 key in self.data
                 and self.data[key].rstrip("/") != merging_record.data[key].rstrip("/")
@@ -892,38 +811,14 @@ class Record:
             ):
                 self.update_field(key=key, value=val, source=source, append_edit=False)
 
-        elif "UNKNOWN" == self.data.get(
+        elif FieldValues.UNKNOWN == self.data.get(
             key, ""
-        ) and "UNKNOWN" != merging_record.data.get(key, ""):
+        ) and FieldValues.UNKNOWN != merging_record.data.get(key, ""):
             self.data[key] = merging_record.data[key]
-            if key in self.identifying_field_keys:
+            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
                 self.add_masterdata_provenance(key=key, source=source)
             else:
                 self.add_data_provenance(key=key, source=source)
-
-        # elif merging_record.data.get(key, "UNKNOWN") == "UNKNOWN":
-        #     pass
-        # Note : the following is deactivated to avoid frequent changes in merged records
-        # else:
-        #     try:
-        #         if key in self.identifying_field_keys:
-        #             source = merging_record.data["colrev_masterdata_provenance"][key][
-        #                 "source"
-        #             ]
-        #         else:
-        #             source = merging_record.data["colrev_data_provenance"][key][
-        #                 "source"
-        #             ]
-        #     except KeyError:
-        #         pass
-        # if val != str(merging_record.data[key]):
-        #     self.update_field(
-        #         key=key,
-        #         value=str(merging_record.data[key]),
-        #         source=source,
-        #         note=note,
-        #     )
-        # self.update_field(key=key, value=val, source=source, note=note)
 
     @classmethod
     def get_record_change_score(cls, *, record_a: Record, record_b: Record) -> float:
@@ -936,16 +831,16 @@ class Record:
 
         # At some point, this may become more sensitive to major changes
         str_a = (
-            f"{record_a.data.get('author', '')} ({record_a.data.get('year', '')}) "
-            + f"{record_a.data.get('title', '')}. "
-            + f"{record_a.data.get('journal', '')}{record_a.data.get('booktitle', '')}, "
-            + f"{record_a.data.get('volume', '')} ({record_a.data.get('number', '')})"
+            f"{record_a.data.get(Fields.AUTHOR, '')} ({record_a.data.get(Fields.YEAR, '')}) "
+            + f"{record_a.data.get(Fields.TITLE, '')}. "
+            + f"{record_a.data.get(Fields.JOURNAL, '')}{record_a.data.get(Fields.BOOKTITLE, '')}, "
+            + f"{record_a.data.get(Fields.VOLUME, '')} ({record_a.data.get(Fields.NUMBER, '')})"
         )
         str_b = (
-            f"{record_b.data.get('author', '')} ({record_b.data.get('year', '')}) "
-            + f"{record_b.data.get('title', '')}. "
-            + f"{record_b.data.get('journal', '')}{record_b.data.get('booktitle', '')}, "
-            + f"{record_b.data.get('volume', '')} ({record_b.data.get('number', '')})"
+            f"{record_b.data.get(Fields.AUTHOR, '')} ({record_b.data.get(Fields.YEAR, '')}) "
+            + f"{record_b.data.get(Fields.TITLE, '')}. "
+            + f"{record_b.data.get(Fields.JOURNAL, '')}{record_b.data.get(Fields.BOOKTITLE, '')}, "
+            + f"{record_b.data.get(Fields.VOLUME, '')} ({record_b.data.get(Fields.NUMBER, '')})"
         )
         return 1 - fuzz.ratio(str_a.lower(), str_b.lower()) / 100
 
@@ -956,34 +851,40 @@ class Record:
         record_b_dict = record_b.copy().get_data()
 
         mandatory_fields = [
-            "title",
-            "author",
-            "year",
-            "journal",
-            "volume",
-            "number",
-            "pages",
-            "booktitle",
+            Fields.TITLE,
+            Fields.AUTHOR,
+            Fields.YEAR,
+            Fields.JOURNAL,
+            Fields.VOLUME,
+            Fields.NUMBER,
+            Fields.PAGES,
+            Fields.BOOKTITLE,
         ]
 
         for mandatory_field in mandatory_fields:
-            if record_a_dict.get(mandatory_field, "UNKNOWN") == "UNKNOWN":
+            if (
+                record_a_dict.get(mandatory_field, FieldValues.UNKNOWN)
+                == FieldValues.UNKNOWN
+            ):
                 record_a_dict[mandatory_field] = ""
-            if record_b_dict.get(mandatory_field, "UNKNOWN") == "UNKNOWN":
+            if (
+                record_b_dict.get(mandatory_field, FieldValues.UNKNOWN)
+                == FieldValues.UNKNOWN
+            ):
                 record_b_dict[mandatory_field] = ""
 
         if "container_title" not in record_a_dict:
             record_a_dict["container_title"] = (
-                record_a_dict.get("journal", "")
-                + record_a_dict.get("booktitle", "")
-                + record_a_dict.get("series", "")
+                record_a_dict.get(Fields.JOURNAL, "")
+                + record_a_dict.get(Fields.BOOKTITLE, "")
+                + record_a_dict.get(Fields.SERIES, "")
             )
 
         if "container_title" not in record_b_dict:
             record_b_dict["container_title"] = (
-                record_b_dict.get("journal", "")
-                + record_b_dict.get("booktitle", "")
-                + record_b_dict.get("series", "")
+                record_b_dict.get(Fields.JOURNAL, "")
+                + record_b_dict.get(Fields.BOOKTITLE, "")
+                + record_b_dict.get(Fields.SERIES, "")
             )
 
         df_a = pd.DataFrame.from_dict([record_a_dict])  # type: ignore
@@ -1002,19 +903,21 @@ class Record:
     def get_similarity_detailed(cls, *, record_a: dict, record_b: dict) -> dict:
         """Determine the detailed similarities between records"""
         try:
-            author_similarity = fuzz.ratio(record_a["author"], record_b["author"]) / 100
+            author_similarity = (
+                fuzz.ratio(record_a[Fields.AUTHOR], record_b[Fields.AUTHOR]) / 100
+            )
 
             title_similarity = (
                 fuzz.ratio(
-                    record_a["title"].lower().replace(":", "").replace("-", ""),
-                    record_b["title"].lower().replace(":", "").replace("-", ""),
+                    record_a[Fields.TITLE].lower().replace(":", "").replace("-", ""),
+                    record_b[Fields.TITLE].lower().replace(":", "").replace("-", ""),
                 )
                 / 100
             )
 
             # partial ratio (catching 2010-10 or 2001-2002)
             year_similarity = (
-                fuzz.ratio(str(record_a["year"]), str(record_b["year"])) / 100
+                fuzz.ratio(str(record_a[Fields.YEAR]), str(record_b[Fields.YEAR])) / 100
             )
 
             outlet_similarity = 0.0
@@ -1024,26 +927,27 @@ class Record:
                     / 100
                 )
 
-            if str(record_a["journal"]) != "nan":
+            if str(record_a[Fields.JOURNAL]) != "nan":
                 # Note: for journals papers, we expect more details
                 volume_similarity = (
-                    1 if (record_a["volume"] == record_b["volume"]) else 0
+                    1 if (record_a[Fields.VOLUME] == record_b[Fields.VOLUME]) else 0
                 )
 
                 number_similarity = (
-                    1 if (record_a["number"] == record_b["number"]) else 0
+                    1 if (record_a[Fields.NUMBER] == record_b[Fields.NUMBER]) else 0
                 )
 
                 # page similarity is not considered at the moment.
                 #
                 # sometimes, only the first page is provided.
-                # if str(record_a["pages"]) == "nan" or str(record_b["pages"]) == "nan":
+                # if str(record_a[Fields.PAGES]) == "nan" or str(record_b[Fields.PAGES]) == "nan":
                 #     pages_similarity = 1
                 # else:
-                #     if record_a["pages"] == record_b["pages"]:
+                #     if record_a[Fields.PAGES] == record_b[Fields.PAGES]:
                 #         pages_similarity = 1
                 #     else:
-                #         if record_a["pages"].split("-")[0] == record_b["pages"].split("-")[0]:
+                #         if record_a[Fields.PAGES].split("-")[0] ==
+                #               record_b[Fields.PAGES].split("-")[0]:
                 #             pages_similarity = 1
                 #         else:
                 #            pages_similarity = 0
@@ -1052,7 +956,7 @@ class Record:
                 # ie., non-distinctive
                 # The list is based on a large export of distinct papers, tabulated
                 # according to titles and sorted by frequency
-                if [record_a["title"], record_b["title"]] in [
+                if [record_a[Fields.TITLE], record_b[Fields.TITLE]] in [
                     ["editorial", "editorial"],
                     ["editorial introduction", "editorial introduction"],
                     ["editorial notes", "editorial notes"],
@@ -1066,12 +970,12 @@ class Record:
                     weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
 
                 sim_names = [
-                    "authors",
-                    "title",
-                    "year",
+                    Fields.AUTHOR,
+                    Fields.TITLE,
+                    Fields.YEAR,
                     "outlet",
-                    "volume",
-                    "number",
+                    Fields.VOLUME,
+                    Fields.NUMBER,
                 ]
                 similarities = [
                     author_similarity,
@@ -1085,9 +989,9 @@ class Record:
             else:
                 weights = [0.15, 0.75, 0.05, 0.05]
                 sim_names = [
-                    "author",
-                    "title",
-                    "year",
+                    Fields.AUTHOR,
+                    Fields.TITLE,
+                    Fields.YEAR,
                     "outlet",
                 ]
                 similarities = [
@@ -1126,79 +1030,60 @@ class Record:
         default_note = ""
         note = default_note
         source = default_source
-        if key in self.identifying_field_keys:
-            if "colrev_masterdata_provenance" in self.data:
-                if key in self.data.get("colrev_masterdata_provenance", {}):
-                    if "source" in self.data["colrev_masterdata_provenance"][key]:
-                        source = self.data["colrev_masterdata_provenance"][key][
-                            "source"
-                        ]
-                    if "note" in self.data["colrev_masterdata_provenance"][key]:
-                        note = self.data["colrev_masterdata_provenance"][key]["note"]
+        if key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if Fields.MD_PROV in self.data:
+                if key in self.data.get(Fields.MD_PROV, {}):
+                    if "source" in self.data[Fields.MD_PROV][key]:
+                        source = self.data[Fields.MD_PROV][key]["source"]
+                    if "note" in self.data[Fields.MD_PROV][key]:
+                        note = self.data[Fields.MD_PROV][key]["note"]
         else:
-            if "colrev_data_provenance" in self.data:
-                if key in self.data["colrev_data_provenance"]:
-                    if "source" in self.data["colrev_data_provenance"][key]:
-                        source = self.data["colrev_data_provenance"][key]["source"]
-                    if "note" in self.data["colrev_data_provenance"][key]:
-                        note = self.data["colrev_data_provenance"][key]["note"]
+            if Fields.D_PROV in self.data:
+                if key in self.data[Fields.D_PROV]:
+                    if "source" in self.data[Fields.D_PROV][key]:
+                        source = self.data[Fields.D_PROV][key]["source"]
+                    if "note" in self.data[Fields.D_PROV][key]:
+                        note = self.data[Fields.D_PROV][key]["note"]
 
         return {"source": source, "note": note}
 
     def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Remove a masterdata provenance note"""
-        if "colrev_masterdata_provenance" not in self.data:
+        if Fields.MD_PROV not in self.data:
             return
-        if key not in self.data["colrev_masterdata_provenance"]:
+        if key not in self.data[Fields.MD_PROV]:
             return
-        notes = self.data["colrev_masterdata_provenance"][key]["note"].split(",")
+        notes = self.data[Fields.MD_PROV][key]["note"].split(",")
         if note not in notes:
             return
-        self.data["colrev_masterdata_provenance"][key]["note"] = ",".join(
-            n for n in notes if n != note
-        )
+        self.data[Fields.MD_PROV][key]["note"] = ",".join(n for n in notes if n != note)
 
     def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Add a masterdata provenance note (based on a key)"""
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
-        if key in self.data.get("colrev_masterdata_provenance", {}):
-            if (
-                "" == self.data["colrev_masterdata_provenance"][key]["note"]
-                or "" == note
-            ):
-                self.data["colrev_masterdata_provenance"][key]["note"] = note
-            elif note not in self.data["colrev_masterdata_provenance"][key][
-                "note"
-            ].split(","):
-                self.data["colrev_masterdata_provenance"][key]["note"] += f",{note}"
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        if key in self.data.get(Fields.MD_PROV, {}):
+            if "" == self.data[Fields.MD_PROV][key]["note"] or "" == note:
+                self.data[Fields.MD_PROV][key]["note"] = note
+            elif note not in self.data[Fields.MD_PROV][key]["note"].split(","):
+                self.data[Fields.MD_PROV][key]["note"] += f",{note}"
         else:
-            self.data["colrev_masterdata_provenance"][key] = {
+            self.data[Fields.MD_PROV][key] = {
                 "source": "ORIGINAL",
                 "note": note,
             }
 
-        existing_note = self.data["colrev_masterdata_provenance"][key]["note"]
-        if "quality_defect" in existing_note and any(
-            x in existing_note for x in ["missing", "disagreement"]
-        ):
-            self.data["colrev_masterdata_provenance"][key]["note"] = (
-                existing_note.replace("quality_defect", "").rstrip(",").lstrip(",")
-            )
-
     def add_data_provenance_note(self, *, key: str, note: str) -> None:
         """Add a data provenance note (based on a key)"""
-        if "colrev_data_provenance" not in self.data:
-            self.data["colrev_data_provenance"] = {}
-        if key in self.data["colrev_data_provenance"]:
-            if self.data["colrev_data_provenance"][key]["note"] == "":
-                self.data["colrev_data_provenance"][key]["note"] = note
-            elif note not in self.data["colrev_data_provenance"][key]["note"].split(
-                ","
-            ):
-                self.data["colrev_data_provenance"][key]["note"] += f",{note}"
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
+        if key in self.data[Fields.D_PROV]:
+            if self.data[Fields.D_PROV][key]["note"] == "":
+                self.data[Fields.D_PROV][key]["note"] = note
+            elif note not in self.data[Fields.D_PROV][key]["note"].split(","):
+                self.data[Fields.D_PROV][key]["note"] += f",{note}"
         else:
-            self.data["colrev_data_provenance"][key] = {
+            self.data[Fields.D_PROV][key] = {
                 "source": "ORIGINAL",
                 "note": note,
             }
@@ -1207,17 +1092,17 @@ class Record:
         self, *, key: str, source: str, note: str = ""
     ) -> None:
         """Add a masterdata provenance, including source and note (based on a key)"""
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
-        md_p_dict = self.data["colrev_masterdata_provenance"]
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        md_p_dict = self.data[Fields.MD_PROV]
 
         if key in md_p_dict:
             if md_p_dict[key]["note"] == "" or "" == note:
                 md_p_dict[key]["note"] = note
-            elif "missing" == note and "not-missing" in md_p_dict[key]["note"].split(
-                ","
-            ):
-                md_p_dict[key]["note"] = "missing"
+            elif DefectCodes.MISSING == note and DefectCodes.NOT_MISSING in md_p_dict[
+                key
+            ]["note"].split(","):
+                md_p_dict[key]["note"] = DefectCodes.MISSING
             elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"
             md_p_dict[key]["source"] = source
@@ -1226,25 +1111,25 @@ class Record:
 
     def add_provenance_all(self, *, source: str) -> None:
         """Add a data provenance (source) to all fields"""
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
-        if "colrev_data_provenance" not in self.data:
-            self.data["colrev_data_provenance"] = {}
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
 
-        md_p_dict = self.data["colrev_masterdata_provenance"]
-        d_p_dict = self.data["colrev_data_provenance"]
+        md_p_dict = self.data[Fields.MD_PROV]
+        d_p_dict = self.data[Fields.D_PROV]
         for key in self.data.keys():
             if key in [
-                "ENTRYTYPE",
-                "colrev_data_provenance",
-                "colrev_masterdata_provenance",
-                "colrev_status",
-                "colrev_id",
+                Fields.ENTRYTYPE,
+                Fields.D_PROV,
+                Fields.MD_PROV,
+                Fields.STATUS,
+                Fields.COLREV_ID,
             ]:
                 continue
             if (
-                key in self.identifying_field_keys
-                and "CURATED" not in self.data["colrev_masterdata_provenance"]
+                key in FieldSet.IDENTIFYING_FIELD_KEYS
+                and FieldValues.CURATED not in self.data[Fields.MD_PROV]
             ):
                 md_p_dict[key] = {"source": source, "note": ""}
             else:
@@ -1252,9 +1137,9 @@ class Record:
 
     def add_data_provenance(self, *, key: str, source: str, note: str = "") -> None:
         """Add a data provenance, including source and note (based on a key)"""
-        if "colrev_data_provenance" not in self.data:
-            self.data["colrev_data_provenance"] = {}
-        md_p_dict = self.data["colrev_data_provenance"]
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
+        md_p_dict = self.data[Fields.D_PROV]
         if key in md_p_dict:
             if note != "":
                 md_p_dict[key]["note"] += f",{note}"
@@ -1271,17 +1156,17 @@ class Record:
             if (
                 key
                 in [
-                    "colrev_id",
-                    "ENTRYTYPE",
-                    "ID",
-                    "metadata_source_repository_paths",
-                    "local_curated_metadata",
+                    Fields.COLREV_ID,
+                    Fields.ENTRYTYPE,
+                    Fields.ID,
+                    Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+                    Fields.LOCAL_CURATED_METADATA,
                 ]
-                + self.provenance_keys
+                + FieldSet.PROVENANCE_KEYS
             ):
                 continue
 
-            if key in self.identifying_field_keys:
+            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
                 if not self.masterdata_is_curated():
                     self.add_masterdata_provenance(key=key, source=source_info, note="")
             else:
@@ -1289,28 +1174,43 @@ class Record:
 
         return True
 
-    def has_quality_defects(self) -> bool:
+    def has_quality_defects(self, *, field: str = "") -> bool:
         """Check whether a record has quality defects"""
+        if field != "":
+            if field in self.data.get(Fields.MD_PROV, {}):
+                note = self.data[Fields.MD_PROV][field]["note"]
+                notes = note.split(",")
+                notes = [n for n in notes if n != DefectCodes.NOT_MISSING]
+                return len(notes) == 0
+            if field in self.data.get(Fields.D_PROV, {}):
+                note = self.data[Fields.D_PROV][field]["note"]
+                notes = note.split(",")
+                notes = [n for n in notes if n != DefectCodes.NOT_MISSING]
+                return len(notes) == 0
+            return False
+
         return any(
             x["note"] != ""
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
-            if not any(y == x["note"] for y in ["not-missing"])
+            for x in self.data.get(Fields.MD_PROV, {}).values()
+            if not any(y == x["note"] for y in [DefectCodes.NOT_MISSING])
         )
 
     def get_container_title(self) -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
         container_title = "NA"
-        if "ENTRYTYPE" not in self.data:
-            container_title = self.data.get("journal", self.data.get("booktitle", "NA"))
+        if Fields.ENTRYTYPE not in self.data:
+            container_title = self.data.get(
+                Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, "NA")
+            )
         else:
-            if self.data["ENTRYTYPE"] == "article":
-                container_title = self.data.get("journal", "NA")
-            if self.data["ENTRYTYPE"] == "inproceedings":
-                container_title = self.data.get("booktitle", "NA")
-            if self.data["ENTRYTYPE"] == "book":
-                container_title = self.data.get("title", "NA")
-            if self.data["ENTRYTYPE"] == "inbook":
-                container_title = self.data.get("booktitle", "NA")
+            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                container_title = self.data.get(Fields.JOURNAL, "NA")
+            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+                container_title = self.data.get(Fields.BOOKTITLE, "NA")
+            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
+                container_title = self.data.get(Fields.TITLE, "NA")
+            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
+                container_title = self.data.get(Fields.BOOKTITLE, "NA")
         return container_title
 
     def create_colrev_id(
@@ -1331,43 +1231,45 @@ class Record:
         # Especially in cases in which the prescreen-exclusion decision
         # is revised (e.g., because a paper was retracted)
         # In these cases, the paper may already be in the data extraction/synthesis
-        if self.data.get("colrev_status", "NA") in [
+        if self.data.get(Fields.STATUS, "NA") in [
             RecordState.rev_synthesized,
             RecordState.rev_included,
         ]:
             print(
-                f"\n{colors.RED}Warning: setting paper to prescreen_excluded. Please check and "
-                f"remove from synthesis: {self.data['ID']}{colors.END}\n"
+                f"\n{Colors.RED}Warning: setting paper to prescreen_excluded. Please check and "
+                f"remove from synthesis: {self.data['ID']}{Colors.END}\n"
             )
 
         self.set_status(target_state=RecordState.rev_prescreen_excluded)
 
         if (
-            "retracted" not in self.data.get("prescreen_exclusion", "")
-            and "retracted" == reason
+            FieldValues.RETRACTED not in self.data.get(Fields.PRESCREEN_EXCLUSION, "")
+            and FieldValues.RETRACTED == reason
             and print_warning
         ):
             print(
-                f"\n{colors.RED}Paper retracted and prescreen "
-                f"excluded: {self.data['ID']}{colors.END}\n"
+                f"\n{Colors.RED}Paper retracted and prescreen "
+                f"excluded: {self.data['ID']}{Colors.END}\n"
             )
 
-        self.data["prescreen_exclusion"] = reason
+        self.data[Fields.PRESCREEN_EXCLUSION] = reason
 
         # Note: when records are prescreen-excluded during prep:
         to_drop = []
         for key, value in self.data.items():
-            if value == "UNKNOWN":
+            if value == FieldValues.UNKNOWN:
                 to_drop.append(key)
         for key in to_drop:
             self.remove_field(key=key)
 
     def extract_text_by_page(
-        self, *, pages: Optional[list] = None, project_path: Path
+        self,
+        *,
+        pages: Optional[list] = None,
     ) -> str:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
-        pdf_path = project_path / Path(self.data["file"])
+        pdf_path = Path(self.data[Fields.FILE]).absolute()
 
         # https://stackoverflow.com/questions/49457443/python-pdfminer-converts-pdf-file-into-one-chunk-of-string-with-no-spaces-betwee
         laparams = pdfminer.layout.LAParams()
@@ -1399,35 +1301,35 @@ class Record:
                 pass
         return "".join(text_list)
 
-    def set_pages_in_pdf(self, *, project_path: Path) -> None:
+    def set_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
-        pdf_path = project_path / Path(self.data["file"])
+        pdf_path = Path(self.data[Fields.FILE]).absolute()
         with open(pdf_path, "rb") as file:
             parser = PDFParser(file)
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
         self.data["pages_in_file"] = pages_in_file
 
-    def set_text_from_pdf(self, *, project_path: Path) -> None:
+    def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data["text_from_pdf"] = ""
         try:
-            self.set_pages_in_pdf(project_path=project_path)
-            text = self.extract_text_by_page(pages=[0, 1, 2], project_path=project_path)
+            self.set_pages_in_pdf()
+            text = self.extract_text_by_page(pages=[0, 1, 2])
             self.data["text_from_pdf"] = text.replace("\n", " ").replace("\x0c", "")
 
         except PDFSyntaxError:  # pragma: no cover
-            self.add_data_provenance_note(key="file", note="pdf_reader_error")
+            self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         except PDFTextExtractionNotAllowed:  # pragma: no cover
-            self.add_data_provenance_note(key="file", note="pdf_protected")
+            self.add_data_provenance_note(key=Fields.FILE, note="pdf_protected")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
         self, *, pages: list, project_path: Path, save_to_path: Optional[Path] = None
     ) -> None:  # pragma: no cover
         """Extract pages from the PDF (saveing them to the save_to_path)"""
-        pdf_path = project_path / Path(self.data["file"])
+        pdf_path = project_path / Path(self.data[Fields.FILE])
         pdf_reader = PdfFileReader(str(pdf_path), strict=False)
         writer = PdfFileWriter()
         for i in range(0, len(pdf_reader.pages)):
@@ -1459,37 +1361,43 @@ class Record:
         """Get the record's toc-key"""
 
         try:
-            if self.data["ENTRYTYPE"] == "article":
+            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
                 toc_key = (
-                    self.data["journal"]
+                    self.data[Fields.JOURNAL]
                     .replace(" ", "-")
                     .replace("\\", "")
                     .replace("&", "and")
                     .lower()
                 )
                 toc_key += (
-                    f"|{self.data['volume']}"
-                    if ("UNKNOWN" != self.data.get("volume", "UNKNOWN"))
+                    f"|{self.data[Fields.VOLUME]}"
+                    if (
+                        FieldValues.UNKNOWN
+                        != self.data.get(Fields.VOLUME, FieldValues.UNKNOWN)
+                    )
                     else "|-"
                 )
                 toc_key += (
-                    f"|{self.data['number']}"
-                    if ("UNKNOWN" != self.data.get("number", "UNKNOWN"))
+                    f"|{self.data[Fields.NUMBER]}"
+                    if (
+                        FieldValues.UNKNOWN
+                        != self.data.get(Fields.NUMBER, FieldValues.UNKNOWN)
+                    )
                     else "|-"
                 )
 
-            elif self.data["ENTRYTYPE"] == "inproceedings":
+            elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
                 toc_key = (
-                    self.data["booktitle"]
+                    self.data[Fields.BOOKTITLE]
                     .replace(" ", "-")
                     .replace("\\", "")
                     .replace("&", "and")
                     .lower()
-                    + f"|{self.data.get('year', '')}"
+                    + f"|{self.data.get(Fields.YEAR, '')}"
                 )
             else:
                 msg = (
-                    f"ENTRYTYPE {self.data['ENTRYTYPE']} "
+                    f"ENTRYTYPE {self.data[Fields.ENTRYTYPE]} "
                     + f"({self.data['ID']}) not toc-identifiable"
                 )
                 raise colrev_exceptions.NotTOCIdentifiableException(msg)
@@ -1503,19 +1411,19 @@ class Record:
     def print_citation_format(self) -> None:
         """Print the record as a citation"""
         formatted_ref = (
-            f"{self.data.get('author', '')} ({self.data.get('year', '')}) "
-            + f"{self.data.get('title', '')}. "
-            + f"{self.data.get('journal', '')}{self.data.get('booktitle', '')}, "
-            + f"{self.data.get('volume', '')} ({self.data.get('number', '')})"
+            f"{self.data.get(Fields.AUTHOR, '')} ({self.data.get(Fields.YEAR, '')}) "
+            + f"{self.data.get(Fields.TITLE, '')}. "
+            + f"{self.data.get(Fields.JOURNAL, '')}{self.data.get(Fields.BOOKTITLE, '')}, "
+            + f"{self.data.get(Fields.VOLUME, '')} ({self.data.get(Fields.NUMBER, '')})"
         )
         print(formatted_ref)
 
     def get_tei_filename(self) -> Path:
         """Get the TEI filename associated with the file (PDF)"""
-        tei_filename = Path(f'.tei/{self.data["ID"]}.tei.xml')
-        if "file" in self.data:
+        tei_filename = Path(f".tei/{self.data[Fields.ID]}.tei.xml")
+        if Fields.FILE in self.data:
             tei_filename = Path(
-                self.data["file"].replace("pdfs/", ".tei/")
+                self.data[Fields.FILE].replace("pdfs/", ".tei/")
             ).with_suffix(".tei.xml")
         return tei_filename
 
@@ -1530,9 +1438,9 @@ class Record:
                 if letter.startswith("  "):
                     letters[i] = letters[i][-1]
                 elif letter.startswith("+ "):
-                    letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
+                    letters[i] = f"{Colors.RED}" + letters[i][-1] + f"{Colors.END}"
                 elif letter.startswith("- "):
-                    letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
+                    letters[i] = f"{Colors.GREEN}" + letters[i][-1] + f"{Colors.END}"
             res = "".join(letters).replace("\n", " ")
             return res
 
@@ -1554,11 +1462,11 @@ class Record:
                         # from difflib import SequenceMatcher
                         # similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
                     if similarity < 0.5 or key in [
-                        "volume",
-                        "number",
-                        "year",
+                        Fields.VOLUME,
+                        Fields.NUMBER,
+                        Fields.YEAR,
                     ]:
-                        line = f"{colors.RED}{rec.get(key, '')}{colors.END}"
+                        line = f"{Colors.RED}{rec.get(key, '')}{Colors.END}"
                     else:
                         line = print_diff((prev_val, rec.get(key, "")))
                 print(f"{key} : {line}")
@@ -1572,19 +1480,29 @@ class Record:
         if "pages_in_file" in self.data:
             del self.data["pages_in_file"]
 
-    def update_masterdata_provenance(
+    def run_quality_model(
         self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False
     ) -> None:
         """Update the masterdata provenance"""
 
-        if "colrev_masterdata_provenance" not in self.data:
-            self.data["colrev_masterdata_provenance"] = {}
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+
+        self.check_potential_retracts()
 
         if self.masterdata_is_curated():
+            if set_prepared:
+                self.set_status(target_state=RecordState.md_prepared)
             return
 
         # Apply the checkers (including field key requirements etc.)
         qm.run(record=self)
+
+        if (
+            Fields.STATUS in self.data
+            and self.data[Fields.STATUS] == RecordState.rev_prescreen_excluded
+        ):
+            return
 
         if self.has_quality_defects():
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
@@ -1595,11 +1513,11 @@ class Record:
         """Check for potential retracts"""
         # Note : we retrieved metadata in get_masterdata_from_crossref()
         if self.data.get("crossmark", "") == "True":
-            self.prescreen_exclude(reason="retracted", print_warning=True)
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="crossmark")
             return True
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
-            self.prescreen_exclude(reason="retracted", print_warning=True)
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="warning")
             return True
         return False
@@ -1607,31 +1525,33 @@ class Record:
     def print_prescreen_record(self) -> None:
         """Print the record for prescreen operations"""
 
-        ret_str = f"  ID: {self.data['ID']} ({self.data['ENTRYTYPE']})"
+        ret_str = f"  ID: {self.data['ID']} ({self.data[Fields.ENTRYTYPE]})"
         ret_str += (
-            f"\n  {colors.GREEN}{self.data.get('title', 'no title')}{colors.END}"
-            f"\n  {self.data.get('author', 'no-author')}"
+            f"\n  {Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}"
+            f"\n  {self.data.get(Fields.AUTHOR, 'no-author')}"
         )
-        if self.data["ENTRYTYPE"] == "article":
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             ret_str += (
-                f"\n  {self.data.get('journal', 'no-journal')} "
-                f"({self.data.get('year', 'no-year')}) "
-                f"{self.data.get('volume', 'no-volume')}"
-                f"({self.data.get('number', '')})"
+                f"\n  {self.data.get(Fields.JOURNAL, 'no-journal')} "
+                f"({self.data.get(Fields.YEAR, 'no-year')}) "
+                f"{self.data.get(Fields.VOLUME, 'no-volume')}"
+                f"({self.data.get(Fields.NUMBER, '')})"
             )
-        elif self.data["ENTRYTYPE"] == "inproceedings":
-            ret_str += f"\n  {self.data.get('booktitle', 'no-booktitle')}"
-        if "abstract" in self.data:
-            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
+        elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            ret_str += f"\n  {self.data.get(Fields.BOOKTITLE, 'no-booktitle')}"
+        if Fields.ABSTRACT in self.data:
+            lines = textwrap.wrap(
+                self.data[Fields.ABSTRACT], 100, break_long_words=False
+            )
             if lines:
                 ret_str += f"\n  Abstract: {lines.pop(0)}\n"
                 ret_str += "\n  ".join(lines) + ""
 
-        if "url" in self.data:
-            ret_str += f"\n  url: {self.data['url']}"
+        if Fields.URL in self.data:
+            ret_str += f"\n  url: {self.data[Fields.URL]}"
 
-        if "file" in self.data:
-            ret_str += f"\n  file: {self.data['file']}"
+        if Fields.FILE in self.data:
+            ret_str += f"\n  file: {self.data[Fields.FILE]}"
 
         print(ret_str)
 
@@ -1639,50 +1559,58 @@ class Record:
         """Print the record for pdf-prep-man operations"""
         # pylint: disable=too-many-branches
         ret_str = ""
-        if "file" in self.data:
-            ret_str += f"\nfile: {colors.ORANGE}{self.data['file']}{colors.END}\n\n"
+        if Fields.FILE in self.data:
+            ret_str += (
+                f"\nfile: {Colors.ORANGE}{self.data[Fields.FILE]}{Colors.END}\n\n"
+            )
 
-        pdf_prep_note = self.get_field_provenance(key="file")
+        pdf_prep_note = self.get_field_provenance(key=Fields.FILE)
 
         if "author_not_in_first_pages" in pdf_prep_note["note"]:
             ret_str += (
-                f"{colors.RED}{self.data.get('author', 'no-author')}{colors.END}\n"
+                f"{Colors.RED}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
             )
         else:
-            ret_str += (
-                f"{colors.GREEN}{self.data.get('author', 'no-author')}{colors.END}\n"
-            )
+            ret_str += f"{Colors.GREEN}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
 
         if "title_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += f"{colors.RED}{self.data.get('title', 'no title')}{colors.END}\n"
+            ret_str += (
+                f"{Colors.RED}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
+            )
         else:
             ret_str += (
-                f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
+                f"{Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
             )
 
-        if self.data["ENTRYTYPE"] == "article":
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             ret_str += (
-                f"{self.data.get('journal', 'no-journal')} "
-                f"({self.data.get('year', 'no-year')}) "
-                f"{self.data.get('volume', 'no-volume')}"
-                f"({self.data.get('number', '')})"
+                f"{self.data.get(Fields.JOURNAL, 'no-journal')} "
+                f"({self.data.get(Fields.YEAR, 'no-year')}) "
+                f"{self.data.get(Fields.VOLUME, 'no-volume')}"
+                f"({self.data.get(Fields.NUMBER, '')})"
             )
-            if "pages" in self.data:
+            if Fields.PAGES in self.data:
                 if "nr_pages_not_matching" in pdf_prep_note["note"]:
-                    ret_str += f", {colors.RED}pp.{self.data['pages']}{colors.END}\n"
+                    ret_str += (
+                        f", {Colors.RED}pp.{self.data[Fields.PAGES]}{Colors.END}\n"
+                    )
                 else:
-                    ret_str += f", pp.{colors.GREEN}{self.data['pages']}{colors.END}\n"
+                    ret_str += (
+                        f", pp.{Colors.GREEN}{self.data[Fields.PAGES]}{Colors.END}\n"
+                    )
             else:
                 ret_str += "\n"
-        elif self.data["ENTRYTYPE"] == "inproceedings":
-            ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
-        if "abstract" in self.data:
-            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
+        elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            ret_str += f"{self.data.get(Fields.BOOKTITLE, 'no-booktitle')}\n"
+        if Fields.ABSTRACT in self.data:
+            lines = textwrap.wrap(
+                self.data[Fields.ABSTRACT], 100, break_long_words=False
+            )
             ret_str += f"\nAbstract: {lines.pop(0)}\n"
             ret_str += "\n".join(lines) + "\n"
 
-        if "url" in self.data:
-            ret_str += f"\nurl: {self.data['url']}\n"
+        if Fields.URL in self.data:
+            ret_str += f"\nurl: {self.data[Fields.URL]}\n"
 
         print(ret_str)
 
@@ -1752,9 +1680,9 @@ class PrepRecord(Record):
 
     @classmethod
     def __format_authors_string_for_comparison(cls, *, record: Record) -> None:
-        if "author" not in record.data:
+        if Fields.AUTHOR not in record.data:
             return
-        authors = record.data["author"]
+        authors = record.data[Fields.AUTHOR]
         authors = str(authors).lower()
         authors_string = ""
         authors = colrev.env.utils.remove_accents(input_str=authors)
@@ -1777,19 +1705,19 @@ class PrepRecord(Record):
             else:
                 authors_string = authors_string + author + " "
         authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
-        record.data["author"] = authors_string
+        record.data[Fields.AUTHOR] = authors_string
 
     def container_is_abbreviated(self) -> bool:
         """Check whether the container title is abbreviated"""
-        if "journal" in self.data:
-            if self.data["journal"].count(".") > 2:
+        if Fields.JOURNAL in self.data:
+            if self.data[Fields.JOURNAL].count(".") > 2:
                 return True
-            if self.data["journal"].isupper():
+            if self.data[Fields.JOURNAL].isupper():
                 return True
-        if "booktitle" in self.data:
-            if self.data["booktitle"].count(".") > 2:
+        if Fields.BOOKTITLE in self.data:
+            if self.data[Fields.BOOKTITLE].count(".") > 2:
                 return True
-            if self.data["booktitle"].isupper():
+            if self.data[Fields.BOOKTITLE].isupper():
                 return True
         # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
         return False
@@ -1802,20 +1730,22 @@ class PrepRecord(Record):
         retrieved_record: colrev.record.PrepRecord,
     ) -> None:
         def abbreviate_container(*, record: colrev.record.Record, min_len: int) -> None:
-            if "journal" in record.data:
-                record.data["journal"] = " ".join(
-                    [x[:min_len] for x in record.data["journal"].split(" ")]
+            if Fields.JOURNAL in record.data:
+                record.data[Fields.JOURNAL] = " ".join(
+                    [x[:min_len] for x in record.data[Fields.JOURNAL].split(" ")]
                 )
 
         def get_abbrev_container_min_len(*, record: colrev.record.Record) -> int:
             min_len = -1
-            if "journal" in record.data:
+            if Fields.JOURNAL in record.data:
                 min_len = min(
-                    len(x) for x in record.data["journal"].replace(".", "").split(" ")
+                    len(x)
+                    for x in record.data[Fields.JOURNAL].replace(".", "").split(" ")
                 )
-            if "booktitle" in record.data:
+            if Fields.BOOKTITLE in record.data:
                 min_len = min(
-                    len(x) for x in record.data["booktitle"].replace(".", "").split(" ")
+                    len(x)
+                    for x in record.data[Fields.BOOKTITLE].replace(".", "").split(" ")
                 )
             return min_len
 
@@ -1839,38 +1769,47 @@ class PrepRecord(Record):
             record=record, retrieved_record=retrieved_record
         )
 
-        if "title" in record.data:
-            record.data["title"] = record.data["title"][:90]
-        if "title" in retrieved_record.data:
-            retrieved_record.data["title"] = retrieved_record.data["title"][:90]
+        if Fields.TITLE in record.data:
+            record.data[Fields.TITLE] = record.data[Fields.TITLE][:90]
+        if Fields.TITLE in retrieved_record.data:
+            retrieved_record.data[Fields.TITLE] = retrieved_record.data[Fields.TITLE][
+                :90
+            ]
 
-        if "author" in record.data:
+        if Fields.AUTHOR in record.data:
             cls.__format_authors_string_for_comparison(record=record)
-            record.data["author"] = record.data["author"][:45]
-        if "author" in retrieved_record.data:
+            record.data[Fields.AUTHOR] = record.data[Fields.AUTHOR][:45]
+        if Fields.AUTHOR in retrieved_record.data:
             cls.__format_authors_string_for_comparison(record=retrieved_record)
-            retrieved_record.data["author"] = retrieved_record.data["author"][:45]
-        if not ("volume" in record.data and "volume" in retrieved_record.data):
-            record.data["volume"] = "nan"
-            retrieved_record.data["volume"] = "nan"
-        if not ("number" in record.data and "number" in retrieved_record.data):
-            record.data["number"] = "nan"
-            retrieved_record.data["number"] = "nan"
-        if not ("pages" in record.data and "pages" in retrieved_record.data):
-            record.data["pages"] = "nan"
-            retrieved_record.data["pages"] = "nan"
+            retrieved_record.data[Fields.AUTHOR] = retrieved_record.data[Fields.AUTHOR][
+                :45
+            ]
+        if not (
+            Fields.VOLUME in record.data and Fields.VOLUME in retrieved_record.data
+        ):
+            record.data[Fields.VOLUME] = "nan"
+            retrieved_record.data[Fields.VOLUME] = "nan"
+        if not (
+            Fields.NUMBER in record.data and Fields.NUMBER in retrieved_record.data
+        ):
+            record.data[Fields.NUMBER] = "nan"
+            retrieved_record.data[Fields.NUMBER] = "nan"
+        if not (Fields.PAGES in record.data and Fields.PAGES in retrieved_record.data):
+            record.data[Fields.PAGES] = "nan"
+            retrieved_record.data[Fields.PAGES] = "nan"
         # Sometimes, the number of pages is provided (not the range)
         elif not (
-            "--" in record.data["pages"] and "--" in retrieved_record.data["pages"]
+            "--" in record.data[Fields.PAGES]
+            and "--" in retrieved_record.data[Fields.PAGES]
         ):
-            record.data["pages"] = "nan"
-            retrieved_record.data["pages"] = "nan"
+            record.data[Fields.PAGES] = "nan"
+            retrieved_record.data[Fields.PAGES] = "nan"
 
-        if "year" in record.data and "year" in retrieved_record.data:
-            if record.data["year"] == "forthcoming":
-                record.data["year"] = retrieved_record.data["year"]
-            if retrieved_record.data["year"] == "forthcoming":
-                retrieved_record.data["year"] = record.data["year"]
+        if Fields.YEAR in record.data and Fields.YEAR in retrieved_record.data:
+            if record.data[Fields.YEAR] == FieldValues.FORTHCOMING:
+                record.data[Fields.YEAR] = retrieved_record.data[Fields.YEAR]
+            if retrieved_record.data[Fields.YEAR] == FieldValues.FORTHCOMING:
+                retrieved_record.data[Fields.YEAR] = record.data[Fields.YEAR]
 
     @classmethod
     def get_retrieval_similarity(
@@ -1884,8 +1823,8 @@ class PrepRecord(Record):
 
         if same_record_type_required:
             if record_original.data.get(
-                "ENTRYTYPE", "a"
-            ) != retrieved_record_original.data.get("ENTRYTYPE", "b"):
+                Fields.ENTRYTYPE, "a"
+            ) != retrieved_record_original.data.get(Fields.ENTRYTYPE, "b"):
                 return 0.0
 
         record = record_original.copy_prep_rec()
@@ -1895,8 +1834,8 @@ class PrepRecord(Record):
             record=record, retrieved_record=retrieved_record
         )
 
-        if "editorial" in record.data.get("title", "NA").lower():
-            if not all(x in record.data for x in ["volume", "number"]):
+        if "editorial" in record.data.get(Fields.TITLE, "NA").lower():
+            if not all(x in record.data for x in [Fields.VOLUME, Fields.NUMBER]):
                 return 0.0
 
         similarity = Record.get_record_similarity(
@@ -1907,7 +1846,7 @@ class PrepRecord(Record):
     def format_if_mostly_upper(self, *, key: str, case: str = "sentence") -> None:
         """Format the field if it is mostly in upper case"""
 
-        if key not in self.data or self.data[key] == "UNKNOWN":
+        if key not in self.data or self.data[key] == FieldValues.UNKNOWN:
             return
 
         if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.6:
@@ -1928,13 +1867,6 @@ class PrepRecord(Record):
 
         self.data[key] = prep_utils.capitalize_entities(self.data[key])
 
-        if key in self.data.get("colrev_masterdata_provenance", {}):
-            note = self.data["colrev_masterdata_provenance"][key]["note"]
-            if "quality_defect" in note:
-                self.data["colrev_masterdata_provenance"][key]["note"] = note.replace(
-                    "quality_defect", ""
-                )
-
     def rename_fields_based_on_mapping(self, *, mapping: dict) -> None:
         """Convenience function for the prep scripts (to rename fields)"""
 
@@ -1947,41 +1879,72 @@ class PrepRecord(Record):
 
     def unify_pages_field(self) -> None:
         """Unify the format of the page field"""
-        if "pages" not in self.data:
+        if Fields.PAGES not in self.data:
             return
-        if not isinstance(self.data["pages"], str):
+        if not isinstance(self.data[Fields.PAGES], str):
             return
-        if 1 == self.data["pages"].count("-"):
-            self.data["pages"] = self.data["pages"].replace("-", "--")
-        self.data["pages"] = (
-            self.data["pages"]
+        if 1 == self.data[Fields.PAGES].count("-"):
+            self.data[Fields.PAGES] = self.data[Fields.PAGES].replace("-", "--")
+        self.data[Fields.PAGES] = (
+            self.data[Fields.PAGES]
             .replace("–", "--")
             .replace("----", "--")
             .replace(" -- ", "--")
             .rstrip(".")
         )
-        if re.match(r"^\d+\-\-\d+$", self.data["pages"]):
-            from_page, to_page = re.findall(r"(\d+)", self.data["pages"])
+        if re.match(r"^\d+\-\-\d+$", self.data[Fields.PAGES]):
+            from_page, to_page = re.findall(r"(\d+)", self.data[Fields.PAGES])
             if int(from_page) > int(to_page) and len(from_page) > len(to_page):
                 self.data[
-                    "pages"
+                    Fields.PAGES
                 ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
+
+    def fix_name_particles(self) -> None:
+        """Fix the name particles in the author field"""
+        if Fields.AUTHOR not in self.data:
+            return
+        names = self.data[Fields.AUTHOR].split(" and ")
+        for ind, name in enumerate(names):
+            for prefix in [
+                "van den",
+                "von den",
+                "van der",
+                "von der",
+                "vom",
+                "van",
+                "von",
+            ]:
+                if name.startswith(f"{prefix} "):
+                    if "," in name:
+                        name = "{" + name.replace(", ", "}, ")
+                    else:
+                        name = "{" + name + "}"
+                if name.endswith(f" {prefix}"):
+                    if "," in name:
+                        name = (
+                            "{"
+                            + prefix
+                            + " "
+                            + name[: -len(prefix)].replace(", ", "}, ")
+                        )
+                    else:
+                        name = "{" + prefix + " " + name[: -len(prefix)] + "}"
+
+                names[ind] = name
+        self.data[Fields.AUTHOR] = " and ".join(names)
 
     def preparation_save_condition(self) -> bool:
         """Check whether the save condition for the prep operation is given"""
 
-        if self.data.get("colrev_status", "NA") in [
+        if self.data.get(Fields.STATUS, "NA") in [
             RecordState.rev_prescreen_excluded,
             RecordState.md_prepared,
         ]:
             return True
 
         if any(
-            "disagreement with " in x["note"]
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
-        ) or any(
-            "record_not_in_toc" in x["note"]
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
+            for x in self.data.get(Fields.MD_PROV, {}).values()
         ):
             return True
 
@@ -1990,15 +1953,12 @@ class PrepRecord(Record):
     def preparation_break_condition(self) -> bool:
         """Check whether the break condition for the prep operation is given"""
         if any(
-            "disagreement with " in x["note"]
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
-        ) or any(
-            "record_not_in_toc" in x["note"]
-            for x in self.data.get("colrev_masterdata_provenance", {}).values()
+            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
+            for x in self.data.get(Fields.MD_PROV, {}).values()
         ):
             return True
 
-        if self.data.get("colrev_status", "NA") in [
+        if self.data.get(Fields.STATUS, "NA") in [
             RecordState.rev_prescreen_excluded,
         ]:
             return True
@@ -2006,34 +1966,11 @@ class PrepRecord(Record):
 
     def status_to_prepare(self) -> bool:
         """Check whether the record needs to be prepared"""
-        return self.data.get("colrev_status", "NA") in [
+        return self.data.get(Fields.STATUS, "NA") in [
             RecordState.md_needs_manual_preparation,
             RecordState.md_imported,
             RecordState.md_prepared,
         ]
-
-    def update_metadata_status(
-        self,
-    ) -> None:
-        """Update the metadata status (retracts, incompleteness, inconsistencies, etc.)
-        and setting the status accordingly"""
-
-        self.check_potential_retracts()
-
-        if (
-            colrev.record.RecordState.rev_prescreen_excluded
-            == self.data["colrev_status"]
-        ):
-            return
-
-        if self.masterdata_is_curated():
-            self.set_status(target_state=RecordState.md_prepared)
-            return
-
-        if self.has_quality_defects():
-            self.set_status(target_state=RecordState.md_needs_manual_preparation)
-        else:
-            self.set_status(target_state=RecordState.md_prepared)
 
 
 class RecordState(Enum):
@@ -2188,87 +2125,87 @@ class RecordStateModel:
 
     transitions = [
         {
-            "trigger": "load",
+            "trigger": Operations.LOAD,
             "source": RecordState.md_retrieved,
             "dest": RecordState.md_imported,
         },
         {
-            "trigger": "prep",
+            "trigger": Operations.PREP,
             "source": RecordState.md_imported,
             "dest": RecordState.md_needs_manual_preparation,
         },
         {
-            "trigger": "prep",
+            "trigger": Operations.PREP,
             "source": RecordState.md_imported,
             "dest": RecordState.md_prepared,
         },
         {
-            "trigger": "prep_man",
+            "trigger": Operations.PREP_MAN,
             "source": RecordState.md_needs_manual_preparation,
             "dest": RecordState.md_prepared,
         },
         {
-            "trigger": "dedupe",
+            "trigger": Operations.DEDUPE,
             "source": RecordState.md_prepared,
             "dest": RecordState.md_processed,
         },
         {
-            "trigger": "prescreen",
+            "trigger": Operations.PRESCREEN,
             "source": RecordState.md_processed,
             "dest": RecordState.rev_prescreen_excluded,
         },
         {
-            "trigger": "prescreen",
+            "trigger": Operations.PRESCREEN,
             "source": RecordState.md_processed,
             "dest": RecordState.rev_prescreen_included,
         },
         {
-            "trigger": "pdf_get",
+            "trigger": Operations.PDF_GET,
             "source": RecordState.rev_prescreen_included,
             "dest": RecordState.pdf_imported,
         },
         {
-            "trigger": "pdf_get",
+            "trigger": Operations.PDF_GET,
             "source": RecordState.rev_prescreen_included,
             "dest": RecordState.pdf_needs_manual_retrieval,
         },
         {
-            "trigger": "pdf_get_man",
+            "trigger": Operations.PDF_GET_MAN,
             "source": RecordState.pdf_needs_manual_retrieval,
             "dest": RecordState.pdf_not_available,
         },
         {
-            "trigger": "pdf_get_man",
+            "trigger": Operations.PDF_GET_MAN,
             "source": RecordState.pdf_needs_manual_retrieval,
             "dest": RecordState.pdf_imported,
         },
         {
-            "trigger": "pdf_prep",
+            "trigger": Operations.PDF_PREP,
             "source": RecordState.pdf_imported,
             "dest": RecordState.pdf_needs_manual_preparation,
         },
         {
-            "trigger": "pdf_prep",
+            "trigger": Operations.PDF_PREP,
             "source": RecordState.pdf_imported,
             "dest": RecordState.pdf_prepared,
         },
         {
-            "trigger": "pdf_prep_man",
+            "trigger": Operations.PDF_PREP_MAN,
             "source": RecordState.pdf_needs_manual_preparation,
             "dest": RecordState.pdf_prepared,
         },
         {
-            "trigger": "screen",
+            "trigger": Operations.SCREEN,
             "source": RecordState.pdf_prepared,
             "dest": RecordState.rev_excluded,
         },
         {
-            "trigger": "screen",
+            "trigger": Operations.SCREEN,
             "source": RecordState.pdf_prepared,
             "dest": RecordState.rev_included,
         },
         {
-            "trigger": "data",
+            "trigger": Operations.DATA,
             "source": RecordState.rev_included,
             "dest": RecordState.rev_synthesized,
         },
@@ -2332,7 +2269,7 @@ class RecordStateModel:
             )
             record_header_list = list(records_headers.values())
 
-            return {el["colrev_status"] for el in record_header_list}
+            return {el[Fields.STATUS] for el in record_header_list}
 
         if operation.review_manager.settings.project.delay_automated_processing:
             start_states: list[str] = [

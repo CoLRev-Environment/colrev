@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -10,10 +12,10 @@ import colrev.qm.quality_model
 class NameAbbreviatedChecker:
     """The NameAbbreviatedChecker"""
 
-    fields_to_check = ["author", "editor"]
+    fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
     abbreviations = ["and others", "et al", "..."]
 
-    msg = "name-abbreviated"
+    msg = DefectCodes.NAME_ABBREVIATED
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

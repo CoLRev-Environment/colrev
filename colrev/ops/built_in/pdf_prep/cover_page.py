@@ -16,6 +16,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.qm.colrev_pdf_id
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
@@ -175,22 +176,22 @@ class PDFCoverPage(JsonSchemaMixin):
     ) -> dict:
         """Prepare the PDF by removing coverpages (if any)"""
 
-        if not record.data["file"].endswith(".pdf"):
+        if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
         cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
-        coverpages = self.__get_coverpages(pdf=record.data["file"])
+        coverpages = self.__get_coverpages(pdf=record.data[Fields.FILE])
         if not coverpages:
             return record.data
         if coverpages:
             original = pdf_prep_operation.review_manager.path / Path(
-                record.data["file"]
+                record.data[Fields.FILE]
             )
             file_copy = pdf_prep_operation.review_manager.path / Path(
-                record.data["file"].replace(".pdf", "_wo_cp.pdf")
+                record.data[Fields.FILE].replace(".pdf", "_wo_cp.pdf")
             )
             shutil.copy(original, file_copy)
             record.extract_pages(
@@ -199,6 +200,6 @@ class PDFCoverPage(JsonSchemaMixin):
                 save_to_path=cp_path,
             )
             pdf_prep_operation.review_manager.report_logger.info(
-                f'removed cover page for ({record.data["ID"]})'
+                f"removed cover page for ({record.data[Fields.ID]})"
             )
         return record.data

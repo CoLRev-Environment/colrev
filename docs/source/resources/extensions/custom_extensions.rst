@@ -1,7 +1,7 @@
-Custom script extensions
+Custom scripts
 ==================================
 
-To develop a custom extension script, run the command for the respective operation:
+To develop a custom script, run the command for the respective operation:
 
 .. code-block::
 

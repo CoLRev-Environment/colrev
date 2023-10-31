@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -11,21 +13,49 @@ class InconsistentWithEntrytypeChecker:
     """The InconsistentWithEntrytypeChecker"""
 
     record_field_inconsistencies: dict[str, list[str]] = {
-        "article": ["booktitle", "isbn"],
-        "inproceedings": ["issue", "number", "journal"],
+        "article": [Fields.BOOKTITLE, Fields.ISBN],
+        "inproceedings": ["issue", Fields.NUMBER, Fields.JOURNAL],
         "incollection": [],
-        "inbook": ["journal"],
-        "book": ["issue", "number", "journal"],
-        "phdthesis": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
-        "masterthesis": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
-        "techreport": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
-        "unpublished": ["volume", "issue", "number", "journal", "booktitle", "isbn"],
-        "online": ["journal", "booktitle", "isbn"],
-        "misc": ["journal", "booktitle", "isbn"],
+        "inbook": [Fields.JOURNAL],
+        "book": ["issue", Fields.NUMBER, Fields.JOURNAL],
+        "phdthesis": [
+            Fields.VOLUME,
+            "issue",
+            Fields.NUMBER,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.ISBN,
+        ],
+        "masterthesis": [
+            Fields.VOLUME,
+            "issue",
+            Fields.NUMBER,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.ISBN,
+        ],
+        "techreport": [
+            Fields.VOLUME,
+            "issue",
+            Fields.NUMBER,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.ISBN,
+        ],
+        "unpublished": [
+            Fields.VOLUME,
+            "issue",
+            Fields.NUMBER,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.ISBN,
+        ],
+        "online": [Fields.JOURNAL, Fields.BOOKTITLE, Fields.ISBN],
+        "misc": [Fields.JOURNAL, Fields.BOOKTITLE, Fields.ISBN],
     }
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
-    msg = "inconsistent-with-entrytype"
+    msg = DefectCodes.INCONSISTENT_WITH_ENTRYTYPE
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model

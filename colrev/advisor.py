@@ -13,6 +13,8 @@ from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
 import colrev.record
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 
 class Advisor:
@@ -193,6 +195,7 @@ class Advisor:
                     + "(see instructions above).",
                 }
 
+    # pylint: disable=colrev-missed-constant-usage
     def __get_collaboration_instructions(
         self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
@@ -470,10 +473,10 @@ class Advisor:
         missing_files = []
         for record_dict in status_stats.records.values():
             if (
-                record_dict["colrev_status"] in file_required_status
-                and "file" not in record_dict
+                record_dict[Fields.STATUS] in file_required_status
+                and Fields.FILE not in record_dict
             ):
-                missing_files.append(record_dict["ID"])
+                missing_files.append(record_dict[Fields.ID])
 
         return missing_files
 
@@ -505,9 +508,11 @@ class Advisor:
 
         pdfs_no_longer_available = []
         for record_dict in status_stats.records.values():
-            if "file" in record_dict:
-                if not (self.review_manager.path / Path(record_dict["file"])).is_file():
-                    pdfs_no_longer_available.append(record_dict["file"])
+            if Fields.FILE in record_dict:
+                if not (
+                    self.review_manager.path / Path(record_dict[Fields.FILE])
+                ).is_file():
+                    pdfs_no_longer_available.append(record_dict[Fields.FILE])
         if pdfs_no_longer_available:
             review_instructions.append(
                 {
@@ -671,7 +676,7 @@ class Advisor:
             selected_journals = [
                 (candidate, freq)
                 for candidate, freq in selected
-                if candidate not in curated_outlets + ["", "UNKNOWN"]
+                if candidate not in curated_outlets + ["", FieldValues.UNKNOWN]
             ]
 
             journals = "\n   - " + "\n   - ".join(

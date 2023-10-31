@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=too-few-public-methods
 
@@ -10,7 +13,7 @@ import colrev.qm.quality_model
 class IncompleteFieldChecker:
     """The IncompleteFieldChecker"""
 
-    msg = "incomplete-field"
+    msg = DefectCodes.INCOMPLETE_FIELD
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -18,8 +21,14 @@ class IncompleteFieldChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the missing-field checks"""
 
-        for key in ["title", "journal", "booktitle", "author", "abstract"]:
-            if record.data.get(key, "UNKNOWN") == "UNKNOWN":
+        for key in [
+            Fields.TITLE,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.AUTHOR,
+            Fields.ABSTRACT,
+        ]:
+            if record.data.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:
                 continue
             if self.__incomplete_field(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
@@ -30,7 +39,7 @@ class IncompleteFieldChecker:
         """check for incomplete field"""
         if record.data[key].endswith("...") or record.data[key].endswith("…"):
             return True
-        return key == "author" and (
+        return key == Fields.AUTHOR and (
             # heuristics for missing first names:
             ", and " in record.data[key]
             or record.data[key].rstrip().endswith(",")

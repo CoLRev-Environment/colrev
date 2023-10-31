@@ -8,7 +8,8 @@ from pathlib import Path
 import colrev.operation
 import colrev.ops.correct
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 
 class Push(colrev.operation.Operation):
@@ -57,7 +58,7 @@ class Push(colrev.operation.Operation):
                 output = json.load(json_file)
 
             record = output["original_record"]
-            for source_origin in record["colrev_origin"]:
+            for source_origin in record[Fields.ORIGIN]:
                 # note : simple heuristic / should be based on the SearchSources
                 # (objects - whether they offer correction functionality)
                 source_prefix = source_origin[: source_origin.find("/")]
@@ -68,7 +69,7 @@ class Push(colrev.operation.Operation):
                 if search_source in ["colrev.unknown_source"]:
                     continue
 
-                output["file"] = correction_path
+                output[Fields.FILE] = correction_path
                 if source_prefix not in change_sets:
                     change_sets[source_prefix] = []
 
@@ -105,14 +106,14 @@ class Push(colrev.operation.Operation):
             correct_function = getattr(endpoint, "apply_correction", None)
             if callable(correct_function):
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Push record corrections to {source_prefix}{colors.END}"
+                    f"{Colors.GREEN}Push record corrections to {source_prefix}{Colors.END}"
                 )
                 endpoint.apply_correction(change_itemsets=change_itemsets)  # type: ignore
 
             elif all_records:
                 # Else: use the share_corrections functionality:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Push record corrections to {source_prefix}{colors.END}"
+                    f"{Colors.GREEN}Push record corrections to {source_prefix}{Colors.END}"
                 )
                 self.review_manager.logger.debug(
                     f"No correction function in {endpoint_dict}"
@@ -153,5 +154,5 @@ class Push(colrev.operation.Operation):
             input("Press Enter to confirm")
 
             for change_item in change_list:
-                if Path(change_item["file"]).is_file():
-                    Path(change_item["file"]).unlink()
+                if Path(change_item[Fields.FILE]).is_file():
+                    Path(change_item[Fields.FILE]).unlink()

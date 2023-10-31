@@ -12,7 +12,10 @@ from pybtex.database.input import bibtex
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
+from colrev.constants import FieldSet
+from colrev.constants import FieldValues
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -62,16 +65,16 @@ class GeneralOriginFeed:
                 )
 
             self.__available_ids = {
-                x[self.source_identifier]: x["ID"]
+                x[self.source_identifier]: x[Fields.ID]
                 for x in self.feed_records.values()
                 if self.source_identifier in x
             }
             self.__max_id = (
                 max(
                     [
-                        int(x["ID"])
+                        int(x[Fields.ID])
                         for x in self.feed_records.values()
-                        if x["ID"].isdigit()
+                        if x[Fields.ID].isdigit()
                     ]
                     + [1]
                 )
@@ -87,11 +90,11 @@ class GeneralOriginFeed:
             raise colrev_exceptions.NotFeedIdentifiableException()
 
         if record_dict[self.source_identifier] in self.__available_ids:
-            record_dict["ID"] = self.__available_ids[
+            record_dict[Fields.ID] = self.__available_ids[
                 record_dict[self.source_identifier]
             ]
         else:
-            record_dict["ID"] = str(self.__max_id).rjust(6, "0")
+            record_dict[Fields.ID] = str(self.__max_id).rjust(6, "0")
 
         return record_dict
 
@@ -107,35 +110,35 @@ class GeneralOriginFeed:
             self.__max_id += 1
             self.nr_added += 1
 
-        if "colrev_data_provenance" in feed_record_dict:
-            del feed_record_dict["colrev_data_provenance"]
-        if "colrev_masterdata_provenance" in feed_record_dict:
-            del feed_record_dict["colrev_masterdata_provenance"]
-        if "colrev_status" in feed_record_dict:
-            del feed_record_dict["colrev_status"]
+        if Fields.D_PROV in feed_record_dict:
+            del feed_record_dict[Fields.D_PROV]
+        if Fields.MD_PROV in feed_record_dict:
+            del feed_record_dict[Fields.MD_PROV]
+        if Fields.STATUS in feed_record_dict:
+            del feed_record_dict[Fields.STATUS]
 
         self.__available_ids[
             feed_record_dict[self.source_identifier]
-        ] = feed_record_dict["ID"]
+        ] = feed_record_dict[Fields.ID]
 
         if self.update_only:
             # ignore time_variant_fields
             # (otherwise, fields in recent records would be more up-to-date)
-            for key in colrev.record.Record.time_variant_fields:
-                if feed_record_dict["ID"] in self.feed_records:
-                    if key in self.feed_records[feed_record_dict["ID"]]:
+            for key in FieldSet.TIME_VARIANT_FIELDS:
+                if feed_record_dict[Fields.ID] in self.feed_records:
+                    if key in self.feed_records[feed_record_dict[Fields.ID]]:
                         feed_record_dict[key] = self.feed_records[
-                            feed_record_dict["ID"]
+                            feed_record_dict[Fields.ID]
                         ][key]
                     else:
                         if key in feed_record_dict:
                             del feed_record_dict[key]
 
-        self.feed_records[feed_record_dict["ID"]] = feed_record_dict
+        self.feed_records[feed_record_dict[Fields.ID]] = feed_record_dict
 
         # Original record
         colrev_origin = f"{self.origin_prefix}/{record.data['ID']}"
-        record.data["colrev_origin"] = [colrev_origin]
+        record.data[Fields.ORIGIN] = [colrev_origin]
         record.add_provenance_all(source=colrev_origin)
 
         return added_new
@@ -177,7 +180,7 @@ class GeneralOriginFeed:
         record_b = deepcopy(record_b_orig)
 
         bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_a["ID"]: record_a}
+            recs_dict_in={record_a[Fields.ID]: record_a}
         )
         parser = bibtex.Parser()
         bib_data = parser.parse_string(bibtex_str)
@@ -188,7 +191,7 @@ class GeneralOriginFeed:
         )[0]
 
         bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_b["ID"]: record_b}
+            recs_dict_in={record_b[Fields.ID]: record_b}
         )
         parser = bibtex.Parser()
         bib_data = parser.parse_string(bibtex_str)
@@ -201,7 +204,7 @@ class GeneralOriginFeed:
         # Note : record_a can have more keys (that's ok)
         changed = False
         for key, value in record_b.items():
-            if key in colrev.record.Record.provenance_keys + ["ID", "curation_ID"]:
+            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, "curation_ID"]:
                 continue
             if key not in record_a:
                 return True
@@ -211,7 +214,7 @@ class GeneralOriginFeed:
 
     def __get_record_based_on_origin(self, origin: str, records: dict) -> dict:
         for main_record_dict in records.values():
-            if origin in main_record_dict["colrev_origin"]:
+            if origin in main_record_dict[Fields.ORIGIN]:
                 return main_record_dict
         return {}
 
@@ -220,11 +223,13 @@ class GeneralOriginFeed:
     ) -> bool:
         if record.check_potential_retracts():
             self.review_manager.logger.info(
-                f"{colors.GREEN}Found paper retract: "
-                f"{main_record_dict['ID']}{colors.END}"
+                f"{Colors.GREEN}Found paper retract: "
+                f"{main_record_dict['ID']}{Colors.END}"
             )
             main_record = colrev.record.Record(data=main_record_dict)
-            main_record.prescreen_exclude(reason="retracted", print_warning=True)
+            main_record.prescreen_exclude(
+                reason=FieldValues.RETRACTED, print_warning=True
+            )
             main_record.remove_field(key="warning")
             return True
         return False
@@ -233,16 +238,17 @@ class GeneralOriginFeed:
         self, *, record: colrev.record.Record, main_record_dict: dict
     ) -> None:
         if "forthcoming" == main_record_dict.get(
-            "year", ""
-        ) and "forthcoming" != record.data.get("year", ""):
+            Fields.YEAR, ""
+        ) and "forthcoming" != record.data.get(Fields.YEAR, ""):
             self.review_manager.logger.info(
-                f"{colors.GREEN}Update published forthcoming paper: "
-                f"{record.data['ID']}{colors.END}"
+                f"{Colors.GREEN}Update published forthcoming paper: "
+                f"{record.data['ID']}{Colors.END}"
             )
             # prepared_record = crossref_prep.prepare(prep_operation, record)
-            main_record_dict["year"] = record.data["year"]
+            main_record_dict[Fields.YEAR] = record.data[Fields.YEAR]
             record = colrev.record.PrepRecord(data=main_record_dict)
 
+    # pylint: disable=too-many-arguments
     def __update_existing_record_fields(
         self,
         *,
@@ -254,26 +260,21 @@ class GeneralOriginFeed:
         source: colrev.settings.SearchSource,
     ) -> None:
         for key, value in record_dict.items():
-            if (
-                not update_time_variant_fields
-                and key in colrev.record.Record.time_variant_fields
-            ):
+            if not update_time_variant_fields and key in FieldSet.TIME_VARIANT_FIELDS:
                 continue
 
             if key in ["curation_ID"]:
                 continue
 
-            if key in colrev.record.Record.provenance_keys + ["ID"]:
+            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID]:
                 continue
 
             if key not in main_record_dict:
-                if key in main_record_dict.get("colrev_masterdata_provenance", {}):
+                if key in main_record_dict.get(Fields.MD_PROV, {}):
                     if (
-                        main_record_dict["colrev_masterdata_provenance"][key]["source"]
+                        main_record_dict[Fields.MD_PROV][key]["source"]
                         == "colrev_curation.masterdata_restrictions"
-                        and main_record_dict["colrev_masterdata_provenance"][key][
-                            "note"
-                        ]
+                        and main_record_dict[Fields.MD_PROV][key]["note"]
                         == "not-missing"
                     ):
                         continue
@@ -296,7 +297,11 @@ class GeneralOriginFeed:
                     " - ", ": "
                 ):
                     continue
-                if key == "url" and "dblp.org" in value and key in main_record.data:
+                if (
+                    key == Fields.URL
+                    and "dblp.org" in value
+                    and key in main_record.data
+                ):
                     continue
                 main_record.update_field(
                     key=key,
@@ -309,15 +314,20 @@ class GeneralOriginFeed:
     def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
         # Forthcoming paper published if volume and number are assigned
         # i.e., no longer UNKNOWN
+        if record_dict[Fields.ENTRYTYPE] != "article":
+            return False
         if (
-            record_dict.get("volume", "") != "UNKNOWN"
-            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
-            and record_dict.get("number", "") != "UNKNOWN"
-            and prev_record.get("volume", "UNKNOWN") == "UNKNOWN"
+            record_dict.get(Fields.VOLUME, "") != FieldValues.UNKNOWN
+            and prev_record.get(Fields.VOLUME, FieldValues.UNKNOWN)
+            == FieldValues.UNKNOWN
+            and record_dict.get(Fields.NUMBER, "") != FieldValues.UNKNOWN
+            and prev_record.get(Fields.VOLUME, FieldValues.UNKNOWN)
+            == FieldValues.UNKNOWN
         ):
             return True
         return False
 
+    # pylint: disable=too-many-arguments
     def update_existing_record(
         self,
         *,
@@ -341,6 +351,7 @@ class GeneralOriginFeed:
         # TBD: in curated masterdata repositories?
 
         record = colrev.record.Record(data=record_dict)
+        record.prefix_non_standardized_field_keys(prefix=source.endpoint)
         changed = self.__update_existing_record_retract(
             record=record, main_record_dict=main_record_dict
         )
@@ -349,7 +360,7 @@ class GeneralOriginFeed:
         )
 
         if (
-            "CURATED" in main_record_dict.get("colrev_masterdata_provenance", {})
+            FieldValues.CURATED in main_record_dict.get(Fields.MD_PROV, {})
             and "md_curated.bib" != source.get_origin_prefix()
         ):
             return False
@@ -382,15 +393,15 @@ class GeneralOriginFeed:
                 record_dict=record_dict, prev_record=prev_record_dict_version
             ):
                 self.review_manager.logger.info(
-                    f" {colors.GREEN}forthcoming paper published: "
-                    f"{main_record_dict['ID']}{colors.END}"
+                    f" {Colors.GREEN}forthcoming paper published: "
+                    f"{main_record_dict['ID']}{Colors.END}"
                 )
             elif similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {origin}")
             else:
                 self.review_manager.logger.info(
-                    f" {colors.RED} check/update {origin} leads to substantial changes "
-                    f"({similarity_score}) in {main_record_dict['ID']}:{colors.END}"
+                    f" {Colors.RED} check/update {origin} leads to substantial changes "
+                    f"({similarity_score}) in {main_record_dict['ID']}:{Colors.END}"
                 )
                 self.review_manager.p_printer.pprint(
                     [x for x in dict_diff if "change" == x[0]]
@@ -402,19 +413,19 @@ class GeneralOriginFeed:
         """Print the search infos (after running the search)"""
         if self.nr_added > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Retrieved {self.nr_added} records{colors.END}"
+                f"{Colors.GREEN}Retrieved {self.nr_added} records{Colors.END}"
             )
         else:
             self.review_manager.logger.info(
-                f"{colors.GREEN}No additional records retrieved{colors.END}"
+                f"{Colors.GREEN}No additional records retrieved{Colors.END}"
             )
 
         if self.nr_changed > 0:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Updated {self.nr_changed} records{colors.END}"
+                f"{Colors.GREEN}Updated {self.nr_changed} records{Colors.END}"
             )
         else:
             if records:
                 self.review_manager.logger.info(
-                    f"{colors.GREEN}Records (data/records.bib) up-to-date{colors.END}"
+                    f"{Colors.GREEN}Records (data/records.bib) up-to-date{Colors.END}"
                 )

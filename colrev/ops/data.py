@@ -10,7 +10,9 @@ import pandas as pd
 import colrev.operation
 import colrev.ops.built_in.pdf_prep.tei_prep
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 
 class Data(colrev.operation.Operation):
@@ -38,7 +40,7 @@ class Data(colrev.operation.Operation):
         return [
             ID
             for ID, record in records.items()
-            if record["colrev_status"]
+            if record[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,
@@ -51,16 +53,16 @@ class Data(colrev.operation.Operation):
         enlit_list = []
         records = self.review_manager.dataset.load_records_dict()
         for relevant_record_id in self.get_record_ids_for_synthesis(records):
-            enlit_status = str(records[relevant_record_id]["colrev_status"])
+            enlit_status = str(records[relevant_record_id][Fields.STATUS])
             enlit_status = enlit_status.replace("rev_included", "").replace(
                 "rev_synthesized", "synthesized"
             )
             enlit_list.append(
                 {
-                    "ID": relevant_record_id,
+                    Fields.ID: relevant_record_id,
                     "score": 0,
                     "score_intensity": 0,
-                    "colrev_status": enlit_status,
+                    Fields.STATUS: enlit_status,
                 }
             )
 
@@ -79,7 +81,7 @@ class Data(colrev.operation.Operation):
             tei_doc.mark_references(records=records)
             data = tei_doc.get_tei_str()
             for enlit_item in enlit_list:
-                id_string = f'ID="{enlit_item["ID"]}"'
+                id_string = f'ID="{enlit_item[Fields.ID]}"'
                 if id_string in data:
                     enlit_item["score"] += 1
                 enlit_item["score_intensity"] += data.count(id_string)
@@ -98,23 +100,25 @@ class Data(colrev.operation.Operation):
 
         def prep_records(*, records: dict) -> pd.DataFrame:
             for record in records.values():
-                record["outlet"] = record.get("journal", record.get("booktitle", "NA"))
+                record["outlet"] = record.get(
+                    Fields.JOURNAL, record.get(Fields.BOOKTITLE, "NA")
+                )
 
             records_df = pd.DataFrame.from_records(list(records.values()))
 
             required_cols = [
-                "ID",
-                "ENTRYTYPE",
-                "author",
-                "title",
-                "journal",
-                "booktitle",
+                Fields.ID,
+                Fields.ENTRYTYPE,
+                Fields.AUTHOR,
+                Fields.TITLE,
+                Fields.JOURNAL,
+                Fields.BOOKTITLE,
                 "outlet",
-                "year",
-                "volume",
-                "number",
-                "pages",
-                "doi",
+                Fields.YEAR,
+                Fields.VOLUME,
+                Fields.NUMBER,
+                Fields.PAGES,
+                Fields.DOI,
             ]
             available_cols = records_df.columns.intersection(list(set(required_cols)))
             cols = [x for x in required_cols if x in available_cols]
@@ -127,19 +131,19 @@ class Data(colrev.operation.Operation):
             included_papers = [
                 ID
                 for ID, record in records.items()
-                if record["colrev_status"]
+                if record[Fields.STATUS]
                 in [
                     colrev.record.RecordState.rev_synthesized,
                     colrev.record.RecordState.rev_included,
                 ]
-                and record.get("year", "UNKNOWN").isdigit()
+                and record.get(Fields.YEAR, FieldValues.UNKNOWN).isdigit()
             ]
             observations = prepared_records_df[
-                prepared_records_df["ID"].isin(included_papers)
+                prepared_records_df[Fields.ID].isin(included_papers)
             ].copy()
             observations.year = observations.year.astype(int)
             missing_outlet = observations[observations["outlet"].isnull()][
-                "ID"
+                Fields.ID
             ].tolist()
             if len(missing_outlet) > 0:
                 self.review_manager.logger.info(f"No outlet: {missing_outlet}")
@@ -147,7 +151,7 @@ class Data(colrev.operation.Operation):
 
         # if not status.get_completeness_condition():
         #     self.review_manager.logger.warning(
-        #  f"{colors.RED}Sample not completely processed!{colors.END}")
+        #  f"{Colors.RED}Sample not completely processed!{Colors.END}")
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -167,9 +171,9 @@ class Data(colrev.operation.Operation):
         observations.to_csv(output_dir / Path("sample.csv"), index=False)
 
         tabulated = pd.pivot_table(
-            observations[["outlet", "year"]],
+            observations[["outlet", Fields.YEAR]],
             index=["outlet"],
-            columns=["year"],
+            columns=[Fields.YEAR],
             aggfunc=len,
             fill_value=0,
             margins=True,
@@ -191,9 +195,9 @@ class Data(colrev.operation.Operation):
         tabulated.to_csv(output_dir / Path("journals_years.csv"))
 
         tabulated = pd.pivot_table(
-            observations[["ENTRYTYPE", "year"]],
-            index=["ENTRYTYPE"],
-            columns=["year"],
+            observations[[Fields.ENTRYTYPE, Fields.YEAR]],
+            index=[Fields.ENTRYTYPE],
+            columns=[Fields.YEAR],
             aggfunc=len,
             fill_value=0,
             margins=True,
@@ -265,7 +269,7 @@ class Data(colrev.operation.Operation):
         ) in synthesized_record_status_matrix.items():
             if all(x for x in individual_status_dict.values()):
                 if (
-                    records[record_id]["colrev_status"]
+                    records[record_id][Fields.STATUS]
                     != colrev.record.RecordState.rev_synthesized
                 ):
                     if self.review_manager.verbose_mode:
@@ -280,7 +284,7 @@ class Data(colrev.operation.Operation):
 
                 if (
                     colrev.record.RecordState.rev_synthesized
-                    != records[record_id]["colrev_status"]
+                    != records[record_id][Fields.STATUS]
                 ):
                     records[record_id].update(
                         colrev_status=colrev.record.RecordState.rev_synthesized
@@ -289,7 +293,7 @@ class Data(colrev.operation.Operation):
             else:
                 if (
                     colrev.record.RecordState.rev_included
-                    != records[record_id]["colrev_status"]
+                    != records[record_id][Fields.STATUS]
                 ):
                     records[record_id].update(
                         colrev_status=colrev.record.RecordState.rev_included
@@ -306,7 +310,7 @@ class Data(colrev.operation.Operation):
 
         if not silent_mode:
             self.review_manager.logger.info(
-                f"{colors.GREEN}Completed data operation{colors.END}"
+                f"{Colors.GREEN}Completed data operation{Colors.END}"
             )
         if self.review_manager.in_ci_environment():
             print("\n\n")

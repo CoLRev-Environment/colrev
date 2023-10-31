@@ -4,7 +4,8 @@ import platform
 from pathlib import Path
 
 import colrev.record
-import colrev.ui_cli.cli_colors as colors
+from colrev.constants import Colors
+from colrev.constants import Fields
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -15,7 +16,7 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
     sample = [
         r
         for r in records.values()
-        if r["colrev_status"]
+        if r[Fields.STATUS]
         in [
             colrev.record.RecordState.rev_synthesized,
             colrev.record.RecordState.rev_included,
@@ -36,35 +37,35 @@ def print_venv_notes() -> None:
         print("Detected platform: Linux")
         if not Path("venv").is_dir():
             print("To create virtualenv, run")
-            print(f"  {colors.ORANGE}python3 -m venv venv{colors.END}")
+            print(f"  {Colors.ORANGE}python3 -m venv venv{Colors.END}")
         print("To activate virtualenv, run")
-        print(f"  {colors.ORANGE}source venv/bin/activate{colors.END}")
+        print(f"  {Colors.ORANGE}source venv/bin/activate{Colors.END}")
         print("To install colrev/colrev, run")
-        print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
+        print(f"  {Colors.ORANGE}python -m pip install colrev{Colors.END}")
         print("To deactivate virtualenv, run")
-        print(f"  {colors.ORANGE}deactivate{colors.END}")
+        print(f"  {Colors.ORANGE}deactivate{Colors.END}")
     elif current_platform == "Darwin":
         print("Detected platform: MacOS")
         if not Path("venv").is_dir():
             print("To create virtualenv, run")
-            print(f"  {colors.ORANGE}python3 -m venv venv{colors.END}")
+            print(f"  {Colors.ORANGE}python3 -m venv venv{Colors.END}")
         print("To activate virtualenv, run")
-        print(f"  {colors.ORANGE}source venv/bin/activate{colors.END}")
+        print(f"  {Colors.ORANGE}source venv/bin/activate{Colors.END}")
         print("To install colrev/colrev, run")
-        print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
+        print(f"  {Colors.ORANGE}python -m pip install colrev{Colors.END}")
         print("To deactivate virtualenv, run")
-        print(f"  {colors.ORANGE}deactivate{colors.END}")
+        print(f"  {Colors.ORANGE}deactivate{Colors.END}")
     elif current_platform == "Windows":
         print("Detected platform: Windows")
         if not Path("venv").is_dir():
             print("To create virtualenv, run")
-            print(f"  {colors.ORANGE}python -m venv venv{colors.END}")
+            print(f"  {Colors.ORANGE}python -m venv venv{Colors.END}")
         print("To activate virtualenv, run")
-        print(f"  {colors.ORANGE}venv\\Scripts\\Activate.ps1{colors.END}")
+        print(f"  {Colors.ORANGE}venv\\Scripts\\Activate.ps1{Colors.END}")
         print("To install colrev/colrev, run")
-        print(f"  {colors.ORANGE}python -m pip install colrev{colors.END}")
+        print(f"  {Colors.ORANGE}python -m pip install colrev{Colors.END}")
         print("To deactivate virtualenv, run")
-        print(f"  {colors.ORANGE}deactivate{colors.END}")
+        print(f"  {Colors.ORANGE}deactivate{Colors.END}")
     else:
         print(
             "Platform not detected... "

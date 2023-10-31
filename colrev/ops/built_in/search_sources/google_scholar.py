@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 
 # pylint: disable=unused-argument
@@ -28,6 +29,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.google_scholar"
+    # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [colrev.settings.SearchType.DB]
 
@@ -113,12 +115,12 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
                 in record.data["note"]
             ):
                 note = record.data["note"]
-                source = record.data["colrev_data_provenance"]["note"]["source"]
-                record.rename_field(key="note", new_key="cited_by")
+                source = record.data[Fields.D_PROV]["note"]["source"]
+                record.rename_field(key="note", new_key=Fields.CITED_BY)
                 record.update_field(
-                    key="cited_by",
-                    value=record.data["cited_by"][
-                        : record.data["cited_by"].find(" cites: ")
+                    key=Fields.CITED_BY,
+                    value=record.data[Fields.CITED_BY][
+                        : record.data[Fields.CITED_BY].find(" cites: ")
                     ],
                     source="replace_link",
                 )
@@ -128,8 +130,8 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
                     append_edit=False,
                     source=source + "|extract-from-note",
                 )
-        if "abstract" in record.data:
+        if Fields.ABSTRACT in record.data:
             # Note: abstracts provided by GoogleScholar are very incomplete
-            record.remove_field(key="abstract")
+            record.remove_field(key=Fields.ABSTRACT)
 
         return record

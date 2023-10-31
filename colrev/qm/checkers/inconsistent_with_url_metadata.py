@@ -6,6 +6,8 @@ from thefuzz import fuzz
 
 import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -13,8 +15,15 @@ import colrev.qm.quality_model
 class InconsistentWithURLMetadataChecker:
     """The InconsistentWithURLMetadataChecker"""
 
-    msg = "inconsistent-with-url-metadata"
-    __fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
+    msg = DefectCodes.INCONSISTENT_WITH_URL_METADATA
+    __fields_to_check = [
+        Fields.AUTHOR,
+        Fields.TITLE,
+        Fields.JOURNAL,
+        Fields.YEAR,
+        Fields.VOLUME,
+        Fields.NUMBER,
+    ]
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -26,17 +35,17 @@ class InconsistentWithURLMetadataChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the inconsistent-with-url-metadata checks"""
 
-        if "url" not in record.data:
+        if Fields.URL not in record.data:
             return
-        if any(x in record.data["url"] for x in ["search.ebscohost.com/login"]):
+        if any(x in record.data[Fields.URL] for x in ["search.ebscohost.com/login"]):
             return
-        if "md_curated.bib" in record.data["colrev_data_provenance"]["url"]["source"]:
+        if "md_curated.bib" in record.data[Fields.D_PROV][Fields.URL]["source"]:
             return
 
         if self.__url_metadata_conflicts(record=record):
-            record.add_masterdata_provenance_note(key="url", note=self.msg)
+            record.add_masterdata_provenance_note(key=Fields.URL, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key="url", note=self.msg)
+            record.remove_masterdata_provenance_note(key=Fields.URL, note=self.msg)
 
     def __url_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
         url_record = record.copy_prep_rec()

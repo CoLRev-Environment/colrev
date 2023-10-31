@@ -5,6 +5,8 @@ from __future__ import annotations
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
+from colrev.constants import DefectCodes
+from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
 
@@ -12,7 +14,7 @@ import colrev.qm.quality_model
 class RecordNotInTOCChecker:
     """The RecordNotInTOCChecker"""
 
-    msg = "record-not-in-toc"
+    msg = DefectCodes.RECORD_NOT_IN_TOC
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -28,17 +30,23 @@ class RecordNotInTOCChecker:
                 similarity_threshold=0.9,
                 include_file=False,
             )
-            if "journal" in record.data:
-                record.remove_masterdata_provenance_note(key="journal", note=self.msg)
-            elif "booktitle" in record.data:
-                record.remove_masterdata_provenance_note(key="booktitle", note=self.msg)
+            if Fields.JOURNAL in record.data:
+                record.remove_masterdata_provenance_note(
+                    key=Fields.JOURNAL, note=self.msg
+                )
+            elif Fields.BOOKTITLE in record.data:
+                record.remove_masterdata_provenance_note(
+                    key=Fields.BOOKTITLE, note=self.msg
+                )
         except colrev.exceptions.RecordNotInIndexException:
             pass
         except colrev_exceptions.RecordNotInTOCException:
-            if "journal" in record.data:
-                record.add_masterdata_provenance_note(key="journal", note=self.msg)
-            elif "booktitle" in record.data:
-                record.add_masterdata_provenance_note(key="booktitle", note=self.msg)
+            if Fields.JOURNAL in record.data:
+                record.add_masterdata_provenance_note(key=Fields.JOURNAL, note=self.msg)
+            elif Fields.BOOKTITLE in record.data:
+                record.add_masterdata_provenance_note(
+                    key=Fields.BOOKTITLE, note=self.msg
+                )
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

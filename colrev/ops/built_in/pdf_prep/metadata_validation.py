@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.pdf_prep
@@ -41,7 +42,6 @@ class PDFMetadataValidation(JsonSchemaMixin):
     def validates_based_on_metadata(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
     ) -> dict:
         """Validates the PDF based on the metadata (record)"""
@@ -49,21 +49,23 @@ class PDFMetadataValidation(JsonSchemaMixin):
         validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
 
         if "text_from_pdf" not in record.data:
-            record.set_text_from_pdf(project_path=review_manager.path)
+            record.set_text_from_pdf()
 
         text = record.data["text_from_pdf"]
         text = text.replace(" ", "").replace("\n", "").lower()
         text = colrev.env.utils.remove_accents(input_str=text)
         text = re.sub("[^a-zA-Z ]+", "", text)
 
-        title_words = re.sub("[^a-zA-Z ]+", "", record.data["title"]).lower().split()
+        title_words = (
+            re.sub("[^a-zA-Z ]+", "", record.data[Fields.TITLE]).lower().split()
+        )
 
         match_count = 0
         for title_word in title_words:
             if title_word in text:
                 match_count += 1
 
-        if "title" not in record.data or len(title_words) == 0:
+        if Fields.TITLE not in record.data or len(title_words) == 0:
             validation_info["msgs"].append(  # type: ignore
                 f"{record.data['ID']}: title not in record"
             )
@@ -72,7 +74,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
             )
             validation_info["validates"] = False
             return validation_info
-        if "author" not in record.data:
+        if Fields.AUTHOR not in record.data:
             validation_info["msgs"].append(  # type: ignore
                 f"{record.data['ID']}: author not in record"
             )
@@ -96,7 +98,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
         # Editorials often have no author in the PDF (or on the last page)
         if "editorial" not in title_words:
             match_count = 0
-            for author_name in record.data.get("author", "").split(" and "):
+            for author_name in record.data.get(Fields.AUTHOR, "").split(" and "):
                 author_name = author_name.split(",")[0].lower().replace(" ", "")
                 author_name = colrev.env.utils.remove_accents(input_str=author_name)
                 author_name = (
@@ -106,7 +108,10 @@ class PDFMetadataValidation(JsonSchemaMixin):
                 if author_name in text:
                     match_count += 1
 
-            if match_count / len(record.data.get("author", "").split(" and ")) < 0.8:
+            if (
+                match_count / len(record.data.get(Fields.AUTHOR, "").split(" and "))
+                < 0.8
+            ):
                 validation_info["msgs"].append(  # type: ignore
                     f"{record.data['file']}: author not found in first pages"
                 )
@@ -126,11 +131,11 @@ class PDFMetadataValidation(JsonSchemaMixin):
         """Prepare the PDF by validating it against the metadata (record)"""
 
         if colrev.record.RecordState.pdf_imported != record.data.get(
-            "colrev_status", "NA"
+            Fields.STATUS, "NA"
         ):
             return record.data
 
-        if not record.data["file"].endswith(".pdf"):
+        if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
         local_index = pdf_prep_operation.review_manager.get_local_index()
@@ -139,7 +144,7 @@ class PDFMetadataValidation(JsonSchemaMixin):
             retrieved_record = local_index.retrieve(record_dict=record.data)
 
             pdf_path = pdf_prep_operation.review_manager.path / Path(
-                record.data["file"]
+                record.data[Fields.FILE]
             )
             current_cpid = record.get_colrev_pdf_id(pdf_path=pdf_path)
 
@@ -156,15 +161,13 @@ class PDFMetadataValidation(JsonSchemaMixin):
         except colrev_exceptions.RecordNotInIndexException:
             pass
 
-        validation_info = self.validates_based_on_metadata(
-            review_manager=pdf_prep_operation.review_manager, record=record
-        )
+        validation_info = self.validates_based_on_metadata(record=record)
         if not validation_info["validates"]:
             for msg in validation_info["msgs"]:
                 pdf_prep_operation.review_manager.report_logger.error(msg)
 
             notes = ",".join(validation_info["pdf_prep_hints"])
-            record.add_data_provenance_note(key="file", note=notes)
+            record.add_data_provenance_note(key=Fields.FILE, note=notes)
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
             )
