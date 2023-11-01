@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import inquirer
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -50,23 +51,33 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     def __update_metadata(
         self, *, record: colrev.record.Record
     ) -> colrev.record.Record:
-        valid_selections = ["a", "c", "t", "v", "n", "p", "s"]
-        user_selection = ""
-        print(
-            "Update metadata fields: "
-            "(a)uthor, (c)ontainer title, (t)itle, (v)olume, (n)umber, (p)ages  or (s)ave"
-        )
-        while user_selection not in valid_selections:
-            user_selection = input("Selection: ")
+        questions = [
+            inquirer.List(
+                "field",
+                message="Update metadata fields:",
+                choices=[
+                    "Author",
+                    "Container title",
+                    "Title",
+                    "Volume",
+                    "Number",
+                    "Pages",
+                    "Save",
+                ],
+            ),
+        ]
+        while True:
+            answers = inquirer.prompt(questions)
+            user_selection = answers["field"]
 
-            if user_selection == "s":
+            if user_selection == "Save":
                 break
-            if user_selection == "a":
+            if user_selection == "Author":
                 author = input("Authors:")
                 record.update_field(
                     key=Fields.AUTHOR, value=author, source="manual_correction"
                 )
-            elif user_selection == "c":
+            elif user_selection == "Container title":
                 if Fields.JOURNAL in record.data:
                     journal = input("Journal:")
                     record.update_field(
@@ -79,22 +90,22 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                         value=booktitle,
                         source="manual_correction",
                     )
-            elif user_selection == "t":
+            elif user_selection == "Title":
                 title = input("Title:")
                 record.update_field(
                     key=Fields.TITLE, value=title, source="manual_correction"
                 )
-            elif user_selection == "v":
+            elif user_selection == "Volume":
                 volume = input("Volume:")
                 record.update_field(
                     key=Fields.VOLUME, value=volume, source="manual_correction"
                 )
-            elif user_selection == "n":
+            elif user_selection == "Number":
                 number = input("Number:")
                 record.update_field(
                     key=Fields.NUMBER, value=number, source="manual_correction"
                 )
-            elif user_selection == "p":
+            elif user_selection == "Pages":
                 pages = input("Pages:")
                 record.update_field(
                     key=Fields.PAGES, value=pages, source="manual_correction"
@@ -114,24 +125,27 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         filepath: Path,
         pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
     ) -> None:
-        if user_selection == "c":
+        if user_selection == "Remove coverpage":
             try:
                 pdf_prep_man_operation.extract_coverpage(filepath=filepath)
             except colrev_exceptions.InvalidPDFException:
                 pass
-        elif user_selection == "l":
+        elif user_selection == "Remove last page":
             try:
                 pdf_prep_man_operation.extract_lastpage(filepath=filepath)
             except colrev_exceptions.InvalidPDFException:
                 pass
-        elif user_selection == "r":
-            range_str = ""
-            while not re.match(r"(\d)+-(\d)+", range_str):
-                range_str = input('Page range to remove (e.g., "0-10"):')
-
+        elif user_selection == "Remove page range":
+            range_str_questions = [
+            inquirer.Text('range_str', message="Page range to remove (e.g., 1-3):",
+                            validate=lambda _, x: re.match(r"(\d)+-(\d)+", x),
+                            )
+            ]
+            answers = inquirer.prompt(range_str_questions)
+            range_str = answers["range_str"]
             pages_to_exclude = list(
                 range(
-                    int(range_str[: range_str.find("-")]),
+                    int(range_str[: range_str.find("-")])-1,
                     int(range_str[range_str.find("-") + 1 :]),
                 )
             )
@@ -156,32 +170,45 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             self.__open_pdf(filepath=filepath)
 
         # if PDF > 100 pages, we may check on which page we find the title & print
-        intro_paragraph = (
-            "Prepared?\n"
-            "       (y)es, \n"
-            "       (n)o/delete file,\n"
-            "       (s)kip, (s10) to skip 10 records, or (q)uit,\n"
-            "       (c)overpage remove, (l)ast page remove, (r)emove page range, "
-            "(m)etadata needs to be updated\n"
-        )
-        print(intro_paragraph)
-        user_selection = ""
-        valid_selections = ["y", "n", "s", "q"]
-        while user_selection not in valid_selections:
-            user_selection = input("Selection: ")
-            if user_selection.startswith("s"):
-                if user_selection[1:].isdigit():
-                    self.__to_skip = int(user_selection[1:])
-                return
-            if user_selection in ["c", "l", "r"]:
+
+        questions = [
+            inquirer.List(
+                "prep_decision",
+                message="Prepared?",
+                choices=[
+                    "Yes",
+                    "No (delete)",
+                    "Skip",
+                    "Remove coverpage",
+                    "Remove last page",
+                    "Remove page range",
+                    "Metadata needs to be updated",
+                    "Quit",
+                ],
+            ),
+        ]
+        while True:
+            answers = inquirer.prompt(questions)
+            user_selection = answers["prep_decision"]
+
+            # if user_selection.startswith("s"):
+            #     if user_selection[1:].isdigit():
+            #         self.__to_skip = int(user_selection[1:])
+            #     return
+            if user_selection in [
+                "Remove coverpage",
+                "Remove last page",
+                "Remove page range",
+            ]:
                 self.__remove_page(
                     user_selection=user_selection,
                     filepath=filepath,
                     pdf_prep_man_operation=pdf_prep_man_operation,
                 )
-            elif user_selection == "y":
+            elif user_selection == "Yes":
                 pdf_prep_man_operation.set_pdf_man_prepared(record=record)
-            elif user_selection == "n":
+                return
+            elif user_selection == "No (delete)":
                 record.remove_field(key=Fields.FILE)
                 record.remove_field(key=Fields.PDF_ID)
                 record.set_status(
@@ -189,13 +216,12 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 )
                 if filepath.is_file():
                     filepath.unlink()
-            elif user_selection == "m":
+                return
+            elif user_selection == "Metadata needs to be updated":
                 self.__update_metadata(record=record)
-                print(intro_paragraph)
-            elif user_selection == "q":
+
+            elif user_selection == "Quit":
                 raise QuitPressedException()
-            else:
-                print("Invalid selection.")
 
     def __man_pdf_prep_item_init(
         self,
