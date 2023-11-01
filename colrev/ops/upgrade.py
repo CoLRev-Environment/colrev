@@ -604,7 +604,7 @@ class Upgrade(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if Fields.MD_PROV in record_dict:
-                for key, value in record_dict[Fields.MD_PROV]:
+                for key, value in record_dict[Fields.MD_PROV].items():
                     record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
                         "not-missing", "IGNORE:missing"
                     )
