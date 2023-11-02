@@ -331,6 +331,10 @@
         {
             "package_endpoint_identifier": "colrev.website_screenshot",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.download_from_website",
+            "status": "RED"
         }
     ],
     "pdf_get_man": [

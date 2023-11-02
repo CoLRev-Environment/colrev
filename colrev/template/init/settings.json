@@ -118,6 +118,9 @@
                 "endpoint": "colrev.unpaywall"
             },
             {
+                "endpoint": "colrev.download_from_website"
+            },
+            {
                 "endpoint": "colrev.website_screenshot"
             }
         ],

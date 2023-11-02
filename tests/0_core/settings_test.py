@@ -89,6 +89,7 @@ def test_settings_load() -> None:
             "pdf_get_package_endpoints": [
                 {"endpoint": "colrev.local_index"},
                 {"endpoint": "colrev.unpaywall"},
+                {"endpoint": "colrev.download_from_website"},
                 {"endpoint": "colrev.website_screenshot"},
             ],
             "pdf_get_man_package_endpoints": [

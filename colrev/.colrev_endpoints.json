@@ -120,7 +120,10 @@
             },
             {"package_endpoint_identifier": "colrev.website_screenshot",
              "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot"
-            }
+            },
+            {"package_endpoint_identifier": "colrev.download_from_website",
+            "endpoint": "colrev.ops.built_in.pdf_get.download_from_website.WebsiteDownload"
+           }
         ],
         "pdf_get_man": [
             {"package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",

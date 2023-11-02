@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Added
 
 - Separate PDF quality model ([#268](https://github.com/CoLRev-Environment/colrev/pull/268))
+- `download_from_website` pdf-get package
 
 ### Changed
 

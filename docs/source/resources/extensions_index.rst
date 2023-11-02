@@ -130,6 +130,7 @@ pdf_get
 .. toctree::
    :maxdepth: 1
 
+   extensions_index/colrev.download_from_website.rst
    extensions_index/colrev.local_index.rst
    extensions_index/colrev.unpaywall.rst
    extensions_index/colrev.website_screenshot.rst
