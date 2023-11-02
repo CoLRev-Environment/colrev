@@ -18,9 +18,13 @@ Table of contents
 
 :any:`entrytypes`
 
+:any:`field sets`
+
 :any:`fields`
 
 :any:`schema mapping`
+
+:any:`defect codes`
 
 :any:`test data`
 
@@ -29,28 +33,16 @@ Table of contents
 Abstract
 ------------------------------
 
-
-This document describes the major elements (or fields) found on the
-CoLRev display format for CoLRev records. Some elements (e.g., Comment
-In) are not mandatory and will not appear in every record. Other
-elements (e.g., Author, MeSH term, Registry Number) may appear multiple
-times in one record. Some of the elements on this list are searchable
-fields in PubMed. For searching instructions, see the Search Field Tags
-section of PubMed Help. This document is supplementary information, to
-be used in conjuction with PubMed Help.
-
-CoLRev XML data element descriptions are also available (There are
-additional fields in the XML data)???
-
+This document describes the standard data schema for CoLRev records, including ENTRYTYPEs, and record fields.
+Fields can be part of field sets, with corresponding metadata stored in the provenance fields (colrev_data_provenance, colrev_masterdata_provenance), and quality defects tracked by defect codes.
+It also outlines principles for mapping schemata from the feed records (retrieved from SearchSources), and provides unified test data.
 
 .. _entrytypes:
 
 ENTRYTYPEs
 ------------------------------------------------
 
-ENTRYTYPEs and their respective required fields
-
-.. verlinken auf missing und inconsistent with entry type
+Each record has an ENTRYTYPE with respective required fields. Required and inconsistent fields are evaluated by the QualityModel (the `missing-field <https://colrev.readthedocs.io/en/latest/resources/quality_model.html#missing-field>_ and `inconsistent-with-entrytype <https://colrev.readthedocs.io/en/latest/resources/quality_model.html#inconsistent-with-entrytype>`_ checkers).
 
 .. raw:: html
 
@@ -58,11 +50,8 @@ ENTRYTYPEs and their respective required fields
    - fields (like title) can have a different meaning depending on the entrytype?!
    -->
 
-In the following listing are 14 available bibtex entry types with their
-respective required fields (data elements) (source:
-`bibtex.eu <https://bibtex.eu/types/>`__). Additional information and
-optional fields can be accessed with the link included in the name of
-each entry type.
+In the following listing are 14 available bibtex entry types with their respective required fields (data elements) (source: `bibtex.eu <https://bibtex.eu/types/>`__).
+Additional information and optional fields can be accessed with the link included in the name of each entry type.
 
 ENTRYTYPE : `article <https://bibtex.eu/types/article/>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,15 +71,6 @@ ENTRYTYPE: `book <https://bibtex.eu/types/book/>`__
 -  publisher
 -  address
 
-ENTRYTYPE: `booklet <https://bibtex.eu/types/booklet/>`__
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
--  title
--  author
--  howpublished
--  address
--  years
-
 ENTRYTYPE: `conference <https://bibtex.eu/types/conference/>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -103,7 +83,7 @@ ENTRYTYPE: `inbook <https://bibtex.eu/types/inbook/>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  author
--  title - TBD: chapter?
+-  title (i.e., chapter)
 -  booktitle
 -  publisher
 -  year
@@ -178,6 +158,16 @@ ENTRYTYPE: `unpublished <https://bibtex.eu/types/unpublished/>`__
 -  title
 -  institution
 -  year
+
+.. _field sets:
+
+Field sets
+---------------------------------------------------------------------
+
+The following field sets are distinguished:
+
+- IDENTIFYING_FIELD_KEYS
+- colrev_data_provenance/colrev_masterdata_provenance
 
 .. _fields:
 
@@ -300,12 +290,10 @@ Colrev data schema (main records) - SearchSources (raw search results/feed)
    -->
 
 
-“unified colrev fields” (like title, author, …) do not have a prefix (in
-main records.bib) Default: all other fields are added to records.bib
-with a “namespace prefix” (e.g., colrev.synergy.method)
+“unified colrev fields” (like title, author, …) do not have a prefix (in main records.bib)
+Default: all other fields are added to records.bib with a “namespace prefix” (e.g., colrev.synergy.method)
 
-Example: mapping notes with “Cited by” content to cited_by fields
-(scopus)
+Example: mapping notes with “Cited by” content to cited_by fields (scopus)
 
 Give an example (document the specific cases in the SearchSources)
 
@@ -343,6 +331,15 @@ namespace example: @article{ID1, title = {Title1}, colrev.dblp.key =
    colrev/colrev/ops/built_in/search_sources/*.py
    -->
 
+.. _defect codes:
+
+Defect codes
+----------------------------
+
+Defect codes are stored in the field provenance. They can be ignored as false positives based on the `IGNORE:` prefix.
+
+The standardized defect codes are in the `QualityModel <https://colrev.readthedocs.io/en/latest/resources/quality_model.html>_ and `PDFQualityModel <https://colrev.readthedocs.io/en/latest/resources/pdf_quality_model.html>`_
+
 .. _test data:
 
 Test data
@@ -374,10 +371,5 @@ Links informing the standard
    https://www.bibtex.com/format/fields/
 -  https://www.nlm.nih.gov/bsd/mms/medlineelements.html, examples of
    different fields and descriptions
-
-TODO
-------------------------------
-
-- Heading: CoLRev Data Element (Field) Descriptions
 -  `bibTeX Definition in Web Ontology Language (OWL) Version
    0.2 <https://zeitkunst.org/bibtex/0.2/>`__
