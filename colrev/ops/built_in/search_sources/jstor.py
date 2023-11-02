@@ -81,7 +81,10 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Run a search of JSTOR"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            self.operation.run_db_search()  # type: ignore
+            self.operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
             return
 
         raise NotImplementedError

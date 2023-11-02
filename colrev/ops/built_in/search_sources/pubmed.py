@@ -94,7 +94,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             self.pubmed_lock = Lock()
 
-        self.operation = source_operation
+        self.source_operation = source_operation
         self.quality_model = self.review_manager.get_qm()
         _, self.email = self.review_manager.get_committer()
 
@@ -673,8 +673,11 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
 
         elif self.search_source.search_type == colrev.settings.SearchType.DB:
-            self.operation.run_db_search()  # type: ignore
-
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
+            return
         else:
             raise NotImplementedError
 
