@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import platform
 import re
-import webbrowser
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -115,8 +115,19 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         return record
 
     def __open_pdf(self, *, filepath: Path) -> None:
-        # pylint: disable=no-member
-        webbrowser.open(str(filepath))
+        try:
+            system_platform = platform.system().lower()
+
+            if system_platform == "darwin":  # macOS
+                subprocess.run(["open", filepath], check=True)
+            elif system_platform == "windows":
+                subprocess.run(["start", "", filepath], check=True, shell=True)
+            elif system_platform == "linux":
+                subprocess.run(["xdg-open", filepath], check=True)
+            else:
+                print("Unsupported operating system.")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"Error: {e}")
 
     def __remove_page(
         self,
