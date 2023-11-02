@@ -78,3 +78,5 @@ class QualityModel:
         if self.pdf_mode:
             if Fields.TEXT_FROM_PDF in record.data:
                 del record.data[Fields.TEXT_FROM_PDF]
+            if Fields.PAGES_IN_FILE in record.data:
+                del record.data[Fields.PAGES_IN_FILE]

@@ -127,9 +127,18 @@ class PDFIncompletenessChecker:
             page = roman_page_matched.group()
             pages_metadata = f"{__roman_to_int(s=page)}"
 
-        nr_pages_metadata = __get_nr_pages_in_metadata(pages_metadata=pages_metadata)
+        try:
+            nr_pages_metadata = __get_nr_pages_in_metadata(
+                pages_metadata=pages_metadata
+            )
+        except ValueError:
+            # e.g., S49--S50
+            return True
 
         record.set_pages_in_pdf()
+        if Fields.PAGES_IN_FILE not in record.data:
+            return True
+
         if nr_pages_metadata == record.data[Fields.PAGES_IN_FILE]:
             return True
 

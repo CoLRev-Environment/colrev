@@ -148,15 +148,17 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 pass
         elif user_selection == "Remove page range":
             range_str_questions = [
-            inquirer.Text('range_str', message="Page range to remove (e.g., 1-3):",
-                            validate=lambda _, x: re.match(r"(\d)+-(\d)+", x),
-                            )
+                inquirer.Text(
+                    "range_str",
+                    message="Page range to remove (e.g., 1-3):",
+                    validate=lambda _, x: re.match(r"(\d)+-(\d)+", x),
+                )
             ]
             answers = inquirer.prompt(range_str_questions)
             range_str = answers["range_str"]
             pages_to_exclude = list(
                 range(
-                    int(range_str[: range_str.find("-")])-1,
+                    int(range_str[: range_str.find("-")]) - 1,
                     int(range_str[range_str.find("-") + 1 :]),
                 )
             )
@@ -269,7 +271,14 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         filepath = self.review_manager.path / Path(record_dict[Fields.FILE])
         if not filepath.is_file():
             filepath = self.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
-        record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath))
+
+        try:
+            record.data.update(
+                colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath)
+            )
+        except colrev_exceptions.InvalidPDFException:
+            pass
+
         if filepath.is_file():
             self.__man_pdf_prep_item(
                 filepath=filepath,

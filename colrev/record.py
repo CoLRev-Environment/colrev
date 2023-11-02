@@ -1377,18 +1377,25 @@ class Record:
                     # close open handles
                     converter.close()
                     fake_file_handle.close()
-            except (TypeError, KeyError):  # pragma: no cover
+            except (
+                TypeError,
+                KeyError,
+                pdfminer.pdfparser.PDFSyntaxError,
+            ):  # pragma: no cover
                 pass
         return "".join(text_list)
 
     def set_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
         pdf_path = Path(self.data[Fields.FILE]).absolute()
-        with open(pdf_path, "rb") as file:
-            parser = PDFParser(file)
-            document = PDFDocument(parser)
-            pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-        self.data[Fields.PAGES_IN_FILE] = pages_in_file
+        try:
+            with open(pdf_path, "rb") as file:
+                parser = PDFParser(file)
+                document = PDFDocument(parser)
+                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+            self.data[Fields.PAGES_IN_FILE] = pages_in_file
+        except pdfminer.pdfparser.PDFSyntaxError:
+            pass
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
