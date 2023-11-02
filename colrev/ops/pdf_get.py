@@ -177,9 +177,10 @@ class PDFGet(colrev.operation.Operation):
 
         record_dict = item["record"]
 
-        if str(colrev.record.RecordState.rev_prescreen_included) != str(
-            record_dict[Fields.STATUS]
-        ):
+        if record_dict[Fields.STATUS] not in [
+            colrev.record.RecordState.rev_prescreen_included,
+            colrev.record.RecordState.pdf_needs_manual_retrieval,
+        ]:
             if Fields.FILE in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.remove_field(key=Fields.FILE)
@@ -514,13 +515,18 @@ class PDFGet(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.rev_prescreen_included == x[Fields.STATUS]
+                if x[Fields.STATUS]
+                in [
+                    colrev.record.RecordState.pdf_needs_manual_retrieval,
+                    colrev.record.RecordState.rev_prescreen_included,
+                ]
             ]
         )
 
         items = self.review_manager.dataset.read_next_record(
             conditions=[
-                {Fields.STATUS: colrev.record.RecordState.rev_prescreen_included}
+                {Fields.STATUS: colrev.record.RecordState.rev_prescreen_included},
+                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_retrieval},
             ],
         )
 
