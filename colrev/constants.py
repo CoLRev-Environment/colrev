@@ -131,7 +131,6 @@ class FieldSet:
             Fields.KEYWORDS,
             Fields.CITED_BY,
             Fields.FILE,
-            Fields.INSTITUTION,
             Fields.MONTH,
             Fields.SERIES,
             Fields.LANGUAGE,
