@@ -51,7 +51,7 @@ class WebsiteDownload(JsonSchemaMixin):
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> None:
         article_url = record.data[Fields.URL]
-        response = requests.get(article_url, headers=self.headers)
+        response = requests.get(article_url, headers=self.headers, timeout=60)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
@@ -63,7 +63,7 @@ class WebsiteDownload(JsonSchemaMixin):
 
                 paper_title_tag = soup.find("meta", {"name": "citation_title"})
                 if paper_title_tag:
-                    pdf_response = requests.get(pdf_url)
+                    pdf_response = requests.get(pdf_url, timeout=60)
 
                     if pdf_response.status_code == 200:
                         with open(pdf_filepath, "wb") as pdf_file:
@@ -90,7 +90,7 @@ class WebsiteDownload(JsonSchemaMixin):
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> None:
         url = record.data[Fields.URL]
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, headers=self.headers, timeout=60)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
@@ -104,7 +104,7 @@ class WebsiteDownload(JsonSchemaMixin):
                     if not pdf_url.startswith(("http:", "https:")):
                         pdf_url = urljoin(url, pdf_url)
 
-                    pdf_response = requests.get(pdf_url)
+                    pdf_response = requests.get(pdf_url, timeout=60)
 
                     if pdf_response.status_code == 200:
                         with open(pdf_filepath, "wb") as pdf_file:
@@ -130,7 +130,7 @@ class WebsiteDownload(JsonSchemaMixin):
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> None:
         url = record.data[Fields.URL]
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, headers=self.headers, timeout=60)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
@@ -148,7 +148,7 @@ class WebsiteDownload(JsonSchemaMixin):
                     if not pdf_url.startswith(("http:", "https:")):
                         pdf_url = urljoin(url, pdf_url)
 
-                    pdf_response = requests.get(pdf_url)
+                    pdf_response = requests.get(pdf_url, timeout=60)
 
                     if pdf_response.status_code == 200:
                         with open(pdf_filepath, "wb") as pdf_file:
