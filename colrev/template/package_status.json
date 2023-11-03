@@ -357,12 +357,8 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.create_tei",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.grobid_tei",
-            "status": "RED"
+            "status": "MATURING"
         }
     ],
     "pdf_prep_man": [

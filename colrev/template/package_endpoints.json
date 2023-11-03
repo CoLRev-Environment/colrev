@@ -770,8 +770,8 @@
         {
             "package_endpoint_identifier": "colrev.grobid_tei",
             "endpoint": "colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI",
-            "status": "RED",
-            "status_linked": "RED",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </resources/extensions_index/colrev.grobid_tei>`)",
             "ci_supported": false
         },

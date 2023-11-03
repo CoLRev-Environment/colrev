@@ -291,7 +291,7 @@ class Initializer:
                     "colrev.ocrmypdf",
                     "colrev.remove_coverpage",
                     "colrev.remove_last_page",
-                    "colrev.create_tei",
+                    "colrev.grobid_tei",
                 ]
             ]
 

@@ -444,7 +444,7 @@ class PDFPrep(colrev.operation.Operation):
                 s["endpoint"]
                 for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
             ]
-            if "colrev.create_tei" in endpoint_names:  # type: ignore
+            if "colrev.grobid_tei" in endpoint_names:  # type: ignore
                 pool = Pool(mp.cpu_count() // 2)
             else:
                 pool = Pool(self.cpus)

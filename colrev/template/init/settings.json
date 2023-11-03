@@ -143,7 +143,7 @@
                 "endpoint": "colrev.remove_last_page"
             },
             {
-                "endpoint": "colrev.create_tei"
+                "endpoint": "colrev.grobid_tei"
             }
         ],
         "pdf_prep_man_package_endpoints": [
