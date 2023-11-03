@@ -35,17 +35,16 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)"""
 
-        if prep_operation.polish and not prep_operation.force_mode:
+        if self.prep_operation.polish and not self.prep_operation.force_mode:
             return record
 
         if Fields.DOI in record.data:

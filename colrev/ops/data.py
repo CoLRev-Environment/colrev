@@ -368,11 +368,10 @@ class Data(colrev.operation.Operation):
             endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
             endpoint.update_data(  # type: ignore
-                self, records, synthesized_record_status_matrix, silent_mode=silent_mode
+                records, synthesized_record_status_matrix, silent_mode=silent_mode
             )
 
             endpoint.update_record_status_matrix(  # type: ignore
-                self,
                 synthesized_record_status_matrix,
                 data_package_endpoint["endpoint"],
             )

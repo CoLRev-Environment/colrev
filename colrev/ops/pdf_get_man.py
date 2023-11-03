@@ -212,4 +212,4 @@ class PDFGetMan(colrev.operation.Operation):
                 pdf_get_man_package_endpoint["endpoint"]
             ]
 
-            records = endpoint.pdf_get_man(self, records)  # type: ignore
+            records = endpoint.pdf_get_man(records)  # type: ignore

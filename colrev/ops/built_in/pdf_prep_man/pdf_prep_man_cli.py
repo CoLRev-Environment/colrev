@@ -47,6 +47,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = pdf_prep_man_operation.review_manager
+        self.pdf_prep_man_operation = pdf_prep_man_operation
 
     def __update_metadata(
         self, *, record: colrev.record.Record
@@ -134,16 +135,15 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         *,
         user_selection: str,
         filepath: Path,
-        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
     ) -> None:
         if user_selection == "Remove coverpage":
             try:
-                pdf_prep_man_operation.extract_coverpage(filepath=filepath)
+                self.pdf_prep_man_operation.extract_coverpage(filepath=filepath)
             except colrev_exceptions.InvalidPDFException:
                 pass
         elif user_selection == "Remove last page":
             try:
-                pdf_prep_man_operation.extract_lastpage(filepath=filepath)
+                self.pdf_prep_man_operation.extract_lastpage(filepath=filepath)
             except colrev_exceptions.InvalidPDFException:
                 pass
         elif user_selection == "Remove page range":
@@ -163,7 +163,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 )
             )
             try:
-                pdf_prep_man_operation.extract_pages(
+                self.pdf_prep_man_operation.extract_pages(
                     filepath=filepath, pages_to_remove=pages_to_exclude
                 )
             except colrev_exceptions.InvalidPDFException:
@@ -177,7 +177,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         *,
         filepath: Path,
         record: colrev.record.Record,
-        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
     ) -> None:
         if not self.__is_inside_wsl():
             self.__open_pdf(filepath=filepath)
@@ -216,10 +215,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 self.__remove_page(
                     user_selection=user_selection,
                     filepath=filepath,
-                    pdf_prep_man_operation=pdf_prep_man_operation,
                 )
             elif user_selection == "Yes":
-                pdf_prep_man_operation.set_pdf_man_prepared(record=record)
+                self.pdf_prep_man_operation.set_pdf_man_prepared(record=record)
                 return
             elif user_selection == "No (delete)":
                 record.remove_field(key=Fields.FILE)
@@ -239,7 +237,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     def __man_pdf_prep_item_init(
         self,
         *,
-        pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan,
         records: dict,
         item: dict,
         stat: str,
@@ -283,7 +280,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             self.__man_pdf_prep_item(
                 filepath=filepath,
                 record=record,
-                pdf_prep_man_operation=pdf_prep_man_operation,
             )
 
         else:
@@ -293,13 +289,11 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         return records
 
-    def pdf_prep_man(
-        self, pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, records: dict
-    ) -> dict:
+    def pdf_prep_man(self, records: dict) -> dict:
         """Prepare PDF manually based on a cli"""
 
         self.review_manager.logger.info("Loading data for pdf_prep_man")
-        pdf_prep_man_data = pdf_prep_man_operation.get_data()
+        pdf_prep_man_data = self.pdf_prep_man_operation.get_data()
         records = self.review_manager.dataset.load_records_dict()
 
         for i, item in enumerate(pdf_prep_man_data["items"]):
@@ -309,7 +303,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             try:
                 stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
                 records = self.__man_pdf_prep_item_init(
-                    pdf_prep_man_operation=pdf_prep_man_operation,
                     records=records,
                     item=item,
                     stat=stat,
@@ -319,7 +312,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         self.review_manager.dataset.save_records_dict(records=records)
 
-        if pdf_prep_man_operation.pdfs_prepared_manually():
+        if self.pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":
                 self.review_manager.create_commit(
                     msg="Prepare PDFs manually",

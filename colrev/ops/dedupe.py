@@ -966,7 +966,7 @@ class Dedupe(colrev.operation.Operation):
 
             endpoint = endpoint_dict[dedupe_package_endpoint["endpoint"]]
 
-            endpoint.run_dedupe(self)  # type: ignore
+            endpoint.run_dedupe()  # type: ignore
             if not self.review_manager.high_level_operation:
                 print()
 

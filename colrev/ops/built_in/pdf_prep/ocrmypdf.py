@@ -50,14 +50,13 @@ class OCRMyPDF(JsonSchemaMixin):
     def __apply_ocr(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         record: colrev.record.Record,
     ) -> colrev.record.Record:
-        pdf_path = review_manager.path / Path(record.data[Fields.FILE])
+        pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
         pdf_path.rename(non_ocred_filename)
         orig_path = (
-            pdf_path.parents[0] if pdf_path.is_file() else review_manager.pdf_dir
+            pdf_path.parents[0] if pdf_path.is_file() else self.review_manager.pdf_dir
         )
 
         # options = ""
@@ -87,12 +86,10 @@ class OCRMyPDF(JsonSchemaMixin):
         record.set_text_from_pdf()
         return record
 
-    # pylint: disable=unused-argument
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.Record,
-        pad: int,
+        pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the PDF by applying OCR"""
 
@@ -104,9 +101,6 @@ class OCRMyPDF(JsonSchemaMixin):
             return record.data
 
         self.review_manager.report_logger.info(f"apply_ocr({record.data[Fields.ID]})")
-        record = self.__apply_ocr(
-            review_manager=self.review_manager,
-            record=record,
-        )
+        record = self.__apply_ocr(record=record)
 
         return record.data

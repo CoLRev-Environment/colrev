@@ -57,11 +57,7 @@ class ExcludeComplementaryMaterialsPrep(JsonSchemaMixin):
             colrev.env.utils.load_complementary_material_prefixes()
         )
 
-    def prepare(
-        self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
-        record: colrev.record.PrepRecord,
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the records by excluding complementary materials"""
 
         if (

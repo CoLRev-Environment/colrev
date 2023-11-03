@@ -72,11 +72,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return True
         return False
 
-    def prepare(
-        self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
-        record: colrev.record.PrepRecord,
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
         # Note : other languages are not yet supported

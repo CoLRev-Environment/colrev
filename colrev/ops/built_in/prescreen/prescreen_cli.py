@@ -112,7 +112,6 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
 
     def run_prescreen(
         self,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,
     ) -> dict:
@@ -121,7 +120,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         if not split:
             split = []
 
-        prescreen_data = prescreen_operation.get_data()
+        prescreen_data = self.prescreen_operation.get_data()
         stat_len = len(split) if len(split) > 0 else prescreen_data["nr_tasks"]
         padding = prescreen_data["PAD"]
 

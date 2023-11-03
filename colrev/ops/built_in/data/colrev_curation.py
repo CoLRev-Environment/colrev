@@ -313,7 +313,6 @@ class ColrevCuration(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
@@ -329,7 +328,6 @@ class ColrevCuration(JsonSchemaMixin):
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -340,11 +338,10 @@ class ColrevCuration(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        records = review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         advice = {
             "msg": "TODO (add curation-specific advice...)",
             "detailed_msg": "TODO",

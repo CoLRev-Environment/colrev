@@ -170,15 +170,13 @@ class WebsiteDownload(JsonSchemaMixin):
                 f"Failed to retrieve the Minerva Medica page. Status code: {response.status_code}"
             )
 
-    def get_pdf(
-        self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
-    ) -> colrev.record.Record:
+    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
         """Get PDFs from website (URL)"""
 
         if Fields.URL not in record.data:
             return record
 
-        pdf_filepath = pdf_get_operation.get_target_filepath(record=record)
+        pdf_filepath = self.pdf_get_operation.get_target_filepath(record=record)
 
         try:
             if any(

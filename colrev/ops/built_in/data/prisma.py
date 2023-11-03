@@ -196,7 +196,6 @@ class PRISMA(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
@@ -208,7 +207,6 @@ class PRISMA(JsonSchemaMixin):
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -220,7 +218,6 @@ class PRISMA(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
@@ -228,7 +225,7 @@ class PRISMA(JsonSchemaMixin):
 
         path_str = ",".join(
             [
-                str(x.relative_to(review_manager.path))
+                str(x.relative_to(self.review_manager.path))
                 for x in self.settings.diagram_path
             ]
         )

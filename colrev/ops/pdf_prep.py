@@ -161,7 +161,7 @@ class PDFPrep(colrev.operation.Operation):
                     msg.ljust(50, " ") + "called"  # type: ignore
                 )
 
-                record.data = endpoint.prep_pdf(self, record, pad)  # type: ignore
+                record.data = endpoint.prep_pdf(record, pad)  # type: ignore
             except colrev_exceptions.PDFHashError:
                 record.add_data_provenance_note(key=Fields.FILE, note="pdf-hash-error")
 
@@ -374,7 +374,6 @@ class PDFPrep(colrev.operation.Operation):
             self.review_manager.logger.info(record_dict[Fields.ID])
             try:
                 endpoint.prep_pdf(
-                    pdf_prep_operation=self,
                     record=colrev.record.Record(data=record_dict),
                     pad=0,
                 )

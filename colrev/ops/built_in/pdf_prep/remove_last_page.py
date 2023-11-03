@@ -40,10 +40,10 @@ class PDFLastPage(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = pdf_prep_operation.review_manager
 
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
@@ -52,7 +52,7 @@ class PDFLastPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        local_index = pdf_prep_operation.review_manager.get_local_index()
+        local_index = self.review_manager.get_local_index()
         lp_path = local_index.local_environment_path / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
@@ -119,20 +119,18 @@ class PDFLastPage(JsonSchemaMixin):
         if not last_pages:
             return record.data
         if last_pages:
-            original = pdf_prep_operation.review_manager.path / Path(
-                record.data[Fields.FILE]
-            )
-            file_copy = pdf_prep_operation.review_manager.path / Path(
+            original = self.review_manager.path / Path(record.data[Fields.FILE])
+            file_copy = self.review_manager.path / Path(
                 record.data[Fields.FILE].replace(".pdf", "_wo_lp.pdf")
             )
             shutil.copy(original, file_copy)
 
             record.extract_pages(
                 pages=last_pages,
-                project_path=pdf_prep_operation.review_manager.path,
+                project_path=self.review_manager.path,
                 save_to_path=lp_path,
             )
-            pdf_prep_operation.review_manager.report_logger.info(
+            self.review_manager.report_logger.info(
                 f"removed last page for ({record.data[Fields.ID]})"
             )
         return record.data

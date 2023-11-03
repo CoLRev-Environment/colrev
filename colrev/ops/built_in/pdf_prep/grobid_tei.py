@@ -33,6 +33,7 @@ class GROBIDTEI(JsonSchemaMixin):
         self, *, pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep, settings: dict
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = pdf_prep_operation.review_manager
 
         if not pdf_prep_operation.review_manager.in_ci_environment():
             grobid_service = pdf_prep_operation.review_manager.get_grobid_service()
@@ -45,7 +46,6 @@ class GROBIDTEI(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
@@ -55,10 +55,8 @@ class GROBIDTEI(JsonSchemaMixin):
             return record.data
 
         if not record.get_tei_filename().is_file():
-            pdf_prep_operation.review_manager.logger.debug(
-                f" creating tei: {record.data['ID']}"
-            )
-            _ = pdf_prep_operation.review_manager.get_tei(
+            self.review_manager.logger.debug(f" creating tei: {record.data['ID']}")
+            _ = self.review_manager.get_tei(
                 pdf_path=Path(record.data[Fields.FILE]),
                 tei_path=record.get_tei_filename(),
             )

@@ -394,10 +394,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         print(f"Once completed, run {Colors.ORANGE}colrev prep-man{Colors.END} again.")
 
-    # pylint: disable=unused-argument
-    def prepare_manual(
-        self, prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
-    ) -> dict:
+    def prepare_manual(self, records: dict) -> dict:
         """Prepare records manually by extracting the subset of records to a separate BiBTex file"""
 
         if not self.prep_man_bib_path.is_file():

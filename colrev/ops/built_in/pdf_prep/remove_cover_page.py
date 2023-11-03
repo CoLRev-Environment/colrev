@@ -170,7 +170,6 @@ class PDFCoverPage(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.Record,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
@@ -179,7 +178,7 @@ class PDFCoverPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        local_index = pdf_prep_operation.review_manager.get_local_index()
+        local_index = self.review_manager.get_local_index()
         cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
@@ -187,19 +186,17 @@ class PDFCoverPage(JsonSchemaMixin):
         if not coverpages:
             return record.data
         if coverpages:
-            original = pdf_prep_operation.review_manager.path / Path(
-                record.data[Fields.FILE]
-            )
-            file_copy = pdf_prep_operation.review_manager.path / Path(
+            original = self.review_manager.path / Path(record.data[Fields.FILE])
+            file_copy = self.review_manager.path / Path(
                 record.data[Fields.FILE].replace(".pdf", "_wo_cp.pdf")
             )
             shutil.copy(original, file_copy)
             record.extract_pages(
                 pages=coverpages,
-                project_path=pdf_prep_operation.review_manager.path,
+                project_path=self.review_manager.path,
                 save_to_path=cp_path,
             )
-            pdf_prep_operation.review_manager.report_logger.info(
+            self.review_manager.report_logger.info(
                 f"removed cover page for ({record.data[Fields.ID]})"
             )
         return record.data

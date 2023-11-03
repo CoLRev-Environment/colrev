@@ -99,7 +99,7 @@ class Prescreen(colrev.operation.Operation):
                 prescreen_operation=self, settings={"endpoint": "include_all"}
             )
         )
-        endpoint.run_prescreen(self, records, [])
+        endpoint.run_prescreen(records, [])
         self.__print_stats(selected_record_ids=selected_record_ids)
 
     def include_records(self, *, ids: str) -> None:
@@ -379,7 +379,7 @@ class Prescreen(colrev.operation.Operation):
                 if colrev.record.RecordState.md_processed == r[Fields.STATUS]
                 and not r.get("include_flag", "0") == "1"
             ]
-            endpoint.run_prescreen(self, records, split)  # type: ignore
+            endpoint.run_prescreen(records, split)  # type: ignore
 
             selected_auto_include_ids = self.__auto_include(records=records)
 

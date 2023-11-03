@@ -41,10 +41,11 @@ class PubmedMetadataPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
 
         self.pubmed_source = pubmed_connector.PubMedSearchSource(
             source_operation=prep_operation
@@ -62,9 +63,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Pubmed API"""
         self.pubmed_source.check_availability(source_operation=source_operation)
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on Pubmed metadata"""
 
         if any(
@@ -75,5 +74,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
             # Already linked to a pubmed record
             return record
 
-        self.pubmed_source.get_masterdata(prep_operation=prep_operation, record=record)
+        self.pubmed_source.get_masterdata(
+            prep_operation=self.prep_operation, record=record
+        )
         return record

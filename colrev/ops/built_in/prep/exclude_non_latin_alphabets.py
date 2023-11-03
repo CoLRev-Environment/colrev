@@ -38,19 +38,19 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
 
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the records by excluding records whose metadata is not in Latin alphabet"""
 
-        if prep_operation.polish:
+        if self.prep_operation.polish:
             return record
 
         def mostly_latin_alphabet(str_to_check: str) -> bool:

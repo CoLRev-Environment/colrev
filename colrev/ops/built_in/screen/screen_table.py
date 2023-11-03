@@ -213,10 +213,7 @@ class TableScreen(JsonSchemaMixin):
 
         self.review_manager.dataset.save_records_dict(records=records)
 
-    # pylint: disable=unused-argument
-    def run_screen(
-        self, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
-    ) -> dict:
+    def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on screening tables"""
 
         if input("create screen table [y,n]?") == "y":

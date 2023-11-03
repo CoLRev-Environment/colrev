@@ -205,7 +205,7 @@ class PDFGet(colrev.operation.Operation):
                 continue
 
             endpoint = endpoint_dict[pdf_get_package_endpoint["endpoint"]]
-            endpoint.get_pdf(self, record)  # type: ignore
+            endpoint.get_pdf(record)  # type: ignore
 
             if Fields.FILE in record.data:
                 self.review_manager.report_logger.info(

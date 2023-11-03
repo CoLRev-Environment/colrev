@@ -43,21 +43,21 @@ class DOIMetadataPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by retrieving its metadata from doi.org"""
 
         if Fields.DOI not in record.data:
             return record
         doi_connector.DOIConnector.retrieve_doi_metadata(
-            review_manager=prep_operation.review_manager,
+            review_manager=self.review_manager,
             record=record,
-            timeout=prep_operation.timeout,
+            timeout=self.prep_operation.timeout,
         )
         doi_connector.DOIConnector.get_link_from_doi(
             record=record,
-            review_manager=prep_operation.review_manager,
+            review_manager=self.review_manager,
         )
         return record

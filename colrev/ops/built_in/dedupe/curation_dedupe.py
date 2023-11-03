@@ -560,8 +560,7 @@ class CurationDedupe(JsonSchemaMixin):
             ]
         )
 
-    # pylint: disable=unused-argument
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(self) -> None:
         """Run the curation dedupe procedure"""
 
         records = self.review_manager.dataset.load_records_dict()

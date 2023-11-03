@@ -586,8 +586,7 @@ class ActiveLearningDedupeTraining(JsonSchemaMixin):
             results=manual_dedupe_decision_list,
         )
 
-    # pylint: disable=unused-argument
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(self) -> None:
         """Run the console labeling to train the active learning model"""
 
         # Setting in-memory mode depending on system RAM
@@ -1072,8 +1071,9 @@ class ActiveLearningDedupeAutomated(JsonSchemaMixin):
         )
         return clustered_dupes
 
-    # pylint: disable=unused-argument
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(
+        self,
+    ) -> None:
         """Cluster potential duplicates, merge, and export validation tables"""
 
         if not self.settings_file.is_file():

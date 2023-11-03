@@ -181,7 +181,7 @@ class PrepPackageEndpointInterface(
     )
 
     # pylint: disable=no-self-argument
-    def prepare(prep_operation: colrev.ops.prep.Prep, prep_record: dict) -> dict:  # type: ignore
+    def prepare(prep_record: dict) -> dict:  # type: ignore
         """Run the prep operation"""
 
 
@@ -194,9 +194,7 @@ class PrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def prepare_manual(  # type: ignore
-        prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
-    ) -> dict:
+    def prepare_manual(records: dict) -> dict:  # type: ignore
         """Run the prep-man operation"""
 
 
@@ -209,7 +207,8 @@ class DedupePackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_dedupe(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:  # type: ignore
+    # pylint: disable=no-method-argument
+    def run_dedupe() -> None:  # type: ignore
         """Run the dedupe operation"""
 
 
@@ -222,9 +221,7 @@ class PrescreenPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_prescreen(  # type: ignore
-        prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict, split: list
-    ) -> dict:
+    def run_prescreen(records: dict, split: list) -> dict:  # type: ignore
         """Run the prescreen operation"""
 
 
@@ -237,7 +234,7 @@ class PDFGetPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def get_pdf(pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: dict) -> dict:  # type: ignore
+    def get_pdf(record: dict) -> dict:  # type: ignore
         """Run the pdf-get operation"""
         return record  # pragma: no cover
 
@@ -251,9 +248,7 @@ class PDFGetManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def pdf_get_man(  # type: ignore
-        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
-    ) -> dict:
+    def pdf_get_man(records: dict) -> dict:
         """Run the pdf-get-man operation"""
         return records  # pragma: no cover
 
@@ -269,7 +264,6 @@ class PDFPrepPackageEndpointInterface(
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(  # type: ignore
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.PrepRecord,
         pad: int,
     ) -> dict:
@@ -286,9 +280,7 @@ class PDFPrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def pdf_prep_man(  # type: ignore
-        pdf_prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
-    ) -> dict:
+    def pdf_prep_man(records: dict) -> dict:
         """Run the prep-man operation"""
         return records  # pragma: no cover
 
@@ -302,9 +294,7 @@ class ScreenPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_screen(  # type: ignore
-        screen_operation: colrev.ops.screen.Screen, records: dict, split: list
-    ) -> dict:
+    def run_screen(records: dict, split: list) -> dict:  # type: ignore
         """Run the screen operation"""
 
 
@@ -318,7 +308,6 @@ class DataPackageEndpointInterface(
     # pylint: disable=no-self-argument
 
     def update_data(  # type: ignore
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
@@ -326,7 +315,6 @@ class DataPackageEndpointInterface(
         """Run the data operation (data extraction, analysis, synthesis)"""
 
     def update_record_status_matrix(  # type: ignore
-        data_operation: colrev.ops.data.Data,
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -334,9 +322,8 @@ class DataPackageEndpointInterface(
         i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier
         """
 
-    def get_advice(  # type: ignore
-        review_manager: colrev.review_manager.ReviewManager,
-    ) -> dict:
+    # pylint: disable=no-method-argument
+    def get_advice() -> dict:  # type: ignore
         """Get advice on how to operate the data package endpoint"""
 
 

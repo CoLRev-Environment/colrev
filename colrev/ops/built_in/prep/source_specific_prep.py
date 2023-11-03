@@ -40,14 +40,13 @@ class SourceSpecificPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = prep_operation.review_manager
 
         self.search_sources = colrev.ops.search_sources.SearchSources(
             review_manager=prep_operation.review_manager
         )
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by applying source-specific fixes"""
 
         # Note : we take the first origin (ie., the source-specific prep should
@@ -56,7 +55,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
 
         sources = [
             s
-            for s in prep_operation.review_manager.settings.sources
+            for s in self.review_manager.settings.sources
             if s.filename == Path("data/search") / Path(origin_source)
         ]
 

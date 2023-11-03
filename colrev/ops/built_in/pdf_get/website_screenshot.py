@@ -44,29 +44,10 @@ class WebsiteScreenshot(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.chrome_browserless_image = "browserless/chrome:latest"
         self.review_manager = pdf_get_operation.review_manager
+        self.pdf_get_operation = pdf_get_operation
         self.review_manager.environment_manager.build_docker_image(
             imagename=self.chrome_browserless_image
         )
-
-    def get_pdf(
-        self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
-    ) -> colrev.record.Record:
-        """Get a PDF of the website (screenshot)"""
-
-        if record.data[Fields.ENTRYTYPE] != "online":
-            return record
-
-        self.__start_screenshot_service()
-
-        pdf_filepath = pdf_get_operation.review_manager.PDF_DIR_RELATIVE / Path(
-            f"{record.data['ID']}.pdf"
-        )
-        record = self.__add_screenshot(record=record, pdf_filepath=pdf_filepath)
-
-        if Fields.FILE in record.data:
-            pdf_get_operation.import_pdf(record=record)
-
-        return record
 
     def __start_screenshot_service(self) -> None:
         """Start the screenshot service"""
@@ -167,5 +148,23 @@ class WebsiteScreenshot(JsonSchemaMixin):
                 "URL screenshot retrieval error "
                 f"{ret.status_code}/{record.data['url']}"
             )
+
+        return record
+
+    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+        """Get a PDF of the website (screenshot)"""
+
+        if record.data[Fields.ENTRYTYPE] != "online":
+            return record
+
+        self.__start_screenshot_service()
+
+        pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+            f"{record.data['ID']}.pdf"
+        )
+        record = self.__add_screenshot(record=record, pdf_filepath=pdf_filepath)
+
+        if Fields.FILE in record.data:
+            self.pdf_get_operation.import_pdf(record=record)
 
         return record

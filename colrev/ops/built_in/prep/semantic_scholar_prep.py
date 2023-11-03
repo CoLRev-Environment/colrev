@@ -44,6 +44,8 @@ class SemanticScholarPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
         _, email = prep_operation.review_manager.get_committer()
         self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
         self.session = prep_operation.review_manager.get_cached_session()
@@ -94,7 +96,6 @@ class SemanticScholarPrep(JsonSchemaMixin):
     def retrieve_record_from_semantic_scholar(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,
         url: str,
         record_in: colrev.record.PrepRecord,
     ) -> colrev.record.PrepRecord:
@@ -102,7 +103,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
         # prep_operation.review_manager.logger.debug(url)
         ret = self.session.request(
-            "GET", url, headers=self.headers, timeout=prep_operation.timeout
+            "GET", url, headers=self.headers, timeout=self.prep_operation.timeout
         )
         ret.raise_for_status()
 
@@ -120,7 +121,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
             "GET",
             record_retrieval_url,
             headers=self.headers,
-            timeout=prep_operation.timeout,
+            timeout=self.prep_operation.timeout,
         )
         ret_ent.raise_for_status()
         item = json.loads(ret_ent.text)
@@ -130,13 +131,11 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
         return record
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on metadata from SemanticScholar"""
 
         same_record_type_required = (
-            prep_operation.review_manager.settings.is_curated_masterdata_repo()
+            self.review_manager.settings.is_curated_masterdata_repo()
         )
         try:
             search_api_url = (
@@ -145,7 +144,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
             url = search_api_url + record.data.get(Fields.TITLE, "").replace(" ", "+")
 
             retrieved_record = self.retrieve_record_from_semantic_scholar(
-                prep_operation=prep_operation, url=url, record_in=record
+                url=url, record_in=record
             )
             if Fields.SEMANTIC_SCHOLAR_ID not in retrieved_record.data:
                 return record
@@ -162,7 +161,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=same_record_type_required,
             )
-            if similarity > prep_operation.retrieval_similarity:
+            if similarity > self.prep_operation.retrieval_similarity:
                 # prep_operation.review_manager.logger.debug("Found matching record")
                 # prep_operation.review_manager.logger.debug(
                 #     f"scholar similarity: {similarity} "

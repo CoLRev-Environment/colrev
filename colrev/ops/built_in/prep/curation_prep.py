@@ -138,7 +138,6 @@ class CurationPrep(JsonSchemaMixin):
 
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare records in a CoLRev curation"""

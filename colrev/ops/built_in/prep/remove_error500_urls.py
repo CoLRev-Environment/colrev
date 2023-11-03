@@ -35,24 +35,24 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by removing URLs with 500 errors"""
 
-        session = prep_operation.review_manager.get_cached_session()
+        session = self.review_manager.get_cached_session()
 
         try:
             if Fields.URL in record.data:
                 ret = session.request(
                     "GET",
                     record.data[Fields.URL],
-                    headers=prep_operation.requests_headers,
+                    headers=self.prep_operation.requests_headers,
                     timeout=60,
                 )
                 if ret.status_code >= 500:
@@ -64,8 +64,8 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
                 ret = session.request(
                     "GET",
                     record.data[Fields.FULLTEXT],
-                    headers=prep_operation.requests_headers,
-                    timeout=prep_operation.timeout,
+                    headers=self.prep_operation.requests_headers,
+                    timeout=self.prep_operation.timeout,
                 )
                 if ret.status_code >= 500:
                     record.remove_field(key=Fields.FULLTEXT)
