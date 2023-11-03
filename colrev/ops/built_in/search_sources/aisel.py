@@ -2,7 +2,6 @@
 """SearchSource: AIS electronic Library"""
 from __future__ import annotations
 
-import json
 import re
 import urllib.parse
 from dataclasses import dataclass
@@ -243,37 +242,18 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         response = requests.get(query_string, timeout=300)
         response.raise_for_status()
 
-        zotero_translation_service = (
-            self.review_manager.get_zotero_translation_service()
+        # Note: the following writes the enl to the feed file (bib).
+        # This file is replaced by ais_feed.save_feed_file()
+        self.search_source.filename.write_text(response.content.decode("utf-8"))
+        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+            load_operation=self.review_manager.get_load_operation(),
+            source=self.search_source,
+            unique_id_field="ID",
         )
-        zotero_translation_service.start()
-
-        headers = {"Content-type": "text/plain"}
-        ret = requests.post(
-            "http://127.0.0.1:1969/import",
-            headers=headers,
-            data=response.content,
-            timeout=30,
-        )
-        headers = {"Content-type": "application/json"}
-
-        try:
-            json_content = json.loads(ret.content)
-            export = requests.post(
-                "http://127.0.0.1:1969/export?format=bibtex",
-                headers=headers,
-                json=json_content,
-                timeout=30,
-            )
-
-        except Exception as exc:
-            raise colrev_exceptions.ImportException(
-                f"Zotero translators failed ({exc})"
-            )
-
-        records = self.review_manager.dataset.load_records_dict(
-            load_str=export.content.decode("utf-8")
-        )
+        entries = enl_loader.load_enl_entries()
+        for entry in entries.values():
+            entry["ID"] = entry[Fields.URL].replace("https://aisel.aisnet.org/", "")
+        records = enl_loader.convert_to_records(entries=entries)
 
         return list(records.values())
 
