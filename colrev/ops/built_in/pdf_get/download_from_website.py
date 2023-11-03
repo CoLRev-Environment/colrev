@@ -4,14 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-import requests
-from bs4 import BeautifulSoup
-import re
 from urllib.parse import urljoin
-
 
 import requests
 import zope.interface
+from bs4 import BeautifulSoup
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
