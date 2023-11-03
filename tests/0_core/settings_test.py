@@ -102,7 +102,7 @@ def test_settings_load() -> None:
                 {"endpoint": "colrev.ocrmypdf"},
                 {"endpoint": "colrev.remove_coverpage"},
                 {"endpoint": "colrev.remove_last_page"},
-                {"endpoint": "colrev.create_tei"},
+                {"endpoint": "colrev.grobid_tei"},
             ],
             "pdf_prep_man_package_endpoints": [
                 {"endpoint": "colrev.colrev_cli_pdf_prep_man"}
