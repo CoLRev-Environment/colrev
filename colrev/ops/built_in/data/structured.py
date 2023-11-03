@@ -139,8 +139,6 @@ Example 2:
 
         # Note : missing IDs are added through update_data
 
-        return
-
     def __set_fields(self) -> None:
         self.review_manager.logger.info("Add fields for data extraction")
         try:

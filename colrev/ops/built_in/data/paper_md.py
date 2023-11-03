@@ -645,9 +645,7 @@ class PaperMarkdown(JsonSchemaMixin):
             records=records, save_path=self.sample_references
         )
 
-    def __call_docker_build_process(
-        self, *, data_operation: colrev.ops.data.Data, script: str
-    ) -> None:
+    def __call_docker_build_process(self, *, script: str) -> None:
         try:
             uid = os.stat(self.review_manager.dataset.records_file).st_uid
             gid = os.stat(self.review_manager.dataset.records_file).st_gid
@@ -724,9 +722,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         Timer(
             1,
-            lambda: self.__call_docker_build_process(
-                data_operation=data_operation, script=script
-            ),
+            lambda: self.__call_docker_build_process(script=script),
         ).start()
 
     def update_data(

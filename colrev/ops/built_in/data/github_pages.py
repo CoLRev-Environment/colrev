@@ -62,6 +62,7 @@ class GithubPages(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = data_operation.review_manager
+        self.git_repo = self.review_manager.dataset.get_repo()
 
     # pylint: disable=unused-argument
     @classmethod
@@ -76,13 +77,11 @@ class GithubPages(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __setup_github_pages_branch(
-        self, *, data_operation: colrev.ops.data.Data, git_repo: git.Repo
-    ) -> None:
+    def __setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
         self.review_manager.logger.info("Setup gh-pages branch")
-        git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
-        git_repo.git.rm("-rf", Path("."))
+        self.git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
+        self.git_repo.git.rm("-rf", Path("."))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/README.md"),
@@ -126,8 +125,6 @@ class GithubPages(JsonSchemaMixin):
     def __update_data(
         self,
         *,
-        data_operation: colrev.ops.data.Data,
-        git_repo: git.Repo,
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
@@ -145,7 +142,7 @@ class GithubPages(JsonSchemaMixin):
             ]
         }
 
-        git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
+        self.git_repo.git.checkout(self.GH_PAGES_BRANCH_NAME)
         if not Path("pre-commit-config.yaml").is_file():
             colrev.env.utils.retrieve_package_file(
                 template_file=Path("template/github_pages/pre-commit-config.yaml"),
@@ -166,16 +163,14 @@ class GithubPages(JsonSchemaMixin):
     def __push_branch(
         self,
         *,
-        data_operation: colrev.ops.data.Data,
-        git_repo: git.Repo,
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
             self.review_manager.logger.info("Push to github pages")
-        if "origin" in git_repo.remotes:
-            if "origin/gh-pages" in [r.name for r in git_repo.remotes.origin.refs]:
+        if "origin" in self.git_repo.remotes:
+            if "origin/gh-pages" in [r.name for r in self.git_repo.remotes.origin.refs]:
                 try:
-                    git_repo.remotes.origin.push(
+                    self.git_repo.remotes.origin.push(
                         refspec=f"{self.GH_PAGES_BRANCH_NAME}:{self.GH_PAGES_BRANCH_NAME}"
                     )
                 except git.exc.GitCommandError:  # pylint: disable=no-member
@@ -185,7 +180,7 @@ class GithubPages(JsonSchemaMixin):
                         f"git pull --rebase && git push{Colors.END}"
                     )
             else:
-                git_repo.git.push(
+                self.git_repo.git.push(
                     "--set-upstream",
                     "origin",
                     self.GH_PAGES_BRANCH_NAME,
@@ -193,7 +188,7 @@ class GithubPages(JsonSchemaMixin):
                 )
 
             username, project = (
-                git_repo.remotes.origin.url.replace("https://github.com/", "")
+                self.git_repo.remotes.origin.url.replace("https://github.com/", "")
                 .replace(".git", "")
                 .split("/")
             )
@@ -205,9 +200,9 @@ class GithubPages(JsonSchemaMixin):
             if not silent_mode:
                 self.review_manager.logger.info("No remotes specified")
 
-    def __check_gh_pages_setup(self, *, git_repo: git.Repo) -> None:
+    def __check_gh_pages_setup(self) -> None:
         username, project = (
-            git_repo.remotes.origin.url.replace("https://github.com/", "")
+            self.git_repo.remotes.origin.url.replace("https://github.com/", "")
             .replace(".git", "")
             .split("/")
         )
@@ -246,43 +241,38 @@ class GithubPages(JsonSchemaMixin):
             )
             return
 
-        git_repo = self.review_manager.dataset.get_repo()
-        active_branch = git_repo.active_branch
+        active_branch = self.git_repo.active_branch
 
         # check if there is an "origin" remote
 
-        if "origin" in git_repo.remotes:
+        if "origin" in self.git_repo.remotes:
             # check if remote.origin has a gh-pages branch
-            git_repo.remotes.origin.fetch()
+            self.git_repo.remotes.origin.fetch()
             if f"origin/{self.GH_PAGES_BRANCH_NAME}" in [
-                r.name for r in git_repo.remotes.origin.refs
+                r.name for r in self.git_repo.remotes.origin.refs
             ]:
                 try:
                     if "origin/gh-pages" not in [
-                        r.name for r in git_repo.remotes.origin.refs
+                        r.name for r in self.git_repo.remotes.origin.refs
                     ]:
-                        git_repo.git.push(
+                        self.git_repo.git.push(
                             "--set-upstream",
                             "origin",
                             self.GH_PAGES_BRANCH_NAME,
                             "--no-verify",
                         )
                     else:
-                        git_repo.remotes.origin.pull(ff_only=True)
+                        self.git_repo.remotes.origin.pull(ff_only=True)
 
                     # update
-                    git_repo.git.checkout(active_branch)
+                    self.git_repo.git.checkout(active_branch)
                     self.__update_data(
-                        data_operation=data_operation,
-                        git_repo=git_repo,
                         silent_mode=silent_mode,
                     )
 
                     # Push gh-pages branch to remote origin
                     if self.settings.auto_push:
                         self.__push_branch(
-                            data_operation=data_operation,
-                            git_repo=git_repo,
                             silent_mode=silent_mode,
                         )
                 except git.exc.GitCommandError as exc:  # pylint: disable=no-member
@@ -291,48 +281,40 @@ class GithubPages(JsonSchemaMixin):
                     return
             else:
                 # create branch
-                if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
-                    self.__setup_github_pages_branch(
-                        data_operation=data_operation, git_repo=git_repo
-                    )
+                if self.GH_PAGES_BRANCH_NAME not in [
+                    h.name for h in self.git_repo.heads
+                ]:
+                    self.__setup_github_pages_branch()
 
                 # update
-                git_repo.git.checkout(active_branch)
+                self.git_repo.git.checkout(active_branch)
                 self.__update_data(
-                    data_operation=data_operation,
-                    git_repo=git_repo,
                     silent_mode=silent_mode,
                 )
 
                 # Push gh-pages branch to remote origin
                 if self.settings.auto_push:
                     self.__push_branch(
-                        data_operation=data_operation,
-                        git_repo=git_repo,
                         silent_mode=silent_mode,
                     )
-            git_repo.git.checkout(active_branch)
-            self.__check_gh_pages_setup(git_repo=git_repo)
+            self.git_repo.git.checkout(active_branch)
+            self.__check_gh_pages_setup()
         else:
             self.review_manager.logger.warning(
                 "Cannot push github pages because there is no remote origin. "
                 "gh-pages branch will only be created locally."
             )
             # create branch
-            if self.GH_PAGES_BRANCH_NAME not in [h.name for h in git_repo.heads]:
-                self.__setup_github_pages_branch(
-                    data_operation=data_operation, git_repo=git_repo
-                )
+            if self.GH_PAGES_BRANCH_NAME not in [h.name for h in self.git_repo.heads]:
+                self.__setup_github_pages_branch()
 
             # update
-            git_repo.git.checkout(active_branch)
+            self.git_repo.git.checkout(active_branch)
             self.__update_data(
-                data_operation=data_operation,
-                git_repo=git_repo,
                 silent_mode=silent_mode,
             )
 
-        git_repo.git.checkout(active_branch)
+        self.git_repo.git.checkout(active_branch)
 
     def update_record_status_matrix(
         self,
