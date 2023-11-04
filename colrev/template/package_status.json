@@ -281,11 +281,7 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.active_learning_training",
-            "status": "EXPERIMENTAL"
-        },
-        {
-            "package_endpoint_identifier": "colrev.active_learning_automated",
+            "package_endpoint_identifier": "colrev.dedupe",
             "status": "EXPERIMENTAL"
         },
         {

@@ -71,8 +71,7 @@ def test_settings_load() -> None:
         "dedupe": {
             "same_source_merges": colrev.settings.SameSourceMergePolicy.prevent,
             "dedupe_package_endpoints": [
-                {"endpoint": "colrev.active_learning_training"},
-                {"endpoint": "colrev.active_learning_automated"},
+                {"endpoint": "colrev.dedupe"},
             ],
         },
         "prescreen": {

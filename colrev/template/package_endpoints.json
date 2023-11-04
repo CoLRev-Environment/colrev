@@ -640,22 +640,6 @@
     ],
     "dedupe": [
         {
-            "package_endpoint_identifier": "colrev.active_learning_automated",
-            "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Applies trained (active learning) model (:doc:`instructions </resources/extensions_index/colrev.active_learning_automated>`)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.active_learning_training",
-            "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Active learning: training phase (minimum sample size of 50 required) (:doc:`instructions </resources/extensions_index/colrev.active_learning_training>`)",
-            "ci_supported": false
-        },
-        {
             "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
             "status": "|EXPERIMENTAL|",
@@ -670,6 +654,14 @@
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Deduplication of remaining records in a curated metadata repository (:doc:`instructions </resources/extensions_index/colrev.curation_missing_dedupe>`)",
             "ci_supported": false
+        },
+        {
+            "package_endpoint_identifier": "colrev.dedupe",
+            "endpoint": "colrev.ops.built_in.dedupe.dedupe.Dedupe",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Default deduplication (:doc:`instructions </resources/extensions_index/colrev.dedupe>`)",
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.simple_dedupe",

@@ -106,10 +106,9 @@ dedupe
 .. toctree::
    :maxdepth: 1
 
-   extensions_index/colrev.active_learning_automated.rst
-   extensions_index/colrev.active_learning_training.rst
    extensions_index/colrev.curation_full_outlet_dedupe.rst
    extensions_index/colrev.curation_missing_dedupe.rst
+   extensions_index/colrev.dedupe.rst
    extensions_index/colrev.simple_dedupe.rst
 
 prescreen

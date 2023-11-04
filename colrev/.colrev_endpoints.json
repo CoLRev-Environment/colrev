@@ -84,11 +84,8 @@
             {"package_endpoint_identifier": "colrev.simple_dedupe",
              "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe"
             },
-            {"package_endpoint_identifier": "colrev.active_learning_training",
-             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining"
-            },
-            {"package_endpoint_identifier": "colrev.active_learning_automated",
-             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated"
+            {"package_endpoint_identifier": "colrev.dedupe",
+             "endpoint": "colrev.ops.built_in.dedupe.dedupe.Dedupe"
             },
             {"package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
              "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe"
