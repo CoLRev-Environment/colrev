@@ -50,7 +50,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
-        self.operation = source_operation
+        self.source_operation = source_operation
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -82,10 +82,13 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         """Run a search of EbscoHost"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            self.operation.run_db_search()  # type: ignore
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
+            return
 
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def get_masterdata(
         self,

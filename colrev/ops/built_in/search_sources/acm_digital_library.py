@@ -92,6 +92,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
                 return
 
             raise NotImplementedError
+        raise NotImplementedError
 
     def get_masterdata(
         self,

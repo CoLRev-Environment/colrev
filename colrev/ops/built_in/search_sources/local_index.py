@@ -188,10 +188,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 prev_record_dict_version = local_index_feed.feed_records[
                     retrieved_record_dict[Fields.ID]
                 ]
-
             local_index_feed.add_record(
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
+            del retrieved_record_dict["curation_ID"]
 
             local_index_feed.update_existing_record(
                 records=records,
@@ -228,6 +228,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             added = local_index_feed.add_record(
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
+            del retrieved_record_dict["curation_ID"]
             if added:
                 self.review_manager.logger.info(
                     " retrieve " + retrieved_record_dict[Fields.ID]

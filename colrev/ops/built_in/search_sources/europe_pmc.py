@@ -117,7 +117,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 )
 
             self.europe_pmc_lock = Lock()
-        self.operation = source_operation
+        self.source_operation = source_operation
 
     # @classmethod
     # def check_status(cls, *, prep_operation: colrev.ops.prep.Prep) -> None:
@@ -400,7 +400,10 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             )
 
         elif self.search_source.search_type == colrev.settings.SearchType.DB:
-            self.operation.run_db_search()  # type: ignore
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
 
         # if self.search_source.search_type == colrev.settings.SearchSource.MD:
         # self.__run_md_search_update(

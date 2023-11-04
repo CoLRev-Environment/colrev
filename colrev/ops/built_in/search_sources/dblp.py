@@ -397,7 +397,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             ):
                 if (
                     retrieved_record.data[Fields.DBLP_KEY]
-                    != feed_record.data[Fields.DBLP_KEY]
+                    != feed_record.data["dblp_key"]
                 ):
                     continue
                 if retrieved_record.data.get("type", "") == "Editorship":
