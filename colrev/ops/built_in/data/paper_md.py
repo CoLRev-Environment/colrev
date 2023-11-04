@@ -675,7 +675,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
-    def build_paper(self, *, data_operation: colrev.ops.data.Data) -> None:
+    def build_paper(self) -> None:
         """Build the paper (based on pandoc)"""
 
         if not self.review_manager.dataset.records_file.is_file():
@@ -727,7 +727,6 @@ class PaperMarkdown(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
@@ -750,7 +749,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 )
 
         if not self.review_manager.in_ci_environment():
-            self.build_paper(data_operation=data_operation)
+            self.build_paper()
 
     def __get_to_synthesize_in_paper(
         self, *, paper: Path, records_for_synthesis: list
