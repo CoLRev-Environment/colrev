@@ -168,7 +168,7 @@ The following field sets are distinguished (**work-in-progress**):
 Fields
 ---------------------------------------------------------------------
 
-Standardized field names and explanations. 
+Standardized field names and explanations.
 Value restrictions are implemented in the QualityModel.
 
 Fields should be in unicode (i.e., not contain latex or html characters or tags).
@@ -224,7 +224,7 @@ Five different entry examples for dummy values used in the tests.
 .. _entrytype-article-1:
 
 .. code-block::
-   
+
    @article{ID274107,
       author                        = {Marilena, Ferdinand and Ethelinda Aignéis},
       title                         = {Article title},
@@ -241,22 +241,22 @@ Five different entry examples for dummy values used in the tests.
       publisher                     = {Publisher name},
       address                       = {Publisher address},
    }
-   
-   
+
+
    @conference{ID461901,
       author                        = {Derry, Wassa and Wemba, Sandip},
       title                         = {Conference title},
       booktitle                     = {Conference book title},
       year                          = {2020},
    }
-   
+
    @inproceedings{ID110380,
       author                        = {Raanan, Cathrine and Philomena, Miigwan},
       title                         = {Inproceedings title},
       booktitle                     = {Inproceedings book title},
       year                          = {2020},
    }
-   
+
    @phdthesis{ID833501,
       author                        = {Davie, Ulyana},
       title                         = {PhD thesis title},
