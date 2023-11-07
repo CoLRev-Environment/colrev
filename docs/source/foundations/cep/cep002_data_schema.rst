@@ -59,6 +59,7 @@ ENTRYTYPE : `article <https://bibtex.eu/types/article/>`__
 -  author
 -  title
 -  journal
+-  year
 -  volume (if exists)
 -  number (if exists)
 
@@ -113,8 +114,6 @@ ENTRYTYPE: `manual <https://bibtex.eu/types/manual/>`__
 
 ENTRYTYPE: `mastersthesis <https://bibtex.eu/types/mastersthesis/>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-`it is master"s"thesis, not masterthesis <https://tex.stackexchange.com/questions/415204/masterthesis-doesnt-work-for-bibtex-citation>`__
 
 -  author
 -  title
@@ -206,18 +205,27 @@ Standardized field names, explanations, and field value restrictions
 .. Identifying metadata (record.py):
 .. TODO : create table
 
--  title: string,
--  author: TODO: Format: “LastName, FirstName and LastName, FirstName”,
-   how to handle “vom Brocke”?
--  year: integer, :raw-latex:`\d{4}`
--  journal: string,
--  booktitle: string
--  chapter: integer
--  publisher: string
--  volume: integer
--  number: integer
--  pages: integer, I II III V X
--  editor: string
+Mandatory fields across all entrytypes:
+
+-  title
+-  author
+-  year
+
+Mandatory fields depending on entrytype (examples):
+
+-  journal
+-  booktitle
+-  chapter
+-  publisher
+-  volume
+-  number
+-  pages
+-  editor
+
+Non-Mandatory fields:
+
+- ....
+
 
 .. verweisen auf entsprechende quality checks, fuer autor, namen sind schon
 checks implementiert fuer jahr ” ” fuer seitenzahl ” ”
@@ -268,7 +276,7 @@ Colrev data schema (main records) - SearchSources (raw search results/feed)
    pdfs_dir
    psycinfo
    pubmed
-   scopus
+   scopus@book{
    springer_link
    synergy_datasets
    taylor_and_francis
@@ -342,20 +350,68 @@ The standardized defect codes are in the `QualityModel <https://colrev.readthedo
 
 .. _test data:
 
-Test data
+Test data values
 ------------------------------
-
-Used for tests fakewerte standardisieren fakedaten ueber alle search
-sources hinweg einen standard journal article man muss sich nicht mehr
-in jeden Testdatensatz eindenken
+Five different entry examples for dummy values used in the tests.
 
 .. _entrytype-article-1:
 
 ENTRYTYPE: article
 ------------------
 
-@article{ID1, author = {Smith, Tom and Walter, Tim}, title = {An
-empirical study}, journal = {Nature}, }
+@article{ID274107,
+   author                        = {Marilena, Ferdinand and Ethelinda Aignéis},
+   title                         = {Article title},
+   journal                       = {Journal name},
+   year                          = {2020},
+   volume                        = {23},
+   number                        = {78},
+}
+
+
+ENTRYTYPE: book
+---------------
+
+@book{ID438965,
+   author                        = {Romilius, Milivoj and Alphaeus, Cheyanne},
+   year                          = {2020},
+   title                         = {Book title},
+   publisher                     = {Publisher name},
+   address                       = {Publisher address},
+}
+
+
+ENTRYTYPE: conference
+---------------------
+
+@conference{ID461901,
+   author                        = {Derry, Wassa and Wemba, Sandip},
+   title                         = {Conference title},
+   booktitle                     = {Conference book title},
+   year                          = {2020},
+}
+
+
+ENTRYTYPE: inproceedings
+------------------------
+
+@inproceedings{ID110380,
+   author                        = {Raanan, Cathrine and Philomena, Miigwan},
+   title                         = {Inproceedings title},
+   booktitle                     = {Inproceedings book title},
+   year                          = {2020},
+}
+
+
+ENTRYTYPE: phdthesis
+--------------------
+
+@phdthesis{ID833501,
+   author                        = {Davie, Ulyana},
+   title                         = {PhD thesis title},
+   school                        = {PhD school name},
+   year                          = {2020},
+}
 
 
 Links informing the standard
@@ -373,3 +429,4 @@ Links informing the standard
    different fields and descriptions
 -  `bibTeX Definition in Web Ontology Language (OWL) Version
    0.2 <https://zeitkunst.org/bibtex/0.2/>`__
+-  `it is master"s"thesis, not masterthesis <https://tex.stackexchange.com/questions/415204/masterthesis-doesnt-work-for-bibtex-citation>`__
