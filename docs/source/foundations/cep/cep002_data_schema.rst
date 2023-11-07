@@ -8,8 +8,6 @@ CEP002 - Data schema
 +----------------+------------------------------+
 | **Created**    | 2023-10-02                   |
 +----------------+------------------------------+
-| **Discussion** | TODO : link-to-issue         |
-+----------------+------------------------------+
 
 Table of contents
 ------------------------------
@@ -44,13 +42,9 @@ ENTRYTYPEs
 
 Each record has an ENTRYTYPE with respective required fields. Required and inconsistent fields are evaluated by the QualityModel (the `missing-field <https://colrev.readthedocs.io/en/latest/resources/quality_model.html#missing-field>_ and `inconsistent-with-entrytype <https://colrev.readthedocs.io/en/latest/resources/quality_model.html#inconsistent-with-entrytype>`_ checkers).
 
-.. raw:: html
+Note that fields (like title) can have a different meaning depending on the ENTRYTYPEs.
 
-   <!--
-   - fields (like title) can have a different meaning depending on the entrytype?!
-   -->
-
-In the following listing are 14 available bibtex entry types with their respective required fields (data elements) (source: `bibtex.eu <https://bibtex.eu/types/>`__).
+In the following listing are available bibtex ENTRYTYPEs with their respective required fields (data elements) (source: `bibtex.eu <https://bibtex.eu/types/>`__).
 Additional information and optional fields can be accessed with the link included in the name of each entry type.
 
 ENTRYTYPE : `article <https://bibtex.eu/types/article/>`__
@@ -163,56 +157,27 @@ ENTRYTYPE: `unpublished <https://bibtex.eu/types/unpublished/>`__
 Field sets
 ---------------------------------------------------------------------
 
-The following field sets are distinguished:
+The following field sets are distinguished (**work-in-progress**):
 
 - IDENTIFYING_FIELD_KEYS
 - colrev_data_provenance/colrev_masterdata_provenance
+
 
 .. _fields:
 
 Fields
 ---------------------------------------------------------------------
 
-Standardized field names, explanations, and field value restrictions
+Standardized field names and explanations. 
+Value restrictions are implemented in the QualityModel.
 
-.. <!--
+Fields should be in unicode (i.e., not contain latex or html characters or tags).
 
-   standardisierte Feldbezeichnungen, Erklärungen, Wertebeschränkung
+Fields not listed in the ENTRYTYPEs section are optional.
 
-   -->
-
-   <!--
-   TBD:
-   - latex/html characters?
-
-   NOTE from record.py
-       identifying_field_keys = [
-           "title",
-           "author",
-           "year",
-           "journal",
-           "booktitle",
-           "chapter",
-           "publisher",
-           "volume",
-           "number",
-           "pages",
-           "editor",
-       ]
-   -->
-
-
-.. Identifying metadata (record.py):
-.. TODO : create table
-
-Mandatory fields across all entrytypes:
-
+-  author (Last-name, FirstName - separated by " and "; institutional authors are escaped with double braces; particles are escaped with last names using braces)
 -  title
--  author
 -  year
-
-Mandatory fields depending on entrytype (examples):
-
 -  journal
 -  booktitle
 -  chapter
@@ -220,124 +185,26 @@ Mandatory fields depending on entrytype (examples):
 -  volume
 -  number
 -  pages
--  editor
-
-Non-Mandatory fields:
-
-- ....
-
-
-.. verweisen auf entsprechende quality checks, fuer autor, namen sind schon
-checks implementiert fuer jahr ” ” fuer seitenzahl ” ”
-
-   <!-- what about special characters like [!?,;/-_...] in certain fields? -->
-
-   <!--PART 2.2 extracted into extra file, regex to be implemented into code-->
-
-
-Identifiers:…
-
-   <!--PART 2.3 -->
-
-Complementary/optional fields:
-
--  language: ISO 639-1 standard language codes
--  abstract: anything goes
--  keywords: integers, strings, “,”
--  url:
--  eprint:
--  note: anything goes, but some sources use them for specific
-   information e.g. scopus.bib “cited by”
+-  editor (format: see author)
+-  language (ISO 639-1 standard language codes)
+-  abstract
+-  keywords (separated by ",")
+-  url
+-  fulltext
+-  note: containing custom notes entered by users (note fields from SearchSources do not replace this field)
 -  cited_by: current number of citations (volatile)
+
+Identifiers: **work-in-progress**
 
 .. _schema mapping:
 
 Schema Mapping
 ---------------------------------------------------------------------
 
-Colrev data schema (main records) - SearchSources (raw search results/feed)
+Upon load, the SearchSource fields are mapped to the standardized fields.
+Fields which cannot be mapped receive a SearchSource-specific prefix (e.g., "colrev.dblp.dblp_key").
 
-.. Feldbezeichnung ohne prefix erhalten, autor, titel, sind standardisiert,
-.. dlbp key ist nicht standardisiert, wird umgewandelt @Gerit
-..    <!--PART 3
-   SearchSources durchschauen aus colrev/ops/built_in/searchsorces -> .py Dateien, erste Übersicht/Aufstellung
-   ebsco_host
-   eric
-   europe_pmc
-   google_scholar
-   ieee
-   ieee_api
-   jstor
-   local_index
-   open_alex
-   open_citations_forward_search
-   open_library
-   pdf_backward_search
-   pdfs_dir
-   psycinfo
-   pubmed
-   scopus@book{
-   springer_link
-   synergy_datasets
-   taylor_and_francis
-   trid
-   unknown_source
-   utils
-   video_dir
-   web_of_science
-   website
-   wiley
-   __init__
-   abi_inform_proquest
-   acm_digital_library
-   aisel
-   colrev_project
-   crossref
-   dblp
-   doi_org
-   -->
-
-
-“unified colrev fields” (like title, author, …) do not have a prefix (in main records.bib)
-Default: all other fields are added to records.bib with a “namespace prefix” (e.g., colrev.synergy.method)
-
-Example: mapping notes with “Cited by” content to cited_by fields (scopus)
-
-Give an example (document the specific cases in the SearchSources)
-
-Following fields will be transformed and standardized:
-
-- records.bib  <-> search-source
-- title        <-> colrev.crossref.title
-- author       <-> colrev.crossref.author
-- year         <-> colrev.crossref.year
-- journal      <-> colrev.crossref.journal
-- journal      <-> colrev.psycinfo.T2 IF colrev.pycinfo.TY == "JOUR"
-- booktitle    <-> colrev.crossref.booktitle
-- chapter      <-> colrev.crossref.chapter
-- publisher    <-> colrev.crossref.publisher
-- volume       <-> colrev.crossref.volume
-- number       <-> colrev.crossref.number
-- pages        <-> colrev.crossref.page
-.. variation is intentional: "page" gets transformed to "pages"
-- editor       <-> colrev.crossref.editor
-- colrev.synergy.method <-> colrev.synergy.method
-
-Keys cannot be transformed and standardized, they remain immutable once created
-
-- colrev.dblp.key              <-> colrev.dblp.key
-- colrev.openalex.key          <-> colrev.openalex.key
-.. each search source will get its custom namespace, see excample below
-
-.. **TODO : anticipate upgrade of existing projects** mittlerweile
-umgesetzt, name space pull request
-
-namespace example: @article{ID1, title = {Title1}, colrev.dblp.key =
-{de123414}, }
-
-..    <!--
-   colrev/colrev/ops/built_in/search_sources/*.py
-   -->
+TBD: should prefixed versions be stored in the feeds?
 
 .. _defect codes:
 
@@ -356,62 +223,46 @@ Five different entry examples for dummy values used in the tests.
 
 .. _entrytype-article-1:
 
-ENTRYTYPE: article
-------------------
+.. code-block::
+   
+   @article{ID274107,
+      author                        = {Marilena, Ferdinand and Ethelinda Aignéis},
+      title                         = {Article title},
+      journal                       = {Journal name},
+      year                          = {2020},
+      volume                        = {23},
+      number                        = {78},
+   }
 
-@article{ID274107,
-   author                        = {Marilena, Ferdinand and Ethelinda Aignéis},
-   title                         = {Article title},
-   journal                       = {Journal name},
-   year                          = {2020},
-   volume                        = {23},
-   number                        = {78},
-}
-
-
-ENTRYTYPE: book
----------------
-
-@book{ID438965,
-   author                        = {Romilius, Milivoj and Alphaeus, Cheyanne},
-   year                          = {2020},
-   title                         = {Book title},
-   publisher                     = {Publisher name},
-   address                       = {Publisher address},
-}
-
-
-ENTRYTYPE: conference
----------------------
-
-@conference{ID461901,
-   author                        = {Derry, Wassa and Wemba, Sandip},
-   title                         = {Conference title},
-   booktitle                     = {Conference book title},
-   year                          = {2020},
-}
-
-
-ENTRYTYPE: inproceedings
-------------------------
-
-@inproceedings{ID110380,
-   author                        = {Raanan, Cathrine and Philomena, Miigwan},
-   title                         = {Inproceedings title},
-   booktitle                     = {Inproceedings book title},
-   year                          = {2020},
-}
-
-
-ENTRYTYPE: phdthesis
---------------------
-
-@phdthesis{ID833501,
-   author                        = {Davie, Ulyana},
-   title                         = {PhD thesis title},
-   school                        = {PhD school name},
-   year                          = {2020},
-}
+   @book{ID438965,
+      author                        = {Romilius, Milivoj and Alphaeus, Cheyanne},
+      year                          = {2020},
+      title                         = {Book title},
+      publisher                     = {Publisher name},
+      address                       = {Publisher address},
+   }
+   
+   
+   @conference{ID461901,
+      author                        = {Derry, Wassa and Wemba, Sandip},
+      title                         = {Conference title},
+      booktitle                     = {Conference book title},
+      year                          = {2020},
+   }
+   
+   @inproceedings{ID110380,
+      author                        = {Raanan, Cathrine and Philomena, Miigwan},
+      title                         = {Inproceedings title},
+      booktitle                     = {Inproceedings book title},
+      year                          = {2020},
+   }
+   
+   @phdthesis{ID833501,
+      author                        = {Davie, Ulyana},
+      title                         = {PhD thesis title},
+      school                        = {PhD school name},
+      year                          = {2020},
+   }
 
 
 Links informing the standard
