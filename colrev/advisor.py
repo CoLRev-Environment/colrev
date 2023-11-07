@@ -432,6 +432,8 @@ class Advisor:
                         selected_packages=[data_package_endpoint],
                         operation=check_operation,
                     )
+                    if data_package_endpoint["endpoint"] not in endpoint_dict:
+                        continue
                     endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
                     advice = endpoint.get_advice(self.review_manager)  # type: ignore

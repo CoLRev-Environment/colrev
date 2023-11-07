@@ -89,7 +89,6 @@ prep
    extensions_index/colrev.pubmed.rst
    extensions_index/colrev.remove_broken_ids.rst
    extensions_index/colrev.remove_urls_with_500_errors.rst
-   extensions_index/colrev.resolve_crossrefs.rst
    extensions_index/colrev.source_specific_prep.rst
 
 prep_man
@@ -107,10 +106,9 @@ dedupe
 .. toctree::
    :maxdepth: 1
 
-   extensions_index/colrev.active_learning_automated.rst
-   extensions_index/colrev.active_learning_training.rst
    extensions_index/colrev.curation_full_outlet_dedupe.rst
    extensions_index/colrev.curation_missing_dedupe.rst
+   extensions_index/colrev.dedupe.rst
    extensions_index/colrev.simple_dedupe.rst
 
 prescreen
@@ -131,6 +129,7 @@ pdf_get
 .. toctree::
    :maxdepth: 1
 
+   extensions_index/colrev.download_from_website.rst
    extensions_index/colrev.local_index.rst
    extensions_index/colrev.unpaywall.rst
    extensions_index/colrev.website_screenshot.rst
@@ -149,12 +148,10 @@ pdf_prep
 .. toctree::
    :maxdepth: 1
 
-   extensions_index/colrev.create_tei.rst
-   extensions_index/colrev.pdf_check_ocr.rst
+   extensions_index/colrev.grobid_tei.rst
+   extensions_index/colrev.ocrmypdf.rst
    extensions_index/colrev.remove_coverpage.rst
    extensions_index/colrev.remove_last_page.rst
-   extensions_index/colrev.validate_completeness.rst
-   extensions_index/colrev.validate_pdf_metadata.rst
 
 pdf_prep_man
 -----------------------------

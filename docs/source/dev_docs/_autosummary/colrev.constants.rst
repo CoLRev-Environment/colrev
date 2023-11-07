@@ -28,3 +28,4 @@ colrev.constants
       FieldValues
       Fields
       Operations
+      PDFDefectCodes

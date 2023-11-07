@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.11.0 - TBA
+
+### Added
+
+- Separate PDF quality model ([#268](https://github.com/CoLRev-Environment/colrev/pull/268))
+- `download_from_website` pdf-get package
+
+### Changed
+
+- Integrated `colrev.resolve_crossrefs` into `load_utils_bib.py`
+- Defect codes can be ignored based on the `IGNORE:` prefix ([#269](https://github.com/CoLRev-Environment/colrev/pull/269))
+
 ## 0.10.4 - 2023-10-15
 
 ### Fixed

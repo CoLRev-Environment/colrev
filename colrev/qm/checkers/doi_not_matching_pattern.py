@@ -24,7 +24,9 @@ class DOIPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the doi-not-matching-pattern checks"""
 
-        if Fields.DOI not in record.data:
+        if Fields.DOI not in record.data or record.ignored_defect(
+            field=Fields.DOI, defect=self.msg
+        ):
             return
 
         if not re.match(self.__DOI_REGEX, record.data[Fields.DOI]):

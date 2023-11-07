@@ -43,11 +43,7 @@ class CurationJupyterNotebookManPrep(JsonSchemaMixin):
                 target=Path("prep_man/prep_man_curation.ipynb"),
             )
 
-    def prepare_manual(
-        self,
-        prep_man_operation: colrev.ops.prep_man.PrepMan,  # pylint: disable=unused-argument
-        records: dict,
-    ) -> dict:
+    def prepare_manual(self, records: dict) -> dict:
         """Prepare records manually based on  a Jupyter notebeook"""
 
         input(

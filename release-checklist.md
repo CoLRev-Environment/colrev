@@ -35,3 +35,17 @@ For all releases:
     - Trigger/test the Github-action in a curated metadata repository (using ``colrev-batch-gh-api.py``)
 
 - Update [example repository](https://github.com/CoLRev-Environment/example) if necessary
+
+```
+mkdir example && cd example
+colrev init --example
+colrev retrieve
+colrev prescreen --include_all
+colrev pdfs
+colrev pdfs --discard
+colrev screen --include_all
+colrev data
+# Manually edit data/data/paper.md
+git remote add origin git@github.com:CoLRev-Environment/example.git
+git push --set-upstream origin main -f
+```

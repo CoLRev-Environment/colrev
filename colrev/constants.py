@@ -23,6 +23,7 @@ class ENTRYTYPES:
     MISC = "misc"
     SOFTWARE = "software"
     ONLINE = "online"
+    CONFERENCE = "conference"
 
 
 class Fields:
@@ -71,6 +72,9 @@ class Fields:
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
 
+    TEXT_FROM_PDF = "text_from_pdf"
+    PAGES_IN_FILE = "pages_in_file"
+
     COLREV_ID = "colrev_id"
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"
     LOCAL_CURATED_METADATA = "local_curated_metadata"
@@ -109,6 +113,7 @@ class FieldSet:
         Fields.NUMBER,
         Fields.PAGES,
         Fields.EDITOR,
+        Fields.INSTITUTION,
     ]
 
     STANDARDIZED_FIELD_KEYS = (
@@ -126,7 +131,6 @@ class FieldSet:
             Fields.KEYWORDS,
             Fields.CITED_BY,
             Fields.FILE,
-            Fields.INSTITUTION,
             Fields.MONTH,
             Fields.SERIES,
             Fields.LANGUAGE,
@@ -150,7 +154,6 @@ class DefectCodes:
     """Constant defect codes"""
 
     MISSING = "missing"
-    NOT_MISSING = "not-missing"
     RECORD_NOT_IN_TOC = "record-not-in-toc"
     INCONSISTENT_WITH_ENTRYTYPE = "inconsistent-with-entrytype"
     CONTAINER_TITLE_ABBREVIATED = "container-title-abbreviated"
@@ -178,6 +181,17 @@ class DefectCodes:
     PUBMED_ID_NOT_MATCHING_PATTERN = "pubmedid-not-matching-pattern"
     THESIS_WITH_MULTIPLE_AUTHORS = "thesis-with-multiple-authors"
     YEAR_FORMAT = "year-format"
+
+
+class PDFDefectCodes:
+    """Constant PDF defect codes"""
+
+    NO_TEXT_IN_PDF = "no-text-in-pdf"
+    PDF_INCOMPLETE = "pdf-incomplete"
+    AUTHOR_NOT_IN_PDF = "author-not-in-pdf"
+    TITLE_NOT_IN_PDF = "title-not-in-pdf"
+    COVERPAGE_INCLUDED = "coverpage-included"
+    LAST_PAGE_APPENDED = "last-page-appended"
 
 
 class Operations:

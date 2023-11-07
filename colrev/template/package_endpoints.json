@@ -612,14 +612,6 @@
             "ci_supported": true
         },
         {
-            "package_endpoint_identifier": "colrev.resolve_crossrefs",
-            "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepares records by resolving BibTex crossref links (e.g., to proceedings) (:doc:`instructions </resources/extensions_index/colrev.resolve_crossrefs>`)",
-            "ci_supported": true
-        },
-        {
             "package_endpoint_identifier": "colrev.source_specific_prep",
             "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep",
             "status": "|MATURING|",
@@ -648,22 +640,6 @@
     ],
     "dedupe": [
         {
-            "package_endpoint_identifier": "colrev.active_learning_automated",
-            "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Applies trained (active learning) model (:doc:`instructions </resources/extensions_index/colrev.active_learning_automated>`)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.active_learning_training",
-            "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Active learning: training phase (minimum sample size of 50 required) (:doc:`instructions </resources/extensions_index/colrev.active_learning_training>`)",
-            "ci_supported": false
-        },
-        {
             "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
             "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
             "status": "|EXPERIMENTAL|",
@@ -678,6 +654,14 @@
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Deduplication of remaining records in a curated metadata repository (:doc:`instructions </resources/extensions_index/colrev.curation_missing_dedupe>`)",
             "ci_supported": false
+        },
+        {
+            "package_endpoint_identifier": "colrev.dedupe",
+            "endpoint": "colrev.ops.built_in.dedupe.dedupe.Dedupe",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Default deduplication (:doc:`instructions </resources/extensions_index/colrev.dedupe>`)",
+            "ci_supported": true
         },
         {
             "package_endpoint_identifier": "colrev.simple_dedupe",
@@ -732,6 +716,14 @@
     ],
     "pdf_get": [
         {
+            "package_endpoint_identifier": "colrev.download_from_website",
+            "endpoint": "colrev.ops.built_in.pdf_get.download_from_website.WebsiteDownload",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "Get PDFs from the website (:doc:`instructions </resources/extensions_index/colrev.download_from_website>`)",
+            "ci_supported": false
+        },
+        {
             "package_endpoint_identifier": "colrev.local_index",
             "endpoint": "colrev.ops.built_in.pdf_get.local_index_pdf_get.LocalIndexPDFGet",
             "status": "|MATURING|",
@@ -768,24 +760,24 @@
     ],
     "pdf_prep": [
         {
-            "package_endpoint_identifier": "colrev.create_tei",
-            "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep",
+            "package_endpoint_identifier": "colrev.grobid_tei",
+            "endpoint": "colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </resources/extensions_index/colrev.create_tei>`)",
+            "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </resources/extensions_index/colrev.grobid_tei>`)",
             "ci_supported": false
         },
         {
-            "package_endpoint_identifier": "colrev.pdf_check_ocr",
-            "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR",
+            "package_endpoint_identifier": "colrev.ocrmypdf",
+            "endpoint": "colrev.ops.built_in.pdf_prep.ocrmypdf.OCRMyPDF",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by checking and applying OCR (if necessary) based on OCRmyPDF (:doc:`instructions </resources/extensions_index/colrev.pdf_check_ocr>`)",
+            "short_description": "Prepare PDFs by applying OCR based on OCRmyPDF (:doc:`instructions </resources/extensions_index/colrev.ocrmypdf>`)",
             "ci_supported": false
         },
         {
             "package_endpoint_identifier": "colrev.remove_coverpage",
-            "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage",
+            "endpoint": "colrev.ops.built_in.pdf_prep.remove_cover_page.PDFCoverPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers) (:doc:`instructions </resources/extensions_index/colrev.remove_coverpage>`)",
@@ -793,26 +785,10 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_last_page",
-            "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage",
+            "endpoint": "colrev.ops.built_in.pdf_prep.remove_last_page.PDFLastPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos) (:doc:`instructions </resources/extensions_index/colrev.remove_last_page>`)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.validate_completeness",
-            "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by validating its completeness (based on the number of pages) (:doc:`instructions </resources/extensions_index/colrev.validate_completeness>`)",
-            "ci_supported": false
-        },
-        {
-            "package_endpoint_identifier": "colrev.validate_pdf_metadata",
-            "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Prepare PDFs by validating it against its associated metadata (:doc:`instructions </resources/extensions_index/colrev.validate_pdf_metadata>`)",
             "ci_supported": false
         }
     ],

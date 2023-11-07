@@ -461,7 +461,7 @@ class Screen(colrev.operation.Operation):
             if split:
                 split = [x for x in selected_record_ids if x in split]
 
-            endpoint.run_screen(self, records, selected_record_ids)  # type: ignore
+            endpoint.run_screen(records, selected_record_ids)  # type: ignore
 
             self.__print_stats(
                 selected_record_ids=selected_record_ids + selected_auto_include_ids

@@ -46,6 +46,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.local_index = prep_operation.review_manager.get_local_index()
         self.vol_nr_dict = self.__get_vol_nr_dict()
@@ -151,27 +152,26 @@ class YearVolIssPrep(JsonSchemaMixin):
                 )
                 record.run_quality_model(qm=self.quality_model)
 
-    def __get_year_from_crossref(
-        self, *, record: colrev.record.Record, prep_operation: colrev.ops.prep.Prep
-    ) -> None:
+    def __get_year_from_crossref(self, *, record: colrev.record.Record) -> None:
         try:
             crossref_source = crossref_connector.CrossrefSearchSource(
-                source_operation=prep_operation
+                source_operation=self.prep_operation
             )
             retrieved_records = crossref_source.crossref_query(
                 record_input=record,
                 jour_vol_iss_list=True,
-                timeout=prep_operation.timeout,
+                timeout=self.prep_operation.timeout,
             )
             retries = 0
             while (
-                not retrieved_records and retries < prep_operation.max_retries_on_error
+                not retrieved_records
+                and retries < self.prep_operation.max_retries_on_error
             ):
                 retries += 1
                 retrieved_records = crossref_source.crossref_query(
                     record_input=record,
                     jour_vol_iss_list=True,
-                    timeout=prep_operation.timeout,
+                    timeout=self.prep_operation.timeout,
                 )
             if 0 == len(retrieved_records):
                 return
@@ -201,9 +201,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         except requests.exceptions.RequestException:
             pass
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on year-volume-issue dependency"""
 
         if (
@@ -222,6 +220,6 @@ class YearVolIssPrep(JsonSchemaMixin):
         if Fields.YEAR in record.data:
             return record
 
-        self.__get_year_from_crossref(record=record, prep_operation=prep_operation)
+        self.__get_year_from_crossref(record=record)
 
         return record

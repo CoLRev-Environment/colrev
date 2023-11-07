@@ -37,10 +37,10 @@ class ConditionalPrescreen(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.review_manager = prescreen_operation.review_manager
 
     def run_prescreen(
         self,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,  # pylint: disable=unused-argument
     ) -> dict:
@@ -50,7 +50,7 @@ class ConditionalPrescreen(JsonSchemaMixin):
         for record in records.values():
             if record[Fields.STATUS] != colrev.record.RecordState.md_processed:
                 continue
-            prescreen_operation.review_manager.report_logger.info(
+            self.review_manager.report_logger.info(
                 f" {record[Fields.ID]}".ljust(pad, " ")
                 + "Included in prescreen (automatically)"
             )
@@ -58,8 +58,8 @@ class ConditionalPrescreen(JsonSchemaMixin):
                 colrev_status=colrev.record.RecordState.rev_prescreen_included
             )
 
-        prescreen_operation.review_manager.dataset.save_records_dict(records=records)
-        prescreen_operation.review_manager.create_commit(
+        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
         )

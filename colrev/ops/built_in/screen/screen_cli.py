@@ -271,10 +271,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self.review_manager.create_commit(msg="Screening (manual)", manual_author=True)
         return records
 
-    # pylint: disable=unused-argument
-    def run_screen(
-        self, screen_operation: colrev.ops.screen.Screen, records: dict, split: list
-    ) -> dict:
+    def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on a cli"""
 
         records = self.__screen_cli(split)

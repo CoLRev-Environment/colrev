@@ -17,7 +17,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Colors
-from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -157,9 +156,9 @@ class Upgrade(colrev.operation.Operation):
             },
             {
                 "version": CoLRevVersion("0.10.2"),
-                "target_version": CoLRevVersion("0.10.3"),
-                "script": self.__migrate_0_10_3,
-                "released": True,
+                "target_version": CoLRevVersion("0.11.0"),
+                "script": self.__migrate_0_11_0,
+                "released": False,
             },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
@@ -375,11 +374,11 @@ class Upgrade(colrev.operation.Operation):
                 continue
             not_missing_fields = []
             for key, prov in record_dict[Fields.MD_PROV].items():
-                if DefectCodes.NOT_MISSING in prov["note"]:
+                if "not-missing" in prov["note"]:
                     not_missing_fields.append(key)
                 prov["note"] = ""
             for key in not_missing_fields:
-                record_dict[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
+                record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
             if "cited_by_id" in record_dict:
@@ -549,8 +548,29 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_10_3(self) -> bool:
+    def __migrate_0_11_0(self) -> bool:
         settings = self.__load_settings_dict()
+        if settings["project"]["review_type"] == "curated_masterdata":
+            settings["project"]["review_type"] = "colrev.curated_masterdata"
+
+        settings["pdf_get"]["defects_to_ignore"] = []
+
+        settings["pdf_prep"]["pdf_prep_package_endpoints"] = [
+            {"endpoint": "colrev.ocrmypdf"},
+            {"endpoint": "colrev.grobid_tei"},
+        ] + [
+            x
+            for x in settings["pdf_prep"]["pdf_prep_package_endpoints"]
+            if x["endpoint"]
+            not in [
+                "colrev.check_ocr",
+                "colrev.pdf_check_ocr",
+                "colrev.validate_pdf_metadata",
+                "colrev.validate_completeness",
+                "colrev.tei_prep",
+            ]
+        ]
+
         if settings["project"]["review_type"] == "curated_masterdata":
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
@@ -567,6 +587,28 @@ class Upgrade(colrev.operation.Operation):
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
+
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.resolve_crossrefs"
+            ]
+            if settings["project"]["review_type"] == "colrev.curated_masterdata":
+                p_round["prep_package_endpoints"] = [
+                    {"endpoint": "colrev.colrev_curation"}
+                ] + p_round["prep_package_endpoints"]
+
+        self.__save_settings(settings)
+
+        records = self.review_manager.dataset.load_records_dict()
+        for record_dict in records.values():
+            if Fields.MD_PROV in record_dict:
+                for key, value in record_dict[Fields.MD_PROV].items():
+                    record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
+                        "not-missing", "IGNORE:missing"
+                    )
+        self.review_manager.dataset.save_records_dict(records=records)
 
         return self.repo.is_dirty()
 

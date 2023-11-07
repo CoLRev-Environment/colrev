@@ -440,6 +440,8 @@ class PDFGetSettings(JsonSchemaMixin):
 
     pdf_get_man_package_endpoints: list
 
+    defects_to_ignore: list
+
     def __str__(self) -> str:
         endpoints_str = "- endpoints: []\n"
         if self.pdf_get_man_package_endpoints:

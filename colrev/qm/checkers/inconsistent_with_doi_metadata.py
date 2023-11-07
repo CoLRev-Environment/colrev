@@ -36,7 +36,9 @@ class InconsistentWithDOIMetadataChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""
 
-        if Fields.DOI not in record.data:
+        if Fields.DOI not in record.data or record.ignored_defect(
+            field=Fields.DOI, defect=self.msg
+        ):
             return
         if Fields.DOI in record.data.get(Fields.D_PROV, {}):
             if "md_curated.bib" in record.data[Fields.D_PROV][Fields.DOI]["source"]:

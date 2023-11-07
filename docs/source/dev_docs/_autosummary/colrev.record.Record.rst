@@ -28,6 +28,7 @@ colrev.record.Record
       ~Record.copy
       ~Record.copy_prep_rec
       ~Record.create_colrev_id
+      ~Record.defects
       ~Record.extract_pages
       ~Record.extract_text_by_page
       ~Record.format_bib_style
@@ -45,7 +46,10 @@ colrev.record.Record
       ~Record.get_toc_key
       ~Record.get_value
       ~Record.has_overlapping_colrev_id
+      ~Record.has_pdf_defects
       ~Record.has_quality_defects
+      ~Record.ignore_defect
+      ~Record.ignored_defect
       ~Record.masterdata_is_curated
       ~Record.merge
       ~Record.prefix_non_standardized_field_keys
@@ -54,10 +58,12 @@ colrev.record.Record
       ~Record.print_diff_pair
       ~Record.print_pdf_prep_man
       ~Record.print_prescreen_record
+      ~Record.remove_data_provenance_note
       ~Record.remove_field
       ~Record.remove_masterdata_provenance_note
       ~Record.rename_field
       ~Record.reset_pdf_provenance_notes
+      ~Record.run_pdf_quality_model
       ~Record.run_quality_model
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent

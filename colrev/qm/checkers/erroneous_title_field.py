@@ -20,7 +20,9 @@ class ErroneousTitleFieldChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the erroneous-title-field checks"""
 
-        if Fields.TITLE not in record.data:
+        if Fields.TITLE not in record.data or record.ignored_defect(
+            field=Fields.TITLE, defect=self.msg
+        ):
             return
 
         if self.__title_has_errors(title=record.data[Fields.TITLE]):
@@ -33,7 +35,8 @@ class ErroneousTitleFieldChecker:
         # Cover common errors
         if title in {
             "A I S ssociation for nformation ystems",
-            "The International Journal of Information Systems Applications Chairman of the Editorial Board",
+            "The International Journal of Information Systems "
+            + "Applications Chairman of the Editorial Board",
         }:
             return True
 

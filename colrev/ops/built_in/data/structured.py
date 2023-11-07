@@ -139,8 +139,6 @@ Example 2:
 
         # Note : missing IDs are added through update_data
 
-        return
-
     def __set_fields(self) -> None:
         self.review_manager.logger.info("Add fields for data extraction")
         try:
@@ -180,7 +178,6 @@ Example 2:
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
@@ -255,7 +252,6 @@ Example 2:
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -307,7 +303,6 @@ Example 2:
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 

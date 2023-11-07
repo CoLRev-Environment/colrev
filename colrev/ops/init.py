@@ -288,10 +288,10 @@ class Initializer:
                 for x in settings.pdf_prep.pdf_prep_package_endpoints
                 if x["endpoint"]
                 not in [
-                    "colrev.pdf_check_ocr",
+                    "colrev.ocrmypdf",
                     "colrev.remove_coverpage",
                     "colrev.remove_last_page",
-                    "colrev.create_tei",
+                    "colrev.grobid_tei",
                 ]
             ]
 

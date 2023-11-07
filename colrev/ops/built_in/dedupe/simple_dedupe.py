@@ -302,7 +302,7 @@ class SimpleDedupe(JsonSchemaMixin):
 
         return potential_duplicates
 
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(self) -> None:
         """Pairwise identification of duplicates based on static similarity measure
 
         This procedure should only be used in small samples on which active learning
@@ -336,7 +336,7 @@ class SimpleDedupe(JsonSchemaMixin):
 
         # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
 
-        dedupe_operation.apply_merges(
+        self.dedupe_operation.apply_merges(
             results=dedupe_batch_results, complete_dedupe=True
         )
         if [x for x in dedupe_batch_results if x["decision"] == "duplicate"]:
@@ -354,7 +354,7 @@ class SimpleDedupe(JsonSchemaMixin):
         )
 
         # apply:
-        dedupe_operation.apply_merges(results=potential_duplicates)
+        self.dedupe_operation.apply_merges(results=potential_duplicates)
 
         # commit
         self.review_manager.create_commit(

@@ -23,7 +23,11 @@ def get_pdf_hash(*, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
         logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
         raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
-    doc: fitz.Document = fitz.open(pdf_path)
+    try:
+        doc: fitz.Document = fitz.open(pdf_path)
+    except fitz.fitz.FileDataError as exc:
+        raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+
     img = None
     file_name = f".{pdf_path.stem}-{page_nr}.png"
     page_no = 0

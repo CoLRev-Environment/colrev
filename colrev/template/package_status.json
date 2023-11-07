@@ -205,10 +205,6 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.resolve_crossrefs",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
             "status": "EXPERIMENTAL"
         },
@@ -285,11 +281,7 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.active_learning_training",
-            "status": "EXPERIMENTAL"
-        },
-        {
-            "package_endpoint_identifier": "colrev.active_learning_automated",
+            "package_endpoint_identifier": "colrev.dedupe",
             "status": "EXPERIMENTAL"
         },
         {
@@ -335,6 +327,10 @@
         {
             "package_endpoint_identifier": "colrev.website_screenshot",
             "status": "EXPERIMENTAL"
+        },
+        {
+            "package_endpoint_identifier": "colrev.download_from_website",
+            "status": "RED"
         }
     ],
     "pdf_get_man": [
@@ -345,7 +341,7 @@
     ],
     "pdf_prep": [
         {
-            "package_endpoint_identifier": "colrev.pdf_check_ocr",
+            "package_endpoint_identifier": "colrev.ocrmypdf",
             "status": "MATURING"
         },
         {
@@ -357,15 +353,7 @@
             "status": "MATURING"
         },
         {
-            "package_endpoint_identifier": "colrev.validate_pdf_metadata",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.validate_completeness",
-            "status": "MATURING"
-        },
-        {
-            "package_endpoint_identifier": "colrev.create_tei",
+            "package_endpoint_identifier": "colrev.grobid_tei",
             "status": "MATURING"
         }
     ],

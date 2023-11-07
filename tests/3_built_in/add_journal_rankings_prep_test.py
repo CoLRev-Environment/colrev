@@ -54,6 +54,6 @@ def test_prep_exclude_languages(
 ) -> None:
     """Test the add_journal_ranking"""
     record = colrev.record.PrepRecord(data=input_value)
-    returned_record = ajr_instance.prepare(prep_operation=ajr_instance, record=record)
+    returned_record = ajr_instance.prepare(record=record)
     actual = returned_record.data
     assert expected == actual

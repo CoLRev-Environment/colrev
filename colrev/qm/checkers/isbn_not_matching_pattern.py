@@ -27,7 +27,9 @@ class ISBNPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the isbn-not-matching-pattern checks"""
 
-        if Fields.ISBN not in record.data:
+        if Fields.ISBN not in record.data or record.ignored_defect(
+            field=Fields.ISBN, defect=self.msg
+        ):
             return
 
         if not re.match(self.__ISBN_REGEX, record.data[Fields.ISBN]):

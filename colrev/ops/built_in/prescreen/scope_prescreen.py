@@ -264,12 +264,10 @@ class ScopePrescreen(JsonSchemaMixin):
             0, {**{"endpoint": "colrev.scope_prescreen"}, **params_dict}
         )
 
-    # pylint: disable=unused-argument
     def run_prescreen(
         self,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
-        split: list,
+        split: list,  # pylint: disable=unused-argument
     ) -> dict:
         """Prescreen records based on the scope parameters"""
 

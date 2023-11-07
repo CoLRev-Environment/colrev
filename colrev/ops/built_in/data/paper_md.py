@@ -645,9 +645,7 @@ class PaperMarkdown(JsonSchemaMixin):
             records=records, save_path=self.sample_references
         )
 
-    def __call_docker_build_process(
-        self, *, data_operation: colrev.ops.data.Data, script: str
-    ) -> None:
+    def __call_docker_build_process(self, *, script: str) -> None:
         try:
             uid = os.stat(self.review_manager.dataset.records_file).st_uid
             gid = os.stat(self.review_manager.dataset.records_file).st_gid
@@ -677,7 +675,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 f"Docker service not available ({exc}). Please install/start Docker."
             ) from exc
 
-    def build_paper(self, *, data_operation: colrev.ops.data.Data) -> None:
+    def build_paper(self) -> None:
         """Build the paper (based on pandoc)"""
 
         if not self.review_manager.dataset.records_file.is_file():
@@ -724,14 +722,11 @@ class PaperMarkdown(JsonSchemaMixin):
 
         Timer(
             1,
-            lambda: self.__call_docker_build_process(
-                data_operation=data_operation, script=script
-            ),
+            lambda: self.__call_docker_build_process(script=script),
         ).start()
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
@@ -754,7 +749,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 )
 
         if not self.review_manager.in_ci_environment():
-            self.build_paper(data_operation=data_operation)
+            self.build_paper()
 
     def __get_to_synthesize_in_paper(
         self, *, paper: Path, records_for_synthesis: list
@@ -797,7 +792,6 @@ class PaperMarkdown(JsonSchemaMixin):
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -815,7 +809,6 @@ class PaperMarkdown(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 

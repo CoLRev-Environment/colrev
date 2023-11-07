@@ -41,6 +41,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
     ):
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = dedupe_operation.review_manager
+        self.dedupe_operation = dedupe_operation
 
         self.__post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
             state=colrev.record.RecordState.md_processed
@@ -283,7 +284,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 break
         return results
 
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(self) -> None:
         """Run the dedupe procedure for remaining records in curations"""
 
         # pylint: disable=too-many-branches
@@ -319,7 +320,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 if s.endpoint != "colrev.files_dir"
             ]
 
-            dedupe_operation.apply_merges(
+            self.dedupe_operation.apply_merges(
                 results=ret["decision_list"],
                 preferred_masterdata_sources=preferred_masterdata_sources,
             )

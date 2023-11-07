@@ -12,7 +12,7 @@ import requests
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.ops.built_in.pdf_prep.tei_prep
+import colrev.ops.built_in.pdf_prep.grobid_tei
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -45,6 +45,8 @@ class PDFPrep(colrev.operation.Operation):
         self.reprocess = reprocess
 
         self.cpus = 4
+
+        self.pdf_qm = self.review_manager.get_pdf_qm()
 
     def __complete_successful_pdf_prep(
         self, *, record: colrev.record.Record, original_filename: str
@@ -159,7 +161,7 @@ class PDFPrep(colrev.operation.Operation):
                     msg.ljust(50, " ") + "called"  # type: ignore
                 )
 
-                record.data = endpoint.prep_pdf(self, record, pad)  # type: ignore
+                record.data = endpoint.prep_pdf(record, pad)  # type: ignore
             except colrev_exceptions.PDFHashError:
                 record.add_data_provenance_note(key=Fields.FILE, note="pdf-hash-error")
 
@@ -190,6 +192,8 @@ class PDFPrep(colrev.operation.Operation):
             # if failed:
             #     break
 
+        record.run_pdf_quality_model(pdf_qm=self.pdf_qm, set_prepared=True)
+
         # Each pdf_prep_package_endpoint can create a new file
         # previous/temporary pdfs are deleted when the process is successful
         # The original PDF is never deleted automatically.
@@ -200,7 +204,7 @@ class PDFPrep(colrev.operation.Operation):
         )
 
         successfully_prepared = (
-            colrev.record.RecordState.pdf_imported == record.data[Fields.STATUS]
+            colrev.record.RecordState.pdf_prepared == record.data[Fields.STATUS]
         )
 
         if successfully_prepared:
@@ -357,8 +361,8 @@ class PDFPrep(colrev.operation.Operation):
         """Generate TEI documents for included records"""
 
         self.review_manager.logger.info("Generate TEI documents")
-        endpoint = colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep(
-            pdf_prep_operation=self, settings={"endpoint": "colrev.create_tei"}
+        endpoint = colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI(
+            pdf_prep_operation=self, settings={"endpoint": "colrev.grobid_tei"}
         )
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
@@ -370,7 +374,6 @@ class PDFPrep(colrev.operation.Operation):
             self.review_manager.logger.info(record_dict[Fields.ID])
             try:
                 endpoint.prep_pdf(
-                    pdf_prep_operation=self,
                     record=colrev.record.Record(data=record_dict),
                     pad=0,
                 )
@@ -440,7 +443,7 @@ class PDFPrep(colrev.operation.Operation):
                 s["endpoint"]
                 for s in self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints
             ]
-            if "colrev.create_tei" in endpoint_names:  # type: ignore
+            if "colrev.grobid_tei" in endpoint_names:  # type: ignore
                 pool = Pool(mp.cpu_count() // 2)
             else:
                 pool = Pool(self.cpus)

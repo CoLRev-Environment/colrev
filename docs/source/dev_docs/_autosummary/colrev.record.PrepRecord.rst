@@ -29,6 +29,7 @@ colrev.record.PrepRecord
       ~PrepRecord.copy
       ~PrepRecord.copy_prep_rec
       ~PrepRecord.create_colrev_id
+      ~PrepRecord.defects
       ~PrepRecord.extract_pages
       ~PrepRecord.extract_text_by_page
       ~PrepRecord.fix_name_particles
@@ -50,7 +51,10 @@ colrev.record.PrepRecord
       ~PrepRecord.get_toc_key
       ~PrepRecord.get_value
       ~PrepRecord.has_overlapping_colrev_id
+      ~PrepRecord.has_pdf_defects
       ~PrepRecord.has_quality_defects
+      ~PrepRecord.ignore_defect
+      ~PrepRecord.ignored_defect
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.prefix_non_standardized_field_keys
@@ -61,11 +65,13 @@ colrev.record.PrepRecord
       ~PrepRecord.print_diff_pair
       ~PrepRecord.print_pdf_prep_man
       ~PrepRecord.print_prescreen_record
+      ~PrepRecord.remove_data_provenance_note
       ~PrepRecord.remove_field
       ~PrepRecord.remove_masterdata_provenance_note
       ~PrepRecord.rename_field
       ~PrepRecord.rename_fields_based_on_mapping
       ~PrepRecord.reset_pdf_provenance_notes
+      ~PrepRecord.run_pdf_quality_model
       ~PrepRecord.run_quality_model
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent

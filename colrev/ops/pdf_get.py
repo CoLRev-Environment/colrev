@@ -39,6 +39,8 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.pdf_dir.mkdir(exist_ok=True, parents=True)
 
+        self.pdf_qm = self.review_manager.get_pdf_qm()
+
         self.filepath_directory_pattern = ""
         pdf_endpoints = [
             s
@@ -143,15 +145,42 @@ class PDFGet(colrev.operation.Operation):
 
         record.data[Fields.FILE] = str(new_fp)
 
+    def __log_infos(self, *, record: colrev.record.Record) -> None:
+        if Fields.FILE not in record.data:
+            if (
+                not self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis
+            ):
+                return
+            self.review_manager.logger.info(
+                f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
+                + f"rev_prescreen_included → pdf_needs_manual_retrieval{Colors.END}"
+            )
+            return
+
+        if colrev.record.RecordState.pdf_prepared == record.data[Fields.STATUS]:
+            self.review_manager.logger.info(
+                f" {Colors.GREEN}{record.data['ID']}".ljust(46)
+                + f"rev_prescreen_included → pdf_prepared{Colors.END}"
+            )
+        elif (
+            colrev.record.RecordState.pdf_needs_manual_preparation
+            == record.data[Fields.STATUS]
+        ):
+            self.review_manager.logger.info(
+                f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
+                + f"rev_prescreen_included → pdf_needs_manual_preparation{Colors.END}"
+            )
+
     # Note : no named arguments (multiprocessing)
     def get_pdf(self, item: dict) -> dict:
         """Get PDFs (based on the package endpoints in the settings)"""
 
         record_dict = item["record"]
 
-        if str(colrev.record.RecordState.rev_prescreen_included) != str(
-            record_dict[Fields.STATUS]
-        ):
+        if record_dict[Fields.STATUS] not in [
+            colrev.record.RecordState.rev_prescreen_included,
+            colrev.record.RecordState.pdf_needs_manual_retrieval,
+        ]:
             if Fields.FILE in record_dict:
                 record = colrev.record.Record(data=record_dict)
                 record.remove_field(key=Fields.FILE)
@@ -176,43 +205,24 @@ class PDFGet(colrev.operation.Operation):
                 continue
 
             endpoint = endpoint_dict[pdf_get_package_endpoint["endpoint"]]
-            endpoint.get_pdf(self, record)  # type: ignore
+            endpoint.get_pdf(record)  # type: ignore
 
             if Fields.FILE in record.data:
                 self.review_manager.report_logger.info(
                     f"{endpoint.settings.endpoint}"  # type: ignore
-                    f"({record_dict[Fields.ID]}): retrieved .../"
-                    f"{Path(record_dict[Fields.FILE]).name}"
+                    f"({record.data[Fields.ID]}): retrieved .../"
+                    f"{Path(record.data[Fields.FILE]).name}"
                 )
-                if (
-                    colrev.record.RecordState.rev_prescreen_included
-                    == record.data[Fields.STATUS]
-                ):
-                    record.data.update(
-                        colrev_status=colrev.record.RecordState.pdf_imported
-                    )
-                    self.review_manager.logger.info(
-                        f" {Colors.GREEN}{record.data['ID']}".ljust(46)
-                        + f"rev_prescreen_included → pdf_imported{Colors.END}"
-                    )
-                return record.get_data()
+                break
 
-        if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
-            self.review_manager.logger.info(
-                f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
-                + f"rev_prescreen_included → pdf_needs_manual_retrieval{Colors.END}"
-            )
-
+        if Fields.FILE in record.data:
+            record.run_pdf_quality_model(pdf_qm=self.pdf_qm, set_prepared=True)
+        else:
             record.data.update(
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
             )
-        else:
-            self.review_manager.logger.info(
-                f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
-                + f"rev_prescreen_included → pdf_prepared{Colors.END}"
-            )
 
-            record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
+        self.__log_infos(record=record)
 
         return record.get_data()
 
@@ -505,13 +515,18 @@ class PDFGet(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.rev_prescreen_included == x[Fields.STATUS]
+                if x[Fields.STATUS]
+                in [
+                    colrev.record.RecordState.pdf_needs_manual_retrieval,
+                    colrev.record.RecordState.rev_prescreen_included,
+                ]
             ]
         )
 
         items = self.review_manager.dataset.read_next_record(
             conditions=[
-                {Fields.STATUS: colrev.record.RecordState.rev_prescreen_included}
+                {Fields.STATUS: colrev.record.RecordState.rev_prescreen_included},
+                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_retrieval},
             ],
         )
 

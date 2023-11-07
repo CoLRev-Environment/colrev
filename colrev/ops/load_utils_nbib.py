@@ -21,7 +21,7 @@ import re
 import typing
 from typing import TYPE_CHECKING
 
-from colrev.constants import ENTRYTYPES
+from colrev.constants import Colors
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
@@ -49,6 +49,7 @@ class NBIBLoader:
         *,
         load_operation: colrev.ops.load.Load,
         source: colrev.settings.SearchSource,
+        list_fields: dict,
         unique_id_field: str = "",
     ):
         self.load_operation = load_operation
@@ -57,24 +58,7 @@ class NBIBLoader:
 
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
-        self.mapping = {
-            "TI": Fields.TITLE,
-            "AU": Fields.AUTHOR,
-            "DP": Fields.YEAR,
-            "JT": Fields.JOURNAL,
-            "VI": Fields.VOLUME,
-            "IP": Fields.NUMBER,
-            "PG": Fields.PAGES,
-            "AB": Fields.ABSTRACT,
-            "AID": Fields.DOI,
-            "ISSN": Fields.ISSN,
-            "OID": "eric_id",
-            "OT": Fields.KEYWORDS,
-            "LA": Fields.LANGUAGE,
-            "PT": "type",
-            # "OWN": "owner",
-        }
-        self.list_tags = {"AU": " and ", "OT": ", ", "PT": ", "}
+        self.list_fields = list_fields
 
     def is_tag(self, line: str) -> bool:
         """Determine if the line has a tag using regex."""
@@ -100,16 +84,13 @@ class NBIBLoader:
             self.current[name] = [value]
 
     def _add_tag(self, tag: str, line: str) -> None:
-        if tag not in self.mapping:
-            print(f"load_utils_nbib error: tag {tag} not in mapping")
-            return
-        name = self.mapping[tag]
+        name = tag
         new_value = self.get_content(line)
 
-        if tag in self.list_tags:
+        if tag in self.list_fields:
             self._add_list_value(name, new_value)
         else:
-            self._add_single_value(name, new_value)
+            self._add_single_value(tag, new_value)
 
     def _parse_tag(self, line: str) -> dict:
         tag = self.get_tag(line)
@@ -146,34 +127,44 @@ class NBIBLoader:
 
         records = {}
         for ind, record in enumerate(records_list):
-            record[Fields.ID] = str(ind).rjust(6, "0")
+            record[Fields.ID] = str(ind + 1).rjust(6, "0")
+            for list_field, connective in self.list_fields.items():
+                if list_field in record:
+                    record[list_field] = connective.join(record[list_field])
             records[record[Fields.ID]] = record
-
         return records
 
-    def convert_to_records(self, *, entries: dict) -> dict:
+    def apply_entrytype_mapping(
+        self, *, record_dict: dict, entrytype_map: dict
+    ) -> None:
+        """Apply the mapping of nbib PT fields to CoLRev ENTRYTYPES"""
+
+        if record_dict["PT"] not in entrytype_map:
+            msg = f"{Colors.RED}PT={record_dict['PT']} not yet supported{Colors.END}"
+            if not self.load_operation.review_manager.force_mode:
+                raise NotImplementedError(msg)
+            self.load_operation.review_manager.logger.error(msg)
+            return
+
+        entrytype = entrytype_map[record_dict["PT"]]
+        record_dict[Fields.ENTRYTYPE] = entrytype
+
+    def map_keys(self, *, record_dict: dict, key_map: dict) -> None:
         """Converts nbib entries it to bib records"""
+        entrytype = record_dict[Fields.ENTRYTYPE]
 
-        records: dict = {}
-        for counter, entry in enumerate(entries.values()):
-            if self.unique_id_field == "":
-                _id = str(counter + 1).zfill(5)
-            else:
-                _id = entry[self.unique_id_field].replace(" ", "").replace(";", "_")
+        # NBIB-keys > standard keys
+        for ris_key in list(record_dict.keys()):
+            if ris_key in [Fields.ENTRYTYPE, Fields.ID]:
+                continue
+            if ris_key not in key_map[entrytype]:
+                del record_dict[ris_key]
+                # print/notify: ris_key
+                continue
+            standard_key = key_map[entrytype][ris_key]
+            record_dict[standard_key] = record_dict.pop(ris_key)
 
-            for list_tag, delimiter in self.list_tags.items():
-                list_field = self.mapping[list_tag]
-                if list_field not in entry:
-                    continue
-                entry[list_field] = delimiter.join(entry[list_field])
-
-            if "journal article" in entry["type"].lower():
-                entry[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
-            else:
-                entry[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
-
-            entry[Fields.ID] = _id
-
-            records[_id] = entry
-
-        return records
+        # Set unique_id (if any)
+        if self.unique_id_field != "":
+            _id = record_dict[self.unique_id_field].replace(" ", "").replace(";", "_")
+            record_dict[Fields.ID] = _id

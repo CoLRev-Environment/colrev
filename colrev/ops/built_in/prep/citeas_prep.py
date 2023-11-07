@@ -41,6 +41,8 @@ class CiteAsPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
         self.same_record_type_required = (
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
@@ -81,9 +83,7 @@ class CiteAsPrep(JsonSchemaMixin):
         record.add_provenance_all(source=url)
         return record
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record based on citeas"""
 
         if record.data.get(Fields.ENTRYTYPE, "NA") not in ["misc", "software"]:
@@ -99,8 +99,8 @@ class CiteAsPrep(JsonSchemaMixin):
             ret = self.session.request(
                 "GET",
                 url,
-                headers=prep_operation.requests_headers,
-                timeout=prep_operation.timeout,
+                headers=self.prep_operation.requests_headers,
+                timeout=self.prep_operation.timeout,
             )
             ret.raise_for_status()
 
@@ -111,13 +111,13 @@ class CiteAsPrep(JsonSchemaMixin):
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=self.same_record_type_required,
             )
-            if similarity > prep_operation.retrieval_similarity:
+            if similarity > self.prep_operation.retrieval_similarity:
                 record.merge(merging_record=retrieved_record, default_source=url)
 
         except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             pass
         except UnicodeEncodeError:
-            prep_operation.review_manager.logger.error(
+            self.review_manager.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
 

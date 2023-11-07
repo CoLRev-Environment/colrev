@@ -347,4 +347,4 @@ class PDFPrepMan(colrev.operation.Operation):
 
             endpoint = endpoint_dict[pdf_prep_man_package_endpoint["endpoint"]]
 
-            records = endpoint.pdf_prep_man(self, records)  # type: ignore
+            records = endpoint.pdf_prep_man(records)  # type: ignore

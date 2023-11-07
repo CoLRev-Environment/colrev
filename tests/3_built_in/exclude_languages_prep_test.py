@@ -97,6 +97,6 @@ def test_prep_exclude_languages(
 ) -> None:
     """Test the prep_exclude_languages"""
     record = colrev.record.PrepRecord(data=input_value)
-    returned_record = elp_elp.prepare(prep_operation=elp_elp, record=record)
+    returned_record = elp_elp.prepare(record=record)
     actual = returned_record.data
     assert expected == actual

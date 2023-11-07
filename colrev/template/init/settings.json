@@ -33,9 +33,6 @@
                 "similarity": 0.8,
                 "prep_package_endpoints": [
                     {
-                        "endpoint": "colrev.resolve_crossrefs"
-                    },
-                    {
                         "endpoint": "colrev.source_specific_prep"
                     },
                     {
@@ -93,10 +90,7 @@
         "same_source_merges": "prevent",
         "dedupe_package_endpoints": [
             {
-                "endpoint": "colrev.active_learning_training"
-            },
-            {
-                "endpoint": "colrev.active_learning_automated"
+                "endpoint": "colrev.dedupe"
             }
         ]
     },
@@ -111,6 +105,7 @@
     "pdf_get": {
         "pdf_path_type": "symlink",
         "pdf_required_for_screen_and_synthesis": true,
+        "defects_to_ignore": [],
         "rename_pdfs": true,
         "pdf_get_package_endpoints": [
             {
@@ -118,6 +113,9 @@
             },
             {
                 "endpoint": "colrev.unpaywall"
+            },
+            {
+                "endpoint": "colrev.download_from_website"
             },
             {
                 "endpoint": "colrev.website_screenshot"
@@ -133,7 +131,7 @@
         "keep_backup_of_pdfs": true,
         "pdf_prep_package_endpoints": [
             {
-                "endpoint": "colrev.pdf_check_ocr"
+                "endpoint": "colrev.ocrmypdf"
             },
             {
                 "endpoint": "colrev.remove_coverpage"
@@ -142,13 +140,7 @@
                 "endpoint": "colrev.remove_last_page"
             },
             {
-                "endpoint": "colrev.validate_pdf_metadata"
-            },
-            {
-                "endpoint": "colrev.validate_completeness"
-            },
-            {
-                "endpoint": "colrev.create_tei"
+                "endpoint": "colrev.grobid_tei"
             }
         ],
         "pdf_prep_man_package_endpoints": [

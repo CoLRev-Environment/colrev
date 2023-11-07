@@ -23,9 +23,11 @@ class YearFormatChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the year-format checks"""
 
-        if Fields.YEAR not in record.data:
-            return
-        if record.data[Fields.YEAR] == FieldValues.UNKNOWN:
+        if (
+            Fields.YEAR not in record.data
+            or record.ignored_defect(field=Fields.YEAR, defect=self.msg)
+            or record.data[Fields.YEAR] == FieldValues.UNKNOWN
+        ):
             return
 
         if not re.match(r"^\d{4}$", record.data[Fields.YEAR]):

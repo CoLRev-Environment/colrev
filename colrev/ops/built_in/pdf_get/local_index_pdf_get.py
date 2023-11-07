@@ -43,13 +43,13 @@ class LocalIndexPDFGet(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.pdf_get_operation = pdf_get_operation
+        self.review_manager = pdf_get_operation.review_manager
 
-    def get_pdf(
-        self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
-    ) -> colrev.record.Record:
+    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
         """Get PDFs from the local-index"""
 
-        local_index = pdf_get_operation.review_manager.get_local_index()
+        local_index = self.review_manager.get_local_index()
 
         try:
             retrieved_record = local_index.retrieve(
@@ -64,7 +64,7 @@ class LocalIndexPDFGet(JsonSchemaMixin):
                 value=str(retrieved_record[Fields.FILE]),
                 source="local_index",
             )
-            pdf_get_operation.import_pdf(record=record)
+            self.pdf_get_operation.import_pdf(record=record)
             if Fields.FULLTEXT in retrieved_record:
                 try:
                     record.get_tei_filename().write_text(

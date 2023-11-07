@@ -61,6 +61,7 @@ class Obsidian(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.review_manager = data_operation.review_manager
+        self.data_operation = data_operation
 
         # Set default values (if necessary)
         if "version" not in settings:
@@ -123,10 +124,8 @@ class Obsidian(JsonSchemaMixin):
 
         return keywords
 
-    def __append_missing_records(
-        self, *, data_operation: colrev.ops.data.Data, records: dict, silent_mode: bool
-    ) -> None:
-        included = data_operation.get_record_ids_for_synthesis(records)
+    def __append_missing_records(self, *, records: dict, silent_mode: bool) -> None:
+        included = self.data_operation.get_record_ids_for_synthesis(records)
         missing_records = self.__get_obsidian_missing(included=included)
         if len(missing_records) == 0:
             if not silent_mode:
@@ -215,7 +214,6 @@ class Obsidian(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
@@ -224,13 +222,10 @@ class Obsidian(JsonSchemaMixin):
 
         self.review_manager.logger.debug("Export to obsidian endpoint")
 
-        self.__append_missing_records(
-            data_operation=data_operation, records=records, silent_mode=silent_mode
-        )
+        self.__append_missing_records(records=records, silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -249,7 +244,6 @@ class Obsidian(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 

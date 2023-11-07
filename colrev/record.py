@@ -413,7 +413,7 @@ class Record:
             # field is not required
             if key not in self.data[Fields.MD_PROV]:
                 self.data[Fields.MD_PROV][key] = {}
-            self.data[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
+            self.data[Fields.MD_PROV][key]["note"] = f"IGNORE:{DefectCodes.MISSING}"
             if source != "":
                 self.data[Fields.MD_PROV][key]["source"] = source
         else:
@@ -441,7 +441,10 @@ class Record:
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if DefectCodes.MISSING in note and DefectCodes.NOT_MISSING not in note:
+                if (
+                    DefectCodes.MISSING in note
+                    and f"IGNORE:{DefectCodes.MISSING}" not in note
+                ):
                     md_p_dict[identifying_field_key]["note"] = note.replace(
                         DefectCodes.MISSING, ""
                     )
@@ -451,26 +454,26 @@ class Record:
                 if Fields.VOLUME in self.data[Fields.MD_PROV]:
                     self.data[Fields.MD_PROV][Fields.VOLUME][
                         "note"
-                    ] = DefectCodes.NOT_MISSING
+                    ] = f"IGNORE:{DefectCodes.MISSING}"
                     if replace_source:
                         self.data[Fields.MD_PROV][Fields.VOLUME]["source"] = source
                 else:
                     self.data[Fields.MD_PROV][Fields.VOLUME] = {
                         "source": source,
-                        "note": DefectCodes.NOT_MISSING,
+                        "note": f"IGNORE:{DefectCodes.MISSING}",
                     }
 
             if Fields.NUMBER not in self.data:
                 if Fields.NUMBER in self.data[Fields.MD_PROV]:
                     self.data[Fields.MD_PROV][Fields.NUMBER][
                         "note"
-                    ] = DefectCodes.NOT_MISSING
+                    ] = f"IGNORE:{DefectCodes.MISSING}"
                     if replace_source:
                         self.data[Fields.MD_PROV][Fields.NUMBER]["source"] = source
                 else:
                     self.data[Fields.MD_PROV][Fields.NUMBER] = {
                         "source": source,
-                        "note": DefectCodes.NOT_MISSING,
+                        "note": f"IGNORE:{DefectCodes.MISSING}",
                     }
 
     def set_masterdata_consistent(self) -> None:
@@ -1088,6 +1091,17 @@ class Record:
                 "note": note,
             }
 
+    def remove_data_provenance_note(self, *, key: str, note: str) -> None:
+        """Remove a masterdata provenance note"""
+        if Fields.D_PROV not in self.data:
+            return
+        if key not in self.data[Fields.D_PROV]:
+            return
+        notes = self.data[Fields.D_PROV][key]["note"].split(",")
+        if note not in notes:
+            return
+        self.data[Fields.D_PROV][key]["note"] = ",".join(n for n in notes if n != note)
+
     def add_masterdata_provenance(
         self, *, key: str, source: str, note: str = ""
     ) -> None:
@@ -1099,9 +1113,10 @@ class Record:
         if key in md_p_dict:
             if md_p_dict[key]["note"] == "" or "" == note:
                 md_p_dict[key]["note"] = note
-            elif DefectCodes.MISSING == note and DefectCodes.NOT_MISSING in md_p_dict[
-                key
-            ]["note"].split(","):
+            elif (
+                DefectCodes.MISSING == note
+                and f"IGNORE:{DefectCodes.MISSING}" in md_p_dict[key]["note"].split(",")
+            ):
                 md_p_dict[key]["note"] = DefectCodes.MISSING
             elif note not in md_p_dict[key]["note"].split(","):
                 md_p_dict[key]["note"] += f",{note}"
@@ -1174,26 +1189,91 @@ class Record:
 
         return True
 
+    def defects(self, field: str) -> typing.List[str]:
+        """Get a list of defects for a field"""
+        if field in self.data[Fields.MD_PROV]:
+            return self.data[Fields.MD_PROV][field]["note"].split(",")
+        if field in self.data[Fields.D_PROV]:
+            return self.data[Fields.D_PROV][field]["note"].split(",")
+        raise KeyError
+
+    def ignore_defect(self, *, field: str, defect: str) -> None:
+        """Ignore a defect for a field"""
+        ignore_code = f"IGNORE:{defect}"
+
+        if field in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if (
+                Fields.MD_PROV not in self.data
+                or field not in self.data[Fields.MD_PROV]
+            ):
+                self.add_masterdata_provenance_note(key=field, note=ignore_code)
+            else:
+                notes = self.data[Fields.MD_PROV][field]["note"].split(",")
+                if defect in notes:
+                    notes.remove(defect)
+                if ignore_code not in notes:
+                    notes.append(ignore_code)
+                self.data[Fields.MD_PROV][field]["note"] = ",".join(notes)
+        else:
+            if Fields.D_PROV not in self.data or field not in self.data[Fields.D_PROV]:
+                self.add_data_provenance_note(key=field, note=ignore_code)
+            else:
+                notes = self.data[Fields.D_PROV][field]["note"].split(",")
+                if defect in notes:
+                    notes.remove(defect)
+                if ignore_code not in notes:
+                    notes.append(ignore_code)
+                self.data[Fields.D_PROV][field]["note"] = ",".join(notes)
+
+    def ignored_defect(self, *, field: str, defect: str) -> bool:
+        """Get a list of ignored defects for a record"""
+        ignore_code = f"IGNORE:{defect}"
+        if Fields.MD_PROV in self.data and field in self.data[Fields.MD_PROV]:
+            notes = self.data[Fields.MD_PROV][field]["note"].split(",")
+            return ignore_code in notes
+        if Fields.D_PROV in self.data and field in self.data[Fields.D_PROV]:
+            notes = self.data[Fields.D_PROV][field]["note"].split(",")
+            return ignore_code in notes
+        return False
+
+    def has_pdf_defects(self) -> bool:
+        """Check whether the PDF has quality defects"""
+
+        if (
+            Fields.D_PROV not in self.data
+            or Fields.FILE not in self.data[Fields.D_PROV]
+        ):
+            return False
+
+        return bool(
+            [
+                n
+                for n in self.data[Fields.D_PROV][Fields.FILE]["note"].split(",")
+                if not n.startswith("IGNORE:") and n != ""
+            ]
+        )
+
     def has_quality_defects(self, *, field: str = "") -> bool:
         """Check whether a record has quality defects"""
         if field != "":
             if field in self.data.get(Fields.MD_PROV, {}):
                 note = self.data[Fields.MD_PROV][field]["note"]
                 notes = note.split(",")
-                notes = [n for n in notes if n != DefectCodes.NOT_MISSING]
+                notes = [n for n in notes if not n.startswith("IGNORE:")]
                 return len(notes) == 0
             if field in self.data.get(Fields.D_PROV, {}):
                 note = self.data[Fields.D_PROV][field]["note"]
                 notes = note.split(",")
-                notes = [n for n in notes if n != DefectCodes.NOT_MISSING]
+                notes = [n for n in notes if not n.startswith("IGNORE:")]
                 return len(notes) == 0
             return False
-
-        return any(
-            x["note"] != ""
+        defect_codes = [
+            n
             for x in self.data.get(Fields.MD_PROV, {}).values()
-            if not any(y == x["note"] for y in [DefectCodes.NOT_MISSING])
-        )
+            for n in x["note"].split(",")
+            if not n.startswith("IGNORE:") and n != ""
+        ]
+        return bool(defect_codes)
 
     def get_container_title(self) -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
@@ -1297,26 +1377,35 @@ class Record:
                     # close open handles
                     converter.close()
                     fake_file_handle.close()
-            except (TypeError, KeyError):  # pragma: no cover
+            except (
+                TypeError,
+                KeyError,
+                pdfminer.pdfparser.PDFSyntaxError,
+            ):  # pragma: no cover
                 pass
         return "".join(text_list)
 
     def set_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
         pdf_path = Path(self.data[Fields.FILE]).absolute()
-        with open(pdf_path, "rb") as file:
-            parser = PDFParser(file)
-            document = PDFDocument(parser)
-            pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-        self.data["pages_in_file"] = pages_in_file
+        try:
+            with open(pdf_path, "rb") as file:
+                parser = PDFParser(file)
+                document = PDFDocument(parser)
+                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+            self.data[Fields.PAGES_IN_FILE] = pages_in_file
+        except pdfminer.pdfparser.PDFSyntaxError:
+            pass
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
-        self.data["text_from_pdf"] = ""
+        self.data[Fields.TEXT_FROM_PDF] = ""
         try:
             self.set_pages_in_pdf()
             text = self.extract_text_by_page(pages=[0, 1, 2])
-            self.data["text_from_pdf"] = text.replace("\n", " ").replace("\x0c", "")
+            self.data[Fields.TEXT_FROM_PDF] = text.replace("\n", " ").replace(
+                "\x0c", ""
+            )
 
         except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
@@ -1475,10 +1564,24 @@ class Record:
 
     def cleanup_pdf_processing_fields(self) -> None:
         """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""
-        if "text_from_pdf" in self.data:
-            del self.data["text_from_pdf"]
-        if "pages_in_file" in self.data:
-            del self.data["pages_in_file"]
+        if Fields.TEXT_FROM_PDF in self.data:
+            del self.data[Fields.TEXT_FROM_PDF]
+        if Fields.PAGES_IN_FILE in self.data:
+            del self.data[Fields.PAGES_IN_FILE]
+
+    def run_pdf_quality_model(
+        self,
+        *,
+        pdf_qm: colrev.qm.quality_model.QualityModel,
+        set_prepared: bool = False,
+    ) -> None:
+        """Run the PDF quality model"""
+
+        pdf_qm.run(record=self)
+        if self.has_pdf_defects():
+            self.set_status(target_state=RecordState.pdf_needs_manual_preparation)
+        elif set_prepared:
+            self.set_status(target_state=RecordState.pdf_prepared)
 
     def run_quality_model(
         self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False

@@ -69,7 +69,7 @@ colrev.exceptions
       RecordNotParsableException
       RepoInitError
       RepoSetupError
-      ReviewManagerNotNofiedError
+      ReviewManagerNotNotifiedError
       SearchNotAutomated
       SearchSourceException
       ServiceNotAvailableException

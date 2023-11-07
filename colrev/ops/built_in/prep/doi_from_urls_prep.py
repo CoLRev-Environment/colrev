@@ -47,6 +47,8 @@ class DOIFromURLsPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
         self.same_record_type_required = (
             prep_operation.review_manager.settings.is_curated_masterdata_repo()
         )
@@ -58,9 +60,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             ) from exc
         _, self.email = prep_operation.review_manager.get_committer()
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by retrieving its DOI from the website (url) if available"""
 
         if (Fields.URL not in record.data and Fields.FULLTEXT not in record.data) or (
@@ -72,7 +72,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             url = record.data.get(Fields.URL, record.data.get(Fields.FULLTEXT, "NA"))
             headers = {"user-agent": f"{__name__}  " f"(mailto:{self.email})"}
             ret = self.session.request(
-                "GET", url, headers=headers, timeout=prep_operation.timeout
+                "GET", url, headers=headers, timeout=self.prep_operation.timeout
             )
             ret.raise_for_status()
             res = re.findall(self.doi_regex, ret.text)
@@ -96,9 +96,9 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             }
             retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
             doi_connector.DOIConnector.retrieve_doi_metadata(
-                review_manager=prep_operation.review_manager,
+                review_manager=self.review_manager,
                 record=retrieved_record,
-                timeout=prep_operation.timeout,
+                timeout=self.prep_operation.timeout,
             )
 
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
@@ -106,7 +106,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=self.same_record_type_required,
             )
-            if similarity < prep_operation.retrieval_similarity:
+            if similarity < self.prep_operation.retrieval_similarity:
                 return record
 
             record.merge(merging_record=retrieved_record, default_source=url)

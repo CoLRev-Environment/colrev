@@ -223,10 +223,8 @@ class TablePrescreen(JsonSchemaMixin):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.logger.info("Completed import")
 
-    # pylint: disable=unused-argument
     def run_prescreen(
         self,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,
     ) -> dict:
