@@ -261,25 +261,29 @@ class Load(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.__validate_load(source=source)
 
-        if not keep_ids:
-            # Set IDs based on local_index
-            # (the same records are more likely to have the same ID on the same machine)
-            self.review_manager.logger.debug("Set IDs")
-            records = self.review_manager.dataset.set_ids(
-                records=records,
-                selected_ids=[
-                    r[Fields.ID] for r in source.search_source.source_records_list
-                ],
-            )
+        if source.search_source.to_import > 0:
+            if not keep_ids:
+                # Set IDs based on local_index
+                # (the same records are more likely to have the same ID on the same machine)
+                self.review_manager.logger.debug("Set IDs")
+                records = self.review_manager.dataset.set_ids(
+                    records=records,
+                    selected_ids=[
+                        r[Fields.ID] for r in source.search_source.source_records_list
+                    ],
+                )
 
-        self.review_manager.logger.info(
-            "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
-        )
+            self.review_manager.logger.info(
+                "New records loaded".ljust(38)
+                + f"{source.search_source.to_import} records"
+            )
+        else:
+            self.review_manager.logger.info("New additional records loaded")
 
         self.review_manager.dataset.add_setting_changes()
         self.review_manager.dataset.add_changes(path=source.search_source.filename)
         if (
-            0 == getattr(source.search_source, "to_import", 0)
+            source.search_source.to_import == 0
             and not self.review_manager.high_level_operation
         ):
             print()
