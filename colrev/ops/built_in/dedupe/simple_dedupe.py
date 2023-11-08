@@ -269,8 +269,8 @@ class SimpleDedupe(JsonSchemaMixin):
             Fields.ID,
             Fields.ORIGIN,
             Fields.STATUS,
-            "colrev_id",
-            "container_title",
+            Fields.COLREV_ID,
+            Fields.CONTAINER_TITLE,
         ]:
             if key_to_drop in keys:
                 keys.remove(key_to_drop)
@@ -308,6 +308,8 @@ class SimpleDedupe(JsonSchemaMixin):
         This procedure should only be used in small samples on which active learning
         models cannot be trained.
         """
+
+        self.dedupe_operation.merge_based_on_global_ids(apply=True)
 
         # default='warn'
         pd.options.mode.chained_assignment = None  # type: ignore  # noqa

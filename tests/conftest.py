@@ -302,6 +302,14 @@ def fixture_prep_operation(
     return base_repo_review_manager.get_prep_operation()
 
 
+@pytest.fixture(scope="package", name="dedupe_operation")
+def fixture_pdedupe_operation(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.ops.dedupe.Dedupe:
+    """Fixture returning a dedupe operation"""
+    return base_repo_review_manager.get_dedupe_operation()
+
+
 @pytest.fixture
 def record_with_pdf() -> colrev.record.Record:
     """Fixture returning a record containing a file (PDF)"""

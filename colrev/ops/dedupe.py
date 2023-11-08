@@ -12,11 +12,13 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
@@ -33,6 +35,8 @@ class Dedupe(colrev.operation.Operation):
     DUPLICATES_TO_VALIDATE = Path("duplicates_to_validate.xlsx")
     SAME_SOURCE_MERGE_FILE = Path("same_source_merges.txt")
     PREVENTED_SAME_SOURCE_MERGE_FILE = Path("prevented_same_source_merges.txt")
+
+    debug = False
 
     def __init__(
         self,
@@ -93,8 +97,9 @@ class Dedupe(colrev.operation.Operation):
         if 0 == records_df.shape[0]:
             return {}
 
+        records_df.replace(to_replace={"UNKNOWN": ""}, inplace=True)
         required_fields = [
-            Fields.JOURNAL,
+            Fields.ENTRYTYPE,
             Fields.JOURNAL,
             Fields.BOOKTITLE,
             Fields.SERIES,
@@ -102,6 +107,9 @@ class Dedupe(colrev.operation.Operation):
             Fields.NUMBER,
             Fields.PAGES,
             Fields.AUTHOR,
+            Fields.ABSTRACT,
+            Fields.ISBN,
+            Fields.DOI,
         ]
         for required_field in required_fields:
             if required_field not in records_df:
@@ -111,19 +119,38 @@ class Dedupe(colrev.operation.Operation):
         if Fields.STATUS in records_df:
             # pylint: disable=colrev-direct-status-assign
             records_df[Fields.STATUS] = records_df[Fields.STATUS].astype(str)
+        if Fields.ORIGIN in records_df:
+            # pylint: disable=unnecessary-lambda
+            records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(
+                lambda x: ",".join(x)
+            )
 
-        records_df[Fields.AUTHOR] = records_df[Fields.AUTHOR].str[:60]
+        def select_authors(authors: str) -> str:
+            """Select first author"""
+            authors_list = str(authors).split(" and ")
+            authors_str = " ".join(
+                [author.split(",")[0] for author in authors_list][:8]
+            )
+            return colrev.env.utils.remove_accents(input_str=authors_str)
+
+        # pylint: disable=unnecessary-lambda
+        records_df[Fields.AUTHOR] = records_df[Fields.AUTHOR].apply(
+            lambda x: select_authors(x)
+        )
 
         records_df.loc[
-            records_df.ENTRYTYPE == "inbook", "container_title"
-        ] = records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.TITLE]
+            records_df.ENTRYTYPE == ENTRYTYPES.INBOOK, Fields.CONTAINER_TITLE
+        ] = records_df.loc[records_df.ENTRYTYPE == ENTRYTYPES.INBOOK, Fields.TITLE]
         if Fields.CHAPTER in records_df:
             records_df.loc[
-                records_df.ENTRYTYPE == "inbook", Fields.TITLE
-            ] = records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.CHAPTER]
+                records_df.ENTRYTYPE == ENTRYTYPES.INBOOK, Fields.TITLE
+            ] = records_df.loc[
+                records_df.ENTRYTYPE == ENTRYTYPES.INBOOK, Fields.CHAPTER
+            ]
 
         records_df[Fields.TITLE] = (
             records_df[Fields.TITLE]
+            .str.replace("&amp;", "and")
             .str.replace(r"[^A-Za-z0-9, ]+", " ", regex=True)
             .str.lower()
         )
@@ -135,10 +162,12 @@ class Dedupe(colrev.operation.Operation):
             .str.lower()
         )
 
+        # Note: don't include years/nrs because they are not used consistently
         records_df[Fields.BOOKTITLE] = (
             records_df[Fields.BOOKTITLE]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+            .str.replace(r"[^A-Za-z, ]+", "", regex=True)
             .str.lower()
+            .replace("proceedings of the", "", regex=True)
         )
 
         records_df[Fields.SERIES] = (
@@ -147,10 +176,16 @@ class Dedupe(colrev.operation.Operation):
             .str.lower()
         )
 
-        records_df["container_title"] = (
-            records_df[Fields.JOURNAL].fillna("")
-            + records_df[Fields.BOOKTITLE].fillna("")
-            + records_df[Fields.SERIES].fillna("")
+        # TODO : extract and standardize!
+        def get_container_title(row: dict) -> str:
+            if row[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                return row[Fields.JOURNAL]
+            if row[Fields.ENTRYTYPE] in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.BOOK]:
+                return row[Fields.BOOKTITLE]
+            return ""
+
+        records_df[Fields.CONTAINER_TITLE] = records_df.apply(
+            get_container_title, axis=1
         )
 
         # To validate/improve preparation in jupyter notebook:
@@ -168,17 +203,22 @@ class Dedupe(colrev.operation.Operation):
                 records_df.columns.difference(
                     [
                         Fields.ID,
+                        Fields.ENTRYTYPE,
                         Fields.AUTHOR,
                         Fields.TITLE,
                         Fields.YEAR,
                         Fields.JOURNAL,
-                        "container_title",
+                        Fields.CONTAINER_TITLE,
                         Fields.VOLUME,
                         Fields.NUMBER,
                         Fields.PAGES,
-                        "colrev_id",
+                        Fields.COLREV_ID,
                         Fields.ORIGIN,
                         Fields.STATUS,
+                        Fields.ABSTRACT,
+                        Fields.URL,
+                        Fields.ISBN,
+                        Fields.DOI,
                     ]
                 )
             ),
@@ -190,7 +230,7 @@ class Dedupe(colrev.operation.Operation):
                 Fields.AUTHOR,
                 Fields.TITLE,
                 Fields.JOURNAL,
-                "container_title",
+                Fields.CONTAINER_TITLE,
                 Fields.PAGES,
             ]
         ] = records_df[
@@ -198,7 +238,7 @@ class Dedupe(colrev.operation.Operation):
                 Fields.AUTHOR,
                 Fields.TITLE,
                 Fields.JOURNAL,
-                "container_title",
+                Fields.CONTAINER_TITLE,
                 Fields.PAGES,
             ]
         ].astype(
@@ -363,7 +403,7 @@ class Dedupe(colrev.operation.Operation):
             main_record=main_record, dupe_record=dupe_record
         ):
             self.review_manager.logger.info(
-                f" merge {main_record.data['ID']} - {dupe_record.data['ID']}"
+                f" merge {main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return
 
@@ -378,8 +418,8 @@ class Dedupe(colrev.operation.Operation):
                 f"{merge_info}\n"
                 f"  {main_record.format_bib_style()}\n"
                 f"  {dupe_record.format_bib_style()}\n"
-                f"  {main_record.data.get('colrev_origin', ['ERROR'])} x "
-                f"{dupe_record.data.get('colrev_origin', ['ERROR'])}\n"
+                f"  {main_record.data.get(Fields.ORIGIN, ['ERROR'])} x "
+                f"{dupe_record.data.get(Fields.ORIGIN, ['ERROR'])}\n"
             )
             with self.same_source_merge_file.open("a", encoding="utf8") as file:
                 file.write(merge_info + "\n")
@@ -397,27 +437,27 @@ class Dedupe(colrev.operation.Operation):
 
             self.review_manager.logger.info(
                 "To force merge use colrev dedupe --merge "
-                f"{main_record.data['ID']},{dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]},{dupe_record.data[Fields.ID]}"
             )
 
     def __is_cross_level_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> bool:
         is_cross_level_merge_attempt = False
-        if main_record.data[Fields.ENTRYTYPE] in ["proceedings"] or dupe_record.data[
-            Fields.ENTRYTYPE
-        ] in ["proceedings"]:
+        if main_record.data[Fields.ENTRYTYPE] in [
+            ENTRYTYPES.PROCEEDINGS
+        ] or dupe_record.data[Fields.ENTRYTYPE] in [ENTRYTYPES.PROCEEDINGS]:
             is_cross_level_merge_attempt = True
 
         if (
-            main_record.data[Fields.ENTRYTYPE] == "book"
-            and dupe_record.data[Fields.ENTRYTYPE] == "inbook"
+            main_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK
+            and dupe_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK
         ):
             is_cross_level_merge_attempt = True
 
         if (
-            main_record.data[Fields.ENTRYTYPE] == "inbook"
-            and dupe_record.data[Fields.ENTRYTYPE] == "book"
+            main_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK
+            and dupe_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK
         ):
             is_cross_level_merge_attempt = True
 
@@ -428,9 +468,9 @@ class Dedupe(colrev.operation.Operation):
     ) -> bool:
         gid_conflict = False
         if Fields.DOI in main_record.data and Fields.DOI in dupe_record.data:
-            if main_record.data.get(Fields.DOI, Fields.DOI) != dupe_record.data.get(
-                Fields.DOI, Fields.DOI
-            ):
+            doi_main = main_record.data.get(Fields.DOI, "a").replace("\\", "")
+            doi_dupe = dupe_record.data.get(Fields.DOI, "b").replace("\\", "")
+            if doi_main != doi_dupe:
                 gid_conflict = True
 
         return gid_conflict
@@ -515,14 +555,14 @@ class Dedupe(colrev.operation.Operation):
         ):
             self.review_manager.logger.info(
                 "Prevented cross-level merge: "
-                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return True
 
         if self.__gids_conflict(main_record=main_record, dupe_record=dupe_record):
             self.review_manager.logger.info(
                 "Prevented merge with conflicting global IDs: "
-                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return True
 
@@ -532,7 +572,7 @@ class Dedupe(colrev.operation.Operation):
         ):
             self.review_manager.logger.info(
                 "Prevented same-source merge: "
-                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return True
 
@@ -837,7 +877,9 @@ class Dedupe(colrev.operation.Operation):
                         if duplicated_source in o
                     ]
                     all_cases.append(f"{duplicated_source}: {cases}")
-                same_source_merges.append(f"{record['ID']} ({', '.join(all_cases)})")
+                same_source_merges.append(
+                    f"{record[Fields.ID]} ({', '.join(all_cases)})"
+                )
 
         info = {
             "same_source_merges": same_source_merges,
@@ -923,7 +965,7 @@ class Dedupe(colrev.operation.Operation):
             print()
 
     @colrev.operation.Operation.decorate()
-    def main(self) -> None:
+    def main(self, *, debug: bool = False) -> None:
         """Dedupe records (main entrypoint)"""
 
         self.review_manager.logger.info("Dedupe")
@@ -933,11 +975,10 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.logger.info(
             "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/dedupe.html"
         )
+        self.debug = debug
 
         if not self.review_manager.high_level_operation:
             print()
-
-        self.merge_based_on_global_ids(apply=True)
 
         package_manager = self.review_manager.get_package_manager()
         for (

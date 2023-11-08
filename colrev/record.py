@@ -876,15 +876,15 @@ class Record:
             ):
                 record_b_dict[mandatory_field] = ""
 
-        if "container_title" not in record_a_dict:
-            record_a_dict["container_title"] = (
+        if Fields.CONTAINER_TITLE not in record_a_dict:
+            record_a_dict[Fields.CONTAINER_TITLE] = (
                 record_a_dict.get(Fields.JOURNAL, "")
                 + record_a_dict.get(Fields.BOOKTITLE, "")
                 + record_a_dict.get(Fields.SERIES, "")
             )
 
-        if "container_title" not in record_b_dict:
-            record_b_dict["container_title"] = (
+        if Fields.CONTAINER_TITLE not in record_b_dict:
+            record_b_dict[Fields.CONTAINER_TITLE] = (
                 record_b_dict.get(Fields.JOURNAL, "")
                 + record_b_dict.get(Fields.BOOKTITLE, "")
                 + record_b_dict.get(Fields.SERIES, "")
@@ -924,9 +924,12 @@ class Record:
             )
 
             outlet_similarity = 0.0
-            if record_b["container_title"] and record_a["container_title"]:
+            if record_b[Fields.CONTAINER_TITLE] and record_a[Fields.CONTAINER_TITLE]:
                 outlet_similarity = (
-                    fuzz.ratio(record_a["container_title"], record_b["container_title"])
+                    fuzz.ratio(
+                        record_a[Fields.CONTAINER_TITLE],
+                        record_b[Fields.CONTAINER_TITLE],
+                    )
                     / 100
                 )
 

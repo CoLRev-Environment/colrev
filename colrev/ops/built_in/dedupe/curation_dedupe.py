@@ -266,7 +266,7 @@ class CurationDedupe(JsonSchemaMixin):
                 # print(processed_same_toc_same_source_records)
 
         for record in records.values():
-            record.pop("container_title")
+            record.pop(Fields.CONTAINER_TITLE)
         self.review_manager.dataset.save_records_dict(records=records)
 
         if self.review_manager.dataset.has_changes():
@@ -295,8 +295,8 @@ class CurationDedupe(JsonSchemaMixin):
             Fields.BOOKTITLE,
         ]
         for record in records.values():
-            if "container_title" not in record:
-                record["container_title"] = (
+            if Fields.CONTAINER_TITLE not in record:
+                record[Fields.CONTAINER_TITLE] = (
                     record.get(Fields.JOURNAL, "")
                     + record.get(Fields.BOOKTITLE, "")
                     + record.get(Fields.SERIES, "")
@@ -562,6 +562,8 @@ class CurationDedupe(JsonSchemaMixin):
 
     def run_dedupe(self) -> None:
         """Run the curation dedupe procedure"""
+
+        self.dedupe_operation.merge_based_on_global_ids(apply=True)
 
         records = self.review_manager.dataset.load_records_dict()
         records = self.__prep_records(records=records)

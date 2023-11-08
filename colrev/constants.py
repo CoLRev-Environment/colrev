@@ -69,6 +69,8 @@ class Fields:
     EDITION = "edition"
     ADDRESS = "address"
 
+    CONTAINER_TITLE = "container_title"
+
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
 
