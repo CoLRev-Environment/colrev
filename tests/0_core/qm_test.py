@@ -14,6 +14,7 @@ from colrev.constants import Fields
 @pytest.mark.parametrize(
     "author_str, defects",
     [
+        ("{{European Union}}", {}),
         ("RAI", {DefectCodes.MOSTLY_ALL_CAPS, DefectCodes.INCOMPLETE_FIELD}),
         (
             "Rai, Arun and B,",
@@ -98,6 +99,8 @@ def test_get_quality_defects_author(
     v_t_record.data[Fields.AUTHOR] = author_str
     v_t_record.run_quality_model(qm=quality_model)
     if not defects:
+        if v_t_record.has_quality_defects():
+            print(v_t_record.defects(field=Fields.AUTHOR))
         assert not v_t_record.has_quality_defects()
         return
 
