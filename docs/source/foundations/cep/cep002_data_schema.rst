@@ -194,7 +194,10 @@ Fields not listed in the ENTRYTYPEs section are optional.
 -  note: containing custom notes entered by users (note fields from SearchSources do not replace this field)
 -  cited_by: current number of citations (volatile)
 
-Identifiers: **work-in-progress**
+**work-in-progress**
+
+- Identifiers
+- title fields in different languages (e.g., title_deu)
 
 .. _schema mapping:
 
