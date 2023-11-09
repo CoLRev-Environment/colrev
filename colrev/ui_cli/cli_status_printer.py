@@ -30,8 +30,8 @@ def print_review_instructions(review_instructions: dict) -> None:
     if not review_instructions:
         print(f"    {Colors.GREEN}Review iteration completed{Colors.END}")
         print(
-            f"    {Colors.ORANGE}To start the next iteration of the review, "
-            f"add new search results (to data/search){Colors.END}"
+            f"    {Colors.ORANGE}To start the next iteration of the review, run the search\n "
+            f"    colrev search{Colors.END}"
         )
         print()
 

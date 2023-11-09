@@ -436,7 +436,7 @@ class Advisor:
                         continue
                     endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
-                    advice = endpoint.get_advice(self.review_manager)  # type: ignore
+                    advice = endpoint.get_advice()  # type: ignore
                     if advice:
                         review_instructions.append(advice)
 
@@ -534,8 +534,8 @@ class Advisor:
             if not self.review_manager.dataset.has_untracked_search_records():
                 instruction = {
                     "info": "Review iteration completed.",
-                    "msg": "To start the next iteration of the review, "
-                    + "add new search results (to data/search)",
+                    "msg": "To start the next iteration of the review, run the search",
+                    "cmd": "colrev search",
                 }
                 review_instructions.append(instruction)
             else:
