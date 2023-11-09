@@ -307,7 +307,7 @@ class CurationDedupe(JsonSchemaMixin):
                     record[required_field] = ""
         return records
 
-    def __dedupe_source(self, *, records: dict) -> list[dict]:
+    def __dedupe_source(self, *, records: dict) -> list[list]:
         self.review_manager.logger.info(
             "Processing as a non-pdf source (matching exact colrev_ids)"
         )
@@ -324,7 +324,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         toc_items = self.__get_toc_items(records_list=source_records)
 
-        decision_list: list[dict] = []
+        decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
         # match based on overlapping  colrev_ids
@@ -361,11 +361,7 @@ class CurationDedupe(JsonSchemaMixin):
                         )
                         if overlapping_colrev_ids:
                             decision_list.append(
-                                {
-                                    "ID1": new_same_toc_record[Fields.ID],
-                                    "ID2": rec2[Fields.ID],
-                                    "decision": "duplicate",
-                                }
+                                new_same_toc_record[Fields.ORIGIN] + rec2[Fields.ORIGIN]
                             )
                             print("TODO : validate whether it merges correctly:")
                             input(decision_list)
@@ -421,46 +417,19 @@ class CurationDedupe(JsonSchemaMixin):
             if Fields.FILE in rec1:
                 if tuple_to_process[0] in [x["ID1"] for x in decision_list]:
                     return
-                if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[1],
-                            "ID2": tuple_to_process[0],
-                            "decision": "duplicate",
-                        }
-                    )
-                else:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[0],
-                            "ID2": tuple_to_process[1],
-                            "decision": "duplicate",
-                        }
-                    )
+                decision_list.append(rec1[Fields.ORIGIN] + rec2[Fields.ORIGIN])
             else:
                 if tuple_to_process[1] in [x["ID1"] for x in decision_list]:
                     return
                 if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[1],
-                            "ID2": tuple_to_process[0],
-                            "decision": "duplicate",
-                        }
-                    )
+                    decision_list.append(rec1[Fields.ORIGIN] + rec2[Fields.ORIGIN])
                 else:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[0],
-                            "ID2": tuple_to_process[1],
-                            "decision": "duplicate",
-                        }
-                    )
+                    decision_list.append(rec1[Fields.ORIGIN] + rec2[Fields.ORIGIN])
 
     def __dedupe_pdf_toc_item(
         self,
         *,
-        decision_list: list[dict],
+        decision_list: list[list],
         toc_item: dict,
         records: dict,
         source_records: list,
@@ -515,7 +484,7 @@ class CurationDedupe(JsonSchemaMixin):
                 pdf_record_ids=pdf_record_ids,
             )
 
-    def __dedupe_pdf_source(self, *, records: dict) -> list[dict]:
+    def __dedupe_pdf_source(self, *, records: dict) -> list[list]:
         self.review_manager.logger.info("Processing as a pdf source")
 
         source_records = [
@@ -528,7 +497,7 @@ class CurationDedupe(JsonSchemaMixin):
             )
         ]
 
-        decision_list: list[dict] = []
+        decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
         for toc_item in tqdm(self.__get_toc_items(records_list=source_records)):
@@ -583,7 +552,7 @@ class CurationDedupe(JsonSchemaMixin):
             f"curated_records and {self.settings.selected_source} (within toc_items)"
         )
 
-        decision_list: list[dict] = []
+        decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
         if not self.__pdf_source_selected():
             decision_list = self.__dedupe_source(records=records)
@@ -602,16 +571,13 @@ class CurationDedupe(JsonSchemaMixin):
             f"{Colors.GREEN}Duplicates identified{Colors.END}"
         )
 
-        # decision_list =
-        # [{'ID1': '0000000053', 'ID2': 'BellMillsFadel2013', 'decision': 'duplicate'}, .. . ]
-
         preferred_masterdata_sources = [
             s
             for s in self.review_manager.settings.sources
             if s.endpoint != "colrev.files_dir"
         ]
         self.dedupe_operation.apply_merges(
-            results=decision_list,
+            origin_sets=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
         self.review_manager.create_commit(

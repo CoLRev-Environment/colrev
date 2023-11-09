@@ -68,11 +68,8 @@ def expected_true_dupes(helpers) -> list:  # type: ignore
         helpers.test_data_path / Path("dedupe_package/expected_true_duplicates.csv")
     )
 
-    expected_td_pairs = list(
-        expected_true_dupes["ID1"].astype(str)
-        + "-"
-        + expected_true_dupes["ID2"].astype(str)
-    )
+    expected_td_pairs = expected_true_dupes["merged_origins"].apply(eval).tolist()
+
     return expected_td_pairs
 
 
@@ -98,17 +95,18 @@ def test_dedupe(
     for expected_item in expected_blocked:
         assert expected_item in actual_blocked
 
-    matches = dedupe_instance.identify_true_matches(actual_blocked_df)
+    results = dedupe_instance.identify_true_matches(actual_blocked_df)
 
-    # Matching: true_dupes
-    true_matches = matches["true_pairs"]
-    actual_true_dupes = list(
-        true_matches["ID1"].astype(str) + "-" + true_matches["ID2"].astype(str)
-    )
-    for actual_item in actual_true_dupes:
+    # Matching (true_dupes)
+    predicted_dupes = results["duplicate_origin_sets"]
+
+    for actual_item in predicted_dupes:
         assert actual_item in expected_true_dupes
     for expected_item in expected_true_dupes:
-        assert expected_item in actual_true_dupes
+        assert expected_item in predicted_dupes
+
+    # TODO : switch to origins (instead of IDs)
+    # TODO : remove fields form test-records (anonymize origins)
 
     # TODO : maybe_pairs
 

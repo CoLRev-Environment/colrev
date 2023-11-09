@@ -662,14 +662,6 @@
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Default deduplication (:doc:`instructions </resources/extensions_index/colrev.dedupe>`)",
             "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev.simple_dedupe",
-            "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "Simple duplicate identification (for small sample sizes) (:doc:`instructions </resources/extensions_index/colrev.simple_dedupe>`)",
-            "ci_supported": true
         }
     ],
     "prescreen": [

@@ -174,11 +174,12 @@ class Dedupe(JsonSchemaMixin):
             .reset_index(drop=True)
         )
         self.review_manager.logger.info(
-            f"Blocking with {block_fields}: {grouped.shape[0]} pairs"
+            f"Blocked {str(grouped.shape[0]).rjust(8)} pairs with {block_fields}"
         )
         return grouped
 
     # flake8: noqa: E501
+    # pylint: disable=line-too-long
     def identify_true_matches(self, pairs: pd.DataFrame) -> pd.DataFrame:
         """
         This method identifies the true matches from the given pairs.
@@ -308,8 +309,19 @@ class Dedupe(JsonSchemaMixin):
         # maybe_pairs = pd.concat([maybe_pairs, important_mismatch])
         # maybe_pairs = maybe_pairs.drop_duplicates()
 
+        origin_sets = [
+            row["colrev_origin_1"].split(";") + row["colrev_origin_2"].split(";")
+            for _, row in true_pairs.iterrows()
+        ]
+        duplicate_origin_sets = self.dedupe_operation.connected_components(
+            origin_sets=origin_sets
+        )
 
-        return {"true_pairs": true_pairs, "maybe_pairs": maybe_pairs}
+        return {
+            "duplicate_origin_sets": duplicate_origin_sets,
+            "true_pairs": true_pairs,
+            "maybe_pairs": maybe_pairs,
+        }
 
     def run_dedupe(self) -> None:
         """Run default dedupe"""
@@ -323,23 +335,16 @@ class Dedupe(JsonSchemaMixin):
         records_df = pd.DataFrame.from_dict(records, orient="index")
 
         deduplication_pairs = self.block_pairs_for_deduplication(records_df)
-        deduplication_pairs.to_csv("dedupe_pairs.csv")
-
-        # TODO generate_dup_id : get connected components of the graph
+        # deduplication_pairs.to_csv("dedupe_pairs.csv")
 
         result = self.identify_true_matches(deduplication_pairs)
-
-        result["true_pairs"]["decision"] = "duplicate"
-        potential_duplicates = result["true_pairs"][["ID1", "ID2", "decision"]].to_dict(
-            "records"
-        )
-
-        # potential_duplicates = []
 
         if self.dedupe_operation.debug:
             return
 
-        self.dedupe_operation.apply_merges(results=potential_duplicates)
+        self.dedupe_operation.apply_merges(
+            origin_sets=result["duplicate_origin_sets"], complete_dedupe=True
+        )
 
         self.review_manager.create_commit(
             msg="Merge duplicate records",

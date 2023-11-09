@@ -428,9 +428,7 @@ class Initializer:
         with open("settings.json", encoding="utf-8") as file:
             settings = json.load(file)
 
-        settings["dedupe"]["dedupe_package_endpoints"] = [
-            {"endpoint": "colrev.simple_dedupe"}
-        ]
+        settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
         settings["sources"] = [
             {
                 "endpoint": "colrev.unknown_source",

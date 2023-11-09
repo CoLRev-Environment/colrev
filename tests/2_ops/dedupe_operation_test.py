@@ -32,20 +32,26 @@ def test_dedupe(  # type: ignore
 ) -> None:
     """Test the dedupe operation"""
 
+    # TODO : this should test individual methods (main/dedupe package is tested separately...)
+
     dedupe_operation = dedupe_test_setup.get_dedupe_operation(
         notify_state_transition_operation=True
     )
+    dedupe_operation.review_manager.verbose_mode = True
     dedupe_operation.main()
-    dedupe_operation.merge_records(merge="Staehr2010,Staehr2010a")
-    dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
-    dedupe_test_setup.create_commit(
-        msg="Merge Staehr2010-Staehr2010a", manual_author=True
-    )
 
-    dedupe_operation.unmerge_records(previous_id_lists=["Staehr2010", "Staehr2010a"])
+    dedupe_operation.unmerge_records(previous_id_lists=[["Staehr2010", "Staehr2010a"]])
     dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
     dedupe_test_setup.create_commit(
         msg="Unmerge Staehr2010-Staehr2010a", manual_author=True
+    )
+
+    dedupe_operation.merge_records(
+        merge="30_example_records.bib/Staehr2010;30_example_records.bib/Staehr2010a"
+    )
+    dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
+    dedupe_test_setup.create_commit(
+        msg="Merge Staehr2010-Staehr2010a", manual_author=True
     )
 
     expected_file = Path("dedupe/records_expected.bib")
