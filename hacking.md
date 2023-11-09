@@ -7,7 +7,8 @@ Muss ein externes Package wie das JsonSchema automatisch bei erster Verwendung i
 
 Müssen wir bezüglich packages etwas beachten? Muss unser Modul mit der Logik in einem eigenen Package liegen? Falls dazu erstmal nichts weiter beachtet werden muss, würden wir unseren Code einfach in einer SemanticScholar.py-Datei in search_sources ablegen.
 
-pushtest
+--> diese zeile wurde geändert ... pushtest 
+#speichern
 #für push: git add ...dateiname
 #git commit -m "was geändert wurde hier eingeben"
 #git push
