@@ -19,6 +19,7 @@ def elp(
     return elp_instance
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "input_value, expected",
     [

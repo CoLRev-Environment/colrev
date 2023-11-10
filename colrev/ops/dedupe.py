@@ -95,7 +95,7 @@ class Dedupe(colrev.operation.Operation):
             if not visited[node]:
                 component: List[str] = []
                 cls.__dfs(node, graph, visited, component)
-                components.append(component)
+                components.append(sorted(component))
 
         return components
 
@@ -123,8 +123,14 @@ class Dedupe(colrev.operation.Operation):
 
         return value
 
-    def prep_records(self, *, records_df: pd.DataFrame) -> dict:
-        """Prepare records for dedupe"""
+    def get_records_for_dedupe(
+        self, *, records_df: pd.DataFrame = None
+    ) -> pd.DataFrame:
+        """Get (pre-processed) records for dedupe"""
+
+        if records_df is None:
+            records = self.review_manager.dataset.load_records_dict()
+            records_df = pd.DataFrame.from_dict(records, orient="index")
 
         if 0 == records_df.shape[0]:
             return {}
@@ -146,6 +152,17 @@ class Dedupe(colrev.operation.Operation):
         for required_field in required_fields:
             if required_field not in records_df:
                 records_df[required_field] = ""
+
+        records_df = records_df[
+            ~(
+                records_df[Fields.STATUS].isin(
+                    [
+                        colrev.record.RecordState.md_imported,
+                        colrev.record.RecordState.md_needs_manual_preparation,
+                    ]
+                )
+            )
+        ]
 
         records_df[Fields.YEAR] = records_df[Fields.YEAR].astype(str)
         if Fields.STATUS in records_df:
@@ -217,21 +234,11 @@ class Dedupe(colrev.operation.Operation):
             .replace("proceedings of the", "", regex=True)
         )
 
-        records_df[Fields.SERIES] = (
-            records_df[Fields.SERIES]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-
-        # To validate/improve preparation in jupyter notebook:
-        # return records_df
-        # Copy to notebook:
-        # from colrev.review_manager import ReviewManager
-        # from colrev.operation import Operation, OperationsType
-        # review_manager = ReviewManager()
-        # df = self.read_data(review_manager)
-        # EDITS
-        # df.to_csv('export.csv', index=False)
+        # records_df[Fields.SERIES] = (
+        #     records_df[Fields.SERIES]
+        #     .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+        #     .str.lower()
+        # )
 
         records_df.drop(
             labels=list(
@@ -290,48 +297,7 @@ class Dedupe(colrev.operation.Operation):
             ]
             records[row[Fields.ID]] = dict(clean_row)
 
-        return records
-
-    def read_data(self) -> dict:
-        """Read the data for dedupe"""
-
-        records = self.review_manager.dataset.load_records_dict()
-
-        # Note: Because we only introduce individual (non-merged records),
-        # the length of colrev_origin lists should be 1!
-        records_queue = [
-            x
-            for x in records.values()
-            if x[Fields.STATUS]
-            not in [
-                colrev.record.RecordState.md_imported,
-                colrev.record.RecordState.md_needs_manual_preparation,
-            ]
-        ]
-
-        # Do not merge records with non_latin_alphabets:
-        records_queue = [
-            record_dict
-            for record_dict in records_queue
-            if not (
-                colrev.record.RecordState.rev_prescreen_excluded
-                == record_dict[Fields.STATUS]
-                and "non_latin_alphabet"
-                in record_dict.get(Fields.PRESCREEN_EXCLUSION, "")
-            )
-        ]
-
-        for record_dict in records_queue:
-            try:
-                record = colrev.record.Record(data=record_dict)
-                record_dict[Fields.COLREV_ID] = record.create_colrev_id()
-            except colrev_exceptions.NotEnoughDataToIdentifyException:
-                record_dict[Fields.COLREV_ID] = "NA"
-
-        records_df = pd.DataFrame.from_records(records_queue)
-        records = self.prep_records(records_df=records_df)
-
-        return records
+        return pd.DataFrame.from_dict(records, orient="index")
 
     def __select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
         # pylint: disable=too-many-branches
@@ -654,6 +620,7 @@ class Dedupe(colrev.operation.Operation):
             ]
 
         records = self.review_manager.dataset.load_records_dict()
+
         removed_duplicates = []
         duplicate_id_mappings: typing.Dict[str, list] = {}
         for main_record, dupe_record in self.__get_records_to_merge(
@@ -685,7 +652,6 @@ class Dedupe(colrev.operation.Operation):
 
             except colrev_exceptions.InvalidMerge:
                 continue
-
         set_to_md_processed = self.__apply_records_merges(
             records=records,
             removed_duplicates=removed_duplicates,

@@ -10,6 +10,7 @@ import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
+import multiprocessing
 
 import colrev.env.package_manager
 import colrev.ops.built_in.dedupe.utils
@@ -22,6 +23,25 @@ if TYPE_CHECKING:
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
+
+
+def create_pairs_for_block_fields(
+    records_df: pd.DataFrame, block_fields: list
+) -> pd.DataFrame:
+    grouped = (
+        records_df.groupby(list(block_fields), group_keys=True)["ID"]
+        .apply(lambda x: pd.DataFrame(list(combinations(x, 2)), columns=["ID1", "ID2"]))
+        .reset_index(drop=True)
+    )
+    print(f"Blocked {str(grouped.shape[0]).rjust(8)} pairs with {block_fields}")
+    return grouped
+
+
+def calculate_pairs(records_df, block_fields):
+    if not all(x in records_df.columns for x in block_fields):
+        return pd.DataFrame(columns=["ID1", "ID2"])
+    pairs = create_pairs_for_block_fields(records_df, block_fields)
+    return pairs
 
 
 @zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
@@ -82,11 +102,14 @@ class Dedupe(JsonSchemaMixin):
             # TODO : conferences, books, ...
         ]
 
-        for block_fields in block_fields_list:
-            if not all(x in records_df.columns for x in block_fields):
-                continue
-            pairs = self.__create_pairs_for_block_fields(records_df, block_fields)
-            pairs_df = pd.concat([pairs_df, pairs], ignore_index=True)
+        pool = multiprocessing.Pool()
+        results = pool.starmap(
+            calculate_pairs, [(records_df, field) for field in block_fields_list]
+        )
+        pool.close()
+        pool.join()
+
+        pairs_df = pd.concat(results, ignore_index=True)
 
         pairs_df = pairs_df.drop_duplicates()
 
@@ -162,21 +185,6 @@ class Dedupe(JsonSchemaMixin):
             else 0,
             axis=1,
         )
-
-    def __create_pairs_for_block_fields(
-        self, records_df: pd.DataFrame, block_fields: list
-    ) -> pd.DataFrame:
-        grouped = (
-            records_df.groupby(list(block_fields), group_keys=True)["ID"]
-            .apply(
-                lambda x: pd.DataFrame(list(combinations(x, 2)), columns=["ID1", "ID2"])
-            )
-            .reset_index(drop=True)
-        )
-        self.review_manager.logger.info(
-            f"Blocked {str(grouped.shape[0]).rjust(8)} pairs with {block_fields}"
-        )
-        return grouped
 
     # flake8: noqa: E501
     # pylint: disable=line-too-long
@@ -326,16 +334,12 @@ class Dedupe(JsonSchemaMixin):
     def run_dedupe(self) -> None:
         """Run default dedupe"""
 
-        records = self.review_manager.dataset.load_records_dict()
-        records_df = pd.DataFrame.from_dict(records, orient="index")
+        records_df = self.dedupe_operation.get_records_for_dedupe()
 
-        # TODO: return df from dedupe_operation.prep_records()
-
-        records = self.dedupe_operation.prep_records(records_df=records_df)
-        records_df = pd.DataFrame.from_dict(records, orient="index")
+        if 0 == records_df.shape[0]:
+            return
 
         deduplication_pairs = self.block_pairs_for_deduplication(records_df)
-        # deduplication_pairs.to_csv("dedupe_pairs.csv")
 
         result = self.identify_true_matches(deduplication_pairs)
 

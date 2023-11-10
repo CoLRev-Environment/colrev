@@ -2,14 +2,15 @@
 """Utility to export and evaluate dedupe benchmarks."""
 from __future__ import annotations
 
-import os
 from itertools import combinations
+from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
 
 import colrev.review_manager
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 
 
 class DedupeBenchmarker(colrev.operation.Operation):
@@ -21,14 +22,20 @@ class DedupeBenchmarker(colrev.operation.Operation):
     def __init__(
         self,
         *,
-        path: str = "",
+        benchmark_path: Path = None,
         regenerate_benchmark_from_history: bool = False,
+        colrev_project_path: Path = None,
     ) -> None:
-        if path == "":
-            path = os.getcwd()
+        if benchmark_path is None:
+            benchmark_path = Path.cwd()
+        self.benchmark_path = Path(benchmark_path)
+        if colrev_project_path is None:
+            self.colrev_project_path = benchmark_path
+        else:
+            self.colrev_project_path = colrev_project_path
 
         self.review_manager = colrev.review_manager.ReviewManager(
-            path_str=path, force_mode=True
+            path_str=str(colrev_project_path), force_mode=True
         )
         self.dedupe_operation = self.review_manager.get_dedupe_operation()
 
@@ -38,28 +45,43 @@ class DedupeBenchmarker(colrev.operation.Operation):
             notify_state_transition_operation=False,
         )
 
+        self.records_pre_merged_path = Path(
+            self.benchmark_path, "records_pre_merged.csv"
+        )
+        self.merged_record_origins_path = Path(
+            self.benchmark_path, "merged_record_origins.csv"
+        )
         if regenerate_benchmark_from_history:
             ret = self.get_dedupe_benchmark()
-            ret["records_prepared"].to_csv("records_pre_merged.csv", index=False)
-            ret["merged_origins"].to_csv("merged_record_origins.csv", index=False)
+            ret["records_prepared"].to_csv(
+                str(self.records_pre_merged_path), index=False
+            )
+            ret["merged_origins"].to_csv(
+                str(self.merged_record_origins_path), index=False
+            )
         else:
             self.__load_data()
 
     def __load_data(self) -> None:
-        true_merged_origins_df = pd.read_csv("merged_record_origins.csv")
+        true_merged_origins_df = pd.read_csv(str(self.merged_record_origins_path))
         self.true_merged_origins = (
             true_merged_origins_df["merged_origins"].apply(eval).tolist()
         )
 
-        records_df = pd.read_csv("records_pre_merged.csv")
-        records_df["colrev_origin"] = records_df["colrev_origin"].apply(eval).tolist()
+        records_df = pd.read_csv(str(self.records_pre_merged_path))
+        records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(eval).tolist()
         self.records_df = records_df
 
-    def get_prepared_records_df(self) -> pd.DataFrame:
-        prepared_records = self.dedupe_operation.prep_records(
+    def get_records_for_dedupe(self) -> pd.DataFrame:
+        """
+        Get (pre-processed) records for dedupe
+
+        Returns:
+            pd.DataFrame: Pre-processed records for dedupe
+        """
+        prepared_records_df = self.dedupe_operation.get_records_for_dedupe(
             records_df=self.records_df
         )
-        prepared_records_df = pd.DataFrame.from_dict(prepared_records, orient="index")
         return prepared_records_df
 
     def get_dedupe_benchmark(self) -> dict:
@@ -74,7 +96,7 @@ class DedupeBenchmarker(colrev.operation.Operation):
 
         # Select md-processed records (discard recently added/non-deduped ones)
         records = {
-            r["ID"]: r
+            r[Fields.ID]: r
             for r in records.values()
             if r[Fields.STATUS]
             in colrev.record.RecordState.get_post_x_states(
@@ -160,6 +182,7 @@ class DedupeBenchmarker(colrev.operation.Operation):
             records_pre_merged, orient="index"
         )
         records_df = pd.DataFrame.from_dict(records, orient="index")
+        self.records_df = records_df
 
         merged_record_origins = []
         for row in list(records_df.to_dict(orient="records")):
@@ -182,8 +205,8 @@ class DedupeBenchmarker(colrev.operation.Operation):
     def compare(
         self,
         *,
-        predicted: list,
         blocked_df: pd.DataFrame,
+        predicted: list,
     ) -> dict:
         """Compare the predicted matches and blocked pairs to the ground truth."""
 
@@ -211,7 +234,11 @@ class DedupeBenchmarker(colrev.operation.Operation):
         matches_fp_list = []
         matches_fn_list = []
 
-        all_origins = self.records_df["colrev_origin"].tolist()
+        all_origins = [
+            origin
+            for sublist in self.records_df[Fields.ORIGIN].tolist()
+            for origin in sublist
+        ]
         for combination in combinations(all_origins, 2):
             pair = "-".join(sorted(combination))
 
@@ -258,7 +285,65 @@ class DedupeBenchmarker(colrev.operation.Operation):
 
         cases_df = pd.DataFrame()
         for pair in origin_pairs:
-            pair_df = self.records_df[self.records_df["colrev_origin"].isin(pair)]
+            pair_df = self.records_df[self.records_df[Fields.ORIGIN].isin(pair)]
             pair_df["pair"] = ";".join(pair)
             cases_df = pd.concat([cases_df, pair_df])
         return cases_df
+
+    def export_for_pytest(self, *, target_path: Path) -> None:
+        """
+        Export the benchmark data for pytest.
+
+        Args:
+            target_path (Path): The path to export the benchmark data to.
+        """
+        target_path.mkdir(parents=True, exist_ok=True)
+
+        records_df = self.records_df.copy()
+        merged_origins = self.true_merged_origins
+
+        all_origins = self.records_df[Fields.ORIGIN].tolist()
+        all_origins_dict = {x: "" for n in all_origins for x in n}
+
+        # anonymize origins
+        source_dict = {}
+        for i, key in enumerate(all_origins_dict.keys()):
+            source = key.split("/")[0]
+            if source not in source_dict:
+                source_dict[source] = f"source_{len(source_dict)}.bib"
+            new_key = f"{source_dict[source]}/{str(i).zfill(10)}"
+            all_origins_dict[key] = new_key
+        records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(
+            lambda x: [all_origins_dict.get(i, i) for i in x]
+        )
+        merged_origins = [
+            [all_origins_dict.get(sub_origin, sub_origin) for sub_origin in origin]
+            for origin in merged_origins
+        ]
+
+        records_df = records_df[
+            records_df.columns.intersection(
+                set(
+                    FieldSet.IDENTIFYING_FIELD_KEYS
+                    + [
+                        Fields.ORIGIN,
+                        Fields.STATUS,
+                        Fields.ID,
+                        Fields.DOI,
+                        Fields.ISBN,
+                        Fields.ABSTRACT,
+                    ]
+                )
+            )
+        ]
+
+        records_df.to_csv(
+            str(target_path / self.records_pre_merged_path.name), index=False
+        )
+
+        merged_record_origins_df = pd.DataFrame({"merged_origins": merged_origins})
+        merged_record_origins_df.to_csv(
+            str(target_path / self.merged_record_origins_path.name), index=False
+        )
+
+        # actual_blocked_df.to_csv("expected_blocked.csv", index=False)
