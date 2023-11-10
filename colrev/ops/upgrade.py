@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import git
+from pybtex.database.input import bibtex
 from tqdm import tqdm
 
 import colrev.env.utils
@@ -65,6 +66,32 @@ class Upgrade(colrev.operation.Operation):
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
         self.repo.index.add(["settings.json"])
+
+    def load_records_dict(self) -> dict:
+        """
+        Load the records dictionary from a file and parse it using the bibtex parser.
+
+        Returns:
+            dict: The loaded records dictionary.
+        """
+        parser = bibtex.Parser()
+        bib_data = parser.parse_file("data/records.bib")
+        records = colrev.dataset.Dataset.parse_records_dict(
+            records_dict=bib_data.entries
+        )
+        return records
+
+    def save_records_dict(self, *, records: dict) -> None:
+        """
+        Save the records dictionary to a file and add it to the repository index.
+
+        Args:
+            records (dict): The records dictionary to save.
+        """
+        bibtex_str = colrev.dataset.Dataset.parse_bibtex_str(recs_dict_in=records)
+        with open("data/records.bib", "w", encoding="utf-8") as out:
+            out.write(bibtex_str + "\n")
+        self.repo.index.add(["data/records.bib"])
 
     def main(self) -> None:
         """Upgrade a CoLRev project (main entrypoint)"""
@@ -439,7 +466,7 @@ class Upgrade(colrev.operation.Operation):
 
         self.__save_settings(settings)
 
-        records = self.review_manager.dataset.load_records_dict()
+        records = self.load_records_dict()
         for record_dict in records.values():
             if "pubmedid" in record_dict:
                 record = colrev.record.Record(data=record_dict)
@@ -484,7 +511,8 @@ class Upgrade(colrev.operation.Operation):
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.save_records_dict(records=records)
+
         return self.repo.is_dirty()
 
     # pylint: disable=too-many-branches
@@ -601,14 +629,14 @@ class Upgrade(colrev.operation.Operation):
 
         self.__save_settings(settings)
 
-        records = self.review_manager.dataset.load_records_dict()
+        records = self.load_records_dict()
         for record_dict in records.values():
             if Fields.MD_PROV in record_dict:
                 for key, value in record_dict[Fields.MD_PROV].items():
                     record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
                         "not-missing", "IGNORE:missing"
                     )
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.save_records_dict(records=records)
 
         return self.repo.is_dirty()
 

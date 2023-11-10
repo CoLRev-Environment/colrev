@@ -80,6 +80,15 @@ class Dedupe(colrev.operation.Operation):
 
     @classmethod
     def connected_components(cls, origin_sets: list) -> list:
+        """
+        Find the connected components in a graph.
+
+        Args:
+            origin_sets (list): A list of origin sets.
+
+        Returns:
+            list: A list of connected components.
+        """
         graph = defaultdict(list)
 
         # Create an adjacency list

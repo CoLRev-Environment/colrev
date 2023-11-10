@@ -2,6 +2,7 @@
 """Default deduplication module for CoLRev"""
 from __future__ import annotations
 
+import multiprocessing
 from dataclasses import dataclass
 from itertools import combinations
 from typing import TYPE_CHECKING
@@ -10,7 +11,6 @@ import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
-import multiprocessing
 
 import colrev.env.package_manager
 import colrev.ops.built_in.dedupe.utils
@@ -28,6 +28,16 @@ if TYPE_CHECKING:
 def create_pairs_for_block_fields(
     records_df: pd.DataFrame, block_fields: list
 ) -> pd.DataFrame:
+    """
+    Create pairs for block fields.
+
+    Parameters:
+    records_df (pd.DataFrame): The dataframe containing the records.
+    block_fields (list): The list of block fields.
+
+    Returns:
+    pd.DataFrame: The dataframe containing the blocked pairs.
+    """
     grouped = (
         records_df.groupby(list(block_fields), group_keys=True)["ID"]
         .apply(lambda x: pd.DataFrame(list(combinations(x, 2)), columns=["ID1", "ID2"]))
@@ -37,7 +47,17 @@ def create_pairs_for_block_fields(
     return grouped
 
 
-def calculate_pairs(records_df, block_fields):
+def calculate_pairs(records_df: pd.DataFrame, block_fields: list) -> pd.DataFrame:
+    """
+    Calculate pairs for deduplication.
+
+    Parameters:
+    records_df (pd.DataFrame): The dataframe containing the records.
+    block_fields (list): The list of block fields.
+
+    Returns:
+    pd.DataFrame: The dataframe containing the calculated pairs.
+    """
     if not all(x in records_df.columns for x in block_fields):
         return pd.DataFrame(columns=["ID1", "ID2"])
     pairs = create_pairs_for_block_fields(records_df, block_fields)

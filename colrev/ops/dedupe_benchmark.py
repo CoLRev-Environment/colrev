@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from itertools import combinations
 from pathlib import Path
+from typing import Dict
+from typing import Optional
 
 import pandas as pd
 from tqdm import tqdm
@@ -22,9 +24,9 @@ class DedupeBenchmarker(colrev.operation.Operation):
     def __init__(
         self,
         *,
-        benchmark_path: Path = None,
+        benchmark_path: Optional[Path] = None,
         regenerate_benchmark_from_history: bool = False,
-        colrev_project_path: Path = None,
+        colrev_project_path: Optional[Path] = None,
     ) -> None:
         if benchmark_path is None:
             benchmark_path = Path.cwd()
@@ -192,10 +194,10 @@ class DedupeBenchmarker(colrev.operation.Operation):
         merged_record_origins = self.dedupe_operation.connected_components(
             merged_record_origins
         )
+        self.true_merged_origins = merged_record_origins
         merged_record_origins_df = pd.DataFrame(
             {"merged_origins": merged_record_origins}
         )
-
         return {
             "records_prepared": records_pre_merged_df,
             "records_deduped": records_df,
@@ -306,7 +308,7 @@ class DedupeBenchmarker(colrev.operation.Operation):
         all_origins_dict = {x: "" for n in all_origins for x in n}
 
         # anonymize origins
-        source_dict = {}
+        source_dict: Dict[str, str] = {}
         for i, key in enumerate(all_origins_dict.keys()):
             source = key.split("/")[0]
             if source not in source_dict:

@@ -9,7 +9,7 @@ import colrev.ops.dedupe
 from colrev.ops.dedupe_benchmark import DedupeBenchmarker
 
 
-def dedupe_dataset(
+def dedupe_dataset(  # type: ignore
     dir, dedupe_instance: colrev.ops.built_in.dedupe.dedupe.Dedupe, helpers
 ) -> None:
     dedupe_benchmark = DedupeBenchmarker(
@@ -42,7 +42,7 @@ def dedupe_dataset(
 
 
 @pytest.mark.slow
-def test_dedupe(dedupe_operation: colrev.ops.dedupe.Dedupe, helpers) -> None:
+def test_dedupe(dedupe_operation: colrev.ops.dedupe.Dedupe, helpers) -> None:  # type: ignore
     """Test the dedupe standard package"""
 
     settings = {"endpoint": "colrev.dedupe"}
