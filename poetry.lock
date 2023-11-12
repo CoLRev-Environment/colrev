@@ -180,6 +180,24 @@ html5lib = ["html5lib"]
 lxml = ["lxml"]
 
 [[package]]
+name = "bib-dedupe"
+version = "0.1.0"
+description = "Identify and merge duplicates in bibliographic records"
+category = "main"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "bib_dedupe-0.1.0-py3-none-any.whl", hash = "sha256:08b73af180929547c9cf092ee7b1ce79e7e0fd2ebd1dc7e0e090f7eaf2f187ec"},
+    {file = "bib_dedupe-0.1.0.tar.gz", hash = "sha256:1dcd1b88c6c493f4970404d65bcefe6bdba0679e4cc0a7a97b3719867ab2ead3"},
+]
+
+[package.dependencies]
+colrev = ">=0.10.4,<0.11.0"
+
+[package.extras]
+dev = ["coverage[toml] (>=7.3.2,<8.0.0)", "pylint (==3.0.1)", "pytest (>=7.2.1,<8.0.0)"]
+
+[[package]]
 name = "blessed"
 version = "1.20.0"
 description = "Easy, practical library for making terminal apps, by providing an elegant, well-documented interface to Colors, Keyboard input, and screen Positioning capabilities."
@@ -4163,4 +4181,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "6ccfbcc3e460c4609b7e37484eeed48d2f230e8f24d2a94c831ef2a2ab7f0699"
+content-hash = "426bf0ac4bc0ae0502a2b93bcf50053fd09633d397f489f808a42baf339f3e77"

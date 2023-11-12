@@ -92,6 +92,7 @@ requests-mock = {version = "^1.10.0", optional = true }
 feedparser = "^6.0.10"
 rapidfuzz = "^3.5.2"
 pytest-skip-slow = "^0.0.5"
+bib-dedupe = "^0.1.0"
 
 [tool.poetry.extras]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface"]

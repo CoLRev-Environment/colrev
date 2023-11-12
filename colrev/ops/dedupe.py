@@ -5,10 +5,12 @@ from __future__ import annotations
 import re
 import string
 import typing
-from collections import Counter, defaultdict
+from collections import Counter
+from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import List, Optional
+from typing import List
+from typing import Optional
 from typing import TYPE_CHECKING
 
 import pandas as pd
