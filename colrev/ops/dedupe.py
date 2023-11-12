@@ -108,7 +108,8 @@ class Dedupe(colrev.operation.Operation):
 
         return components
 
-    def __pre_process(self, *, key: str, value: str) -> str | None:
+    @classmethod
+    def __pre_process(cls, *, key: str, value: str) -> str | None:
         if key in [Fields.ID, Fields.ENTRYTYPE, Fields.STATUS, Fields.ORIGIN]:
             return value
 
@@ -132,14 +133,9 @@ class Dedupe(colrev.operation.Operation):
 
         return value
 
-    def get_records_for_dedupe(
-        self, *, records_df: pd.DataFrame = None
-    ) -> pd.DataFrame:
+    @classmethod
+    def get_records_for_dedupe(cls, *, records_df: pd.DataFrame) -> pd.DataFrame:
         """Get (pre-processed) records for dedupe"""
-
-        if records_df is None:
-            records = self.review_manager.dataset.load_records_dict()
-            records_df = pd.DataFrame.from_dict(records, orient="index")
 
         if 0 == records_df.shape[0]:
             return {}
@@ -302,7 +298,7 @@ class Dedupe(colrev.operation.Operation):
             # Note: we need the ID to identify/remove duplicates in the RECORDS_FILE.
             # It is ignored in the field-definitions by the deduper
             clean_row = [
-                (k, self.__pre_process(key=str(k), value=v)) for (k, v) in row.items()
+                (k, cls.__pre_process(key=str(k), value=v)) for (k, v) in row.items()
             ]
             records[row[Fields.ID]] = dict(clean_row)
 

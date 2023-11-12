@@ -10,12 +10,13 @@ from typing import Optional
 import pandas as pd
 from tqdm import tqdm
 
+import colrev.ops.dedupe
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 
 
-class DedupeBenchmarker(colrev.operation.Operation):
+class DedupeBenchmarker:
     """Dedupe benchmarker"""
 
     true_merged_origins: list
@@ -35,17 +36,6 @@ class DedupeBenchmarker(colrev.operation.Operation):
             self.colrev_project_path = benchmark_path
         else:
             self.colrev_project_path = colrev_project_path
-
-        self.review_manager = colrev.review_manager.ReviewManager(
-            path_str=str(colrev_project_path), force_mode=True
-        )
-        self.dedupe_operation = self.review_manager.get_dedupe_operation()
-
-        super().__init__(
-            review_manager=self.review_manager,
-            operations_type=colrev.operation.OperationsType.dedupe,
-            notify_state_transition_operation=False,
-        )
 
         self.records_pre_merged_path = Path(
             self.benchmark_path, "records_pre_merged.csv"
@@ -74,25 +64,31 @@ class DedupeBenchmarker(colrev.operation.Operation):
         records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(eval).tolist()
         self.records_df = records_df
 
-    def get_records_for_dedupe(self) -> pd.DataFrame:
+    def get_records_for_dedupe(self, colrev_project_path) -> pd.DataFrame:
         """
         Get (pre-processed) records for dedupe
 
         Returns:
             pd.DataFrame: Pre-processed records for dedupe
         """
-        prepared_records_df = self.dedupe_operation.get_records_for_dedupe(
+
+        prepared_records_df = colrev.ops.dedupe.Dedupe.get_records_for_dedupe(
             records_df=self.records_df
         )
         return prepared_records_df
 
-    def get_dedupe_benchmark(self) -> dict:
+    def get_dedupe_benchmark(self, colrev_project_path) -> dict:
         """Get benchmark for dedupe"""
 
         def merged(record: dict) -> bool:
             return (
                 len([o for o in record[Fields.ORIGIN] if not o.startswith("md_")]) != 1
             )
+
+        self.review_manager = colrev.review_manager.ReviewManager(
+            path_str=str(colrev_project_path), force_mode=True
+        )
+        self.dedupe_operation = self.review_manager.get_dedupe_operation()
 
         records = self.review_manager.dataset.load_records_dict()
 
