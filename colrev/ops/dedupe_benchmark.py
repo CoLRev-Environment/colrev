@@ -44,7 +44,9 @@ class DedupeBenchmarker:
             self.benchmark_path, "merged_record_origins.csv"
         )
         if regenerate_benchmark_from_history:
-            ret = self.get_dedupe_benchmark()
+            ret = self.get_dedupe_benchmark(
+                colrev_project_path=self.colrev_project_path
+            )
             ret["records_prepared"].to_csv(
                 str(self.records_pre_merged_path), index=False
             )
@@ -64,7 +66,7 @@ class DedupeBenchmarker:
         records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(eval).tolist()
         self.records_df = records_df
 
-    def get_records_for_dedupe(self, colrev_project_path) -> pd.DataFrame:
+    def get_records_for_dedupe(self) -> pd.DataFrame:
         """
         Get (pre-processed) records for dedupe
 
@@ -77,7 +79,7 @@ class DedupeBenchmarker:
         )
         return prepared_records_df
 
-    def get_dedupe_benchmark(self, colrev_project_path) -> dict:
+    def get_dedupe_benchmark(self, colrev_project_path: Path) -> dict:
         """Get benchmark for dedupe"""
 
         def merged(record: dict) -> bool:
