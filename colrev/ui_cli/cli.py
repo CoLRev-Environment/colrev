@@ -515,9 +515,11 @@ def search(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        source_dict = package_manager.add_endpoint_for_operation(
             operation=search_operation, package_identifier=add, params=params
         )
+        search_operation.main(selection_str=str(source_dict["filename"]), rerun=False)
+        return
 
     if not skip:
         import colrev.ui_cli.cli_add_source

@@ -1103,7 +1103,7 @@ class PackageManager:
         package_identifier: str,
         params: str,
         prompt_on_same_source: bool = True,
-    ) -> None:
+    ) -> dict:
         """Add a package_endpoint"""
 
         settings = operation.review_manager.settings
@@ -1167,7 +1167,7 @@ class PackageManager:
                 f"Package {package_identifier} already in {endpoints}"
             )
             if "y" != input("Continue [y/n]?"):
-                return
+                return {}
 
         operation.review_manager.logger.info(
             f"{Colors.GREEN}Add {operation.type} package:{Colors.END} {package_identifier}"
@@ -1200,6 +1200,7 @@ class PackageManager:
             operation.review_manager.dataset.add_changes(
                 path=add_source.filename, ignore_missing=True
             )
+            add_package = add_source.to_dict()
 
         else:
             add_package = {"endpoint": package_identifier}
@@ -1209,3 +1210,4 @@ class PackageManager:
         operation.review_manager.create_commit(
             msg=f"Add {operation.type} {package_identifier}",
         )
+        return add_package

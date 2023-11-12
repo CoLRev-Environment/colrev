@@ -42,7 +42,8 @@ class DBLPSearchSource(JsonSchemaMixin):
     __api_url_venues = "https://dblp.org/search/venue/api?q="
     __START_YEAR = 1980
 
-    source_identifier = "dblp_key"
+    # TODO : standardize?! should the search-feed already contain namespaced fields?!
+    source_identifier = Fields.DBLP_KEY
     search_types = [
         colrev.settings.SearchType.API,
         colrev.settings.SearchType.MD,
@@ -443,7 +444,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                 + f"&format=json&h={batch_size}&f={batch_size_cumulative}"
             )
             batch_size_cumulative += batch_size
-
             retrieved = False
             for retrieved_record in self.__retrieve_dblp_records(url=url):
                 retrieved = True
@@ -462,7 +462,8 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 try:
                     dblp_feed.set_id(record_dict=retrieved_record.data)
-                except colrev_exceptions.NotFeedIdentifiableException:
+                except colrev_exceptions.NotFeedIdentifiableException as exc:
+                    print(exc)
                     continue
 
                 prev_record_dict_version = {}
