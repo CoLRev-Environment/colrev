@@ -1,15 +1,17 @@
-# dedupe
+# bib-dedupe
 
 ## dedupe
 
-This is the default deduplication module for CoLRev. It is activated by default and is responsible for removing duplicate entries in the data.
+The [bib-dedupe](https://github.com/CoLRev-Environment/bib-dedupe) package is the default deduplication module for CoLRev.
+It is activated by default and is responsible for removing duplicate entries in the data.
 
-
-To test individual cases, run
+To debug individual cases, run
 
 ```
-colrev dedupe --debug
-# interactively select the relevant id pairs
+bib-dedupe debug
+# interactively select the casese to debug
 ```
 
 ## Links
+
+- [bib-dedupe](https://github.com/CoLRev-Environment/bib-dedupe)
