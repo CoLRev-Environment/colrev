@@ -20,6 +20,8 @@ from colrev.constants import FieldSet
 class DedupeBenchmarker:
     """Dedupe benchmarker"""
 
+    # pylint: disable=too-many-instance-attributes
+
     true_merged_origins: list
     records_df: pd.DataFrame
 
@@ -45,15 +47,7 @@ class DedupeBenchmarker:
             self.benchmark_path, "merged_record_origins.csv"
         )
         if regenerate_benchmark_from_history:
-            ret = self.get_dedupe_benchmark(
-                colrev_project_path=self.colrev_project_path
-            )
-            ret["records_prepared"].to_csv(
-                str(self.records_pre_merged_path), index=False
-            )
-            ret["merged_origins"].to_csv(
-                str(self.merged_record_origins_path), index=False
-            )
+            self.__get_dedupe_benchmark()
         else:
             self.__load_data()
 
@@ -80,7 +74,8 @@ class DedupeBenchmarker:
         )
         return prepared_records_df
 
-    def get_dedupe_benchmark(self, colrev_project_path: Path) -> dict:
+    # pylint: disable=too-many-locals
+    def __get_dedupe_benchmark(self) -> dict:
         """Get benchmark for dedupe"""
 
         def merged(record: dict) -> bool:
@@ -89,7 +84,7 @@ class DedupeBenchmarker:
             )
 
         self.review_manager = colrev.review_manager.ReviewManager(
-            path_str=str(colrev_project_path), force_mode=True
+            path_str=str(self.colrev_project_path), force_mode=True
         )
         self.dedupe_operation = self.review_manager.get_dedupe_operation()
 
@@ -197,12 +192,19 @@ class DedupeBenchmarker:
         merged_record_origins_df = pd.DataFrame(
             {"merged_origins": merged_record_origins}
         )
+        records_pre_merged_df.to_csv(str(self.records_pre_merged_path), index=False)
+        merged_record_origins_df.to_csv(
+            str(self.merged_record_origins_path), index=False
+        )
+
         return {
             "records_prepared": records_pre_merged_df,
             "records_deduped": records_df,
             "merged_origins": merged_record_origins_df,
         }
 
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-branches
     def compare(
         self,
         *,
@@ -352,6 +354,17 @@ class DedupeBenchmarker:
     def compare_dedupe_id(
         self, *, records_df: pd.DataFrame, merged_df: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Compare dedupe IDs and calculate evaluation metrics.
+
+        Args:
+            records_df (pd.DataFrame): DataFrame containing the original records.
+            merged_df (pd.DataFrame): DataFrame containing the merged records.
+
+        Returns:
+            pd.DataFrame: DataFrame containing the evaluation metrics.
+        """
+
         # Note: hard to evaluate because we don't know which record is merged into.
         # We simply assume it is the first (origin)
 
@@ -364,7 +377,8 @@ class DedupeBenchmarker:
         for _, record in records_df.iterrows():
             # Record has been removed as a duplicate (predicted positive)
             if record[Fields.ID] not in merged_df[Fields.ID].tolist():
-                # We assume that the first record (origin) remains (all following are removed as duplicates)
+                # We assume that the first record (origin) remains
+                # (all following are removed as duplicates)
                 if record[Fields.ORIGIN] not in first_origins:
                     results["TP"] += 1
                 else:
