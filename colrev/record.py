@@ -1280,21 +1280,18 @@ class Record:
 
     def get_container_title(self) -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
-        container_title = "NA"
+
         if Fields.ENTRYTYPE not in self.data:
-            container_title = self.data.get(
-                Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, "NA")
-            )
-        else:
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                container_title = self.data.get(Fields.JOURNAL, "NA")
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-                container_title = self.data.get(Fields.BOOKTITLE, "NA")
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
-                container_title = self.data.get(Fields.TITLE, "NA")
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
-                container_title = self.data.get(Fields.BOOKTITLE, "NA")
-        return container_title
+            return self.data.get(Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, "NA"))
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            return self.data.get(Fields.JOURNAL, "NA")
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            return self.data.get(Fields.BOOKTITLE, "NA")
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
+            return self.data.get(Fields.TITLE, "NA")
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
+            return self.data.get(Fields.BOOKTITLE, "NA")
+        return "NA"
 
     def create_colrev_id(
         self,

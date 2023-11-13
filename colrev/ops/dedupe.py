@@ -192,19 +192,9 @@ class Dedupe(colrev.operation.Operation):
             lambda x: select_authors(x)
         )
 
-        # TODO : extract and standardize!
         def get_container_title(row: dict) -> str:
-            if row[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                return row[Fields.JOURNAL]
-            if row[Fields.ENTRYTYPE] in [
-                ENTRYTYPES.INPROCEEDINGS,
-                ENTRYTYPES.BOOK,
-                ENTRYTYPES.PROCEEDINGS,
-            ]:
-                return row[Fields.BOOKTITLE]
-            if row[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
-                return row[Fields.TITLE]
-            return ""
+            record = colrev.record.Record(data=row)
+            return record.get_container_title()
 
         records_df[Fields.CONTAINER_TITLE] = records_df.apply(
             get_container_title, axis=1
