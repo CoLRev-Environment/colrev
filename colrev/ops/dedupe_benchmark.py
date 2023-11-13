@@ -2,6 +2,7 @@
 """Utility to export and evaluate dedupe benchmarks."""
 from __future__ import annotations
 
+import typing
 from itertools import combinations
 from pathlib import Path
 from typing import Dict
@@ -31,7 +32,7 @@ class DedupeBenchmarker:
     ) -> None:
         if benchmark_path is None:
             benchmark_path = Path.cwd()
-        self.benchmark_path = Path(benchmark_path)
+        self.benchmark_path = Path(benchmark_path).resolve()
         if colrev_project_path is None:
             self.colrev_project_path = benchmark_path
         else:
@@ -213,7 +214,7 @@ class DedupeBenchmarker:
         ground_truth_pairs = set()
         for item in self.true_merged_origins:
             for combination in combinations(item, 2):
-                ground_truth_pairs.add("-".join(sorted(combination)))
+                ground_truth_pairs.add(";".join(sorted(combination)))
 
         blocked = blocked_df.apply(
             lambda row: [row["colrev_origin_1"], row["colrev_origin_2"]], axis=1
@@ -221,12 +222,12 @@ class DedupeBenchmarker:
         blocked_pairs = set()
         for item in blocked:
             for combination in combinations(item, 2):
-                blocked_pairs.add("-".join(sorted(combination)))
+                blocked_pairs.add(";".join(sorted(combination)))
 
         predicted_pairs = set()
         for item in predicted:
             for combination in combinations(item, 2):
-                predicted_pairs.add("-".join(sorted(combination)))
+                predicted_pairs.add(";".join(sorted(combination)))
 
         blocks = {"TP": 0, "FP": 0, "TN": 0, "FN": 0}
         blocks_fn_list = []
@@ -240,7 +241,7 @@ class DedupeBenchmarker:
             for origin in sublist
         ]
         for combination in combinations(all_origins, 2):
-            pair = "-".join(sorted(combination))
+            pair = ";".join(sorted(combination))
 
             if pair in blocked_pairs:
                 if pair in ground_truth_pairs:
@@ -290,14 +291,14 @@ class DedupeBenchmarker:
             cases_df = pd.concat([cases_df, pair_df])
         return cases_df
 
-    def export_for_pytest(self, *, target_path: Path) -> None:
+    def export_for_pytest(self) -> None:
         """
         Export the benchmark data for pytest.
 
         Args:
             target_path (Path): The path to export the benchmark data to.
         """
-        target_path.mkdir(parents=True, exist_ok=True)
+        self.benchmark_path.mkdir(parents=True, exist_ok=True)
 
         records_df = self.records_df.copy()
         merged_origins = self.true_merged_origins
@@ -338,12 +339,53 @@ class DedupeBenchmarker:
         ]
 
         records_df.to_csv(
-            str(target_path / self.records_pre_merged_path.name), index=False
+            str(self.benchmark_path / self.records_pre_merged_path.name), index=False
         )
 
         merged_record_origins_df = pd.DataFrame({"merged_origins": merged_origins})
         merged_record_origins_df.to_csv(
-            str(target_path / self.merged_record_origins_path.name), index=False
+            str(self.benchmark_path / self.merged_record_origins_path.name), index=False
         )
 
         # actual_blocked_df.to_csv("expected_blocked.csv", index=False)
+
+    def compare_dedupe_id(
+        self, *, records_df: pd.DataFrame, merged_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        # Note: hard to evaluate because we don't know which record is merged into.
+        # We simply assume it is the first (origin)
+
+        results: typing.Dict[str, typing.Any] = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
+
+        all_merged_origins = [o for ol in self.true_merged_origins for o in ol]
+
+        # Note: the other origins are assumed merged/removed duplicates
+        first_origins = [o[0] for o in self.true_merged_origins]
+        for _, record in records_df.iterrows():
+            # Record has been removed as a duplicate (predicted positive)
+            if record[Fields.ID] not in merged_df[Fields.ID].tolist():
+                # We assume that the first record (origin) remains (all following are removed as duplicates)
+                if record[Fields.ORIGIN] not in first_origins:
+                    results["TP"] += 1
+                else:
+                    results["FP"] += 1
+            else:
+                if record[Fields.ORIGIN] in all_merged_origins:
+                    results["FN"] += 1
+                else:
+                    results["TN"] += 1
+
+        specificity = results["TN"] / (results["TN"] + results["FP"])
+        sensitivity = results["TP"] / (results["TP"] + results["FN"])
+
+        results["specificity"] = specificity
+        results["sensitivity"] = sensitivity
+        results["precision"] = results["TP"] / (results["TP"] + results["FP"])
+
+        results["f1"] = (
+            2
+            * (results["precision"] * results["sensitivity"])
+            / (results["precision"] + results["sensitivity"])
+        )
+
+        return results
