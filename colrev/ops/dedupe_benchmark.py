@@ -15,6 +15,7 @@ import colrev.ops.dedupe
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import FieldSet
+import datetime
 
 
 class DedupeBenchmarker:
@@ -408,6 +409,8 @@ class DedupeBenchmarker:
         specificity = results["TN"] / (results["TN"] + results["FP"])
         sensitivity = results["TP"] / (results["TP"] + results["FN"])
 
+        results["false_positive_rate"] = results["FP"] / (results["FP"] + results["TN"])
+
         results["specificity"] = specificity
         results["sensitivity"] = sensitivity
         results["precision"] = results["TP"] / (results["TP"] + results["FP"])
@@ -419,3 +422,54 @@ class DedupeBenchmarker:
         )
 
         return results
+
+    def append_to_output(self, result: dict, *, package_name: str) -> None:
+        output_path = str(
+            self.benchmark_path.parent.parent.parent / Path("output/evaluation.csv")
+        )
+
+        result["dataset"] = Path(self.benchmark_path).name
+        result["package"] = package_name
+        current_time = datetime.datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M")
+        result["time"] = formatted_time
+
+        if not Path(output_path).is_file():
+            results_df = pd.DataFrame(
+                columns=[
+                    "package",
+                    "time",
+                    "dataset",
+                    "TP",
+                    "FP",
+                    "FN",
+                    "TN",
+                    "false_positive_rate",
+                    "specificity",
+                    "sensitivity",
+                    "precision",
+                    "f1",
+                ]
+            )
+        else:
+            results_df = pd.read_csv(output_path)
+
+        result_item_df = pd.DataFrame.from_records([result])
+        result_item_df = result_item_df[
+            [
+                "package",
+                "time",
+                "dataset",
+                "TP",
+                "FP",
+                "FN",
+                "TN",
+                "false_positive_rate",
+                "specificity",
+                "sensitivity",
+                "precision",
+                "f1",
+            ]
+        ]
+        results_df = pd.concat([results_df, result_item_df])
+        results_df.to_csv(output_path, index=False)
