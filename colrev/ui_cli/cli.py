@@ -273,7 +273,6 @@ def init(
 
     Docs: https://colrev.readthedocs.io/en/latest/manual/problem_formulation/init.html
     """
-    import colrev.ops.init
 
     colrev.review_manager.get_init_operation(
         review_type=type,
