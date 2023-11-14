@@ -370,24 +370,40 @@ class DedupeBenchmarker:
 
         results: typing.Dict[str, typing.Any] = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
 
-        all_merged_origins = [o for ol in self.true_merged_origins for o in ol]
+        origin_id_dict = {
+            record["colrev_origin"]: record["ID"]
+            for _, record in records_df[["ID", "colrev_origin"]].iterrows()
+        }
+        true_merged_ids = []
+        for true_merged_origin_set in self.true_merged_origins:
+            true_merged_id_item = []
+            for origin in true_merged_origin_set:
+                true_merged_id_item.append(origin_id_dict.pop(origin))
+            true_merged_ids.append(true_merged_id_item)
+        true_non_merged_ids = list(origin_id_dict.values())
 
-        # Note: the other origins are assumed merged/removed duplicates
-        first_origins = [o[0] for o in self.true_merged_origins]
-        for _, record in records_df.iterrows():
-            # Record has been removed as a duplicate (predicted positive)
-            if record[Fields.ID] not in merged_df[Fields.ID].tolist():
-                # We assume that the first record (origin) remains
-                # (all following are removed as duplicates)
-                if record[Fields.ORIGIN] not in first_origins:
-                    results["TP"] += 1
-                else:
-                    results["FP"] += 1
+        # Assume that IDs are not changed (merged origins are not available)
+        # For each origin-set, **exactly one** must be in the merged_df
+
+        for true_non_merged_id in true_non_merged_ids:
+            if true_non_merged_id in merged_df["ID"].tolist():
+                results["TN"] += 1
             else:
-                if record[Fields.ORIGIN] in all_merged_origins:
-                    results["FN"] += 1
-                else:
-                    results["TN"] += 1
+                results["FP"] += 1
+
+        for true_merged_id_set in true_merged_ids:
+            nr_in_merged_df = merged_df[merged_df["ID"].isin(true_merged_id_set)].shape[
+                0
+            ]
+            # One would always be required to be a non-duplicate (true value:negative)
+            # All that are removed are true positive, all that are not removed are false negatives
+            if nr_in_merged_df == 0:
+                results["FP"] += 1
+                results["TP"] += len(true_merged_id_set) - 1
+            elif nr_in_merged_df >= 1:
+                results["TN"] += 1
+                results["FN"] += nr_in_merged_df - 1
+                results["TP"] += len(true_merged_id_set) - nr_in_merged_df
 
         specificity = results["TN"] / (results["TN"] + results["FP"])
         sensitivity = results["TP"] / (results["TP"] + results["FN"])
