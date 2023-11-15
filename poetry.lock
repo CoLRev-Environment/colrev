@@ -1953,6 +1953,21 @@ files = [
 setuptools = "*"
 
 [[package]]
+name = "number-parser"
+version = "0.3.2"
+description = "parse numbers written in natural language"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "number-parser-0.3.2.tar.gz", hash = "sha256:7650e91afd46dec2f40396f62c2babc84645679a1ca8ecdb5292bdd252685d6a"},
+    {file = "number_parser-0.3.2-py2.py3-none-any.whl", hash = "sha256:beb20ce4c66d8e8f34dde1512a21f7c2a2aa3b068c60e230c4388d548ef3e3ca"},
+]
+
+[package.dependencies]
+attrs = ">=17.3.0"
+
+[[package]]
 name = "numpy"
 version = "1.24.4"
 description = "Fundamental package for array computing in Python"
@@ -4181,4 +4196,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "426bf0ac4bc0ae0502a2b93bcf50053fd09633d397f489f808a42baf339f3e77"
+content-hash = "66ea629cc8c0009aec298a48b61d8806973849ae4763b3faba2367dd43495f4b"

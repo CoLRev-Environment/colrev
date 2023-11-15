@@ -1278,20 +1278,20 @@ class Record:
         ]
         return bool(defect_codes)
 
-    def get_container_title(self) -> str:
+    def get_container_title(self, *, na_string: str = "NA") -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
 
         if Fields.ENTRYTYPE not in self.data:
-            return self.data.get(Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, "NA"))
+            return self.data.get(
+                Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, na_string)
+            )
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            return self.data.get(Fields.JOURNAL, "NA")
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            return self.data.get(Fields.BOOKTITLE, "NA")
+            return self.data.get(Fields.JOURNAL, na_string)
+        if self.data[Fields.ENTRYTYPE] in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS, ENTRYTYPES.INBOOK]:
+            return self.data.get(Fields.BOOKTITLE, na_string)
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
-            return self.data.get(Fields.TITLE, "NA")
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
-            return self.data.get(Fields.BOOKTITLE, "NA")
-        return "NA"
+            return self.data.get(Fields.TITLE, na_string)
+        return na_string
 
     def create_colrev_id(
         self,

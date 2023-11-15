@@ -2,6 +2,7 @@
 """Utility to export and evaluate dedupe benchmarks."""
 from __future__ import annotations
 
+import datetime
 import typing
 from itertools import combinations
 from pathlib import Path
@@ -15,7 +16,6 @@ import colrev.ops.dedupe
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import FieldSet
-import datetime
 
 
 class DedupeBenchmarker:
@@ -154,7 +154,6 @@ class DedupeBenchmarker:
             except KeyError:
                 break
 
-        # TODO: work with lists to avoid ID conflicts?!
         records_pre_merged = {r["ID"]: r for r in records_pre_merged_list}
 
         # drop missing from records
@@ -366,9 +365,6 @@ class DedupeBenchmarker:
             pd.DataFrame: DataFrame containing the evaluation metrics.
         """
 
-        # Note: hard to evaluate because we don't know which record is merged into.
-        # We simply assume it is the first (origin)
-
         results: typing.Dict[str, typing.Any] = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
 
         origin_id_dict = {
@@ -424,6 +420,17 @@ class DedupeBenchmarker:
         return results
 
     def append_to_output(self, result: dict, *, package_name: str) -> None:
+        """
+        Append the result to the output file.
+
+        Args:
+            result (dict): The result dictionary.
+            package_name (str): The name of the package.
+
+        Returns:
+            None
+        """
+
         output_path = str(
             self.benchmark_path.parent.parent.parent / Path("output/evaluation.csv")
         )
