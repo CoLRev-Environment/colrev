@@ -19,8 +19,10 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_enl
 import colrev.ops.search
 import colrev.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -380,17 +382,66 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
+        enl_mapping = {
+            ENTRYTYPES.ARTICLE: {
+                "T": Fields.TITLE,
+                "A": Fields.AUTHOR,
+                "D": Fields.YEAR,
+                "B": Fields.JOURNAL,
+                "V": Fields.VOLUME,
+                "N": Fields.NUMBER,
+                "P": Fields.PAGES,
+                "X": Fields.ABSTRACT,
+                "U": Fields.URL,
+                "8": "date",
+                "0": "type",
+            },
+            ENTRYTYPES.INPROCEEDINGS: {
+                "T": Fields.TITLE,
+                "A": Fields.AUTHOR,
+                "D": Fields.YEAR,
+                "B": Fields.JOURNAL,
+                "V": Fields.VOLUME,
+                "N": Fields.NUMBER,
+                "P": Fields.PAGES,
+                "X": Fields.ABSTRACT,
+                "U": Fields.URL,
+                "8": "date",
+                "0": "type",
+            },
+        }
+
+        entrytype_map = {
+            "Journal Article": ENTRYTYPES.ARTICLE,
+            "HICSS": ENTRYTYPES.INPROCEEDINGS,
+            "ICIS": ENTRYTYPES.INPROCEEDINGS,
+            "ECIS": ENTRYTYPES.INPROCEEDINGS,
+            "AMCIS": ENTRYTYPES.INPROCEEDINGS,
+            "Proceedings": ENTRYTYPES.INPROCEEDINGS,
+            "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
+            "All Sprouts Content": ENTRYTYPES.INPROCEEDINGS,
+        }
+
         # pylint: disable=colrev-missed-constant-usage
         if self.search_source.filename.suffix in [".txt", ".enl"]:
             enl_loader = colrev.ops.load_utils_enl.ENLLoader(
                 load_operation=load_operation,
                 source=self.search_source,
+                list_fields={"A": " and "},
                 unique_id_field="ID",
             )
-            entries = enl_loader.load_enl_entries()
-            for entry in entries.values():
-                entry["ID"] = entry[Fields.URL].replace("https://aisel.aisnet.org/", "")
-            records = enl_loader.convert_to_records(entries=entries)
+            records = enl_loader.load_enl_entries()
+
+            for record_dict in records.values():
+                self.__fix_entrytype_before_conversion(record_dict=record_dict)
+                enl_loader.apply_entrytype_mapping(
+                    record_dict=record_dict, entrytype_map=entrytype_map
+                )
+                enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
+                record_dict["ID"] = record_dict[Fields.URL].replace(
+                    "https://aisel.aisnet.org/", ""
+                )
+            # records = enl_loader.convert_to_records(entries=records, enl_mapping=enl_mapping)
             return records
 
         # for API-based searches
@@ -401,6 +452,19 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             return records
 
         raise NotImplementedError
+
+    def __fix_entrytype_before_conversion(self, *, record_dict: dict) -> None:
+        """
+        Fix entrytype
+        :param record_dict: record that is being prepared
+        :return: None
+        """
+        if "0" not in record_dict:
+            keys_to_check = ["V", "N"]
+            if any([k in record_dict for k in keys_to_check]):
+                record_dict["0"] = "Journal Article"
+            else:
+                record_dict["0"] = "Inproceedings"
 
     def __fix_entrytype(self, *, record: colrev.record.Record) -> None:
         # Note : simple heuristic
