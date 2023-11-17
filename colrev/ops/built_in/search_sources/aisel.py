@@ -413,13 +413,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         entrytype_map = {
             "Journal Article": ENTRYTYPES.ARTICLE,
-            "HICSS": ENTRYTYPES.INPROCEEDINGS,
-            "ICIS": ENTRYTYPES.INPROCEEDINGS,
-            "ECIS": ENTRYTYPES.INPROCEEDINGS,
-            "AMCIS": ENTRYTYPES.INPROCEEDINGS,
-            "Proceedings": ENTRYTYPES.INPROCEEDINGS,
             "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
-            "All Sprouts Content": ENTRYTYPES.INPROCEEDINGS,
         }
 
         # pylint: disable=colrev-missed-constant-usage
@@ -441,7 +435,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record_dict["ID"] = record_dict[Fields.URL].replace(
                     "https://aisel.aisnet.org/", ""
                 )
-            # records = enl_loader.convert_to_records(entries=records, enl_mapping=enl_mapping)
             return records
 
         # for API-based searches

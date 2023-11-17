@@ -144,16 +144,15 @@ class ENLLoader:
     def apply_entrytype_mapping(
         self, *, record_dict: dict, entrytype_map: dict
     ) -> None:
-        typ = record_dict["0"]
-        if typ not in entrytype_map:
-            msg = f"{Colors.RED}0={typ} not yet supported{Colors.END}"
+        if record_dict["0"] not in entrytype_map:
+            msg = f"{Colors.RED}0={record_dict['0']} not yet supported{Colors.END}"
             if not self.load_operation.review_manager.force_mode:
                 raise NotImplementedError(msg)
 
             self.load_operation.review_manager.logger.error(msg)
             return
 
-        entrytype = entrytype_map[typ]
+        entrytype = entrytype_map[record_dict["0"]]
         record_dict[Fields.ENTRYTYPE] = entrytype
 
     def map_keys(self, *, record_dict: dict, key_map: dict) -> dict:

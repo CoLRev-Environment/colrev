@@ -339,7 +339,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 "8": "date",
                 "0": "type",
             },
-            ENTRYTYPES.INPROCEEDINGS: {
+            ENTRYTYPES.MISC: {
                 "T": Fields.TITLE,
                 "A": Fields.AUTHOR,
                 "D": Fields.YEAR,
@@ -356,13 +356,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         entrytype_map = {
             "Journal Article": ENTRYTYPES.ARTICLE,
-            "HICSS": ENTRYTYPES.INPROCEEDINGS,
-            "ICIS": ENTRYTYPES.INPROCEEDINGS,
-            "ECIS": ENTRYTYPES.INPROCEEDINGS,
-            "AMCIS": ENTRYTYPES.INPROCEEDINGS,
-            "Proceedings": ENTRYTYPES.INPROCEEDINGS,
-            "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
-            "All Sprouts Content": ENTRYTYPES.INPROCEEDINGS,
+            "Inproceedings": ENTRYTYPES.MISC,
         }
 
         list_fields = {"A": " and "}
