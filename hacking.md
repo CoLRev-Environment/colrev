@@ -1,23 +1,33 @@
 #Aufgaben
 ##Robert
+Code verstehen zu ieee.py
+Welche Funktionen machen was und können wir diese auch für unseren Issue gebrauchen?
+Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
 
 ##Amadu
+API Key Semantic Scholar - Authentifizierung von Semantic Scholar
+Wie kann man den Key verwenden/generiert? (Header) 
+Wie wird dieser gespeichert?
+--> im Python CLient oder IEEE SearchSource finden sich Beispiele.und direkt bei Semantic Scholar
+Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
 
 ##Louis
+Wie sucht man nach Papers in Semantic Scholar
+	--> Searching for papers by Keyword (https://www.semanticscholar.org/product/api/tutorial)
+Was ist der "endpoint"? (Auch findbar in crossref.py/ieee.py)
+Was ist JSON und wie verwendet man das?
+Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
 
 ##Peter
-
-Wie man nach Papers sucht - Searching for papers by Keyword (https://www.semanticscholar.org/product/api/tutorial)
-API Key + Python Client - Authentifizierung von Semantic Scholar
-Code verstehen von z.B. ieee.py / crossref.py
-Was muss API Klasse beinhalten ieee_api.py -  was braucht man alles, woher kennt man die SearchFields? (muss man das alles auflisten?)
+Code verstehen zu crossref.py
+Welche Funktionen machen was und können wir diese auch für unseren Issue gebrauchen?
 
 Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben 
 
 #FRAGEN FUER HACKING SESSIONS
 Alle Ergebnisse per Suchbegriff oder auch einzelne Paper suchen können (targeting)
 
-Was muss alles in die BibTech Datei rein?
+Was muss alles in di BibTech Datei rein?
 
 Soll unsere Software einen API Key automatisch anfordern können, wenn noch keiner vorhanden ist? Oder soll der Nutzer bei nicht vorhandenem Key selbst einen anfragen und dann manuell in colrev eingeben?
 (siehe IEEE Klasse, Zeile 208)
