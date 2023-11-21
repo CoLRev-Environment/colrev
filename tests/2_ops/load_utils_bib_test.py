@@ -32,7 +32,7 @@ def test_load(  # type: ignore
         load_operation=load_operation,
         source=search_source,
         list_fields={},
-        unique_id_field=""
+        unique_id_field="",
     )
     records = loader.load_bib_file()
     expected = (

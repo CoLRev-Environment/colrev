@@ -143,7 +143,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             load_operation=load_operation,
             source=self.search_source,
             list_fields={},
-            unique_id_field=""
+            unique_id_field="",
         )
         records = loader.load_bib_file()
         self.__remove_duplicates(records=records)
@@ -229,7 +229,6 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             return self.__load_ris(load_operation)
 
         raise NotImplementedError
-
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

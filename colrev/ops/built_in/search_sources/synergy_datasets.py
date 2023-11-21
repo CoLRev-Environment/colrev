@@ -330,11 +330,13 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation,
                 source=self.search_source,
-                check_bib_file=False,
+                list_fields={},
+                unique_id_field="",
             )
+            records = loader.load_bib_file()
             for record in records.values():
                 if "pmid" in record:
                     record["pubmedid"] = record["pmid"].replace(

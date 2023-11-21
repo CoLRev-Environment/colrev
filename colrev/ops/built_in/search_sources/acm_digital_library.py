@@ -112,7 +112,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
                 load_operation=load_operation,
                 source=self.search_source,
                 list_fields={},
-                unique_id_field=""
+                unique_id_field="",
             )
             records = loader.load_bib_file()
             return records

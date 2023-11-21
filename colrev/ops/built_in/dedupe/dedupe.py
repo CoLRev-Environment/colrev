@@ -44,6 +44,8 @@ class Dedupe(JsonSchemaMixin):
         self.review_manager = dedupe_operation.review_manager
 
     def match_citations(self, formatted_citations: DataFrame) -> Any | None:
+        """Match formatted citation and remove duplications"""
+
         def jaro_winkler_similarity(str1: str, str2: str) -> Any:
             return fuzz.jaro_winkler(str1, str2)
 
@@ -85,6 +87,7 @@ class Dedupe(JsonSchemaMixin):
     def compare_dedup(
         self, formatted_citations: DataFrame, block_fields: List
     ) -> DataFrame:
+        """compares duplicates"""
         pairs = formatted_citations.apply(
             lambda row: self.compare_dedup_inner(
                 row, formatted_citations, block_fields
@@ -95,7 +98,8 @@ class Dedupe(JsonSchemaMixin):
 
     def compare_dedup_inner(
         self, row: Any, formatted_citations: DataFrame, block_fields: List
-    ) -> DataFrame:
+    ) -> DataFrame | None:
+        """compares duplicates"""
         try:
             newpairs = formatted_citations.compare.dedup(
                 row, blockfld=block_fields, exclude=["record_id", "source", "label"]
@@ -108,6 +112,8 @@ class Dedupe(JsonSchemaMixin):
     def get_metadata(
         self, row: Any, formatted_citations: DataFrame, similarity_function: Any
     ) -> pd.Series:
+        """Extracts possible metadata"""
+
         metadata_columns = [
             "author",
             "title",

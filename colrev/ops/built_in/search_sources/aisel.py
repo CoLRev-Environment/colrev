@@ -246,7 +246,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save_feed_file()
-        self.search_source.filename.write_text(response.content.decode("utf-8"))
+        self.search_source.filename.write_text(
+            response.content.decode("utf-8"), encoding="utf-8"
+        )
 
         records = self.__load_enl(
             load_operation=self.review_manager.get_load_operation()
@@ -366,10 +368,13 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # for API-based searches
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
-                load_operation=load_operation, source=self.search_source
+            loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_operation=load_operation,
+                source=self.search_source,
+                list_fields={},
+                unique_id_field="",
             )
-            return records
+            return loader.load_bib_file()
 
         raise NotImplementedError
 
@@ -434,7 +439,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """
         if "0" not in record_dict:
             keys_to_check = ["V", "N"]
-            if any([k in record_dict for k in keys_to_check]):
+            if any(k in record_dict for k in keys_to_check):
                 record_dict["0"] = "Journal Article"
             else:
                 record_dict["0"] = "Inproceedings"

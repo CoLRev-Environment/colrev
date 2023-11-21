@@ -144,6 +144,8 @@ class ENLLoader:
     def apply_entrytype_mapping(
         self, *, record_dict: dict, entrytype_map: dict
     ) -> None:
+        """Applies entrytype mappings to the record dict"""
+
         if record_dict["0"] not in entrytype_map:
             msg = f"{Colors.RED}0={record_dict['0']} not yet supported{Colors.END}"
             if not self.load_operation.review_manager.force_mode:

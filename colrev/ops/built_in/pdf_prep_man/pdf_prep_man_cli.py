@@ -127,8 +127,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 subprocess.run(["xdg-open", filepath], check=True)
             else:
                 print("Unsupported operating system.")
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"Error: {e}")
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            print(f"Error: {err}")
 
     def __remove_page(
         self,

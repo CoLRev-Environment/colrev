@@ -38,16 +38,16 @@ if TYPE_CHECKING:
     import colrev.ops.load
 
 
-
 class BIBLoader:
+    """Loads bib files"""
 
     def __init__(
-            self,
-            *,
-            load_operation: colrev.ops.load.Load,
-            source: colrev.settings.SearchSource,
-            list_fields: dict,
-            unique_id_field: str = "",
+        self,
+        *,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        list_fields: dict,
+        unique_id_field: str = "",
     ):
         self.load_operation = load_operation
         self.source = source
@@ -74,18 +74,25 @@ class BIBLoader:
                 self.load_operation.review_manager.logger.error(
                     f"Not a bib file? {self.source.filename.name}"
                 )
-                raise colrev_exceptions.UnsupportedImportFormatError(self.source.filename)
+                raise colrev_exceptions.UnsupportedImportFormatError(
+                    self.source.filename
+                )
 
         # Errors to fix before pybtex loading:
         # - set_incremental_ids (otherwise, not all records will be loaded)
         # - fix_keys (keys containing white spaces)
         record_ids: typing.List[str] = []
         with open(self.source.filename, "r+b") as file:
+            # this helps to keep line length bellow 100,
+            # and a small performance boost.
+            generate_next_unique_id = (
+                self.load_operation.review_manager.dataset.generate_next_unique_id
+            )
             seek_pos = file.tell()
             line = file.readline()
             while line:
                 if b"@" in line[:3]:
-                    current_id = line[line.find(b"{") + 1:line.rfind(b",")]
+                    current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
                     current_id_str = current_id.decode("utf-8").lstrip().rstrip()
 
                     if any(x in current_id_str for x in [";"]):
@@ -94,13 +101,13 @@ class BIBLoader:
                             r"_",
                             line.decode("utf-8"),
                         ).encode("utf-8")
-                        seek_pos = self.__fix_key(file, line, replacement_line, seek_pos)
+                        seek_pos = self.__fix_key(
+                            file, line, replacement_line, seek_pos
+                        )
 
                     if current_id_str in record_ids:
-                        next_id = (
-                            self.load_operation.review_manager.dataset.generate_next_unique_id(
-                                temp_id=current_id_str, existing_ids=record_ids
-                            )
+                        next_id = generate_next_unique_id(
+                            temp_id=current_id_str, existing_ids=record_ids
                         )
                         self.load_operation.review_manager.logger.info(
                             f"Fix duplicate ID: {current_id_str} >> {next_id}"
@@ -112,14 +119,17 @@ class BIBLoader:
                             .encode("utf-8")
                         )
 
-                        seek_pos = self.__fix_key(file, line, replacement_line, seek_pos)
+                        seek_pos = self.__fix_key(
+                            file, line, replacement_line, seek_pos
+                        )
                         record_ids.append(next_id)
 
                     else:
                         record_ids.append(current_id_str)
-
                 # Fix keys
-                if re.match(r"^\s*[a-zA-Z0-9]+\s+[a-zA-Z0-9]+\s*\=", line.decode("utf-8")):
+                if re.match(
+                    r"^\s*[a-zA-Z0-9]+\s+[a-zA-Z0-9]+\s*\=", line.decode("utf-8")
+                ):
                     replacement_line = re.sub(
                         r"(^\s*)([a-zA-Z0-9]+)\s+([a-zA-Z0-9]+)(\s*\=)",
                         r"\1\2_\3\4",
@@ -131,7 +141,7 @@ class BIBLoader:
                 line = file.readline()
 
     def __fix_key(
-            self, file: typing.IO, line: bytes, replacement_line: bytes, seek_pos: int
+        self, file: typing.IO, line: bytes, replacement_line: bytes, seek_pos: int
     ) -> int:
         self.load_operation.review_manager.logger.info(
             f"Fix invalid key: \n{line.decode('utf-8')}"
@@ -180,9 +190,7 @@ class BIBLoader:
                             )
                     line = file.readline()
 
-    def __check_bib_file(
-            self, *, records: dict
-    ) -> None:
+    def __check_bib_file(self, *, records: dict) -> None:
         if len(records.items()) <= 3:
             return
         if not any(Fields.AUTHOR in r for r in records.values()):
@@ -204,7 +212,9 @@ class BIBLoader:
             )
 
             if len(records) == 0:
-                self.load_operation.review_manager.report_logger.debug("No records loaded")
+                self.load_operation.review_manager.report_logger.debug(
+                    "No records loaded"
+                )
                 self.load_operation.review_manager.logger.debug("No records loaded")
             return records
 
@@ -241,19 +251,16 @@ class BIBLoader:
             del records[crossref_id]
 
     def load_bib_file(
-            self, *,
-            check_bib_file: bool = True,
+        self,
+        *,
+        check_bib_file: bool = True,
     ) -> dict:
         """Load a bib file and return records dict"""
 
-        # TODO (Tarin): create class (which handles the load_operation) and extract the following functions
-
         self.__apply_file_fixes()
-
         records = self.__load_records()
         if len(records) == 0:
             return records
-
         self.__lower_case_keys(records=records)
         self.__drop_empty_fields(records=records)
         self.__resolve_crossref(records=records)

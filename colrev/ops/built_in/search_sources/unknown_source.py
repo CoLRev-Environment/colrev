@@ -300,7 +300,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             load_operation=load_operation,
             source=self.search_source,
             list_fields={},
-            unique_id_field=""
+            unique_id_field="",
         )
         records = loader.load_bib_file()
         return records
@@ -374,7 +374,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         for record_dict in records.values():
             if "0" not in record_dict:
                 keys_to_check = ["V", "N"]
-                if any([k in record_dict for k in keys_to_check]):
+                if any(k in record_dict for k in keys_to_check):
                     record_dict["0"] = "Journal Article"
                 else:
                     record_dict["0"] = "Inproceedings"
