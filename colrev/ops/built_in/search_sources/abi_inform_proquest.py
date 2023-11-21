@@ -138,6 +138,17 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def __load_bib(self, load_operation: colrev.ops.load.Load) -> dict:
+        loader = colrev.ops.load_utils_bib.BIBLoader(
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields={},
+            unique_id_field=""
+        )
+        records = loader.load_bib_file()
+        self.__remove_duplicates(records=records)
+        return records
+
     def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
         references_types = {
             "JOUR": ENTRYTYPES.ARTICLE,
@@ -212,16 +223,13 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
-                load_operation=load_operation, source=self.search_source
-            )
-            self.__remove_duplicates(records=records)
-            return records
+            return self.__load_bib(load_operation)
 
         if self.search_source.filename.suffix == ".ris":
             return self.__load_ris(load_operation)
 
         raise NotImplementedError
+
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

@@ -28,9 +28,13 @@ def test_load(  # type: ignore
     )
     load_operation = base_repo_review_manager.get_load_operation()
 
-    records = colrev.ops.load_utils_bib.load_bib_file(
-        load_operation=load_operation, source=search_source
+    loader = colrev.ops.load_utils_bib.BIBLoader(
+        load_operation=load_operation,
+        source=search_source,
+        list_fields={},
+        unique_id_field=""
     )
+    records = loader.load_bib_file()
     expected = (
         helpers.test_data_path / Path("load_utils/") / Path("bib_tests_expected.bib")
     ).read_text(encoding="utf-8")
