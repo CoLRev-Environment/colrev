@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
+from typing import List
 from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from pandas import DataFrame
 from rapidfuzz import fuzz
 
 import colrev.env.package_manager
@@ -40,8 +43,8 @@ class Dedupe(JsonSchemaMixin):
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
 
-    def match_citations(self, formatted_citations):
-        def jaro_winkler_similarity(str1, str2):
+    def match_citations(self, formatted_citations: DataFrame) -> Any | None:
+        def jaro_winkler_similarity(str1: str, str2: str) -> Any:
             return fuzz.jaro_winkler(str1, str2)
 
         # ROUND 1
@@ -79,7 +82,9 @@ class Dedupe(JsonSchemaMixin):
 
         return pairs
 
-    def compare_dedup(self, formatted_citations, block_fields):
+    def compare_dedup(
+        self, formatted_citations: DataFrame, block_fields: List
+    ) -> DataFrame:
         pairs = formatted_citations.apply(
             lambda row: self.compare_dedup_inner(
                 row, formatted_citations, block_fields
@@ -88,7 +93,9 @@ class Dedupe(JsonSchemaMixin):
         )
         return pairs.dropna()
 
-    def compare_dedup_inner(self, row, formatted_citations, block_fields):
+    def compare_dedup_inner(
+        self, row: Any, formatted_citations: DataFrame, block_fields: List
+    ) -> DataFrame:
         try:
             newpairs = formatted_citations.compare.dedup(
                 row, blockfld=block_fields, exclude=["record_id", "source", "label"]
@@ -98,7 +105,9 @@ class Dedupe(JsonSchemaMixin):
         except Exception:
             return None
 
-    def get_metadata(self, row, formatted_citations, similarity_function):
+    def get_metadata(
+        self, row: Any, formatted_citations: DataFrame, similarity_function: Any
+    ) -> pd.Series:
         metadata_columns = [
             "author",
             "title",
@@ -130,7 +139,7 @@ class Dedupe(JsonSchemaMixin):
         result = self.match_citations(records_df)
         input(result)
 
-        potential_duplicates = []
+        potential_duplicates: List = []
 
         # apply:
         self.dedupe_operation.apply_merges(results=potential_duplicates)

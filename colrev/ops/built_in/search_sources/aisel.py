@@ -247,15 +247,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save_feed_file()
         self.search_source.filename.write_text(response.content.decode("utf-8"))
-        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            load_operation=self.review_manager.get_load_operation(),
-            source=self.search_source,
-            unique_id_field="ID",
+
+        records = self.__load_enl(
+            load_operation=self.review_manager.get_load_operation()
         )
-        entries = enl_loader.load_enl_entries()
-        for entry in entries.values():
-            entry["ID"] = entry[Fields.URL].replace("https://aisel.aisnet.org/", "")
-        records = enl_loader.convert_to_records(entries=entries)
 
         return list(records.values())
 
@@ -365,6 +360,20 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
+        # pylint: disable=colrev-missed-constant-usage
+        if self.search_source.filename.suffix in [".txt", ".enl"]:
+            return self.__load_enl(load_operation=load_operation)
+
+        # for API-based searches
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
+
+    def __load_enl(self, load_operation: colrev.ops.load.Load) -> dict:
         enl_mapping = {
             ENTRYTYPES.ARTICLE: {
                 "T": Fields.TITLE,
@@ -398,36 +407,24 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             "Journal Article": ENTRYTYPES.ARTICLE,
             "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
         }
+        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields={"A": " and "},
+            unique_id_field="ID",
+        )
+        records = enl_loader.load_enl_entries()
 
-        # pylint: disable=colrev-missed-constant-usage
-        if self.search_source.filename.suffix in [".txt", ".enl"]:
-            enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                list_fields={"A": " and "},
-                unique_id_field="ID",
+        for record_dict in records.values():
+            self.__fix_entrytype_before_conversion(record_dict=record_dict)
+            enl_loader.apply_entrytype_mapping(
+                record_dict=record_dict, entrytype_map=entrytype_map
             )
-            records = enl_loader.load_enl_entries()
-
-            for record_dict in records.values():
-                self.__fix_entrytype_before_conversion(record_dict=record_dict)
-                enl_loader.apply_entrytype_mapping(
-                    record_dict=record_dict, entrytype_map=entrytype_map
-                )
-                enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
-                record_dict["ID"] = record_dict[Fields.URL].replace(
-                    "https://aisel.aisnet.org/", ""
-                )
-            return records
-
-        # for API-based searches
-        if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
-                load_operation=load_operation, source=self.search_source
+            enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
+            record_dict["ID"] = record_dict[Fields.URL].replace(
+                "https://aisel.aisnet.org/", ""
             )
-            return records
-
-        raise NotImplementedError
+        return records
 
     def __fix_entrytype_before_conversion(self, *, record_dict: dict) -> None:
         """
