@@ -6,7 +6,6 @@ import datetime
 import typing
 from itertools import combinations
 from pathlib import Path
-from typing import Dict
 from typing import Optional
 
 import pandas as pd
@@ -15,7 +14,6 @@ from tqdm import tqdm
 import colrev.ops.dedupe
 import colrev.review_manager
 from colrev.constants import Fields
-from colrev.constants import FieldSet
 
 
 class DedupeBenchmarker:
@@ -76,7 +74,7 @@ class DedupeBenchmarker:
         return prepared_records_df
 
     # pylint: disable=too-many-locals
-    def __get_dedupe_benchmark(self) -> dict:
+    def __get_dedupe_benchmark(self) -> None:
         """Get benchmark for dedupe"""
 
         def merged(record: dict) -> bool:
@@ -90,6 +88,10 @@ class DedupeBenchmarker:
         self.dedupe_operation = self.review_manager.get_dedupe_operation()
 
         records = self.review_manager.dataset.load_records_dict()
+        for record in records.values():
+            if Fields.STATUS not in record:
+                record[Fields.STATUS] = colrev.record.RecordState.md_processed
+                print("setting missing status")
 
         # Select md-processed records (discard recently added/non-deduped ones)
         records = {
@@ -177,6 +179,8 @@ class DedupeBenchmarker:
         records_pre_merged_df = pd.DataFrame.from_dict(
             records_pre_merged, orient="index"
         )
+        self.records_pre_merged_df = records_pre_merged_df
+
         records_df = pd.DataFrame.from_dict(records, orient="index")
         self.records_df = records_df
 
@@ -197,12 +201,6 @@ class DedupeBenchmarker:
             str(self.merged_record_origins_path), index=False
         )
 
-        return {
-            "records_prepared": records_pre_merged_df,
-            "records_deduped": records_df,
-            "merged_origins": merged_record_origins_df,
-        }
-
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-branches
     def compare(
@@ -210,6 +208,7 @@ class DedupeBenchmarker:
         *,
         blocked_df: pd.DataFrame,
         predicted: list,
+        updated_paper_pairs: list,
     ) -> dict:
         """Compare the predicted matches and blocked pairs to the ground truth."""
 
@@ -272,87 +271,81 @@ class DedupeBenchmarker:
                     matches["TN"] += 1
 
         return {
-            "blocks": blocks,
             "matches": matches,
             "blocks_FN_list": blocks_fn_list,
             "matches_FP_list": matches_fp_list,
             "matches_FN_list": matches_fn_list,
+            "blocks": blocks,
+            "updated_paper_pairs": updated_paper_pairs,
         }
 
-    def get_cases(self, *, origin_pairs: list) -> pd.DataFrame:
-        """Get the cases for origin_pairs
+    def export_cases(
+        self, *, prepared_records_df: pd.DataFrame, results: dict
+    ) -> pd.DataFrame:
+        """Get the cases for results
 
         records_df = [ID, origin, title, author, ...]
-        origin_pairs = [(origin_1, origin_2), ...]
+        results = {"blocks_FN_list", "matches_FP_list", "matches_FN_list", "updated_paper_pairs"}
         """
 
-        cases_df = pd.DataFrame()
-        for pair in origin_pairs:
-            pair_df = self.records_df[self.records_df[Fields.ORIGIN].isin(pair)]
-            pair_df["pair"] = ";".join(pair)
-            cases_df = pd.concat([cases_df, pair_df])
+        for list_name in [
+            "blocks_FN_list",
+            "matches_FP_list",
+            "matches_FN_list",
+            "updated_paper_pairs",
+        ]:
+            origin_pairs = results[list_name]
+            cases_df = pd.DataFrame()
+            for pair in origin_pairs:
+                pair_df = prepared_records_df[
+                    prepared_records_df[Fields.ORIGIN].isin(pair)
+                ].copy()
+                pair_df.loc[:, "case"] = ";".join(pair)
+                cases_df = pd.concat([cases_df, pair_df])
+
+            if not cases_df.empty:
+                cases_df = cases_df[
+                    ["case", "ID", "colrev_origin"]
+                    + [
+                        col
+                        for col in cases_df.columns
+                        if col not in ["case", "ID", "colrev_origin"]
+                    ]
+                ]
+                cases_df = cases_df.sort_values(by=["case", "ID"])
+
+            cases_df.to_csv(self.benchmark_path / f"{list_name}.csv", index=False)
+
         return cases_df
 
-    def export_for_pytest(self) -> None:
+    def get_runtime(self, timestamp: datetime.datetime) -> str:
         """
-        Export the benchmark data for pytest.
+        Calculate the runtime.
 
         Args:
-            target_path (Path): The path to export the benchmark data to.
+            timestamp (datetime.datetime): The timestamp when the deduplication was started.
+
+        Returns:
+            str: The runtime in the format "hours:minutes:seconds".
         """
-        self.benchmark_path.mkdir(parents=True, exist_ok=True)
+        start_time = datetime.datetime.now()
+        time_diff = start_time - timestamp
+        runtime_in_minutes = time_diff.total_seconds() / 60
 
-        records_df = self.records_df.copy()
-        merged_origins = self.true_merged_origins
-
-        all_origins = self.records_df[Fields.ORIGIN].tolist()
-        all_origins_dict = {x: "" for n in all_origins for x in n}
-
-        # anonymize origins
-        source_dict: Dict[str, str] = {}
-        for i, key in enumerate(all_origins_dict.keys()):
-            source = key.split("/")[0]
-            if source not in source_dict:
-                source_dict[source] = f"source_{len(source_dict)}.bib"
-            new_key = f"{source_dict[source]}/{str(i).zfill(10)}"
-            all_origins_dict[key] = new_key
-        records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(
-            lambda x: [all_origins_dict.get(i, i) for i in x]
-        )
-        merged_origins = [
-            [all_origins_dict.get(sub_origin, sub_origin) for sub_origin in origin]
-            for origin in merged_origins
-        ]
-
-        records_df = records_df[
-            records_df.columns.intersection(
-                set(
-                    FieldSet.IDENTIFYING_FIELD_KEYS
-                    + [
-                        Fields.ORIGIN,
-                        Fields.STATUS,
-                        Fields.ID,
-                        Fields.DOI,
-                        Fields.ISBN,
-                        Fields.ABSTRACT,
-                    ]
-                )
-            )
-        ]
-
-        records_df.to_csv(
-            str(self.benchmark_path / self.records_pre_merged_path.name), index=False
-        )
-
-        merged_record_origins_df = pd.DataFrame({"merged_origins": merged_origins})
-        merged_record_origins_df.to_csv(
-            str(self.benchmark_path / self.merged_record_origins_path.name), index=False
-        )
-
-        # actual_blocked_df.to_csv("expected_blocked.csv", index=False)
+        runtime_in_hours = runtime_in_minutes / 60
+        hours = int(runtime_in_hours)
+        minutes = (runtime_in_hours * 60) % 60
+        seconds = (runtime_in_hours * 3600) % 60
+        runtime_string = f"{hours}:{int(minutes):02d}:{int(seconds):02d}"
+        print(f"Runtime: {runtime_string}")
+        return runtime_string
 
     def compare_dedupe_id(
-        self, *, records_df: pd.DataFrame, merged_df: pd.DataFrame
+        self,
+        *,
+        records_df: pd.DataFrame,
+        merged_df: pd.DataFrame,
+        timestamp: datetime.datetime,
     ) -> pd.DataFrame:
         """
         Compare dedupe IDs and calculate evaluation metrics.
@@ -360,12 +353,19 @@ class DedupeBenchmarker:
         Args:
             records_df (pd.DataFrame): DataFrame containing the original records.
             merged_df (pd.DataFrame): DataFrame containing the merged records.
+            timestamp (datetime.datetime): The timestamp when the deduplication was started.
 
         Returns:
             pd.DataFrame: DataFrame containing the evaluation metrics.
         """
 
-        results: typing.Dict[str, typing.Any] = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
+        results: typing.Dict[str, typing.Any] = {
+            "TP": 0,
+            "FP": 0,
+            "FN": 0,
+            "TN": 0,
+            "runtime": self.get_runtime(timestamp),
+        }
 
         origin_id_dict = {
             record["colrev_origin"]: record["ID"]
@@ -417,66 +417,6 @@ class DedupeBenchmarker:
             / (results["precision"] + results["sensitivity"])
         )
 
+        results["dataset"] = Path(self.benchmark_path).name
+
         return results
-
-    def append_to_output(self, result: dict, *, package_name: str) -> None:
-        """
-        Append the result to the output file.
-
-        Args:
-            result (dict): The result dictionary.
-            package_name (str): The name of the package.
-
-        Returns:
-            None
-        """
-
-        output_path = str(
-            self.benchmark_path.parent.parent.parent / Path("output/evaluation.csv")
-        )
-
-        result["dataset"] = Path(self.benchmark_path).name
-        result["package"] = package_name
-        current_time = datetime.datetime.now()
-        formatted_time = current_time.strftime("%Y-%m-%d %H:%M")
-        result["time"] = formatted_time
-
-        if not Path(output_path).is_file():
-            results_df = pd.DataFrame(
-                columns=[
-                    "package",
-                    "time",
-                    "dataset",
-                    "TP",
-                    "FP",
-                    "FN",
-                    "TN",
-                    "false_positive_rate",
-                    "specificity",
-                    "sensitivity",
-                    "precision",
-                    "f1",
-                ]
-            )
-        else:
-            results_df = pd.read_csv(output_path)
-
-        result_item_df = pd.DataFrame.from_records([result])
-        result_item_df = result_item_df[
-            [
-                "package",
-                "time",
-                "dataset",
-                "TP",
-                "FP",
-                "FN",
-                "TN",
-                "false_positive_rate",
-                "specificity",
-                "sensitivity",
-                "precision",
-                "f1",
-            ]
-        ]
-        results_df = pd.concat([results_df, result_item_df])
-        results_df.to_csv(output_path, index=False)

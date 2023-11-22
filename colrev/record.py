@@ -1287,7 +1287,11 @@ class Record:
             )
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             return self.data.get(Fields.JOURNAL, na_string)
-        if self.data[Fields.ENTRYTYPE] in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS, ENTRYTYPES.INBOOK]:
+        if self.data[Fields.ENTRYTYPE] in [
+            ENTRYTYPES.INPROCEEDINGS,
+            ENTRYTYPES.PROCEEDINGS,
+            ENTRYTYPES.INBOOK,
+        ]:
             return self.data.get(Fields.BOOKTITLE, na_string)
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
             return self.data.get(Fields.TITLE, na_string)
@@ -1738,8 +1742,10 @@ class PrepRecord(Record):
 
         if " and " in input_string:
             names = input_string.split(" and ")
+        elif input_string.count(";") > 1:
+            names = input_string.split(";")
         elif input_string.count(",") > 1:
-            names = input_string.split(", ")
+            names = input_string.split(" ")
         else:
             names = [input_string]
         author_string = ""
@@ -1997,7 +2003,7 @@ class PrepRecord(Record):
         )
         if re.match(r"^\d+\-\-\d+$", self.data[Fields.PAGES]):
             from_page, to_page = re.findall(r"(\d+)", self.data[Fields.PAGES])
-            if int(from_page) > int(to_page) and len(from_page) > len(to_page):
+            if len(from_page) > len(to_page):
                 self.data[
                     Fields.PAGES
                 ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"

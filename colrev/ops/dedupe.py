@@ -2,7 +2,6 @@
 """CoLRev dedupe operation: identify and merge duplicate records."""
 from __future__ import annotations
 
-import re
 import string
 import typing
 from collections import Counter
@@ -14,6 +13,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import pandas as pd
+from bib_dedupe.bib_dedupe import BibDeduper
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -23,7 +23,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from number_parser import parse
 
 if TYPE_CHECKING:
     import colrev.review_manager
@@ -110,189 +109,10 @@ class Dedupe(colrev.operation.Operation):
         return components
 
     @classmethod
-    def __pre_process(cls, *, key: str, value: str) -> str:
-        if key in [Fields.ID, Fields.ENTRYTYPE, Fields.STATUS, Fields.ORIGIN]:
-            return value
-
-        value = str(value).lower()
-        # Note unidecode may be an alternative to rmdiacritics/remove_accents.
-        # It would be important to operate on a per-character basis
-        # instead of throwing an exception when processing whole strings
-        # value = unidecode(value)
-        value = (
-            value.replace("&amp;", "and")
-            .replace(" & ", " and ")
-            .replace(" + ", " and ")
-        )
-        value = re.sub("\n", " ", value)
-        if key in [Fields.TITLE, Fields.CHAPTER]:
-            value = re.sub(r"[^A-Za-z0-9, ]+", " ", value)
-
-        if key in [
-            Fields.BOOKTITLE,
-            Fields.JOURNAL,
-            Fields.CONTAINER_TITLE,
-            Fields.SERIES,
-        ]:
-            value = parse(value)
-            value = value.replace("proceedings of the", "")
-            value = re.sub(r"[^A-Za-z ]+", " ", value)
-            value = re.sub(r"^the\s", "", value)
-            value = re.sub(r"^\s*(st|nd|rd|th) ", "", value)
-
-        value = re.sub(r"\s+", " ", value)
-        value = value.strip().strip('"').strip("'").strip()
-
-        # If data is missing, indicate that by setting the value to `None`
-        if not value:
-            return ""
-
-        if any(
-            value == x
-            for x in ["no issue", "no volume", "no pages", "no author", "nan", ""]
-        ):
-            return ""
-
-        return value
-
-    @classmethod
     def get_records_for_dedupe(cls, *, records_df: pd.DataFrame) -> pd.DataFrame:
         """Get (pre-processed) records for dedupe"""
-
-        if 0 == records_df.shape[0]:
-            return {}
-
-        assert all(
-            f in records_df.columns
-            for f in [Fields.ENTRYTYPE, Fields.TITLE, Fields.AUTHOR, Fields.YEAR]
-        )
-
-        records_df.replace(to_replace={"UNKNOWN": ""}, inplace=True)
-        required_fields = [
-            Fields.ENTRYTYPE,
-            Fields.JOURNAL,
-            Fields.TITLE,
-            Fields.BOOKTITLE,
-            Fields.SERIES,
-            Fields.VOLUME,
-            Fields.NUMBER,
-            Fields.PAGES,
-            Fields.AUTHOR,
-            Fields.ABSTRACT,
-            Fields.ISBN,
-            Fields.DOI,
-        ]
-        for required_field in required_fields:
-            if required_field not in records_df:
-                records_df[required_field] = ""
-
-        records_df = records_df[
-            ~(
-                records_df[Fields.STATUS].isin(
-                    [
-                        colrev.record.RecordState.md_imported,
-                        colrev.record.RecordState.md_needs_manual_preparation,
-                    ]
-                )
-            )
-        ]
-
-        records_df[Fields.YEAR] = records_df[Fields.YEAR].astype(str)
-        if Fields.STATUS in records_df:
-            # pylint: disable=colrev-direct-status-assign
-            records_df[Fields.STATUS] = records_df[Fields.STATUS].astype(str)
-        if Fields.ORIGIN in records_df:
-            # pylint: disable=unnecessary-lambda
-            records_df[Fields.ORIGIN] = records_df[Fields.ORIGIN].apply(
-                lambda x: ";".join(x)
-            )
-
-        def select_authors(authors: str) -> str:
-            """Select first author"""
-            authors_list = str(authors).lower().split(" and ")
-            authors_str = " ".join(
-                [author.split(",")[0] for author in authors_list][:8]
-            )
-            authors_str = authors_str.replace("anonymous", "").replace("jr", "")
-            authors_str = colrev.env.utils.remove_accents(input_str=authors_str)
-            authors_str = re.sub(r"[^A-Za-z0-9, ]+", "", authors_str)
-            return authors_str
-
-        # pylint: disable=unnecessary-lambda
-        records_df[Fields.AUTHOR] = records_df[Fields.AUTHOR].apply(
-            lambda x: select_authors(x)
-        )
-
-        records_df[Fields.CONTAINER_TITLE] = records_df.apply(
-            lambda row: colrev.record.Record(data=row).get_container_title(na_string=""),
-            axis=1
-        )
-
-        if Fields.CHAPTER in records_df:
-            records_df.loc[
-                records_df.ENTRYTYPE == ENTRYTYPES.INBOOK, Fields.TITLE
-            ] = records_df.loc[
-                records_df.ENTRYTYPE == ENTRYTYPES.INBOOK, Fields.CHAPTER
-            ]
-
-        for column in records_df.columns:
-            records_df[column] = records_df[column].apply(
-                lambda cell: cls.__pre_process(key=column, value=cell)
-            )
-
-        records_df.drop(
-            labels=list(
-                records_df.columns.difference(
-                    [
-                        Fields.ID,
-                        Fields.ENTRYTYPE,
-                        Fields.AUTHOR,
-                        Fields.TITLE,
-                        Fields.YEAR,
-                        Fields.JOURNAL,
-                        Fields.CONTAINER_TITLE,
-                        Fields.VOLUME,
-                        Fields.NUMBER,
-                        Fields.PAGES,
-                        Fields.COLREV_ID,
-                        Fields.ORIGIN,
-                        Fields.STATUS,
-                        Fields.ABSTRACT,
-                        Fields.URL,
-                        Fields.ISBN,
-                        Fields.DOI,
-                    ]
-                )
-            ),
-            axis=1,
-            inplace=True,
-        )
-        records_df[
-            [
-                Fields.AUTHOR,
-                Fields.TITLE,
-                Fields.JOURNAL,
-                Fields.CONTAINER_TITLE,
-                Fields.PAGES,
-                Fields.ABSTRACT,
-            ]
-        ] = records_df[
-            [
-                Fields.AUTHOR,
-                Fields.TITLE,
-                Fields.JOURNAL,
-                Fields.CONTAINER_TITLE,
-                Fields.PAGES,
-                Fields.ABSTRACT,
-            ]
-        ].astype(
-            str
-        )
-
-        # For blocking:
-        records_df["first_author"] = records_df[Fields.AUTHOR].str.split().str[0]
-
-        return records_df
+        dedupe_instance = BibDeduper()
+        return dedupe_instance.get_records_for_dedupe(records_df=records_df)
 
     def __select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
         # pylint: disable=too-many-branches
