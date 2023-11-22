@@ -770,7 +770,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
                 # Rerun restrictions and __update_fields_based_on_pdf_dirs
                 # because the restrictions/subdir-pattern may change
-                record_dict = self.__update_fields_based_on_pdf_dirs(
+                self.__update_fields_based_on_pdf_dirs(
                     record_dict=record_dict, params=self.search_source.search_parameters
                 )
 

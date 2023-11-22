@@ -41,6 +41,8 @@ if TYPE_CHECKING:
 class BIBLoader:
     """Loads bib files"""
 
+    __current_source: typing.TextIO
+
     def __init__(
         self,
         *,
@@ -53,38 +55,32 @@ class BIBLoader:
         self.source = source
         self.unique_id_field = unique_id_field
 
-        self.current: dict = {}
-        # self.pattern = re.compile(self.PATTERN)
+        self.__current_record: dict = {}
         self.list_fields = list_fields
+
+    def __check_source_file(self) -> None:
+        if not self.source.filename.is_file():
+            exp = colrev_exceptions.UnsupportedImportFormatError(self.source.filename)
+            self.load_operation.review_manager.logger.debug(exp.message)
+            raise exp
 
     def __apply_file_fixes(self) -> None:
         # pylint: disable=duplicate-code
         # pylint: disable=too-many-statements
+        self.__check_source_file()
 
-        if not self.source.filename.is_file():
-            self.load_operation.review_manager.logger.debug(
-                f"Did not find bib file {self.source.filename} "
-            )
-            return
-
-        with open(self.source.filename, encoding="utf8") as bibtex_file:
-            contents = bibtex_file.read()
-            bib_r = re.compile(r"@.*{.*,", re.M)
-            if len(re.findall(bib_r, contents)) == 0:
-                self.load_operation.review_manager.logger.error(
-                    f"Not a bib file? {self.source.filename.name}"
-                )
-                raise colrev_exceptions.UnsupportedImportFormatError(
-                    self.source.filename
-                )
+        contents = self.__read_current_file()
+        bib_r = re.compile(r"@.*{.*,", re.M)
+        if len(re.findall(bib_r, contents)) == 0:
+            exp = colrev_exceptions.UnsupportedImportFormatError(self.source.filename)
+            self.load_operation.review_manager.logger.error(exp.message)
+            raise exp
 
         # Errors to fix before pybtex loading:
         # - set_incremental_ids (otherwise, not all records will be loaded)
         # - fix_keys (keys containing white spaces)
         record_ids: typing.List[str] = []
         with open(self.source.filename, "r+b") as file:
-            # this helps to keep line length bellow 100,
-            # and a small performance boost.
             generate_next_unique_id = (
                 self.load_operation.review_manager.dataset.generate_next_unique_id
             )
@@ -159,36 +155,52 @@ class BIBLoader:
         file.seek(seek_pos)
         return seek_pos
 
-    def __drop_empty_fields(self, *, records: dict) -> None:
-        for record_id in records:
-            records[record_id] = {
-                k: v for k, v in records[record_id].items() if v is not None
-            }
-            records[record_id] = {
-                k: v for k, v in records[record_id].items() if v != "nan"
-            }
+    def __read_current_file(self) -> str:
+        """Reads current file and returns content"""
+        content = self.__current_file().read()
+        self.__current_file().seek(os.SEEK_SET)
+        return content
+
+    def __current_file(self) -> typing.TextIO:
+        if self.__current_source:
+            self.__current_source.seek(os.SEEK_SET)
+            return self.__current_source
+        raise colrev_exceptions.ImportException(
+            f"File is not loaded: {self.source.filename}"
+        )
+
+    def __drop_empty_fields(self) -> None:
+        """Clear empty columns"""
+        fields = dict(self.__current_record)
+        for k, field in fields.items():
+            if not field or field == "nan":
+                del self.__current_record[k]
 
     def __check_nr_in_bib(self, *, records: dict) -> None:
         self.load_operation.review_manager.logger.debug(
             f"Loaded {self.source.filename.name} with {len(records)} records"
         )
-        nr_in_bib = self.load_operation.review_manager.dataset.get_nr_in_bib(
-            file_path=self.source.filename
+
+        file = self.__current_file()
+        if not file:
+            raise colrev_exceptions.ImportException("No file provided")
+        nr_in_bib = self.load_operation.review_manager.dataset.get_nr_in_bib_text(
+            file=file
         )
         if len(records) < nr_in_bib:
             self.load_operation.review_manager.logger.error(
                 "broken bib file (not imported all records)"
             )
-            with open(self.source.filename, encoding="utf8") as file:
+            file.seek(os.SEEK_SET)
+            line = file.readline()
+            while line:
+                if "@" in line[:3]:
+                    record_id = line[line.find("{") + 1 : line.rfind(",")]
+                    if record_id not in [x[Fields.ID] for x in records.values()]:
+                        self.load_operation.review_manager.logger.error(
+                            f"{record_id} not imported"
+                        )
                 line = file.readline()
-                while line:
-                    if "@" in line[:3]:
-                        record_id = line[line.find("{") + 1 : line.rfind(",")]
-                        if record_id not in [x[Fields.ID] for x in records.values()]:
-                            self.load_operation.review_manager.logger.error(
-                                f"{record_id} not imported"
-                            )
-                    line = file.readline()
 
     def __check_bib_file(self, *, records: dict) -> None:
         if len(records.items()) <= 3:
@@ -204,27 +216,21 @@ class BIBLoader:
             )
 
     def __load_records(self) -> dict:
-        if not self.source.filename.is_file():
-            return {}
-        with open(self.source.filename, encoding="utf8") as bibtex_file:
-            records = self.load_operation.review_manager.dataset.load_records_dict(
-                load_str=bibtex_file.read()
-            )
+        records = self.load_operation.review_manager.dataset.load_records_dict(
+            load_str=self.__read_current_file()
+        )
 
-            if len(records) == 0:
-                self.load_operation.review_manager.report_logger.debug(
-                    "No records loaded"
-                )
-                self.load_operation.review_manager.logger.debug("No records loaded")
-            return records
+        if len(records) == 0:
+            self.load_operation.review_manager.report_logger.debug("No records loaded")
+            self.load_operation.review_manager.logger.debug("No records loaded")
+        return records
 
-    def __lower_case_keys(self, *, records: dict) -> None:
-        for record in records.values():
-            for key in list(record.keys()):
-                if key in [Fields.ID, Fields.ENTRYTYPE]:
-                    continue
-                if not key.islower():
-                    record[key.lower()] = record.pop(key)
+    def __lower_case_keys(self) -> None:
+        for key in list(self.__current_record.keys()):
+            if key in [Fields.ID, Fields.ENTRYTYPE]:
+                continue
+            if not key.islower():
+                self.__current_record[key.lower()] = self.__current_record.pop(key)
 
     def __resolve_crossref(self, *, records: dict) -> None:
         # https://bibtex.eu/fields/crossref/
@@ -257,15 +263,22 @@ class BIBLoader:
     ) -> dict:
         """Load a bib file and return records dict"""
 
-        self.__apply_file_fixes()
-        records = self.__load_records()
-        if len(records) == 0:
+        with open(self.source.filename, encoding="utf-8") as file:
+            self.__current_source = file
+            try:
+                self.__apply_file_fixes()
+            except colrev_exceptions.UnsupportedImportFormatError:
+                return {}
+            records = self.__load_records()
+            if len(records) == 0:
+                return records
+            for _record_id, record in records.items():
+                self.__current_record = record
+                self.__lower_case_keys()
+                self.__drop_empty_fields()
+            self.__check_nr_in_bib(records=records)
+            self.__resolve_crossref(records=records)
+            records = dict(sorted(records.items()))
+            if check_bib_file:
+                self.__check_bib_file(records=records)
             return records
-        self.__lower_case_keys(records=records)
-        self.__drop_empty_fields(records=records)
-        self.__resolve_crossref(records=records)
-        records = dict(sorted(records.items()))
-        self.__check_nr_in_bib(records=records)
-        if check_bib_file:
-            self.__check_bib_file(records=records)
-        return records

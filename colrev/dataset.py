@@ -13,6 +13,7 @@ from copy import deepcopy
 from pathlib import Path
 from random import randint
 from typing import Optional
+from typing import TextIO
 from typing import TYPE_CHECKING
 
 import git
@@ -146,14 +147,18 @@ class Dataset:
 
     def get_nr_in_bib(self, *, file_path: Path) -> int:
         """Returns number of records in the bib file"""
+        with open(file_path, encoding="utf-8") as file:
+            return self.get_nr_in_bib_text(file=file)
+
+    def get_nr_in_bib_text(self, *, file: TextIO) -> int:
+        """Returns number of records in an opened file"""
         number_in_bib = 0
-        with open(file_path, encoding="utf8") as file:
+        line = file.readline()
+        while line:
+            if "@" in line[:3]:
+                if "@comment" not in line[:10].lower():
+                    number_in_bib += 1
             line = file.readline()
-            while line:
-                if "@" in line[:3]:
-                    if "@comment" not in line[:10].lower():
-                        number_in_bib += 1
-                line = file.readline()
         return number_in_bib
 
     def load_records_from_history(

@@ -302,8 +302,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             list_fields={},
             unique_id_field="",
         )
-        records = loader.load_bib_file()
-        return records
+        return loader.load_bib_file()
 
     def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
         csv_loader = colrev.ops.load_utils_table.CSVLoader(

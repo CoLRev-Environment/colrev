@@ -626,8 +626,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 list_fields={},
                 unique_id_field="",
             )
-            records = loader.load_bib_file()
-            return records
+            return loader.load_bib_file()
 
         raise NotImplementedError
 
