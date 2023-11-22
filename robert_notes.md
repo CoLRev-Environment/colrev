@@ -16,6 +16,7 @@
 	Key wird beim Ausführen der Query direkt abgefragt
 	Methode __run_api_search führt Suche aus und speichert von der Query aus der ieee.api-Klasse gelieferte und formatierte Daten in einer Datei im Ordner "records"
 	review manager nimmt Veränderungen an den Eigenschaften der Klasse vor, wird in __init__ initialisiert
+	Unterscheidung zwischen Entrytypes (Art der Literatur) und Fields (tatsächliche Key-Value-Paare der Einträge)
 	
 
 #Fragen/points of interest
