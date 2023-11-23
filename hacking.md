@@ -25,6 +25,8 @@ Welche Funktionen machen was und können wir diese auch für unseren Issue gebra
 Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben 
 
 #FRAGEN FUER HACKING SESSIONS
+Soll es eine Standard Abfrage (Query) geben? Bei den anderen Search S. gibt es das, aber wie sinnvoll ist es wirklich? - Wir sagen nicht sinnvoll
+
 Alle Ergebnisse per Suchbegriff oder auch einzelne Paper suchen können (targeting)
 
 Was muss alles in di BibTech Datei rein?
