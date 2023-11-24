@@ -40,10 +40,10 @@ Links
 
 
 * `Crossref <https://www.crossref.org/>`_
-*
+* 
   `License <https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-metadata-license-information/>`_
 
-*
+* 
   `Issue: AND Operators not yet supported <https://github.com/fabiobatalha/crossrefapi/issues/20>`_
 
 To test the metadata provided for a particular ``DOI`` use:

@@ -370,7 +370,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         for record_dict in records.values():
             if "0" not in record_dict:
                 keys_to_check = ["V", "N"]
-                if any([k in record_dict for k in keys_to_check]):
+                if any(k in record_dict for k in keys_to_check):
                     record_dict["0"] = "Journal Article"
                 else:
                     record_dict["0"] = "Inproceedings"
