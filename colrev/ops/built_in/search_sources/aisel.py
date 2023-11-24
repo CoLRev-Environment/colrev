@@ -246,58 +246,17 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # Note: the following writes the enl to the feed file (bib).
         # This file is replaced by ais_feed.save_feed_file()
-
-        enl_mapping = {
-            ENTRYTYPES.ARTICLE: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-            ENTRYTYPES.INPROCEEDINGS: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-        }
-
-        entrytype_map = {
-            "Journal Article": ENTRYTYPES.ARTICLE,
-            "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
-        }
         self.search_source.filename.write_text(response.content.decode("utf-8"))
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
             load_operation=self.review_manager.get_load_operation(),
             source=self.search_source,
-            list_fields={"A": " and "},
             unique_id_field="ID",
         )
+        entries = enl_loader.load_enl_entries()
+        for entry in entries.values():
+            entry["ID"] = entry[Fields.URL].replace("https://aisel.aisnet.org/", "")
+        records = enl_loader.convert_to_records(entries=entries)
 
-        records = enl_loader.load_enl_entries()
-        for record_dict in records.values():
-            self.__fix_entrytype_before_conversion(record_dict=record_dict)
-            enl_loader.apply_entrytype_mapping(
-                record_dict=record_dict, entrytype_map=entrytype_map
-            )
-            enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
-            record_dict["ID"] = record_dict[Fields.URL].replace(
-                "https://aisel.aisnet.org/", ""
-            )
         return list(records.values())
 
     def __run_api_search(
@@ -478,7 +437,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """
         if "0" not in record_dict:
             keys_to_check = ["V", "N"]
-            if any(k in record_dict for k in keys_to_check):
+            if any([k in record_dict for k in keys_to_check]):
                 record_dict["0"] = "Journal Article"
             else:
                 record_dict["0"] = "Inproceedings"
