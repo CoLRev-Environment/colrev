@@ -25,9 +25,12 @@ import colrev.record
 import colrev.settings
 import colrev.operation
 import colrev.env.language_service
+from colrev import settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+
+from semanticscholar import SemanticScholar
 
 if TYPE_CHECKING:
     import colrev.ops.search
@@ -63,7 +66,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     )
 
     short_name = "S2"
-    __s2_md_filename = Path("data/search/md_crossref.bib")
+    __s2_md_filename = Path("data/search/md_S2.bib")
 
     __availability_exception_message = (
         f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})")
@@ -72,21 +75,36 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self,
             *,
             source_operation: colrev.operation.Operation,
-            # settings: Optional[dict] = None,
+            settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
-        self.search_source = colrev.settings.SearchSource(
-            endpoint="colrev.crossref",
-            # filename=self.__crossref_md_filename,
-            search_type=colrev.settings.SearchType.API,
-            search_parameters={},
-            comment="",
-        )
-        self.s2_lock = Lock()
+#        if settings:
+#            # Semantic Scholar as a search source
+#            self.search_source = from_dict(
+#                data_class=self.settings_class, data=settings
+#            )
+#        else:
+#            # Semantic Scholar as a md-prep source
+#            s2_api_source_l = [
+#                s
+#                for s in self.review_manager.settings.sources
+#                if s.filename == self.__s2_api_filename
+#            ]
+#            if s2_api_source_l:
+#                self.search_source = s2_api_source_l[0]
+#            else:
+#                self.search_source = colrev.settings.SearchSource(
+#                    endpoint="colrev.semanticscholar",
+#                    filename=self.__S2_md_filename,
+#                    search_type=colrev.settings.SearchType.API,
+#                    search_parameters={},
+#                    comment="",
+#                )
+#            self.s2_lock = Lock()
 
         self.language_service = colrev.env.language_service.LanguageService()
         # self.etiquette = self.get_etiquette(review_manager=self.review_manager)
-        self.email = self.review_manager.get_committer()
+        # self.email = self.review_manager.get_committer()
 
     def __query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
         """Get records from Semantic Scholar based on a bibliographic query"""
@@ -115,6 +133,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             raise
 
         s2_query = {"bibliographic": params["query"].replace(" ", "+")}
+
 
 
 
