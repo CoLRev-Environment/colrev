@@ -25,11 +25,14 @@ Welche Funktionen machen was und können wir diese auch für unseren Issue gebra
 Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben 
 
 #FRAGEN FUER HACKING SESSIONS
+
+In der __init_: Sollen wir die MD-Search auch initialisieren? Oder legt der von uns auskommentierte Code die SearchSource neu in den Settings an, wenn sie noch nicht vorhanden ist?
+
 Soll es eine Standard Abfrage (Query) geben? Bei den anderen Search S. gibt es das, aber wie sinnvoll ist es wirklich? - Wir sagen nicht sinnvoll
 
-Alle Ergebnisse per Suchbegriff oder auch einzelne Paper suchen können (targeting)
+Alle Ergebnisse per Suchbegriff oder auch einzelne Paper suchen können (targeting)?
 
-Was muss alles in di BibTech Datei rein?
+Was muss alles in die BibTech Datei rein?
 
 Soll unsere Software einen API Key automatisch anfordern können, wenn noch keiner vorhanden ist? Oder soll der Nutzer bei nicht vorhandenem Key selbst einen anfragen und dann manuell in colrev eingeben?
 (siehe IEEE Klasse, Zeile 208)
