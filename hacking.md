@@ -26,6 +26,8 @@ Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
 
 #FRAGEN FUER HACKING SESSIONS
 
+Wie importieren wir den Python Client am besten? Beispiel siehe UI Klasse
+
 In der __init_: Sollen wir die MD-Search auch initialisieren? Oder legt der von uns auskommentierte Code die SearchSource neu in den Settings an, wenn sie noch nicht vorhanden ist?
 
 Soll es eine Standard Abfrage (Query) geben? Bei den anderen Search S. gibt es das, aber wie sinnvoll ist es wirklich? - Wir sagen nicht sinnvoll
