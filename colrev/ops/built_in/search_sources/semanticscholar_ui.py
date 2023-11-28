@@ -185,7 +185,7 @@ class Semanticscholar_ui():
                     ]
         choice = inquirer.prompt(questions=question)
 
-        return choice["Choice"]
+        return choice.get("Choice")
     
     def enterText(self,
                   *,
@@ -197,7 +197,7 @@ class Semanticscholar_ui():
         question = [inquirer.Text(name="Entry", message=msg,)]
         choice = inquirer.prompt(questions=question)
 
-        return choice["Entry"]
+        return choice.get("Entry")
     
 
 #test
