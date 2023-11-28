@@ -1,43 +1,30 @@
+
 #Aufgaben
 ##Robert
-Code verstehen zu ieee.py
-Welche Funktionen machen was und können wir diese auch für unseren Issue gebrauchen?
-Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
-
+tbd
 ##Amadu
-API Key Semantic Scholar - Authentifizierung von Semantic Scholar
-Wie kann man den Key verwenden/generiert? (Header) 
-Wie wird dieser gespeichert?
---> im Python CLient oder IEEE SearchSource finden sich Beispiele.und direkt bei Semantic Scholar
-Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
-
+tbd
 ##Louis
-Wie sucht man nach Papers in Semantic Scholar
-	--> Searching for papers by Keyword (https://www.semanticscholar.org/product/api/tutorial)
-Was ist der "endpoint"? (Auch findbar in crossref.py/ieee.py)
-Was ist JSON und wie verwendet man das?
-Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
-
+tbd
 ##Peter
-Code verstehen zu crossref.py
-Welche Funktionen machen was und können wir diese auch für unseren Issue gebrauchen?
-
-Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben 
+tbd
 
 #FRAGEN FUER HACKING SESSIONS
+Nachfragen: Frage nach Einschränkung der Results auf bestimmte Fields als Prompt im UI?
 
-Nachfragen: Frage nach bestimmten Fields für die Ausgabe im UI!!
+Fehlermeldungen bei Validierung: Abbruch einfügen?
 
 
 #NEXT STEPS
-tbd
+1) User UI fertigstellen: Validierung bestimmter Parameter und Abfrage nach Einschränkung der Resultfile auf bestimmte Felder
+2) Logik implementieren: Übergabe der search parameter an Python Client, Speichern der Resultfile und des feeds für rerun, [...]
 
 
 #PUSH-ANLEITUNG
 --> diese zeile wurde geändert ... pushtest 
-#speichern
-#für push: git add ...dateiname
-#git commit -m "was geändert wurde hier eingeben"
-#
+	#speichern
+	#git add ...dateiname
+	#git commit -m "was geändert wurde hier eingeben"
+	#git push
 
 
