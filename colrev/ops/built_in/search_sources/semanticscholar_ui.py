@@ -36,7 +36,8 @@ class Semanticscholar_ui():
         
         '''Ask user to enter search parameters for distinctive paper search'''
 
-        paperList = []
+        paperIDList = []
+        queryList = []
         morePapers = True
 
         while morePapers:
@@ -49,22 +50,24 @@ class Semanticscholar_ui():
             if param in pOptions and not (param == "Search by title"):
                 paramValue = self.enterText(msg="Please enter the chosen ID in the right format: ")
 
-                if len(paperList) == 0:
+                if len(paperIDList) == 0:
                     self.searchParams["paper_id"] = paramValue
-                    paperList.append(paramValue)
+                    paperIDList.append(paramValue)
                 else:
-                    paperList.append(paramValue)
-                    self.searchParams["paper_ids"] = paperList
+                    paperIDList.append(paramValue)
+                    del self.searchParams["paper_id"]
+                    self.searchParams["paper_ids"] = paperIDList
 
             elif param == "Search by title":
                 paramValue = self.enterText(msg="Please enter the title of the paper: ")
                 
-                if len(paperList) == 0:
+                if len(queryList) == 0:
                     self.searchParams["query"] = paramValue
-                    paperList.append(paramValue)
+                    queryList.append(paramValue)
                 else:
-                    paperList.append(paramValue)
-                    self.searchParams["querylist"] = paperList
+                    queryList.append(paramValue)
+                    del self.searchParams["query"]
+                    self.searchParams["query_list"] = queryList
 
             if self.chooseOption(msg="Would you like to search for another paper?", options=["YES", "NO"]) == "NO":
                 morePapers = False
@@ -78,7 +81,8 @@ class Semanticscholar_ui():
 
         '''Ask user to enter search parameters for distinctive author search'''
 
-        authorList = []
+        authorIDList = []
+        queryList = []
         moreAuthors = True
 
         while moreAuthors:
@@ -90,22 +94,24 @@ class Semanticscholar_ui():
 
             if param == "S2AuthorId":
                 paramValue = self.enterText(msg="Please enter the author ID in the right format: ")
-                if len(authorList) == 0:
+                if len(authorIDList) == 0:
                     self.searchParams["author_id"] = paramValue
-                    authorList.append(paramValue)
+                    authorIDList.append(paramValue)
                 else:
-                    authorList.append(paramValue)
-                    self.searchParams["author_ids"] = authorList
+                    authorIDList.append(paramValue)
+                    del self.searchParams["author_id"]
+                    self.searchParams["author_ids"] = authorIDList
 
 
             elif param == "Search by name":
                 paramValue = self.enterText(msg="Please enter the name of the author: ")
-                if len(authorList) == 0:
+                if len(queryList) == 0:
                     self.searchParams["query"] = paramValue
-                    authorList.append(paramValue)
+                    queryList.append(paramValue)
                 else:
-                    authorList.append(paramValue)
-                    self.searchParams["querylist"] = authorList
+                    queryList.append(paramValue)
+                    del self.searchParams["query"]
+                    self.searchParams["querylist"] = queryList
             
             fwd = self.chooseOption(msg="Would you like to search for another author?", options=["YES", "NO"])
             
@@ -186,9 +192,8 @@ class Semanticscholar_ui():
 test = Semanticscholar_ui()
 test.mainUI()
 print("\nSearch Subject: ", test.searchSubject)
-print("\nSearch Parameters:")
 for key,value in test.searchParams.items():
-    print(key, ":", value)
+    print("Search parameter: ", key, ":", value)
 
 
 
