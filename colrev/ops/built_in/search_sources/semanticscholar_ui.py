@@ -51,10 +51,7 @@ class Semanticscholar_ui():
 
                 if len(paperList) == 0:
                     self.searchParams["paper_id"] = paramValue
-                elif len(paperList) == 1:
-                    paperList.append(self.searchParams["paper_id"])
                     paperList.append(paramValue)
-                    self.searchParams["paper_ids"] = paperList
                 else:
                     paperList.append(paramValue)
                     self.searchParams["paper_ids"] = paperList
@@ -64,13 +61,10 @@ class Semanticscholar_ui():
                 
                 if len(paperList) == 0:
                     self.searchParams["query"] = paramValue
-                elif len(paperList) == 1:
-                    paperList.append(self.searchParams["query"])
                     paperList.append(paramValue)
-                    self.searchParams["query"] = paperList
                 else:
                     paperList.append(paramValue)
-                    self.searchParams["query"] = paperList
+                    self.searchParams["querylist"] = paperList
 
             if self.chooseOption(msg="Would you like to search for another paper?", options=["YES", "NO"]) == "NO":
                 morePapers = False
@@ -98,10 +92,7 @@ class Semanticscholar_ui():
                 paramValue = self.enterText(msg="Please enter the author ID in the right format: ")
                 if len(authorList) == 0:
                     self.searchParams["author_id"] = paramValue
-                elif len(authorList) == 1:
-                    authorList.append(self.searchParams["author_id"])
                     authorList.append(paramValue)
-                    self.searchParams["author_ids"] = authorList
                 else:
                     authorList.append(paramValue)
                     self.searchParams["author_ids"] = authorList
@@ -111,13 +102,10 @@ class Semanticscholar_ui():
                 paramValue = self.enterText(msg="Please enter the name of the author: ")
                 if len(authorList) == 0:
                     self.searchParams["query"] = paramValue
-                elif len(authorList) == 1:
-                    authorList.append(self.searchParams["query"])
                     authorList.append(paramValue)
-                    self.searchParams["query"] = authorList
                 else:
                     authorList.append(paramValue)
-                    self.searchParams["query"] = authorList
+                    self.searchParams["querylist"] = authorList
             
             fwd = self.chooseOption(msg="Would you like to search for another author?", options=["YES", "NO"])
             
@@ -197,6 +185,11 @@ class Semanticscholar_ui():
 #test
 test = Semanticscholar_ui()
 test.mainUI()
+print("\nSearch Subject: ", test.searchSubject)
+print("\nSearch Parameters:")
+for key,value in test.searchParams.items():
+    print(key, ":", value)
+
 
 
 
