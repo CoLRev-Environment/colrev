@@ -26,31 +26,11 @@ Generell - wenn was nicht bekannt ist, dann raussuchen und aufschreiben
 
 #FRAGEN FUER HACKING SESSIONS
 
-Wie importieren wir den Python Client am besten? Beispiel siehe UI Klasse
-
-In der __init_: Sollen wir die MD-Search auch initialisieren? Oder legt der von uns auskommentierte Code die SearchSource neu in den Settings an, wenn sie noch nicht vorhanden ist?
-
-Soll es eine Standard Abfrage (Query) geben? Bei den anderen Search S. gibt es das, aber wie sinnvoll ist es wirklich? - Wir sagen nicht sinnvoll
-
-Alle Ergebnisse per Suchbegriff oder auch einzelne Paper suchen können (targeting)?
-
-Was muss alles in die BibTech Datei rein?
-
-Soll unsere Software einen API Key automatisch anfordern können, wenn noch keiner vorhanden ist? Oder soll der Nutzer bei nicht vorhandenem Key selbst einen anfragen und dann manuell in colrev eingeben?
-(siehe IEEE Klasse, Zeile 208)
-	--> Key jedesmal abfragen, wenn festgestellt wurde, dass es noch keinen gibt z.B. über if(header == none) then ask key
-		oder über extra Funktion: addAPIKey(header as String) --> none:
-
-Muss ein externes Package wie das JsonSchema automatisch bei erster Verwendung installiert werden oder können wir das manuell machen? JsonSchema wird in jeder SearchSource verwendet.
-
-
-Müssen wir bezüglich packages etwas beachten? Muss unser Modul mit der Logik in einem eigenen Package liegen? Falls dazu erstmal nichts weiter beachtet werden muss, würden wir unseren Code einfach in einer SemanticScholar.py-Datei in search_sources ablegen.
+Nachfragen: Frage nach bestimmten Fields für die Ausgabe im UI!!
 
 
 #NEXT STEPS
-1. SemanticScholar API lesen
-2. PythonClient lesen (link in Issuebeschreibung)
-3. #search_sources.semanticscholar_api Klasse erstellen (coding-Aufgabe, machen wir zusammen)
+tbd
 
 
 #PUSH-ANLEITUNG
