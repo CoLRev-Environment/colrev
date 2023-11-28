@@ -71,7 +71,7 @@ class Semanticscholar_ui():
 
         #asking for specific fields not implemented: Import question!!
                 
-        print("Doing magic...")
+        print("\nDoing magic...")
         
 
     def authorUI(self) -> None:
@@ -114,7 +114,7 @@ class Semanticscholar_ui():
                 
         #asking for specific fields not implemented: Import question!!
         
-        print("Doing magic...")
+        print("\nDoing magic...")
 
     def keywordUI(self) -> None:
 
@@ -148,7 +148,7 @@ class Semanticscholar_ui():
 
         #asking for specific fields not implemented: Import question!!
 
-        print("Doing magic...")
+        print("\nDoing magic...")
 
 
     def chooseOption(self,
