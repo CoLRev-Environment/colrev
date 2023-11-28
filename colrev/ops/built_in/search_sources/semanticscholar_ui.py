@@ -90,9 +90,12 @@ class Semanticscholar_ui():
                 paramValue = self.enterText(msg="Please enter the name of the author: ")
                 authorList.append(paramValue)
                 self.searchParams["query"] = authorList
-
-            if self.chooseOption(msg="Would you like to search for another author?", options=["YES", "NO"]) == "NO":
+            
+            fwd = self.chooseOption(msg="Would you like to search for another author?", options=["YES", "NO"])
+            
+            if fwd == "NO":
                 moreAuthors = False
+                if authorList.len() 
 
 
             #asking for specific fields not implemented: Import question!!
@@ -107,21 +110,16 @@ class Semanticscholar_ui():
         year = self.enterText(msg="Please enter the yearspan for your Keyword search. You can press Enter if you don't wish to specify a yearspan: ")
         self.searchParams["year"] = year
 
-        #!!! LIST NEEDED FOR PUB TYPES!!!
-
-        publication_types = self.enterText(msg="Please enter the publication types you'd like to include in your Keyword search. "+ 
+        publication_types = self.enterText(msg="Please enter the publication types you'd like to include in your Keyword search. Separate multiple types by comma."+ 
                                            "You can press Enter if you don't wish to specify publication types: ")
-        self.searchParams["publication_types"] = publication_types####
+        self.searchParams["publication_types"] = publication_types.split(",")
 
-        #!!! LIST NEEDED FOR VENUES!!!
+        venue = self.enterText(msg="Please enter the venues for your Keyword search. Separate multiple venues by comma. You can press Enter if you don't wish to specify any venues: ")
+        self.searchParams["venue"] = venue.split(",")
 
-        venue = self.enterText(msg="Please enter the venues for your Keyword search: ")
-        self.searchParams["query"] = query####
-
-        #!!! LIST NEEDED FOR STUDY FIELDS!!!
-
-        fields_of_study = self.enterText(msg="Please enter the fields of study for your Keyword search: ")
-        self.searchParams["fields_of_study"] = fields_of_study####
+        fields_of_study = self.enterText(msg="Please enter the fields of study for your Keyword search. Separate multiple study fields by comma."+ 
+                                            "You can press Enter if you don't wish to specify any study fields: ")
+        self.searchParams["fields_of_study"] = fields_of_study.split(",")
 
         open_access = self.chooseOption(msg="Would you like to solely include open Access PDF files to your search results?", options=["YES", "NO"])
         if open_access == "YES":
