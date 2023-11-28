@@ -53,9 +53,12 @@ class Semanticscholar_ui():
                 if len(paperIDList) == 0:
                     self.searchParams["paper_id"] = paramValue
                     paperIDList.append(paramValue)
-                else:
+                elif len(paperIDList) == 1:
                     paperIDList.append(paramValue)
                     del self.searchParams["paper_id"]
+                    self.searchParams["paper_ids"] = paperIDList
+                else:
+                    paperIDList.append(paramValue)
                     self.searchParams["paper_ids"] = paperIDList
 
             elif param == "Search by title":
@@ -64,9 +67,12 @@ class Semanticscholar_ui():
                 if len(queryList) == 0:
                     self.searchParams["query"] = paramValue
                     queryList.append(paramValue)
-                else:
+                elif len(queryList) == 1:
                     queryList.append(paramValue)
                     del self.searchParams["query"]
+                    self.searchParams["query_list"] = queryList
+                else:
+                    queryList.append(paramValue)
                     self.searchParams["query_list"] = queryList
 
             if self.chooseOption(msg="Would you like to search for another paper?", options=["YES", "NO"]) == "NO":
@@ -97,9 +103,12 @@ class Semanticscholar_ui():
                 if len(authorIDList) == 0:
                     self.searchParams["author_id"] = paramValue
                     authorIDList.append(paramValue)
-                else:
+                elif len(authorIDList) == 1:
                     authorIDList.append(paramValue)
                     del self.searchParams["author_id"]
+                    self.searchParams["author_ids"] = authorIDList
+                else:
+                    authorIDList.append(paramValue)
                     self.searchParams["author_ids"] = authorIDList
 
 
@@ -108,9 +117,12 @@ class Semanticscholar_ui():
                 if len(queryList) == 0:
                     self.searchParams["query"] = paramValue
                     queryList.append(paramValue)
-                else:
+                elif len(queryList) == 1:
                     queryList.append(paramValue)
                     del self.searchParams["query"]
+                    self.searchParams["querylist"] = queryList
+                else:
+                    queryList.append(paramValue)
                     self.searchParams["querylist"] = queryList
             
             fwd = self.chooseOption(msg="Would you like to search for another author?", options=["YES", "NO"])
