@@ -51,8 +51,8 @@ class Dedupe(JsonSchemaMixin):
         if 0 == records_df.shape[0]:
             return
 
-        deduplication_pairs = self.bib_deduper.block_pairs_for_deduplication(records_df)
-        result = self.bib_deduper.identify_true_matches(deduplication_pairs)
+        deduplication_pairs = self.bib_deduper.block(records_df)
+        result = self.bib_deduper.match(deduplication_pairs)
 
         if self.dedupe_operation.debug:
             return
