@@ -17,6 +17,8 @@ Aufräumen!!
 
 #FRAGEN FUER HACKING SESSIONS
 GENERELL: Was muss bis zum 20.12. alles stehen? 
+	Was darf noch nach dem pull Date verändert werden?
+	Wie wird die Präsi aufgebaut sein? PPP oder frei mit Shell?
 
 crossref.py Zeile 77: __crossref_md_filename = Path("data/search/md_crossref.bib")
 	Was genau ist diese Datei, wo findet man sie?
