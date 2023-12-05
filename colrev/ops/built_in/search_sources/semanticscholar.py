@@ -132,24 +132,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     def __get_s2_parameters(self,
                             *,
                             rerun: bool
-                            ) -> typing.Iterator[dict]:
+                            ) -> list:
         """Get all parameters from the user, using the User Interface"""
         self.__s2_UI__.mainUI()
         search_subject = self.__s2_UI__.searchSubject
         params = self.__s2_UI__.searchParams
+        return [search_subject, params]
 
-        # Open Semantic Scholar depending from the search subject  and look for search parameters
-        match search_subject:
-            case "keyword":
-                __search_return__ = self.keyword_search(params=params, rerun=rerun)
-            case "paper":
-                __search_return__ = self.paper_search(params=params, rerun=rerun)
-            case "author":
-                __search_return__ = self.author_search(params=params, rerun=rerun)
-            case _:
-                self.review_manager.logger.info(
-                    "No search parameters were found."
-                )
+
 
     #        if ("\"total\": 0" in params):
     #            self.review_manager.logger.info("Nothing was found with the given search parameters: " + params)
@@ -160,14 +150,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                        params: dict,
                        rerun: bool
                        ) -> dict:
-
-        query = ''
-        year = ''
-        publication_types = ''
-        venue = ''
-        fields_of_study = ''
-        open_access_pdf = ''
-        limit = ''
+        query = None
+        year = None
+        publication_types = None
+        venue = None
+        fields_of_study = None
+        open_access_pdf = None
+        limit = None
 
         for key, value in params.items():
             match key:
@@ -212,6 +201,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     + "Search parameter: "
                     + value
                 )
+        return record_return
 
     def author_search(self,
                       *,
@@ -225,10 +215,11 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 record_return = self.__s2__.search_author(value)
             else:
                 self.review_manager.logger.info(
-                    "Search type \"Search for author\" is not available with your parameters.\n"
+                    "\nSearch type \"Search for author\" is not available with your parameters.\n"
                     + "Search parameter: "
                     + value
                 )
+        return record_return
 
     def run_search(
             self,
@@ -245,6 +236,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             update_only=(not rerun)
         )
 
+        self.search_source.search_type = colrev.settings.SearchType.API
+
         if rerun:
             self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
@@ -256,8 +249,23 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             # or records = self.review_manager.dataset.load_records_dict()
             records = self.review_manager.dataset.load_records_dict()
 
+            # get the search parameters from the user
+            param_search = self.__get_s2_parameters(rerun=rerun)
+            __search_return__ = ''
             try:
-                for item in self.__get_s2_parameters(rerun=rerun):
+                # Open Semantic Scholar depending from the search subject  and look for search parameters
+                match param_search[0]:
+                    case "keyword":
+                        __search_return__ = self.keyword_search(params=param_search[1], rerun=rerun)
+                    case "paper":
+                        __search_return__ = self.paper_search(params=param_search[1], rerun=rerun)
+                    case "author":
+                        __search_return__ = self.author_search(params=param_search[1], rerun=rerun)
+                    case _:
+                        self.review_manager.logger.info(
+                            "No search parameters were found."
+                        )
+                for item in __search_return__:
                     try:
                         retrieved_record_dict = connector_utils.json_to_record(item=item)
                         continue
@@ -272,3 +280,46 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             raise colrev_exceptions.ServiceNotAvailableException(
                 self.__availability_exception_message
             ) from exc
+
+
+    @classmethod
+    def add_endpoint(
+            cls,
+            operation: colrev.ops.search.Search,
+            params: dict,
+    ) -> colrev.settings.SearchSource:
+        """Add SearchSource as an endpoint"""
+
+    #    if list(params) == [Fields.ISSN]:
+    #        search_type = colrev.settings.SearchType.TOC
+    #    else:
+    #        search_type = operation.select_search_type(
+    #            search_types=cls.search_types, params=params
+    #        )
+
+    #    if search_type == colrev.settings.SearchType.API:
+    #        if len(params) == 0:
+    #            add_source = operation.add_api_source(endpoint=cls.endpoint)
+    #            return add_source
+
+    #        if Fields.URL in params:
+    #            query = (
+    #                params[Fields.URL]
+    #                .replace("https://search.crossref.org/?q=", "")
+    #                .replace("&from_ui=yes", "")
+    #                .lstrip("+")
+    #            )
+        query = ''
+        filename = operation.get_unique_filename(
+            file_path_string=f"crossref_{query}"
+        )
+        add_source = colrev.settings.SearchSource(
+            endpoint="colrev.crossref",
+            filename=filename,
+            search_type=colrev.settings.SearchType.API,
+            search_parameters={"query": query},
+            comment="",
+        )
+        return add_source
+
+    raise NotImplementedError
