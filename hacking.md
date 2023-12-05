@@ -1,27 +1,38 @@
 
 #Aufgaben
 ##Robert
-tbd
+add get_api_key() in UI
+check push for ui
+validate input from user
+lösch mal bitte die URL Anfrage, danke :)
+Nutz Unterstrich statt camel case
+Anführungszeichen ändern ''' --> """
 ##Amadu
-tbd
+2 und 4
 ##Louis
-tbd
+1
 ##Peter
-tbd
+Aufräumen!!
+3
 
 #FRAGEN FUER HACKING SESSIONS
-Nachfragen: Frage nach Einschränkung der Results auf bestimmte Fields als Prompt im UI?
-
-Fehlermeldungen bei Validierung: Abbruch einfügen?
-
 GENERELL: Was muss bis zum 20.12. alles stehen? 
+
+crossref.py Zeile 77: __crossref_md_filename = Path("data/search/md_crossref.bib")
+	Was genau ist diese Datei, wo findet man sie?
+	Kann man mehrere Suchen (unterschiedliche Suchparameter in dieser Datei speichern oder werden hier die 
+		Feeds gespeichert? Oder was ganz anderes?
+	Settings Search Source wie funktioniert das speichern einer result file
 
 
 #NEXT STEPS
-1) User UI fertigstellen: Validierung bestimmter Parameter und Abfrage nach Einschränkung der Resultfile auf bestimmte Felder
-2) Einbindung in Colrev-Gesamtsoftware verstehen und implementieren: Wohin kommt der Feed, wohin kommt die Resultfile, wie wird die Search Source hinterlegt (colrev.SETTINGS?)
-3) Implementierung des API-Keys: IEEE checken, Speicherort des Keys prüfen und nachahmen. Dann: Wie realisieren wir die Authentifizierung? Wo wird der Key abgefragt? -> UI wenn nötig anpassen!
-4) Logik implementieren: Übergabe der search parameter an Python Client, Speichern der Resultfile und des feeds für rerun, [...]
+1) Wie speichert man die Search Source "Semantic Scholar" im colrev Projekt - damit die wiederholt abgerufen werdne kann.
+	Welche Parameter braucht diese Funktion?
+2) Wie und wo speichern wie die Ergebnisse korrekt (results)?
+	Wie funktioniert: Update existing record?
+3) Wie aktualliseren wir den feed korrekt?
+	wie rerun?
+4) Wie baut man den header der URL für semantic scholar (damit der api key genutzt werden kann)
 
 
 #PUSH-ANLEITUNG
