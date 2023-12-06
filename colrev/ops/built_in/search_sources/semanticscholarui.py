@@ -3,38 +3,38 @@ import inquirer
 
 class Semanticscholar_ui():
 
-    '''Implements the User Interface for the SemanticScholar API Search within colrev'''
+    """Implements the User Interface for the SemanticScholar API Search within colrev"""
 
     searchSubject = ""
     searchParams = {}
 
 
-    def mainUI(self) -> None:
+    def main_ui(self) -> None:
 
-        '''Display the main Menu and choose the search type'''
+        """Display the main Menu and choose the search type"""
 
         print("\nWelcome to SemanticScholar! \n\n")
         mainMsg = "Please choose one of the options below: "
-        mainOptions = ["Search for paper", "Search for author", "Keyword search"]
+        mainOptions = ["Keyword search", "Search for paper", "Search for author"]
 
-        fwdValue = self.chooseOption(msg=mainMsg, options=mainOptions)
+        fwdValue = self.choose_option(msg=mainMsg, options=mainOptions)
 
         if fwdValue == "Search for paper":
             self.searchSubject = "paper"
-            self.paperUI()
+            self.paper_ui()
         
         elif fwdValue == "Search for author":
             self.searchSubject = "author"
-            self.authorUI()
+            self.author_ui()
 
         elif fwdValue == "Keyword search":
             self.searchSubject = "keyword"
-            self.keywordUI()
+            self.keyword_ui()
 
 
-    def paperUI(self) -> None:
+    def paper_ui(self) -> None:
         
-        '''Ask user to enter search parameters for distinctive paper search'''
+        """Ask user to enter search parameters for distinctive paper search"""
 
         paperIDList = []
         queryList = []
@@ -45,10 +45,10 @@ class Semanticscholar_ui():
             pMsg = "How would you like to search for the paper?"
             pOptions = ["S2PaperId", "CorpusId", "DOI", "ArXivId", "MAG", "ACL", "PMID", "PMCID", "Search by title"]
 
-            param = self.chooseOption(msg=pMsg, options=pOptions)
+            param = self.choose_option(msg=pMsg, options=pOptions)
 
             if param in pOptions and not (param == "Search by title"):
-                paramValue = self.enterText(msg="Please enter the chosen ID in the right format: ")
+                paramValue = self.enter_text(msg="Please enter the chosen ID in the right format: ")
 
                 if len(paperIDList) == 0:
                     self.searchParams["paper_id"] = paramValue
@@ -62,7 +62,7 @@ class Semanticscholar_ui():
                     self.searchParams["paper_ids"] = paperIDList
 
             elif param == "Search by title":
-                paramValue = self.enterText(msg="Please enter the title of the paper: ")
+                paramValue = self.enter_text(msg="Please enter the title of the paper: ")
                 
                 if len(queryList) == 0:
                     self.searchParams["query"] = paramValue
@@ -75,7 +75,7 @@ class Semanticscholar_ui():
                     queryList.append(paramValue)
                     self.searchParams["query_list"] = queryList
 
-            if self.chooseOption(msg="Would you like to search for another paper?", options=["YES", "NO"]) == "NO":
+            if self.choose_option(msg="Would you like to search for another paper?", options=["YES", "NO"]) == "NO":
                 morePapers = False
 
         #asking for specific fields not implemented: Import question!!
@@ -83,9 +83,9 @@ class Semanticscholar_ui():
         print("\nDoing magic...")
         
 
-    def authorUI(self) -> None:
+    def author_ui(self) -> None:
 
-        '''Ask user to enter search parameters for distinctive author search'''
+        """Ask user to enter search parameters for distinctive author search"""
 
         authorIDList = []
         queryList = []
@@ -96,10 +96,10 @@ class Semanticscholar_ui():
             aMsg = "How would you like to search for the author?"
             aOptions = ["S2AuthorId", "Search by name"]
 
-            param = self.chooseOption(msg=aMsg, options=aOptions)
+            param = self.choose_option(msg=aMsg, options=aOptions)
 
             if param == "S2AuthorId":
-                paramValue = self.enterText(msg="Please enter the author ID in the right format: ")
+                paramValue = self.enter_text(msg="Please enter the author ID in the right format: ")
                 if len(authorIDList) == 0:
                     self.searchParams["author_id"] = paramValue
                     authorIDList.append(paramValue)
@@ -113,7 +113,7 @@ class Semanticscholar_ui():
 
 
             elif param == "Search by name":
-                paramValue = self.enterText(msg="Please enter the name of the author: ")
+                paramValue = self.enter_text(msg="Please enter the name of the author: ")
                 if len(queryList) == 0:
                     self.searchParams["query"] = paramValue
                     queryList.append(paramValue)
@@ -125,7 +125,7 @@ class Semanticscholar_ui():
                     queryList.append(paramValue)
                     self.searchParams["querylist"] = queryList
             
-            fwd = self.chooseOption(msg="Would you like to search for another author?", options=["YES", "NO"])
+            fwd = self.choose_option(msg="Would you like to search for another author?", options=["YES", "NO"])
             
             if fwd == "NO":
                 moreAuthors = False
@@ -134,43 +134,43 @@ class Semanticscholar_ui():
         
         print("\nDoing magic...")
 
-    def keywordUI(self) -> None:
+    def keyword_ui(self) -> None:
 
-        '''Ask user to enter Searchstring and limitations for Keyword search'''
+        """Ask user to enter Searchstring and limitations for Keyword search"""
         
-        query = self.enterText(msg="Please enter the Query for your Keyword search: ")
+        query = self.enter_text(msg="Please enter the Query for your Keyword search: ")
         self.searchParams["query"] = query
 
-        year = self.enterText(msg="Please enter the yearspan for your Keyword search. You can press Enter if you don't wish to specify a yearspan: ")
+        year = self.enter_text(msg="Please enter the yearspan for your Keyword search. You can press Enter if you don't wish to specify a yearspan: ")
         self.searchParams["year"] = year
 
-        publication_types = self.enterText(msg="Please enter the publication types you'd like to include in your Keyword search. Separate multiple types by comma. "+ 
+        publication_types = self.enter_text(msg="Please enter the publication types you'd like to include in your Keyword search. Separate multiple types by comma. "+ 
                                            "You can press Enter if you don't wish to restrict your query to certain publication types: ")
         if publication_types:
             self.searchParams["publication_types"] = publication_types.split(",")
         else:
             self.searchParams["publication_types"] = publication_types
 
-        venue = self.enterText(msg="Please enter the venues for your Keyword search. Separate multiple venues by comma. You can press Enter if you don't wish to specify any venues: ")
+        venue = self.enter_text(msg="Please enter the venues for your Keyword search. Separate multiple venues by comma. You can press Enter if you don't wish to specify any venues: ")
         if venue:
             self.searchParams["venue"] = venue.split(",")
         else:
             self.searchParams["venue"] = venue
 
-        fields_of_study = self.enterText(msg="Please enter the fields of study for your Keyword search. Separate multiple study fields by comma."+ 
+        fields_of_study = self.enter_text(msg="Please enter the fields of study for your Keyword search. Separate multiple study fields by comma."+ 
                                             "You can press Enter if you don't wish to specify any study fields: ")
         if fields_of_study:
             self.searchParams["fields_of_study"] = fields_of_study.split(",")
         else:
             self.searchParams["fields_of_study"] = fields_of_study
 
-        open_access = self.chooseOption(msg="If available, would you like to include a direct link to the respective pdf file of each paper to the results?", options=["YES", "NO"])
+        open_access = self.choose_option(msg="If available, would you like to include a direct link to the respective pdf file of each paper to the results?", options=["YES", "NO"])
         if open_access == "YES":
             self.searchParams["open_access_pdf"] = True
         else:
             self.searchParams["open_access_pdf"] = False
 
-        limit = self.enterText(msg="How many search results should the query include? Please enter a number between 1 and 1000: ")
+        limit = self.enter_text(msg="How many search results should the query include? Please enter a number between 1 and 1000: ")
         self.searchParams["limit"] = limit.format(int)
 
         #asking for specific fields not implemented: Import question!!
@@ -178,13 +178,57 @@ class Semanticscholar_ui():
         print("\nDoing magic...")
 
 
-    def chooseOption(self,
+    def get_api_key(self) -> str:
+        
+        """Method to get API key from user input"""
+
+        run_api = False
+        while not run_api:
+            api_key = self.enter_text(msg= "If you want to enter an API key for Semantic Scholar you can do that here. "
+                                            + "If not, just press Enter to continue without an API key.")
+            if api_key:
+                if self.is_valid_api(api = api_key):
+                    run_api = True
+                else:
+                    print("Your entered API key is not valid.")
+                    fwd = self.choose_option(msg="Would you like to enter another API key?", options=["Enter another key", "Continue without key"])
+
+                    if fwd == "Continue without key":
+                       print("WARNING: Searching without an API key might not be successfull. \n")
+                       
+                       fwd = self.choose_option(msg="Would you like to continue?", options=["YES", "NO"])
+                       
+                       if fwd == "YES":
+                        run_api = True
+            else:
+                print("WARNING: Searching without an API key might not be successfull. \n")
+
+                fwd = self.choose_option(msg="Would you like to continue?", options=["YES", "NO"])
+            
+                if fwd == "YES":
+                    run_api = True
+        return api_key
+                
+
+
+    def is_valid_api(self, 
+                     api_key: str
+                     ) -> bool:
+        """Method to validate API key input"""
+
+        if len(api_key) == 40 and api_key.isalnum():
+            return True
+        else:
+            return False
+
+
+    def choose_option(self,
                      *,
                      msg: str,
                      options,
                      ) -> str:
         
-        '''Method to display a question with single choice answers to the console using inquirer'''
+        """Method to display a question with single choice answers to the console using inquirer"""
 
         question = [inquirer.List(name="Choice",
                                   message=msg,
@@ -196,12 +240,12 @@ class Semanticscholar_ui():
 
         return choice.get("Choice")
     
-    def enterText(self,
+    def enter_text(self,
                   *,
                   msg: str,
                   ) -> str:
         
-        '''Method to display a question with free text entry answer to the console using inquirer'''
+        """Method to display a question with free text entry answer to the console using inquirer"""
 
         question = [inquirer.Text(name="Entry", message=msg,)]
         choice = inquirer.prompt(questions=question)
@@ -211,7 +255,7 @@ class Semanticscholar_ui():
 
 #test
 test = Semanticscholar_ui()
-test.mainUI()
+test.main_ui()
 print("\nSearch Subject: ", test.searchSubject)
 for key,value in test.searchParams.items():
     print("Search parameter: ", key, ":", value)
