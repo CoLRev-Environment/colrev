@@ -4,7 +4,6 @@
 add get_api_key() in UI
 check push for ui
 validate input from user
-lösch mal bitte die URL Anfrage, danke :)
 Nutz Unterstrich statt camel case
 Anführungszeichen ändern ''' --> """
 ##Amadu

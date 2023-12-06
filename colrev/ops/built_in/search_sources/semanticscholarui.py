@@ -1,9 +1,9 @@
 import inquirer
 
 
-class SemanticScholarUI:
+class Semanticscholar_ui():
 
-    """Implements the User Interface for the SemanticScholar API Search within colrev"""
+    '''Implements the User Interface for the SemanticScholar API Search within colrev'''
 
     searchSubject = ""
     searchParams = {}
@@ -11,7 +11,7 @@ class SemanticScholarUI:
 
     def mainUI(self) -> None:
 
-        """Display the main Menu and choose the search type"""
+        '''Display the main Menu and choose the search type'''
 
         print("\nWelcome to SemanticScholar! \n\n")
         mainMsg = "Please choose one of the options below: "
@@ -34,7 +34,7 @@ class SemanticScholarUI:
 
     def paperUI(self) -> None:
         
-        """Ask user to enter search parameters for distinctive paper search"""
+        '''Ask user to enter search parameters for distinctive paper search'''
 
         paperIDList = []
         queryList = []
@@ -43,7 +43,7 @@ class SemanticScholarUI:
         while morePapers:
 
             pMsg = "How would you like to search for the paper?"
-            pOptions = ["S2PaperId", "CorpusId", "DOI", "ArXivId", "MAG", "ACL", "PMID", "PMCID", "URL", "Search by title"]
+            pOptions = ["S2PaperId", "CorpusId", "DOI", "ArXivId", "MAG", "ACL", "PMID", "PMCID", "Search by title"]
 
             param = self.chooseOption(msg=pMsg, options=pOptions)
 
@@ -85,7 +85,7 @@ class SemanticScholarUI:
 
     def authorUI(self) -> None:
 
-        """Ask user to enter search parameters for distinctive author search"""
+        '''Ask user to enter search parameters for distinctive author search'''
 
         authorIDList = []
         queryList = []
@@ -136,7 +136,7 @@ class SemanticScholarUI:
 
     def keywordUI(self) -> None:
 
-        """Ask user to enter Searchstring and limitations for Keyword search"""
+        '''Ask user to enter Searchstring and limitations for Keyword search'''
         
         query = self.enterText(msg="Please enter the Query for your Keyword search: ")
         self.searchParams["query"] = query
@@ -146,14 +146,23 @@ class SemanticScholarUI:
 
         publication_types = self.enterText(msg="Please enter the publication types you'd like to include in your Keyword search. Separate multiple types by comma. "+ 
                                            "You can press Enter if you don't wish to restrict your query to certain publication types: ")
-        self.searchParams["publication_types"] = publication_types.split(",")
+        if publication_types:
+            self.searchParams["publication_types"] = publication_types.split(",")
+        else:
+            self.searchParams["publication_types"] = publication_types
 
         venue = self.enterText(msg="Please enter the venues for your Keyword search. Separate multiple venues by comma. You can press Enter if you don't wish to specify any venues: ")
-        self.searchParams["venue"] = venue.split(",")
+        if venue:
+            self.searchParams["venue"] = venue.split(",")
+        else:
+            self.searchParams["venue"] = venue
 
         fields_of_study = self.enterText(msg="Please enter the fields of study for your Keyword search. Separate multiple study fields by comma."+ 
                                             "You can press Enter if you don't wish to specify any study fields: ")
-        self.searchParams["fields_of_study"] = fields_of_study.split(",")
+        if fields_of_study:
+            self.searchParams["fields_of_study"] = fields_of_study.split(",")
+        else:
+            self.searchParams["fields_of_study"] = fields_of_study
 
         open_access = self.chooseOption(msg="If available, would you like to include a direct link to the respective pdf file of each paper to the results?", options=["YES", "NO"])
         if open_access == "YES":
@@ -175,7 +184,7 @@ class SemanticScholarUI:
                      options,
                      ) -> str:
         
-        """Method to display a question with single choice answers to the console using inquirer"""
+        '''Method to display a question with single choice answers to the console using inquirer'''
 
         question = [inquirer.List(name="Choice",
                                   message=msg,
@@ -192,7 +201,7 @@ class SemanticScholarUI:
                   msg: str,
                   ) -> str:
         
-        """Method to display a question with free text entry answer to the console using inquirer"""
+        '''Method to display a question with free text entry answer to the console using inquirer'''
 
         question = [inquirer.Text(name="Entry", message=msg,)]
         choice = inquirer.prompt(questions=question)
@@ -200,8 +209,8 @@ class SemanticScholarUI:
         return choice.get("Entry")
     
 
-# test
-test = SemanticScholarUI()
+#test
+test = Semanticscholar_ui()
 test.mainUI()
 print("\nSearch Subject: ", test.searchSubject)
 for key,value in test.searchParams.items():
