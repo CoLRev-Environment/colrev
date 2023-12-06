@@ -1,11 +1,8 @@
 
 #Aufgaben
 ##Robert
-add get_api_key() in UI
-check push for ui
 validate input from user
-Nutz Unterstrich statt camel case
-Anführungszeichen ändern ''' --> """
+update publication types: no string input, but multiple choice list from API
 ##Amadu
 2 und 4
 ##Louis
@@ -25,7 +22,7 @@ crossref.py Zeile 77: __crossref_md_filename = Path("data/search/md_crossref.bib
 		Feeds gespeichert? Oder was ganz anderes?
 	Settings Search Source wie funktioniert das speichern einer result file
 
-
+api key format validierung: Welches Format hat ein API key bei Semantic Scholar? Wir würden das gerne validieren
 #NEXT STEPS
 1) Wie speichert man die Search Source "Semantic Scholar" im colrev Projekt - damit die wiederholt abgerufen werdne kann.
 	Welche Parameter braucht diese Funktion?
