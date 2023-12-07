@@ -317,12 +317,11 @@ test.main_ui()
 api_test = test.get_api_key(retry=False)
 if api_test == "0":
     api_test = test.get_api_key(retry=True)
-    
+
 print("\nSearch Subject: ", test.searchSubject)
 for key,value in test.searchParams.items():
     print("Search parameter: ", key, ":", value)    
 print("\nAPI key: ", api_test)
-
 
 
 
