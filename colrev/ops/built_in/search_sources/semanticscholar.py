@@ -262,7 +262,12 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             ) from exc
 
 
-# Lassen wir das überhaupt zu?
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Crossref"""
+        result = {"confidence": 0.0}
+        return result
+
     @classmethod
     def add_endpoint(
             cls,
@@ -296,5 +301,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         return add_source
 
     raise NotImplementedError
+
+
 
 
