@@ -1,0 +1,46 @@
+
+
+# FRAGEN 2 UND 4
+-------------------------------------------------------------------------------------------------
+crossRef speichert nicht direkt Suchergebnisse sondern in Datenbank-crossRef.
+Daten in Datenbank werden in einem Proprietäre Format gespeichert.
+
+
+# Durchführung der Query:
+-----------------------
+Query-bedingung[suchparametern (titel,autor,jahr) mit (API-schlüssel)] ---1---> DB-crossRef ---2--> ergebnis
+ rückgabe
+ ---3--> Exportieren der Suchregebnisse möglich in format (json,csv,RIS)
+
+# Speicherung daten
+-------------------------
+verarbeiteten Daten in python-object oder Array 
+um Daten später nutzen zu können.
+
+# Crossref-Datenbank in python verbinden und daten verarbeiten:
+------------------------------------------------------------
+1) Crossref-bibliothek verwenden, um die API aufzurufen und die Daten zu vwerarbeiten 
+2) Andere bibliothek(Urllib, Requests) verwenden, um Http-Anfrage an Crossref-API(semanticscholar) zu senden und
+die daten zu verarbeiten 
+3) Importieren CR-datenbank in python-pandas-dataframe, um die daten leicht zu analysieren und 
+visualisieren 
+
+
+# Regex(Code-Zeile:50 crossref.py)zur validierung von URLs/Angabeparameter/Antwort-daten:
+-----------------------------------------------------------------------------------------
+Reguläre Ausdrücke verwendung: - format und struktur von eingaben parametern zu validieren während 
+der Query bei semnaticscholar.
+
+# Aufbau Header : kann als authorization
+---------------------------------------
+GET/api/v1/paper?q=turing+machine&count=50 HTTP/1.1
+Authorization: Bearer hier_api_key
+Accept: application /json
+
+# Update records
+---------------------------------------------------------
+curl -X PUT \
+  http://example.com/resource \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"John","age":30}' \
+  -H 'Authorization: Bearer <token>'
