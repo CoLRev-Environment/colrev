@@ -53,13 +53,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     """Semantic Scholar API"""
 
     __api_url = "https://api.semanticscholar.org/graph/v1/paper/search?"
-    # API search limit is 100. Default is 10.
-    # Can be added by using the __api_url+query="xxx"&__limit
     __limit = 100
-    # Use offset to go through the entire list of found literature.
-    # Simply add __limit to offset after one circle --> loop until everything is scouted
-    # Ether use the thin gin ieee (ask Robert) or use the total of the json form
-    # __api_url+query="xxx"&__limit&__offset
     __offset = 0
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
@@ -76,10 +70,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     __availability_exception_message = (
         f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})")
 
-    __s2_UI__ = semanticscholarui.SemanticScholarUI()
+    __s2_UI__ = semanticscholarui.Semanticscholar_ui()
     __s2__ = SemanticScholar
-
-    __search_return__ = None
 
     def __init__(
             self,
@@ -87,57 +79,31 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             source_operation: colrev.operation.Operation,
             settings: typing.Optional[dict] = None,
     ) -> None:
-
         self.review_manager = source_operation.review_manager
-        #        if settings:
-        #            # Semantic Scholar as a search source
-        #            self.search_source = from_dict(
-        #                data_class=self.settings_class, data=settings
-        #            )
-        #        else:
-        #            # Semantic Scholar as a md-prep source
-        #            s2_api_source_l = [
-        #                s
-        #                for s in self.review_manager.settings.sources
-        #                if s.filename == self.__s2_api_filename
-        #            ]
-        #            if s2_api_source_l:
-        #                self.search_source = s2_api_source_l[0]
-        #            else:
-        #                self.search_source = colrev.settings.SearchSource(
-        #                    endpoint="colrev.semanticscholar",
-        #                    filename=self.__S2_md_filename,
-        #                    search_type=colrev.settings.SearchType.API,
-        #                    search_parameters={},
-        #                    comment="",
-        #                )
-        #            self.s2_lock = Lock()
+        if settings:
+            # Semantic Scholar as a search source
+            self.search_source = from_dict(
+                data_class=self.settings_class, data=settings
+            )
+        else:
+            self.search_source = colrev.settings.SearchSource(
+                endpoint="colrev.semanticscholar",
+                filename=self.__S2_md_filename,
+                search_type=colrev.settings.SearchType.API,
+                search_parameters={},
+                comment="",
+            )
+            self.s2_lock = Lock()
 
         self.language_service = colrev.env.language_service.LanguageService()
-        # self.etiquette = self.get_etiquette(review_manager=self.review_manager)
-        # self.email = self.review_manager.get_committer()
-
-        __search_return__ = ''
-
-    def __query(self, **kwargs) -> typing.Iterator[dict]:  # type: ignore
-        """Get records from Semantic Scholar based on a bibliographic query"""
-
-        # Here don't use works or swagger_ui --> this is only for Crossref
-        # We have to use semanticscholar (py) for that
-
-        # works = Works(etiquette=self.etiquette)
-        # use facets:
-        # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
-
-        # crossref_query_return = works.query(**kwargs).sort("deposited").order("desc")
-        # yield from crossref_query_return
+        __search_return__ = None
 
     def __get_s2_parameters(self,
                             *,
                             rerun: bool
                             ) -> dict:
         """Get all parameters from the user, using the User Interface"""
-        self.__s2_UI__.mainUI()
+        self.__s2_UI__.main_ui()
         search_subject = self.__s2_UI__.searchSubject
         params = self.__s2_UI__.searchParams
 
@@ -145,12 +111,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             search_subject: search_subject,
             params: params
         }
-
         return dict_param
-
-    #        if ("\"total\": 0" in params):
-    #            self.review_manager.logger.info("Nothing was found with the given search parameters: " + params)
-    #            raise
 
     def keyword_search(self,
                        *,
@@ -232,8 +193,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
-        if api_key is None: #or len(api_key) != 24:
-            api_key = self.__s2_UI__.get_api_key() #input("Please enter api key: ")
+        if api_key is None:
+            api_key = self.__s2_UI__.get_api_key()
             self.review_manager.environment_manager.update_registry(
                 self.SETTINGS["api_key"], api_key
             )
@@ -246,20 +207,19 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     ) -> None:
         """Run a search of Semantic Scholar"""
 
-        # method call api key
+        # get the api key
         s2_api_key = self.__get_api_key()
         if s2_api_key is not None:
             self.__s2__(api_key=s2_api_key)
 
         # validate source
 
+        # load file because the object is not shared between processes
         s2_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun)
         )
-
-        self.search_source.search_type = colrev.settings.SearchType.API
 
         if rerun:
             self.review_manager.logger.info(
@@ -267,14 +227,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
 
         try:
-            # no full rerun
-            # load the database (feed) --> __get_masterdata_record() and __get_masterdata()
-            # or records = self.review_manager.dataset.load_records_dict()
             records = self.review_manager.dataset.load_records_dict()
 
             # get the search parameters from the user
             dict_param = self.__get_s2_parameters(rerun=rerun)
-            __search_return__ = None
             try:
                 # Open Semantic Scholar depending on the search subject  and look for search parameters
                 match dict_param["search_subject"]:
@@ -305,39 +261,33 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 self.__availability_exception_message
             ) from exc
 
+
+# Lassen wir das überhaupt zu?
     @classmethod
     def add_endpoint(
             cls,
             operation: colrev.ops.search.Search,
             params: dict,
     ) -> colrev.settings.SearchSource:
-        """Add SearchSource as an endpoint"""
+        """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
-        #    if list(params) == [Fields.ISSN]:
-        #        search_type = colrev.settings.SearchType.TOC
-        #    else:
-        #        search_type = operation.select_search_type(
-        #            search_types=cls.search_types, params=params
-        #        )
+        if len(params) is 0:
+            add_source = operation.add_api_source(endpoint=cls.endpoint)
+            return add_source
 
-        #    if search_type == colrev.settings.SearchType.API:
-        #        if len(params) == 0:
-        #            add_source = operation.add_api_source(endpoint=cls.endpoint)
-        #            return add_source
+        if Fields.URL in params:
+            query = (
+                params[Fields.URL]
+                .replace("https://api.semanticscholar.org/graph/v1/paper/search?/query=", "")
+                .replace("&from_ui=yes", "")
+                .lstrip("+")
+            )
 
-        #        if Fields.URL in params:
-        #            query = (
-        #                params[Fields.URL]
-        #                .replace("https://search.crossref.org/?q=", "")
-        #                .replace("&from_ui=yes", "")
-        #                .lstrip("+")
-        #            )
-        query = ''
         filename = operation.get_unique_filename(
-            file_path_string=f"crossref_{query}"
+            file_path_string=f"semanticscholar_{query}"
         )
         add_source = colrev.settings.SearchSource(
-            endpoint="colrev.crossref",
+            endpoint="colrev.semanticscholar",
             filename=filename,
             search_type=colrev.settings.SearchType.API,
             search_parameters={"query": query},

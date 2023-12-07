@@ -8,7 +8,6 @@ update publication types: no string input, but multiple choice list from API
 ##Louis
 1
 ##Peter
-Aufräumen!!
 3
 
 #FRAGEN FUER HACKING SESSIONS
