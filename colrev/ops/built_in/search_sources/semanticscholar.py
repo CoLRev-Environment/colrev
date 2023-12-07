@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import typing
 
-from semanticscholar.PaginatedResults import PaginatedResults
+from semanticscholar import PaginatedResults
 
 import semanticscholarui
 
