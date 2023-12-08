@@ -188,9 +188,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 "prep_decision",
                 message="Prepared?",
                 choices=[
+                    "Skip",
                     "Yes",
                     "No (delete)",
-                    "Skip",
                     "Remove coverpage",
                     "Remove last page",
                     "Remove page range",
@@ -207,6 +207,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             #     if user_selection[1:].isdigit():
             #         self.__to_skip = int(user_selection[1:])
             #     return
+            if user_selection == "Skip":
+                return
             if user_selection in [
                 "Remove coverpage",
                 "Remove last page",
@@ -249,6 +251,8 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         print(stat)
         record = colrev.record.Record(data=item)
+        file_provenance = record.get_field_provenance(key=Fields.FILE)
+
         record.print_pdf_prep_man()
 
         record_dict = records[item[Fields.ID]]
@@ -259,7 +263,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         ):
             return record_dict
 
-        file_provenance = record.get_field_provenance(key=Fields.FILE)
         print(
             "Manual preparation needed:"
             f" {Colors.RED}{file_provenance['note']}{Colors.END}"

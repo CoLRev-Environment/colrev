@@ -161,6 +161,16 @@ class Screen(colrev.operation.Operation):
             return
 
         for record_dict in records.values():
+            if record_dict[Fields.STATUS] not in [
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_excluded,
+                colrev.record.RecordState.rev_synthesized,
+            ]:
+                continue
+            if Fields.SCREENING_CRITERIA not in record_dict:
+                record_dict[Fields.SCREENING_CRITERIA] = ";".join(
+                    f"{c}=TODO" for c in self.review_manager.settings.screen.criteria
+                )
             if record_dict[Fields.STATUS] in [
                 colrev.record.RecordState.rev_included,
                 colrev.record.RecordState.rev_synthesized,

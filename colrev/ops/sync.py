@@ -133,7 +133,7 @@ class Sync:
 
         local_index = colrev.env.local_index.LocalIndex()
         for citation_key in citation_keys:
-            if citation_key in ids_in_bib:
+            if citation_key in ids_in_bib + ["tbl"]:
                 continue
 
             if Path(f"{citation_key}.pdf").is_file():
@@ -241,6 +241,33 @@ class Sync:
         with open(save_path, "w", encoding="utf-8") as out:
             out.write(bibtex_str)
 
+    def add_paper(self, add: str) -> None:
+        """Add a paper to the bibliography"""
+
+        local_index = colrev.env.local_index.LocalIndex()
+
+        def parse_record_str(add: str) -> dict:
+            # DOI: from crossref
+            if add.startswith("10."):
+                returned_records = local_index.search(query=f"doi='{add}'")
+            else:
+                returned_records = local_index.search(query=f"title LIKE '{add}'")
+
+            # TODO: Reference: GROBID
+
+            return returned_records
+
+        self.get_cited_papers()
+        records = parse_record_str(add)
+
+        if len(records) == 0:
+            print("not found")
+            return
+
+        self.records_to_import = records
+        input(self.records_to_import)
+        print(records[0].data["ID"])
+
     def add_to_bib(self) -> None:
         """Add records to the bibliography"""
 
@@ -308,8 +335,10 @@ class Sync:
                 "%s Loaded %s papers%s", Colors.GREEN, len(added), Colors.END
             )
 
-        records_dict = {
-            r[Fields.ID]: r for r in records if r[Fields.ID] in self.cited_papers
-        }
+        # records_dict = {
+        #     r[Fields.ID]: r for r in records if r[Fields.ID] in self.cited_papers
+        # }
+
+        records_dict = {r[Fields.ID]: r for r in records}
 
         self.__save_to_bib(records=records_dict, save_path=references_file)

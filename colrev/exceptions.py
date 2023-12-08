@@ -623,6 +623,7 @@ class InvalidLanguageCodeException(CoLRevException):
 
     def __init__(self, invalid_language_codes: list) -> None:
         self.invalid_language_codes = invalid_language_codes
+
         super().__init__(f"Invalid language codes: {', '.join(invalid_language_codes)}")
 
 

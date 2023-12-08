@@ -343,7 +343,6 @@ class Prescreen(colrev.operation.Operation):
         prescreen_package_endpoints = (
             self.review_manager.settings.prescreen.prescreen_package_endpoints
         )
-
         if not prescreen_package_endpoints:
             self.__prescreen_include_all(records=records)
             return

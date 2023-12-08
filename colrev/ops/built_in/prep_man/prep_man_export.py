@@ -165,7 +165,7 @@ class ExportManPrep(JsonSchemaMixin):
         man_prep_info = []
         for record in man_prep_recs:
             for field, value in record[Fields.MD_PROV].items():
-                if value["note"]:
+                if value["note"] and value["note"] != f"IGNORE:{DefectCodes.MISSING}":
                     man_prep_info.append(
                         {
                             Fields.ID: record[Fields.ID],

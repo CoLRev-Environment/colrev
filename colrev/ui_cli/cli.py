@@ -2566,6 +2566,11 @@ def settings(
 @main.command(help_priority=22)
 @click.option(
     "-a",
+    "--add",
+    help="Paper to add.",
+    required=False,
+)
+@click.option(
     "--add_hook",
     is_flag=True,
     default=False,
@@ -2579,6 +2584,7 @@ def settings(
 @click.pass_context
 def sync(
     ctx: click.core.Context,
+    add: str,
     add_hook: bool,
     src: Path,
 ) -> None:
@@ -2613,13 +2619,20 @@ def sync(
             )
         print("Added pre-commit hook for colrev sync.")
         return
+
+    sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
+
     if src:
-        sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
         sync_operation.get_cited_papers_from_source(src=Path(src))
         sync_operation.add_to_bib()
         return
 
-    sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
+    if add:
+        sync_operation.add_paper(add)
+        sync_operation.add_to_bib()
+
+        return
+
     sync_operation.get_cited_papers()
 
     if len(sync_operation.non_unique_for_import) > 0:

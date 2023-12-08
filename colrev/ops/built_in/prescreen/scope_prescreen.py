@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.language_service
 import colrev.env.local_index
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
 
@@ -97,9 +98,16 @@ class ScopePrescreen(JsonSchemaMixin):
             assert settings["TimeScopeTo"] < 2100
         if "LanguageScope" in settings:
             self.language_service = colrev.env.language_service.LanguageService()
-            self.language_service.validate_iso_639_3_language_codes(
-                lang_code_list=settings["LanguageScope"]
-            )
+            try:
+                self.language_service.validate_iso_639_3_language_codes(
+                    lang_code_list=settings["LanguageScope"]
+                )
+            except colrev_exceptions.InvalidLanguageCodeException as exc:
+                raise colrev_exceptions.InvalidSettingsError(
+                    msg=f"Invalid LanguageScope in scope_prescreen: {settings['LanguageScope']} (should be iso_639_3 language code)",
+                    fix_per_upgrade=False,
+                ) from exc
+
         if "ExcludePredatoryJournals" not in settings:
             settings["ExcludePredatoryJournals"] = True
 
@@ -117,7 +125,6 @@ class ScopePrescreen(JsonSchemaMixin):
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
     def __predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
-        print(self.settings.ExcludePredatoryJournals)
         if not self.settings.ExcludePredatoryJournals:
             return
         if Fields.JOURNAL not in record.data:

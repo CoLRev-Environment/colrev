@@ -31,13 +31,16 @@ def get_pdf_hash(*, pdf_path: Path, page_nr: int, hash_size: int = 32) -> str:
     img = None
     file_name = f".{pdf_path.stem}-{page_nr}.png"
     page_no = 0
-    for page in doc:
-        pix = page.get_pixmap(dpi=200)
-        pix.save(file_name)  # store image as a PNG
-        page_no += 1
-        if page_no == page_nr:
-            img = Image.open(file_name)
-            break
+    try:
+        for page in doc:
+            pix = page.get_pixmap(dpi=200)
+            pix.save(file_name)  # store image as a PNG
+            page_no += 1
+            if page_no == page_nr:
+                img = Image.open(file_name)
+                break
+    except RuntimeError as exc:
+        raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
     average_hash = imagehash.average_hash(img, hash_size=int(hash_size))
     Path(file_name).unlink()
     average_hash_str = str(average_hash).replace("\n", "")

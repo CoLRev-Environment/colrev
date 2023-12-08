@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from inquirer import Checkbox
+from inquirer import prompt
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -65,7 +67,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 f"({color}{criterion_settings.criterion_type}{Colors.END}): "
                 f"{criterion_settings.explanation}"
             )
-            if criterion_settings.comment != "":
+            if criterion_settings.comment is not None:
                 print(f"   {criterion_settings.comment}")
 
     def __screen_with_criteria_print_overall_decision(
@@ -88,49 +90,48 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         record: colrev.record.Record,
         abstract_from_tei: bool,
     ) -> str:
-        decisions = []
-        quit_pressed, skip_pressed = False, False
-
+        choices = []
         for criterion_name, criterion_settings in self.screening_criteria.items():
-            decision, ret = "NA", "NA"
-            while ret not in ["y", "n", "q", "s"]:
-                color = Colors.GREEN
-                if (
-                    colrev.settings.ScreenCriterionType.exclusion_criterion
-                    == criterion_settings.criterion_type
-                ):
-                    color = Colors.RED
+            color = Colors.GREEN
+            if (
+                colrev.settings.ScreenCriterionType.exclusion_criterion
+                == criterion_settings.criterion_type
+            ):
+                color = Colors.RED
+            choices.append(f"{color}{criterion_name}{Colors.END}")
+        choices.append("Skip")
+        choices.append("Quit")
+        question = [
+            Checkbox(
+                "violated_criteria",
+                message="Select the criteria that are violated:",
+                choices=choices,
+            ),
+        ]
 
-                ret = input(
-                    # is relevant / should be in the sample / should be retained
-                    # ({self.__i}/{self.__stat_len})
-                    f"Record should be included according to"
-                    f" {criterion_settings.criterion_type}"
-                    f" {color}{criterion_name}{Colors.END}"
-                    " [y,n,q,s for yes,no,quit,skip to decide later]? "
-                )
-                if ret == "q":
-                    quit_pressed = True
-                elif ret == "s":
-                    skip_pressed = True
-                    continue
-                elif ret in ["y", "n"]:
-                    decision = ret
+        answers = prompt(question)
+        violated_criteria = answers["violated_criteria"]
 
-            if quit_pressed:
-                return "quit"
-            if skip_pressed:
-                return "skip"
+        if "Skip" in violated_criteria:
+            return "skip"
+        if "Quit" in violated_criteria:
+            return "quit"
 
-            decision = decision.replace("n", "out").replace("y", "in")
-            decisions.append([criterion_name, decision])
+        decisions = {c: "in" for c in self.screening_criteria.keys()}
+
+        for criterion_name in violated_criteria:
+            decisions[
+                criterion_name.replace(Colors.RED, "")
+                .replace(Colors.END, "")
+                .replace(Colors.GREEN, "")
+            ] = "out"
 
         c_field = ""
-        for criterion_name, decision in decisions:
+        for criterion_name, decision in decisions.items():
             c_field += f";{criterion_name}={decision}"
         c_field = c_field.replace(" ", "").lstrip(";")
 
-        screen_inclusion = all(decision == "in" for _, decision in decisions)
+        screen_inclusion = all(decision == "in" for _, decision in decisions.values())
         self.__screen_with_criteria_print_overall_decision(
             record=record, screen_inclusion=screen_inclusion
         )
