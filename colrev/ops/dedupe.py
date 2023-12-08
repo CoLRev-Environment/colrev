@@ -2,21 +2,26 @@
 """CoLRev dedupe operation: identify and merge duplicate records."""
 from __future__ import annotations
 
-import re
 import string
 import typing
 from collections import Counter
+from collections import defaultdict
+from itertools import combinations
 from pathlib import Path
+from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 
 import pandas as pd
+from bib_dedupe.bib_dedupe import BibDeduper
 
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 if TYPE_CHECKING:
@@ -33,6 +38,8 @@ class Dedupe(colrev.operation.Operation):
     DUPLICATES_TO_VALIDATE = Path("duplicates_to_validate.xlsx")
     SAME_SOURCE_MERGE_FILE = Path("same_source_merges.txt")
     PREVENTED_SAME_SOURCE_MERGE_FILE = Path("prevented_same_source_merges.txt")
+
+    debug = False
 
     def __init__(
         self,
@@ -63,200 +70,49 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
         self.policy = self.review_manager.settings.dedupe.same_source_merges
 
-    def __pre_process(self, *, key: str, value: str) -> str | None:
-        if key in [Fields.ID, Fields.ENTRYTYPE, Fields.STATUS, Fields.ORIGIN]:
-            return value
+    @classmethod
+    def __dfs(cls, node: str, graph: dict, visited: dict, component: list) -> None:
+        visited[node] = True
+        component.append(node)
+        for neighbor in graph[node]:
+            if not visited[neighbor]:
+                cls.__dfs(neighbor, graph, visited, component)
 
-        value = str(value)
-        # Note unidecode may be an alternative to rmdiacritics/remove_accents.
-        # It would be important to operate on a per-character basis
-        # instead of throwing an exception when processing whole strings
-        # value = unidecode(value)
-        value = re.sub("  +", " ", value)
-        value = re.sub("\n", " ", value)
-        value = value.strip().strip('"').strip("'").lower().strip()
-        # If data is missing, indicate that by setting the value to `None`
-        if not value:
-            return None
+    @classmethod
+    def connected_components(cls, origin_sets: list) -> list:
+        """
+        Find the connected components in a graph.
 
-        if any(
-            value == x
-            for x in ["no issue", "no volume", "no pages", "no author", "nan", ""]
-        ):
-            return None
+        Args:
+            origin_sets (list): A list of origin sets.
 
-        return value
+        Returns:
+            list: A list of connected components.
+        """
+        graph = defaultdict(list)
 
-    def prep_records(self, *, records_df: pd.DataFrame) -> dict:
-        """Prepare records for dedupe"""
+        # Create an adjacency list
+        for origin_set in origin_sets:
+            for combination in combinations(origin_set, 2):
+                graph[combination[0]].append(combination[1])
+                graph[combination[1]].append(combination[0])
 
-        if 0 == records_df.shape[0]:
-            return {}
+        visited = {node: False for node in graph}
+        components = []
 
-        required_fields = [
-            Fields.JOURNAL,
-            Fields.JOURNAL,
-            Fields.BOOKTITLE,
-            Fields.SERIES,
-            Fields.VOLUME,
-            Fields.NUMBER,
-            Fields.PAGES,
-            Fields.AUTHOR,
-        ]
-        for required_field in required_fields:
-            if required_field not in records_df:
-                records_df[required_field] = ""
+        for node in graph:
+            if not visited[node]:
+                component: List[str] = []
+                cls.__dfs(node, graph, visited, component)
+                components.append(sorted(component))
 
-        records_df[Fields.YEAR] = records_df[Fields.YEAR].astype(str)
-        if Fields.STATUS in records_df:
-            # pylint: disable=colrev-direct-status-assign
-            records_df[Fields.STATUS] = records_df[Fields.STATUS].astype(str)
+        return components
 
-        records_df[Fields.AUTHOR] = records_df[Fields.AUTHOR].str[:60]
-
-        records_df.loc[
-            records_df.ENTRYTYPE == "inbook", "container_title"
-        ] = records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.TITLE]
-        if Fields.CHAPTER in records_df:
-            records_df.loc[
-                records_df.ENTRYTYPE == "inbook", Fields.TITLE
-            ] = records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.CHAPTER]
-
-        records_df[Fields.TITLE] = (
-            records_df[Fields.TITLE]
-            .str.replace(r"[^A-Za-z0-9, ]+", " ", regex=True)
-            .str.lower()
-        )
-        records_df.loc[records_df[Fields.TITLE].isnull(), Fields.TITLE] = ""
-
-        records_df[Fields.JOURNAL] = (
-            records_df[Fields.JOURNAL]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-
-        records_df[Fields.BOOKTITLE] = (
-            records_df[Fields.BOOKTITLE]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-
-        records_df[Fields.SERIES] = (
-            records_df[Fields.SERIES]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-
-        records_df["container_title"] = (
-            records_df[Fields.JOURNAL].fillna("")
-            + records_df[Fields.BOOKTITLE].fillna("")
-            + records_df[Fields.SERIES].fillna("")
-        )
-
-        # To validate/improve preparation in jupyter notebook:
-        # return records_df
-        # Copy to notebook:
-        # from colrev.review_manager import ReviewManager
-        # from colrev.operation import Operation, OperationsType
-        # review_manager = ReviewManager()
-        # df = self.read_data(review_manager)
-        # EDITS
-        # df.to_csv('export.csv', index=False)
-
-        records_df.drop(
-            labels=list(
-                records_df.columns.difference(
-                    [
-                        Fields.ID,
-                        Fields.AUTHOR,
-                        Fields.TITLE,
-                        Fields.YEAR,
-                        Fields.JOURNAL,
-                        "container_title",
-                        Fields.VOLUME,
-                        Fields.NUMBER,
-                        Fields.PAGES,
-                        "colrev_id",
-                        Fields.ORIGIN,
-                        Fields.STATUS,
-                    ]
-                )
-            ),
-            axis=1,
-            inplace=True,
-        )
-        records_df[
-            [
-                Fields.AUTHOR,
-                Fields.TITLE,
-                Fields.JOURNAL,
-                "container_title",
-                Fields.PAGES,
-            ]
-        ] = records_df[
-            [
-                Fields.AUTHOR,
-                Fields.TITLE,
-                Fields.JOURNAL,
-                "container_title",
-                Fields.PAGES,
-            ]
-        ].astype(
-            str
-        )
-        records_list = records_df.to_dict("records")
-
-        records = {}
-        for row in records_list:
-            # Note: we need the ID to identify/remove duplicates in the RECORDS_FILE.
-            # It is ignored in the field-definitions by the deduper
-            clean_row = [
-                (k, self.__pre_process(key=str(k), value=v)) for (k, v) in row.items()
-            ]
-            records[row[Fields.ID]] = dict(clean_row)
-
-        return records
-
-    def read_data(self) -> dict:
-        """Read the data for dedupe"""
-
-        records = self.review_manager.dataset.load_records_dict()
-
-        # Note: Because we only introduce individual (non-merged records),
-        # the length of colrev_origin lists should be 1!
-        records_queue = [
-            x
-            for x in records.values()
-            if x[Fields.STATUS]
-            not in [
-                colrev.record.RecordState.md_imported,
-                colrev.record.RecordState.md_needs_manual_preparation,
-            ]
-        ]
-
-        # Do not merge records with non_latin_alphabets:
-        records_queue = [
-            record_dict
-            for record_dict in records_queue
-            if not (
-                colrev.record.RecordState.rev_prescreen_excluded
-                == record_dict[Fields.STATUS]
-                and "non_latin_alphabet"
-                in record_dict.get(Fields.PRESCREEN_EXCLUSION, "")
-            )
-        ]
-
-        for record_dict in records_queue:
-            try:
-                record = colrev.record.Record(data=record_dict)
-                record_dict[Fields.COLREV_ID] = record.create_colrev_id()
-            except colrev_exceptions.NotEnoughDataToIdentifyException:
-                record_dict[Fields.COLREV_ID] = "NA"
-
-        records_df = pd.DataFrame.from_records(records_queue)
-        records = self.prep_records(records_df=records_df)
-
-        return records
+    @classmethod
+    def get_records_for_dedupe(cls, *, records_df: pd.DataFrame) -> pd.DataFrame:
+        """Get (pre-processed) records for dedupe"""
+        dedupe_instance = BibDeduper()
+        return dedupe_instance.get_records_for_dedupe(records_df=records_df)
 
     def __select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
         # pylint: disable=too-many-branches
@@ -363,7 +219,7 @@ class Dedupe(colrev.operation.Operation):
             main_record=main_record, dupe_record=dupe_record
         ):
             self.review_manager.logger.info(
-                f" merge {main_record.data['ID']} - {dupe_record.data['ID']}"
+                f" merge {main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return
 
@@ -378,8 +234,8 @@ class Dedupe(colrev.operation.Operation):
                 f"{merge_info}\n"
                 f"  {main_record.format_bib_style()}\n"
                 f"  {dupe_record.format_bib_style()}\n"
-                f"  {main_record.data.get('colrev_origin', ['ERROR'])} x "
-                f"{dupe_record.data.get('colrev_origin', ['ERROR'])}\n"
+                f"  {main_record.data.get(Fields.ORIGIN, ['ERROR'])} x "
+                f"{dupe_record.data.get(Fields.ORIGIN, ['ERROR'])}\n"
             )
             with self.same_source_merge_file.open("a", encoding="utf8") as file:
                 file.write(merge_info + "\n")
@@ -397,27 +253,30 @@ class Dedupe(colrev.operation.Operation):
 
             self.review_manager.logger.info(
                 "To force merge use colrev dedupe --merge "
-                f"{main_record.data['ID']},{dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]},{dupe_record.data[Fields.ID]}"
+            )
+            raise colrev_exceptions.InvalidMerge(
+                record_a=main_record, record_b=dupe_record
             )
 
     def __is_cross_level_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
     ) -> bool:
         is_cross_level_merge_attempt = False
-        if main_record.data[Fields.ENTRYTYPE] in ["proceedings"] or dupe_record.data[
-            Fields.ENTRYTYPE
-        ] in ["proceedings"]:
+        if main_record.data[Fields.ENTRYTYPE] in [
+            ENTRYTYPES.PROCEEDINGS
+        ] or dupe_record.data[Fields.ENTRYTYPE] in [ENTRYTYPES.PROCEEDINGS]:
             is_cross_level_merge_attempt = True
 
         if (
-            main_record.data[Fields.ENTRYTYPE] == "book"
-            and dupe_record.data[Fields.ENTRYTYPE] == "inbook"
+            main_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK
+            and dupe_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK
         ):
             is_cross_level_merge_attempt = True
 
         if (
-            main_record.data[Fields.ENTRYTYPE] == "inbook"
-            and dupe_record.data[Fields.ENTRYTYPE] == "book"
+            main_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK
+            and dupe_record.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK
         ):
             is_cross_level_merge_attempt = True
 
@@ -428,9 +287,9 @@ class Dedupe(colrev.operation.Operation):
     ) -> bool:
         gid_conflict = False
         if Fields.DOI in main_record.data and Fields.DOI in dupe_record.data:
-            if main_record.data.get(Fields.DOI, Fields.DOI) != dupe_record.data.get(
-                Fields.DOI, Fields.DOI
-            ):
+            doi_main = main_record.data.get(Fields.DOI, "a").replace("\\", "")
+            doi_dupe = dupe_record.data.get(Fields.DOI, "b").replace("\\", "")
+            if doi_main != doi_dupe:
                 gid_conflict = True
 
         return gid_conflict
@@ -515,14 +374,14 @@ class Dedupe(colrev.operation.Operation):
         ):
             self.review_manager.logger.info(
                 "Prevented cross-level merge: "
-                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return True
 
         if self.__gids_conflict(main_record=main_record, dupe_record=dupe_record):
             self.review_manager.logger.info(
                 "Prevented merge with conflicting global IDs: "
-                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return True
 
@@ -532,7 +391,7 @@ class Dedupe(colrev.operation.Operation):
         ):
             self.review_manager.logger.info(
                 "Prevented same-source merge: "
-                f"{main_record.data['ID']} - {dupe_record.data['ID']}"
+                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
             )
             return True
 
@@ -557,34 +416,17 @@ class Dedupe(colrev.operation.Operation):
     def apply_merges(
         self,
         *,
-        results: list,
+        origin_sets: list,
         complete_dedupe: bool = False,
         preferred_masterdata_sources: Optional[list] = None,
     ) -> None:
-        """Apply automated deduplication decisions
+        """Apply deduplication decisions
 
-        Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
-
-        record['colrev_status'] can only be set to md_processed after running the
-        active-learning classifier and checking whether the record is not part of
-        any other duplicate-cluster
-        - If the results list does not contain a 'score' value, it is generated
-        manually and we cannot set the 'colrev_status' to md_processed
-        - If the results list contains a 'score value'
+        origin_sets : [[origin_1, origin_2, origin_3], ...]
 
         - complete_dedupe: when not all potential duplicates were considered,
         we cannot set records to md_procssed for non-duplicate decisions
-
-        results : [{"ID1": "...", "ID2": "...", "decision": "duplicate"}]
-
         """
-
-        # The merging also needs to consider whether IDs are propagated
-        # Completeness of comparisons should be ensured by the
-        # dedupe clustering routine
-
-        if not results:
-            return
 
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
@@ -593,10 +435,11 @@ class Dedupe(colrev.operation.Operation):
             ]
 
         records = self.review_manager.dataset.load_records_dict()
+
         removed_duplicates = []
         duplicate_id_mappings: typing.Dict[str, list] = {}
         for main_record, dupe_record in self.__get_records_to_merge(
-            records=records, results=results
+            records=records, origin_sets=origin_sets
         ):
             try:
                 if self.__skip_merge_condition(
@@ -622,10 +465,8 @@ class Dedupe(colrev.operation.Operation):
                 )
                 removed_duplicates.append(dupe_record.data[Fields.ID])
 
-            except colrev_exceptions.InvalidMerge as exc:
-                print(exc)
+            except colrev_exceptions.InvalidMerge:
                 continue
-
         set_to_md_processed = self.__apply_records_merges(
             records=records,
             removed_duplicates=removed_duplicates,
@@ -641,38 +482,38 @@ class Dedupe(colrev.operation.Operation):
         )
 
     def __get_records_to_merge(
-        self, *, records: dict, results: list
+        self, *, records: dict, origin_sets: list
     ) -> typing.Iterable[tuple]:
         """Resolves multiple/chained duplicates (by following the MOVED_DUPE_ID mark)
         and returns tuples with the primary merge record in the first position."""
 
-        duplicates_to_process = [x for x in results if "duplicate" == x["decision"]]
-        for dupe in duplicates_to_process:
-            try:
-                rec_1 = records[dupe.pop("ID1")]
-                rec_2 = records[dupe.pop("ID2")]
-            except KeyError:
-                print(f"skip {dupe}")
-                continue
+        for origin_set in origin_sets:
+            recs_to_merge = [
+                r
+                for r in records.values()
+                if any(o in r[Fields.ORIGIN] for o in origin_set)
+            ]
 
             # Simple way of implementing the closure
             # cases where the main_record has already been merged into another record
-            while "MOVED_DUPE_ID" in rec_1:
-                rec_1 = records[rec_1["MOVED_DUPE_ID"]]
-            while "MOVED_DUPE_ID" in rec_2:
-                rec_2 = records[rec_2["MOVED_DUPE_ID"]]
+            for ind, rec_to_merge in enumerate(recs_to_merge):
+                cur_rec = rec_to_merge
+                while "MOVED_DUPE_ID" in cur_rec:
+                    cur_rec = records[cur_rec["MOVED_DUPE_ID"]]
+                recs_to_merge[ind] = cur_rec
 
-            if rec_1[Fields.ID] == rec_2[Fields.ID]:
+            if all(recs_to_merge[0][Fields.ID] == r[Fields.ID] for r in recs_to_merge):
                 continue
 
-            main_record_dict, dupe_record_dict = self.__select_primary_merge_record(
-                rec_1, rec_2
-            )
+            for rec_1, rec_2 in combinations(recs_to_merge, 2):
+                main_record_dict, dupe_record_dict = self.__select_primary_merge_record(
+                    rec_1, rec_2
+                )
 
-            main_record = colrev.record.Record(data=main_record_dict)
-            dupe_record = colrev.record.Record(data=dupe_record_dict)
+                main_record = colrev.record.Record(data=main_record_dict)
+                dupe_record = colrev.record.Record(data=dupe_record_dict)
 
-            yield (main_record, dupe_record)
+                yield (main_record, dupe_record)
 
     def __unmerge_current_record_ids_records(self, *, current_record_ids: list) -> dict:
         ids_origins: typing.Dict[str, list] = {rid: [] for rid in current_record_ids}
@@ -802,8 +643,16 @@ class Dedupe(colrev.operation.Operation):
     def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
         """Fix lists of errors"""
 
+        records = self.review_manager.dataset.load_records_dict()
+        origin_sets = [
+            o
+            for r in records
+            for o in r[Fields.ORIGIN]
+            if r[Fields.ID] in false_negatives
+        ]
+
         self.unmerge_records(previous_id_lists=false_positives)
-        self.apply_merges(results=false_negatives, complete_dedupe=False)
+        self.apply_merges(origin_sets=origin_sets, complete_dedupe=False)
 
         if self.review_manager.dataset.records_changed():
             self.review_manager.create_commit(
@@ -837,7 +686,9 @@ class Dedupe(colrev.operation.Operation):
                         if duplicated_source in o
                     ]
                     all_cases.append(f"{duplicated_source}: {cases}")
-                same_source_merges.append(f"{record['ID']} ({', '.join(all_cases)})")
+                same_source_merges.append(
+                    f"{record[Fields.ID]} ({', '.join(all_cases)})"
+                )
 
         info = {
             "same_source_merges": same_source_merges,
@@ -845,11 +696,9 @@ class Dedupe(colrev.operation.Operation):
         return info
 
     def merge_records(self, *, merge: str) -> None:
-        """Merge two records by ID"""
+        """Merge two records by origin sets origin_1;origin_2;origin_3..."""
 
-        merge_ids = merge.split(",")
-        results = [{"ID1": merge_ids[0], "ID2": merge_ids[1], "decision": "duplicate"}]
-        self.apply_merges(results=results)
+        self.apply_merges(origin_sets=merge.split(";"))
 
     def merge_based_on_global_ids(self, *, apply: bool = False) -> None:
         """Merge records based on global IDs (e.g., doi)"""
@@ -878,7 +727,7 @@ class Dedupe(colrev.operation.Operation):
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
 
-        results = []
+        origin_sets = []
         for global_key in global_keys:
             key_dict: typing.Dict[str, list] = {}
             for record in records.values():
@@ -892,27 +741,23 @@ class Dedupe(colrev.operation.Operation):
             key_dict = {k: v for k, v in key_dict.items() if len(v) > 1}
             for record_ids in key_dict.values():
                 for ref_rec_id in range(1, len(record_ids)):
-                    results.append(
-                        {
-                            "ID1": record_ids[0],
-                            "ID2": record_ids[ref_rec_id],
-                            "decision": "duplicate",
-                        }
+                    origin_sets.append(
+                        record_ids[0][Fields.ORIGIN]
+                        + record_ids[ref_rec_id][Fields.ORIGIN]
                     )
 
         if apply:
             self.review_manager.settings.dedupe.same_source_merges = (
                 colrev.settings.SameSourceMergePolicy.warn
             )
-            self.apply_merges(results=results)
+            self.apply_merges(origin_sets=origin_sets)
             self.review_manager.create_commit(
                 msg="Merge records (identical global IDs)"
             )
 
-        elif results:
+        elif origin_sets:
             print()
             self.review_manager.logger.info("Found records with identical global-ids:")
-            print(results)
             self.review_manager.logger.info(
                 f"{Colors.ORANGE}To merge records with identical global-ids, "
                 f"run colrev merge -gid{Colors.END}"
@@ -923,7 +768,7 @@ class Dedupe(colrev.operation.Operation):
             print()
 
     @colrev.operation.Operation.decorate()
-    def main(self) -> None:
+    def main(self, *, debug: bool = False) -> None:
         """Dedupe records (main entrypoint)"""
 
         self.review_manager.logger.info("Dedupe")
@@ -933,11 +778,10 @@ class Dedupe(colrev.operation.Operation):
         self.review_manager.logger.info(
             "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/dedupe.html"
         )
+        self.debug = debug
 
         if not self.review_manager.high_level_operation:
             print()
-
-        self.merge_based_on_global_ids(apply=True)
 
         package_manager = self.review_manager.get_package_manager()
         for (

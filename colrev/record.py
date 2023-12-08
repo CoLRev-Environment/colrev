@@ -876,15 +876,15 @@ class Record:
             ):
                 record_b_dict[mandatory_field] = ""
 
-        if "container_title" not in record_a_dict:
-            record_a_dict["container_title"] = (
+        if Fields.CONTAINER_TITLE not in record_a_dict:
+            record_a_dict[Fields.CONTAINER_TITLE] = (
                 record_a_dict.get(Fields.JOURNAL, "")
                 + record_a_dict.get(Fields.BOOKTITLE, "")
                 + record_a_dict.get(Fields.SERIES, "")
             )
 
-        if "container_title" not in record_b_dict:
-            record_b_dict["container_title"] = (
+        if Fields.CONTAINER_TITLE not in record_b_dict:
+            record_b_dict[Fields.CONTAINER_TITLE] = (
                 record_b_dict.get(Fields.JOURNAL, "")
                 + record_b_dict.get(Fields.BOOKTITLE, "")
                 + record_b_dict.get(Fields.SERIES, "")
@@ -924,9 +924,12 @@ class Record:
             )
 
             outlet_similarity = 0.0
-            if record_b["container_title"] and record_a["container_title"]:
+            if record_b[Fields.CONTAINER_TITLE] and record_a[Fields.CONTAINER_TITLE]:
                 outlet_similarity = (
-                    fuzz.ratio(record_a["container_title"], record_b["container_title"])
+                    fuzz.ratio(
+                        record_a[Fields.CONTAINER_TITLE],
+                        record_b[Fields.CONTAINER_TITLE],
+                    )
                     / 100
                 )
 
@@ -1275,23 +1278,24 @@ class Record:
         ]
         return bool(defect_codes)
 
-    def get_container_title(self) -> str:
+    def get_container_title(self, *, na_string: str = "NA") -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
-        container_title = "NA"
+
         if Fields.ENTRYTYPE not in self.data:
-            container_title = self.data.get(
-                Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, "NA")
+            return self.data.get(
+                Fields.JOURNAL, self.data.get(Fields.BOOKTITLE, na_string)
             )
-        else:
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                container_title = self.data.get(Fields.JOURNAL, "NA")
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-                container_title = self.data.get(Fields.BOOKTITLE, "NA")
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
-                container_title = self.data.get(Fields.TITLE, "NA")
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
-                container_title = self.data.get(Fields.BOOKTITLE, "NA")
-        return container_title
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            return self.data.get(Fields.JOURNAL, na_string)
+        if self.data[Fields.ENTRYTYPE] in [
+            ENTRYTYPES.INPROCEEDINGS,
+            ENTRYTYPES.PROCEEDINGS,
+            ENTRYTYPES.INBOOK,
+        ]:
+            return self.data.get(Fields.BOOKTITLE, na_string)
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
+            return self.data.get(Fields.TITLE, na_string)
+        return na_string
 
     def create_colrev_id(
         self,
@@ -1738,8 +1742,10 @@ class PrepRecord(Record):
 
         if " and " in input_string:
             names = input_string.split(" and ")
+        elif input_string.count(";") > 1:
+            names = input_string.split(";")
         elif input_string.count(",") > 1:
-            names = input_string.split(", ")
+            names = input_string.split(" ")
         else:
             names = [input_string]
         author_string = ""
@@ -1997,7 +2003,7 @@ class PrepRecord(Record):
         )
         if re.match(r"^\d+\-\-\d+$", self.data[Fields.PAGES]):
             from_page, to_page = re.findall(r"(\d+)", self.data[Fields.PAGES])
-            if int(from_page) > int(to_page) and len(from_page) > len(to_page):
+            if len(from_page) > len(to_page):
                 self.data[
                     Fields.PAGES
                 ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"

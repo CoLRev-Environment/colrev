@@ -277,10 +277,6 @@
     ],
     "dedupe": [
         {
-            "package_endpoint_identifier": "colrev.simple_dedupe",
-            "status": "MATURING"
-        },
-        {
             "package_endpoint_identifier": "colrev.dedupe",
             "status": "EXPERIMENTAL"
         },

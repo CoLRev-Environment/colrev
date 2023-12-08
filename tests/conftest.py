@@ -201,7 +201,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         # {"endpoint": "colrev.exclude_collections"},
     ]
     review_manager.settings.dedupe.dedupe_package_endpoints = [
-        {"endpoint": "colrev.simple_dedupe"}
+        {"endpoint": "colrev.dedupe"}
     ]
     review_manager.settings.prescreen.prescreen_package_endpoints = [
         {"endpoint": "colrev.conditional_prescreen"}
@@ -300,6 +300,14 @@ def fixture_prep_operation(
 ) -> colrev.ops.prep.Prep:
     """Fixture returning a prep operation"""
     return base_repo_review_manager.get_prep_operation()
+
+
+@pytest.fixture(scope="package", name="dedupe_operation")
+def fixture_pdedupe_operation(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.ops.dedupe.Dedupe:
+    """Fixture returning a dedupe operation"""
+    return base_repo_review_manager.get_dedupe_operation()
 
 
 @pytest.fixture

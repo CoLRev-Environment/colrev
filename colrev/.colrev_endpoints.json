@@ -81,9 +81,6 @@
             }
         ],
         "dedupe": [
-            {"package_endpoint_identifier": "colrev.simple_dedupe",
-             "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe"
-            },
             {"package_endpoint_identifier": "colrev.dedupe",
              "endpoint": "colrev.ops.built_in.dedupe.dedupe.Dedupe"
             },

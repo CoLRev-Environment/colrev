@@ -520,7 +520,7 @@ class Dataset:
         bibtex_str = ""
         language_service = colrev.env.language_service.LanguageService()
         first = True
-        for record_id, record_dict in recs_dict.items():
+        for record_id, record_dict in sorted(recs_dict.items()):
             if not first:
                 bibtex_str += "\n"
             first = False

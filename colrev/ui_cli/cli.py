@@ -915,6 +915,13 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 )
 @click.option("--view", is_flag=True, default=False, help="View dedupe info")
 @click.option(
+    "-d",
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Debug mode",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -939,6 +946,7 @@ def dedupe(
     fix_errors: bool,
     gid: bool,
     view: bool,
+    debug: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -1007,7 +1015,7 @@ def dedupe(
         __view_dedupe_details(dedupe_operation)
         return
 
-    dedupe_operation.main()
+    dedupe_operation.main(debug=debug)
 
 
 @main.command(help_priority=9)

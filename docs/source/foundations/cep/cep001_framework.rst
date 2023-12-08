@@ -1,4 +1,4 @@
-CEP 1: CoLRev Framework
+CEP001: CoLRev Framework
 ====================================
 
 +----------------+------------------------------------------------------------------------------------------------------------------------------------+
@@ -16,7 +16,7 @@ CEP 1: CoLRev Framework
 Table of contents
 ------------------------------
 
-:any:`preliminaries`
+:any:`abstract`
 
 :any:`area_methods`
 
@@ -46,9 +46,9 @@ Table of contents
 
 ..  Note : this page should mirror the areas of innovation (first page)
 
-.. _preliminaries:
+.. _abstract:
 
-0. Preliminaries
+Abstract
 ------------------------------
 
 The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.

@@ -109,7 +109,6 @@ dedupe
    extensions_index/colrev.curation_full_outlet_dedupe.rst
    extensions_index/colrev.curation_missing_dedupe.rst
    extensions_index/colrev.dedupe.rst
-   extensions_index/colrev.simple_dedupe.rst
 
 prescreen
 -----------------------------

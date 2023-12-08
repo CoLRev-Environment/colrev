@@ -1,4 +1,4 @@
-CEP 3: SearchSources
+CEP003 - SearchSources
 ====================================
 
 +----------------+------------------------------+
@@ -22,10 +22,10 @@ Table of contents
 - :any:`maturity`
 - :any:`roadmap`
 
-.. _summary:
+.. _abstract:
 
-Summary
-----------------
+Abstract
+------------------------------
 
 The SearchSources are an integral part of CoLRev.
 Knowing the source matters because many aspects are source-specific, including:
