@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 import json
-import typing
+import typing 
 
-from semanticscholar import PaginatedResults
+from semanticscholar import SemanticScholar
+from semanticscholar.PaginatedResults import PaginatedResults
 
 import semanticscholarui
 
@@ -101,17 +102,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     def __get_s2_parameters(self,
                             *,
                             rerun: bool
-                            ) -> dict:
+                            ) -> None:
         """Get all parameters from the user, using the User Interface"""
         self.__s2_UI__.main_ui()
-        search_subject = self.__s2_UI__.searchSubject
-        params = self.__s2_UI__.searchParams
-
-        dict_param = {
-            search_subject: search_subject,
-            params: params
-        }
-        return dict_param
 
     def keyword_search(self,
                        *,
@@ -141,7 +134,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 case "open_access_pdf":
                     open_access_pdf = value
                 case "limit":
-                    limit = value
+                    if not value== "":
+                        limit = int(value)
 
         record_return = self.__s2__.search_paper(query=query,
                                                  year=year,
@@ -230,10 +224,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             records = self.review_manager.dataset.load_records_dict()
 
             # get the search parameters from the user
-            dict_param = self.__get_s2_parameters(rerun=rerun)
+            
+            self.__get_s2_parameters(rerun=rerun)
+            search_subject= self.__s2_UI__.searchSubject
+            params=self.__s2_UI__.searchParams
+
             try:
                 # Open Semantic Scholar depending on the search subject  and look for search parameters
-                match dict_param["search_subject"]:
+                match search_subject:
                     case "keyword":
                         __search_return__ = self.keyword_search(params=dict_param["params"], rerun=rerun)
                     case "paper":
@@ -247,6 +245,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
                 for item in __search_return__:
                     try:
+                        
                         retrieved_record_dict = connector_utils.json_to_record(item=item)
                         continue
                     except:
@@ -303,5 +302,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     raise NotImplementedError
 
 
-
+test=SemanticScholarSearchSource
+test.run_search(rerun=False)
 
