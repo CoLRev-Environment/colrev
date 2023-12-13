@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import bib_dedupe.cluster
 import pandas as pd
 import zope.interface
 from bib_dedupe.bib_dedupe import BibDeduper
@@ -13,6 +14,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.dedupe.utils
 import colrev.record
+from colrev.constants import Fields
 
 if TYPE_CHECKING:
     import colrev.ops.dedupe
@@ -52,13 +54,21 @@ class Dedupe(JsonSchemaMixin):
             return
 
         deduplication_pairs = self.bib_deduper.block(records_df)
-        result = self.bib_deduper.match(deduplication_pairs)
+        matched_df = self.bib_deduper.match(deduplication_pairs)
 
         if self.dedupe_operation.debug:
             return
 
+        duplicate_id_sets = bib_dedupe.cluster.get_connected_components(matched_df)
+
+        # based on records, get the origin_sets
+        origin_sets = [
+            [o for rid in dupe_id_set for o in records[rid][Fields.ORIGIN]]
+            for dupe_id_set in duplicate_id_sets
+        ]
+
         self.dedupe_operation.apply_merges(
-            origin_sets=result["duplicate_origin_sets"], complete_dedupe=True
+            origin_sets=origin_sets, complete_dedupe=True
         )
 
         self.review_manager.create_commit(
