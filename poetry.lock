@@ -1649,6 +1649,26 @@ files = [
 rapidfuzz = ">=2.3.0,<4.0.0"
 
 [[package]]
+name = "lingua"
+version = "4.15.0"
+description = "Translation toolset"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "lingua-4.15.0-py2.py3-none-any.whl", hash = "sha256:8645a8029425bc97b74850f3c7817a7fae58d5f60709f13b3f3f41e5041f8a68"},
+    {file = "lingua-4.15.0.tar.gz", hash = "sha256:0e1a946741db288a40361ad04ff38fe04bf0819834b8abb84c4b535fed9ba4ef"},
+]
+
+[package.dependencies]
+click = ">=8.0.3"
+polib = ">=1.1.1"
+
+[package.extras]
+chameleonextractor = ["Chameleon"]
+dev = ["black (>=22.1.0)", "flake8 (>=4.0.1)", "pytest (>=7.0.1)"]
+
+[[package]]
 name = "lingua-language-detector"
 version = "2.0.2"
 description = "An accurate natural language detection library, suitable for short text and mixed-language text"
@@ -2299,6 +2319,18 @@ python-versions = "*"
 files = [
     {file = "ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"},
     {file = "ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3"},
+]
+
+[[package]]
+name = "polib"
+version = "1.2.0"
+description = "A library to manipulate gettext files (po and mo files)."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "polib-1.2.0-py2.py3-none-any.whl", hash = "sha256:1c77ee1b81feb31df9bca258cbc58db1bbb32d10214b173882452c73af06d62d"},
+    {file = "polib-1.2.0.tar.gz", hash = "sha256:f3ef94aefed6e183e342a8a269ae1fc4742ba193186ad76f175938621dbfc26b"},
 ]
 
 [[package]]
@@ -4130,4 +4162,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "175ebae6f5a7e03e802797046b31475b5b168dac506b91eb0fec96db113ad1cc"
+content-hash = "dcf4b7faf5f1c6d9d53954d1a93d305f22fd5db20632fec2c89e18f4bfffde63"
