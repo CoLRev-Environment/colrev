@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pycountry
-from lingua.builder import LanguageDetectorBuilder
+from lingua import LanguageDetectorBuilder
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
