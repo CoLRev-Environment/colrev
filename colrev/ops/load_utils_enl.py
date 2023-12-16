@@ -155,11 +155,10 @@ class ENLLoader:
         entrytype = entrytype_map[record_dict["0"]]
         record_dict[Fields.ENTRYTYPE] = entrytype
 
-    def map_keys(self, *, record_dict: dict, key_map: dict) -> dict:
+    def map_keys(self, *, record_dict: dict, key_map: dict) -> None:
         """Converts enl entries it to bib records"""
         entrytype = record_dict[Fields.ENTRYTYPE]
 
-        records: dict = {}
         for enl_key in list(record_dict.keys()):
             if enl_key in [Fields.ENTRYTYPE, Fields.ID]:
                 continue
@@ -174,4 +173,3 @@ class ENLLoader:
         if self.unique_id_field != "":
             _id = record_dict[self.unique_id_field].replace(" ", "").replace(";", "_")
             record_dict[Fields.ID] = _id
-        return records
