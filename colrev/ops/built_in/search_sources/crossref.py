@@ -986,9 +986,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     .lstrip("+")
                 )
 
-                filename = operation.get_unique_filename(
-                    file_path_string=f"crossref_{query}"
-                )
+                filename = operation.get_unique_filename(file_path_string="crossref")
                 add_source = colrev.settings.SearchSource(
                     endpoint="colrev.crossref",
                     filename=filename,
@@ -1005,9 +1003,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 source = cls.__add_toc_interactively(operation=operation)
                 return source
 
-            filename = operation.get_unique_filename(
-                file_path_string=f"crossref_{params}"
-            )
+            filename = operation.get_unique_filename(file_path_string="crossref")
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
                 filename=filename,
