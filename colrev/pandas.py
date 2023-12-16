@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import pandas as pd
+
 import colrev.review_manager
+
 
 def load_df(project_path: str) -> pd.DataFrame:
     """Get a pandas dataframe from a CoLRev project"""
