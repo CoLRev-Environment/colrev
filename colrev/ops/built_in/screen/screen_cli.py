@@ -118,7 +118,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             return "quit"
 
         decisions = {c: "in" for c in self.screening_criteria.keys()}
-
         for criterion_name in violated_criteria:
             decisions[
                 criterion_name.replace(Colors.RED, "")
@@ -131,7 +130,8 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             c_field += f";{criterion_name}={decision}"
         c_field = c_field.replace(" ", "").lstrip(";")
 
-        screen_inclusion = all(decision == "in" for _, decision in decisions.values())
+        screen_inclusion = all(decision == "in" for _, decision in decisions.items())
+
         self.__screen_with_criteria_print_overall_decision(
             record=record, screen_inclusion=screen_inclusion
         )
@@ -214,7 +214,13 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self.__i += 1
         print("\n\n")
         print(f"Record {self.__i} (of {self.__stat_len})")
-        print(record)
+        print()
+        print(record.data["ID"])
+        print()
+        record.print_citation_format()
+        if "abstract" in record.data:
+            print()
+            print(record.data["abstract"])
 
         if self.criteria_available:
             ret = self.__screen_record_with_criteria(
