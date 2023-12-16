@@ -121,7 +121,7 @@ class Search(colrev.operation.Operation):
         keywords = input("Enter the keywords:")
 
         filename = self.get_unique_filename(
-            file_path_string=f"{endpoint.replace('colrev.', '')}_{keywords}"
+            file_path_string=f"{endpoint.replace('colrev.', '')}"
         )
         add_source = colrev.settings.SearchSource(
             endpoint=endpoint,
