@@ -296,9 +296,11 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        records = colrev.ops.load_utils_bib.load_bib_file(
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
             load_operation=load_operation, source=self.search_source
         )
+        records = bib_loader.load_bib_file()
+
         return records
 
     def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:

@@ -104,9 +104,10 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
             return records
 
         if self.search_source.filename.suffix == ".csv":
