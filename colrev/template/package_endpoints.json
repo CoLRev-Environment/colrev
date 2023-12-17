@@ -440,6 +440,17 @@
             "search_types": [
                 "DB"
             ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.semanticscholar",
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Semanticscholar API",
+            "ci_supported": false,
+            "search_types": [
+                "API"
+            ]
         }
     ],
     "prep": [
