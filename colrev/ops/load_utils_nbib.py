@@ -1,6 +1,56 @@
 #! /usr/bin/env python
 """Convenience functions to load nbib files
 
+NBIB requires a mapping from the NBIB_FIELDS to the standard CoLRev Fields (see CEP 002), which
+
+- can involve merging of NBIB_FIELDS (e.g. AU / author fields)
+- can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
+
+Usage::
+
+    import colrev.ops.load_utils_nbib
+    from colrev.constants import Fields, ENTRYTYPES
+
+    # The mappings need to be adapted to the SearchSource
+    entrytype_map = {
+        "Journal Article": ENTRYTYPES.ARTICLE,
+        "Conference Proceedings": ENTRYTYPES.INPROCEEDINGS,
+    }
+    key_map = {
+        ENTRYTYPES.ARTICLE: {
+            "DP": Fields.YEAR,
+            "AU": Fields.AUTHOR,
+            "TI": Fields.TITLE,
+            "JT": Fields.JOURNAL,
+            "VI": Fields.VOLUME,
+            "IP": Fields.NUMBER,
+            "PG": Fields.PAGES,
+            "U": Fields.URL,
+        },
+        ENTRYTYPES.INPROCEEDINGS: {
+            "DP": Fields.YEAR,
+            "AU": Fields.AUTHOR,
+            "TI": Fields.TITLE,
+            "JT": Fields.BOOKTITLE,
+            "U": Fields.URL,
+            "PG": Fields.PAGES,
+        },
+    }
+
+    nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
+        load_operation=load_operation,
+        source=self.search_source,
+        list_fields={"A": " and "},
+    )
+
+    # Note : fixes can be applied before each of the following steps
+
+    records = nbib_loader.load_nbib_entries()
+
+    for record_dict in records.values():
+        nbib_loader.apply_entrytype_mapping(record_dict=record_dict, entrytype_map=entrytype_map)
+        nbib_loader.map_keys(record_dict=record_dict, key_map=key_map)
+
 Example nbib record::
 
     OWN - ERIC

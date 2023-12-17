@@ -111,11 +111,11 @@ class EbscoHostSearchSource(JsonSchemaMixin):
             return records
 
         if self.search_source.filename.suffix == ".csv":
-            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+            table_loader = colrev.ops.load_utils_table.TableLoader(
                 load_operation=load_operation, source=self.search_source
             )
-            table_entries = csv_loader.load_table_entries()
-            records = csv_loader.convert_to_records(entries=table_entries)
+            table_entries = table_loader.load_table_entries()
+            records = table_loader.convert_to_records(entries=table_entries)
             return records
 
         raise NotImplementedError

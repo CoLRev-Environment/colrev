@@ -304,15 +304,15 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        csv_loader = colrev.ops.load_utils_table.CSVLoader(
+        table_loader = colrev.ops.load_utils_table.TableLoader(
             load_operation=load_operation, source=self.search_source
         )
-        table_entries = csv_loader.load_table_entries()
-        records = csv_loader.convert_to_records(entries=table_entries)
+        table_entries = table_loader.load_table_entries()
+        records = table_loader.convert_to_records(entries=table_entries)
         return records
 
     def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        excel_loader = colrev.ops.load_utils_table.ExcelLoader(
+        excel_loader = colrev.ops.load_utils_table.TableLoader(
             load_operation=load_operation, source=self.search_source
         )
         table_entries = excel_loader.load_table_entries()

@@ -1,12 +1,58 @@
 #! /usr/bin/env python
-"""Convenience functions to load enl files
+"""Convenience functions to load ENL files
 
+ENL requires a mapping from the ENL_FIELDS to the standard CoLRev Fields (see CEP 002), which
+
+- can involve merging of ENL_FIELDS (e.g. AU / author fields)
+- can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
 
 Usage::
 
-    TODO
+    import colrev.ops.load_utils_enl
+    from colrev.constants import Fields, ENTRYTYPES
 
-Example enl record::
+    # The mappings need to be adapted to the SearchSource
+    entrytype_map = {
+        "Journal Article": ENTRYTYPES.ARTICLE,
+        "Conference Proceedings": ENTRYTYPES.INPROCEEDINGS,
+    }
+    key_map = {
+        ENTRYTYPES.ARTICLE: {
+            "D": Fields.YEAR,
+            "A": Fields.AUTHOR,
+            "T": Fields.TITLE,
+            "B": Fields.JOURNAL,
+            "V": Fields.VOLUME,
+            "N": Fields.NUMBER,
+            "P": Fields.PAGES,
+            "U": Fields.URL,
+        },
+        ENTRYTYPES.INPROCEEDINGS: {
+            "D": Fields.YEAR,
+            "A": Fields.AUTHOR,
+            "T": Fields.TITLE,
+            "B": Fields.BOOKTITLE,
+            "U": Fields.URL,
+            "P": Fields.PAGES,
+        },
+    }
+
+    enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+        load_operation=load_operation,
+        source=self.search_source,
+        list_fields={"A": " and "},
+    )
+
+    # Note : fixes can be applied before each of the following steps
+
+    records = enl_loader.load_enl_entries()
+
+    for record_dict in records.values():
+        enl_loader.apply_entrytype_mapping(record_dict=record_dict, entrytype_map=entrytype_map)
+        enl_loader.map_keys(record_dict=record_dict, key_map=key_map)
+
+
+Example ENL record::
 
     %T How Trust Leads to Commitment on Microsourcing Platforms
     %0 Journal Article
@@ -73,7 +119,7 @@ class ENLLoader:
         return bool(self.pattern.match(line))
 
     def get_tag(self, line: str) -> str:
-        """Get the tag from a line in the RIS file."""
+        """Get the tag from a line in the ENL file."""
         return line[1:3].rstrip()
 
     def get_content(self, line: str) -> str:
