@@ -1,9 +1,9 @@
-colrev.ops.load\_utils\_table.ExcelLoader
+colrev.ops.load\_utils\_table.TableLoader
 =========================================
 
 .. currentmodule:: colrev.ops.load_utils_table
 
-.. autoclass:: ExcelLoader
+.. autoclass:: TableLoader
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,5 +16,6 @@ colrev.ops.load\_utils\_table.ExcelLoader
    .. autosummary::
       :nosignatures:
 
-      ~ExcelLoader.convert_to_records
-      ~ExcelLoader.load_table_entries
+      ~TableLoader.convert_to_records
+      ~TableLoader.load_table_entries
+      ~TableLoader.preprocess_records

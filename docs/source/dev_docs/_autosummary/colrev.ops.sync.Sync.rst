@@ -16,6 +16,7 @@ colrev.ops.sync.Sync
    .. autosummary::
       :nosignatures:
 
+      ~Sync.add_paper
       ~Sync.add_to_bib
       ~Sync.add_to_records_to_import
       ~Sync.get_cited_papers

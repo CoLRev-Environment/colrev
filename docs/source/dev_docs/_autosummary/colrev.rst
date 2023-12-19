@@ -36,6 +36,7 @@
    colrev.logger
    colrev.operation
    colrev.ops
+   colrev.pandas
    colrev.qm
    colrev.record
    colrev.review_manager

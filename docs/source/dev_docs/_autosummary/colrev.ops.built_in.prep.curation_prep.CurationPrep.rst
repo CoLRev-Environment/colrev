@@ -17,6 +17,7 @@ colrev.ops.built\_in.prep.curation\_prep.CurationPrep
       :nosignatures:
 
       ~CurationPrep.all_json_schemas
+      ~CurationPrep.apply_curation_restrictions
       ~CurationPrep.field_mapping
       ~CurationPrep.from_dict
       ~CurationPrep.from_json

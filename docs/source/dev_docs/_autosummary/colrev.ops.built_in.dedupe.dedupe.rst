@@ -1,7 +1,7 @@
-colrev.ops.load\_utils\_table
-=============================
+colrev.ops.built\_in.dedupe.dedupe
+==================================
 
-.. automodule:: colrev.ops.load_utils_table
+.. automodule:: colrev.ops.built_in.dedupe.dedupe
 
 
 
@@ -20,4 +20,4 @@ colrev.ops.load\_utils\_table
       :template: custom-class-template.rst
       :nosignatures:
 
-      TableLoader
+      Dedupe

@@ -9,10 +9,15 @@ colrev.ops.load\_utils\_bib
 
 
 
-   .. rubric:: Functions
+
+
+
+
+   .. rubric:: Classes
 
    .. autosummary::
       :toctree:
+      :template: custom-class-template.rst
       :nosignatures:
 
-      load_bib_file
+      BIBLoader

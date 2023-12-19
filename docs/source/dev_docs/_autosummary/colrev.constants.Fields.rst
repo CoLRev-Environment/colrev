@@ -32,6 +32,7 @@ colrev.constants.Fields
       ~Fields.CHAPTER
       ~Fields.CITED_BY
       ~Fields.COLREV_ID
+      ~Fields.CONTAINER_TITLE
       ~Fields.DBLP_KEY
       ~Fields.DOI
       ~Fields.D_PROV
