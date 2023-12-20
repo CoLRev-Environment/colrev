@@ -134,6 +134,17 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.semanticscholar",
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
+            "status": "RED",
+            "status_linked": "RED",
+            "short_description": "Semantic Scholar API (:doc:`instructions </resources/extensions_index/colrev.semanticscholar>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.synergy_datasets",
             "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
             "status": "|EXPERIMENTAL|",

@@ -361,6 +361,17 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.semanticscholar",
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
+            "status": "EXPERIMENTAL",
+            "status_linked": "EXPERIMENTAL",
+            "short_description": "Semantic Scholar API (:doc:`instructions </resources/extensions_index/colrev.semanticscholar>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.springer_link",
             "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource",
             "status": "|EXPERIMENTAL|",
@@ -439,17 +450,6 @@
             "ci_supported": false,
             "search_types": [
                 "DB"
-            ]
-        },
-        {
-            "package_endpoint_identifier": "colrev.semanticscholar",
-            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
-            "status": "|EXPERIMENTAL|",
-            "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Semanticscholar API",
-            "ci_supported": false,
-            "search_types": [
-                "API"
             ]
         }
     ],
