@@ -182,8 +182,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get the api key
         s2_api_key = self.__get_api_key()
-        if s2_api_key is not None:
-            self.__s2__(api_key=s2_api_key)
+        if s2_api_key:
+            self.s2 = self.__s2__(api_key=s2_api_key)
+        else:
+            self.s2 = self.__s2__()
 
         # validate source
 
