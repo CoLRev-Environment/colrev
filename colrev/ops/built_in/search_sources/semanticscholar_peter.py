@@ -1,32 +1,41 @@
 #! /usr/bin/env python
 """SearchSource: Semantic Scholar"""
-from __future__ import annotations
 
+from __future__ import annotations
+import json
 import typing
+
+from semanticscholar import SemanticScholar
+from semanticscholar import PaginatedResults
+
+import semanticscholarui
+
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests as requests
-import colrev.ops.built_in.search_sources.semanticscholarui
+# install zope package
 import zope.interface
+# install package dacite
 from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
-from semanticscholar import SemanticScholar
-from semanticscholar.PaginatedResults import PaginatedResults
+# from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 import colrev.settings
+import colrev.operation
+import colrev.env.language_service
+from colrev import settings
 from colrev.constants import Colors
 from colrev.constants import Fields
-# install zope package
-# install package dacite
+from colrev.constants import FieldValues
+
+
 
 if TYPE_CHECKING:
     import colrev.ops.search
@@ -37,15 +46,12 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 # pylint: disable=too-many-lines
 
-
 @zope.interface.implementer(
     colrev.env.package_manager.SearchSourcePackageEndpointInterface
 )
 @dataclass
-class SemanticScholarSearchSource(JsonSchemaMixin):
+class SemanticScholarSearchSource(): # JsonSchemaMixin):
     """Semantic Scholar API"""
-
-    s2: SemanticScholar
 
     __api_url = "https://api.semanticscholar.org/graph/v1/paper/search?"
     __limit = 100
@@ -54,28 +60,24 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.semanticscholar"
 
-    search_types = [
-        colrev.settings.SearchType.API,
-    ]
-
-    ci_supported: bool = True
-
     docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/semanticscholar.md"
+            "https://github.com/CoLRev-Environment/colrev/blob/main/"
+            + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
 
     short_name = "S2"
-    __s2_md_filename = Path("data/search/md_S2.bib")
 
-    __availability_exception_message = f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})"
+    __availability_exception_message = (
+        f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})")
 
-    __s2_UI__ = colrev.ops.built_in.search_sources.semanticscholarui.Semanticscholar_ui()
+    __s2_UI__ = semanticscholarui.Semanticscholar_ui()
+    __s2__ = SemanticScholar
+
     def __init__(
-        self,
-        *,
-        source_operation: colrev.operation.Operation,
-        settings: typing.Optional[dict] = None,
+            self,
+            *,
+            source_operation: colrev.operation.Operation,
+            settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:
@@ -96,11 +98,26 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         self.language_service = colrev.env.language_service.LanguageService()
         __search_return__ = None
 
-    def __get_s2_parameters(self, *, rerun: bool) -> None:
+    def __get_s2_parameters(self,
+                            *,
+                            rerun: bool
+                            ) -> dict:
         """Get all parameters from the user, using the User Interface"""
         self.__s2_UI__.main_ui()
+        search_subject = self.__s2_UI__.searchSubject
+        params = self.__s2_UI__.searchParams
 
-    def keyword_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
+        dict_param = {
+            search_subject: search_subject,
+            params: params
+        }
+        return dict_param
+
+    def keyword_search(self,
+                       *,
+                       params: dict,
+                       rerun: bool
+                       ) -> PaginatedResults:
         query = None
         year = None
         publication_types = None
@@ -124,21 +141,23 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 case "open_access_pdf":
                     open_access_pdf = value
                 case "limit":
-                    if not value == "":
-                        limit = int(value)
+                    limit = value
 
-        record_return = self.__s2__.search_paper(
-            query=query,
-            year=year,
-            publication_types=publication_types,
-            venue=venue,
-            fields_of_study=fields_of_study,
-            open_access_pdf=open_access_pdf,
-            limit=limit,
-        )
+        record_return = self.__s2__.search_paper(query=query,
+                                                 year=year,
+                                                 publication_types=publication_types,
+                                                 venue=venue,
+                                                 fields_of_study=fields_of_study,
+                                                 open_access_pdf=open_access_pdf,
+                                                 limit=limit,
+                                                 )
         return record_return
 
-    def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
+    def paper_search(self,
+                     *,
+                     params: dict,
+                     rerun: bool
+                     ) -> PaginatedResults:
         for key, value in params.items():
             if key == "paper_ids":
                 record_return = self.__s2__.get_papers(value)
@@ -146,13 +165,17 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 record_return = self.__s2__.search_paper(value)
             else:
                 self.review_manager.logger.info(
-                    'Search type "Search for paper" is not available with your parameters.\n'
+                    "Search type \"Search for paper\" is not available with your parameters.\n"
                     + "Search parameter: "
                     + value
                 )
         return record_return
 
-    def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
+    def author_search(self,
+                      *,
+                      params: dict,
+                      rerun: bool
+                      ) -> PaginatedResults:
         for key, value in params.items():
             if key == "author_ids":
                 record_return = self.__s2__.get_authors(value)
@@ -160,7 +183,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 record_return = self.__s2__.search_author(value)
             else:
                 self.review_manager.logger.info(
-                    '\nSearch type "Search for author" is not available with your parameters.\n'
+                    "\nSearch type \"Search for author\" is not available with your parameters.\n"
                     + "Search parameter: "
                     + value
                 )
@@ -177,7 +200,11 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
         return api_key
 
-    def run_search(self, *, rerun: bool) -> None:
+    def run_search(
+            self,
+            *,
+            rerun: bool
+    ) -> None:
         """Run a search of Semantic Scholar"""
 
         # get the api key
@@ -191,7 +218,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         s2_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
-            update_only=(not rerun),
+            update_only=(not rerun)
         )
 
         if rerun:
@@ -203,26 +230,16 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             records = self.review_manager.dataset.load_records_dict()
 
             # get the search parameters from the user
-
-            self.__get_s2_parameters(rerun=rerun)
-            search_subject = self.__s2_UI__.searchSubject
-            params = self.__s2_UI__.searchParams
-
+            dict_param = self.__get_s2_parameters(rerun=rerun)
             try:
                 # Open Semantic Scholar depending on the search subject  and look for search parameters
-                match search_subject:
+                match dict_param["search_subject"]:
                     case "keyword":
-                        __search_return__ = self.keyword_search(
-                            params=dict_param["params"], rerun=rerun
-                        )
+                        __search_return__ = self.keyword_search(params=dict_param["params"], rerun=rerun)
                     case "paper":
-                        __search_return__ = self.paper_search(
-                            params=dict_param["params"], rerun=rerun
-                        )
+                        __search_return__ = self.paper_search(params=dict_param["params"], rerun=rerun)
                     case "author":
-                        __search_return__ = self.author_search(
-                            params=dict_param["params"], rerun=rerun
-                        )
+                        __search_return__ = self.author_search(params=dict_param["params"], rerun=rerun)
                     case _:
                         self.review_manager.logger.info(
                             "No search parameters were found."
@@ -230,21 +247,22 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
                 for item in __search_return__:
                     try:
-                        retrieved_record_dict = connector_utils.json_to_record(
-                            item=item
-                        )
+                        retrieved_record_dict = connector_utils.json_to_record(item=item)
                         continue
                     except:
                         raise
             except:
                 raise
-
-            self.review_manager.dataset.save_records_dict(records=records)
         # pip install requests
         except requests.exceptions.RequestException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
                 self.__availability_exception_message
             ) from exc
+
+        s2_feed.print_post_run_search_infos(records=records)
+
+        s2_feed.save_feed_file()
+        self.review_manager.dataset.save_records_dict(records=records)
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -254,9 +272,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-        cls,
-        operation: colrev.ops.search.Search,
-        params: dict,
+            cls,
+            operation: colrev.ops.search.Search,
+            params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
@@ -267,9 +285,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         if Fields.URL in params:
             query = (
                 params[Fields.URL]
-                .replace(
-                    "https://api.semanticscholar.org/graph/v1/paper/search?/query=", ""
-                )
+                .replace("https://api.semanticscholar.org/graph/v1/paper/search?/query=", "")
                 .replace("&from_ui=yes", "")
                 .lstrip("+")
             )
@@ -286,8 +302,11 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         )
         return add_source
 
-    # raise NotImplementedError
+    raise NotImplementedError
 
-if __name__ == "__main__":
-    test = SemanticScholarSearchSource
-    test.run_search(rerun=False)
+
+test = SemanticScholarSearchSource()
+test.run_search(rerun=False)
+
+
+
