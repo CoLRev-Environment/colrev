@@ -5,7 +5,6 @@
 crossRef speichert nicht direkt Suchergebnisse sondern in Datenbank-crossRef.
 Daten in Datenbank werden in einem Proprietäre Format gespeichert.
 
-
 # Durchführung der Query:
 -----------------------
 Query-bedingung[suchparametern (titel,autor,jahr) mit (API-schlüssel)] ---1---> DB-crossRef ---2--> ergebnis
@@ -39,6 +38,7 @@ Accept: application /json
 
 # Update records
 ---------------------------------------------------------
+zum beispiel: 
 curl -X PUT \
   http://example.com/resource \
   -H 'Content-Type: application/json' \
