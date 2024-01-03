@@ -37,6 +37,8 @@ from colrev.constants import Fields
 if TYPE_CHECKING:
     import colrev.ops.load
 
+# pylint: disable=too-few-public-methods
+
 
 class BIBLoader:
 
@@ -52,6 +54,7 @@ class BIBLoader:
         self.load_operation = load_operation
         self.source = source
         self.unique_id_field = unique_id_field
+        self.review_manager = self.load_operation.review_manager
 
     def __apply_file_fixes(self) -> None:
         # pylint: disable=duplicate-code
@@ -60,7 +63,7 @@ class BIBLoader:
         def fix_key(
             file: typing.IO, line: bytes, replacement_line: bytes, seekpos: int
         ) -> int:
-            self.load_operation.review_manager.logger.info(
+            self.review_manager.logger.info(
                 f"Fix invalid key: \n{line.decode('utf-8')}"
                 f"{replacement_line.decode('utf-8')}"
             )
@@ -77,7 +80,7 @@ class BIBLoader:
             return seekpos
 
         if not self.source.filename.is_file():
-            self.load_operation.review_manager.logger.debug(
+            self.review_manager.logger.debug(
                 f"Did not find bib file {self.source.filename} "
             )
             return
@@ -86,7 +89,7 @@ class BIBLoader:
             contents = bibtex_file.read()
             bib_r = re.compile(r"@.*{.*,", re.M)
             if len(re.findall(bib_r, contents)) == 0:
-                self.load_operation.review_manager.logger.error(
+                self.review_manager.logger.error(
                     f"Not a bib file? {self.source.filename.name}"
                 )
                 raise colrev_exceptions.UnsupportedImportFormatError(
@@ -114,10 +117,10 @@ class BIBLoader:
                         seekpos = fix_key(file, line, replacement_line, seekpos)
 
                     if current_id_str in record_ids:
-                        next_id = self.load_operation.review_manager.dataset.generate_next_unique_id(
+                        next_id = self.review_manager.dataset.generate_next_unique_id(
                             temp_id=current_id_str, existing_ids=record_ids
                         )
-                        self.load_operation.review_manager.logger.info(
+                        self.review_manager.logger.info(
                             f"Fix duplicate ID: {current_id_str} >> {next_id}"
                         )
 
@@ -157,13 +160,24 @@ class BIBLoader:
                 seekpos = file.tell()
                 line = file.readline()
 
+    def __check_bib_file(self, *, records: dict) -> None:
+        if len(records.items()) <= 3:
+            return
+        if not any(Fields.AUTHOR in r for r in records.values()):
+            raise colrev_exceptions.ImportException(
+                f"Import failed (no record with author field): {self.source.filename.name}"
+            )
+
+        if not any(Fields.TITLE in r for ID, r in records.items()):
+            raise colrev_exceptions.ImportException(
+                f"Import failed (no record with title field): {self.source.filename.name}"
+            )
+
     def load_bib_file(
         self,
         check_bib_file: bool = True,
     ) -> dict:
         """Load a bib file and return records dict"""
-
-        # TODO (Tarin): create class (which handles the load_operation) and extract the following functions
 
         def drop_empty_fields(*, records: dict) -> None:
             for record_id in records:
@@ -175,14 +189,14 @@ class BIBLoader:
                 }
 
         def check_nr_in_bib(*, records: dict) -> None:
-            self.load_operation.review_manager.logger.debug(
+            self.review_manager.logger.debug(
                 f"Loaded {self.source.filename.name} with {len(records)} records"
             )
-            nr_in_bib = self.load_operation.review_manager.dataset.get_nr_in_bib(
+            nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
                 file_path=self.source.filename
             )
             if len(records) < nr_in_bib:
-                self.load_operation.review_manager.logger.error(
+                self.review_manager.logger.error(
                     "broken bib file (not imported all records)"
                 )
                 with open(self.source.filename, encoding="utf8") as file:
@@ -193,37 +207,22 @@ class BIBLoader:
                             if record_id not in [
                                 x[Fields.ID] for x in records.values()
                             ]:
-                                self.load_operation.review_manager.logger.error(
+                                self.review_manager.logger.error(
                                     f"{record_id} not imported"
                                 )
                         line = file.readline()
-
-        def __check_bib_file(*, records: dict) -> None:
-            if len(records.items()) <= 3:
-                return
-            if not any(Fields.AUTHOR in r for r in records.values()):
-                raise colrev_exceptions.ImportException(
-                    f"Import failed (no record with author field): {self.source.filename.name}"
-                )
-
-            if not any(Fields.TITLE in r for ID, r in records.items()):
-                raise colrev_exceptions.ImportException(
-                    f"Import failed (no record with title field): {self.source.filename.name}"
-                )
 
         def __load_records() -> dict:
             if not self.source.filename.is_file():
                 return {}
             with open(self.source.filename, encoding="utf8") as bibtex_file:
-                records = self.load_operation.review_manager.dataset.load_records_dict(
+                records = self.review_manager.dataset.load_records_dict(
                     load_str=bibtex_file.read()
                 )
 
                 if len(records) == 0:
-                    self.load_operation.review_manager.report_logger.debug(
-                        "No records loaded"
-                    )
-                    self.load_operation.review_manager.logger.debug("No records loaded")
+                    self.review_manager.report_logger.debug("No records loaded")
+                    self.review_manager.logger.debug("No records loaded")
                 return records
 
         def lower_case_keys(*, records: dict) -> None:
@@ -270,5 +269,5 @@ class BIBLoader:
         records = dict(sorted(records.items()))
         check_nr_in_bib(records=records)
         if check_bib_file:
-            __check_bib_file(records=records)
+            self.__check_bib_file(records=records)
         return records

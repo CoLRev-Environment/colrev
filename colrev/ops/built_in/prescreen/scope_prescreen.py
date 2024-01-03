@@ -21,6 +21,8 @@ if typing.TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 
+# to check: https://asistdl.onlinelibrary.wiley.com/doi/full/10.1002/asi.24816
+
 
 @zope.interface.implementer(
     colrev.env.package_manager.PrescreenPackageEndpointInterface
@@ -104,7 +106,8 @@ class ScopePrescreen(JsonSchemaMixin):
                 )
             except colrev_exceptions.InvalidLanguageCodeException as exc:
                 raise colrev_exceptions.InvalidSettingsError(
-                    msg=f"Invalid LanguageScope in scope_prescreen: {settings['LanguageScope']} (should be iso_639_3 language code)",
+                    msg=f"Invalid LanguageScope in scope_prescreen: {settings['LanguageScope']}"
+                    + " (should be iso_639_3 language code)",
                     fix_per_upgrade=False,
                 ) from exc
 

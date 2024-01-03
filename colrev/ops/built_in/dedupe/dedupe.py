@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING
 import bib_dedupe.cluster
 import pandas as pd
 import zope.interface
-from bib_dedupe.bib_dedupe import BibDeduper
+from bib_dedupe.bib_dedupe import block
+from bib_dedupe.bib_dedupe import export_maybe
+from bib_dedupe.bib_dedupe import import_maybe
+from bib_dedupe.bib_dedupe import match
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
@@ -40,7 +43,6 @@ class Dedupe(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
-        self.bib_deduper = BibDeduper()
 
     def run_dedupe(self) -> None:
         """Run default dedupe"""
@@ -48,13 +50,23 @@ class Dedupe(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
         records_df = pd.DataFrame.from_dict(records, orient="index")
 
+        records_df.loc[
+            records_df[Fields.STATUS].isin(
+                colrev.record.RecordState.get_post_x_states(
+                    state=colrev.record.RecordState.md_processed
+                )
+            ),
+            "search_set",
+        ] = "old_search"
+
         records_df = self.dedupe_operation.get_records_for_dedupe(records_df=records_df)
 
         if 0 == records_df.shape[0]:
             return
 
-        deduplication_pairs = self.bib_deduper.block(records_df)
-        matched_df = self.bib_deduper.match(deduplication_pairs)
+        deduplication_pairs = block(records_df)
+        matched_df = match(deduplication_pairs)
+        matched_df = import_maybe(matched_df)
 
         if self.dedupe_operation.debug:
             return
@@ -74,5 +86,5 @@ class Dedupe(JsonSchemaMixin):
         self.review_manager.create_commit(
             msg="Merge duplicate records",
         )
-
-        # TODO : maybes
+        # TODO : export to custom path
+        export_maybe(matched_df, records_df)

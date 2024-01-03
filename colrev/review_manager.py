@@ -191,9 +191,10 @@ class ReviewManager:
 
     def __get_project_home_dir(self, *, path_str: Optional[str] = None) -> Path:
         if path_str:
-            return Path(path_str)
+            original_dir = Path(path_str)
+        else:
+            original_dir = Path.cwd()
 
-        original_dir = Path.cwd()
         while ".git" not in [f.name for f in Path.cwd().iterdir() if f.is_dir()]:
             os.chdir("..")
             if Path("/") == Path.cwd():
@@ -442,8 +443,8 @@ class ReviewManager:
 
         return colrev.env.tei_parser.TEIParser(
             environment_manager=self.environment_manager,
-            pdf_path=pdf_path,
-            tei_path=tei_path,
+            pdf_path=self.path / pdf_path if pdf_path else None,
+            tei_path=self.path / tei_path if tei_path else None,
         )
 
     @classmethod

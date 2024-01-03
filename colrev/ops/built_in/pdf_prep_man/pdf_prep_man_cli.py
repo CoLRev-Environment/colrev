@@ -249,7 +249,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         else:
             os.system("cls")
 
-        # TODO : if authors mismatch: color those that do/do not match
+        # to do : if authors mismatch: color those that do/do not match
         print(stat)
         record = colrev.record.Record(data=item)
         file_provenance = record.get_field_provenance(key=Fields.FILE)

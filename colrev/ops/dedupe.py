@@ -13,7 +13,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import pandas as pd
-from bib_dedupe.bib_dedupe import BibDeduper
+from bib_dedupe.bib_dedupe import prep
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -111,8 +111,7 @@ class Dedupe(colrev.operation.Operation):
     @classmethod
     def get_records_for_dedupe(cls, *, records_df: pd.DataFrame) -> pd.DataFrame:
         """Get (pre-processed) records for dedupe"""
-        dedupe_instance = BibDeduper()
-        return dedupe_instance.get_records_for_dedupe(records_df=records_df)
+        return prep(records_df=records_df)
 
     def __select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
         # pylint: disable=too-many-branches

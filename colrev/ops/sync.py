@@ -28,6 +28,36 @@ class Sync:
         self.logger = self.__setup_logger(level=logging.DEBUG)
         self.paper_md = self.__get_md_file()
 
+    def add_hook(self) -> None:
+        """Add a pre-commit hook for colrev sync"""
+        if not Path(".git").is_dir():
+            print("Not in a git directory.")
+            return
+        if not Path("records.bib").is_file() or not Path("paper.md").is_file():
+            print("Warning: records.bib or paper.md does not exist.")
+            print("Other filenames are not (yet) supported.")
+            return
+
+        if Path(".pre-commit-config.yaml").is_file():
+            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
+                encoding="utf-8"
+            ):
+                print("Hook already registered")
+                return
+
+        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
+            file.write(
+                """\n-   repo: local
+        hooks:
+        -   id: colrev-hooks-update
+            name: "CoLRev ReviewManager: update"
+            entry: colrev-hooks-update
+            language: python
+            stages: [commit]
+            files: 'records.bib|paper.md'"""
+            )
+        print("Added pre-commit hook for colrev sync.")
+
     def __setup_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         """Setup the sync logger"""
         # pylint: disable=duplicate-code
@@ -246,14 +276,12 @@ class Sync:
 
         local_index = colrev.env.local_index.LocalIndex()
 
-        def parse_record_str(add: str) -> dict:
+        def parse_record_str(add: str) -> list:
             # DOI: from crossref
             if add.startswith("10."):
                 returned_records = local_index.search(query=f"doi='{add}'")
             else:
                 returned_records = local_index.search(query=f"title LIKE '{add}'")
-
-            # TODO: Reference: GROBID
 
             return returned_records
 

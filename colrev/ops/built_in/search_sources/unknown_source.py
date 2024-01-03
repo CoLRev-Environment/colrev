@@ -380,7 +380,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record_dict=record_dict, entrytype_map=entrytype_map
             )
             enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
-            record_dict["ID"] = record_dict[Fields.URL].replace(
+            record_dict[Fields.ID] = record_dict[Fields.URL].replace(
                 "https://aisel.aisnet.org/", ""
             )
 

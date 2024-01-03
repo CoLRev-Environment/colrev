@@ -16,7 +16,7 @@ TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 
 def __get_year(*, item: dict) -> str:
-    year = -1
+    year = "-1"
     try:
         if "published-print" in item:
             date_parts = item["published-print"]["date-parts"]

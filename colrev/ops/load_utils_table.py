@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """Convenience functions to load tabular files (csv, xlsx)
 
-This module provides utility functions to load and preprocess data from tabular files such as CSV and Excel files.
+This module provides utility functions to load data from tabular files (e.g., CSV and Excel).
 The data is loaded using pandas and then converted into a dictionary of records.
 The records are then preprocessed to ensure they are in the correct format for the CoLRev system.
 

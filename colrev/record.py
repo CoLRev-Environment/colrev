@@ -1198,7 +1198,7 @@ class Record:
             return self.data[Fields.MD_PROV][field]["note"].split(",")
         if field in self.data[Fields.D_PROV]:
             return self.data[Fields.D_PROV][field]["note"].split(",")
-        raise KeyError
+        return []
 
     def ignore_defect(self, *, field: str, defect: str) -> None:
         """Ignore a defect for a field"""

@@ -9,16 +9,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 
 
-def test_repo_init_error(tmp_path) -> None:  # type: ignore
-    """Test repo init error (non-empty dir)"""
-    colrev.review_manager.ReviewManager.REPORT_RELATIVE.write_text(
-        "test", encoding="utf-8"
-    )
-    # colrev status/etc. should print the RepoSetupError in non-colrev repositories
-    with pytest.raises(colrev_exceptions.RepoSetupError):
-        colrev.review_manager.ReviewManager(path_str=str(tmp_path), force_mode=False)
-
-
 def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
     """Test repo init error (non-empty dir)"""
 

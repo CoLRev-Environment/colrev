@@ -2598,37 +2598,10 @@ def sync(
 ) -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
 
-    if add_hook:
-        if not Path(".git").is_dir():
-            print("Not in a git directory.")
-            return
-        if not Path("records.bib").is_file() or not Path("paper.md").is_file():
-            print("Warning: records.bib or paper.md does not exist.")
-            print("Other filenames are not (yet) supported.")
-            return
-
-        if Path(".pre-commit-config.yaml").is_file():
-            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
-                encoding="utf-8"
-            ):
-                print("Hook already registered")
-                return
-
-        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
-            file.write(
-                """\n-   repo: local
-    hooks:
-    -   id: colrev-hooks-update
-        name: "CoLRev ReviewManager: update"
-        entry: colrev-hooks-update
-        language: python
-        stages: [commit]
-        files: 'records.bib|paper.md'"""
-            )
-        print("Added pre-commit hook for colrev sync.")
-        return
-
     sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
+    if add_hook:
+        sync_operation.add_hook()
+        return
 
     if src:
         sync_operation.get_cited_papers_from_source(src=Path(src))
