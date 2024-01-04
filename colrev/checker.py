@@ -343,7 +343,9 @@ class Checker:
             pattern = "^NA$"
             pattern_inclusion = "^NA$"
         else:
-            pattern = "=(in|out);".join(screening_criteria.keys()) + "=(in|out)"
+            pattern = (
+                "=(in|out|TODO);".join(screening_criteria.keys()) + "=(in|out|TODO)"
+            )
             pattern_inclusion = "=in;".join(screening_criteria.keys()) + "=in"
             criteria = list(screening_criteria.keys())
 

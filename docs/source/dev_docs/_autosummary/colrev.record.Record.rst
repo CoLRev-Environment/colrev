@@ -71,6 +71,7 @@ colrev.record.Record
       ~Record.set_status
       ~Record.set_text_from_pdf
       ~Record.shares_origins
+      ~Record.to_screen
       ~Record.update_by_record
       ~Record.update_field
 

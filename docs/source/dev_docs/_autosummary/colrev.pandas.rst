@@ -15,4 +15,6 @@ colrev.pandas
       :toctree:
       :nosignatures:
 
+      add_from_tei
       load_df
+      save

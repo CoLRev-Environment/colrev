@@ -1721,6 +1721,20 @@ class Record:
 
         print(ret_str)
 
+    def to_screen(self) -> bool:
+        """
+        This method checks if the record is ready to be screened.
+        It returns True if the status of the record is 'pdf_prepared', otherwise it returns False.
+        """
+        if colrev.record.RecordState.pdf_prepared == self.data[Fields.STATUS]:
+            return True
+        if (
+            "screening_criteria" in self.data
+            and "TODO" in self.data["screening_criteria"]
+        ):
+            return True
+        return False
+
 
 class PrepRecord(Record):
     """The PrepRecord class provides a range of convenience functions for record preparation"""

@@ -80,6 +80,7 @@ colrev.record.PrepRecord
       ~PrepRecord.set_text_from_pdf
       ~PrepRecord.shares_origins
       ~PrepRecord.status_to_prepare
+      ~PrepRecord.to_screen
       ~PrepRecord.unify_pages_field
       ~PrepRecord.update_by_record
       ~PrepRecord.update_field

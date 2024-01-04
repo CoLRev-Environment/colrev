@@ -110,24 +110,19 @@ class Screen(colrev.operation.Operation):
         """Get the data (records to screen)"""
 
         # pylint: disable=duplicate-code
-        records_headers = self.review_manager.dataset.load_records_dict(
-            header_only=True
-        )
-        record_header_list = list(records_headers.values())
+        records = self.review_manager.dataset.load_records_dict()
+
         nr_tasks = len(
-            [
-                x
-                for x in record_header_list
-                if colrev.record.RecordState.pdf_prepared == x[Fields.STATUS]
-            ]
+            [r for r in records.values() if colrev.record.Record(data=r).to_screen()]
         )
+        items = [
+            r for r in records.values() if colrev.record.Record(data=r).to_screen()
+        ]
         pad = 0
-        if record_header_list:
-            pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 35)
-        items = self.review_manager.dataset.read_next_record(
-            conditions=[{Fields.STATUS: colrev.record.RecordState.pdf_prepared}]
-        )
+        if items:
+            pad = min((max(len(x[Fields.ID]) for x in items) + 2), 35)
         screen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
+
         # self.review_manager.logger.debug(
         #     self.review_manager.p_printer.pformat(screen_data)
         # )
@@ -300,12 +295,14 @@ class Screen(colrev.operation.Operation):
             r[Fields.ID]
             for r in records.values()
             if colrev.record.RecordState.rev_excluded == r[Fields.STATUS]
+            and not colrev.record.Record(data=r).to_screen()
             and r[Fields.ID] in selected_record_ids
         ]
         screen_included = [
             r[Fields.ID]
             for r in records.values()
             if colrev.record.RecordState.rev_included == r[Fields.STATUS]
+            and not colrev.record.Record(data=r).to_screen()
             and r[Fields.ID] in selected_record_ids
         ]
 
@@ -315,6 +312,8 @@ class Screen(colrev.operation.Operation):
         print()
         self.review_manager.logger.info("Statistics")
         for record_dict in records.values():
+            if colrev.record.Record(data=record_dict).to_screen():
+                continue
             if record_dict[Fields.ID] in screen_excluded:
                 reasons = record_dict.get(Fields.SCREENING_CRITERIA, "NA")
                 if reasons == "NA":
@@ -383,7 +382,7 @@ class Screen(colrev.operation.Operation):
         selected_auto_include_ids = [
             r[Fields.ID]
             for r in records.values()
-            if colrev.record.RecordState.pdf_prepared == r[Fields.STATUS]
+            if colrev.record.Record(data=r).to_screen()
             and r.get("include_flag", "0") == "1"
         ]
         if not selected_auto_include_ids:
@@ -465,7 +464,7 @@ class Screen(colrev.operation.Operation):
             selected_record_ids = [
                 r[Fields.ID]
                 for r in records.values()
-                if colrev.record.RecordState.pdf_prepared == r[Fields.STATUS]
+                if colrev.record.Record(data=r).to_screen()
                 and not r.get("include_flag", "0") == "1"
             ]
             if split:
