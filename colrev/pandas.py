@@ -98,6 +98,35 @@ def add_from_tei(
         records_df[Fields.KEYWORDS] = records_df.apply(extract_keywords, axis=1)
 
 
+def link_pdfs_for_data_extraction(records_df: pd.DataFrame, directory: str) -> None:
+    """
+    This function creates symlinks to the PDFs in the given directory.
+
+    Parameters:
+    records_df (pd.DataFrame): The DataFrame containing the records.
+    directory (str): The directory where the symlinks will be created.
+
+    Returns:
+    None
+    """
+    project_path = str(Path.cwd())
+    review_manager = colrev.review_manager.ReviewManager(
+        path_str=project_path, force_mode=True
+    )
+
+    directory_path = Path(directory)
+    directory_path.mkdir(parents=True, exist_ok=True)
+    for _, record in records_df.iterrows():
+        if record[Fields.STATUS] not in [colrev.record.RecordState.rev_included, colrev.record.RecordState.rev_synthesized]:
+            continue
+        if Fields.FILE in record and not pd.isnull(record[Fields.FILE]):
+            pdf_path = review_manager.path / Path(record[Fields.FILE])
+            symlink_path = Path(directory) / pdf_path.name
+            if not symlink_path.exists():
+                symlink_path.symlink_to(pdf_path)
+
+
+
 def save(records_df: pd.DataFrame) -> None:
     """
     This function saves the records from a DataFrame to a dataset.
