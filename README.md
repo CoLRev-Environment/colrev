@@ -105,4 +105,4 @@ If you contribute to the project, you agree to share your contribution following
 
 Please [cite](docs/_static/colrev_citation.bib) the project as follows:
 
-Wagner, G. and Prester, J. (2023) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Environment/colrev.
+Wagner, G. and Prester, J. (2024) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Environment/colrev.
