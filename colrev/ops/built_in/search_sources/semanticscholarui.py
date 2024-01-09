@@ -1,6 +1,7 @@
 import inquirer
+import re
 
-
+#TO DO: Add alphanumeric validation for Ids and Alpha-Validation for names and titles!
 class Semanticscholar_ui:
 
     """Implements the User Interface for the SemanticScholar API Search within colrev"""
@@ -91,10 +92,6 @@ class Semanticscholar_ui:
             ):
                 morePapers = False
 
-        # asking for specific fields not implemented: Import question!!
-
-        print("\nDoing magic...")
-
     def author_ui(self) -> None:
         """Ask user to enter search parameters for distinctive author search"""
 
@@ -144,17 +141,13 @@ class Semanticscholar_ui:
             if fwd == "NO":
                 moreAuthors = False
 
-        # asking for specific fields not implemented: Import question!!
-
-        print("\nDoing magic...")
-
     def keyword_ui(self) -> None:
         """Ask user to enter Searchstring and limitations for Keyword search"""
 
         query = self.enter_text(msg="Please enter the Query for your Keyword search ")
         self.searchParams["query"] = query
 
-        year = self.enter_year(retry=False)
+        year = self.enter_year()
         if year:
             self.searchParams["year"] = year
 
@@ -169,8 +162,8 @@ class Semanticscholar_ui:
             self.searchParams["venue"] = venue.split(",")
 
         fields_of_study = self.enter_text(
-            msg="Please enter the fields of study for your Keyword search. Separate multiple study fields by comma."
-            + "You can press Enter if you don't wish to specify any study fields "
+            msg="Please enter fields of study. Separate multiple study fields by comma."
+            + "Please pressn Enter if you don't wish to specify any study fields "
         )
         if fields_of_study:
             self.searchParams["fields_of_study"] = fields_of_study.split(",")
@@ -188,100 +181,61 @@ class Semanticscholar_ui:
             msg="How many search results should the query include? Please enter a number between 1 and 1000 "
         )
         self.searchParams["limit"] = limit.format(int)
+        #ADD REGEX VALIDATION HERE!!! 
 
-        # asking for specific fields not implemented: Import question!!
-
-        print("\nDoing magic...")
-
-    def get_api_key(self, *, retry: bool) -> str:
+    def get_api_key(self) -> str:
         """Method to get API key from user input"""
 
         ask_again = True
 
-        if retry:
-            print("Your entered API key is not valid.")
-            fwd = self.choose_single_option(
-                msg="Would you like to enter a different API key?",
-                options=["Enter different key", "Continue without key"],
-            )
+        api_key = self.enter_text(
+            msg="Please enter a valid API key for SemanticScholar here. If you don't have a key, please press Enter."
+        )
 
-            if fwd == "Continue without key":
-                while ask_again:
-                    ask_again = False
-                    print(
-                        "WARNING: Searching without an API key might not be successfull. \n"
-                    )
-                    fwd = self.choose_single_option(
-                        msg="Would you like to continue?", options=["YES", "NO"]
-                    )
-
-                    if fwd == "NO":
-                        api_key = self.enter_text(msg="Please enter an API key ")
-                        if not api_key:
-                            ask_again = True
-                    else:
-                        api_key = None
-
-            else:
-                api_key = self.enter_text(msg="Please enter an API key ")
-
-                if not api_key:
-                    while ask_again:
-                        ask_again = False
-                        print(
-                            "WARNING: Searching without an API key might not be successfull. \n"
-                        )
-                        fwd = self.choose_single_option(
-                            msg="Would you like to continue?", options=["YES", "NO"]
-                        )
-
-                        if fwd == "NO":
-                            api_key = self.enter_text(msg="Please enter an API key ")
-                            if not api_key:
-                                ask_again = True
-                        else:
-                            api_key = None
-
-        else:
-            api_key = self.enter_text(
-                msg="Please enter a valid API key for SemanticScholar here. If you don't have a key, please press Enter."
-            )
+        while ask_again:
+            ask_again = False
 
             if not api_key:
-                while ask_again:
-                    ask_again = False
-                    print(
-                        "WARNING: Searching without an API key might not be successfull. \n"
-                    )
-                    fwd = self.choose_single_option(
-                        msg="Would you like to continue?", options=["YES", "NO"]
-                    )
+                print(
+                    "WARNING: Searching without an API key might not be successfull. \n"
+                )
+                fwd = self.choose_single_option(
+                    msg="Would you like to continue?", options=["YES", "NO"]
+                )
 
-                    if fwd == "NO":
-                        api_key = self.enter_text(msg="Please enter an API key ")
-                        if not api_key:
-                            ask_again = True
-                    else:
-                        api_key = None
+                if fwd == "NO":
+                    api_key = self.enter_text(msg="Please enter an API key ")
+                    ask_again = True
+                else:
+                    api_key = None
+            
+            elif not re.match("^\w{40}$", api_key):
+                print("Error: Invalid API key.\n")
+                fwd = self.choose_single_option(
+                    msg="Would you like to enter a different key?", options=["YES", "NO"])
+                
+                if fwd == "YES":
+                    api_key = self.enter_text(msg="Please enter an API key ")
+                    ask_again = True
+                else:
+                    api_key = None
 
         return api_key
 
-    def enter_year(
-        self,
-        *,
-        retry: bool,
-    ) -> str:
+    def enter_year(self) -> str:
         """Method to ask a specific yearspan in the format allowed by the SemanticScholar API"""
 
-        if retry:
-            print("The yearspan you entered seems not to be valid. \n")
-
-        examples = "Here are some examples for valid yearspans: '2019'; '2012-2020'; '-2022'; '2015-'"
+        examples = "Examples for valid yearspans: '2019'; '2012-2020'; '-2022'; '2015-'"
         yearspan = self.enter_text(
-            msg="Please enter a yearspan for the publications in your results. "
-            + examples
-            + " You can press Enter if you don't want to specify a yearspan"
+            msg="Please enter a yearspan.\n"
+            + "Please press Enter if you don't wish to specify a yearspan"
         )
+        while not re.match("|".join(["^-?\d{4}$", "^\d{4}-?$", "^\d{4}-\d{4}"]), yearspan):
+            print("Error: Invalid yearspan.\n" + examples + "\n")
+            yearspan = self.enter_text(
+            msg="Please enter a yearspan.\n"
+            + "Please press Enter if you don't wish to specify a yearspan"
+            )
 
         return yearspan
 
@@ -352,7 +306,7 @@ class Semanticscholar_ui:
         *,
         msg: str,
     ) -> str:
-        """Method to display a question with free text entry answer to the console using inquirer"""
+        """Method to display a question with free text entry answer to the console using inquirer."""
 
         question = [
             inquirer.Text(
@@ -364,15 +318,13 @@ class Semanticscholar_ui:
 
         return choice.get("Entry")
 
-if __name__ == "__main__":
-    # test
-    test = Semanticscholar_ui()
-    test.main_ui()
-    api_test = test.get_api_key(retry=False)
-    if api_test == "0":
-        api_test = test.get_api_key(retry=True)
 
-    print("\nSearch Subject: ", test.searchSubject)
-    for key, value in test.searchParams.items():
-        print("Search parameter: ", key, ":", value)
-    print("\nAPI key: ", api_test)
+# test
+test = Semanticscholar_ui()
+test.main_ui()
+api_test = test.get_api_key()
+
+print("\nSearch Subject: ", test.searchSubject)
+for key, value in test.searchParams.items():
+    print("Search parameter: ", key, ":", value)
+print("\nAPI key: ", api_test)
