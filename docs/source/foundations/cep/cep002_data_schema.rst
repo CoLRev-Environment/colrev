@@ -208,7 +208,7 @@ Upon load, the SearchSource fields are mapped to the standardized fields.
 This is necessary to handle naming conflicts (e.g., field name "authors" in one SearchSource and "author" in another), and type/domain conflicts (e.g., "citations" containing an integer in one SearchSoruce and a list of citing papers in another).
 Fields which cannot be mapped receive a SearchSource-specific prefix (e.g., "colrev.dblp.dblp_key").
 
-TBD: should prefixed versions be stored in the feeds?
+The schema mapping should be completed in the search methods. Search feeds should contain raw (non-prefixed) fields.
 
 .. _defect codes:
 

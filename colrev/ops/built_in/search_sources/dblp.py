@@ -43,7 +43,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     __START_YEAR = 1980
 
     # TODO : standardize?! should the search-feed already contain namespaced fields?!
-    source_identifier = Fields.DBLP_KEY
+    source_identifier = "dblp_key"
     search_types = [
         colrev.settings.SearchType.API,
         colrev.settings.SearchType.MD,
@@ -261,7 +261,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 item[Fields.AUTHOR] = author_string
 
         if "key" in item:
-            item[Fields.DBLP_KEY] = "https://dblp.org/rec/" + item["key"]
+            item["dblp_key"] = "https://dblp.org/rec/" + item["key"]
 
         if Fields.DOI in item:
             item[Fields.DOI] = item[Fields.DOI].upper()
@@ -336,7 +336,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 if Fields.PAGES in retrieved_record.data:
                     del retrieved_record.data[Fields.PAGES]
                 retrieved_record.add_provenance_all(
-                    source=retrieved_record.data[Fields.DBLP_KEY]
+                    source=retrieved_record.data["dblp_key"]
                 )
 
         # pylint: disable=duplicate-code
@@ -675,7 +675,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             ):
                 if Fields.DBLP_KEY in record.data:
                     if (
-                        retrieved_record.data[Fields.DBLP_KEY]
+                        retrieved_record.data["dblp_key"]
                         != record.data[Fields.DBLP_KEY]
                     ):
                         continue
@@ -701,6 +701,12 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                     dblp_feed.set_id(record_dict=retrieved_record.data)
                     dblp_feed.add_record(record=retrieved_record)
+
+                    # TODO : extract as function (apply similarly in other search sources)
+                    # Assign schema
+                    retrieved_record.data[Fields.DBLP_KEY] = retrieved_record.data.pop(
+                        "dblp_key"
+                    )
 
                     record.merge(
                         merging_record=retrieved_record,
