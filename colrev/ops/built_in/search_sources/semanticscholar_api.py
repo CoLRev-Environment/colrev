@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests as requests
-import colrev.ops.built_in.search_sources.semanticscholarui
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -20,11 +19,12 @@ import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+import colrev.ops.built_in.search_sources.semanticscholarui
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors
-from colrev.constants import Fields
+
 # install zope package
 # install package dacite
 
@@ -65,12 +65,19 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
 
+    SETTINGS = {
+        "api_key": "packages.search_source.colrev.semanticscholar.api_key",
+    }
+
     short_name = "S2"
     __s2_md_filename = Path("data/search/md_S2.bib")
 
     __availability_exception_message = f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})"
 
-    __s2_UI__ = colrev.ops.built_in.search_sources.semanticscholarui.Semanticscholar_ui()
+    __s2_UI__ = (
+        colrev.ops.built_in.search_sources.semanticscholarui.Semanticscholar_ui()
+    )
+
     def __init__(
         self,
         *,
@@ -205,8 +212,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             records = self.review_manager.dataset.load_records_dict()
 
             # get the search parameters from the user
-
-            self.__get_s2_parameters(rerun=rerun)
+            # self.__get_s2_parameters(rerun=rerun)
             search_subject = self.__s2_UI__.searchSubject
             params = self.__s2_UI__.searchParams
 
@@ -250,7 +256,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Crossref"""
+        """Source heuristic for Semantic Scholar"""
         result = {"confidence": 0.0}
         return result
 
@@ -261,17 +267,16 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
-        cls.__s2_UI__.main_ui()
+
         # get search parameters from the user interface
+        cls.__s2_UI__.main_ui()
         params = cls.__s2_UI__.searchParams
 
         if len(params) == 0:
             add_source = operation.add_api_source(endpoint=cls.endpoint)
             return add_source
 
-        filename = operation.get_unique_filename(
-            file_path_string=f"semanticscholar_"
-        )
+        filename = operation.get_unique_filename(file_path_string="semanticscholar_")
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
             filename=filename,
