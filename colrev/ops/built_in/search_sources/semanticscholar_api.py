@@ -215,15 +215,15 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 match search_subject:
                     case "keyword":
                         __search_return__ = self.keyword_search(
-                            params=dict_param["params"], rerun=rerun
+                            params=params, rerun=rerun
                         )
                     case "paper":
                         __search_return__ = self.paper_search(
-                            params=dict_param["params"], rerun=rerun
+                            params=params, rerun=rerun
                         )
                     case "author":
                         __search_return__ = self.author_search(
-                            params=dict_param["params"], rerun=rerun
+                            params=params["params"], rerun=rerun
                         )
                     case _:
                         self.review_manager.logger.info(
@@ -261,34 +261,26 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
+        cls.__s2_UI__.main_ui()
+        # get search parameters from the user interface
+        params = cls.__s2_UI__.searchParams
 
         if len(params) == 0:
             add_source = operation.add_api_source(endpoint=cls.endpoint)
             return add_source
 
-        if Fields.URL in params:
-            query = (
-                params[Fields.URL]
-                .replace(
-                    "https://api.semanticscholar.org/graph/v1/paper/search?/query=", ""
-                )
-                .replace("&from_ui=yes", "")
-                .lstrip("+")
-            )
-
         filename = operation.get_unique_filename(
-            file_path_string=f"semanticscholar_{query}"
+            file_path_string=f"semanticscholar_"
         )
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
             filename=filename,
             search_type=colrev.settings.SearchType.API,
-            search_parameters={"query": query},
+            search_parameters=params,
             comment="",
         )
         return add_source
 
-    # raise NotImplementedError
 
 if __name__ == "__main__":
     test = SemanticScholarSearchSource
