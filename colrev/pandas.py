@@ -117,14 +117,16 @@ def link_pdfs_for_data_extraction(records_df: pd.DataFrame, directory: str) -> N
     directory_path = Path(directory)
     directory_path.mkdir(parents=True, exist_ok=True)
     for _, record in records_df.iterrows():
-        if record[Fields.STATUS] not in [colrev.record.RecordState.rev_included, colrev.record.RecordState.rev_synthesized]:
+        if record[Fields.STATUS] not in [
+            colrev.record.RecordState.rev_included,
+            colrev.record.RecordState.rev_synthesized,
+        ]:
             continue
         if Fields.FILE in record and not pd.isnull(record[Fields.FILE]):
             pdf_path = review_manager.path / Path(record[Fields.FILE])
             symlink_path = Path(directory) / pdf_path.name
             if not symlink_path.exists():
                 symlink_path.symlink_to(pdf_path)
-
 
 
 def save(records_df: pd.DataFrame) -> None:
