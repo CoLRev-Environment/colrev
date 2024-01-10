@@ -159,7 +159,7 @@ class Semanticscholar_ui:
                 paramValue = self.enter_text(
                     msg="Please enter the author ID in the right format "
                 )
-                while not self.id_validation_with_regex(id=paramValue, regex="^\w+§") and (not validationBreak):
+                while not paramValue.isalnum() and (not validationBreak):
                         paramValue = self.enter_text(
                             msg="Error: Invalid S2AuthorId format. Please try again or press Enter."
                         )
