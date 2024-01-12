@@ -136,5 +136,13 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         record.remove_field(key="colrev.web_of_science.researcherid-numbers")
         record.remove_field(key="colrev.web_of_science.orcid-numbers")
+        record.remove_field(key="colrev.web_of_science.book-group-author")
+        record.remove_field(key="colrev.web_of_science.note")
+        record.remove_field(key="colrev.web_of_science.organization")
+        record.remove_field(key="colrev.web_of_science.eissn")
+        record.remove_field(key="colrev.web_of_science.earlyaccessdate")
+
+        record.remove_field(key="colrev.web_of_science.meeting")
+        record.remove_field(key="colrev.web_of_science.article-number")
 
         return record
