@@ -47,7 +47,7 @@ def test_dedupe(  # type: ignore
     )
 
     dedupe_operation.merge_records(
-        merge="30_example_records.bib/Staehr2010;30_example_records.bib/Staehr2010a"
+        merge="30_example_records.bib/Staehr2010,30_example_records.bib/Staehr2010a"
     )
     dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
     dedupe_test_setup.create_commit(
