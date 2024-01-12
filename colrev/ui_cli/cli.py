@@ -971,9 +971,6 @@ def dedupe(
         return
 
     if merge:
-        review_manager.settings.dedupe.same_source_merges = (
-            colrev.settings.SameSourceMergePolicy.warn
-        )
         dedupe_operation.merge_records(merge=merge)
         return
 

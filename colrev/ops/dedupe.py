@@ -426,7 +426,8 @@ class Dedupe(colrev.operation.Operation):
         - complete_dedupe: when not all potential duplicates were considered,
         we cannot set records to md_procssed for non-duplicate decisions
         """
-        # TODO : the apply_merges and other utility functions should refer to the current IDs (not the origins)
+        # TODO : the apply_merges and other utility functions
+        # should refer to the current IDs (not the origins)
 
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
@@ -650,10 +651,8 @@ class Dedupe(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         origin_sets = [
-            o
-            for r in records.values()
-            for o in r[Fields.ORIGIN]
-            if r[Fields.ID] in false_negatives
+            [o for rid in dupe_id_set for o in records[rid][Fields.ORIGIN]]
+            for dupe_id_set in false_negatives
         ]
 
         self.unmerge_records(previous_id_lists=false_positives)
@@ -704,8 +703,12 @@ class Dedupe(colrev.operation.Operation):
         """Merge two records by ID sets ID_1,ID_2"""
 
         assert "," in merge
+        self.review_manager.settings.dedupe.same_source_merges = (
+            colrev.settings.SameSourceMergePolicy.apply
+        )
+        self.policy = colrev.settings.SameSourceMergePolicy.apply
 
-        self.fix_errors(false_negatives=[merge.split(",")])
+        self.fix_errors(false_negatives=[i.split(",") for i in merge.split(";")])
 
     def merge_based_on_global_ids(self, *, apply: bool = False) -> None:
         """Merge records based on global IDs (e.g., doi)"""
