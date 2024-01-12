@@ -134,9 +134,9 @@ class StatusStats:
             )
 
         origin_list = [x[Fields.ORIGIN] for x in self.records.values()]
-        self.record_links = 0
+        self.nr_origins = 0
         for origin in origin_list:
-            self.record_links += len([o for o in origin if not o.startswith("md_")])
+            self.nr_origins += len([o for o in origin if not o.startswith("md_")])
 
         criteria = list(review_manager.settings.screen.criteria.keys())
         self.screening_statistics = {crit: 0 for crit in criteria}
@@ -161,7 +161,9 @@ class StatusStats:
             + self.currently.md_prepared
         )
 
-        self.currently.md_retrieved = self.overall.md_retrieved - self.record_links
+        self.currently.md_retrieved = max(
+            self.overall.md_retrieved - self.nr_origins, 0
+        )
 
         self.completeness_condition = (
             (0 == self.nr_incomplete)
