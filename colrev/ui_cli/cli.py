@@ -1151,7 +1151,7 @@ def prescreen(
         prescreen_operation.include_records(ids=include)
 
     elif exclude:
-        prescreen_operation.exclude_records(ids=include)
+        prescreen_operation.exclude_records(ids=exclude)
 
     elif setup_custom_script:
         prescreen_operation.setup_custom_script()
