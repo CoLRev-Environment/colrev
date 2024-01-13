@@ -1053,7 +1053,7 @@ def dedupe(
 @click.option(
     "--import_table",
     type=click.Path(exists=True),
-    help="Import file with the screening decisions (csv supported)",
+    help="Import file with the screening decisions (csv/xlsx supported)",
 )
 @click.option(
     "--create_split",
