@@ -444,7 +444,7 @@ class Semanticscholar_ui:
                 return True
         
         return False
-    
+
 #test
     
 if __name__ == "__main__":
