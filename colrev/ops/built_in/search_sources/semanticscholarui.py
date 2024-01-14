@@ -446,17 +446,19 @@ class Semanticscholar_ui:
         return False
     
 #test
+    
+if __name__ == "__main__":
 
-test = Semanticscholar_ui()
-test.main_ui()
+    test = Semanticscholar_ui()
+    test.main_ui()
 
-if test.searchParams:
+    if test.searchParams:
 
-    api_test = test.get_api_key()
+        api_test = test.get_api_key()
 
-    print("\nSearch will be conducted with following parameters:\n")
-    print("\nSearch Subject: ", test.searchSubject)
-    for key, value in test.searchParams.items():
-        print("Search parameter: ", key, ":", value)
-    print("\nAPI key: ", api_test)
+        print("\nSearch will be conducted with following parameters:\n")
+        print("\nSearch Subject: ", test.searchSubject)
+        for key, value in test.searchParams.items():
+            print("Search parameter: ", key, ":", value)
+        print("\nAPI key: ", api_test)
 
