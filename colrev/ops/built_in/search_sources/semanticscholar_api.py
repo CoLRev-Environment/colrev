@@ -78,9 +78,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     __availability_exception_message = f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})"
 
-    __s2_UI__ = (
-        colrev.ops.built_in.search_sources.semanticscholarui.Semanticscholar_ui()
-    )
+    __s2_UI__ = Semanticscholar_ui()
+    __s2_filename = Path("data/search/md_semscholar.bib")
 
     def __init__(
         self,
@@ -97,7 +96,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.semanticscholar",
-                filename=self.__S2_md_filename,
+                filename=self.__s2_filename,
                 search_type=colrev.settings.SearchType.API,
                 search_parameters={},
                 comment="",
