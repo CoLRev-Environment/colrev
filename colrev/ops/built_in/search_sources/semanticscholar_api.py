@@ -18,11 +18,14 @@ from semanticscholar.PaginatedResults import PaginatedResults
 
 import colrev.env.language_service
 import colrev.env.package_manager
+import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.ops.built_in.search_sources.semanticscholarui
+from colrev.ops.built_in.search_sources.semanticscholarui import Semanticscholar_ui
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
+import colrev.ops.load
+import colrev.ops.load_utils_bib
 import colrev.settings
 from colrev.constants import Colors, Fields
 
@@ -47,7 +50,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     """Semantic Scholar API"""
 
     # Provide objects with classes
-    s2: SemanticScholar
+    __s2__: SemanticScholar
     __search_return__: PaginatedResults
 
     __limit = 100
@@ -198,9 +201,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         # get the api key
         s2_api_key = self.__get_api_key()
         if s2_api_key:
-            self.s2 = self.__s2__(api_key=s2_api_key)
+            self.__s2__ = SemanticScholar(api_key=s2_api_key)
         else:
-            self.s2 = self.__s2__()
+            self.__s2__ = SemanticScholar()
 
         # validate source
 
@@ -255,9 +258,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                         )
 
                     retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-                    self.__prep_crossref_record(
+                    """ self.__prep_crossref_record(
                         record=retrieved_record, prep_main_record=False
-                    )
+                    )"""
 
                     added = s2_feed.add_record(record=retrieved_record)
 
@@ -275,11 +278,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                         )
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                    if (
-                        not added
-                        and not rerun
-                        and not self.__potentially_overlapping_issn_search()
-                    ):
+                    if not added:
                         # problem: some publishers don't necessarily
                         # deposit papers chronologically
                         self.review_manager.logger.debug("Break condition")
@@ -332,68 +331,30 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             save_feed: bool = True,
             timeout: int = 30,
     ) -> colrev.record.Record:
-        """Retrieve master data from Crossref based on similarity with the record provided"""
-        print(1)
-        # To test the metadata provided for a particular DOI use:
-        # https://api.crossref.org/works/DOI
+        """Out of scope"""
+        pass
 
-        # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-        if (
-                len(record.data.get(Fields.TITLE, "")) < 35
-                and Fields.DOI not in record.data
-        ):
-            return record
-
-        if Fields.DOI in record.data:
-            record = self.__check_doi_masterdata(record=record)
-
-        record = self.__get_masterdata_record(
-            prep_operation=prep_operation,
-            record=record,
-            timeout=timeout,
-            save_feed=save_feed,
-        )
-
-        return record
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Semantic Scholar"""
-        print(2)
         result = {"confidence": 0.0}
         return result
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        print(3)
         if self.search_source.filename.suffix == ".bib":
             records = colrev.ops.load_utils_bib.load_bib_file(
                 load_operation=load_operation, source=self.search_source
             )
             return records
 
-        raise NotImplementedError
-
     # Aktuell noch von crossref - muss noch verändert werden
     def prepare(
             self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.PrepRecord:
         """Source-specific preparation for Crossref"""
-        print(4)
-        source_item = [
-            x
-            for x in record.data[Fields.ORIGIN]
-            if str(source.filename).replace("data/search/", "") in x
-        ]
-        if source_item:
-            record.set_masterdata_complete(
-                source=source_item[0],
-                masterdata_repository=self.review_manager.settings.is_curated_repo(),
-            )
-
-        record.fix_name_particles()
-
-        return record
+        pass
 
 
 if __name__ == "__main__":
