@@ -249,16 +249,6 @@ class Semanticscholar_ui:
         else:
             self.searchParams["open_access_pdf"] = False
 
-        limit = self.enter_text(
-            msg="How many search results should the query include? Please enter a number between 1 and 1000 "
-        )
-        while not self.limit_validation(limit):
-            limit = self.enter_text(
-                msg="Error: Invalid input. Please enter a number between 1 and 1000 "
-            )
-        
-        self.searchParams["limit"] = int(limit)
-
     def get_api_key(self) -> str:
         """Method to get API key from user input"""
 
@@ -432,31 +422,20 @@ class Semanticscholar_ui:
         
         return False
         
-    def limit_validation(
-            self,
-            inputString: str,
-    ) -> bool:
-        """Method to validate that the user input is a number between 1 and 1000"""
-
-        if inputString.isnumeric():
-            x = int(inputString)
-            if 1 <= x <= 1000:
-                return True
-        
-        return False
-    
 #test
+    
+if __name__ == "__main__":
 
-test = Semanticscholar_ui()
-test.main_ui()
+    test = Semanticscholar_ui()
+    test.main_ui()
 
-if test.searchParams:
+    if test.searchParams:
 
-    api_test = test.get_api_key()
+        api_test = test.get_api_key()
 
-    print("\nSearch will be conducted with following parameters:\n")
-    print("\nSearch Subject: ", test.searchSubject)
-    for key, value in test.searchParams.items():
-        print("Search parameter: ", key, ":", value)
-    print("\nAPI key: ", api_test)
+        print("\nSearch will be conducted with following parameters:\n")
+        print("\nSearch Subject: ", test.searchSubject)
+        for key, value in test.searchParams.items():
+            print("Search parameter: ", key, ":", value)
+        print("\nAPI key: ", api_test)
 

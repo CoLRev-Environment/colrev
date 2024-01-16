@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing
+from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -23,7 +24,7 @@ import colrev.ops.built_in.search_sources.semanticscholarui
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 import colrev.settings
-from colrev.constants import Colors
+from colrev.constants import Colors, Fields
 
 # install zope package
 # install package dacite
@@ -45,32 +46,32 @@ if TYPE_CHECKING:
 class SemanticScholarSearchSource(JsonSchemaMixin):
     """Semantic Scholar API"""
 
+    # Provide objects with classes
     s2: SemanticScholar
+    __search_return__: PaginatedResults
 
-    __api_url = "https://api.semanticscholar.org/graph/v1/paper/search?"
     __limit = 100
     __offset = 0
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    __api_url = "https://api.semanticscholar.org/graph/v1/paper/search?"
+
     endpoint = "colrev.semanticscholar"
-
-    search_types = [
-        colrev.settings.SearchType.API,
-    ]
-
     ci_supported: bool = True
 
+    # SearchSourcePackageEndpointInterface constants
     docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/blob/main/"
-        + "colrev/ops/built_in/search_sources/semanticscholar.md"
+            "https://github.com/CoLRev-Environment/colrev/tree/main/"
+            + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
+    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    search_types = [colrev.settings.SearchType.API]
+    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    short_name = "S2"
+    source_identifier = Fields.DOI
 
     SETTINGS = {
         "api_key": "packages.search_source.colrev.semanticscholar.api_key",
     }
-
-    short_name = "S2"
-    __s2_md_filename = Path("data/search/md_S2.bib")
 
     __availability_exception_message = f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})"
 
@@ -114,7 +115,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         venue = None
         fields_of_study = None
         open_access_pdf = None
-        limit = None
 
         for key, value in params.items():
             match key:
@@ -130,9 +130,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     fields_of_study = value
                 case "open_access_pdf":
                     open_access_pdf = value
-                case "limit":
-                    if not value == "":
-                        limit = int(value)
 
         record_return = self.__s2__.search_paper(
             query=query,
@@ -141,8 +138,19 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             venue=venue,
             fields_of_study=fields_of_study,
             open_access_pdf=open_access_pdf,
-            limit=limit,
         )
+
+        self.review_manager.logger.info(
+            '\n'
+            + record_return.total
+            + ', have been found.'
+        )
+
+        if record_return.total > self.__limit:
+            self.review_manager.logger.info(
+                '\nYou will only receive the first 100 not sorted results.'
+            )
+
         return record_return
 
     def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
@@ -212,53 +220,84 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             records = self.review_manager.dataset.load_records_dict()
 
             # get the search parameters from the user
-            # self.__get_s2_parameters(rerun=rerun)
             search_subject = self.__s2_UI__.searchSubject
             params = self.__s2_UI__.searchParams
 
-            try:
-                # Open Semantic Scholar depending on the search subject  and look for search parameters
-                match search_subject:
-                    case "keyword":
-                        __search_return__ = self.keyword_search(
-                            params=params, rerun=rerun
+            # Get Semantic Scholar API depending on the search subject and look for search parameters
+            match search_subject:
+                case "keyword":
+                    __search_return__ = self.keyword_search(
+                        params=params, rerun=rerun
+                    )
+                case "paper":
+                    __search_return__ = self.paper_search(
+                        params=params, rerun=rerun
+                    )
+                case "author":
+                    __search_return__ = self.author_search(
+                        params=params["params"], rerun=rerun
+                    )
+                case _:
+                    self.review_manager.logger.info(
+                        "No search parameters were found."
+                    )
+
+            for item in __search_return__:
+                try:
+                    retrieved_record_dict = connector_utils.json_to_record(
+                        item=item
+                    )
+                    s2_feed.set_id(record_dict=retrieved_record_dict)
+                    prev_record_dict_version = {}
+                    if retrieved_record_dict[Fields.ID] in s2_feed.feed_records:
+                        prev_record_dict_version = deepcopy(
+                            s2_feed.feed_records[retrieved_record_dict[Fields.ID]]
                         )
-                    case "paper":
-                        __search_return__ = self.paper_search(
-                            params=params, rerun=rerun
-                        )
-                    case "author":
-                        __search_return__ = self.author_search(
-                            params=params["params"], rerun=rerun
-                        )
-                    case _:
+
+                    retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                    self.__prep_crossref_record(
+                        record=retrieved_record, prep_main_record=False
+                    )
+
+                    added = s2_feed.add_record(record=retrieved_record)
+
+                    if added:
                         self.review_manager.logger.info(
-                            "No search parameters were found."
+                            " retrieve " + retrieved_record.data[Fields.DOI]
+                        )
+                    else:
+                        s2_feed.update_existing_record(
+                            records=records,
+                            record_dict=retrieved_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
                         )
 
-                for item in __search_return__:
-                    try:
-                        retrieved_record_dict = connector_utils.json_to_record(
-                            item=item
-                        )
-                        continue
-                    except:
-                        raise
-            except:
-                raise
+                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                    if (
+                        not added
+                        and not rerun
+                        and not self.__potentially_overlapping_issn_search()
+                    ):
+                        # problem: some publishers don't necessarily
+                        # deposit papers chronologically
+                        self.review_manager.logger.debug("Break condition")
+                        break
+                except (
+                    colrev_exceptions.RecordNotParsableException,
+                    colrev_exceptions.NotFeedIdentifiableException,
+                ):
+                    pass
+        except KeyError as exc:
+            print(exc)
+            # KeyError  # error in semanticscholar package:
+            # if len(result['message']['items']) == 0:
+            # KeyError: 'items'
 
-            self.review_manager.dataset.save_records_dict(records=records)
-        # pip install requests
-        except requests.exceptions.RequestException as exc:
-            raise colrev_exceptions.ServiceNotAvailableException(
-                self.__availability_exception_message
-            ) from exc
-
-    @classmethod
-    def heuristic(cls, filename: Path, data: str) -> dict:
-        """Source heuristic for Semantic Scholar"""
-        result = {"confidence": 0.0}
-        return result
+        s2_feed.print_post_run_search_infos(records=records)
+        s2_feed.save_feed_file()
+        self.review_manager.dataset.save_records_dict(records=records)
 
     @classmethod
     def add_endpoint(
@@ -270,13 +309,12 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get search parameters from the user interface
         cls.__s2_UI__.main_ui()
-        params = cls.__s2_UI__.searchParams
+        search_params = cls.__s2_UI__.searchParams
 
-        if len(params) == 0:
-            add_source = operation.add_api_source(endpoint=cls.endpoint)
-            return add_source
+        filename = operation.get_unique_filename(
+            file_path_string=f"semanticscholar_{search_params}",
+        )
 
-        filename = operation.get_unique_filename(file_path_string="semanticscholar_")
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
             filename=filename,
@@ -285,6 +323,77 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             comment="",
         )
         return add_source
+
+    # Aktuell noch von crossref - muss noch verändert werden
+    def get_masterdata(
+            self,
+            prep_operation: colrev.ops.prep.Prep,
+            record: colrev.record.Record,
+            save_feed: bool = True,
+            timeout: int = 30,
+    ) -> colrev.record.Record:
+        """Retrieve master data from Crossref based on similarity with the record provided"""
+        print(1)
+        # To test the metadata provided for a particular DOI use:
+        # https://api.crossref.org/works/DOI
+
+        # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
+        if (
+                len(record.data.get(Fields.TITLE, "")) < 35
+                and Fields.DOI not in record.data
+        ):
+            return record
+
+        if Fields.DOI in record.data:
+            record = self.__check_doi_masterdata(record=record)
+
+        record = self.__get_masterdata_record(
+            prep_operation=prep_operation,
+            record=record,
+            timeout=timeout,
+            save_feed=save_feed,
+        )
+
+        return record
+
+    @classmethod
+    def heuristic(cls, filename: Path, data: str) -> dict:
+        """Source heuristic for Semantic Scholar"""
+        print(2)
+        result = {"confidence": 0.0}
+        return result
+
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+        print(3)
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
+
+    # Aktuell noch von crossref - muss noch verändert werden
+    def prepare(
+            self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+    ) -> colrev.record.PrepRecord:
+        """Source-specific preparation for Crossref"""
+        print(4)
+        source_item = [
+            x
+            for x in record.data[Fields.ORIGIN]
+            if str(source.filename).replace("data/search/", "") in x
+        ]
+        if source_item:
+            record.set_masterdata_complete(
+                source=source_item[0],
+                masterdata_repository=self.review_manager.settings.is_curated_repo(),
+            )
+
+        record.fix_name_particles()
+
+        return record
 
 
 if __name__ == "__main__":
