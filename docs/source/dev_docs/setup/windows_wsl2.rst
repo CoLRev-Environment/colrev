@@ -1,7 +1,7 @@
 Windows 10/11: WSL2
 ===================================================
 
-On Windows 10/11, CoLRev can be installed through the Windows Subsystem for Linux 2 (WSL2) with Ubuntu 22.04.3 LTS (`setup with “The one line install!” <https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#3-download-ubuntu>`__).
+On Windows 10/11, CoLRev can be installed through the Windows Subsystem for Linux 2 (WSL2) with Ubuntu 22.04.
 
 Check availability of virtualization capabilities in Task Manager:
 
@@ -11,7 +11,7 @@ Check availability of virtualization capabilities in Task Manager:
 
   Performance tab shows if "Virtualization" is activated
 
-Install WSL2 via PowerShell:
+Install WSL2 and Ubuntu 22.04 via PowerShell:
 
 ::
 
@@ -43,3 +43,5 @@ Restart your machine and and launch Ubuntu:
 Now install Docker as a prerequisite to run CoLRev following the official install guide: `Docker Desktop WSL 2 backend on Windows <https://docs.docker.com/desktop/wsl>`__.
 
 Afterwards, follow the steps in :doc:`"Setup part 2: Git and SSH" </dev_docs/setup/part_2_git_ssh>`.
+
+Further guides and tutorials how to setup and configure WSL2 can be found directly in the `official Ubuntu WSL documentation at Canonical. <https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/>`__
