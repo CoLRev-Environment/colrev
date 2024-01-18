@@ -18,7 +18,7 @@ Install WSL2 via PowerShell:
   Press "WIN + X", in the menu click on "Windows PowerShell(Administrator)"
 
   Enter the following command:
-  wsl --install -d ubuntu-22.04
+  wsl --install -d Ubuntu-22.04
 
 Restart your machine and and launch Ubuntu:
 
