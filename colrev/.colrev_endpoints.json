@@ -103,6 +103,9 @@
             },
             {"package_endpoint_identifier": "colrev.prescreen_table",
              "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen"
+            },
+            {"package_endpoint_identifier": "colrev.ml_prescreen",
+            "endpoint": "colrev.ops.built_in.prescreen.ml_prescreen.MlPrescreen"
             }
         ],
         "pdf_get": [

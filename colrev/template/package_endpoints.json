@@ -698,6 +698,14 @@
             "ci_supported": true
         },
         {
+            "package_endpoint_identifier": "colrev.ml_prescreen",
+            "endpoint": "colrev.ops.built_in.prescreen.ml_prescreen.MlPrescreen",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "ML prescreen",
+            "ci_supported": false
+        },
+        {
             "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
             "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen",
             "status": "|MATURING|",
