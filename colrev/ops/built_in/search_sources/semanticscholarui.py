@@ -200,66 +200,17 @@ class Semanticscholar_ui:
             if fwd == "NO":
                 moreAuthors = False
 
-    def keyword_ui(self) -> None:
-        """Ask user to enter Searchstring and limitations for Keyword search"""
-
-        query = self.enter_text(msg="Please enter the query for your keyword search ")
-        while not isinstance(query, str):
-            query = self.enter_text(msg="Error: You must enter a query to conduct a search. Please enter a query")
-            
-        self.searchParams["query"] = query
-
-        year = self.enter_year()
-        if year:
-            self.searchParams["year"] = year
-
-        publication_types = self.enter_pub_types()
-        if publication_types:
-            self.searchParams["publication_types"] = publication_types
-
-        venue = self.enter_text(
-            msg="Please enter venues. Separate multiple venues by comma. Do not use whitespaces." 
-            + " Please press Enter if you don't wish to specify any venues "
-        )
-        while venue:
-            if not self.alnum_and_comma_validation(venue):
-                venue = self.enter_text(
-                    msg="Error: Invalid format. Please try again or press Enter. Separate multiple inputs by comma."
-                )
-            else:
-                self.searchParams["venue"] = venue.split(",")
-                break
-
-        fields_of_study = self.enter_text(
-            msg="Please enter fields of study. Separate multiple study fields by comma. Do not use whitespaces."
-            + " Please press Enter if you don't wish to specify any study fields "
-        )
-        while fields_of_study:
-            if not self.alnum_and_comma_validation(fields_of_study):
-                fields_of_study = self.enter_text(
-                    msg="Error: Invalid format. Please try again or press Enter. Separate multiple inputs by comma."
-                )
-            else:
-                self.searchParams["fields_of_study"] = fields_of_study.split(",")
-                break
-
-        open_access = self.choose_single_option(
-            msg="If available, would you like to include a direct link to the respective pdf file of each paper?",
-            options=["YES", "NO"],
-        )
-        if open_access == "YES":
-            self.searchParams["open_access_pdf"] = True
-        else:
-            self.searchParams["open_access_pdf"] = False
-
-    def get_api_key(self) -> str:
+    def get_api_key(self, existing_key = None) -> str:
         """Method to get API key from user input"""
 
         ask_again = True
 
-        api_key = self.enter_text(
-            msg="Please enter a valid API key for SemanticScholar. If you don't have a key, please press Enter."
-        )
+        if existing_key:
+            api_key = existing_key
+        else:
+            api_key = self.enter_text(
+                msg="Please enter a valid API key for SemanticScholar. If you don't have a key, please press Enter."
+            )
 
         while ask_again:
             ask_again = False
@@ -276,18 +227,80 @@ class Semanticscholar_ui:
                     api_key = self.enter_text(msg="Please enter an API key ")
                     ask_again = True
                 else:
-                    api_key = None
-            
+                    return None
+
             elif not re.match("^\w{40}$", api_key):
                 print("Error: Invalid API key.\n")
                 fwd = self.choose_single_option(
                     msg="Would you like to enter a different key?", options=["YES", "NO"])
-                
+
                 if fwd == "YES":
                     api_key = self.enter_text(msg="Please enter an API key ")
                     ask_again = True
                 else:
-                    api_key = None
+                    return None
+
+            else:
+                print("API key: "+api_key+"\n")
+                fwd = self.choose_single_option(
+                    msg="Start search with this API key?", options=["YES", "NO"]
+                    )
+
+                if fwd == "NO":
+                    api_key = self.enter_text(msg="Please enter a different API key ")
+                    ask_again = True
+
+        return api_key
+
+    def get_api_key(self, existing_key = None) -> str:
+        """Method to get API key from user input"""
+
+        ask_again = True
+
+        if existing_key:
+            api_key = existing_key
+        else:
+            api_key = self.enter_text(
+                msg="Please enter a valid API key for SemanticScholar. If you don't have a key, please press Enter."
+            )
+
+        while ask_again:
+            ask_again = False
+
+            if not api_key:
+                print(
+                    "WARNING: Searching without an API key might not be successful. \n"
+                )
+                fwd = self.choose_single_option(
+                    msg="Would you like to continue?", options=["YES", "NO"]
+                )
+
+                if fwd == "NO":
+                    api_key = self.enter_text(msg="Please enter an API key ")
+                    ask_again = True
+                else:
+                    return None
+
+            elif not re.match("^\w{40}$", api_key):
+                print("Error: Invalid API key.\n")
+                fwd = self.choose_single_option(
+                    msg="Would you like to enter a different key?", options=["YES", "NO"])
+
+                if fwd == "YES":
+                    api_key = self.enter_text(msg="Please enter an API key ")
+                    ask_again = True
+                else:
+                    return None
+
+            else:
+                print("API key: "+api_key+"\n")
+                fwd = self.choose_single_option(
+                    msg="Start search with this API key?", options=["YES", "NO"]
+                    )
+
+                if fwd == "NO":
+                    api_key = self.enter_text(msg="Please enter a different API key ")
+                    ask_again = True
 
         return api_key
 
