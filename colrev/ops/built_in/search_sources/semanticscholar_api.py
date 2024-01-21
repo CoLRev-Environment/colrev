@@ -9,7 +9,6 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import requests as requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -119,19 +118,18 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         open_access_pdf = None
 
         for key, value in params.items():
-            match key:
-                case "query":
-                    query = value
-                case "year":
-                    year = value
-                case "publication_types":
-                    publication_types = value
-                case "venue":
-                    venue = value
-                case "fields_of_study":
-                    fields_of_study = value
-                case "open_access_pdf":
-                    open_access_pdf = value
+            if key == "query":
+                query = value
+            elif key == "year":
+                year = value
+            elif key == "publication_types":
+                publication_types = value
+            elif key == "venue":
+                venue = value
+            elif key == "fields_of_study":
+                fields_of_study = value
+            elif key == "open_access_pdf":
+                open_access_pdf = value
 
         record_return = self.__s2__.search_paper(
             query=query,
@@ -226,23 +224,22 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             params = self.__s2_UI__.searchParams
 
             # Get Semantic Scholar API depending on the search subject and look for search parameters
-            match search_subject:
-                case "keyword":
-                    __search_return__ = self.keyword_search(
-                        params=params, rerun=rerun
-                    )
-                case "paper":
-                    __search_return__ = self.paper_search(
-                        params=params, rerun=rerun
-                    )
-                case "author":
-                    __search_return__ = self.author_search(
-                        params=params["params"], rerun=rerun
-                    )
-                case _:
-                    self.review_manager.logger.info(
-                        "No search parameters were found."
-                    )
+            if search_subject == "keyword":
+                __search_return__ = self.keyword_search(
+                    params=params, rerun=rerun
+                )
+            elif search_subject == "paper":
+                __search_return__ = self.paper_search(
+                    params=params, rerun=rerun
+                )
+            elif search_subject == "author":
+                __search_return__ = self.author_search(
+                    params=params["params"], rerun=rerun
+                )
+            else:
+                self.review_manager.logger.info(
+                    "No search parameters were found."
+                )
 
             for item in __search_return__:
                 try:
