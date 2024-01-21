@@ -203,7 +203,10 @@ class Semanticscholar_ui:
     def keyword_ui(self) -> None:
         """Ask user to enter Searchstring and limitations for Keyword search"""
 
-        query = self.enter_text(msg="Please enter the Query for your Keyword search ")
+        query = self.enter_text(msg="Please enter the query for your keyword search ")
+        while not isinstance(query, str):
+            query = self.enter_text(msg="Error: You must enter a query to conduct a search. Please enter a query")
+            
         self.searchParams["query"] = query
 
         year = self.enter_year()
