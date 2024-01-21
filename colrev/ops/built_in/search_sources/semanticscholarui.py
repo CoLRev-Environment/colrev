@@ -293,7 +293,7 @@ class Semanticscholar_ui:
                     return None
 
             else:
-                print("API key: "+api_key+"\n")
+                print("\n"+"API key: "+api_key+"\n")
                 fwd = self.choose_single_option(
                     msg="Start search with this API key?", options=["YES", "NO"]
                     )
