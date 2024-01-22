@@ -2,6 +2,7 @@
 """Connector for pandas"""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -24,6 +25,8 @@ def load_df(
     if project_path == "":
         project_path = str(Path.cwd())
 
+    os.chdir(project_path)
+
     if add_abstracts_from_pdfs:
         raise NotImplementedError
 
@@ -33,9 +36,7 @@ def load_df(
     if notify != "":
         raise NotImplementedError
 
-    review_manager = colrev.review_manager.ReviewManager(
-        path_str=project_path, force_mode=True
-    )
+    review_manager = colrev.review_manager.ReviewManager(path_str=project_path)
     colrev.operation.CheckOperation(review_manager=review_manager)
     records = review_manager.dataset.load_records_dict()
     df = pd.DataFrame.from_dict(records, orient="index")
