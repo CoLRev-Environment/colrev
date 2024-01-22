@@ -48,7 +48,19 @@ class Dedupe(JsonSchemaMixin):
         """Run default dedupe"""
 
         records = self.review_manager.dataset.load_records_dict()
+
         records_df = pd.DataFrame.from_dict(records, orient="index")
+
+        records_df = records_df[
+            ~(
+                records_df[Fields.STATUS].isin(
+                    [
+                        "md_imported",
+                        "md_needs_manual_preparation",
+                    ]
+                )
+            )
+        ]
 
         records_df.loc[
             records_df[Fields.STATUS].isin(
