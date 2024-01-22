@@ -1066,9 +1066,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 """retrieved_record_dict = connector_utils.json_to_record(
                     item=item
                 )"""
-                print(44)
+                #print(44) as test
                 retrieved_record_dict = self.prep_records(item=item)
-                print(45)
+                #print(45) as test
 
                 s2_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
