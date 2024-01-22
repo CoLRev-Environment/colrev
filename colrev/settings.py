@@ -692,9 +692,16 @@ class Settings(JsonSchemaMixin):
         return schema
 
 
+def __add_missing_attributes(loaded_dict: dict) -> None:
+    # TODO : replace dict with defaults if values are missing (to avoid exceptions)
+    if "defects_to_ignore" not in loaded_dict["pdf_get"]:
+        loaded_dict["pdf_get"]["defects_to_ignore"] = []
+
+
 def __load_settings_from_dict(*, loaded_dict: dict) -> Settings:
     try:
         converters = {Path: Path, Enum: Enum}
+        __add_missing_attributes(loaded_dict)
         settings = from_dict(
             data_class=Settings,
             data=loaded_dict,
