@@ -269,7 +269,7 @@ class Semanticscholar_ui:
 
             if not api_key:
                 print(
-                    "WARNING: Searching without an API key might not be successful. \n"
+                    "\nWARNING: Searching without an API key might not be successful. \n"
                 )
                 fwd = self.choose_single_option(
                     msg="Would you like to continue?", options=["YES", "NO"]
