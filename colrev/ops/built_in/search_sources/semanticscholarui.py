@@ -244,7 +244,7 @@ class Semanticscholar_ui:
                 break
 
         open_access = self.choose_single_option(
-            msg="If available, would you like to include a direct link to the respective pdf file of each paper?",
+            msg="Would you like to only search for items for which the full text is available as pdf?",
             options=["YES", "NO"],
         )
         if open_access == "YES":
