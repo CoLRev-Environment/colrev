@@ -65,6 +65,6 @@ So far, the `rerun` functionality, which enables the user to conduct a completel
 
 ## Links
 - [SemanticScholar](https://www.semanticscholar.org)
-- [SemanticScholarAPI] (https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)
-- [SemanticScholarAPIDocumentation] (https://api.semanticscholar.org/api-docs/)
-- [SemanticScholarPythonClient] (https://github.com/danielnsilva/semanticscholar)
+- [SemanticScholarAPI](https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)
+- [SemanticScholarAPIDocumentation](https://api.semanticscholar.org/api-docs/)
+- [SemanticScholarPythonClient](https://github.com/danielnsilva/semanticscholar)
