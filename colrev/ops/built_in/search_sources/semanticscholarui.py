@@ -64,7 +64,7 @@ class Semanticscholar_ui:
                     msg="Please enter the chosen ID in the right format "
                 )
                 if param == "S2PaperId":
-                    while not paramValue.isalnum() and (not validationBreak):
+                    while not self.id_validation_with_regex(id=paramValue, regex=r"^[a-zA-Z0-9]+$") and (not validationBreak):
                         paramValue = self.enter_text(
                             msg="Error: Invalid S2PaperId format. Please try again or press Enter."
                         )
@@ -72,7 +72,7 @@ class Semanticscholar_ui:
                             validationBreak = True
                 
                 elif param == "DOI":
-                    while not self.id_validation_with_regex(id=paramValue, regex="^10\..+$") and (not validationBreak):
+                    while not self.id_validation_with_regex(id=paramValue, regex=r"^10\..+$") and (not validationBreak):
                         paramValue = self.enter_text(
                             msg="Error: Invalid DOI format. Please try again or press Enter."
                         )
@@ -80,7 +80,7 @@ class Semanticscholar_ui:
                             validationBreak = True
                 
                 elif param == "ArXivId":
-                    while not self.id_validation_with_regex(id=paramValue, regex="^\d+\.\d+$") and (not validationBreak):
+                    while not self.id_validation_with_regex(id=paramValue, regex=r"^\d+\.\d+$") and (not validationBreak):
                         paramValue = self.enter_text(
                             msg="Error: Invalid ArXivId format. Please try again or press Enter."
                         )
@@ -88,7 +88,7 @@ class Semanticscholar_ui:
                             validationBreak = True
 
                 elif param == "ACL":
-                    while not self.id_validation_with_regex(id=paramValue, regex="^\w+-\w+$") and (not validationBreak):
+                    while not self.id_validation_with_regex(id=paramValue, regex=r"^\w+-\w+$") and (not validationBreak):
                         paramValue = self.enter_text(
                             msg="Error: Invalid ACL ID format. Please try again or press Enter."
                         )
@@ -96,7 +96,7 @@ class Semanticscholar_ui:
                             validationBreak = True
 
                 else:
-                    while not paramValue.isnumeric() and (not validationBreak):
+                    while not self.id_validation_with_regex(id=paramValue, regex=r"^[0-9]+$") and (not validationBreak):
                         paramValue = self.enter_text(
                             msg="Error: Invalid ID format. Please try again or press Enter."
                         )
@@ -281,7 +281,7 @@ class Semanticscholar_ui:
                 else:
                     return None
 
-            elif not re.match("^\w{40}$", api_key):
+            elif not re.match(r"^\w{40}$", api_key):
                 print("Error: Invalid API key.\n")
                 fwd = self.choose_single_option(
                     msg="Would you like to enter a different key?", options=["YES", "NO"])
@@ -314,14 +314,14 @@ class Semanticscholar_ui:
         )
         while yearspan and ask_again:
             ask_again = False
-            if not re.match("|".join(["^-\d{4}$", "^\d{4}-?$", "^\d{4}-\d{4}"]), yearspan):
+            if not re.match("|".join([r"^-\d{4}$", r"^\d{4}-?$", r"^\d{4}-\d{4}"]), yearspan):
                 print("Error: Invalid yearspan.\n" + examples + "\n")
                 yearspan = self.enter_text(
                     msg="Please enter a yearspan."
                         + " Please press Enter if you don't wish to specify a yearspan"
                 )
                 ask_again = True
-            elif re.match("^\d{4}-\d{4}", yearspan):
+            elif re.match(r"^\d{4}-\d{4}", yearspan):
                 years = yearspan.split("-")
                 a = int(years[0])
                 b = int(years[1])
@@ -418,7 +418,7 @@ class Semanticscholar_ui:
             self,
             *,
             id: str,
-            regex: str,
+            regex: re,
     ) -> bool:
         """Method to validate ID formats using a regex as an argument"""
 
@@ -433,7 +433,7 @@ class Semanticscholar_ui:
     ) -> bool:
         """Method to validate an input consisting of words devided by comma. Used for comma separated lists."""
 
-        if re.match("^\w+$|^(\w+,\w+)+$", inputString):
+        if re.match(r"^\w+$|^(\w+,\w+)+$", inputString):
             return True
         
         return False
