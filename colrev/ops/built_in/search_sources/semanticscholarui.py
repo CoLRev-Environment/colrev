@@ -203,7 +203,10 @@ class Semanticscholar_ui:
     def keyword_ui(self) -> None:
         """Ask user to enter Searchstring and limitations for Keyword search"""
 
-        query = self.enter_text(msg="Please enter the Query for your Keyword search ")
+        query = self.enter_text(msg="Please enter the query for your keyword search ")
+        while not isinstance(query, str):
+            query = self.enter_text(msg="Error: You must enter a query to conduct a search. Please enter a query")
+            
         self.searchParams["query"] = query
 
         year = self.enter_year()
@@ -249,14 +252,17 @@ class Semanticscholar_ui:
         else:
             self.searchParams["open_access_pdf"] = False
 
-    def get_api_key(self) -> str:
+    def get_api_key(self, existing_key = None) -> str:
         """Method to get API key from user input"""
 
         ask_again = True
 
-        api_key = self.enter_text(
-            msg="Please enter a valid API key for SemanticScholar. If you don't have a key, please press Enter."
-        )
+        if existing_key:
+            api_key = existing_key
+        else:
+            api_key = self.enter_text(
+                msg="Please enter a valid API key for SemanticScholar. If you don't have a key, please press Enter."
+            )
 
         while ask_again:
             ask_again = False
@@ -273,21 +279,31 @@ class Semanticscholar_ui:
                     api_key = self.enter_text(msg="Please enter an API key ")
                     ask_again = True
                 else:
-                    api_key = None
-            
+                    return None
+
             elif not re.match("^\w{40}$", api_key):
                 print("Error: Invalid API key.\n")
                 fwd = self.choose_single_option(
                     msg="Would you like to enter a different key?", options=["YES", "NO"])
-                
+
                 if fwd == "YES":
                     api_key = self.enter_text(msg="Please enter an API key ")
                     ask_again = True
                 else:
-                    api_key = None
+                    return None
+
+            else:
+                print("\n"+"API key: "+api_key+"\n")
+                fwd = self.choose_single_option(
+                    msg="Start search with this API key?", options=["YES", "NO"]
+                    )
+
+                if fwd == "NO":
+                    api_key = self.enter_text(msg="Please enter a different API key ")
+                    ask_again = True
 
         return api_key
-
+    
     def enter_year(self) -> str:
         """Method to ask a specific yearspan in the format allowed by the SemanticScholar API"""
 
