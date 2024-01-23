@@ -2,19 +2,28 @@
 
 from __future__ import annotations
 
-import html
-import re
 
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
 from colrev.constants import ENTRYTYPES
-from colrev.constants import FieldValues
 
-#pylint: disable=duplicate-code
+
+# pylint: disable=duplicate-code
+
+
+def __get_authors(*, record: dict) -> str:
+    authors_list = []
+    for author in record.get("authors"):
+        a_string = ""
+        if "name" in author:
+            a_string += author["name"]
+            authors_list.append(a_string)
+    return " and ".join(authors_list)
+
 
 def __convert_entry_types(*, entrytype: str) -> ENTRYTYPES:
     """Method to convert semanticscholar entry types to colrev entry types"""
-    
+
     if entrytype == "JournalArticle":
         return ENTRYTYPES.ARTICLE
     elif entrytype == "Book":
@@ -23,13 +32,15 @@ def __convert_entry_types(*, entrytype: str) -> ENTRYTYPES:
         return ENTRYTYPES.INBOOK
     elif entrytype == "CaseReport":
         return ENTRYTYPES.TECHREPORT
+    elif entrytype == "conference":
+        return ENTRYTYPES.INPROCEEDINGS
     else:
         return ENTRYTYPES.MISC
 
 
 def __item_to_record(*, item) -> dict:
     """Method to convert the different fields and information within item to record dictionary"""
-    
+
     record_dict = dict(item)
     is_book = False
 
@@ -45,59 +56,107 @@ def __item_to_record(*, item) -> dict:
 
     record_dict[Fields.URL] = record_dict.get("url")
 
-    record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
+    record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationVenue")
 
-    if isinstance(record_dict[Fields.ENTRYTYPE], list):
+    if record_dict[Fields.ENTRYTYPE] is not None \
+            and record_dict[Fields.ENTRYTYPE] != "None":
         if len(record_dict[Fields.ENTRYTYPE]) > 0:
-            record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE][0]
-        else:
-            record_dict[Fields.ENTRYTYPE] = "n/a"
-    assert isinstance(record_dict.get("ENTRYTYPE", ""), str)
+            record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE]["type"].lower()
+            record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
+            assert isinstance(record_dict.get("ENTRYTYPE", ""), str)
 
-    record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
+            record_dict[Fields.ISSN] = record_dict[Fields.ENTRYTYPE]["issn"]
 
-    record_dict[Fields.ABSTRACT] = record_dict.get("abstract")
+    if record_dict[Fields.ENTRYTYPE] is None \
+            or record_dict[Fields.ENTRYTYPE] == "" \
+            or record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS:
+        record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
+
+        if isinstance(record_dict[Fields.ENTRYTYPE], list):
+            if len(record_dict[Fields.ENTRYTYPE]) > 0:
+                record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE][0].lower()
+            else:
+                record_dict[Fields.ENTRYTYPE] = "n/a"
+        assert isinstance(record_dict.get("ENTRYTYPE", ""), str)
+
+        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
+
     record_dict[Fields.TITLE] = record_dict.get("title")
-    # record_dict[Fields.YEAR] = record_dict.get("year")
-    # record_dict[Fields.JOURNAL] = record_dict.get("venue")
+    record_dict[Fields.AUTHOR] = __get_authors(record=record_dict)
+    record_dict[Fields.ABSTRACT] = record_dict.get("abstract")
+    record_dict[Fields.YEAR] = record_dict.get("year")
+    record_dict[Fields.JOURNAL] = record_dict.get("venue")
+
+    record_dict[Fields.BOOKTITLE] = record_dict.get("publicationTypes")
+    if record_dict[Fields.BOOKTITLE] is not None:
+        for typ in record_dict[Fields.BOOKTITLE]:
+            if typ == "Book":
+                is_book = True
+
+    if is_book:
+        record_dict[Fields.BOOKTITLE] = record_dict.get("journal").get("name")
+    else:
+        record_dict[Fields.BOOKTITLE] = "n/a"
+
+    record_dict[Fields.PAGES] = record_dict.get("publicationDate")
+    if record_dict[Fields.PAGES] is not None:
+        record_dict[Fields.PAGES] = record_dict[Fields.PAGES].__getitem__("journal")
+        if record_dict[Fields.PAGES] is not None:
+            record_dict[Fields.PAGES] = record_dict[Fields.PAGES].get("pages")
+            record_dict[Fields.VOLUME] = record_dict[Fields.PAGES].get("volumen")
+
     record_dict[Fields.CITED_BY] = record_dict.get("citationCount")
 
-    # TO DO: Keep implementing further fields!!
+    record_dict[Fields.FULLTEXT] = record_dict.get("openAccessPdf")
+    if isinstance(record_dict[Fields.FULLTEXT], dict):
+        if len(record_dict[Fields.FULLTEXT]) > 0:
+            record_dict[Fields.FULLTEXT] = record_dict[Fields.FULLTEXT].get("url")
+        else:
+            record_dict[Fields.FULLTEXT] = "n/a"
+    assert isinstance(record_dict.get("FULLTEXT", ""), str)
 
-"""
-ID	paperId
-ENTRYTYPE	publicationTypes  first appearance
-DOI	'externalIds'  ‘DOI
-URL	url
-ISSN	'publicationVenue'  issn
-ABSTRACT	'abstract'
-CITED_BY	'citationCount'
-TITLE		'title'
-AUTHOR	'authors' but get_author
-YEAR	'year'
-JOURNAL	'venue'
-BOOKTITLE	'journal'  name – mit flag isBook?
-FULLTEXT	'openAccessPdf'  'url'
-VOLUME	'publicationDate'  'volume'
-PAGES	'publicationDate' 'pages'
-"""
+    return record_dict
 
-def __remove_fields(*, record: dict) -> None:
+
+def __remove_fields(*, record: dict) -> dict:
     """Method to remove unsupported fields from semanticscholar record"""
+    supported_fields = [
+        Fields.ID,
+        Fields.DOI,
+        Fields.URL,
+        Fields.ENTRYTYPE,
+        Fields.ISSN,
+        Fields.JOURNAL,
+        Fields.BOOKTITLE,
+        Fields.VOLUME,
+        Fields.PAGES,
+        Fields.TITLE,
+        Fields.AUTHOR,
+        Fields.YEAR,
+        Fields.CITED_BY,
+        Fields.ABSTRACT,
+        Fields.FULLTEXT,
+    ]
+
+    record_dict = {
+        k: v for k, v in record.items() if k in supported_fields and v != ""
+    }
+
+    return record_dict
+
 
 def s2_dict_to_record(*, item: dict) -> dict:
     """Convert a semanticscholar item to a record dict"""
 
     try:
         record_dict = __item_to_record(item=item)
-        __remove_fields(record=record_dict)
-        #TO DO: Implement further functions, especially "remove fields": Use colrev/colrev/ops/built_in/search_sources/utils.py as inspiration!
-    
+        record_dict = __remove_fields(record=record_dict)
+        # TO DO: Implement further functions, especially "remove fields":
+        # Use colrev/colrev/ops/built_in/search_sources/utils.py as inspiration!
+
     except (IndexError, KeyError) as exc:
         raise colrev_exceptions.RecordNotParsableException(
             f"Exception: Record not parsable: {exc}"
         ) from exc
-    
+
     return record_dict
-
-
