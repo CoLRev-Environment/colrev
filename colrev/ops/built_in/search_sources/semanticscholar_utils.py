@@ -1,4 +1,3 @@
-
 """Utility to transform items from semanticscholar into records"""
 
 from __future__ import annotations
@@ -32,6 +31,7 @@ def __item_to_record(*, item) -> dict:
     """Method to convert the different fields and information within item to record dictionary"""
     
     record_dict = dict(item)
+    is_book = False
 
     record_dict[Fields.ID] = record_dict.get("paperId")
     record_dict[Fields.DOI] = record_dict.get("externalIds")
@@ -42,6 +42,8 @@ def __item_to_record(*, item) -> dict:
         else:
             record_dict[Fields.DOI] = "n/a"
     assert isinstance(record_dict.get("doi", ""), str)
+
+    record_dict[Fields.URL] = record_dict.get("url")
 
     record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
 
@@ -54,10 +56,31 @@ def __item_to_record(*, item) -> dict:
 
     record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
 
+    record_dict[Fields.ABSTRACT] = record_dict.get("abstract")
+    record_dict[Fields.TITLE] = record_dict.get("title")
+    # record_dict[Fields.YEAR] = record_dict.get("year")
+    # record_dict[Fields.JOURNAL] = record_dict.get("venue")
+    record_dict[Fields.CITED_BY] = record_dict.get("citationCount")
+
     # TO DO: Keep implementing further fields!!
 
-    
-    
+"""
+ID	paperId
+ENTRYTYPE	publicationTypes  first appearance
+DOI	'externalIds'  ‘DOI
+URL	url
+ISSN	'publicationVenue'  issn
+ABSTRACT	'abstract'
+CITED_BY	'citationCount'
+TITLE		'title'
+AUTHOR	'authors' but get_author
+YEAR	'year'
+JOURNAL	'venue'
+BOOKTITLE	'journal'  name – mit flag isBook?
+FULLTEXT	'openAccessPdf'  'url'
+VOLUME	'publicationDate'  'volume'
+PAGES	'publicationDate' 'pages'
+"""
 
 def __remove_fields(*, record: dict) -> None:
     """Method to remove unsupported fields from semanticscholar record"""
@@ -76,3 +99,5 @@ def s2_dict_to_record(*, item: dict) -> dict:
         ) from exc
     
     return record_dict
+
+
