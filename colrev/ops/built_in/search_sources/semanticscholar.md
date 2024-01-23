@@ -9,6 +9,7 @@ So far, only API search is implemented. Other search types such as MD search or 
 ### API search
 
 The code for the API search is located in `colrev/ops/built_in/search_sources/semanticscholar_api.py`.
+
 The API search is launched with the following command:
 
 ```
@@ -44,11 +45,11 @@ While it is not necessary to enter an API key to conduct a search in SemanticSch
 
 #### API search: Forming the url and running the search
 
-A dictionary containing the entered search parameters is saved as the `search_params`-attribute of the UI object that is defined in the search source class. Accessing this dictionary, the different parameters are now distingushed and passed on to the SemanticScholar client software (link below). The client then implements these parameters into a query url. By calling the url, the client accesses the SemanticScholar API and downloads the results from the website. These results are then passed back to the search source class as a dictionary, containing objects of the SemanticScholar-specific `Paper` type.
+A dictionary containing the entered search parameters is saved as the `search_params` attribute of the UI object that is defined in the search source class. Accessing this dictionary, the different parameters are now distingushed and passed on to the SemanticScholar client software (link below). The client then implements these parameters into a query url. By calling the url, the client accesses the SemanticScholar API and downloads the results from the website. These results are then passed back to the search source class as a dictionary, containing objects of the SemanticScholar-specific `Paper` type.
 
 #### API search: Transforming the search results to standardized colrev resultfile
 
-Via iteration, each item of the result dictionary is modified to satisfy the colrev resultfile standard established in the `colrev/constants.py` module. Items are transformed into dictionaries and the contained information is allocated to the respective colrev `Fields`, which serve as keys in the newly formed dictionary. 
+Via iteration, each item of the result dictionary is modified to satisfy the colrev resultfile standard established in the `colrev/constants.py` module. Items are transformed into dictionaries and the contained information is allocated to the respective colrev `Fields`, which serve as keys in the newly formed dictionary. After completing the allocation, all key-value pairs whose keys are not colrev fields, are deleted to complete the transformation.
 
 Please note that, unfortunately, the format of SemanticScholar outputs does not produce sufficiently clear information to fill in every colrev field. Disparities, e.g. in the definition of publication types (== "ENTRYTYPES" in colrev), may lead to ambigous information about a paper, its type or its venue. To prevent misinformation, papers will be marked as `miscellaneaous`, if the publication type is not determinable. Other fields, especially regarding books, such as `EDITOR`, `EDITION` or `ADDRESS` are not supported at all by SemanticScholar and thus cannot be filled in. 
 
@@ -60,7 +61,7 @@ TO BE IMPLEMENTED
 
 #### API search: Not yet supported features
 
-So far, the `rerun` functionality, which enables the user to conduct a completely new run of an already conducted query, has been out of scope. In the future, it will be implemented. 
+So far, the `rerun` functionality, which enables the user to conduct a completely new run of an already conducted query, has been out of scope. It will be implemented in the future. 
 
 ## Links
 [SemanticScholar](https://www.semanticscholar.org)
