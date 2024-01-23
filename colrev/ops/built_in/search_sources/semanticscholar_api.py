@@ -1060,12 +1060,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             # KeyError  # error in semanticscholar package:
             # if len(result['message']['items']) == 0:
             # KeyError: 'items'
-        i = 1
+        
+        # TO DO: implement conversion into record
+        """
         for item in __search_return__:
             try:
-                """retrieved_record_dict = connector_utils.json_to_record(
+                retrieved_record_dict = connector_utils.json_to_record(
                     item=item
-                )"""
+                )
                 #print(44) as test
                 retrieved_record_dict = self.prep_records(item=item)
                 #print(45) as test
@@ -1084,13 +1086,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     colrev_exceptions.NotFeedIdentifiableException,
             ):
                 pass
+        """
 
 
-        print(retrieved_record)
-        """print(str(i) + ": " + item.title + "\n")
-            i += 1"""
-
-        print(1)
+        print(__search_return__[0])
 
     @classmethod
     def __add_toc_interactively(
