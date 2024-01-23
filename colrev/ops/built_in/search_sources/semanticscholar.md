@@ -20,7 +20,7 @@ Upon entering the command above with no additional parameters, a console interfa
 
 #### API search: Interface
 
-The code for interface is located in `colrev/ops/built_in/search_sources/semanticscholarui.py`. 
+The code for the interface is located in `colrev/ops/built_in/search_sources/semanticscholarui.py`. 
 
 In the main menu, the user can decide whether they want to search for a single paper or author, or conduct a full keyword search. Authors can be searched for by their name or via their distinct SemanticScholar-ID, which the user is asked to enter into the console. Papers can be searched for by their title or a specific ID - SemanticScholarID, DOI, ArXiv etc. 
 
@@ -64,8 +64,7 @@ TO BE IMPLEMENTED
 So far, the `rerun` functionality, which enables the user to conduct a completely new run of an already conducted query, has been out of scope. It will be implemented in the future. 
 
 ## Links
-[SemanticScholar](https://www.semanticscholar.org)
-[License]
-[SemanticScholarAPI] (https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)
-[SemanticScholarAPIDocumentation] (https://api.semanticscholar.org/api-docs/)
-[SemanticScholarPythonClient] (https://github.com/danielnsilva/semanticscholar)
+- [SemanticScholar](https://www.semanticscholar.org)
+- [SemanticScholarAPI] (https://www.semanticscholar.org/product/api/tutorial#searching-and-retrieving-paper-details)
+- [SemanticScholarAPIDocumentation] (https://api.semanticscholar.org/api-docs/)
+- [SemanticScholarPythonClient] (https://github.com/danielnsilva/semanticscholar)
