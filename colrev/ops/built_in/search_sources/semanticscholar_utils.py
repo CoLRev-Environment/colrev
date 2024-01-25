@@ -70,7 +70,7 @@ def __item_to_record(*, item) -> dict:
 
                     if key == "type": # and value == "conference":
                         record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=value.lower().replace(" ", ""))
-                        
+
     if record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS:
         record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
 

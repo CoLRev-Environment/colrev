@@ -7,7 +7,6 @@ import re
 import typing
 import urllib
 from copy import deepcopy
-from curses.ascii import isalnum
 from dataclasses import dataclass
 from importlib.metadata import version
 from multiprocessing import Lock
