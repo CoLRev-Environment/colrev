@@ -7,7 +7,6 @@ import re
 import typing
 import urllib
 from copy import deepcopy
-from curses.ascii import isalnum
 from dataclasses import dataclass
 from importlib.metadata import version
 from multiprocessing import Lock
@@ -983,15 +982,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         crossref_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
 
-    # prep hier
-    def prep_records(self,
-                     *,
-                     item: dict) -> dict:
-        new_dict = dict(item)
-        new_dict[Fields.ID] = new_dict["paperId"]
-        del new_dict["paperId"]
-        return new_dict
-
     def __get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
@@ -1031,9 +1021,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
+        records = self.review_manager.dataset.load_records_dict()
         try:
-            records = self.review_manager.dataset.load_records_dict()
-
             # get the search parameters from the user
             search_subject = self.__s2_UI__.searchSubject
             params = self.__s2_UI__.searchParams
@@ -1058,21 +1047,12 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         except KeyError as exc:
             print(exc)
             # KeyError  # error in semanticscholar package:
-            # if len(result['message']['items']) == 0:
-            # KeyError: 'items'
-        
-        # TO DO: implement conversion into record
+
         for item in __search_return__:
             try:
-                print("\nTest1: " + str(item) + "\n")
-
                 retrieved_record_dict = connector_utils.s2_dict_to_record(
                     item=item
                 )
-                print("\nTest2: " + str(retrieved_record_dict) + "\n")
-                #print(44) as test
-                retrieved_record_dict = self.prep_records(item=item)
-                #print(45) as test
 
                 s2_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
@@ -1083,14 +1063,30 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
+                added = s2_feed.add_record(record=retrieved_record)
+
+                if added:
+                    self.review_manager.logger.info(
+                        " retrieve " + retrieved_record.data[Fields.DOI]
+                    )
+                else:
+                    s2_feed.update_existing_record(
+                        records=records,
+                        record_dict=retrieved_record.data,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                        update_time_variant_fields=rerun,
+                    )
+
             except (
                     colrev_exceptions.RecordNotParsableException,
                     colrev_exceptions.NotFeedIdentifiableException,
             ):
                 pass
 
-
-        print(__search_return__[0])
+        s2_feed.print_post_run_search_infos(records=records)
+        s2_feed.save_feed_file()
+        self.review_manager.dataset.save_records_dict(records=records)
 
     @classmethod
     def __add_toc_interactively(
@@ -1144,7 +1140,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             endpoint="colrev.semanticscholar",
             filename=filename,
             search_type=colrev.settings.SearchType.API,
-            search_parameters=params,
+            search_parameters=search_params,
             comment="",
         )
         return add_source
