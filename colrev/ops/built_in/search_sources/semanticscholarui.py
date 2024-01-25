@@ -32,7 +32,7 @@ class Semanticscholar_ui:
 
         if not self.searchParams:
             print("\n Search cancelled. The program will close.\n")
-
+ 
     def paper_ui(self) -> None:
         """Ask user to enter search parameters for distinctive paper search"""
 
@@ -438,7 +438,7 @@ class Semanticscholar_ui:
         
         return False
         
-#test
+# ------------------------- UNIT TEST -------------------------
     
 if __name__ == "__main__":
 

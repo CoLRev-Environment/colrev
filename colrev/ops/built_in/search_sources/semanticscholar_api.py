@@ -875,7 +875,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         for key, value in params.items():
-            if key == "paper_ids":
+            if key == ("paper_id" or "paper_ids"):
                 record_return = self.__s2__.get_papers(value)
             elif key == "query":
                 record_return = self.__s2__.search_paper(value)
@@ -889,7 +889,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         for key, value in params.items():
-            if key == "author_ids":
+            if key == ("author_id" or "author_ids"):
                 record_return = self.__s2__.get_authors(value)
             elif key == "queryList":
                 record_return = self.__s2__.search_author(value)
