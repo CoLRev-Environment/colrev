@@ -28,14 +28,14 @@ If the user opted for a full keyword search, they are asked to enter a series of
 
 For all search parameters except the query, the user can press the `enter` key to leave them blank. The query then will not restrict the search in the respective parameters, resulting in an increasingly broad search and more returned papers. 
 
-When asked about the different publication types, the user can select one or multiple values by navigating the list with `uparrow` and `downarrow` and selecting and unselecting with `rightarrow`. Pressing `enter` will confirm the choice.
+When asked about the fields of study and the publication types, the user can select one or multiple values by navigating the list with `uparrow` and `downarrow` and selecting and unselecting with `rightarrow`. Pressing `enter` will confirm the choice.
 
 Please note that some user entries require a specific format and will be validated by the UI. If the format is not satisfied, the user will be asked to make a different entry. Here are some examples:
 
 ```
 S2Ids (Paper or author) --> A String of alphanumeric characters
 yearspan                --> Specific format, e.g.: "2020", "2020-" (from 2020 until this year), "-2020", "2020-2023"
-venues and studyfields  --> Multiple entries in csv format possible, e.g.: "Venue A,Venue B,Venue C"
+venues  --> Multiple entries in csv format possible, e.g.: "Venue A,Venue B,Venue C"
 API key                 --> A String of 40 alphanumeric characters
 ```
 

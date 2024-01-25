@@ -204,7 +204,7 @@ class Semanticscholar_ui:
         """Ask user to enter Searchstring and limitations for Keyword search"""
 
         query = self.enter_text(msg="Please enter the query for your keyword search ")
-        while not isinstance(query, str):
+        while not (query and isinstance(query, str)):
             query = self.enter_text(msg="Error: You must enter a query to conduct a search. Please enter a query")
             
         self.searchParams["query"] = query
@@ -218,31 +218,17 @@ class Semanticscholar_ui:
             self.searchParams["publication_types"] = publication_types
 
         venue = self.enter_text(
-            msg="Please enter venues. Separate multiple venues by comma. Do not use whitespaces." 
+            msg="To search for papers from specific venues, enter the venues here."
+            + " Separate multiple venues by comma." 
             + " Please press Enter if you don't wish to specify any venues "
         )
-        while venue:
-            if not self.alnum_and_comma_validation(venue):
-                venue = self.enter_text(
-                    msg="Error: Invalid format. Please try again or press Enter. Separate multiple inputs by comma."
-                )
-            else:
-                self.searchParams["venue"] = venue.split(",")
-                break
+        if venue:
+            self.searchParams["venue"] = venue.split(",")
 
-        fields_of_study = self.enter_text(
-            msg="Please enter fields of study. Separate multiple study fields by comma. Do not use whitespaces."
-            + " Please press Enter if you don't wish to specify any study fields "
-        )
-        while fields_of_study:
-            if not self.alnum_and_comma_validation(fields_of_study):
-                fields_of_study = self.enter_text(
-                    msg="Error: Invalid format. Please try again or press Enter. Separate multiple inputs by comma."
-                )
-            else:
-                self.searchParams["fields_of_study"] = fields_of_study.split(",")
-                break
-
+        fields_of_study = self.enter_studyfields()
+        if fields_of_study:
+            self.searchParams["fields_of_study"] = fields_of_study
+        
         open_access = self.choose_single_option(
             msg="Would you like to only search for items for which the full text is available as pdf?",
             options=["YES", "NO"],
@@ -314,7 +300,7 @@ class Semanticscholar_ui:
         )
         while yearspan and ask_again:
             ask_again = False
-            if not re.match("|".join([r"^-\d{4}$", r"^\d{4}-?$", r"^\d{4}-\d{4}"]), yearspan):
+            if not re.match("|".join([r"^-\d{4}$", r"^\d{4}-?$", r"^\d{4}-\d{4}$"]), yearspan):
                 print("Error: Invalid yearspan.\n" + examples + "\n")
                 yearspan = self.enter_text(
                     msg="Please enter a yearspan."
@@ -327,6 +313,15 @@ class Semanticscholar_ui:
                 b = int(years[1])
                 if (not a < b) or (b > int(datetime.date.today().year)):
                     print("Error: Invalid yearspan.\n" + examples + "\n")
+                    yearspan = self.enter_text(
+                        msg="Please enter a yearspan."
+                            + " Please press Enter if you don't wish to specify a yearspan"
+                    )
+                    ask_again = True
+            elif re.match(r"^-?\d{4}-?$", yearspan):
+                year = int(re.findall(r"\d{4}", yearspan)[0])
+                if year > int(datetime.date.today().year):
+                    print("Error: Invalid yearspan. You cannot search for papers from the future.\n")
                     yearspan = self.enter_text(
                         msg="Please enter a yearspan."
                             + " Please press Enter if you don't wish to specify a yearspan"
@@ -356,6 +351,39 @@ class Semanticscholar_ui:
         pub_types = self.choose_multiple_options(msg=msg, options=options)
 
         return pub_types
+    
+    def enter_studyfields(self) -> list:
+        """Method to ask a selection of fields of study that are allowed by the SemanticScholar API"""
+
+        msg = "If you want to restrict your search to certain study fields, select them here or press Enter"
+        options = [ 
+            "Computer Science",
+            "Medicine",
+            "Chemistry",
+            "Biology",
+            "Materials Science",
+            "Physics",
+            "Geology",
+            "Psychology",
+            "Art",
+            "History",
+            "Geography",
+            "Sociology",
+            "Business",
+            "Political Science",
+            "Economics",
+            "Philosophy",
+            "Mathematics",
+            "Engineering",
+            "Environmental Science",
+            "Agricultural and Food Sciences",
+            "Education",
+            "Law",
+            "Linguistics",
+        ]
+        studyfields = self.choose_multiple_options(msg=msg, options=options)
+
+        return studyfields
 
     def choose_single_option(
         self,
@@ -423,17 +451,6 @@ class Semanticscholar_ui:
         """Method to validate ID formats using a regex as an argument"""
 
         if re.match(regex, id):
-            return True
-        
-        return False
-
-    def alnum_and_comma_validation(
-            self,
-            inputString: str,
-    ) -> bool:
-        """Method to validate an input consisting of words devided by comma. Used for comma separated lists."""
-
-        if re.match(r"^\w+$|^(\w+,\w+)+$", inputString):
             return True
         
         return False
