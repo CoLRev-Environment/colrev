@@ -61,7 +61,7 @@ TO BE IMPLEMENTED
 
 #### API search: Not yet supported features
 
-So far, the `rerun` functionality, which enables the user to conduct a completely new run of an already conducted query, has been out of scope. It will be implemented in the future. 
+So far, the `rerun` functionality, which enables the user to conduct a completely new run of an already conducted query, has been out of scope. SemanticScholar itself does not support a rerun feature, colrev however offers the option when updating existing result files. The functionality might be added for SemanticScholar in the future.
 
 ## Links
 - [SemanticScholar](https://www.semanticscholar.org)
