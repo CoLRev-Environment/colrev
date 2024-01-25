@@ -1031,9 +1031,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
         records = self.review_manager.dataset.load_records_dict()
         try:
-            # get the search parameters from the interface
-            search_subject = self.__s2_UI__.searchSubject
-            params = self.__s2_UI__.searchParams
+            # get the search parameters from the settings.json file
+            search_subject = self.search_source.search_parameters.get("search_subject")
+            params = self.search_source.search_parameters
+            del params["search_subject"]
 
             # Get Semantic Scholar API depending on the search subject and look for search parameters
             if search_subject == "keyword":
@@ -1138,7 +1139,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get search parameters from the user interface
         cls.__s2_UI__.main_ui()
+        search_subject = cls.__s2_UI__.searchSubject
         search_params = cls.__s2_UI__.searchParams
+
+        search_params["search_subject"] = search_subject
 
         filename = operation.get_unique_filename(
             file_path_string=f"semanticscholar_{search_params}",
