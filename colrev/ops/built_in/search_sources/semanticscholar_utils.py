@@ -88,23 +88,25 @@ def __item_to_record(*, item) -> dict:
 
     if is_book:
         record_dict[Fields.BOOKTITLE] = record_dict.get("journal")
-        if "name" in record_dict[Fields.BOOKTITLE]:
+        if record_dict[Fields.BOOKTITLE] and "name" in record_dict[Fields.BOOKTITLE]:
             record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE].get("name")
     else:
         record_dict[Fields.BOOKTITLE] = "n/a"
 
-    if "journal" in record_dict:
-        record_dict[Fields.PAGES] = record_dict.get("journal")
+    if "journal" in record_dict and isinstance(record_dict.get("journal"), dict):
+        
         if "volume" in record_dict.get("journal"):
             record_dict[Fields.VOLUME] = record_dict.get("journal")["volume"]
         else:
             record_dict[Fields.VOLUME] = "n/a"
 
         if "pages" in record_dict.get("journal"):
-            record_dict[Fields.PAGES] = record_dict.get("journal")
-            record_dict[Fields.PAGES] = record_dict[Fields.PAGES]["pages"]
+            record_dict[Fields.PAGES] = record_dict.get("journal")["pages"]
         else:
             record_dict[Fields.PAGES] = "n/a"
+    else:
+        record_dict[Fields.VOLUME] = "n/a"
+        record_dict[Fields.PAGES] = "n/a"
 
     record_dict[Fields.JOURNAL] = record_dict.get("venue")
     record_dict[Fields.CITED_BY] = record_dict.get("citationCount")
