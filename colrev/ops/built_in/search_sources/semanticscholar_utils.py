@@ -14,23 +14,22 @@ from colrev.constants import ENTRYTYPES
 def __get_authors(*, record: dict) -> str:
     authors_list = []
     for author in record.get("authors"):
-        a_string = ""
         if "name" in author:
-            a_string += author["name"]
-            authors_list.append(a_string)
+            authors_list.append(author["name"])
     return " and ".join(authors_list)
 
 
 def __convert_entry_types(*, entrytype: str) -> ENTRYTYPES:
     """Method to convert semanticscholar entry types to colrev entry types"""
 
-    if entrytype == "JournalArticle":
+    if entrytype == "journalarticle" \
+            or entrytype == "journal":
         return ENTRYTYPES.ARTICLE
-    elif entrytype == "Book":
+    elif entrytype == "book":
         return ENTRYTYPES.BOOK
-    elif entrytype == "BookSection":
+    elif entrytype == "booksection":
         return ENTRYTYPES.INBOOK
-    elif entrytype == "CaseReport":
+    elif entrytype == "casereport":
         return ENTRYTYPES.TECHREPORT
     elif entrytype == "conference":
         return ENTRYTYPES.INPROCEEDINGS
@@ -50,7 +49,6 @@ def __item_to_record(*, item) -> dict:
     if isinstance(record_dict[Fields.DOI], dict):
         if len(record_dict[Fields.DOI]) > 0:
             record_dict[Fields.DOI] = record_dict[Fields.DOI].get("DOI", "n/a")
-
         else:
             record_dict[Fields.DOI] = "n/a"
     assert isinstance(record_dict.get("doi", ""), str)
@@ -60,24 +58,25 @@ def __item_to_record(*, item) -> dict:
     record_dict[Fields.ISSN] = "n/a"
 
     if record_dict[Fields.ENTRYTYPE] \
-            and record_dict[Fields.ENTRYTYPE] != "None":
+            and record_dict[Fields.ENTRYTYPE] != "n/a":
         if isinstance(record_dict[Fields.ENTRYTYPE], dict):
             if "issn" in record_dict[Fields.ENTRYTYPE]:
                 record_dict[Fields.ISSN] = record_dict[Fields.ENTRYTYPE]["issn"]
+
             if "type" in record_dict[Fields.ENTRYTYPE]:
                 for key, value in record_dict.get("ENTRYTYPE").items():
-                    if key == "type" and value == "conference":
-                        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype="conference")
+                    if key == "Book":
+                        is_book = True
 
-    if record_dict[Fields.ENTRYTYPE] is None \
-            or record_dict[Fields.ENTRYTYPE] == "" \
-            or record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS \
-            or record_dict[Fields.ENTRYTYPE] is ENTRYTYPES.MISC:
+                    if key == "type": # and value == "conference":
+                        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=value.lower().replace(" ", ""))
+                        
+    if record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS:
         record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
 
         if isinstance(record_dict[Fields.ENTRYTYPE], list):
             if len(record_dict[Fields.ENTRYTYPE]) > 0:
-                record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE][0].lower()
+                record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE][0].lower().replace(" ", "")
             else:
                 record_dict[Fields.ENTRYTYPE] = "n/a"
         record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
@@ -86,46 +85,28 @@ def __item_to_record(*, item) -> dict:
     record_dict[Fields.AUTHOR] = __get_authors(record=record_dict)
     record_dict[Fields.ABSTRACT] = record_dict.get("abstract")
     record_dict[Fields.YEAR] = record_dict.get("year")
-    record_dict[Fields.JOURNAL] = record_dict.get("venue")
-
-    record_dict[Fields.BOOKTITLE] = record_dict.get("publicationTypes")
-    if record_dict[Fields.BOOKTITLE] is not None:
-        for typ in record_dict[Fields.BOOKTITLE]:
-            if typ == "Book":
-                is_book = True
 
     if is_book:
         record_dict[Fields.BOOKTITLE] = record_dict.get("journal")
         if "name" in record_dict[Fields.BOOKTITLE]:
-            record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE]["name"]
+            record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE].get("name")
     else:
         record_dict[Fields.BOOKTITLE] = "n/a"
 
     if "journal" in record_dict:
-        print(1)
         record_dict[Fields.PAGES] = record_dict.get("journal")
-        if record_dict[Fields.PAGES]:
-            print(34)
-            record_dict[Fields.VOLUME] = record_dict[Fields.PAGES].get("volume", "n/a")
-        print(record_dict[Fields.VOLUME])
-        print(type(record_dict["journal"]))
-        print(record_dict["journal"])
-        print(2)
         if "volume" in record_dict.get("journal"):
-            print(3)
             record_dict[Fields.VOLUME] = record_dict.get("journal")["volume"]
         else:
             record_dict[Fields.VOLUME] = "n/a"
-        print(record_dict[Fields.VOLUME])
 
         if "pages" in record_dict.get("journal"):
-            print(4)
             record_dict[Fields.PAGES] = record_dict.get("journal")
             record_dict[Fields.PAGES] = record_dict[Fields.PAGES]["pages"]
         else:
             record_dict[Fields.PAGES] = "n/a"
-        print(record_dict[Fields.PAGES])
 
+    record_dict[Fields.JOURNAL] = record_dict.get("venue")
     record_dict[Fields.CITED_BY] = record_dict.get("citationCount")
 
     record_dict[Fields.FULLTEXT] = record_dict.get("openAccessPdf")
