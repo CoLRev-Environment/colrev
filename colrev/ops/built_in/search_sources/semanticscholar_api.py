@@ -875,10 +875,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         for key, value in params.items():
-            if key == ("paper_id" or "paper_ids"):
-                record_return = self.__s2__.get_papers(value)
+            if key == "paper_ids":
+                record_return = self.__s2__.get_papers(paper_ids=value)
             elif key == "query":
-                record_return = self.__s2__.search_paper(value)
+                record_return = self.__s2__.search_paper(query=value)
+            elif key == "query_list":
+                #IMPLEMENT??
+                self.review_manager.logger.info("Error: Not implemented yet.")
+                return None
             else:
                 self.review_manager.logger.info(
                     'Search type "Search for paper" is not available with your parameters.\n'
@@ -889,10 +893,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         for key, value in params.items():
-            if key == ("author_id" or "author_ids"):
-                record_return = self.__s2__.get_authors(value)
-            elif key == "queryList":
-                record_return = self.__s2__.search_author(value)
+            if key == "author_ids":
+                record_return = self.__s2__.get_authors(author_ids=value)
+            elif key == "query":
+                record_return = self.__s2__.search_author(query=value)
+            elif key == "query_list":
+                #IMPLEMENT??
+                self.review_manager.logger.info("Error: Not implemented yet.")
+                return None
             else:
                 self.review_manager.logger.info(
                     '\nSearch type "Search for author" is not available with your parameters.\n'
@@ -1023,7 +1031,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
         records = self.review_manager.dataset.load_records_dict()
         try:
-            # get the search parameters from the user
+            # get the search parameters from the interface
             search_subject = self.__s2_UI__.searchSubject
             params = self.__s2_UI__.searchParams
 
@@ -1038,7 +1046,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 )
             elif search_subject == "author":
                 __search_return__ = self.author_search(
-                    params=params["params"], rerun=rerun
+                    params=params, rerun=rerun
                 )
             else:
                 self.review_manager.logger.info(

@@ -104,17 +104,8 @@ class Semanticscholar_ui:
                             validationBreak = True
 
                 if not validationBreak:
-
-                    if len(paperIDList) == 0:
-                        self.searchParams["paper_id"] = paramValue
-                        paperIDList.append(paramValue)
-                    elif len(paperIDList) == 1:
-                        paperIDList.append(paramValue)
-                        del self.searchParams["paper_id"]
-                        self.searchParams["paper_ids"] = paperIDList
-                    else:
-                        paperIDList.append(paramValue)
-                        self.searchParams["paper_ids"] = paperIDList
+                    paperIDList.append(paramValue)
+                    self.searchParams["paper_ids"] = paperIDList
 
             elif param == "Search by title":
                 paramValue = self.enter_text(msg="Please enter the title of the paper ")
@@ -167,17 +158,8 @@ class Semanticscholar_ui:
                             validationBreak = True
 
                 if not validationBreak:
-
-                    if len(authorIDList) == 0:
-                        self.searchParams["author_id"] = paramValue
-                        authorIDList.append(paramValue)
-                    elif len(authorIDList) == 1:
-                        authorIDList.append(paramValue)
-                        del self.searchParams["author_id"]
-                        self.searchParams["author_ids"] = authorIDList
-                    else:
-                        authorIDList.append(paramValue)
-                        self.searchParams["author_ids"] = authorIDList
+                    authorIDList.append(paramValue)
+                    self.searchParams["author_ids"] = authorIDList
 
             elif param == "Search by name":
                 paramValue = self.enter_text(msg="Please enter the name of the author ")
@@ -187,10 +169,10 @@ class Semanticscholar_ui:
                 elif len(queryList) == 1:
                     queryList.append(paramValue)
                     del self.searchParams["query"]
-                    self.searchParams["querylist"] = queryList
+                    self.searchParams["query_list"] = queryList
                 else:
                     queryList.append(paramValue)
-                    self.searchParams["querylist"] = queryList
+                    self.searchParams["query_list"] = queryList
 
             fwd = self.choose_single_option(
                 msg="Would you like to search for another author or enter a different ID?",
