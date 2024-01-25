@@ -63,7 +63,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.constants
 from colrev.ops.built_in.search_sources.semanticscholarui import Semanticscholar_ui
-import colrev.ops.built_in.search_sources.utils as connector_utils
+import colrev.ops.built_in.search_sources.semanticscholar_utils as connector_utils
 import colrev.record
 import colrev.ops.load
 import colrev.ops.load_utils_bib
@@ -1062,12 +1062,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             # KeyError: 'items'
         
         # TO DO: implement conversion into record
-        """
         for item in __search_return__:
             try:
-                retrieved_record_dict = connector_utils.json_to_record(
+                print("\nTest1: " + str(item) + "\n")
+
+                retrieved_record_dict = connector_utils.s2_dict_to_record(
                     item=item
                 )
+                print("\nTest2: " + str(retrieved_record_dict) + "\n")
                 #print(44) as test
                 retrieved_record_dict = self.prep_records(item=item)
                 #print(45) as test
@@ -1086,7 +1088,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     colrev_exceptions.NotFeedIdentifiableException,
             ):
                 pass
-        """
 
 
         print(__search_return__[0])

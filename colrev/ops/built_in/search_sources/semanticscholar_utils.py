@@ -44,32 +44,35 @@ def __item_to_record(*, item) -> dict:
     record_dict = dict(item)
     is_book = False
 
-    record_dict[Fields.ID] = record_dict.get("paperId")
-    record_dict[Fields.DOI] = record_dict.get("externalIds")
+    record_dict[Fields.ID] = record_dict.get("paperId", "n/a")
+    record_dict[Fields.DOI] = record_dict.get("externalIds", "n/a")
 
     if isinstance(record_dict[Fields.DOI], dict):
         if len(record_dict[Fields.DOI]) > 0:
-            record_dict[Fields.DOI] = record_dict[Fields.DOI].get("DOI")
+            record_dict[Fields.DOI] = record_dict[Fields.DOI].get("DOI", "n/a")
+
         else:
             record_dict[Fields.DOI] = "n/a"
     assert isinstance(record_dict.get("doi", ""), str)
 
-    record_dict[Fields.URL] = record_dict.get("url")
+    record_dict[Fields.URL] = record_dict.get("url", "n/a")
+    record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationVenue", "n/a")
+    record_dict[Fields.ISSN] = "n/a"
 
-    record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationVenue")
-
-    if record_dict[Fields.ENTRYTYPE] is not None \
+    if record_dict[Fields.ENTRYTYPE] \
             and record_dict[Fields.ENTRYTYPE] != "None":
-        if len(record_dict[Fields.ENTRYTYPE]) > 0:
-            record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE]["type"].lower()
-            record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
-            assert isinstance(record_dict.get("ENTRYTYPE", ""), str)
-
-            record_dict[Fields.ISSN] = record_dict[Fields.ENTRYTYPE]["issn"]
+        if isinstance(record_dict[Fields.ENTRYTYPE], dict):
+            if "issn" in record_dict[Fields.ENTRYTYPE]:
+                record_dict[Fields.ISSN] = record_dict[Fields.ENTRYTYPE]["issn"]
+            if "type" in record_dict[Fields.ENTRYTYPE]:
+                for key, value in record_dict.get("ENTRYTYPE").items():
+                    if key == "type" and value == "conference":
+                        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype="conference")
 
     if record_dict[Fields.ENTRYTYPE] is None \
             or record_dict[Fields.ENTRYTYPE] == "" \
-            or record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS:
+            or record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS \
+            or record_dict[Fields.ENTRYTYPE] is ENTRYTYPES.MISC:
         record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
 
         if isinstance(record_dict[Fields.ENTRYTYPE], list):
@@ -77,8 +80,6 @@ def __item_to_record(*, item) -> dict:
                 record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE][0].lower()
             else:
                 record_dict[Fields.ENTRYTYPE] = "n/a"
-        assert isinstance(record_dict.get("ENTRYTYPE", ""), str)
-
         record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
 
     record_dict[Fields.TITLE] = record_dict.get("title")
@@ -94,23 +95,43 @@ def __item_to_record(*, item) -> dict:
                 is_book = True
 
     if is_book:
-        record_dict[Fields.BOOKTITLE] = record_dict.get("journal").get("name")
+        record_dict[Fields.BOOKTITLE] = record_dict.get("journal")
+        if "name" in record_dict[Fields.BOOKTITLE]:
+            record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE]["name"]
     else:
         record_dict[Fields.BOOKTITLE] = "n/a"
 
-    record_dict[Fields.PAGES] = record_dict.get("publicationDate")
-    if record_dict[Fields.PAGES] is not None:
-        record_dict[Fields.PAGES] = record_dict[Fields.PAGES].__getitem__("journal")
-        if record_dict[Fields.PAGES] is not None:
-            record_dict[Fields.PAGES] = record_dict[Fields.PAGES].get("pages")
-            record_dict[Fields.VOLUME] = record_dict[Fields.PAGES].get("volumen")
+    if "journal" in record_dict:
+        print(1)
+        record_dict[Fields.PAGES] = record_dict.get("journal")
+        if record_dict[Fields.PAGES]:
+            print(34)
+            record_dict[Fields.VOLUME] = record_dict[Fields.PAGES].get("volume", "n/a")
+        print(record_dict[Fields.VOLUME])
+        print(type(record_dict["journal"]))
+        print(record_dict["journal"])
+        print(2)
+        if "volume" in record_dict.get("journal"):
+            print(3)
+            record_dict[Fields.VOLUME] = record_dict.get("journal")["volume"]
+        else:
+            record_dict[Fields.VOLUME] = "n/a"
+        print(record_dict[Fields.VOLUME])
+
+        if "pages" in record_dict.get("journal"):
+            print(4)
+            record_dict[Fields.PAGES] = record_dict.get("journal")
+            record_dict[Fields.PAGES] = record_dict[Fields.PAGES]["pages"]
+        else:
+            record_dict[Fields.PAGES] = "n/a"
+        print(record_dict[Fields.PAGES])
 
     record_dict[Fields.CITED_BY] = record_dict.get("citationCount")
 
     record_dict[Fields.FULLTEXT] = record_dict.get("openAccessPdf")
     if isinstance(record_dict[Fields.FULLTEXT], dict):
         if len(record_dict[Fields.FULLTEXT]) > 0:
-            record_dict[Fields.FULLTEXT] = record_dict[Fields.FULLTEXT].get("url")
+            record_dict[Fields.FULLTEXT] = record_dict[Fields.FULLTEXT]["url"]
         else:
             record_dict[Fields.FULLTEXT] = "n/a"
     assert isinstance(record_dict.get("FULLTEXT", ""), str)
