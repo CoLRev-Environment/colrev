@@ -68,11 +68,14 @@ def __item_to_record(*, item) -> dict:
                     if key == "Book":
                         is_book = True
 
-                    if key == "type": # and value == "conference":
+                    if key == "type":
                         record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=value.lower().replace(" ", ""))
 
     if record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS:
         record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
+        if record_dict[Fields.ENTRYTYPE] \
+                and "Book" in record_dict[Fields.ENTRYTYPE]:
+            is_book = True
 
         if isinstance(record_dict[Fields.ENTRYTYPE], list):
             if len(record_dict[Fields.ENTRYTYPE]) > 0:
@@ -90,8 +93,6 @@ def __item_to_record(*, item) -> dict:
         record_dict[Fields.BOOKTITLE] = record_dict.get("journal")
         if record_dict[Fields.BOOKTITLE] and "name" in record_dict[Fields.BOOKTITLE]:
             record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE].get("name")
-    else:
-        record_dict[Fields.BOOKTITLE] = "n/a"
 
     if "journal" in record_dict and isinstance(record_dict.get("journal"), dict):
         
