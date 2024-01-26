@@ -733,62 +733,60 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         """Update the data/paper"""
 
-        if not self.review_manager.dataset.has_changes(
+        if silent_mode:
+            return
+
+        if self.review_manager.dataset.has_changes(
             relative_path=self.paper_relative_path, change_type="unstaged"
         ):
+            self.review_manager.logger.warning(
+                f"{Colors.RED}Skipping updates of "
+                f"{self.paper_relative_path} due to unstaged changes{Colors.END}"
+            )
+        else:
             records = self.update_paper(
                 records=records,
                 synthesized_record_status_matrix=synthesized_record_status_matrix,
                 silent_mode=silent_mode,
             )
-        else:
-            if not silent_mode:
-                self.review_manager.logger.warning(
-                    f"{Colors.RED}Skipping updates of "
-                    f"{self.paper_relative_path} due to unstaged changes{Colors.END}"
-                )
 
         if not self.review_manager.in_ci_environment():
             self.build_paper()
 
-    def __get_to_synthesize_in_paper(
-        self, *, paper: Path, records_for_synthesis: list
-    ) -> list:
-        in_paper_to_synthesize = []
-        if paper.is_file():
-            with open(paper, encoding="utf-8") as file:
-                for line in file:
-                    if self.NEW_RECORD_SOURCE_TAG in line:
-                        while line:
-                            line = file.readline()
-                            if re.search(r"- @.*", line):
-                                record_id = re.findall(r"- @(.*)$", line)
-                                in_paper_to_synthesize.append(record_id[0])
-                                if line == "\n":
-                                    break
+    def __get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:
+        if not paper.is_file():
+            return records_for_synthesis
 
-            in_paper_to_synthesize = [
-                x for x in in_paper_to_synthesize if x in records_for_synthesis
-            ]
-        else:
-            in_paper_to_synthesize = records_for_synthesis
-        return in_paper_to_synthesize
+        to_synthesize = []
+        with open(paper, encoding="utf-8") as file:
+            for line in file:
+                if self.NEW_RECORD_SOURCE_TAG in line:
+                    while line:
+                        line = file.readline()
+                        if re.search(r"- @.*", line):
+                            record_id = re.findall(r"- @(.*)$", line)
+                            to_synthesize.append(record_id[0])
+                            if line == "\n":
+                                break
 
-    def __get_synthesized_ids_paper(
+        to_synthesize = [x for x in to_synthesize if x in records_for_synthesis]
+        return to_synthesize
+
+    def __get_synthesized_papers(
         self, *, paper: Path, synthesized_record_status_matrix: dict
     ) -> list:
-        in_paper_to_synthesize = self.__get_to_synthesize_in_paper(
+        to_synthesize = self.__get_to_synthesize(
             paper=paper,
             records_for_synthesis=list(synthesized_record_status_matrix.keys()),
         )
         # Assuming that all records have been added to the paper before
-        synthesized_ids = [
+        synthesized = [
             x
             for x in list(synthesized_record_status_matrix.keys())
-            if x not in in_paper_to_synthesize
+            if x not in to_synthesize
         ]
 
-        return synthesized_ids
+        return synthesized
 
     def update_record_status_matrix(
         self,
@@ -797,15 +795,15 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         """Update the record_status_matrix"""
         # Update status / synthesized_record_status_matrix
-        synthesized_in_paper = self.__get_synthesized_ids_paper(
+        synthesized = self.__get_synthesized_papers(
             paper=self.settings.paper_path,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
-        for syn_id in synthesized_in_paper:
+        for syn_id in synthesized:
             if syn_id in synthesized_record_status_matrix:
                 synthesized_record_status_matrix[syn_id][endpoint_identifier] = True
             else:
-                print(f"Error: {syn_id} not int {synthesized_in_paper}")
+                print(f"Error: {syn_id} not int {synthesized}")
 
     def get_advice(
         self,

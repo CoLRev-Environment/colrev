@@ -312,7 +312,16 @@ class DataPackageEndpointInterface(
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Run the data operation (data extraction, analysis, synthesis)"""
+        """
+        Update the data by running the data operation. This includes data extraction,
+        analysis, and synthesis.
+
+        Parameters:
+        records (dict): The records to be updated.
+        synthesized_record_status_matrix (dict): The status matrix for the synthesized records.
+        silent_mode (bool): Whether the operation is run in silent mode
+        (for checks of review_manager/status).
+        """
 
     def update_record_status_matrix(  # type: ignore
         synthesized_record_status_matrix: dict,
