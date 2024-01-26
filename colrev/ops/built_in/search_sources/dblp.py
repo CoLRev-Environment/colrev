@@ -449,7 +449,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     "scope" in self.search_source.search_parameters
                     and (
                         f"{self.search_source.search_parameters['scope']['venue_key']}/"
-                        not in retrieved_record.data[Fields.DBLP_KEY]
+                        not in retrieved_record.data["dblp_key"]
                     )
                 ) or retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
                     "article",
