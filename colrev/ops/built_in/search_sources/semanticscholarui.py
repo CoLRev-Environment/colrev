@@ -12,35 +12,41 @@ class Semanticscholar_ui:
     def main_ui(self) -> None:
         """Display the main Menu and choose the search type"""
 
+        run = True
+
         print("\nWelcome to SemanticScholar! \n\n")
-        mainMsg = "Please choose one of the options below "
-        mainOptions = ["Keyword search", "Search for paper", "Search for author"]
+        while run:
+            mainMsg = "Please choose one of the options below "
+            mainOptions = ["Keyword search", "Search for paper by ID", "Search for author by ID", "Exit Program"]
 
-        fwdValue = self.choose_single_option(msg=mainMsg, options=mainOptions)
+            fwdValue = self.choose_single_option(msg=mainMsg, options=mainOptions)
 
-        if fwdValue == "Search for paper":
-            self.searchSubject = "paper"
-            self.paper_ui()
+            if fwdValue == "Search for paper by ID":
+                self.searchSubject = "paper"
+                run = self.paper_ui()
 
-        elif fwdValue == "Search for author":
-            self.searchSubject = "author"
-            self.author_ui()
+            elif fwdValue == "Search for author by ID":
+                self.searchSubject = "author"
+                run = self.author_ui()
 
-        elif fwdValue == "Keyword search":
-            self.searchSubject = "keyword"
-            self.keyword_ui()
+            elif fwdValue == "Keyword search":
+                self.searchSubject = "keyword"
+                self.keyword_ui()
+                run = False
+
+            elif fwdValue == "Exit Program":
+                print("\nThanks for using Colrev! This Program will close.")
+                run = False
 
         if not self.searchParams:
-            print("\n Search cancelled. The program will close.\n")
+            print("\n Search cancelled. This program will close.\n")
  
-    def paper_ui(self) -> None:
+    def paper_ui(self) -> bool:
         """Ask user to enter search parameters for distinctive paper search"""
 
         paperIDList = []
-        queryList = []
-        morePapers = True
 
-        while morePapers:
+        while True:
 
             validationBreak = False
 
@@ -54,12 +60,11 @@ class Semanticscholar_ui:
                 "ACL",
                 "PMID",
                 "PMCID",
-                "Search by title",
             ]
 
             param = self.choose_single_option(msg=pMsg, options=pOptions)
 
-            if param in pOptions and (not param == "Search by title"):
+            if param in pOptions:
                 paramValue = self.enter_text(
                     msg="Please enter the chosen ID in the right format "
                 )
@@ -107,80 +112,48 @@ class Semanticscholar_ui:
                     paperIDList.append(paramValue)
                     self.searchParams["paper_ids"] = paperIDList
 
-            elif param == "Search by title":
-                paramValue = self.enter_text(msg="Please enter the title of the paper ")
+            fwd = self.choose_single_option(
+                msg="How would you like to continue?",
+                options=["Conduct Search", "Search for another paper or enter different ID", "Back to main Menu"],
+            )
 
-                if len(queryList) == 0:
-                    self.searchParams["query"] = paramValue
-                    queryList.append(paramValue)
-                elif len(queryList) == 1:
-                    queryList.append(paramValue)
-                    del self.searchParams["query"]
-                    self.searchParams["query_list"] = queryList
-                else:
-                    queryList.append(paramValue)
-                    self.searchParams["query_list"] = queryList
+            if fwd == "Conduct Search":
+                return False
+            elif fwd == "Back to main Menu":
+                return True
 
-            if (
-                self.choose_single_option(
-                    msg="Would you like to search for another paper or enter a different ID?",
-                    options=["YES", "NO"],
-                )
-                == "NO"
-            ):
-                morePapers = False
-
-    def author_ui(self) -> None:
+    def author_ui(self) -> bool:
         """Ask user to enter search parameters for distinctive author search"""
 
         authorIDList = []
-        queryList = []
-        moreAuthors = True
 
-        while moreAuthors:
+        while True:
 
             validationBreak = False
 
-            aMsg = "How would you like to search for the author?"
-            aOptions = ["S2AuthorId", "Search by name"]
+            paramValue = self.enter_text(
+                msg="Please enter an S2 author ID in the right format "
+            )
+            while not self.id_validation_with_regex(id=paramValue, regex=r"^[a-zA-Z0-9]+$") and (not validationBreak):
+                    paramValue = self.enter_text(
+                        msg="Error: Invalid S2AuthorId format. Please try again or press Enter."
+                    )
+                    if not paramValue:
+                        validationBreak = True
 
-            param = self.choose_single_option(msg=aMsg, options=aOptions)
-
-            if param == "S2AuthorId":
-                paramValue = self.enter_text(
-                    msg="Please enter the author ID in the right format "
-                )
-                while not self.id_validation_with_regex(id=paramValue, regex=r"^[a-zA-Z0-9]+$") and (not validationBreak):
-                        paramValue = self.enter_text(
-                            msg="Error: Invalid S2AuthorId format. Please try again or press Enter."
-                        )
-                        if not paramValue:
-                            validationBreak = True
-
-                if not validationBreak:
-                    authorIDList.append(paramValue)
-                    self.searchParams["author_ids"] = authorIDList
-
-            elif param == "Search by name":
-                paramValue = self.enter_text(msg="Please enter the name of the author ")
-                if len(queryList) == 0:
-                    self.searchParams["query"] = paramValue
-                    queryList.append(paramValue)
-                elif len(queryList) == 1:
-                    queryList.append(paramValue)
-                    del self.searchParams["query"]
-                    self.searchParams["query_list"] = queryList
-                else:
-                    queryList.append(paramValue)
-                    self.searchParams["query_list"] = queryList
+            if not validationBreak:
+                authorIDList.append(paramValue)
+                self.searchParams["author_ids"] = authorIDList
 
             fwd = self.choose_single_option(
-                msg="Would you like to search for another author or enter a different ID?",
-                options=["YES", "NO"],
+                msg="How would you like to continue?",
+                options=["Conduct Search", "Search for another author or enter different ID", "Back to main Menu"],
             )
 
-            if fwd == "NO":
-                moreAuthors = False
+            if fwd == "Conduct Search":
+                return False
+            elif fwd == "Back to main Menu":
+                return True
 
     def keyword_ui(self) -> None:
         """Ask user to enter Searchstring and limitations for Keyword search"""
