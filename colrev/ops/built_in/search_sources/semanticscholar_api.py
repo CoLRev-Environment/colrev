@@ -1,46 +1,11 @@
 #! /usr/bin/env python
-"""SearchSource: Crossref"""
+"""SearchSource: Semantic Scholar"""
 from __future__ import annotations
 
-import json
-import re
-import typing
-import urllib
-from copy import deepcopy
-from dataclasses import dataclass
-from importlib.metadata import version
-from multiprocessing import Lock
-from pathlib import Path
-from sqlite3 import OperationalError
-from typing import Optional
-from typing import TYPE_CHECKING
-
-import inquirer
-import requests
 import zope.interface
-from crossref.restful import Etiquette
-from crossref.restful import Journals
-from crossref.restful import Works
+
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
-
-import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.search_sources.doi_org as doi_connector
-import colrev.ops.built_in.search_sources.utils as connector_utils
-import colrev.record
-from colrev.constants import Colors
-from colrev.constants import Fields
-from colrev.constants import FieldValues
-
-if TYPE_CHECKING:
-    import colrev.ops.search
-    import colrev.ops.prep
-
-# pylint: disable=unused-argument
-# pylint: disable=duplicate-code
-# pylint: disable=too-many-lines
 
 import typing
 from copy import deepcopy
@@ -48,12 +13,9 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-import zope.interface
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
 from semanticscholar import SemanticScholar
 from semanticscholar.PaginatedResults import PaginatedResults
+from semanticscholar import SemanticScholarException
 
 import colrev.env.language_service
 import colrev.env.package_manager
@@ -68,9 +30,8 @@ import colrev.ops.load
 import colrev.ops.load_utils_bib
 import colrev.settings
 from colrev.constants import Colors, Fields
-
-# install zope package
-# install package dacite
+import re
+import requests
 
 if TYPE_CHECKING:
     import colrev.ops.search
@@ -87,14 +48,11 @@ if TYPE_CHECKING:
 )
 @dataclass
 class SemanticScholarSearchSource(JsonSchemaMixin):
-    """Semantic Scholar API"""
+    """Semantic Scholar API Search Source"""
 
     # Provide objects with classes
     __s2__: SemanticScholar
     __search_return__: PaginatedResults
-
-    __limit = 100
-    __offset = 0
 
     __api_url = "https://api.semanticscholar.org/graph/v1/paper/search?"
 
@@ -145,8 +103,42 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
         __search_return__ = None
+    
+    def check_availability(
+        self, *, source_operation: colrev.operation.Operation
+    ) -> None:
+        """Check the availability of the Semantic Scholar API"""
+
+        try:
+            # pylint: disable=duplicate-code
+            test_DOI = "10.17705/1CAIS.04607"
+            test_record = {
+                                "title": "A Knowledge Development Perspective on Literature Reviews: "
+                                            +"Validation of a new Typology in the IS Field",
+                                "url": "https://www.semanticscholar.org/paper/b639a05d936dfd519fe4098edc95b5680b7ec7ec"
+            }
+
+            returned_record = self.__s2__.get_paper(paper_id=test_DOI)
+
+            if 0 != len(returned_record):
+                assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
+                assert returned_record[Fields.URL] == test_record[Fields.URL]
+            else:
+                if not source_operation.force_mode:
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        self.__availability_exception_message
+                    )
+        except (requests.exceptions.RequestException, IndexError) as exc:
+            print(exc)
+            if not source_operation.force_mode:
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    self.__availability_exception_message
+                ) from exc
+    
 
     def keyword_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
+        """Prepare search parameters for a full keyword search with the python client"""
+        
         query = None
         year = None
         publication_types = None
@@ -182,37 +174,40 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             + ' records have been found.'
         )
 
+        if record_return.total == 0:
+            print("\nSearch cancelled. This program will close.")
+            raise SystemExit
+
         return record_return
 
     def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
-        for key, value in params.items():
-            if key == "paper_ids":
-                record_return = self.__s2__.get_papers(paper_ids=value)
-            elif key == "query":
-                record_return = self.__s2__.search_paper(query=value)
-            else:
-                self.review_manager.logger.info(
-                    'Search type "Search for paper" is not available with your parameters.\n'
-                    + "Search parameter: "
-                    + value
-                )
+        """Method to conduct an API search of SemanticScholar with a List of Paper IDs"""
+        
+        if "paper_ids" in params:
+            record_return = self.__s2__.get_papers(params.get("paper_ids"))
+        else:
+            self.review_manager.logger.info(
+                'Search type "Search for paper" is not available with your parameters.\n'
+                + "Search parameter: "
+                + params.get("paper_ids")
+            )
         return record_return
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
-        for key, value in params.items():
-            if key == "author_ids":
-                record_return = self.__s2__.get_authors(author_ids=value)
-            elif key == "query":
-                record_return = self.__s2__.search_author(query=value)
-            else:
-                self.review_manager.logger.info(
-                    '\nSearch type "Search for author" is not available with your parameters.\n'
-                    + "Search parameter: "
-                    + value
-                )
+        """Method to conduct an API search of SemanticScholar with a List of Author IDs"""
+        
+        if "author_ids" in params:
+            record_return = self.__s2__.get_authors(params.get("paper_ids"))
+        else:
+            self.review_manager.logger.info(
+                '\nSearch type "Search for author" is not available with your parameters.\n'
+                + "Search parameter: "
+                + params.get("paper_ids")
+            )
         return record_return
 
     def __get_api_key(self) -> str:
+        """Method to request an API key from the settings file - or, if empty, from user input"""
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
@@ -238,8 +233,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         else:
             self.__s2__ = SemanticScholar()
 
-        # validate source
-
         # load file because the object is not shared between processes
         s2_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -253,7 +246,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
         records = self.review_manager.dataset.load_records_dict()
         try:
-            # get the search parameters from the settings.json file
             params = self.search_source.search_parameters
             search_subject = params.get("search_subject")
             del params["search_subject"]
@@ -275,9 +267,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 self.review_manager.logger.info(
                     "No search parameters were found."
                 )
+        except SemanticScholarException.BadQueryParametersException as exc:
+            print("Error: Invalid Search Parameters. The Program will close.")
+            raise SystemExit
+            # KeyError  # error in semanticscholar package:
         except KeyError as exc:
             print(exc)
-            # KeyError  # error in semanticscholar package:
+            raise SystemExit
 
         for item in __search_return__:
             try:
@@ -321,38 +317,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         s2_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
 
-    """@classmethod
-    def __add_toc_interactively(
-            cls, *, operation: colrev.ops.search.Search
-    ) -> colrev.settings.SearchSource:
-        print("Get ISSN from https://portal.issn.org/issn/search")
-
-        j_name = input("Enter journal name to lookup the ISSN:")
-        journals = Journals()
-        ret = journals.query(j_name)
-
-        questions = [
-            inquirer.List(
-                Fields.JOURNAL,
-                message="Select journal:",
-                choices=[{x[Fields.TITLE]: x["ISSN"]} for x in ret],
-            ),
-        ]
-        answers = inquirer.prompt(questions)
-        issn = list(answers[Fields.JOURNAL].values())[0][0]
-
-        filename = operation.get_unique_filename(
-            file_path_string=f"crossref_issn_{issn}"
-        )
-        add_source = colrev.settings.SearchSource(
-            endpoint="colrev.crossref",
-            filename=filename,
-            search_type=colrev.settings.SearchType.TOC,
-            search_parameters={"scope": {Fields.ISSN: [issn]}},
-            comment="",
-        )
-        return add_source"""
-
     @classmethod
     def add_endpoint(
             cls,
@@ -368,8 +332,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         search_params["search_subject"] = search_subject
 
+        name_string = str(search_params)
+        name_string = re.sub(r'[\/\.\,\:\?\']+', "", name_string)
+
+        print(name_string)
+
         filename = operation.get_unique_filename(
-            file_path_string=f"semanticscholar_{search_params}",
+            file_path_string="semanticscholar_"+name_string
         )
 
         add_source = colrev.settings.SearchSource(
@@ -388,6 +357,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             save_feed: bool = True,
             timeout: int = 30,
     ) -> colrev.record.Record:
+        """Retrieve masterdata from Semantic Scholar"""
         """Not yet implemented"""
         pass
 
@@ -400,17 +370,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        """if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
-                load_operation=load_operation, source=self.search_source
-            )
-            return records"""
+        """Not yet implemented"""
         pass
 
-    # Aktuell noch von crossref - muss noch verändert werden
     def prepare(
             self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.PrepRecord:
-        """Source-specific preparation for Crossref"""
+        """Source-specific preparation for Semantic Scholar"""
+        """Not yet implemented"""
         pass
 
