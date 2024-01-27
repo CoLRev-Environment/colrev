@@ -37,9 +37,11 @@ class Semanticscholar_ui:
             elif fwdValue == "Exit Program":
                 print("\nThanks for using Colrev! This Program will close.")
                 run = False
+                raise SystemExit
 
         if not self.searchParams:
-            print("\n Search cancelled. This program will close.\n")
+            print("\n Search cancelled. This program will close.")
+            raise SystemExit
  
     def paper_ui(self) -> bool:
         """Ask user to enter search parameters for distinctive paper search"""
@@ -175,7 +177,7 @@ class Semanticscholar_ui:
         venue = self.enter_text(
             msg="To search for papers from specific venues, enter the venues here."
             + " Separate multiple venues by comma." 
-            + " Please press Enter if you don't wish to specify any venues "
+            + " Please press Enter to not specify any venues "
         )
         if venue:
             self.searchParams["venue"] = venue.split(",")
@@ -409,21 +411,3 @@ class Semanticscholar_ui:
             return True
         
         return False
-        
-# ------------------------- UNIT TEST -------------------------
-    
-if __name__ == "__main__":
-
-    test = Semanticscholar_ui()
-    test.main_ui()
-
-    if test.searchParams:
-
-        api_test = test.get_api_key()
-
-        print("\nSearch will be conducted with following parameters:\n")
-        print("\nSearch Subject: ", test.searchSubject)
-        for key, value in test.searchParams.items():
-            print("Search parameter: ", key, ":", value)
-        print("\nAPI key: ", api_test)
-
