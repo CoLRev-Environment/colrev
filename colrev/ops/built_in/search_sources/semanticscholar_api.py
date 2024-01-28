@@ -2,36 +2,36 @@
 """SearchSource: Semantic Scholar"""
 from __future__ import annotations
 
-import zope.interface
-
-from dacite import from_dict
-from dataclasses_jsonschema import JsonSchemaMixin
-
+import re
 import typing
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import TYPE_CHECKING
-from semanticscholar import SemanticScholar
-from semanticscholar.PaginatedResults import PaginatedResults
-from semanticscholar import SemanticScholarException
 
+import requests
+import zope.interface
+from dacite import from_dict
+from dataclasses_jsonschema import JsonSchemaMixin
+from semanticscholar import SemanticScholar
+from semanticscholar import SemanticScholarException
+from semanticscholar.PaginatedResults import PaginatedResults
+
+import colrev.constants
+import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.env.package_manager
-import colrev.env.environment_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.constants
-from colrev.ops.built_in.search_sources.semanticscholarui import Semanticscholar_ui
 import colrev.ops.built_in.search_sources.semanticscholar_utils as connector_utils
-import colrev.record
 import colrev.ops.load
 import colrev.ops.load_utils_bib
+import colrev.record
 import colrev.settings
-from colrev.constants import Colors, Fields
-import re
-import requests
+from colrev.constants import Colors
+from colrev.constants import Fields
+from colrev.ops.built_in.search_sources.semanticscholarui import SemanticScholarUI
 
 if TYPE_CHECKING:
     import colrev.ops.search
@@ -61,8 +61,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     # SearchSourcePackageEndpointInterface constants
     docs_link = (
-            "https://github.com/CoLRev-Environment/colrev/tree/main/"
-            + "colrev/ops/built_in/search_sources/semanticscholar.md"
+        "https://github.com/CoLRev-Environment/colrev/tree/main/"
+        + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
     search_types = [colrev.settings.SearchType.API]
@@ -76,14 +76,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     __availability_exception_message = f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})"
 
-    __s2_UI__ = Semanticscholar_ui()
+    __s2_UI__ = SemanticScholarUI()
     __s2_filename = Path("data/search/md_semscholar.bib")
 
     def __init__(
-            self,
-            *,
-            source_operation: colrev.operation.Operation,
-            settings: typing.Optional[dict] = None,
+        self,
+        *,
+        source_operation: colrev.operation.Operation,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:
@@ -103,7 +103,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
         __search_return__ = None
-    
+
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
     ) -> None:
@@ -113,9 +113,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             # pylint: disable=duplicate-code
             test_DOI = "10.17705/1CAIS.04607"
             test_record = {
-                                "title": "A Knowledge Development Perspective on Literature Reviews: "
-                                            +"Validation of a new Typology in the IS Field",
-                                "url": "https://www.semanticscholar.org/paper/b639a05d936dfd519fe4098edc95b5680b7ec7ec"
+                "title": "A Knowledge Development Perspective on Literature Reviews: "
+                + "Validation of a new Typology in the IS Field",
+                "url": "https://www.semanticscholar.org/paper/b639a05d936dfd519fe4098edc95b5680b7ec7ec",
             }
 
             returned_record = self.__s2__.get_paper(paper_id=test_DOI)
@@ -134,11 +134,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self.__availability_exception_message
                 ) from exc
-    
 
     def keyword_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         """Prepare search parameters for a full keyword search with the python client"""
-        
+
         query = None
         year = None
         publication_types = None
@@ -170,8 +169,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         )
 
         self.review_manager.logger.info(
-            str(record_return.total)
-            + ' records have been found.'
+            str(record_return.total) + " records have been found."
         )
 
         if record_return.total == 0:
@@ -182,7 +180,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def paper_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         """Method to conduct an API search of SemanticScholar with a List of Paper IDs"""
-        
+
         if "paper_ids" in params:
             record_return = self.__s2__.get_papers(params.get("paper_ids"))
         else:
@@ -195,7 +193,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         """Method to conduct an API search of SemanticScholar with a List of Author IDs"""
-        
+
         if "author_ids" in params:
             record_return = self.__s2__.get_authors(params.get("paper_ids"))
         else:
@@ -252,22 +250,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
             # Get Semantic Scholar API depending on the search subject and look for search parameters
             if search_subject == "keyword":
-                __search_return__ = self.keyword_search(
-                    params=params, rerun=rerun
-                )
+                __search_return__ = self.keyword_search(params=params, rerun=rerun)
             elif search_subject == "paper":
-                __search_return__ = self.paper_search(
-                    params=params, rerun=rerun
-                )
+                __search_return__ = self.paper_search(params=params, rerun=rerun)
             elif search_subject == "author":
-                __search_return__ = self.author_search(
-                    params=params, rerun=rerun
-                )
+                __search_return__ = self.author_search(params=params, rerun=rerun)
             else:
-                self.review_manager.logger.info(
-                    "No search parameters were found."
-                )
-        except SemanticScholarException.BadQueryParametersException as exc:
+                self.review_manager.logger.info("No search parameters were found.")
+        except SemanticScholarException.BadQueryParametersException:
             print("Error: Invalid Search Parameters. The Program will close.")
             raise SystemExit
             # KeyError  # error in semanticscholar package:
@@ -277,9 +267,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         for item in __search_return__:
             try:
-                retrieved_record_dict = connector_utils.s2_dict_to_record(
-                    item=item
-                )
+                retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
                 s2_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
@@ -289,7 +277,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                         s2_feed.feed_records[retrieved_record_dict[Fields.ID]]
                     )
 
-                retrieved_record_dict[Fields.DOI] = retrieved_record_dict[Fields.DOI].upper()
+                retrieved_record_dict[Fields.DOI] = retrieved_record_dict[
+                    Fields.DOI
+                ].upper()
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
                 added = s2_feed.add_record(record=retrieved_record)
@@ -308,8 +298,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     )
 
             except (
-                    colrev_exceptions.RecordNotParsableException,
-                    colrev_exceptions.NotFeedIdentifiableException,
+                colrev_exceptions.RecordNotParsableException,
+                colrev_exceptions.NotFeedIdentifiableException,
             ):
                 pass
 
@@ -319,9 +309,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     @classmethod
     def add_endpoint(
-            cls,
-            operation: colrev.ops.search.Search,
-            params: dict,
+        cls,
+        operation: colrev.ops.search.Search,
+        params: dict,
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
@@ -333,12 +323,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         search_params["search_subject"] = search_subject
 
         name_string = str(search_params)
-        name_string = re.sub(r'[\/\.\,\:\?\']+', "", name_string)
-
-        print(name_string)
+        name_string = re.sub(r"[\/\.\,\:\?\']+", "", name_string)
 
         filename = operation.get_unique_filename(
-            file_path_string="semanticscholar_"+name_string
+            file_path_string="semanticscholar_" + name_string
         )
 
         add_source = colrev.settings.SearchSource(
@@ -351,16 +339,15 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         return add_source
 
     def get_masterdata(
-            self,
-            prep_operation: colrev.ops.prep.Prep,
-            record: colrev.record.Record,
-            save_feed: bool = True,
-            timeout: int = 30,
+        self,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.Record,
+        save_feed: bool = True,
+        timeout: int = 30,
     ) -> colrev.record.Record:
         """Retrieve masterdata from Semantic Scholar"""
         """Not yet implemented"""
         pass
-
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -374,9 +361,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         pass
 
     def prepare(
-            self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         """Not yet implemented"""
         pass
-
