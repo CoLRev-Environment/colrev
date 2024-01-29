@@ -136,9 +136,9 @@
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
             "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
-            "status": "RED",
-            "status_linked": "RED",
-            "short_description": "Semantic Scholar API (:doc:`instructions </resources/extensions_index/colrev.semanticscholar>`)",
+            "status": "|EXPERIMENTAL|",
+            "status_linked": "|EXPERIMENTAL|",
+            "short_description": "Semantic Scholar API Search Source (:doc:`instructions </resources/extensions_index/colrev.semanticscholar>`)",
             "ci_supported": true,
             "search_types": [
                 "API"

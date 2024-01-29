@@ -365,7 +365,7 @@
             "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "Semantic Scholar API (:doc:`instructions </resources/extensions_index/colrev.semanticscholar>`)",
+            "short_description": "Semantic Scholar API Search Source (:doc:`instructions </resources/extensions_index/colrev.semanticscholar>`)",
             "ci_supported": true,
             "search_types": [
                 "API"

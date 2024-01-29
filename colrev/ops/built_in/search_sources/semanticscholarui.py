@@ -1,8 +1,11 @@
+"""Console UI for Semantic Scholar"""
 import datetime
 import re
 from typing import Optional
 
 import inquirer
+
+from colrev.constants import Fields
 
 
 class SemanticScholarUI:
@@ -59,8 +62,6 @@ class SemanticScholarUI:
         paper_id_list = []
 
         while True:
-            validation_break = False
-
             p_msg = "How would you like to search for the paper?"
             p_options = [
                 "S2PaperId",
@@ -76,72 +77,35 @@ class SemanticScholarUI:
             param = self.choose_single_option(msg=p_msg, options=p_options)
 
             if param in p_options:
+                id_formats = ["S2PaperId", "DOI", "ArXivId", "ACL"]
                 param_value = self.enter_text(
                     msg="Please enter the chosen ID in the right format "
                 )
-                if param == "S2PaperId":
-                    while not self.id_validation_with_regex(
-                        id_value=param_value, regex=r"^[a-zA-Z0-9]+$"
-                    ) and (not validation_break):
-                        param_value = self.enter_text(
-                            msg="Error: Invalid S2PaperId format. Please try again or press Enter."
-                        )
-                        if not param_value:
-                            validation_break = True
 
-                elif param == "DOI":
-                    while (
-                        not self.id_validation_with_regex(
-                            id_value=param_value, regex=r"^10\..+$"
-                        )
-                        and not validation_break
-                    ):
-                        param_value = self.enter_text(
-                            msg="Error: Invalid DOI format. Please try again or press Enter."
-                        )
-                        if not param_value:
-                            validation_break = True
+                if param in id_formats:
+                    correct_format = self.check_format(param=param, value=param_value)
 
-                elif param == "ArXivId":
-                    while (
-                        not self.id_validation_with_regex(
-                            id_value=param_value, regex=r"^\d+\.\d+$"
-                        )
-                        and not validation_break
-                    ):
+                    while not correct_format and param_value:
                         param_value = self.enter_text(
-                            msg="Error: Invalid ArXivId format. Please try again or press Enter."
+                            msg="Error: Invalid ID format. Please try again or press Enter."
                         )
-                        if not param_value:
-                            validation_break = True
 
-                elif param == "ACL":
-                    while (
-                        not self.id_validation_with_regex(
-                            id_value=param_value, regex=r"^\w+-\w+$"
+                        correct_format = self.check_format(
+                            param=param, value=param_value
                         )
-                        and not validation_break
-                    ):
-                        param_value = self.enter_text(
-                            msg="Error: Invalid ACL ID format. Please try again or press Enter."
-                        )
-                        if not param_value:
-                            validation_break = True
 
                 else:
                     while (
                         not self.id_validation_with_regex(
                             id_value=param_value, regex=r"^[0-9]+$"
                         )
-                        and not validation_break
+                        and param_value
                     ):
                         param_value = self.enter_text(
                             msg="Error: Invalid ID format. Please try again or press Enter."
                         )
-                        if not param_value:
-                            validation_break = True
 
-                if not validation_break:
+                if param_value:
                     paper_id_list.append(param_value)
                     self.search_params["paper_ids"] = paper_id_list
 
@@ -156,7 +120,8 @@ class SemanticScholarUI:
 
             if fwd == "Conduct Search":
                 return False
-            elif fwd == "Back to main Menu":
+
+            if fwd == "Back to main Menu":
                 return True
 
     def author_ui(self) -> bool:
@@ -197,7 +162,8 @@ class SemanticScholarUI:
 
             if fwd == "Conduct Search":
                 return False
-            elif fwd == "Back to main Menu":
+
+            if fwd == "Back to main Menu":
                 return True
 
     def keyword_ui(self) -> None:
@@ -213,7 +179,7 @@ class SemanticScholarUI:
 
         year = self.enter_year()
         if year:
-            self.search_params["year"] = year
+            self.search_params[Fields.YEAR] = year
 
         publication_types = self.enter_pub_types()
         if publication_types:
@@ -232,7 +198,8 @@ class SemanticScholarUI:
             self.search_params["fields_of_study"] = fields_of_study
 
         open_access = self.choose_single_option(
-            msg="Would you like to only search for items for which the full text is available as pdf?",
+            msg="Would you like to only search for items "
+            "for which the full text is available as pdf?",
             options=["YES", "NO"],
         )
         if open_access == "YES":
@@ -303,7 +270,8 @@ class SemanticScholarUI:
         )
         ask_again = True
         year_span = self.enter_text(
-            msg="Please enter a year span. Please press Enter if you don't wish to specify a year span"
+            msg="Please enter a year span. "
+            "Please press Enter if you don't wish to specify a year span"
         )
         while year_span and ask_again:
             ask_again = False
@@ -322,7 +290,7 @@ class SemanticScholarUI:
 
                 if int(years[1]):
                     b = int(years[1])
-                    if (not a < b) or (b > int(datetime.date.today().year)):
+                    if a >= b or (b > int(datetime.date.today().year)):
                         print("Error: Invalid year span.\n" + examples + "\n")
                         year_span = self.enter_text(
                             msg="Please enter a year span."
@@ -344,7 +312,8 @@ class SemanticScholarUI:
         return year_span
 
     def enter_pub_types(self) -> list:
-        """Method to ask a selection of publication types that are allowed by the SemanticScholar API"""
+        """Method to ask a selection of publication
+        types that are allowed by the Semantic Scholar API"""
 
         msg = (
             "Please choose the publication types. "
@@ -369,9 +338,13 @@ class SemanticScholarUI:
         return pub_types
 
     def enter_study_fields(self) -> list:
-        """Method to ask a selection of fields of study that are allowed by the SemanticScholar API"""
+        """Method to ask a selection of fields of
+        study that are allowed by the Semantic Scholar API"""
 
-        msg = "If you want to restrict your search to certain study fields, select them here or press Enter"
+        msg = (
+            "If you want to restrict your search to certain study fields, "
+            "select them here or press Enter"
+        )
         options = [
             "Computer Science",
             "Medicine",
@@ -413,7 +386,7 @@ class SemanticScholarUI:
             inquirer.List(
                 name="Choice",
                 message=msg,
-                choices=["%s" % i for i in options],
+                choices=options,
                 carousel=False,
             ),
         ]
@@ -427,13 +400,14 @@ class SemanticScholarUI:
         msg: str,
         options: list,
     ) -> list:
-        """Method to display a question with multiple choice answers to the console using inquirer"""
+        """Method to display a question with multiple
+        choice answers to the console using inquirer"""
 
         question = [
             inquirer.Checkbox(
                 name="Choice",
                 message=msg,
-                choices=["%s" % i for i in options],
+                choices=options,
                 carousel=False,
             ),
         ]
@@ -446,7 +420,8 @@ class SemanticScholarUI:
         *,
         msg: str,
     ) -> str:
-        """Method to display a question with free text entry answer to the console using inquirer."""
+        """Method to display a question with free text
+        entry answer to the console using inquirer."""
 
         question = [
             inquirer.Text(
@@ -468,5 +443,24 @@ class SemanticScholarUI:
 
         if re.match(regex, id_value):
             return True
+
+        return False
+
+    def check_format(self, *, param: str, value: str) -> bool:
+        """Method to validate certain ID formats"""
+        if param == "S2PaperId":
+            if self.id_validation_with_regex(id_value=value, regex=r"^[a-zA-Z0-9]+$"):
+                return True
+        elif param == "DOI":
+            if self.id_validation_with_regex(id_value=value, regex=r"^10\..+$"):
+                return True
+
+        elif param == "ArXivId":
+            if self.id_validation_with_regex(id_value=value, regex=r"^\d+\.\d+$"):
+                return True
+
+        elif param == "ACL":
+            if self.id_validation_with_regex(id_value=value, regex=r"^\w+-\w+$"):
+                return True
 
         return False

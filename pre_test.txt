@@ -1,0 +1,134 @@
+trim trailing whitespace.................................................[42mPassed[m
+fix end of files.........................................................[42mPassed[m
+check docstring is first.................................................[42mPassed[m
+check json...............................................................[42mPassed[m
+check yaml...............................................................[42mPassed[m
+check toml...............................................................[42mPassed[m
+debug statements (python)................................................[42mPassed[m
+python tests naming......................................................[42mPassed[m
+black....................................................................[42mPassed[m
+flake8...................................................................[42mPassed[m
+Reorder python imports...................................................[42mPassed[m
+pyupgrade................................................................[42mPassed[m
+mypy.....................................................................[41mFailed[m
+[2m- hook id: mypy[m
+[2m- exit code: 1[m
+
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:14: [1m[31merror:(B[m Item (B[m[1m"None"(B[m of (B[m[1m"Optional[Any]"(B[m has no attribute (B[m[1m"__iter__"(B[m (not iterable)  (B[m[33m[union-attr](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:24: [1m[31merror:(B[m Incompatible return value type (got (B[m[1m"str"(B[m, expected (B[m[1m"ENTRYTYPES"(B[m)  (B[m[33m[return-value](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:26: [1m[31merror:(B[m Incompatible return value type (got (B[m[1m"str"(B[m, expected (B[m[1m"ENTRYTYPES"(B[m)  (B[m[33m[return-value](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:28: [1m[31merror:(B[m Incompatible return value type (got (B[m[1m"str"(B[m, expected (B[m[1m"ENTRYTYPES"(B[m)  (B[m[33m[return-value](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:30: [1m[31merror:(B[m Incompatible return value type (got (B[m[1m"str"(B[m, expected (B[m[1m"ENTRYTYPES"(B[m)  (B[m[33m[return-value](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:32: [1m[31merror:(B[m Incompatible return value type (got (B[m[1m"str"(B[m, expected (B[m[1m"ENTRYTYPES"(B[m)  (B[m[33m[return-value](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:34: [1m[31merror:(B[m Incompatible return value type (got (B[m[1m"str"(B[m, expected (B[m[1m"ENTRYTYPES"(B[m)  (B[m[33m[return-value](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:37: [1m[31merror:(B[m Function is missing a type annotation for one or more arguments  (B[m[33m[no-untyped-def](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:50: [1m[31merror:(B[m Item (B[m[1m"None"(B[m of (B[m[1m"Optional[Any]"(B[m has no attribute (B[m[1m"upper"(B[m  (B[m[33m[union-attr](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:65: [1m[31merror:(B[m Item (B[m[1m"None"(B[m of (B[m[1m"Optional[Any]"(B[m has no attribute (B[m[1m"items"(B[m  (B[m[33m[union-attr](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:87: [1m[31merror:(B[m Argument (B[m[1m"entrytype"(B[m to (B[m[1m"__convert_entry_types"(B[m has incompatible type (B[m[1m"Optional[Any]"(B[m; expected (B[m[1m"str"(B[m  (B[m[33m[arg-type](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:101: [1m[31merror:(B[m Unsupported right operand type for in ((B[m[1m"Optional[Any]"(B[m)  (B[m[33m[operator](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:102: [1m[31merror:(B[m Value of type (B[m[1m"Optional[Any]"(B[m is not indexable  (B[m[33m[index](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:106: [1m[31merror:(B[m Unsupported right operand type for in ((B[m[1m"Optional[Any]"(B[m)  (B[m[33m[operator](B[m
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:107: [1m[31merror:(B[m Value of type (B[m[1m"Optional[Any]"(B[m is not indexable  (B[m[33m[index](B[m
+[1m[31mFound 15 errors in 1 file (checked 279 source files)(B[m
+
+ruff.....................................................................[42mPassed[m
+pytest-check.............................................................[41mFailed[m
+[2m- hook id: pytest-check[m
+[2m- files were modified by this hook[m
+
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.10.12, pytest-7.4.2, pluggy-1.3.0
+rootdir: /home/peteer98/Desktop/SemanticScholar/colrev
+plugins: mock-3.12.0, dash-2.14.0, anyio-4.1.0, requests-mock-1.11.0
+[1mcollecting ... [0m[1mcollecting 204 items                                                           [0m[1mcollected 235 items                                                            [0m
+
+tests/0_core/colrev_pdf_id_test.py [32m.[0m[32m.[0m[33m                                    [  0%][0m
+tests/0_core/linter_test.py [32m.[0m[33m                                            [  1%][0m
+tests/0_core/qm_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m [ 21%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                  [ 24%][0m
+tests/0_core/record_state_state_model_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                       [ 26%][0m
+tests/0_core/record_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m [ 45%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                     [ 46%][0m
+tests/0_core/search_feed_test.py [32m.[0m[33m                                       [ 47%][0m
+tests/0_core/settings_test.py [32m.[0m[33m                                          [ 47%][0m
+tests/0_core/upgrade_test.py [32m.[0m[33m                                           [ 48%][0m
+tests/1_env/custom_script_setup_test.py [32m.[0m[33m                                [ 48%][0m
+tests/1_env/environment_manager_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                             [ 50%][0m
+tests/1_env/language_service_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m             [ 60%][0m
+tests/1_env/local_index_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                   [ 62%][0m
+tests/1_env/packages_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                              [ 68%][0m
+tests/1_env/tei_test.py [32m.[0m[33m                                                [ 68%][0m
+tests/2_ops/check_operation_test.py [32m.[0m[33m                                    [ 69%][0m
+tests/2_ops/check_test.py [32m.[0m[33m                                              [ 69%][0m
+tests/2_ops/correction_test.py [32m.[0m[33m                                         [ 70%][0m
+tests/2_ops/data_operation_test.py [32m.[0m[32m.[0m[33m                                    [ 71%][0m
+tests/2_ops/dedupe_operation_test.py [32m.[0m[32m.[0m[32m.[0m[33m                                 [ 72%][0m
+tests/2_ops/init_test.py [32m.[0m[32m.[0m[32m.[0m[33m                                             [ 73%][0m
+tests/2_ops/load_utils_bib_test.py [32m.[0m[33m                                     [ 74%][0m
+tests/2_ops/load_utils_enl_test.py [32m.[0m[33m                                     [ 74%][0m
+tests/2_ops/pdf_get_operation_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                              [ 76%][0m
+tests/2_ops/pdf_prep_man_operation_test.py [32m.[0m[33m                             [ 77%][0m
+tests/2_ops/pdf_prep_operation_test.py [32m.[0m[32m.[0m[33m                                [ 77%][0m
+tests/2_ops/prep_man_operation_test.py [32m.[0m[32m.[0m[32m.[0m[33m                               [ 79%][0m
+tests/2_ops/prep_operation_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                [ 81%][0m
+tests/2_ops/prescreen_operation_test.py [32m.[0m[33m                                [ 82%][0m
+tests/2_ops/screen_operation_test.py [32m.[0m[33m                                   [ 82%][0m
+tests/2_ops/search_operation_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                [ 84%][0m
+tests/2_ops/trace_operation_test.py [32m.[0m[33m                                    [ 84%][0m
+tests/3_built_in/add_journal_rankings_prep_test.py [32m.[0m[33m                     [ 85%][0m
+tests/3_built_in/bibtex_crossref_resolution_test.py [32m.[0m[33m                    [ 85%][0m
+tests/3_built_in/crossref_test.py [32m.[0m[32m.[0m[32m.[0m[33m                                    [ 86%][0m
+tests/3_built_in/eric_test.py [32m.[0m[33m                                          [ 87%][0m
+tests/3_built_in/exclude_complementary_materials_prep_test.py [32m.[0m[32m.[0m[32m.[0m[33m        [ 88%][0m
+tests/3_built_in/exclude_languages_prep_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                     [ 90%][0m
+tests/3_built_in/source_specific_load_prep_test.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m  [ 98%][0m
+tests/3_built_in/unpaywall_test.py [32m.[0m[33m                                     [ 99%][0m
+tests/3_built_in/year_vol_iss_prep_test.py [32m.[0m[32m.[0m[33m                            [100%][0m
+
+[33m================== [32m235 passed[0m, [33m[1m3 warnings[0m[33m in 70.78s (0:01:10)[0m[33m ==================[0m
+
+pylint...................................................................[41mFailed[m
+[2m- hook id: pylint[m
+[2m- exit code: 28[m
+
+************* Module colrev.ops.built_in.search_sources.semanticscholarui
+colrev/ops/built_in/search_sources/semanticscholarui.py:235:0: C0301: Line too long (103/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:306:0: C0301: Line too long (103/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:347:0: C0301: Line too long (104/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:372:0: C0301: Line too long (102/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:374:0: C0301: Line too long (108/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:430:0: C0301: Line too long (101/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:449:0: C0301: Line too long (101/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholarui.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+colrev/ops/built_in/search_sources/semanticscholarui.py:157:12: R1705: Unnecessary "elif" after "return", remove the leading "el" from "elif" (no-else-return)
+colrev/ops/built_in/search_sources/semanticscholarui.py:56:4: R0912: Too many branches (20/12) (too-many-branches)
+colrev/ops/built_in/search_sources/semanticscholarui.py:198:12: R1705: Unnecessary "elif" after "return", remove the leading "el" from "elif" (no-else-return)
+colrev/ops/built_in/search_sources/semanticscholarui.py:216:12: W0932: Missed constant usage (colrev-missed-constant-usage)
+colrev/ops/built_in/search_sources/semanticscholarui.py:325:24: C0117: Consider changing "not a < b" to "a >= b" (unnecessary-negation)
+colrev/ops/built_in/search_sources/semanticscholarui.py:416:25: C0209: Formatting a regular string which could be an f-string (consider-using-f-string)
+colrev/ops/built_in/search_sources/semanticscholarui.py:436:25: C0209: Formatting a regular string which could be an f-string (consider-using-f-string)
+************* Module colrev.ops.built_in.search_sources.semanticscholar_api
+colrev/ops/built_in/search_sources/semanticscholar_api.py:121:0: C0301: Line too long (104/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:296:0: C0301: Line too long (101/100) (line-too-long)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:117:12: C0103: Variable name "test_DOI" doesn't conform to snake_case naming style (invalid-name)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:183:12: W0707: Consider explicitly re-raising using 'raise SystemExit from exc' (raise-missing-from)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:212:16: W0707: Consider explicitly re-raising using 'raise SystemExit from exc' (raise-missing-from)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:237:16: W0707: Consider explicitly re-raising using 'raise SystemExit from exc' (raise-missing-from)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:310:12: W0707: Consider explicitly re-raising using 'raise SystemExit from exc' (raise-missing-from)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:317:12: W0707: Consider explicitly re-raising using 'raise SystemExit from exc' (raise-missing-from)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:269:4: R0912: Too many branches (14/12) (too-many-branches)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:408:8: W0105: String statement has no effect (pointless-string-statement)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:415:8: W0105: String statement has no effect (pointless-string-statement)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:423:8: W0105: String statement has no effect (pointless-string-statement)
+colrev/ops/built_in/search_sources/semanticscholar_api.py:437:8: W0105: String statement has no effect (pointless-string-statement)
+************* Module colrev.ops.built_in.search_sources.semanticscholar_utils
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:23:4: R1705: Unnecessary "elif" after "return", remove the leading "el" from "elif" (no-else-return)
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:23:7: R1714: Consider merging these comparisons with 'in' by using 'entrytype in ('journalarticle', 'journal')'. Use a set instead if elements are hashable. (consider-using-in)
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:37:0: R0912: Too many branches (26/12) (too-many-branches)
+colrev/ops/built_in/search_sources/semanticscholar_utils.py:37:0: R0915: Too many statements (64/50) (too-many-statements)
+Exception ignored in: <generator object _infer_attribute at 0x7fa0fde99380>
+Traceback (most recent call last):
+  File "/home/peteer98/.local/lib/python3.10/site-packages/astroid/nodes/node_classes.py", line 1107, in _infer_attribute
+    yield from owner.igetattr(node.attrname, context)
+ValueError: generator already executing
+
