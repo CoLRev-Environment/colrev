@@ -1,11 +1,9 @@
 """Utility to transform items from semanticscholar into records"""
-
 from __future__ import annotations
 
-
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Fields
 from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 
 # pylint: disable=duplicate-code
@@ -22,8 +20,7 @@ def __get_authors(*, record: dict) -> str:
 def __convert_entry_types(*, entrytype: str) -> ENTRYTYPES:
     """Method to convert semanticscholar entry types to colrev entry types"""
 
-    if entrytype == "journalarticle" \
-            or entrytype == "journal":
+    if entrytype == "journalarticle" or entrytype == "journal":
         return ENTRYTYPES.ARTICLE
     elif entrytype == "book":
         return ENTRYTYPES.BOOK
@@ -57,8 +54,7 @@ def __item_to_record(*, item) -> dict:
     record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationVenue", "n/a")
     record_dict[Fields.ISSN] = "n/a"
 
-    if record_dict[Fields.ENTRYTYPE] \
-            and record_dict[Fields.ENTRYTYPE] != "n/a":
+    if record_dict[Fields.ENTRYTYPE] and record_dict[Fields.ENTRYTYPE] != "n/a":
         if isinstance(record_dict[Fields.ENTRYTYPE], dict):
             if "issn" in record_dict[Fields.ENTRYTYPE]:
                 record_dict[Fields.ISSN] = record_dict[Fields.ENTRYTYPE]["issn"]
@@ -69,20 +65,25 @@ def __item_to_record(*, item) -> dict:
                         is_book = True
 
                     if key == "type":
-                        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=value.lower().replace(" ", ""))
+                        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(
+                            entrytype=value.lower().replace(" ", "")
+                        )
 
     if record_dict[Fields.ENTRYTYPE] != ENTRYTYPES.INPROCEEDINGS:
         record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
-        if record_dict[Fields.ENTRYTYPE] \
-                and "Book" in record_dict[Fields.ENTRYTYPE]:
+        if record_dict[Fields.ENTRYTYPE] and "Book" in record_dict[Fields.ENTRYTYPE]:
             is_book = True
 
         if isinstance(record_dict[Fields.ENTRYTYPE], list):
             if len(record_dict[Fields.ENTRYTYPE]) > 0:
-                record_dict[Fields.ENTRYTYPE] = record_dict[Fields.ENTRYTYPE][0].lower().replace(" ", "")
+                record_dict[Fields.ENTRYTYPE] = (
+                    record_dict[Fields.ENTRYTYPE][0].lower().replace(" ", "")
+                )
             else:
                 record_dict[Fields.ENTRYTYPE] = "n/a"
-        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(entrytype=record_dict.get("ENTRYTYPE"))
+        record_dict[Fields.ENTRYTYPE] = __convert_entry_types(
+            entrytype=record_dict.get("ENTRYTYPE")
+        )
 
     record_dict[Fields.TITLE] = record_dict.get("title")
     record_dict[Fields.AUTHOR] = __get_authors(record=record_dict)
@@ -95,7 +96,6 @@ def __item_to_record(*, item) -> dict:
             record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE].get("name")
 
     if "journal" in record_dict and isinstance(record_dict.get("journal"), dict):
-        
         if "volume" in record_dict.get("journal"):
             record_dict[Fields.VOLUME] = record_dict.get("journal")["volume"]
         else:
@@ -143,9 +143,7 @@ def __remove_fields(*, record: dict) -> dict:
         Fields.FULLTEXT,
     ]
 
-    record_dict = {
-        k: v for k, v in record.items() if k in supported_fields and v != ""
-    }
+    record_dict = {k: v for k, v in record.items() if k in supported_fields and v != ""}
 
     return record_dict
 

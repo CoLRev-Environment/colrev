@@ -4,7 +4,7 @@ This class supports the search function for Semantic Scholar via an unofficial p
 
 ## search
 
-So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future. All search results are saved as a standardized dictionary in the colrev feed and a distinctive `data/search/records.bib` file, the filename of which contains the query for the search. 
+So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future. All search results are saved as a standardized dictionary in the colrev feed and a distinctive `data/search/records.bib` file, the filename of which contains the query for the search.
 
 ### API search
 
@@ -16,17 +16,17 @@ The API search is launched with the following command:
 colrev search -a colrev.semanticscholar
 ```
 
-Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search. 
+Upon entering the command above with no additional parameters, a console interface opens up, in which the user is asked to enter the parameters and query for their search.
 
 #### API search: The user interface
 
-The code for the interface is located in `colrev/ops/built_in/search_sources/semanticscholar_ui.py`. 
+The code for the interface is located in `colrev/ops/built_in/search_sources/semanticscholar_ui.py`.
 
-In the main menu, the user can decide whether they want to search for a single paper or author, or conduct a full keyword search. Authors can be searched for via their distinct SemanticScholar-ID, which the user is asked to enter into the console. Papers can be searched for by different IDs - SemanticScholarID, DOI, ArXiv etc. 
+In the main menu, the user can decide whether they want to search for a single paper or author, or conduct a full keyword search. Authors can be searched for via their distinct SemanticScholar-ID, which the user is asked to enter into the console. Papers can be searched for by different IDs - SemanticScholarID, DOI, ArXiv etc.
 
-If the user opted for a full keyword search, they are asked to enter a series of search parameters: A query, a yearspan, fields of study, publication types etc. These parameters restrict the search within the SemanticScholar library to recieve more precise results. 
+If the user opted for a full keyword search, they are asked to enter a series of search parameters: A query, a yearspan, fields of study, publication types etc. These parameters restrict the search within the SemanticScholar library to recieve more precise results.
 
-For all search parameters except the query, the user can press the `enter` key to leave them blank. The query then will not restrict the search in the respective parameters, resulting in an increasingly broad search and more returned papers. 
+For all search parameters except the query, the user can press the `enter` key to leave them blank. The query then will not restrict the search in the respective parameters, resulting in an increasingly broad search and more returned papers.
 
 When asked about the fields of study and the publication types, the user can select one or multiple values by navigating the list with `uparrow` and `downarrow` and selecting and unselecting with `rightarrow` or `space`. Pressing `enter` will confirm the choice.
 
@@ -56,9 +56,9 @@ Via iteration, each item of the result dictionary is modified to satisfy the col
 
 The code for the transiformation utility methods can be found in `colrev/ops/built_in/search_sources/semanticscholar_utils.py`.
 
-Please note that, unfortunately, the format of SemanticScholar outputs does not produce sufficiently clear information to fill in every colrev field. Disparities, e.g. in the definition of publication types (== "ENTRYTYPES" in colrev), may lead to ambigous information about a paper, its type or its venue. To prevent misinformation, papers will be marked as `miscellaneaous`, if the publication type is not determinable. Other fields, especially regarding books, such as `EDITOR`, `EDITION` or `ADDRESS` are not supported at all by SemanticScholar and thus cannot be filled in. 
+Please note that, unfortunately, the format of SemanticScholar outputs does not produce sufficiently clear information to fill in every colrev field. Disparities, e.g. in the definition of publication types (== "ENTRYTYPES" in colrev), may lead to ambigous information about a paper, its type or its venue. To prevent misinformation, papers will be marked as `miscellaneaous`, if the publication type is not determinable. Other fields, especially regarding books, such as `EDITOR`, `EDITION` or `ADDRESS` are not supported at all by SemanticScholar and thus cannot be filled in.
 
-SemanticScholar also does not distinguish between forthcoming or retracted entries. Thus, entries unfortunately cannot be flagged as such in the result file. 
+SemanticScholar also does not distinguish between forthcoming or retracted entries. Thus, entries unfortunately cannot be flagged as such in the result file.
 
 #### API search: Saving the result file in records.bib and updating the feed
 

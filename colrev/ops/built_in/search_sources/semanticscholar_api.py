@@ -168,19 +168,25 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 fields_of_study=fields_of_study,
                 open_access_pdf=open_access_pdf,
             )
-        except (SemanticScholarException.SemanticScholarException, SemanticScholarException.BadQueryParametersException) as exc:
-                self.review_manager.logger.error("Error: Something went wrong during the search with the Python Client.\n"
-                                                 +"This program will close."
-                                                 )
-                print(exc)
-                raise SystemExit
+        except (
+            SemanticScholarException.SemanticScholarException,
+            SemanticScholarException.BadQueryParametersException,
+        ) as exc:
+            self.review_manager.logger.error(
+                "Error: Something went wrong during the search with the Python Client.\n"
+                + "This program will close."
+            )
+            print(exc)
+            raise SystemExit
 
         self.review_manager.logger.info(
             str(record_return.total) + " records have been found."
         )
 
         if record_return.total == 0:
-            self.review_manager.logger.info("\nSearch aborted because no records were found. This program will close.")
+            self.review_manager.logger.info(
+                "\nSearch aborted because no records were found. This program will close."
+            )
             raise SystemExit
 
         return record_return
@@ -191,10 +197,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         if "paper_ids" in params:
             try:
                 record_return = self.__s2__.get_papers(params.get("paper_ids"))
-            except (SemanticScholarException.SemanticScholarException, SemanticScholarException.BadQueryParametersException) as exc:
-                self.review_manager.logger.error("Error: Something went wrong during the search with the Python Client.\n"
-                                                 +"This program will close."
-                                                 )
+            except (
+                SemanticScholarException.SemanticScholarException,
+                SemanticScholarException.BadQueryParametersException,
+            ) as exc:
+                self.review_manager.logger.error(
+                    "Error: Something went wrong during the search with the Python Client.\n"
+                    + "This program will close."
+                )
                 print(exc)
                 raise SystemExit
         else:
@@ -212,10 +222,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         if "author_ids" in params:
             try:
                 record_return = self.__s2__.get_authors(params.get("paper_ids"))
-            except (SemanticScholarException.SemanticScholarException, SemanticScholarException.BadQueryParametersException) as exc:
-                self.review_manager.logger.error("Error: Something went wrong during the search with the Python Client.\n"
-                                                 +"This program will close."
-                                                 )
+            except (
+                SemanticScholarException.SemanticScholarException,
+                SemanticScholarException.BadQueryParametersException,
+            ) as exc:
+                self.review_manager.logger.error(
+                    "Error: Something went wrong during the search with the Python Client.\n"
+                    + "This program will close."
+                )
                 print(exc)
                 raise SystemExit
         else:
@@ -233,7 +247,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.SETTINGS["api_key"]
         )
 
-        if api_key == "None" or api_key is None:
+        if api_key == "" or api_key is None:
             api_key = self.__s2_UI__.get_api_key()
         else:
             api_key = self.__s2_UI__.get_api_key(api_key)
@@ -249,7 +263,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get the api key
         s2_api_key = self.__get_api_key()
-        if s2_api_key:
+        if s2_api_key and s2_api_key != "":
             self.__s2__ = SemanticScholar(api_key=s2_api_key)
         else:
             self.__s2__ = SemanticScholar()
@@ -260,7 +274,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
-        #rerun not implemented yet
+        # rerun not implemented yet
         if rerun:
             self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
@@ -281,12 +295,16 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             else:
                 self.review_manager.logger.info("No search parameters were found.")
         except SemanticScholarException.BadQueryParametersException as exc:
-            self.review_manager.logger.error("Error: Invalid Search Parameters. The Program will close.")
+            self.review_manager.logger.error(
+                "Error: Invalid Search Parameters. The Program will close."
+            )
             print(exc)
             raise SystemExit
             # KeyError  # error in semanticscholar package:
         except (KeyError, PermissionError) as exc:
-            self.review_manager.logger.error("Error: Search could not be conducted. Please check your Parameters and API key.")
+            self.review_manager.logger.error(
+                "Error: Search could not be conducted. Please check your Parameters and API key."
+            )
             print(exc)
             raise SystemExit
 
@@ -326,7 +344,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 colrev_exceptions.RecordNotParsableException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ) as exc:
-                self.review_manager.logger.error("Error: Retrieved records were not parsable into feed and result file.")
+                self.review_manager.logger.error(
+                    "Error: Retrieved records were not parsable into feed and result file."
+                )
                 print(exc)
 
         s2_feed.print_post_run_search_infos(records=records)
@@ -343,8 +363,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get search parameters from the user interface
         cls.__s2_UI__.main_ui()
-        search_subject = cls.__s2_UI__.searchSubject
-        search_params = cls.__s2_UI__.searchParams
+        search_subject = cls.__s2_UI__.search_subject
+        search_params = cls.__s2_UI__.search_params
 
         search_params["search_subject"] = search_subject
 
