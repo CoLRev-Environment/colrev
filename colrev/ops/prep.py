@@ -985,13 +985,13 @@ class Prep(colrev.operation.Operation):
         )
 
         package_manager = self.review_manager.get_package_manager()
-        self.prep_package_endpoints: dict[
-            str, typing.Any
-        ] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep,
-            selected_packages=prep_round.prep_package_endpoints,
-            operation=self,
-            only_ci_supported=self.review_manager.in_ci_environment(),
+        self.prep_package_endpoints: dict[str, typing.Any] = (
+            package_manager.load_packages(
+                package_type=colrev.env.package_manager.PackageEndpointType.prep,
+                selected_packages=prep_round.prep_package_endpoints,
+                operation=self,
+                only_ci_supported=self.review_manager.in_ci_environment(),
+            )
         )
         non_available_endpoints = [
             x["endpoint"].lower()

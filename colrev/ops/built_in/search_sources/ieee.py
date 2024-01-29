@@ -446,10 +446,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if source.filename.suffix == ".csv":
             if Fields.AUTHOR in record.data:
-                record.data[
-                    Fields.AUTHOR
-                ] = colrev.record.PrepRecord.format_author_field(
-                    input_string=record.data[Fields.AUTHOR]
+                record.data[Fields.AUTHOR] = (
+                    colrev.record.PrepRecord.format_author_field(
+                        input_string=record.data[Fields.AUTHOR]
+                    )
                 )
             return record
         return record

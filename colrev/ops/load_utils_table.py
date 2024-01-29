@@ -166,7 +166,6 @@ class TableLoadUtility:
 
 
 class CSVLoader:
-
     """Loads csv files (based on pandas)"""
 
     def __init__(

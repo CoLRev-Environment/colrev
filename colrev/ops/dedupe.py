@@ -114,13 +114,13 @@ class Dedupe(colrev.operation.Operation):
 
         records_df[Fields.AUTHOR] = records_df[Fields.AUTHOR].str[:60]
 
-        records_df.loc[
-            records_df.ENTRYTYPE == "inbook", "container_title"
-        ] = records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.TITLE]
+        records_df.loc[records_df.ENTRYTYPE == "inbook", "container_title"] = (
+            records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.TITLE]
+        )
         if Fields.CHAPTER in records_df:
-            records_df.loc[
-                records_df.ENTRYTYPE == "inbook", Fields.TITLE
-            ] = records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.CHAPTER]
+            records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.TITLE] = (
+                records_df.loc[records_df.ENTRYTYPE == "inbook", Fields.CHAPTER]
+            )
 
         records_df[Fields.TITLE] = (
             records_df[Fields.TITLE]

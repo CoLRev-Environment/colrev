@@ -211,9 +211,9 @@ class Advisor:
         if remote_connected:
             collaboration_instructions["title"] = "Versioning and collaboration"
         else:
-            collaboration_instructions[
-                "title"
-            ] = "Versioning (not connected to shared repository)"
+            collaboration_instructions["title"] = (
+                "Versioning (not connected to shared repository)"
+            )
             item = {
                 "title": "Project not yet shared",
                 "level": "WARNING",

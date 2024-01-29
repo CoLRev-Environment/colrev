@@ -133,13 +133,13 @@ class Repare(colrev.operation.Operation):
     def __get_source_feeds(self) -> dict:
         source_feeds = {}
         for source in self.review_manager.settings.sources:
-            source_feeds[
-                str(source.filename).replace("data/search/", "")
-            ] = source.get_feed(
-                review_manager=self.review_manager,
-                source_identifier="NA",
-                update_only=False,
-            ).feed_records
+            source_feeds[str(source.filename).replace("data/search/", "")] = (
+                source.get_feed(
+                    review_manager=self.review_manager,
+                    source_identifier="NA",
+                    update_only=False,
+                ).feed_records
+            )
         return source_feeds
 
     # pylint: disable=too-many-branches

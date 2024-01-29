@@ -1895,9 +1895,9 @@ class PrepRecord(Record):
         if re.match(r"^\d+\-\-\d+$", self.data[Fields.PAGES]):
             from_page, to_page = re.findall(r"(\d+)", self.data[Fields.PAGES])
             if int(from_page) > int(to_page) and len(from_page) > len(to_page):
-                self.data[
-                    Fields.PAGES
-                ] = f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
+                self.data[Fields.PAGES] = (
+                    f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
+                )
 
     def fix_name_particles(self) -> None:
         """Fix the name particles in the author field"""

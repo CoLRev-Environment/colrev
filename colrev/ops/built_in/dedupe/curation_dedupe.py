@@ -104,11 +104,11 @@ class CurationDedupe(JsonSchemaMixin):
             for comparison_entry_i in range(1, references.shape[0]):
                 if base_entry_i > comparison_entry_i:
                     if -1 != similarity_array[base_entry_i, comparison_entry_i]:
-                        similarity_array[
-                            base_entry_i, comparison_entry_i
-                        ] = self.__get_similarity(
-                            df_a=references.iloc[base_entry_i],
-                            df_b=references.iloc[comparison_entry_i],
+                        similarity_array[base_entry_i, comparison_entry_i] = (
+                            self.__get_similarity(
+                                df_a=references.iloc[base_entry_i],
+                                df_b=references.iloc[comparison_entry_i],
+                            )
                         )
 
         tuples_to_process = []

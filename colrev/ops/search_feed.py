@@ -117,9 +117,9 @@ class GeneralOriginFeed:
         if Fields.STATUS in feed_record_dict:
             del feed_record_dict[Fields.STATUS]
 
-        self.__available_ids[
-            feed_record_dict[self.source_identifier]
-        ] = feed_record_dict[Fields.ID]
+        self.__available_ids[feed_record_dict[self.source_identifier]] = (
+            feed_record_dict[Fields.ID]
+        )
 
         if self.update_only:
             # ignore time_variant_fields

@@ -18,7 +18,6 @@ from colrev.constants import FieldValues
 
 
 class Load(colrev.operation.Operation):
-
     """Load the records"""
 
     def __init__(

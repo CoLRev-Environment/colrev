@@ -96,7 +96,6 @@ class ParseError(Exception):
 
 
 class RISLoader:
-
     """Loads ris files"""
 
     PATTERN = r"^[A-Z0-9]{2,4} "

@@ -103,30 +103,30 @@ class PRISMA(JsonSchemaMixin):
         prisma_data["ind"] = prisma_data["data"]
         prisma_data.set_index("ind", inplace=True)
         prisma_data.loc["database_results", "n"] = status_stats.overall.md_retrieved
-        prisma_data.loc[
-            "duplicates", "n"
-        ] = status_stats.currently.md_duplicates_removed
+        prisma_data.loc["duplicates", "n"] = (
+            status_stats.currently.md_duplicates_removed
+        )
         prisma_data.loc["records_screened", "n"] = status_stats.overall.rev_prescreen
-        prisma_data.loc[
-            "records_excluded", "n"
-        ] = status_stats.overall.rev_prescreen_excluded
+        prisma_data.loc["records_excluded", "n"] = (
+            status_stats.overall.rev_prescreen_excluded
+        )
         if status_stats.currently.exclusion:
             prisma_data.loc["dbr_excluded", "n"] = "; ".join(
                 f"{key}, {val}" for key, val in status_stats.currently.exclusion.items()
             )
         else:
-            prisma_data.loc[
-                "dbr_excluded", "n"
-            ] = f"Overall, {status_stats.overall.rev_excluded}"
+            prisma_data.loc["dbr_excluded", "n"] = (
+                f"Overall, {status_stats.overall.rev_excluded}"
+            )
 
         prisma_data.loc["dbr_assessed", "n"] = status_stats.overall.rev_screen
         prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
-        prisma_data.loc[
-            "dbr_notretrieved_reports", "n"
-        ] = status_stats.overall.pdf_not_available
-        prisma_data.loc[
-            "dbr_sought_reports", "n"
-        ] = status_stats.overall.rev_prescreen_included
+        prisma_data.loc["dbr_notretrieved_reports", "n"] = (
+            status_stats.overall.pdf_not_available
+        )
+        prisma_data.loc["dbr_sought_reports", "n"] = (
+            status_stats.overall.rev_prescreen_included
+        )
 
         prisma_data.to_csv(self.csv_path, index=False)
         self.review_manager.logger.debug(f"Exported {self.csv_path}")

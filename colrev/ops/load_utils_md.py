@@ -27,7 +27,6 @@ if TYPE_CHECKING:
 
 
 class MarkdownLoader:
-
     """Loads reference strings from text (md) files (based on GROBID)"""
 
     def __init__(

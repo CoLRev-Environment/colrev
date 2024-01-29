@@ -581,24 +581,24 @@ class PackageManager:
             if parameter not in settings_class._details:
                 continue
             if "tooltip" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "tooltip"
-                ] = settings_class._details[parameter]["tooltip"]
+                package_details["properties"][parameter]["tooltip"] = (
+                    settings_class._details[parameter]["tooltip"]
+                )
 
             if "min" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "min"
-                ] = settings_class._details[parameter]["min"]
+                package_details["properties"][parameter]["min"] = (
+                    settings_class._details[parameter]["min"]
+                )
 
             if "max" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "max"
-                ] = settings_class._details[parameter]["max"]
+                package_details["properties"][parameter]["max"] = (
+                    settings_class._details[parameter]["max"]
+                )
 
             if "options" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "options"
-                ] = settings_class._details[parameter]["options"]
+                package_details["properties"][parameter]["options"] = (
+                    settings_class._details[parameter]["options"]
+                )
 
         self.__apply_package_details_fixes(
             package_type=package_type, package_details=package_details
@@ -702,10 +702,10 @@ class PackageManager:
                         f"Dependency {package_identifier} ({package_type}) not found. "
                         f"Please install it\n  pip install {package_identifier.split('.')[0]}"
                     )
-                packages_dict[package_identifier][
-                    "endpoint"
-                ] = self.load_package_endpoint(
-                    package_type=package_type, package_identifier=package_identifier
+                packages_dict[package_identifier]["endpoint"] = (
+                    self.load_package_endpoint(
+                        package_type=package_type, package_identifier=package_identifier
+                    )
                 )
 
             #     except ModuleNotFoundError as exc:
@@ -726,9 +726,9 @@ class PackageManager:
                     # to import custom packages from the project dir
                     sys.path.append(".")
                     packages_dict[package_identifier]["settings"] = selected_package
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = importlib.import_module(package_identifier, ".")
+                    packages_dict[package_identifier]["endpoint"] = (
+                        importlib.import_module(package_identifier, ".")
+                    )
                     packages_dict[package_identifier]["custom_flag"] = True
                 except ModuleNotFoundError as exc:  # pragma: no cover
                     if ignore_not_available:
