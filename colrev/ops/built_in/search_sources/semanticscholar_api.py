@@ -247,14 +247,19 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.SETTINGS["api_key"]
         )
 
-        if api_key == "" or api_key is None:
-            api_key = self.__s2_UI__.get_api_key()
-        else:
+        if api_key:
             api_key = self.__s2_UI__.get_api_key(api_key)
+        else:
+            api_key = self.__s2_UI__.get_api_key()
 
-        self.review_manager.environment_manager.update_registry(
-            self.SETTINGS["api_key"], api_key
-        )
+        if api_key and api_key != "":
+            self.review_manager.environment_manager.update_registry(
+                self.SETTINGS["api_key"], api_key
+            )
+        else:
+            self.review_manager.environment_manager.update_registry(
+                self.SETTINGS["api_key"], None
+            )
 
         return api_key
 
