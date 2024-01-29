@@ -74,7 +74,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         "api_key": "packages.search_source.colrev.semanticscholar.api_key",
     }
 
-    __availability_exception_message = f"Semantic Scholar ({Colors.ORANGE}check https://status.api.semanticscholar.org/{Colors.END})"
+    __availability_exception_message = (
+        f"Semantic Scholar ({Colors.ORANGE}check "
+        f"https://status.api.semanticscholar.org/{Colors.END})"
+    )
 
     __s2_UI__ = SemanticScholarUI()
     __s2_filename = Path("data/search/md_semscholar.bib")
@@ -102,7 +105,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.s2_lock = Lock()
 
         self.language_service = colrev.env.language_service.LanguageService()
-        __search_return__ = None
+        # __search_return__ = None
 
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
@@ -211,7 +214,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.review_manager.logger.error(
                 'Error: Search type "Search for paper" is not available with your parameters.\n'
                 + "Search parameter: "
-                + params.get("paper_ids")
+                + str(params.get("paper_ids"))
             )
             raise SystemExit
         return record_return
@@ -236,7 +239,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.review_manager.logger.error(
                 '\nError: Search type "Search for author" is not available with your parameters.\n'
                 + "Search parameter: "
-                + params.get("paper_ids")
+                + str(params.get("author_ids"))
             )
             raise SystemExit
         return record_return
@@ -268,7 +271,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get the api key
         s2_api_key = self.__get_api_key()
-        print(s2_api_key)
         if s2_api_key:
             self.__s2__ = SemanticScholar(api_key=s2_api_key)
         else:
@@ -321,9 +323,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 s2_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
 
-                if retrieved_record_dict[self.source_identifier] in s2_feed.feed_records:
+                if (
+                    retrieved_record_dict[self.source_identifier]
+                    in s2_feed.feed_records
+                ):
                     prev_record_dict_version = deepcopy(
-                        s2_feed.feed_records[retrieved_record_dict[self.source_identifier]]
+                        s2_feed.feed_records[
+                            retrieved_record_dict[self.source_identifier]
+                        ]
                     )
 
                 retrieved_record_dict[self.source_identifier] = retrieved_record_dict[

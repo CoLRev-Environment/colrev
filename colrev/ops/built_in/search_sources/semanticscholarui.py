@@ -462,7 +462,7 @@ class SemanticScholarUI:
         self,
         *,
         id_value: str,
-        regex: re,
+        regex: str,
     ) -> bool:
         """Method to validate ID formats using a regex as an argument"""
 
