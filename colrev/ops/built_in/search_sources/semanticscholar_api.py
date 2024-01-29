@@ -2,6 +2,7 @@
 """SearchSource: Semantic Scholar"""
 from __future__ import annotations
 
+import datetime
 import re
 import typing
 from copy import deepcopy
@@ -139,7 +140,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 ) from exc
 
     def keyword_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
-        """Prepare search parameters for a full keyword search with the python client"""
+        """Prepare search parameters and conduct full keyword search with the python client"""
 
         query = None
         year = None
@@ -176,14 +177,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             SemanticScholarException.BadQueryParametersException,
         ) as exc:
             self.review_manager.logger.error(
-                "Error: Something went wrong during the search with the Python Client.\n"
-                + "This program will close."
+                "Error: Something went wrong during the search with the Python Client."
+                + " This program will close."
             )
             print(exc)
             raise SystemExit
 
         self.review_manager.logger.info(
-            str(record_return.total) + " records have been found."
+            str(record_return.total) + " records have been found.\n"
         )
 
         if record_return.total == 0:
@@ -205,8 +206,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 SemanticScholarException.BadQueryParametersException,
             ) as exc:
                 self.review_manager.logger.error(
-                    "Error: Something went wrong during the search with the Python Client.\n"
-                    + "This program will close."
+                    "Error: Something went wrong during the search with the Python Client."
+                    + " This program will close."
                 )
                 print(exc)
                 raise SystemExit
@@ -224,14 +225,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         if "author_ids" in params:
             try:
-                record_return = self.__s2__.get_authors(params.get("paper_ids"))
+                record_return = self.__s2__.get_authors(params.get("author_ids"))
             except (
                 SemanticScholarException.SemanticScholarException,
                 SemanticScholarException.BadQueryParametersException,
             ) as exc:
                 self.review_manager.logger.error(
-                    "Error: Something went wrong during the search with the Python Client.\n"
-                    + "This program will close."
+                    "Error: Something went wrong during the search with the Python Client."
+                    + " This program will close."
                 )
                 print(exc)
                 raise SystemExit
@@ -341,9 +342,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 added = s2_feed.add_record(record=retrieved_record)
 
                 if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + retrieved_record.data[Fields.DOI]
-                    )
+                    if self.__s2_UI__.search_subject == "author":
+                        self.review_manager.logger.info(
+                            "retrieve " + retrieved_record.data[Fields.URL]
+                        )
+                    else:
+                        self.review_manager.logger.info(
+                            "retrieve " + retrieved_record.data[Fields.DOI]
+                        )
                 else:
                     s2_feed.update_existing_record(
                         records=records,
@@ -381,7 +387,25 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         search_params["search_subject"] = search_subject
 
-        name_string = str(search_params)
+        # decrease probability to reach linux file name length limit
+        # by only using three parameters for result file
+        short_search_params_key_list = [
+            "query",
+            "paper_ids",
+            "author_ids",
+            "year",
+            "open_access_pdf",
+        ]
+        short_search_params = {}
+
+        if search_params:
+            for key in search_params:
+                if key in short_search_params_key_list:
+                    short_search_params[key] = search_params[key]
+
+        name_string = str(short_search_params)
+        name_string += str(datetime.date.today())
+        # eliminate problematic characters from filename
         name_string = re.sub(r"[\/\.\,\:\?\']+", "", name_string)
 
         filename = operation.get_unique_filename(

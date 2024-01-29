@@ -131,4 +131,3 @@ Traceback (most recent call last):
   File "/home/peteer98/.local/lib/python3.10/site-packages/astroid/nodes/node_classes.py", line 1107, in _infer_attribute
     yield from owner.igetattr(node.attrname, context)
 ValueError: generator already executing
-

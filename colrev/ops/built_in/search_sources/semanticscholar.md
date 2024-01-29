@@ -4,7 +4,7 @@ This class supports the search function for Semantic Scholar via an unofficial p
 
 ## search
 
-So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future. All search results are saved as a standardized dictionary in the colrev feed and a distinctive `data/search/{query_parameters}.bib` file, the filename of which contains the query for the search.
+So far, only API search is implemented. Other search types such as MD search or TOC search might be implemented in the future. All search results are saved as a standardized dictionary in the colrev feed and a distinctive `data/search/{query_parameters}date.bib` file, the filename of which contains the query and the date of the search.
 
 ### API search
 
@@ -61,6 +61,8 @@ colrev search
 #### API search: Not yet supported features
 
 So far, the `rerun` functionality, which provides a more efficient way of redoing a search, is not implemented. Per default, rerun is set to `true`, which means that every time a query is entered again, a full search will be conducted. The functionality might be added in the future.
+
+Additionally, the result file has not been adapted to author search yet. Although it is still possible to search for authors by their S2-ID, the result file will not include any useful information but the url to the authors' web page in Semantic Scholar.
 
 ## Links
 - [SemanticScholar](https://www.semanticscholar.org)

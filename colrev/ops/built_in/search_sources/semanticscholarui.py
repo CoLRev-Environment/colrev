@@ -215,6 +215,7 @@ class SemanticScholarUI:
         if existing_key:
             api_key = existing_key
         else:
+            print("\n")
             api_key = self.enter_text(
                 msg="Please enter a valid API key for SemanticScholar. "
                 "If you don't have a key, please press Enter."
