@@ -240,12 +240,12 @@ class SemanticScholarUI:
         else:
             self.search_params["open_access_pdf"] = False
 
-    def get_api_key(self, existing_key: str = None) -> str:
+    def get_api_key(self, existing_key: Optional[str] = "") -> str:
         """Method to get API key from user input"""
 
         ask_again = True
 
-        if existing_key and existing_key != "None":
+        if existing_key:
             api_key = existing_key
         else:
             api_key = self.enter_text(
@@ -256,7 +256,7 @@ class SemanticScholarUI:
         while ask_again:
             ask_again = False
 
-            if not api_key or api_key == "None":
+            if not api_key:
                 print(
                     "\nWARNING: Searching without an API key might not be successful. \n"
                 )

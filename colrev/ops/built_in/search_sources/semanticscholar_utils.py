@@ -40,12 +40,14 @@ def __item_to_record(*, item) -> dict:
     record_dict = dict(item)
     is_book = False
 
+    record_dict[Fields.COLREV_ID] = record_dict.get("paperId", "n/a")
     record_dict[Fields.ID] = record_dict.get("paperId", "n/a")
     record_dict[Fields.DOI] = record_dict.get("externalIds", "n/a")
 
     if isinstance(record_dict[Fields.DOI], dict):
         if len(record_dict[Fields.DOI]) > 0:
             record_dict[Fields.DOI] = record_dict[Fields.DOI].get("DOI", "n/a")
+            record_dict[Fields.DOI] = record_dict.get(Fields.DOI).upper()
         else:
             record_dict[Fields.DOI] = "n/a"
     assert isinstance(record_dict.get("doi", ""), str)
@@ -127,6 +129,7 @@ def __remove_fields(*, record: dict) -> dict:
     """Method to remove unsupported fields from semanticscholar record"""
     supported_fields = [
         Fields.ID,
+        Fields.COLREV_ID,
         Fields.DOI,
         Fields.URL,
         Fields.ENTRYTYPE,

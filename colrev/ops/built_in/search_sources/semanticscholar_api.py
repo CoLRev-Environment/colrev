@@ -68,7 +68,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     search_types = [colrev.settings.SearchType.API]
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     short_name = "S2"
-    source_identifier = Fields.DOI
+    source_identifier = Fields.COLREV_ID
 
     SETTINGS = {
         "api_key": "packages.search_source.colrev.semanticscholar.api_key",
@@ -252,13 +252,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         else:
             api_key = self.__s2_UI__.get_api_key()
 
-        if api_key and api_key != "":
+        if api_key:
             self.review_manager.environment_manager.update_registry(
                 self.SETTINGS["api_key"], api_key
             )
         else:
             self.review_manager.environment_manager.update_registry(
-                self.SETTINGS["api_key"], None
+                self.SETTINGS["api_key"], ""
             )
 
         return api_key
@@ -268,7 +268,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         # get the api key
         s2_api_key = self.__get_api_key()
-        if s2_api_key and s2_api_key != "":
+        print(s2_api_key)
+        if s2_api_key:
             self.__s2__ = SemanticScholar(api_key=s2_api_key)
         else:
             self.__s2__ = SemanticScholar()
@@ -320,14 +321,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 s2_feed.set_id(record_dict=retrieved_record_dict)
                 prev_record_dict_version = {}
 
-                if retrieved_record_dict[Fields.ID] in s2_feed.feed_records:
+                if retrieved_record_dict[self.source_identifier] in s2_feed.feed_records:
                     prev_record_dict_version = deepcopy(
-                        s2_feed.feed_records[retrieved_record_dict[Fields.ID]]
+                        s2_feed.feed_records[retrieved_record_dict[self.source_identifier]]
                     )
 
-                retrieved_record_dict[Fields.DOI] = retrieved_record_dict[
-                    Fields.DOI
-                ].upper()
+                retrieved_record_dict[self.source_identifier] = retrieved_record_dict[
+                    self.source_identifier
+                ]
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
                 added = s2_feed.add_record(record=retrieved_record)
@@ -396,24 +397,35 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         save_feed: bool = True,
         timeout: int = 30,
     ) -> colrev.record.Record:
-        """Retrieve masterdata from Semantic Scholar"""
+        """Retrieve master data from Semantic Scholar"""
         """Not yet implemented"""
-        pass
+
+        return record
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Semantic Scholar"""
         """Not yet implemented"""
-        pass
+
+        result = {"confidence": 0.0}
+
+        return result
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
         """Not yet implemented"""
-        pass
+
+        if self.search_source.filename.suffix == ".bib":
+            records = colrev.ops.load_utils_bib.load_bib_file(
+                load_operation=load_operation, source=self.search_source
+            )
+            return records
+
+        raise NotImplementedError
 
     def prepare(
         self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         """Not yet implemented"""
-        pass
+        return record
