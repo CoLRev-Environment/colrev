@@ -4,11 +4,11 @@ index 5bf0ea3e..ba8ab8ce 100644
 +++ b/colrev/env/language_service.py
 @@ -3,7 +3,7 @@
  from __future__ import annotations
- 
+
  import pycountry
 -from lingua.builder import LanguageDetectorBuilder
 +from lingua import LanguageDetectorBuilder
- 
+
  import colrev.exceptions as colrev_exceptions
  import colrev.record
 @@ -57,7 +57,9 @@ class LanguageService:
@@ -20,7 +20,7 @@ index 5bf0ea3e..ba8ab8ce 100644
 +            lang = prediction.language
 +            conf = prediction.value
              predictions_unified.append((lang.iso_code_639_3.name.lower(), conf))
- 
+
          return predictions_unified
 diff --git a/colrev/template/package_endpoints.json b/colrev/template/package_endpoints.json
 index 967dfd27..ec141fef 100644
@@ -79,6 +79,6 @@ index 126029c9..6e24cf00 100644
     extensions_index/colrev.prescreen_table.rst
     extensions_index/colrev.scope_prescreen.rst
 -   extensions_index/NotImplemented
- 
+
  pdf_get
  -----------------------------

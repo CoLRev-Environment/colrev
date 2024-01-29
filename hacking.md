@@ -23,11 +23,8 @@ rerun in Documentation - richtig so oder falsch verstanden?
 
 
 #PUSH-ANLEITUNG
---> diese zeile wurde geändert ... pushtest 
+--> diese zeile wurde geändert ... pushtest
 	#speichern
 	#git add ...dateiname
 	#git commit -m "was geändert wurde hier eingeben"
 	#git push
-
-
-
