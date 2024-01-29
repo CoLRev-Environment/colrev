@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -99,13 +100,18 @@ def add_from_tei(
         records_df[Fields.KEYWORDS] = records_df.apply(extract_keywords, axis=1)
 
 
-def link_pdfs_for_data_extraction(records_df: pd.DataFrame, directory: str) -> None:
+def extract_pdfs_for_data_extraction(
+    records_df: pd.DataFrame, directory: str, copy_files: bool = False
+) -> None:
     """
-    This function creates symlinks to the PDFs in the given directory.
+    This function creates symlinks or copies the PDFs to the given directory
+    based on the copy_files parameter.
 
     Parameters:
     records_df (pd.DataFrame): The DataFrame containing the records.
-    directory (str): The directory where the symlinks will be created.
+    directory (str): The directory where the symlinks or copies will be created.
+    copy_files (bool, optional): If True, copies the PDFs instead of creating
+                                 symlinks. Defaults to False.
 
     Returns:
     None
@@ -125,9 +131,13 @@ def link_pdfs_for_data_extraction(records_df: pd.DataFrame, directory: str) -> N
             continue
         if Fields.FILE in record and not pd.isnull(record[Fields.FILE]):
             pdf_path = review_manager.path / Path(record[Fields.FILE])
-            symlink_path = Path(directory) / pdf_path.name
-            if not symlink_path.exists():
-                symlink_path.symlink_to(pdf_path)
+            target_path = directory_path / pdf_path.name
+            if copy_files:
+                if not target_path.exists():
+                    shutil.copy(pdf_path, target_path)
+            else:
+                if not target_path.exists():
+                    target_path.symlink_to(pdf_path)
 
 
 def save(records_df: pd.DataFrame) -> None:

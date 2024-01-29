@@ -16,5 +16,6 @@ colrev.pandas
       :nosignatures:
 
       add_from_tei
+      extract_pdfs_for_data_extraction
       load_df
       save
