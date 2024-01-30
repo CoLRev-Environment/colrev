@@ -115,14 +115,15 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         try:
             # pylint: disable=duplicate-code
-            test_DOI = "10.17705/1CAIS.04607"
+            test_doi = "10.17705/1CAIS.04607"
             test_record = {
                 "title": "A Knowledge Development Perspective on Literature Reviews: "
                 + "Validation of a new Typology in the IS Field",
-                "url": "https://www.semanticscholar.org/paper/b639a05d936dfd519fe4098edc95b5680b7ec7ec",
+                "url": "https://www.semanticscholar.org/paper"
+                "/b639a05d936dfd519fe4098edc95b5680b7ec7ec",
             }
 
-            returned_record = self.__s2__.get_paper(paper_id=test_DOI)
+            returned_record = self.__s2__.get_paper(paper_id=test_doi)
 
             if 0 != len(returned_record):
                 assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
@@ -138,6 +139,22 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self.__availability_exception_message
                 ) from exc
+
+    def get_semantic_scholar_api(
+        self, *, params: dict, subject: str, rerun: bool
+    ) -> PaginatedResults:
+        """Get Semantic Scholar API depending on
+        the search subject and look for search parameters"""
+        if subject == "keyword":
+            __search_return__ = self.keyword_search(params=params, rerun=rerun)
+        elif subject == "paper":
+            __search_return__ = self.paper_search(params=params, rerun=rerun)
+        elif subject == "author":
+            __search_return__ = self.author_search(params=params, rerun=rerun)
+        else:
+            self.review_manager.logger.info("No search parameters were found.")
+
+        return __search_return__
 
     def keyword_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
         """Prepare search parameters and conduct full keyword search with the python client"""
@@ -181,7 +198,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 + " This program will close."
             )
             print(exc)
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException(exc)
 
         self.review_manager.logger.info(
             str(record_return.total) + " records have been found.\n"
@@ -189,9 +206,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         if record_return.total == 0:
             self.review_manager.logger.info(
-                "\nSearch aborted because no records were found. This program will close."
+                "Search aborted because no records were found. This program will close."
             )
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException("")
 
         return record_return
 
@@ -210,14 +227,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     + " This program will close."
                 )
                 print(exc)
-                raise SystemExit
+                raise colrev_exceptions.ServiceNotAvailableException(exc)
         else:
             self.review_manager.logger.error(
                 'Error: Search type "Search for paper" is not available with your parameters.\n'
                 + "Search parameter: "
                 + str(params.get("paper_ids"))
             )
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException("")
         return record_return
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
@@ -235,14 +252,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     + " This program will close."
                 )
                 print(exc)
-                raise SystemExit
+                raise colrev_exceptions.ServiceNotAvailableException(exc)
         else:
             self.review_manager.logger.error(
                 '\nError: Search type "Search for author" is not available with your parameters.\n'
                 + "Search parameter: "
                 + str(params.get("author_ids"))
             )
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException("")
         return record_return
 
     def __get_api_key(self) -> str:
@@ -294,31 +311,26 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             search_subject = params.get("search_subject")
             del params["search_subject"]
 
-            # Get Semantic Scholar API depending on the search subject and look for search parameters
-            if search_subject == "keyword":
-                __search_return__ = self.keyword_search(params=params, rerun=rerun)
-            elif search_subject == "paper":
-                __search_return__ = self.paper_search(params=params, rerun=rerun)
-            elif search_subject == "author":
-                __search_return__ = self.author_search(params=params, rerun=rerun)
-            else:
-                self.review_manager.logger.info("No search parameters were found.")
+            __search_return__ = self.get_semantic_scholar_api(
+                params=params, subject=search_subject, rerun=rerun
+            )
+
         except SemanticScholarException.BadQueryParametersException as exc:
             self.review_manager.logger.error(
                 "Error: Invalid Search Parameters. The Program will close."
             )
             print(exc)
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException(exc)
             # KeyError  # error in semanticscholar package:
         except (KeyError, PermissionError) as exc:
             self.review_manager.logger.error(
                 "Error: Search could not be conducted. Please check your Parameters and API key."
             )
             print(exc)
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException("")
 
-        for item in __search_return__:
-            try:
+        try:
+            for item in __search_return__:
                 retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
                 s2_feed.set_id(record_dict=retrieved_record_dict)
@@ -358,15 +370,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                         source=self.search_source,
                         update_time_variant_fields=rerun,
                     )
-
-            except (
-                colrev_exceptions.RecordNotParsableException,
-                colrev_exceptions.NotFeedIdentifiableException,
-            ) as exc:
-                self.review_manager.logger.error(
-                    "Error: Retrieved records were not parsable into feed and result file."
-                )
-                print(exc)
+        except (
+            colrev_exceptions.RecordNotParsableException,
+            colrev_exceptions.NotFeedIdentifiableException,
+        ) as exc:
+            self.review_manager.logger.error(
+                "Error: Retrieved records were not parsable into feed and result file."
+            )
+            print(exc)
 
         s2_feed.print_post_run_search_infos(records=records)
         s2_feed.save_feed_file()
@@ -399,9 +410,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         short_search_params = {}
 
         if search_params:
-            for key in search_params:
+            for key, value in search_params.items():
                 if key in short_search_params_key_list:
-                    short_search_params[key] = search_params[key]
+                    short_search_params[key] = value
 
         if "query" in short_search_params:
             if len(short_search_params["query"]) > 50:
