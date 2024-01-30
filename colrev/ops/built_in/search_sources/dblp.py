@@ -651,7 +651,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         save_feed: bool = True,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> colrev.record.Record:
         """Retrieve masterdata from DBLP based on similarity with the record provided"""
 
