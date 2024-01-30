@@ -44,6 +44,14 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.prep_operation = prep_operation
 
+    def __mostly_latin_alphabet(self, str_to_check: str) -> bool:
+        assert len(str_to_check) != 0
+        nr_non_latin = 0
+        for character in str_to_check:
+            if not self.alphabet_detector.only_alphabet_chars(character, "LATIN"):
+                nr_non_latin += 1
+        return nr_non_latin / len(str_to_check) > 0.75
+
     def prepare(
         self,
         record: colrev.record.PrepRecord,
@@ -52,14 +60,6 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
 
         if self.prep_operation.polish:
             return record
-
-        def mostly_latin_alphabet(str_to_check: str) -> bool:
-            assert len(str_to_check) != 0
-            nr_non_latin = 0
-            for character in str_to_check:
-                if not self.alphabet_detector.only_alphabet_chars(character, "LATIN"):
-                    nr_non_latin += 1
-            return nr_non_latin / len(str_to_check) > 0.75
 
         # TB:D join or check independently?
         str_to_check = " ".join(
@@ -70,7 +70,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
                 record.data.get(Fields.BOOKTITLE, ""),
             ]
         )
-        if mostly_latin_alphabet(str_to_check):
+        if self.__mostly_latin_alphabet(str_to_check):
             record.prescreen_exclude(reason="non_latin_alphabet")
 
         return record
