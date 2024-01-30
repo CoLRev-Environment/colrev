@@ -52,7 +52,7 @@ SemanticScholar also does not distinguish between forthcoming or retracted entri
 
 #### API search: Loading the result file
 
-THe result file containing the items can be loaded via the colrev feed. This way, when the same query is run again by entering the command below, the result file will only be updated with the items that were newly registered in SemanticScholar after the last time the query was conducted.
+The result file containing the items can be loaded via the colrev feed. This way, when the same query is run again by entering the command below, the result file will only be updated with the items that were newly registered in SemanticScholar after the last time the query was conducted.
 
 ```
 colrev search
