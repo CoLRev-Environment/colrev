@@ -98,6 +98,7 @@ def test_compute_language_confidence_values(
         ("سماوي يدور", "ara"),
         ("שלום", "heb"),
         ("кириллический", "rus"),
+        ("平台经济的典型特征、垄断分析与反垄断监管", "chi"),
     ],
 )
 def test_compute_language(

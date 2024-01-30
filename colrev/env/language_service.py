@@ -2,6 +2,8 @@
 """Service to detect languages and handle language codes"""
 from __future__ import annotations
 
+import re
+
 import pycountry
 from lingua import LanguageDetectorBuilder
 
@@ -36,11 +38,15 @@ class LanguageService:
 
     def __determine_alphabet(self, str_to_check: str) -> str:
         assert len(str_to_check) != 0
+
+        str_to_check = re.sub(r"[\s\d\.\:]*", "", str_to_check)
+
         nr_greek_letters = 0
         nr_hangul_characters = 0
         nr_cyrillic_characters = 0
         nr_hebrew_characters = 0
         nr_arabic_characters = 0
+        nr_chinese_characters = 0
         for character in str_to_check:
             if "\u0370" <= character <= "\u03FF" or "\u1F00" <= character <= "\u1FFF":
                 nr_greek_letters += 1
@@ -58,6 +64,8 @@ class LanguageService:
                 or "\uFE70" <= character <= "\uFEFF"
             ):
                 nr_arabic_characters += 1
+            elif "\u4E00" <= character <= "\u9FFF" or "\u3400" <= character <= "\u4DBF":
+                nr_chinese_characters += 1
         if nr_greek_letters / len(str_to_check) > 0.75:
             return "ell"
         if nr_hangul_characters / len(str_to_check) > 0.75:
@@ -68,6 +76,8 @@ class LanguageService:
             return "heb"
         if nr_arabic_characters / len(str_to_check) > 0.75:
             return "ara"
+        if nr_chinese_characters / len(str_to_check) > 0.75:
+            return "chi"
         return ""
 
     def compute_language(self, *, text: str) -> str:
