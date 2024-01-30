@@ -403,6 +403,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 if key in short_search_params_key_list:
                     short_search_params[key] = search_params[key]
 
+        if "query" in short_search_params:
+            if len(short_search_params["query"]) > 50:
+                short_search_params["query"] = short_search_params["query"][0:50]
+
         name_string = str(short_search_params)
         name_string += str(datetime.date.today())
         # eliminate problematic characters from filename
@@ -429,14 +433,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         timeout: int = 30,
     ) -> colrev.record.Record:
         """Retrieve master data from Semantic Scholar"""
-        """Not yet implemented"""
+        # Not yet implemented
 
         return record
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
         """Source heuristic for Semantic Scholar"""
-        """Not yet implemented"""
+        # Not yet implemented
 
         result = {"confidence": 0.0}
 
@@ -444,7 +448,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        """Not yet implemented"""
+        # Not yet implemented
 
         if self.search_source.filename.suffix == ".bib":
             records = colrev.ops.load_utils_bib.load_bib_file(
@@ -458,5 +462,5 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
-        """Not yet implemented"""
+        # Not yet implemented
         return record
