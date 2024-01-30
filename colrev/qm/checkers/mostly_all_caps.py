@@ -61,7 +61,7 @@ class MostlyAllCapsFieldChecker:
         if key in [Fields.JOURNAL, Fields.BOOKTITLE] and len(record.data[key]) < 6:
             return False
 
-        if record.data[key] == "PLoS ONE":
+        if record.data[key].upper() == "PLOS ONE":
             return False
 
         return True
