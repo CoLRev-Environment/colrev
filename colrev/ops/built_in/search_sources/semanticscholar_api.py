@@ -69,7 +69,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     search_types = [colrev.settings.SearchType.API]
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     short_name = "S2"
-    source_identifier = Fields.COLREV_ID
+    source_identifier = Fields.SEMANTIC_SCHOLAR_ID
 
     SETTINGS = {
         "api_key": "packages.search_source.colrev.semanticscholar.api_key",
@@ -161,7 +161,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         query = None
         year = None
-        publication_types = None
         venue = None
         fields_of_study = None
         open_access_pdf = None
@@ -171,8 +170,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 query = value
             elif key == "year":
                 year = value
-            elif key == "publication_types":
-                publication_types = value
             elif key == "venue":
                 venue = value
             elif key == "fields_of_study":
@@ -184,7 +181,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             record_return = self.__s2__.search_paper(
                 query=query,
                 year=year,
-                publication_types=publication_types,
+                publication_types=None,
                 venue=venue,
                 fields_of_study=fields_of_study,
                 open_access_pdf=open_access_pdf,
