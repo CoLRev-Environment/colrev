@@ -5,6 +5,7 @@ from typing import Optional
 
 import inquirer
 
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
 
 
@@ -49,12 +50,13 @@ class SemanticScholarUI:
 
             elif fwd_value == "Exit Program":
                 print("\nThanks for using Colrev! This Program will close.")
-                run = False
-                raise SystemExit
+                raise colrev_exceptions.ServiceNotAvailableException("Regular exit.")
 
         if not self.search_params:
             print("\n Search cancelled. This program will close.")
-            raise SystemExit
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "No search parameters were entered."
+            )
 
     def paper_ui(self) -> bool:
         """Ask user to enter search parameters for distinctive paper search"""
@@ -196,7 +198,7 @@ class SemanticScholarUI:
         open_access = self.choose_single_option(
             msg="Would you like to only search for items "
             "for which the full text is available as pdf?",
-            options=["NO","YES"],
+            options=["NO", "YES"],
         )
         if open_access == "YES":
             self.search_params["open_access_pdf"] = True

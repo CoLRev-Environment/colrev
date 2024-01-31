@@ -205,7 +205,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.review_manager.logger.info(
                 "Search aborted because no records were found. This program will close."
             )
-            raise colrev_exceptions.ServiceNotAvailableException("")
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "No records were found."
+            )
 
         return record_return
 
@@ -231,7 +233,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 + "Search parameter: "
                 + str(params.get("paper_ids"))
             )
-            raise colrev_exceptions.ServiceNotAvailableException("")
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Search parameter error."
+            )
         return record_return
 
     def author_search(self, *, params: dict, rerun: bool) -> PaginatedResults:
@@ -256,7 +260,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 + "Search parameter: "
                 + str(params.get("author_ids"))
             )
-            raise colrev_exceptions.ServiceNotAvailableException("")
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "Search parameter error."
+            )
         return record_return
 
     def __get_api_key(self) -> str:
@@ -324,7 +330,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 "Error: Search could not be conducted. Please check your Parameters and API key."
             )
             print(exc)
-            raise colrev_exceptions.ServiceNotAvailableException("")
+            raise colrev_exceptions.ServiceNotAvailableException("No valid API key.")
 
         try:
             for item in __search_return__:
@@ -357,7 +363,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                         )
                     else:
                         self.review_manager.logger.info(
-                            "retrieve " + retrieved_record.data[Fields.DOI]
+                            "retrieve "
+                            + retrieved_record.data.get(Fields.DOI, "DOI not found")
                         )
                 else:
                     s2_feed.update_existing_record(
