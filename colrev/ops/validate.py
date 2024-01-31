@@ -29,11 +29,14 @@ class Validate(colrev.operation.Operation):
 
     def __load_prior_records_dict(self, *, target_commit: str) -> dict:
         git_repo = self.review_manager.dataset.get_repo()
-
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(
+            self.review_manager.dataset.RECORDS_FILE_RELATIVE
+        ).replace("\\", "/")
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / "data" / "records.bib").data_stream.read(),
+                (commit.tree / records_file_path).data_stream.read(),
             )
             for commit in git_repo.iter_commits(
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
@@ -367,6 +370,10 @@ class Validate(colrev.operation.Operation):
         revlist = git_repo.iter_commits(
             paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
         )
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(
+            self.review_manager.dataset.RECORDS_FILE_RELATIVE
+        ).replace("\\", "/")
 
         for commit in list(revlist):
             if len(commit.parents) <= 1:
@@ -376,25 +383,17 @@ class Validate(colrev.operation.Operation):
                 continue
 
             records_branch_1 = self.review_manager.dataset.load_records_dict(
-                load_str=(
-                    commit.parents[0].tree
-                    / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                )
+                load_str=(commit.parents[0].tree / records_file_path)
                 .data_stream.read()
                 .decode("utf-8")
             )
             records_branch_2 = self.review_manager.dataset.load_records_dict(
-                load_str=(
-                    commit.parents[1].tree
-                    / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                )
+                load_str=(commit.parents[1].tree / records_file_path)
                 .data_stream.read()
                 .decode("utf-8")
             )
             records_reconciled = self.review_manager.dataset.load_records_dict(
-                load_str=(
-                    commit.tree / str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-                )
+                load_str=(commit.tree / records_file_path)
                 .data_stream.read()
                 .decode("utf-8")
             )

@@ -68,10 +68,13 @@ class Load(colrev.operation.Operation):
         with an ex-post assignment of incremental IDs."""
 
         git_repo = self.review_manager.dataset.get_repo()
+
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        search_file_path = str(Path("data/search") / file.name).replace("\\", "/")
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / "data" / "search" / file.name).data_stream.read(),
+                (commit.tree / search_file_path).data_stream.read(),
             )
             for commit in git_repo.iter_commits(paths=str(file))
         )

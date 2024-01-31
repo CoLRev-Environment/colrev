@@ -177,9 +177,9 @@ class Dataset:
                             continue
 
             try:
-                filecontents = (
-                    commit.tree / str(self.RECORDS_FILE_RELATIVE)
-                ).data_stream.read()
+                # Ensure the path uses forward slashes, which is compatible with Git's path handling
+                records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
+                filecontents = (commit.tree / records_file_path).data_stream.read()
                 # Note : reinitialize parser (otherwise, bib_data does not change)
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(filecontents.decode("utf-8"))
@@ -187,15 +187,18 @@ class Dataset:
             except (StopIteration, KeyError):
                 found_but_not_changed = True
                 continue
+
             yield records_dict
 
     def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
         """Get the records that changed in a selected commit"""
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
 
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / "data" / "records.bib").data_stream.read(),
+                (commit.tree / records_file_path).data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
@@ -1041,10 +1044,12 @@ class Dataset:
         return self.__git_repo.untracked_files
 
     def __get_last_records_filecontents(self) -> bytes:
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / "data" / "records.bib").data_stream.read(),
+                (commit.tree / records_file_path).data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)

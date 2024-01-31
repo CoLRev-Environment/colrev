@@ -553,23 +553,45 @@ class Dedupe(colrev.operation.Operation):
         for rid in ids_origins:
             records.pop(rid, None)
 
-    def __revert_merge_for_records(self, ids_origins: dict) -> dict:
+    def __revert_merge_for_records(
+        self, unmerged_records: dict, ids_origins: dict
+    ) -> dict:
         """
         Attempt to revert the merge operation for each record based on its origins.
         """
-        unmerged_records = self.review_manager.dataset.load_records_dict()
-        unmerged = False
-        for recs in self.review_manager.dataset.load_records_from_history():
-            for rid, origins in ids_origins.items():
-                if rid not in recs or origins == recs[rid].get(Fields.ORIGIN, []):
-                    continue
-                for record in recs.values():
-                    if any(orig in origins for orig in record.get(Fields.ORIGIN, [])):
-                        record[Fields.STATUS] = colrev.record.RecordState.md_processed
-                        unmerged_records[record[Fields.ID]] = record
-                        unmerged = True
-                if unmerged:
-                    break
+
+        # unmerged = False
+        for hist_recs in self.review_manager.dataset.load_records_from_history():
+            for rid in list(ids_origins.keys()):
+                origins = ids_origins[rid]
+
+                unmerged_rids = []
+
+                for hist_rec in hist_recs.values():
+                    if not set(hist_rec.get(Fields.ORIGIN, [])).intersection(
+                        set(origins)
+                    ):
+                        continue
+
+                    # skip if hist_recs still contains the merged records (identical origin set)
+                    # ie., need to consider older commits
+                    if origins == hist_recs[rid].get(Fields.ORIGIN, []):
+                        continue
+                    if any(orig in origins for orig in hist_rec.get(Fields.ORIGIN, [])):
+                        # TODO Avoid ID conflicts
+                        assert hist_rec[Fields.ID] not in unmerged_records
+                        hist_rec[Fields.STATUS] = colrev.record.RecordState.md_processed
+                        print(f"add historical record: {hist_rec[Fields.ID]}")
+                        unmerged_records[hist_rec[Fields.ID]] = hist_rec
+                        unmerged_rids.append(rid)
+
+                for unmerged_rid in set(unmerged_rids):
+                    ids_origins.pop(unmerged_rid)
+
+            # Stop if all unmerged records were restored
+            if not ids_origins:
+                break
+
         return unmerged_records
 
     def unmerge_records(
@@ -588,17 +610,17 @@ class Dedupe(colrev.operation.Operation):
         print(ids_origins)
 
         # Load the current state of all records.
-        current_records = self.review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
 
         # Remove the merged records from the current state.
-        self.__remove_merged_records(current_records, ids_origins)
-        print(f"After removal: {current_records.keys()}")
+        self.__remove_merged_records(records, ids_origins)
+        print(f"After removal: {records.keys()}")
 
         # Attempt to revert the merge operation for each record.
-        records_after_unmerge = self.__revert_merge_for_records(ids_origins)
-        print(f"After revert: {records_after_unmerge.keys()}")
+        records = self.__revert_merge_for_records(records, ids_origins)
+        print(f"After revert: {records.keys()}")
 
-        self.review_manager.dataset.save_records_dict(records=records_after_unmerge)
+        self.review_manager.dataset.save_records_dict(records=records)
 
     def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
         """Fix lists of errors"""
