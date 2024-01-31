@@ -136,14 +136,14 @@ def __get_book_details(*, record_dict: dict) -> dict:
 def __get_fulltext(*, record_dict: dict) -> dict:
     """Method to extract fulltext from item"""
 
-    record_dict[Fields.FULLTEXT] = record_dict.get("openAccessPdf")
+    fulltext = record_dict.get("openAccessPdf", "")
 
-    if isinstance(record_dict[Fields.FULLTEXT], dict):
-        if len(record_dict[Fields.FULLTEXT]) > 0:
-            record_dict[Fields.FULLTEXT] = record_dict[Fields.FULLTEXT]["url"]
-        else:
-            record_dict[Fields.FULLTEXT] = ""
-    assert isinstance(record_dict.get("FULLTEXT", ""), str)
+    if isinstance(fulltext, dict):
+        if len(fulltext) > 0 and "url" in fulltext:
+            fulltext = fulltext["url"]
+
+    if fulltext:
+        record_dict[Fields.FULLTEXT] = fulltext
 
     return record_dict
 
