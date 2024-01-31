@@ -1,12 +1,14 @@
 """Utility to transform items from semanticscholar into records"""
 from __future__ import annotations
 
+import re
+
 from semanticscholar import Paper
 
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
+from colrev.record import PrepRecord as prep_record
 
 # pylint: disable=duplicate-code
 
@@ -14,15 +16,17 @@ from colrev.constants import Fields
 def __get_authors(record: dict) -> str:
     """Method to extract authors from item"""
     authors_list = []
+    author_string = ""
     record_authors = record.get("authors")
 
     if record_authors:
         for author in record_authors:
             if "name" in author:
                 authors_list.append(author["name"])
-        return " and ".join(authors_list)
+        author_string = " and ".join(authors_list)
+        author_string = prep_record.format_author_field(input_string=author_string)
 
-    return "n/a"
+    return author_string
 
 
 def __convert_entry_types(*, entrytype: str) -> str:
@@ -41,74 +45,90 @@ def __convert_entry_types(*, entrytype: str) -> str:
     return ENTRYTYPES.MISC
 
 
-def __items_from_publication_venue(*, record_dict: dict) -> dict:
+def __get_entrytype_and_issn(*, record_dict: dict) -> dict:
     """Method to extract data from publication venue"""
-    record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationVenue", "n/a")
-    if record_dict["publicationVenue"]:
-        if isinstance(record_dict[Fields.ENTRYTYPE], dict):
-            if "issn" in record_dict[Fields.ENTRYTYPE]:
-                record_dict[Fields.ISSN] = record_dict[Fields.ENTRYTYPE]["issn"]
-            if "type" in record_dict[Fields.ENTRYTYPE]:
-                for key, value in record_dict[Fields.ENTRYTYPE].items():
+    record_dict[Fields.ENTRYTYPE] = ""
+    entrytype_dict = record_dict.get("publicationVenue", "")
+    if entrytype_dict:
+        if isinstance(entrytype_dict, dict):
+            if "issn" in entrytype_dict:
+                record_dict[Fields.ISSN] = entrytype_dict["issn"]
+            if "type" in entrytype_dict:
+                for key, value in entrytype_dict.items():
                     if key == "type":
                         record_dict[Fields.ENTRYTYPE] = __convert_entry_types(
                             entrytype=value.lower().replace(" ", "")
                         )
 
     if not record_dict[Fields.ENTRYTYPE]:
-        record_dict[Fields.ENTRYTYPE] = record_dict.get("publicationTypes")
+        entrytype_list = record_dict.get("publicationTypes", "")
 
-        if isinstance(record_dict[Fields.ENTRYTYPE], list):
-            if len(record_dict[Fields.ENTRYTYPE]) > 0:
-                record_dict[Fields.ENTRYTYPE] = (
-                    record_dict[Fields.ENTRYTYPE][0].lower().replace(" ", "")
-                )
+        if isinstance(entrytype_list, list):
+            if len(entrytype_list) > 0:
+                entrytype_list = entrytype_list[0].lower().replace(" ", "")
             else:
-                record_dict[Fields.ENTRYTYPE] = "n/a"
+                entrytype_list = [""]
         record_dict[Fields.ENTRYTYPE] = __convert_entry_types(
-            entrytype=str(record_dict.get("ENTRYTYPE"))
+            entrytype=str(entrytype_list)
         )
-
-    if "book" in record_dict[Fields.ENTRYTYPE]:
-        record_dict[Fields.BOOKTITLE] = record_dict.get("journal")
-        if record_dict[Fields.BOOKTITLE] and "name" in record_dict[Fields.BOOKTITLE]:
-            record_dict[Fields.BOOKTITLE] = record_dict[Fields.BOOKTITLE]["name"]
 
     return record_dict
 
 
 def __get_doi(*, record_dict: dict) -> dict:
     """Method to extract DOI from item"""
-    record_dict[Fields.DOI] = record_dict.get("externalIds", "n/a")
+    record_dict[Fields.DOI] = record_dict.get("externalIds", "")
 
     if isinstance(record_dict[Fields.DOI], dict):
         if len(record_dict[Fields.DOI]) > 0:
-            record_dict[Fields.DOI] = record_dict[Fields.DOI].get("DOI", "n/a")
+            record_dict[Fields.DOI] = record_dict[Fields.DOI].get("DOI", "")
             if record_dict[Fields.DOI]:
                 record_dict[Fields.DOI] = str(record_dict.get(Fields.DOI)).upper()
         else:
-            record_dict[Fields.DOI] = "n/a"
+            record_dict[Fields.DOI] = ""
     assert isinstance(record_dict.get("doi", ""), str)
 
     return record_dict
 
 
-def __get_book_details(*, record_dict: dict) -> dict:
+def ___get_volume_and_pages(*, record_dict: dict) -> dict:
     """Method to extract pages and volume from item"""
 
     if "journal" in record_dict and isinstance(record_dict.get("journal"), dict):
         if "volume" in record_dict["journal"]:
             record_dict[Fields.VOLUME] = record_dict["journal"]["volume"]
-        else:
-            record_dict[Fields.VOLUME] = "n/a"
-
         if "pages" in record_dict["journal"]:
-            record_dict[Fields.PAGES] = record_dict["journal"]["pages"]
-        else:
-            record_dict[Fields.PAGES] = "n/a"
-    else:
-        record_dict[Fields.VOLUME] = "n/a"
-        record_dict[Fields.PAGES] = "n/a"
+            pages = record_dict["journal"]["pages"]
+            if "-" in pages:
+                pages = re.sub(r"\s+|[a-zA-Z]+", "", pages)
+                pages_list = pages.split("-")
+                a = int(pages_list[0])
+                b = int(pages_list[1])
+                if a > b:
+                    pages = str(b) + "-" + str(a)
+                elif a == b:
+                    pages = str(a)
+
+            record_dict[Fields.PAGES] = pages
+
+    return record_dict
+
+
+def __get_book_details(*, record_dict: dict) -> dict:
+    """Method to extract book specific details from item"""
+
+    book_title = record_dict.get("journal", "")
+    if book_title:
+        if "name" in book_title:
+            book_title = book_title["name"]
+            title = record_dict[Fields.TITLE]
+
+            if book_title and title:
+                if (book_title in title) or (title in book_title):
+                    if len(title) < len(book_title):
+                        record_dict[Fields.TITLE] = book_title
+                else:
+                    record_dict[Fields.BOOKTITLE] = book_title
 
     return record_dict
 
@@ -122,7 +142,7 @@ def __get_fulltext(*, record_dict: dict) -> dict:
         if len(record_dict[Fields.FULLTEXT]) > 0:
             record_dict[Fields.FULLTEXT] = record_dict[Fields.FULLTEXT]["url"]
         else:
-            record_dict[Fields.FULLTEXT] = "n/a"
+            record_dict[Fields.FULLTEXT] = ""
     assert isinstance(record_dict.get("FULLTEXT", ""), str)
 
     return record_dict
@@ -133,26 +153,29 @@ def __item_to_record(item: Paper) -> dict:
 
     record_dict = dict(item)
 
-    record_dict[Fields.COLREV_ID] = record_dict.get("paperId", "n/a")
-    record_dict[Fields.ID] = record_dict.get("paperId", "n/a")
-    record_dict = __get_doi(record_dict=record_dict)
+    record_dict = __get_entrytype_and_issn(record_dict=record_dict)
+    record_dict[Fields.TITLE] = record_dict.get("title", "")
+    record_dict = ___get_volume_and_pages(record_dict=record_dict)
 
-    record_dict[Fields.URL] = record_dict.get("url", "n/a")
-    record_dict[Fields.ISSN] = "n/a"
+    if "book" in record_dict[Fields.ENTRYTYPE]:
+        record_dict = __get_book_details(record_dict=record_dict)
+        record_dict[Fields.JOURNAL] = ""
+    else:
+        record_dict[Fields.JOURNAL] = record_dict.get("venue", "")
 
-    record_dict = __items_from_publication_venue(record_dict=record_dict)
+    abstract = record_dict.get("abstract", "")
+    if not abstract:
+        record_dict[Fields.ABSTRACT] = ""
+    else:
+        record_dict[Fields.ABSTRACT] = abstract
 
-    record_dict[Fields.TITLE] = record_dict.get("title")
     record_dict[Fields.AUTHOR] = __get_authors(record=record_dict)
-    record_dict[Fields.ABSTRACT] = record_dict.get("abstract")
-    record_dict[Fields.YEAR] = record_dict.get("year")
-
-    record_dict = __get_book_details(record_dict=record_dict)
-
-    record_dict[Fields.JOURNAL] = record_dict.get("venue")
-    record_dict[Fields.CITED_BY] = record_dict.get("citationCount")
-
+    record_dict[Fields.YEAR] = record_dict.get("year", "")
+    record_dict[Fields.CITED_BY] = record_dict.get("citationCount", "")
     record_dict = __get_fulltext(record_dict=record_dict)
+    record_dict = __get_doi(record_dict=record_dict)
+    record_dict[Fields.SEMANTIC_SCHOLAR_ID] = record_dict.get("paperId", "")
+    record_dict[Fields.URL] = record_dict.get("url", "")
 
     return record_dict
 
@@ -161,7 +184,7 @@ def __remove_fields(*, record: dict) -> dict:
     """Method to remove unsupported fields from semanticscholar record"""
     supported_fields = [
         Fields.ID,
-        Fields.COLREV_ID,
+        Fields.SEMANTIC_SCHOLAR_ID,
         Fields.DOI,
         Fields.URL,
         Fields.ENTRYTYPE,
@@ -189,8 +212,6 @@ def s2_dict_to_record(*, item: dict) -> dict:
     try:
         record_dict = __item_to_record(item=item)
         record_dict = __remove_fields(record=record_dict)
-        # TO DO: Implement further functions, especially "remove fields":
-        # Use colrev/colrev/ops/built_in/search_sources/utils.py as inspiration!
 
     except (IndexError, KeyError) as exc:
         raise colrev_exceptions.RecordNotParsableException(
