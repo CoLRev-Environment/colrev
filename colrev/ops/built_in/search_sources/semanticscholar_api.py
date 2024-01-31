@@ -32,7 +32,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.ops.built_in.search_sources.semanticscholarui import SemanticScholarUI
+from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
 if TYPE_CHECKING:
     import colrev.ops.search
