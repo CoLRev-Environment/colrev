@@ -181,10 +181,6 @@ class SemanticScholarUI:
         if year:
             self.search_params[Fields.YEAR] = year
 
-        publication_types = self.enter_pub_types()
-        if publication_types:
-            self.search_params["publication_types"] = publication_types
-
         venue = self.enter_text(
             msg="To search for papers from specific venues, enter the venues here."
             + " Separate multiple venues by comma."
@@ -200,7 +196,7 @@ class SemanticScholarUI:
         open_access = self.choose_single_option(
             msg="Would you like to only search for items "
             "for which the full text is available as pdf?",
-            options=["YES", "NO"],
+            options=["NO","YES"],
         )
         if open_access == "YES":
             self.search_params["open_access_pdf"] = True
@@ -285,19 +281,17 @@ class SemanticScholarUI:
                     + " Please press Enter if you don't wish to specify a year span"
                 )
                 ask_again = True
-            elif re.match(r"^\d{4}-\d{4}", year_span):
+            elif re.match(r"^\d{4}-\d{4}$", year_span):
                 years = year_span.split("-")
                 a = int(years[0])
-
-                if int(years[1]):
-                    b = int(years[1])
-                    if a >= b or (b > int(datetime.date.today().year)):
-                        print("Error: Invalid year span.\n" + examples + "\n")
-                        year_span = self.enter_text(
-                            msg="Please enter a year span."
-                            + " Please press Enter if you don't wish to specify a year span"
-                        )
-                        ask_again = True
+                b = int(years[1])
+                if a >= b or (b > int(datetime.date.today().year)):
+                    print("Error: Invalid year span.\n" + examples + "\n")
+                    year_span = self.enter_text(
+                        msg="Please enter a year span."
+                        + " Please press Enter if you don't wish to specify a year span"
+                    )
+                    ask_again = True
             elif re.match(r"^-?\d{4}-?$", year_span):
                 year = int(re.findall(r"\d{4}", year_span)[0])
                 if year > int(datetime.date.today().year):
@@ -311,32 +305,6 @@ class SemanticScholarUI:
                     ask_again = True
 
         return year_span
-
-    def enter_pub_types(self) -> list:
-        """Method to ask a selection of publication
-        types that are allowed by the Semantic Scholar API"""
-
-        msg = (
-            "Please choose the publication types. "
-            "If you want to include all publication types, please press Enter"
-        )
-        options = [
-            "Review",
-            "JournalArticle",
-            "CaseReport",
-            "ClinicalTrial",
-            "Dataset",
-            "Editorial",
-            "LettersAndComments",
-            "MetaAnalysis",
-            "News",
-            "Study",
-            "Book",
-            "BookSection",
-        ]
-        pub_types = self.choose_multiple_options(msg=msg, options=options)
-
-        return pub_types
 
     def enter_study_fields(self) -> list:
         """Method to ask a selection of fields of
