@@ -85,14 +85,8 @@ class Dedupe(JsonSchemaMixin):
 
         duplicate_id_sets = bib_dedupe.cluster.get_connected_components(matched_df)
 
-        # based on records, get the origin_sets
-        origin_sets = [
-            [o for rid in dupe_id_set for o in records[rid][Fields.ORIGIN]]
-            for dupe_id_set in duplicate_id_sets
-        ]
-
         self.dedupe_operation.apply_merges(
-            origin_sets=origin_sets, complete_dedupe=True
+            id_sets=duplicate_id_sets, complete_dedupe=True
         )
 
         self.review_manager.create_commit(

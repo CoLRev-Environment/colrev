@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev dedupe operation"""
+import difflib
 import shutil
 import typing
 from pathlib import Path
@@ -10,7 +11,7 @@ import colrev.review_manager
 
 
 @pytest.fixture(scope="session", name="dedupe_test_setup")
-def fixture_quality_model(  # type: ignore
+def fixture_dedupe_test_setup(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> colrev.review_manager.ReviewManager:
     """Fixture returning the dedupe_test_setup"""
@@ -24,10 +25,11 @@ def fixture_quality_model(  # type: ignore
     base_repo_review_manager.create_commit(
         msg="Import dedupe test cases", manual_author=True
     )
+
     return base_repo_review_manager
 
 
-def test_dedupe(  # type: ignore
+def test_dedupe_utilities(  # type: ignore
     dedupe_test_setup: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the dedupe operation"""
@@ -40,17 +42,29 @@ def test_dedupe(  # type: ignore
     dedupe_operation.review_manager.verbose_mode = True
     dedupe_operation.main()
 
-    dedupe_operation.unmerge_records(previous_id_lists=[["Staehr2010", "Staehr2010a"]])
+    dedupe_operation.unmerge_records(current_record_ids=["Staehr2010"])
+    records = dedupe_test_setup.dataset.load_records_dict()
+    assert "Staehr2010" in records.keys()
+    assert "Staehr2010a" in records.keys()
+
     dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
     dedupe_test_setup.create_commit(
         msg="Unmerge Staehr2010-Staehr2010a", manual_author=True
     )
-
-    dedupe_operation.merge_records(merge="Staehr2010,Staehr2010")
+    dedupe_operation.merge_records(merge="Staehr2010,Staehr2010a")
     dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
     dedupe_test_setup.create_commit(
         msg="Merge Staehr2010-Staehr2010a", manual_author=True
     )
+    records = dedupe_test_setup.dataset.load_records_dict()
+    assert "Staehr2010" in records.keys()
+    assert "Staehr2010a" not in records.keys()
+
+    # Try non-unique ID lists
+    dedupe_operation.merge_records(merge="Staehr2010,Staehr2010")
+
+    with pytest.raises(AssertionError):
+        dedupe_operation.merge_records(merge="RandomID1,RandomID2")
 
     expected_file = Path("dedupe/records_expected.bib")
     actual = Path("data/records.bib").read_text(encoding="utf-8")
@@ -61,6 +75,9 @@ def test_dedupe(  # type: ignore
 
     # If mismatch: copy the actual file to replace the expected file (facilitating updates)
     if expected != actual:
+        diff = difflib.unified_diff(expected.splitlines(), actual.splitlines())
+        print("\n".join(diff))
+
         print(Path.cwd())
         shutil.copy(
             Path("data/records.bib"),

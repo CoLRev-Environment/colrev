@@ -361,7 +361,7 @@ class CurationDedupe(JsonSchemaMixin):
                         )
                         if overlapping_colrev_ids:
                             decision_list.append(
-                                new_same_toc_record[Fields.ORIGIN] + rec2[Fields.ORIGIN]
+                                [new_same_toc_record[Fields.ID], rec2[Fields.ID]]
                             )
                             print("TODO : validate whether it merges correctly:")
                             input(decision_list)
@@ -413,18 +413,7 @@ class CurationDedupe(JsonSchemaMixin):
             data=rec1
         ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
         if validated or overlapping_colrev_ids:
-            # Note : make sure that we merge into the CURATED record
-            if Fields.FILE in rec1:
-                if tuple_to_process[0] in [x["ID1"] for x in decision_list]:
-                    return
-                decision_list.append(rec1[Fields.ORIGIN] + rec2[Fields.ORIGIN])
-            else:
-                if tuple_to_process[1] in [x["ID1"] for x in decision_list]:
-                    return
-                if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
-                    decision_list.append(rec1[Fields.ORIGIN] + rec2[Fields.ORIGIN])
-                else:
-                    decision_list.append(rec1[Fields.ORIGIN] + rec2[Fields.ORIGIN])
+            decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 
     def __dedupe_pdf_toc_item(
         self,
@@ -553,7 +542,7 @@ class CurationDedupe(JsonSchemaMixin):
         )
 
         decision_list: list[list] = []
-        # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
+        # decision_list =[['ID1', 'ID2'], ...]
         if not self.__pdf_source_selected():
             decision_list = self.__dedupe_source(records=records)
         else:
@@ -577,7 +566,7 @@ class CurationDedupe(JsonSchemaMixin):
             if s.endpoint != "colrev.files_dir"
         ]
         self.dedupe_operation.apply_merges(
-            origin_sets=decision_list,
+            id_sets=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
         self.review_manager.create_commit(

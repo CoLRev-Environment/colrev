@@ -84,6 +84,7 @@ def run_around_tests(  # type: ignore
     yield  # run test-code
 
     # post-test-code
+    print("Post-test teardown: Restore repository state")
     os.chdir(str(base_repo_review_manager.path))
     base_repo_review_manager.load_settings()
     repo = git.Repo(base_repo_review_manager.path)

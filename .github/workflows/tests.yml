@@ -26,7 +26,7 @@ jobs:
           git config --global user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
       - name: Run poetry tests (minimal-deps)
-        run: poetry run pytest tests/0_core/
+        run: poetry run pytest tests/0_core/ -vv
 
   test-full-deps:
     needs: test-minimal-deps
@@ -52,4 +52,4 @@ jobs:
           git config --global user.email "actions@users.noreply.github.com"
           git config --global url.https://github.com/.insteadOf git://github.com/
       - name: Run poetry tests
-        run: poetry run pytest --slow
+        run: poetry run pytest --slow -vv

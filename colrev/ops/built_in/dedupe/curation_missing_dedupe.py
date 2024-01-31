@@ -263,11 +263,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         rec2 = same_toc_recs[int(ret) - 1]
                         if record.data[Fields.STATUS] < rec2[Fields.STATUS]:
                             results["decision_list"].append(
-                                rec2[Fields.ORIGIN] + record.data[Fields.ORIGIN]
+                                [rec2[Fields.ID], record.data[Fields.ID]]
                             )
                         else:
                             results["decision_list"].append(
-                                rec2[Fields.ORIGIN] + record.data[Fields.ORIGIN]
+                                [rec2[Fields.ID], record.data[Fields.ID]]
                             )
 
                         valid_selection = True
@@ -313,7 +313,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             ]
 
             self.dedupe_operation.apply_merges(
-                origin_sets=ret["decision_list"],
+                id_sets=ret["decision_list"],
                 preferred_masterdata_sources=preferred_masterdata_sources,
             )
 

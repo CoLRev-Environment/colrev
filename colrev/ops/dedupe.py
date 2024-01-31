@@ -8,6 +8,7 @@ from collections import Counter
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -415,19 +416,17 @@ class Dedupe(colrev.operation.Operation):
     def apply_merges(
         self,
         *,
-        origin_sets: list,
+        id_sets: list,
         complete_dedupe: bool = False,
         preferred_masterdata_sources: Optional[list] = None,
     ) -> None:
         """Apply deduplication decisions
 
-        origin_sets : [[origin_1, origin_2, origin_3], ...]
+        id_sets : [[ID_1, ID_2, ID_3], ...]
 
         - complete_dedupe: when not all potential duplicates were considered,
         we cannot set records to md_procssed for non-duplicate decisions
         """
-        # TODO : the apply_merges and other utility functions
-        # should refer to the current IDs (not the origins)
 
         preferred_masterdata_source_prefixes = []
         if preferred_masterdata_sources:
@@ -436,11 +435,29 @@ class Dedupe(colrev.operation.Operation):
             ]
 
         records = self.review_manager.dataset.load_records_dict()
+        non_existing_IDs = [
+            ID
+            for ID in [id for id_set in id_sets for id in id_set]
+            if ID not in records
+        ]
+        if non_existing_IDs:
+            print(f"Non-existing IDs: {non_existing_IDs}")
+            print(f"Records IDs: {records.keys()}")
+        assert not non_existing_IDs, "Not all IDs from id_sets are present in records"
+
+        # Notify users about items with only one unique ID
+        for id_set in id_sets:
+            if len(set(id_set)) == 1:
+                self.review_manager.logger.info(
+                    f"Skipping merge for identical IDs: {id_set[0]}"
+                )
+        # Drop cases where IDs are identical
+        id_sets = [id_set for id_set in id_sets if len(set(id_set)) != 1]
 
         removed_duplicates = []
         duplicate_id_mappings: typing.Dict[str, list] = {}
         for main_record, dupe_record in self.__get_records_to_merge(
-            records=records, origin_sets=origin_sets
+            records=records, id_sets=id_sets
         ):
             try:
                 if self.__skip_merge_condition(
@@ -483,17 +500,13 @@ class Dedupe(colrev.operation.Operation):
         )
 
     def __get_records_to_merge(
-        self, *, records: dict, origin_sets: list
+        self, *, records: dict, id_sets: list
     ) -> typing.Iterable[tuple]:
         """Resolves multiple/chained duplicates (by following the MOVED_DUPE_ID mark)
         and returns tuples with the primary merge record in the first position."""
 
-        for origin_set in origin_sets:
-            recs_to_merge = [
-                r
-                for r in records.values()
-                if any(o in r[Fields.ORIGIN] for o in origin_set)
-            ]
+        for id_set in id_sets:
+            recs_to_merge = [r for r in records.values() if r[Fields.ID] in id_set]
 
             # Simple way of implementing the closure
             # cases where the main_record has already been merged into another record
@@ -516,147 +529,82 @@ class Dedupe(colrev.operation.Operation):
 
                 yield (main_record, dupe_record)
 
-    def __unmerge_current_record_ids_records(self, *, current_record_ids: list) -> dict:
-        ids_origins: typing.Dict[str, list] = {rid: [] for rid in current_record_ids}
+    def __get_origins_for_current_ids(self, current_record_ids: list) -> dict:
+        """
+        For each record ID, get the origins from the most recent history entry.
+        """
 
-        for records in self.review_manager.dataset.load_records_from_history():
-            for rid in ids_origins:
-                ids_origins[rid] = records[rid][Fields.ORIGIN]
-            break
-
+        ids_origins: Dict[str, List[str]] = {rid: [] for rid in current_record_ids}
+        # history = next(self.review_manager.dataset.load_records_from_history(), None)
+        # if history:
+        #     for rid in ids_origins:
+        #         ids_origins[rid] = history.get(rid, {}).get(Fields.ORIGIN, [])
+        # TODO : assert that all current_record_ids are in the first commit in history?!
         records = self.review_manager.dataset.load_records_dict()
         for rid in ids_origins:
-            del records[rid]
+            ids_origins[rid] = records.get(rid, {}).get(Fields.ORIGIN, [])
+        return ids_origins
 
-        unmerged, first = False, True
-        for recs in self.review_manager.dataset.load_records_from_history():
-            if first:
-                first = False
-                continue
-            for rid in list(ids_origins.keys()):
-                if rid not in recs:
-                    break
+    def __remove_merged_records(self, records: dict, ids_origins: dict) -> None:
+        """
+        Remove records that have been merged from the records dictionary.
+        These records are identified by their current IDs.
+        """
+        for rid in ids_origins:
+            records.pop(rid, None)
 
-                if ids_origins[rid] == recs[rid]:
-                    break
-
-                for record in recs.values():
-                    if any(orig in ids_origins[rid] for orig in record[Fields.ORIGIN]):
-                        records[record[Fields.ID]] = record
-                        unmerged = True
-            if unmerged:
-                break
-        return records
-
-    def __unmerge_previous_id_lists_records(self, *, previous_id_lists: list) -> dict:
-        records = self.review_manager.dataset.load_records_dict()
-        git_repo = self.review_manager.dataset.get_repo()
-        # print(self.review_manager.dataset.RECORDS_FILE_RELATIVE.is_file())
-        # r_path = join_path_native("data", "records.bib")
-        revlist = (
-            (commit.tree / "data" / "records.bib").data_stream.read()
-            for commit in git_repo.iter_commits(
-                paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-            )
-        )
-
+    def __revert_merge_for_records(self, ids_origins: dict) -> dict:
+        """
+        Attempt to revert the merge operation for each record based on its origins.
+        """
+        unmerged_records = self.review_manager.dataset.load_records_dict()
         unmerged = False
-        for filecontents in revlist:
-            prior_records_dict = self.review_manager.dataset.load_records_dict(
-                load_str=filecontents.decode("utf-8")
-            )
-
-            for id_list_to_unmerge in previous_id_lists:
-                self.review_manager.report_logger.info(
-                    f'Undo merge: {",".join(id_list_to_unmerge)}'
-                )
-                self.review_manager.logger.info(
-                    f'Undo merge: {",".join(id_list_to_unmerge)}'
-                )
-
-                if all(rec_id in prior_records_dict for rec_id in id_list_to_unmerge):
-                    # delete new record,
-                    # add previous records (from history) to records
-                    records = {
-                        k: v for k, v in records.items() if k not in id_list_to_unmerge
-                    }
-
-                    for record_dict in prior_records_dict.values():
-                        if record_dict[Fields.ID] in id_list_to_unmerge:
-                            # add manual_dedupe/non_dupe decision to the records
-                            manual_non_duplicates = id_list_to_unmerge.copy()
-                            manual_non_duplicates.remove(record_dict[Fields.ID])
-
-                            # The followin may need to be set to the previous state of the
-                            # record that was erroneously merged (could be md_prepared)
-                            record = colrev.record.Record(data=record_dict)
-                            record.set_status(
-                                target_state=colrev.record.RecordState.md_processed
-                            )
-                            records[record_dict[Fields.ID]] = record_dict
-                            self.review_manager.logger.info(
-                                f"Restored {record_dict[Fields.ID]}"
-                            )
-                    unmerged = True
-
+        for recs in self.review_manager.dataset.load_records_from_history():
+            for rid, origins in ids_origins.items():
+                if rid not in recs or origins == recs[rid].get(Fields.ORIGIN, []):
+                    continue
+                for record in recs.values():
+                    if any(orig in origins for orig in record.get(Fields.ORIGIN, [])):
+                        record[Fields.STATUS] = colrev.record.RecordState.md_processed
+                        unmerged_records[record[Fields.ID]] = record
+                        unmerged = True
                 if unmerged:
                     break
-            if unmerged:
-                break
-
-        if not unmerged:
-            self.review_manager.logger.error(
-                f"Could not restore {previous_id_lists} - " "please fix manually"
-            )
-
-        return records
+        return unmerged_records
 
     def unmerge_records(
         self,
         *,
-        current_record_ids: Optional[list] = None,
-        previous_id_lists: Optional[list] = None,
+        current_record_ids: list,
     ) -> None:
         """Unmerge duplicate decision of the records, as identified by their ids.
 
         The current_record_ids identifies the records by their current IDs and
         unmerges their most recent merge in history.
 
-        The previous_id_lists identifies the records by their IDs in the previous commit and
-        only considers merges in the previous commit.
-
         """
+        # Map each current record ID to its origins for easy lookup of historical records.
+        ids_origins = self.__get_origins_for_current_ids(current_record_ids)
+        print(ids_origins)
 
-        assert not (previous_id_lists and current_record_ids)
-        if current_record_ids is None and previous_id_lists is None:
-            return
+        # Load the current state of all records.
+        current_records = self.review_manager.dataset.load_records_dict()
 
-        if current_record_ids:
-            records = self.__unmerge_current_record_ids_records(
-                current_record_ids=current_record_ids
-            )
+        # Remove the merged records from the current state.
+        self.__remove_merged_records(current_records, ids_origins)
+        print(f"After removal: {current_records.keys()}")
 
-        if previous_id_lists:
-            records = self.__unmerge_previous_id_lists_records(
-                previous_id_lists=previous_id_lists
-            )
+        # Attempt to revert the merge operation for each record.
+        records_after_unmerge = self.__revert_merge_for_records(ids_origins)
+        print(f"After revert: {records_after_unmerge.keys()}")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records=records_after_unmerge)
 
-    def fix_errors(
-        self, *, false_positives: Optional[list] = None, false_negatives: list
-    ) -> None:
+    def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
         """Fix lists of errors"""
 
-        records = self.review_manager.dataset.load_records_dict()
-
-        origin_sets = [
-            [o for rid in dupe_id_set for o in records[rid][Fields.ORIGIN]]
-            for dupe_id_set in false_negatives
-        ]
-
-        self.unmerge_records(previous_id_lists=false_positives)
-        self.apply_merges(origin_sets=origin_sets, complete_dedupe=False)
+        self.unmerge_records(current_record_ids=false_positives)
+        self.apply_merges(id_sets=false_negatives, complete_dedupe=False)
 
         if self.review_manager.dataset.records_changed():
             self.review_manager.create_commit(
@@ -708,7 +656,8 @@ class Dedupe(colrev.operation.Operation):
         )
         self.policy = colrev.settings.SameSourceMergePolicy.apply
 
-        self.fix_errors(false_negatives=[i.split(",") for i in merge.split(";")])
+        id_sets = [i.split(",") for i in merge.split(";")]
+        self.apply_merges(id_sets=id_sets)
 
     def merge_based_on_global_ids(self, *, apply: bool = False) -> None:
         """Merge records based on global IDs (e.g., doi)"""
@@ -737,35 +686,31 @@ class Dedupe(colrev.operation.Operation):
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
 
-        origin_sets = []
+        id_sets = []
         for global_key in global_keys:
-            key_dict: typing.Dict[str, list] = {}
+            global_key_dict: typing.Dict[str, list] = {}
             for record in records.values():
                 if global_key not in record:
                     continue
-                if record[global_key] in key_dict:
-                    key_dict[record[global_key]].append(record[Fields.ID])
+                if record[global_key] in global_key_dict:
+                    global_key_dict[record[global_key]].append(record[Fields.ID])
                 else:
-                    key_dict[record[global_key]] = [record[Fields.ID]]
+                    global_key_dict[record[global_key]] = [record[Fields.ID]]
 
-            key_dict = {k: v for k, v in key_dict.items() if len(v) > 1}
-            for record_ids in key_dict.values():
-                for ref_rec_id in range(1, len(record_ids)):
-                    origin_sets.append(
-                        record_ids[0][Fields.ORIGIN]
-                        + record_ids[ref_rec_id][Fields.ORIGIN]
-                    )
+            global_key_duplicates = [v for v in global_key_dict.values() if len(v) > 1]
+            for duplicate in global_key_duplicates:
+                id_sets.extend(list(combinations(duplicate, 2)))
 
         if apply:
             self.review_manager.settings.dedupe.same_source_merges = (
                 colrev.settings.SameSourceMergePolicy.warn
             )
-            self.apply_merges(origin_sets=origin_sets)
+            self.apply_merges(id_sets=id_sets)
             self.review_manager.create_commit(
                 msg="Merge records (identical global IDs)"
             )
 
-        elif origin_sets:
+        elif id_sets:
             print()
             self.review_manager.logger.info("Found records with identical global-ids:")
             self.review_manager.logger.info(
