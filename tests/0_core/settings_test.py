@@ -62,6 +62,7 @@ def test_settings_load() -> None:
                         {"endpoint": "colrev.crossref"},
                         {"endpoint": "colrev.pubmed"},
                         {"endpoint": "colrev.europe_pmc"},
+                        {"endpoint": "colrev.dblp"},
                         {"endpoint": "colrev.open_library"},
                     ],
                 }

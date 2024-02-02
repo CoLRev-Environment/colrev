@@ -49,6 +49,19 @@
             ]
         },
         {
+            "package_endpoint_identifier": "colrev.dblp",
+            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "DBLP API (:doc:`instructions </resources/extensions_index/colrev.dblp>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API",
+                "MD",
+                "TOC"
+            ]
+        },
+        {
             "package_endpoint_identifier": "colrev.eric",
             "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
             "status": "|EXPERIMENTAL|",
@@ -340,6 +353,19 @@
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </resources/extensions_index/colrev.crossref>`)",
+            "ci_supported": true,
+            "search_types": [
+                "API",
+                "MD",
+                "TOC"
+            ]
+        },
+        {
+            "package_endpoint_identifier": "colrev.dblp",
+            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "status": "|MATURING|",
+            "status_linked": "|MATURING|",
+            "short_description": "DBLP API (:doc:`instructions </resources/extensions_index/colrev.dblp>`)",
             "ci_supported": true,
             "search_types": [
                 "API",

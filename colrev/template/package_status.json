@@ -83,6 +83,10 @@
             "status": "MATURING"
         },
         {
+            "package_endpoint_identifier": "colrev.dblp",
+            "status": "MATURING"
+        },
+        {
             "package_endpoint_identifier": "colrev.europe_pmc",
             "status": "MATURING"
         },
@@ -226,6 +230,10 @@
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
+            "status": "MATURING"
+        },
+        {
+            "package_endpoint_identifier": "colrev.dblp",
             "status": "MATURING"
         },
         {

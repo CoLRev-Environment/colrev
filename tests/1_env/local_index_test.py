@@ -210,9 +210,11 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
         Fields.D_PROV: {
             Fields.PDF_ID: {"source": "file|pdf_hash", "note": ""},
             Fields.FILE: {"source": "pdfs.bib/0000001378", "note": ""},
+            Fields.DBLP_KEY: {"source": "DBLP.bib/000869", "note": ""},
             Fields.URL: {"source": "DBLP.bib/000869", "note": ""},
         },
         Fields.PDF_ID: "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
+        Fields.DBLP_KEY: "https://dblp.org/rec/journals/misq/AbbasiAVH12",
         Fields.JOURNAL: "MIS Quarterly",
         Fields.TITLE: "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
         Fields.YEAR: "2012",
