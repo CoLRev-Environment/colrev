@@ -76,7 +76,6 @@ class Fields:
     LOCAL_CURATED_METADATA = "local_curated_metadata"
     GROBID_VERSION = "grobid-version"
 
-    DBLP_KEY = "colrev.dblp.dblp_key"
     SEMANTIC_SCHOLAR_ID = "colrev.semantic_scholar.id"
     WEB_OF_SCIENCE_ID = "colrev.web_of_science.unique-id"
     PUBMED_ID = "colrev.pubmed.pubmedid"

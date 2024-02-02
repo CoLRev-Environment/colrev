@@ -59,7 +59,6 @@ NO_CUSTOM_SOURCE = None
             NO_CUSTOM_SOURCE,
             Path("ebsco_result.bib"),
         ),
-        (Path("dblp.bib"), "colrev.dblp", NO_CUSTOM_SOURCE, Path("dblp_result.bib")),
         (
             Path("europe_pmc.bib"),
             "colrev.europe_pmc",

@@ -177,19 +177,6 @@
             ]
         },
         {
-            "package_endpoint_identifier": "colrev.dblp",
-            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "DBLP API (:doc:`instructions </resources/extensions_index/colrev.dblp>`)",
-            "ci_supported": true,
-            "search_types": [
-                "API",
-                "MD",
-                "TOC"
-            ]
-        },
-        {
             "package_endpoint_identifier": "colrev.ebsco_host",
             "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource",
             "status": "|EXPERIMENTAL|",

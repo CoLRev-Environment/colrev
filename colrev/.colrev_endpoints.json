@@ -49,9 +49,6 @@
             {"package_endpoint_identifier": "colrev.europe_pmc",
              "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep"
             },
-            {"package_endpoint_identifier": "colrev.dblp",
-             "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep"
-            },
             {"package_endpoint_identifier": "colrev.open_library",
              "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep"
             },

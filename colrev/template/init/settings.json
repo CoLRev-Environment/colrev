@@ -75,9 +75,6 @@
                         "endpoint": "colrev.europe_pmc"
                     },
                     {
-                        "endpoint": "colrev.dblp"
-                    },
-                    {
                         "endpoint": "colrev.open_library"
                     }
                 ]
