@@ -97,7 +97,7 @@ def __assign_abstract(*, record_dict: dict) -> None:
     """Method to assign external IDs from item"""
     abstract = record_dict.get("abstract", "")
     if abstract is not None:
-        record_dict[Fields.ABSTRACT] = abstract.replace("\n", " ")
+        record_dict[Fields.ABSTRACT] = abstract.replace("\n", " ").lstrip().rstrip()
     else:
         record_dict[Fields.ABSTRACT] = ""
 
@@ -113,16 +113,19 @@ def __assign_article_fields(*, record_dict: dict) -> None:
     if "pages" in record_dict["journal"]:
         pages = record_dict["journal"]["pages"]
         if "-" in pages:
-            pages = re.sub(r"\s+|[a-zA-Z]+", "", pages)
-            pages_list = pages.split("-")
-            a = int(pages_list[0])
-            b = int(pages_list[1])
-            if a > b:
-                pages = str(b) + "--" + str(a)
-            elif a == b:
-                pages = str(a)
-            else:
-                pages = str(a) + "--" + str(b)
+            try:
+                pages = re.sub(r"\s+|[a-zA-Z]+", "", pages)
+                pages_list = pages.split("-")
+                a = int(pages_list[0])
+                b = int(pages_list[1])
+                if a > b:
+                    pages = str(b) + "--" + str(a)
+                elif a == b:
+                    pages = str(a)
+                else:
+                    pages = str(a) + "--" + str(b)
+            except ValueError:
+                pass
 
         record_dict[Fields.PAGES] = pages
 
