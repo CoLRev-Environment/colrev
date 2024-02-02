@@ -192,6 +192,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "LuminousLynx",
+      "name": "LuminousLynx",
+      "avatar_url": "https://avatars.githubusercontent.com/u/148456911?v=4",
+      "profile": "https://github.com/LuminousLynx",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
