@@ -172,6 +172,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "Peteer98",
+      "name": "Peter Eckhardt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/148191162?v=4",
+      "profile": "https://github.com/Peteer98",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
