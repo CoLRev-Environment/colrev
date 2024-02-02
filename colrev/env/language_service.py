@@ -57,7 +57,9 @@ class LanguageService:
             )
         )
         predictions_unified = []
-        for lang, conf in predictions:
+        for prediction in predictions:
+            lang = prediction.language
+            conf = prediction.value
             predictions_unified.append((lang.iso_code_639_3.name.lower(), conf))
 
         return predictions_unified

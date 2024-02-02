@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.10.4 - 2023-10-15
+
+### Fixed
+
+- Removed unstable test case
+
+## 0.10.3 - 2023-10-25
+
+### Changed
+
+- GitHub actions for CoLRev updates now install with Poetry because the fixed dependencies are more stable compared to pip installation
+
 ## 0.10.2 - 2023-10-15
 
 ### Fixed

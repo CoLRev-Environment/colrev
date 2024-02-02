@@ -114,7 +114,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 search_parameters={},
                 comment="",
             )
-        self.operation = source_operation
+        self.source_operation = source_operation
 
     # For run_search, a Python SDK would be available:
     # https://developer.ieee.org/Python_Software_Development_Kit
@@ -197,10 +197,13 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            self.operation.run_db_search()  # type: ignore
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
+            return
 
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def __get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(

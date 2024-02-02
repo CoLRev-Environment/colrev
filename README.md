@@ -40,7 +40,7 @@ The following features stand out:
 - Operates a model for data quality, content curation, and reuse
 - Enables typological and methodological pluralism throughout the process
 
-See the [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/dev_status.html) and [documentation](https://colrev.readthedocs.io/en/latest/) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
+See the [documentation](https://colrev.readthedocs.io/en/latest/) and [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/dev_status.html) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
 
 ## Contributing, changes, and releases
 
@@ -105,4 +105,4 @@ If you contribute to the project, you agree to share your contribution following
 
 Please [cite](docs/_static/colrev_citation.bib) the project as follows:
 
-Wagner, G. and Prester, J. (2023) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Environment/colrev.
+Wagner, G. and Prester, J. (2024) CoLRev - An open-source environment for Collaborative Literature Reviews. Available at https://github.com/CoLRev-Environment/colrev.

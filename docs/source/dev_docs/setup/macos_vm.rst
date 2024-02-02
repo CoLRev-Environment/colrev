@@ -1,7 +1,9 @@
 MacOS: VirtualBox
 ===========================
 
-NOTE: VirtualBox does not have official support for macOS with Apple Silicon M1/M2. Please use developer preview versions of VirtualBox at your own discretion.
+NOTE: VirtualBox does not have official support for macOS with Apple Silicon M1/M2. Please use developer preview versions of VirtualBox at your own discretion. It may be necessary to identify the specific version of VirtualBox that is compatible with the Mac version.
+
+**It is recommended to create a backup of your machine (using Time Machine) before setting up virtualBox.**
 
 A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/en/download/a0dc5c130b24636165a5772921ebff40>`__.
 If the link has expired, please contact `Gerit Wagner <mailto:gerit.wagner@uni-bamberg.de>`__.

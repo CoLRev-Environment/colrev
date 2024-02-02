@@ -47,7 +47,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         self, *, source_operation: colrev.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
-        self.operation = source_operation
+        self.source_operation = source_operation
         self.review_manager = source_operation.review_manager
 
     @classmethod
@@ -82,7 +82,13 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Run a search of Psycinfo"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
-            self.operation.run_db_search()  # type: ignore
+            self.source_operation.run_db_search(  # type: ignore
+                search_source_cls=self.__class__,
+                source=self.search_source,
+            )
+            return
+
+        raise NotImplementedError
 
     def get_masterdata(
         self,
