@@ -680,20 +680,16 @@ version = "0.1.0"
 description = ""
 category = "main"
 optional = false
-python-versions = ">=3.8, <4"
-files = []
-develop = false
+python-versions = ">=3.8,<4"
+files = [
+    {file = "colrev_asreview-0.1.0-py3-none-any.whl", hash = "sha256:cf90cb7a87400ac27ed856cb0c1f966ec46c7e8bf2e91cc41fc5d1c67ea17967"},
+    {file = "colrev_asreview-0.1.0.tar.gz", hash = "sha256:c303405887da6d0742c511cdfd7b96c1fff7f64354f98f2d03d3b4eb0c838eba"},
+]
 
 [package.dependencies]
-asreview = "^1.2"
+asreview = ">=1.2,<2.0"
 colrev = ">=0.9.0"
-dataclasses-jsonschema = "^2.16.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/CoLRev-Environment/colrev-asreview.git"
-reference = "HEAD"
-resolved_reference = "6308cb04532579ca5a9d65cd4ec94543d0673ab9"
+dataclasses-jsonschema = ">=2.16.0,<3.0.0"
 
 [[package]]
 name = "coverage"
@@ -4994,4 +4990,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "c97556236ea56bfab6b876147d153b6a6b1b605e7f2e93aa2a2e9e93fc90acbe"
+content-hash = "d21d5ec41ac4435aa0378cf55687ea1a1bbe6ac658df712ec96d176647939d36"
