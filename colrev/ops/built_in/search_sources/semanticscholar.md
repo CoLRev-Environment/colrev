@@ -50,14 +50,6 @@ Please note that, unfortunately, the format of SemanticScholar outputs does not 
 
 SemanticScholar also does not distinguish between forthcoming or retracted entries. Thus, entries unfortunately cannot be flagged as such in the result file.
 
-#### API search: Loading the result file
-
-The result file containing the items can be loaded via the colrev feed. This way, when the same query is run again by entering the command below, the result file will only be updated with the items that were newly registered in SemanticScholar after the last time the query was conducted.
-
-```
-colrev search
-```
-
 #### API search: Not yet supported features
 
 So far, the `rerun` functionality, which provides a more efficient way of redoing a search, is not implemented. Per default, rerun is set to `true`, which means that every time a query is entered again, a full search will be conducted. The functionality might be added in the future.
