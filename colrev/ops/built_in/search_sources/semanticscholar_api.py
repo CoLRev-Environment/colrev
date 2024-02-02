@@ -2,8 +2,6 @@
 """SearchSource: Semantic Scholar"""
 from __future__ import annotations
 
-import datetime
-import re
 import typing
 from copy import deepcopy
 from dataclasses import dataclass
@@ -55,8 +53,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     __s2__: SemanticScholar
     __search_return__: PaginatedResults
 
-    __api_url = "https://api.semanticscholar.org/graph/v1/paper/search?"
-
     endpoint = "colrev.semanticscholar"
     ci_supported: bool = True
 
@@ -105,9 +101,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
             self.s2_lock = Lock()
 
-        self.language_service = colrev.env.language_service.LanguageService()
-        # __search_return__ = None
-
     def check_availability(
         self, *, source_operation: colrev.operation.Operation
     ) -> None:
@@ -140,7 +133,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                     self.__availability_exception_message
                 ) from exc
 
-    def get_semantic_scholar_api(
+    def __get_semantic_scholar_api(
         self, *, params: dict, subject: str, rerun: bool
     ) -> PaginatedResults:
         """Get Semantic Scholar API depending on
@@ -314,7 +307,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             search_subject = params.get("search_subject")
             del params["search_subject"]
 
-            __search_return__ = self.get_semantic_scholar_api(
+            __search_return__ = self.__get_semantic_scholar_api(
                 params=params, subject=search_subject, rerun=rerun
             )
 
@@ -359,12 +352,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 if added:
                     if self.__s2_UI__.search_subject == "author":
                         self.review_manager.logger.info(
-                            "retrieve " + retrieved_record.data[Fields.URL]
+                            "retrieve "
+                            + retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID]
                         )
                     else:
                         self.review_manager.logger.info(
                             "retrieve "
-                            + retrieved_record.data.get(Fields.DOI, "DOI not found")
+                            + retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID]
                         )
                 else:
                     s2_feed.update_existing_record(
@@ -422,14 +416,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             if len(short_search_params["query"]) > 50:
                 short_search_params["query"] = short_search_params["query"][0:50]
 
-        name_string = str(short_search_params)
-        name_string += str(datetime.date.today())
-        # eliminate problematic characters from filename
-        name_string = re.sub(r"[\/\.\,\:\?\']+", "", name_string)
-
-        filename = operation.get_unique_filename(
-            file_path_string="semanticscholar_" + name_string
-        )
+        filename = operation.get_unique_filename(file_path_string="semanticscholar")
 
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
