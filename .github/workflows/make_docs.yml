@@ -40,6 +40,7 @@ jobs:
           poetry run pre-commit run --all-files
 
       - name: Commit changes and create pull request
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
