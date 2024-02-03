@@ -45,5 +45,10 @@ jobs:
         run: |
           git add .
           git commit -m "Update documentation" || echo "No changes to commit"
-          git push --set-upstream origin ${{ env.BRANCH_NAME }}
-          gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
+          CHANGES=$(git diff --name-only HEAD~1..HEAD) # Check for changes in the last commit
+          if [ -z "$CHANGES" ]; then
+            echo "No changes to commit, skipping pull request creation."
+          else
+            git push --set-upstream origin ${{ env.BRANCH_NAME }}
+            gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
+          fi
