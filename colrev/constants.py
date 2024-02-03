@@ -46,6 +46,7 @@ class Fields:
     SERIES = "series"
     SCHOOL = "school"
     LANGUAGE = "language"
+    DATE = "date"
 
     MD_PROV = "colrev_masterdata_provenance"
     D_PROV = "colrev_data_provenance"
@@ -136,6 +137,7 @@ class FieldSet:
             Fields.MONTH,
             Fields.SERIES,
             Fields.LANGUAGE,
+            Fields.DATE,
         ]
     )
     """Standardized field keys"""

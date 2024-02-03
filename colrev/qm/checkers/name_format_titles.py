@@ -15,7 +15,7 @@ class NameFormatTitleChecker:
     """The NameFormatTitleChecker"""
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
-    titles = ["MD", "Dr", "PhD", "Prof", "Dipl Ing"]
+    titles = ["Dr", "PhD", "Prof", "Dipl Ing"]
     __words_rgx = re.compile(r"(\w[\w']*\w|\w)")
 
     msg = DefectCodes.NAME_FORMAT_TITLES

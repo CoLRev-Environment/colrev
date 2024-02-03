@@ -61,6 +61,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         "HICSS": "Hawaii International Conference on System Sciences",
         "MCIS": "Mediterranean Conference on Information Systems",
         "ACIS": "Australasian Conference on Information Systems",
+        "WHICEB": "Wuhan International Conference on e-Business",
+        "CONF-IRM": "International Conference on Information Resources Management",
     }
 
     __link_confs = {
@@ -467,6 +469,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 load_operation=load_operation, source=self.search_source
             )
             records = bib_loader.load_bib_file()
+            for record_dict in records.values():
+                record_dict.pop("type")
 
             return records
 
@@ -580,7 +584,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     source="prep_ais_source",
                 )
 
-    def __format_fields(self, *, record: colrev.record.Record) -> None:
+    def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         if Fields.ABSTRACT in record.data:
             if record.data[Fields.ABSTRACT] == "N/A":
                 record.remove_field(key=Fields.ABSTRACT)
@@ -591,6 +595,11 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 source="prep_ais_source",
                 keep_source_if_equal=True,
             )
+        record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
+        record.format_if_mostly_upper(key=Fields.JOURNAL, case=Fields.TITLE)
+        record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
+        record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
+        # TODO : polish/format title: capitalize ERP, CIO, MIS, ... (IS-Specific)
 
     def __exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
         if re.match(
@@ -608,5 +617,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self.__unify_container_titles(record=record)
         self.__format_fields(record=record)
         self.__exclude_complementary_material(record=record)
+
+        record.fix_name_particles()
 
         return record

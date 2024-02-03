@@ -145,4 +145,12 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         record.remove_field(key="colrev.web_of_science.meeting")
         record.remove_field(key="colrev.web_of_science.article-number")
 
+        record.fix_name_particles()
+
+        if record.data[Fields.AUTHOR] == "[Anonymous]":
+            del record.data[Fields.AUTHOR]
+            record.add_masterdata_provenance(
+                key=Fields.AUTHOR, source="web_of_scienc.prep", note="IGNORE:missing"
+            )
+
         return record

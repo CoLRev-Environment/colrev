@@ -15,6 +15,7 @@ import colrev.ops.load_utils_bib
 import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
+from colrev.constants import Fields
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -121,8 +122,16 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
+        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for EBSCOHost"""
+
+        record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
+        record.format_if_mostly_upper(key=Fields.TITLE, case=Fields.TITLE)
+
+        if record.data.get(Fields.PAGES) == "N.PAG -- N.PAG":
+            record.data[Fields.PAGES] = "UNKNOWN"
+
+        record.fix_name_particles()
 
         return record
