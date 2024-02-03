@@ -80,12 +80,12 @@ class Dedupe(colrev.operation.Operation):
                 cls.__dfs(neighbor, graph, visited, component)
 
     @classmethod
-    def connected_components(cls, origin_sets: list) -> list:
+    def connected_components(cls, id_sets: list) -> list:
         """
         Find the connected components in a graph.
 
         Args:
-            origin_sets (list): A list of origin sets.
+            id_sets (list): A list of id sets.
 
         Returns:
             list: A list of connected components.
@@ -93,7 +93,7 @@ class Dedupe(colrev.operation.Operation):
         graph = defaultdict(list)
 
         # Create an adjacency list
-        for origin_set in origin_sets:
+        for origin_set in id_sets:
             for combination in combinations(origin_set, 2):
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
@@ -669,17 +669,15 @@ class Dedupe(colrev.operation.Operation):
         }
         return info
 
-    def merge_records(self, *, merge: str) -> None:
-        """Merge two records by ID sets ID_1,ID_2"""
+    def merge_records(self, *, merge: list) -> None:
+        """Merge records by ID sets"""
 
-        assert "," in merge
         self.review_manager.settings.dedupe.same_source_merges = (
             colrev.settings.SameSourceMergePolicy.apply
         )
         self.policy = colrev.settings.SameSourceMergePolicy.apply
 
-        id_sets = [i.split(",") for i in merge.split(";")]
-        self.apply_merges(id_sets=id_sets)
+        self.apply_merges(id_sets=merge)
 
     def merge_based_on_global_ids(self, *, apply: bool = False) -> None:
         """Merge records based on global IDs (e.g., doi)"""

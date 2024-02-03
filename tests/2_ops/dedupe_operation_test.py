@@ -51,7 +51,7 @@ def test_dedupe_utilities(  # type: ignore
     dedupe_test_setup.create_commit(
         msg="Unmerge Staehr2010-Staehr2010a", manual_author=True
     )
-    dedupe_operation.merge_records(merge="Staehr2010,Staehr2010a")
+    dedupe_operation.merge_records(merge=[["Staehr2010", "Staehr2010a"]])
     dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
     dedupe_test_setup.create_commit(
         msg="Merge Staehr2010-Staehr2010a", manual_author=True
@@ -61,10 +61,10 @@ def test_dedupe_utilities(  # type: ignore
     assert "Staehr2010a" not in records.keys()
 
     # Try non-unique ID lists
-    dedupe_operation.merge_records(merge="Staehr2010,Staehr2010")
+    dedupe_operation.merge_records(merge=[["Staehr2010", "Staehr2010"]])
 
     with pytest.raises(AssertionError):
-        dedupe_operation.merge_records(merge="RandomID1,RandomID2")
+        dedupe_operation.merge_records(merge=[["RandomID1", "RandomID2"]])
 
     expected_file = Path("dedupe/records_expected.bib")
     actual = Path("data/records.bib").read_text(encoding="utf-8")

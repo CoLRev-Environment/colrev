@@ -971,7 +971,10 @@ def dedupe(
         return
 
     if merge:
-        dedupe_operation.merge_records(merge=merge)
+        assert "," in merge
+        merge_ids = [i.split(",") for i in merge.split(";")]
+
+        dedupe_operation.merge_records(merge=merge_ids)
         return
 
     if unmerge:
