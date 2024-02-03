@@ -93,7 +93,6 @@ class ParseError(Exception):
 
 
 class ENLLoader:
-
     """Loads enl files"""
 
     PATTERN = r"^%[A-Z]{1,3} "

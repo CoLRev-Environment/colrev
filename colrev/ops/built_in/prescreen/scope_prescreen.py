@@ -29,7 +29,6 @@ if typing.TYPE_CHECKING:
 )
 @dataclass
 class ScopePrescreen(JsonSchemaMixin):
-
     """Rule-based prescreen (scope)"""
 
     settings: ScopePrescreenSettings

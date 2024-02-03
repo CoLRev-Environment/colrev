@@ -50,6 +50,9 @@ colrev.ops.built\_in.search\_sources
    colrev.ops.built_in.search_sources.psycinfo
    colrev.ops.built_in.search_sources.pubmed
    colrev.ops.built_in.search_sources.scopus
+   colrev.ops.built_in.search_sources.semanticscholar_api
+   colrev.ops.built_in.search_sources.semanticscholar_ui
+   colrev.ops.built_in.search_sources.semanticscholar_utils
    colrev.ops.built_in.search_sources.springer_link
    colrev.ops.built_in.search_sources.synergy_datasets
    colrev.ops.built_in.search_sources.taylor_and_francis

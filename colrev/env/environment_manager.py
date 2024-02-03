@@ -298,9 +298,9 @@ class EnvironmentManager:
                 repo["remote"] = any(
                     "remote" in x and x["remote"] for x in git_repo.remotes
                 )
-                repo[
-                    "behind_remote"
-                ] = check_operation.review_manager.dataset.behind_remote()
+                repo["behind_remote"] = (
+                    check_operation.review_manager.dataset.behind_remote()
+                )
 
                 repos.append(repo)
             except (

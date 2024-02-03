@@ -332,18 +332,39 @@ class Dataset:
                 **dict(
                     {
                         # Cast status to Enum
-                        k: colrev.record.RecordState[v] if (Fields.STATUS == k)
-                        # DOIs are case insensitive -> use upper case.
-                        else v.upper() if (Fields.DOI == k)
-                        # Note : the following two lines are a temporary fix
-                        # to converg colrev_origins to list items
-                        else [el.rstrip().lstrip() for el in v.split(";") if "" != el]
-                        if k == Fields.ORIGIN
-                        else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
-                        if k in colrev.record.Record.list_fields_keys
-                        else Dataset.__load_field_dict(value=v, field=k)
-                        if k in colrev.record.Record.dict_fields_keys
-                        else v
+                        k: (
+                            colrev.record.RecordState[v]
+                            if (Fields.STATUS == k)
+                            # DOIs are case insensitive -> use upper case.
+                            else (
+                                v.upper()
+                                if (Fields.DOI == k)
+                                # Note : the following two lines are a temporary fix
+                                # to converg colrev_origins to list items
+                                else (
+                                    [
+                                        el.rstrip().lstrip()
+                                        for el in v.split(";")
+                                        if "" != el
+                                    ]
+                                    if k == Fields.ORIGIN
+                                    else (
+                                        [
+                                            el.rstrip()
+                                            for el in (v + " ").split("; ")
+                                            if "" != el
+                                        ]
+                                        if k in colrev.record.Record.list_fields_keys
+                                        else (
+                                            Dataset.__load_field_dict(value=v, field=k)
+                                            if k
+                                            in colrev.record.Record.dict_fields_keys
+                                            else v
+                                        )
+                                    )
+                                )
+                            )
+                        )
                         for k, v in v.fields.items()
                     }
                 ),

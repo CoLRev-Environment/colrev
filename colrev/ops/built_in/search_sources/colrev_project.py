@@ -193,9 +193,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #         record=colrev.record.Record(data=record_to_import)
             #     )
 
-            record_to_import[
-                "colrev_project_identifier"
-            ] = f"{project_url}#{record_to_import['ID']}"
+            record_to_import["colrev_project_identifier"] = (
+                f"{project_url}#{record_to_import['ID']}"
+            )
             record_to_import = {
                 k: v for k, v in record_to_import.items() if k not in keys_to_drop
             }
