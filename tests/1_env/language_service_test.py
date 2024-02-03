@@ -99,6 +99,7 @@ def test_compute_language_confidence_values(
         ("שלום", "heb"),
         ("кириллический", "rus"),
         ("平台经济的典型特征、垄断分析与反垄断监管", "chi"),
+        ("공유경제 플랫폼 규제접근방법에 대한 연구", "kor"),
     ],
 )
 def test_compute_language(

@@ -35,6 +35,27 @@ def elp(
                 },
             },
         ),
+        # TODO: (case with english summary)
+        # (
+        #     {
+        #         Fields.TITLE: "Digitale Soziale Sicherung: Potenzial fur die Plattformarbeit. (Digital Social Security: Potential for Platform Work. With English summary.)",
+        #     },
+        #     {
+        #         Fields.TITLE: "Digitale Soziale Sicherung: Potenzial fur die Plattformarbeit",
+        #         "title_eng": "Digital Social Security: Potential for Platform Work",
+        #         Fields.D_PROV: {
+        #             Fields.LANGUAGE: {"note": "", "source": "LanguageDetector_split"},
+        #             "title_eng": {"note": "", "source": "LanguageDetector_split"},
+        #         },
+        #         Fields.MD_PROV: {
+        #             Fields.TITLE: {
+        #                 "note": "",
+        #                 "source": "original|LanguageDetector_split",
+        #             }
+        #         },
+        #         Fields.LANGUAGE: "de",
+        #     },
+        # ),
         (
             {
                 Fields.TITLE: 'Corrigendum to "Joint collaborative planning as a governance mechanism to strengthen the chain of IT value co-creation" [J. Strategic Inf. Syst. 21(3) (2012) 182-200]',
