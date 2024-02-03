@@ -461,6 +461,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record_dict["ID"] = record_dict[Fields.URL].replace(
                     "https://aisel.aisnet.org/", ""
                 )
+                record_dict.pop("type")
             return records
 
         # for API-based searches
