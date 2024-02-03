@@ -54,6 +54,7 @@ search_source
    extensions_index/colrev.psycinfo.rst
    extensions_index/colrev.pubmed.rst
    extensions_index/colrev.scopus.rst
+   extensions_index/NotImplemented
    extensions_index/colrev.springer_link.rst
    extensions_index/colrev.synergy_datasets.rst
    extensions_index/colrev.taylor_and_francis.rst

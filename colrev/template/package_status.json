@@ -173,6 +173,10 @@
         {
             "package_endpoint_identifier": "colrev.files_dir",
             "status": "RED"
+        },
+        {
+            "package_endpoint_identifier": "colrev.semanticscholar",
+            "status": "EXPERIMENTAL"
         }
     ],
     "prep": [

@@ -261,6 +261,9 @@
             },
             {"package_endpoint_identifier": "colrev.trid",
              "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation"
+            },
+            {"package_endpoint_identifier": "colrev.semanticscholar",
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource"
             }
         ],
         "review_type": [
