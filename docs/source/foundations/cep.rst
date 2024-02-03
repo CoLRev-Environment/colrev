@@ -3,7 +3,7 @@ CoLRev enhancement proposals (CEPs)
 
 CEP stands for CoLRev Enhancement Proposal.
 A CEP is a design document providing information to the CoLRev community, or describing a new feature for CoLRev or its processes or environment.
-The CEP should provide a concise technical specification of the feature and a rationale for the feature (inspired by `PEP, Python Enhancment Propsals <https://peps.python.org/pep-0001/>`_).
+The CEP should provide a concise technical specification of the feature and a rationale for the feature (inspired by `PEP, Python Enhancment Propsals <https://peps.python.org/pep-0001/>`_ and `Jabref architectural decision records (ADR) <https://devdocs.jabref.org/decisions/>`_).
 
 **Draft CEPs**
 
