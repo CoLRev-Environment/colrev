@@ -435,15 +435,15 @@ class Dedupe(colrev.operation.Operation):
             ]
 
         records = self.review_manager.dataset.load_records_dict()
-        non_existing_IDs = [
+        non_existing_ids = [
             ID
             for ID in [id for id_set in id_sets for id in id_set]
             if ID not in records
         ]
-        if non_existing_IDs:
-            print(f"Non-existing IDs: {non_existing_IDs}")
+        if non_existing_ids:
+            print(f"Non-existing IDs: {non_existing_ids}")
             print(f"Records IDs: {records.keys()}")
-        assert not non_existing_IDs, "Not all IDs from id_sets are present in records"
+        assert not non_existing_ids, "Not all IDs from id_sets are present in records"
 
         # Notify users about items with only one unique ID
         for id_set in id_sets:
@@ -580,7 +580,9 @@ class Dedupe(colrev.operation.Operation):
                     if any(orig in origins for orig in hist_rec.get(Fields.ORIGIN, [])):
                         # TODO Avoid ID conflicts
                         assert hist_rec[Fields.ID] not in unmerged_records
-                        hist_rec[Fields.STATUS] = colrev.record.RecordState.md_processed
+                        hist_rec.update(
+                            {Fields.STATUS: colrev.record.RecordState.md_processed}
+                        )
                         print(f"add historical record: {hist_rec[Fields.ID]}")
                         unmerged_records[hist_rec[Fields.ID]] = hist_rec
                         unmerged_rids.append(rid)

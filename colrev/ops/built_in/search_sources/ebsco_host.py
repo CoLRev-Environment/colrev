@@ -16,6 +16,7 @@ import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -130,7 +131,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key=Fields.TITLE, case=Fields.TITLE)
 
         if record.data.get(Fields.PAGES) == "N.PAG -- N.PAG":
-            record.data[Fields.PAGES] = "UNKNOWN"
+            record.data[Fields.PAGES] = FieldValues.UNKNOWN
 
         record.fix_name_particles()
 

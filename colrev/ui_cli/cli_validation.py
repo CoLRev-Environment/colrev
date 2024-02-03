@@ -95,9 +95,9 @@ def __validate_prep(
         prescreen_errors.append(prescreen_excluded_to_validate[index])
 
     for error in prescreen_errors:
-        error["record_dict"][
-            Fields.STATUS
-        ] = colrev.record.RecordState.md_needs_manual_preparation
+        colrev.record.Record(data=error["record_dict"]).set_status(
+            target_state=colrev.record.RecordState.md_needs_manual_preparation
+        )
         validate_operation.review_manager.dataset.save_records_dict(
             records={error["record_dict"][Fields.ID]: error["record_dict"]},
             partial=True,

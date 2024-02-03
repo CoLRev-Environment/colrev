@@ -153,7 +153,7 @@ class TablePrescreen(JsonSchemaMixin):
         elif import_table_path.endswith(".xlsx") or import_table_path.endswith(".xls"):
             prescreen_df = pd.read_excel(import_table_path)
         else:
-            raise Exception(f"Unsupported file format: {import_table_path}")
+            raise ValueError(f"Unsupported file format: {import_table_path}")
         prescreen_df.fillna("", inplace=True)
         prescreened_records = prescreen_df.to_dict("records")
 

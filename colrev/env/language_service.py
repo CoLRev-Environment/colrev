@@ -36,6 +36,8 @@ class LanguageService:
         for country in pycountry.languages:
             self.__lang_code_mapping[country.name.lower()] = country.alpha_3
 
+    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-branches
     def __determine_alphabet(self, str_to_check: str) -> str:
         assert len(str_to_check) != 0
 
