@@ -46,4 +46,4 @@ jobs:
           git add .
           git commit -m "Update documentation" || echo "No changes to commit"
           git push --set-upstream origin ${{ env.BRANCH_NAME }}
-          gh pr create --title "Update documentation" --body "This PR updates the documentation." --head update-documentation --base main
+          gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
