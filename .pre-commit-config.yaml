@@ -25,8 +25,8 @@ repos:
     -   id: check-toml
     -   id: debug-statements
     -   id: name-tests-test
--   repo: https://github.com/psf/black
-    rev: 23.12.1
+-   repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.1.1
     hooks:
       - id: black
         language_version: python3.8
