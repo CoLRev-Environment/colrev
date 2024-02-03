@@ -47,7 +47,6 @@ if TYPE_CHECKING:
 
 
 class TableLoader:
-
     """Loads csv and Excel files (based on pandas)"""
 
     def __init__(

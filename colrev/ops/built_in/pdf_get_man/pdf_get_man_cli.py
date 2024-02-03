@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 )
 @dataclass
 class CoLRevCLIPDFGetMan(JsonSchemaMixin):
-
     """Get PDFs manually based on a CLI"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -230,7 +229,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         retrieval_scripts = {
             "get_pdf_from_google": self.__get_pdf_from_google,
-            "ask_authors": self.__ask_authors_for_pdf
+            "ask_authors": self.__ask_authors_for_pdf,
             # 'get_pdf_from_researchgate': get_pdf_from_researchgate,
         }
 

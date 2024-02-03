@@ -41,7 +41,6 @@ if TYPE_CHECKING:
 
 
 class BIBLoader:
-
     """Loads BibTeX files"""
 
     def __init__(

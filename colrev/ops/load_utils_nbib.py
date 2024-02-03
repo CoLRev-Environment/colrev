@@ -89,7 +89,6 @@ class ParseError(Exception):
 
 
 class NBIBLoader:
-
     """Loads nbib files"""
 
     PATTERN = r"^[A-Z]{2,4}( ){1,2}- "
