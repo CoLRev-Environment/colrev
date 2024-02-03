@@ -1,0 +1,39 @@
+name: Make Documentation
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' # Specify the Python version here
+      - name: Install dependencies using Poetry with docs extra
+        run: |
+          python -m pip install poetry
+          poetry install -E docs -E dev
+      - name: Install pre-commit
+        run: poetry run pip install pre-commit
+      - name: Build documentation with Sphinx
+        run: poetry run sphinx-build -b html docs/source docs/build
+      - name: Run pre-commit hooks excluding black
+        continue-on-error: true
+        run: |
+          poetry run pre-commit run --all-files
+      - name: Commit changes and create pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout -b update-documentation
+          git add .
+          git commit -m "Update documentation" || echo "No changes to commit"
+          git push --set-upstream origin update-documentation
+          gh pr create --title "Update documentation" --body "This PR updates the documentation." --head update-documentation --base main
