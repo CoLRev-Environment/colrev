@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.semanticscholar\_ui.SemanticScholarUI
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SemanticScholarUI.author_ui
       ~SemanticScholarUI.check_format
       ~SemanticScholarUI.choose_multiple_options
@@ -28,15 +28,13 @@ colrev.ops.built\_in.search\_sources.semanticscholar\_ui.SemanticScholarUI
       ~SemanticScholarUI.keyword_ui
       ~SemanticScholarUI.main_ui
       ~SemanticScholarUI.paper_ui
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SemanticScholarUI.search_params
-   
-   
