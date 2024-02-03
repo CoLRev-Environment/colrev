@@ -6,6 +6,8 @@ import os
 import subprocess  # nosec
 from typing import TYPE_CHECKING
 
+import inquirer
+
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -71,11 +73,35 @@ def __validate_prep(
         e for e in validation_details if e["prescreen_exclusion_mark"]
     ]
     print("Prescreen excluded:")
-    for i, validation_detail in enumerate(prescreen_excluded_to_validate):
-        print(i)
-        colrev.record.Record(
-            data=validation_detail["record_dict"]
-        ).print_citation_format()
+    prescreen_errors = []
+
+    choices = [
+        (
+            f"{e['record_dict']['ID']} : {Colors.ORANGE}{e['record_dict']['title']}{Colors.END}",
+            i,
+        )
+        for i, e in enumerate(prescreen_excluded_to_validate)
+    ]
+    questions = [
+        inquirer.Checkbox(
+            "selected_records",
+            message="Select prescreen errors",
+            choices=choices,
+        ),
+    ]
+    answers = inquirer.prompt(questions)
+    selected_indices = answers["selected_records"]
+    for index in selected_indices:
+        prescreen_errors.append(prescreen_excluded_to_validate[index])
+
+    for error in prescreen_errors:
+        error["record_dict"][
+            Fields.STATUS
+        ] = colrev.record.RecordState.md_needs_manual_preparation
+        validate_operation.review_manager.dataset.save_records_dict(
+            records={error["record_dict"][Fields.ID]: error["record_dict"]},
+            partial=True,
+        )
 
     displayed = False
     for validation_element in validation_details:

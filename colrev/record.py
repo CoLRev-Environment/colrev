@@ -1540,21 +1540,33 @@ class Record:
         for key in keys:
             prev_val = "_FIRST_VAL"
             for rec in record_pair:
-                if prev_val == rec.get(key, "") or prev_val == "_FIRST_VAL":
+                if (
+                    prev_val == rec.get(key, FieldValues.UNKNOWN)
+                    or prev_val == "_FIRST_VAL"
+                ):
                     line = f"{rec.get(key, '')}"
                 else:
                     similarity = 0.0
                     if (
-                        prev_val is not None
+                        prev_val != FieldValues.UNKNOWN
                         and rec.get(key, "") != ""
-                        and prev_val != ""
                         and rec[key] is not None
                     ):
                         similarity = fuzz.partial_ratio(prev_val, rec[key]) / 100
                         # Note : the fuzz.partial_ratio works better for partial substrings
                         # from difflib import SequenceMatcher
                         # similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
-                    if similarity < 0.5 or key in [
+                    if (
+                        prev_val == FieldValues.UNKNOWN
+                        and rec.get(key, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
+                    ):
+                        line = f"{Colors.GREEN}{rec.get(key, '')}{Colors.END}"
+                    elif (
+                        rec.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
+                        and prev_val != FieldValues.UNKNOWN
+                    ):
+                        line = f"{Colors.RED}[REMOVED]{Colors.END}"
+                    elif similarity < 0.5 or key in [
                         Fields.VOLUME,
                         Fields.NUMBER,
                         Fields.YEAR,
@@ -1563,7 +1575,7 @@ class Record:
                     else:
                         line = print_diff((prev_val, rec.get(key, "")))
                 print(f"{key} : {line}")
-                prev_val = rec.get(key, "")
+                prev_val = rec.get(key, FieldValues.UNKNOWN)
             print()
 
     def cleanup_pdf_processing_fields(self) -> None:
