@@ -53,3 +53,27 @@ jobs:
           git config --global url.https://github.com/.insteadOf git://github.com/
       - name: Run poetry tests
         run: poetry run pytest --slow -vv
+
+  test-pip-install:
+    needs: test-minimal-deps
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, windows-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install via pip
+        run: |
+          pip install -e .[dev]
+      - name: Setup git
+        run: |
+          git config --global user.name "CoLRev update"
+          git config --global user.email "actions@users.noreply.github.com"
+          git config --global url.https://github.com/.insteadOf git://github.com/
+      - name: Run tests
+        run: pytest tests --slow -vv
