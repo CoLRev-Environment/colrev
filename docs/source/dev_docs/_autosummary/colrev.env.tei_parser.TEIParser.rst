@@ -18,11 +18,11 @@ colrev.env.tei\_parser.TEIParser
 
       ~TEIParser.get_abstract
       ~TEIParser.get_author_details
-      ~TEIParser.get_bibliography
       ~TEIParser.get_citations_per_section
       ~TEIParser.get_grobid_version
       ~TEIParser.get_metadata
       ~TEIParser.get_paper_keywords
+      ~TEIParser.get_references
       ~TEIParser.get_tei_str
       ~TEIParser.mark_references
 
