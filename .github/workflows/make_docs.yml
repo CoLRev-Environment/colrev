@@ -45,6 +45,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git add .
-          git commit -m "Update documentation" || echo "No changes to commit"
-          git push --set-upstream origin ${{ env.BRANCH_NAME }}
-          gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
+          git commit -m "Update documentation" && git push --set-upstream origin ${{ env.BRANCH_NAME }} && gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main || echo "No changes to commit"
