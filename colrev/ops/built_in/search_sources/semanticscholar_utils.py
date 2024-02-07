@@ -1,5 +1,4 @@
 """Utility to transform items from semanticscholar into records"""
-
 from __future__ import annotations
 
 import re
