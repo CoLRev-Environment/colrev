@@ -195,12 +195,12 @@ class ReviewManager:
         else:
             original_dir = Path.cwd()
 
-        while ".git" not in [f.name for f in Path.cwd().iterdir() if f.is_dir()]:
-            os.chdir("..")
-            if Path("/") == Path.cwd():
-                os.chdir(original_dir)
+        while ".git" not in [f.name for f in original_dir.iterdir() if f.is_dir()]:
+            if original_dir.parent == original_dir:  # reached root
                 break
-        return Path.cwd()
+            original_dir = original_dir.parent
+
+        return original_dir
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
