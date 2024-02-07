@@ -91,6 +91,9 @@ class LanguageService:
         language = self.__lingua_language_detector.detect_language_of(text)
 
         if language:
+            # There are too many errors/classifying papers as latin
+            if language.iso_code_639_3.name.lower() == "lat":
+                return ""
             return language.iso_code_639_3.name.lower()
 
         return self.__determine_alphabet(text)
