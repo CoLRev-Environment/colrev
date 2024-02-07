@@ -55,6 +55,7 @@ colrev.constants.Fields
       ~Fields.MD_PROV
       ~Fields.METADATA_SOURCE_REPOSITORY_PATHS
       ~Fields.MONTH
+      ~Fields.NR_INTEXT_CITATIONS
       ~Fields.NUMBER
       ~Fields.ORIGIN
       ~Fields.PAGES
@@ -64,6 +65,7 @@ colrev.constants.Fields
       ~Fields.PRESCREEN_EXCLUSION
       ~Fields.PUBLISHER
       ~Fields.PUBMED_ID
+      ~Fields.REFERENCES
       ~Fields.SCHOOL
       ~Fields.SCREENING_CRITERIA
       ~Fields.SEMANTIC_SCHOLAR_ID
