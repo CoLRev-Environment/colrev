@@ -378,7 +378,7 @@ class PDFPrep(colrev.operation.Operation):
                     pad=0,
                 )
             except colrev_exceptions.TEIException:
-                self.review_manager.logger.error("Eror generating TEI")
+                self.review_manager.logger.error("Error generating TEI")
 
     @colrev.operation.Operation.decorate()
     def main(

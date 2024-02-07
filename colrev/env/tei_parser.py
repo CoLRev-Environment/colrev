@@ -156,7 +156,7 @@ class TEIParser:
 
     def get_grobid_version(self) -> str:
         """Get the GROBID version used for TEI creation"""
-        grobid_version = "NA"
+        grobid_version = ""
         encoding_description = self.root.find(".//" + self.ns["tei"] + "encodingDesc")
         if encoding_description is not None:
             app_info_node = encoding_description.find(
@@ -172,7 +172,7 @@ class TEIParser:
         return grobid_version
 
     def __get_paper_title(self) -> str:
-        title_text = "NA"
+        title_text = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "fileDesc")
         if file_description is not None:
             title_stmt_node = file_description.find(
@@ -181,9 +181,7 @@ class TEIParser:
             if title_stmt_node is not None:
                 title_node = title_stmt_node.find(".//" + self.ns["tei"] + "title")
                 if title_node is not None:
-                    title_text = (
-                        title_node.text if title_node.text is not None else "NA"
-                    )
+                    title_text = title_node.text if title_node.text is not None else ""
                     title_text = (
                         title_text.replace("(Completed paper)", "")
                         .replace("(Completed-paper)", "")
@@ -194,7 +192,7 @@ class TEIParser:
 
     def __get_paper_journal(self) -> str:
         # pylint: disable=too-many-nested-blocks
-        journal_name = "NA"
+        journal_name = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
             if file_description.find(".//" + self.ns["tei"] + "monogr") is not None:
@@ -203,9 +201,9 @@ class TEIParser:
                     jtitle_node = journal_node.find(".//" + self.ns["tei"] + "title")
                     if jtitle_node is not None:
                         journal_name = (
-                            jtitle_node.text if jtitle_node.text is not None else "NA"
+                            jtitle_node.text if jtitle_node.text is not None else ""
                         )
-                        if journal_name != "NA":
+                        if journal_name != "":
                             words = journal_name.split()
                             if sum(word.isupper() for word in words) / len(words) > 0.8:
                                 words = [word.capitalize() for word in words]
@@ -213,7 +211,7 @@ class TEIParser:
         return journal_name
 
     def __get_paper_journal_volume(self) -> str:
-        volume = "NA"
+        volume = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
             if file_description.find(".//" + self.ns["tei"] + "monogr") is not None:
@@ -225,11 +223,11 @@ class TEIParser:
                             ".//" + self.ns["tei"] + "biblScope[@unit='volume']"
                         )
                         if vnode is not None:
-                            volume = vnode.text if vnode.text is not None else "NA"
+                            volume = vnode.text if vnode.text is not None else ""
         return volume
 
     def __get_paper_journal_issue(self) -> str:
-        issue = "NA"
+        issue = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
             if file_description.find(".//" + self.ns["tei"] + "monogr") is not None:
@@ -242,12 +240,12 @@ class TEIParser:
                         )
                         if issue_node is not None:
                             issue = (
-                                issue_node.text if issue_node.text is not None else "NA"
+                                issue_node.text if issue_node.text is not None else ""
                             )
         return issue
 
     def __get_paper_journal_pages(self) -> str:
-        pages = "NA"
+        pages = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
             journal_node = file_description.find(".//" + self.ns["tei"] + "monogr")
@@ -270,7 +268,7 @@ class TEIParser:
         return pages
 
     def __get_paper_year(self) -> str:
-        year = "NA"
+        year = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
             if file_description.find(".//" + self.ns["tei"] + "monogr") is not None:
@@ -283,7 +281,7 @@ class TEIParser:
                             year = (
                                 date_node.get("when", "")
                                 if date_node.get("when") is not None
-                                else "NA"
+                                else ""
                             )
                             year = re.sub(r".*([1-2][0-9]{3}).*", r"\1", year)
         return year
@@ -355,7 +353,7 @@ class TEIParser:
         return authorname
 
     def __get_paper_authors(self) -> str:
-        author_string = "NA"
+        author_string = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         author_list = []
 
@@ -379,15 +377,15 @@ class TEIParser:
                     author_string = " and ".join(author_list)
 
                     if author_string is None:
-                        author_string = "NA"
+                        author_string = ""
                     if "" == author_string.replace(" ", "").replace(",", "").replace(
                         ";", ""
                     ):
-                        author_string = "NA"
+                        author_string = ""
         return author_string
 
     def __get_paper_doi(self) -> str:
-        doi = "NA"
+        doi = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
             bibl_struct = file_description.find(".//" + self.ns["tei"] + "biblStruct")
@@ -407,7 +405,7 @@ class TEIParser:
             cleantext = re.sub(html_tag_regex, "", raw_html)
             return cleantext
 
-        abstract_text = "NA"
+        abstract_text = ""
         profile_description = self.root.find(".//" + self.ns["tei"] + "profileDesc")
         if profile_description is not None:
             abstract_node = profile_description.find(
@@ -524,9 +522,9 @@ class TEIParser:
         )
 
         if author_string is None:
-            author_string = "NA"
+            author_string = ""
         if author_string.replace(" ", "").replace(",", "").replace(";", "") == "":
-            author_string = "NA"
+            author_string = ""
         return author_string
 
     def __get_reference_title_string(self, *, reference: Element) -> str:
@@ -563,9 +561,9 @@ class TEIParser:
 
         if year is not None:
             for name, value in sorted(year.items()):
-                year_string = value if (name == "when") else "NA"
+                year_string = value if (name == "when") else ""
         else:
-            year_string = "NA"
+            year_string = ""
         return year_string
 
     def __get_reference_page_string(self, *, reference: Element) -> str:
@@ -596,7 +594,7 @@ class TEIParser:
                     if name == "to":
                         page_string += "--" + value
             else:
-                page_string = "NA"
+                page_string = ""
 
         return page_string
 
@@ -671,7 +669,7 @@ class TEIParser:
             if monogr_node is not None:
                 title_node = monogr_node.find(self.ns["tei"] + "title")
                 if title_node is not None:
-                    if title_node.get("level", "NA") != "j":
+                    if title_node.get("level", "") != "j":
                         entrytype = ENTRYTYPES.BOOK
                     else:
                         entrytype = ENTRYTYPES.ARTICLE
@@ -687,7 +685,7 @@ class TEIParser:
 
         return count
 
-    def get_bibliography(self, *, min_intext_citations: int = 0) -> list:
+    def get_references(self, *, add_intext_citation_count: bool = False) -> list:
         """Get the bibliography (references section) as a list of record dicts"""
         # Note : could also allow top-10 % of most frequent in-text citations
 
@@ -701,18 +699,13 @@ class TEIParser:
                         reference=reference
                     )
 
-                    if min_intext_citations > 0:
-                        if (
-                            self.__get_tei_id_count(tei_id=tei_id)
-                            < min_intext_citations
-                        ):
-                            continue
+                    in_text_citation_count = self.__get_tei_id_count(tei_id=tei_id)
 
                     if entrytype == ENTRYTYPES.ARTICLE:
                         ref_rec = {
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
-                            "tei_id": tei_id,
+                            Fields.TEI_ID: tei_id,
                             Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -739,7 +732,7 @@ class TEIParser:
                         ref_rec = {
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
-                            "tei_id": tei_id,
+                            Fields.TEI_ID: tei_id,
                             Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -750,11 +743,11 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
-                    elif entrytype == "misc":
+                    elif entrytype == ENTRYTYPES.MISC:
                         ref_rec = {
                             Fields.ID: tei_id,
-                            "ENTRYTYPE": entrytype,
-                            "tei_id": tei_id,
+                            Fields.ENTRYTYPE: entrytype,
+                            Fields.TEI_ID: tei_id,
                             Fields.AUTHOR: self.__get_reference_author_string(
                                 reference=reference
                             ),
@@ -762,6 +755,10 @@ class TEIParser:
                                 reference=reference
                             ),
                         }
+
+                    if add_intext_citation_count:
+                        ref_rec[Fields.NR_INTEXT_CITATIONS] = in_text_citation_count  # type: ignore
+
                 except etree.ElementTree.ParseError:
                     continue
 
@@ -783,11 +780,11 @@ class TEIParser:
             parent = parent_map[section]
             citation_nodes = parent.findall(f'.//{self.ns["tei"]}ref')
             citations = [
-                x.get("target", "NA").replace("#", "")
+                x.get("target", "").replace("#", "")
                 for x in citation_nodes
-                if x.get("type", "NA") == "bibr"
+                if x.get("type", "") == "bibr"
             ]
-            citations = list(filter(lambda a: a != "NA", citations))
+            citations = list(filter(lambda a: a != "", citations))
             if len(citations) > 0:
                 section_citations[section_name.lower()] = citations
         return section_citations
@@ -795,7 +792,7 @@ class TEIParser:
     def mark_references(self, *, records: dict):  # type: ignore
         """Mark references with the additional record ID"""
 
-        tei_records = self.get_bibliography()
+        tei_records = self.get_references()
         for record_dict in tei_records:
             if Fields.TITLE not in record_dict:
                 continue
@@ -822,7 +819,7 @@ class TEIParser:
             bibliography = self.root.find(f".//{self.ns['tei']}listBibl")
             # mark reference in bibliography
             for ref in bibliography:
-                if ref.get(f'{self.ns["w3"]}id') == record_dict["tei_id"]:
+                if ref.get(f'{self.ns["w3"]}id') == record_dict[Fields.TEI_ID]:
                     ref.set(Fields.ID, max_sim_record[Fields.ID])
             # mark reference in in-text citations
             for reference in self.root.iter(f'{self.ns["tei"]}ref'):
