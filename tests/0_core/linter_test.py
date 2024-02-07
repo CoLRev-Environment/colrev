@@ -1,5 +1,4 @@
 """Test the custom CoLRev linter"""
-
 import astroid
 import pylint.testutils
 

@@ -42,7 +42,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
     )
 
     # print list
-    tei_recs = tei.get_bibliography(min_intext_citations=0)
+    tei_recs = tei.get_references()
     for i, tei_rec_dict in enumerate(tei_recs):
         tei_rec = colrev.record.Record(data=tei_rec_dict)
         print(f"{i}  : {tei_rec.format_bib_style()}")
