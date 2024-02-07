@@ -31,30 +31,12 @@ class Fields:
 
     ID = "ID"
     ENTRYTYPE = "ENTRYTYPE"
-    DOI = "doi"
-    URL = "url"
-    # TBD: no LINK field?
-    ISSN = "issn"
-    ISBN = "isbn"
-    FULLTEXT = "fulltext"
-    ABSTRACT = "abstract"
-    KEYWORDS = "keywords"
-    CITED_BY = "cited_by"
-    FILE = "file"
-    INSTITUTION = "institution"
-    MONTH = "month"
-    SERIES = "series"
-    SCHOOL = "school"
-    LANGUAGE = "language"
-    DATE = "date"
 
     MD_PROV = "colrev_masterdata_provenance"
     D_PROV = "colrev_data_provenance"
     ORIGIN = "colrev_origin"
     STATUS = "colrev_status"
     PDF_ID = "colrev_pdf_id"
-
-    TEI_ID = "tei_id"
 
     TITLE = "title"
     AUTHOR = "author"
@@ -69,11 +51,41 @@ class Fields:
     EDITOR = "editor"
     EDITION = "edition"
     ADDRESS = "address"
+    INSTITUTION = "institution"
+    MONTH = "month"
+    SERIES = "series"
+    SCHOOL = "school"
+    LANGUAGE = "language"
+    DATE = "date"
+    FILE = "file"
+    DOI = "doi"
+    URL = "url"
+    # TBD: no LINK field?
+    ISSN = "issn"
+    ISBN = "isbn"
+    FULLTEXT = "fulltext"
+    ABSTRACT = "abstract"
+    KEYWORDS = "keywords"
 
     CONTAINER_TITLE = "container_title"
 
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
+
+    # References and citations
+    # First-level references (backward) and citations (forward) can be stored in the record.
+
+    # CITED_BY refers to forward citations
+    # (as extracted from GoogleScholar cited_by for example)
+    # TODO : rename to NR_CITED_BY and use CITED_BY for a list of citing papers?
+    CITED_BY = "cited_by"
+
+    # REFERENCES is a list containing a dictionary for each reference in the bibliography
+    # each reference can have the same fields as constants.Fields
+    # specific additional fields are TEI_ID and NR_INTEXT_CITATIONS
+    REFERENCES = "references"
+    TEI_ID = "tei_id"
+    NR_INTEXT_CITATIONS = "nr_intext_citations"
 
     TEXT_FROM_PDF = "text_from_pdf"
     PAGES_IN_FILE = "pages_in_file"

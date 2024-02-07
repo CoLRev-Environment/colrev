@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 """Console UI for Semantic Scholar"""
-
 import datetime
 import re
 from typing import Optional
