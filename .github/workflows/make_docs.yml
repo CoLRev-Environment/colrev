@@ -31,14 +31,14 @@ jobs:
       - name: Switch to branch ${{ env.BRANCH_NAME }}
         run: |
           git checkout -b ${{ env.BRANCH_NAME }}
+      - name: Clean old documentation build
+        run: rm -rf docs/source/dev_docs/_autosummary/*
       - name: Build documentation with Sphinx
         run: poetry run sphinx-build -b html docs/source docs/build
-
       - name: Run pre-commit hooks excluding black
         continue-on-error: true
         run: |
           poetry run pre-commit run --all-files
-
       - name: Commit changes and create pull request
         continue-on-error: true
         env:
