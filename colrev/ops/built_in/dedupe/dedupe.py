@@ -15,7 +15,6 @@ from bib_dedupe.bib_dedupe import match
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.built_in.dedupe.utils
 import colrev.record
 from colrev.constants import Fields
 
