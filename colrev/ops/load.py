@@ -202,20 +202,27 @@ class Load(colrev.operation.Operation):
             record_list.append(record)
         return record_list
 
-    def __setup_source_for_load(
-        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    def setup_source_for_load(
+        self,
+        *,
+        source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        select_new_records: bool = True,
     ) -> None:
         search_records = source.load(self)  # type: ignore
 
         source_records_list = self.__prep_records_for_import(
             source_settings=source.search_source, search_records=search_records
         )
-        imported_origins = self.__get_currently_imported_origin_list()
-        source_records_list = [
-            x
-            for x in source_records_list
-            if x[Fields.ORIGIN][0] not in imported_origins
-        ]
+        if select_new_records:
+            imported_origins = self.__get_currently_imported_origin_list()
+            source_records_list = [
+                x
+                for x in source_records_list
+                if x[Fields.ORIGIN][0] not in imported_origins
+            ]
+        else:
+            imported_origins = []
+
         source.search_source.setup_for_load(
             source_records_list=source_records_list, imported_origins=imported_origins
         )
@@ -224,14 +231,15 @@ class Load(colrev.operation.Operation):
                 msg=f"{source} has no records to load"
             )
 
-    def __load_source_records(
+    def load_source_records(
         self,
         *,
         source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
         keep_ids: bool,
     ) -> None:
-        self.__setup_source_for_load(source=source)
+        self.setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
+
         for source_record in source.search_source.source_records_list:
             colrev.record.Record(data=source_record).prefix_non_standardized_field_keys(
                 prefix=source.search_source.endpoint
@@ -308,7 +316,7 @@ class Load(colrev.operation.Operation):
                     path=Path(obj.b_path), remove=True
                 )
 
-    def __load_active_sources(self) -> list:
+    def load_active_sources(self) -> list:
         checker = self.review_manager.get_checker()
         checker.check_sources()
         sources_settings = []
@@ -400,11 +408,11 @@ class Load(colrev.operation.Operation):
         if not self.review_manager.high_level_operation:
             print()
 
-        for source in self.__load_active_sources():
+        for source in self.load_active_sources():
             try:
                 self.review_manager.logger.info(f"Load {source.search_source.filename}")
                 self.__add_source_to_settings(source=source)
-                self.__load_source_records(source=source, keep_ids=keep_ids)
+                self.load_source_records(source=source, keep_ids=keep_ids)
                 self.__create_load_commit(source=source)
 
             except colrev_exceptions.ImportException as exc:

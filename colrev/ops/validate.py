@@ -61,47 +61,59 @@ class Validate(colrev.operation.Operation):
             return prior_records_dict
         return {}
 
-    def validate_preparation_changes(
-        self, *, records: list[dict], prior_records_dict: dict
-    ) -> list:
+    def get_prep_change_for_validation(self) -> list:
         """Validate preparation changes"""
 
-        self.review_manager.logger.debug("Calculating preparation differences...")
-        change_diff = []
-        covered_ids = []
-        for record_dict in records:
-            if "changed_in_target_commit" not in record_dict:
-                continue
-            del record_dict["changed_in_target_commit"]
-            prescreen_excluded = (
-                colrev.record.RecordState.rev_prescreen_excluded
-                == record_dict[Fields.STATUS]
+        self.review_manager.logger.debug("Load records...")
+
+        load_operation = self.review_manager.get_load_operation()
+        origin_records = {}
+        for source in load_operation.load_active_sources():
+
+            load_operation.setup_source_for_load(
+                source=source, select_new_records=False
             )
-            del record_dict[Fields.STATUS]
-            for cur_record_link in record_dict[Fields.ORIGIN]:
-                prior_records = [
-                    x
-                    for x in prior_records_dict.values()
-                    if cur_record_link in x[Fields.ORIGIN]
-                ]
-                for prior_record_dict in prior_records:
-                    change_score = colrev.record.Record.get_record_change_score(
-                        record_a=colrev.record.Record(data=record_dict),
-                        record_b=colrev.record.Record(data=prior_record_dict),
-                    )
-                    if record_dict[Fields.ID] not in covered_ids:
-                        change_diff.append(
-                            {
-                                "prior_record_dict": prior_record_dict,
-                                "record_dict": record_dict,
-                                "change_score": change_score,
-                                "prescreen_exclusion_mark": prescreen_excluded,
-                            }
+            for origin_record in source.search_source.source_records_list:
+                origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
+
+        records = self.review_manager.dataset.load_records_dict()
+
+        self.review_manager.logger.debug("Calculating preparation differences...")
+
+        change_diff = []
+        for record_dict in records.values():
+
+            origin_changes = []
+            for origin in record_dict[Fields.ORIGIN]:
+                origin_record = origin_records[origin]
+
+                change_score = colrev.record.Record.get_record_change_score(
+                    record_a=colrev.record.Record(data=record_dict),
+                    record_b=colrev.record.Record(data=origin_record),
+                )
+
+                origin_record["change_score"] = change_score
+                origin_changes.append(origin_record)
+
+            origin_changes.sort(key=lambda x: x["change_score"], reverse=False)
+
+            change_diff.append(
+                {
+                    "record_dict": record_dict,
+                    "change_score_max": (
+                        max(
+                            origin_change["change_score"]
+                            for origin_change in origin_changes
                         )
-                        covered_ids.append(record_dict[Fields.ID])
+                        if origin_changes
+                        else 0
+                    ),
+                    "origins": origin_changes,
+                }
+            )
 
         # sort according to similarity
-        change_diff.sort(key=lambda x: x["change_score"], reverse=True)
+        change_diff.sort(key=lambda x: x["change_score_max"], reverse=True)
 
         return change_diff
 
@@ -135,7 +147,7 @@ class Validate(colrev.operation.Operation):
         if merge_candidates_file.read_text(encoding="utf-8") == "":
             merge_candidates_file.unlink()
 
-    def validate_dedupe_changes(
+    def get_dedupe_change_for_validation(
         self, *, records: list[dict], target_commit: str
     ) -> list:
         """Validate dedupe changes"""
@@ -556,20 +568,22 @@ class Validate(colrev.operation.Operation):
         self.review_manager.logger.info(f"Filter: {filter_setting} changes")
 
         # extension: filter_setting for changes of contributor (git author)
-        records = self.load_changed_records(target_commit=target_commit)
-        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
         if filter_setting in ["prepare", "all"]:
-            validation_details["prep"] = self.validate_preparation_changes(
-                records=records, prior_records_dict=prior_records_dict
-            )
+            validation_details["prep"] = self.get_prep_change_for_validation()
+
         if filter_setting in ["dedupe", "all"]:
+            records = self.load_changed_records(target_commit=target_commit)
+            prior_records_dict = self.__load_prior_records_dict(
+                target_commit=target_commit
+            )
+
             # Note : the if-statement avoids time-consuming procedures when the
             # origin-sets have not changed (no duplicates merged)
             if self.__deduplicated_records(
                 records=records, prior_records_dict=prior_records_dict
             ):
-                validation_details["dedupe"] = self.validate_dedupe_changes(
+                validation_details["dedupe"] = self.get_dedupe_change_for_validation(
                     records=records, target_commit=target_commit
                 )
 
