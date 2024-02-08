@@ -29,4 +29,3 @@ colrev.ops.built\_in.dedupe
    colrev.ops.built_in.dedupe.curation_dedupe
    colrev.ops.built_in.dedupe.curation_missing_dedupe
    colrev.ops.built_in.dedupe.dedupe
-   colrev.ops.built_in.dedupe.utils
