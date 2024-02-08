@@ -2,7 +2,6 @@
 """Functionality for individual records."""
 from __future__ import annotations
 
-import difflib
 import io
 import logging
 import pprint
@@ -1519,64 +1518,6 @@ class Record:
                 self.data[Fields.FILE].replace("pdfs/", ".tei/")
             ).with_suffix(".tei.xml")
         return tei_filename
-
-    @classmethod
-    def print_diff_pair(cls, *, record_pair: list, keys: list) -> None:
-        """Print the diff between two records"""
-
-        def print_diff(change: tuple) -> str:
-            diff = difflib.Differ()
-            letters = list(diff.compare(change[1], change[0]))
-            for i, letter in enumerate(letters):
-                if letter.startswith("  "):
-                    letters[i] = letters[i][-1]
-                elif letter.startswith("+ "):
-                    letters[i] = f"{Colors.RED}" + letters[i][-1] + f"{Colors.END}"
-                elif letter.startswith("- "):
-                    letters[i] = f"{Colors.GREEN}" + letters[i][-1] + f"{Colors.END}"
-            res = "".join(letters).replace("\n", " ")
-            return res
-
-        for key in keys:
-            prev_val = "_FIRST_VAL"
-            for rec in record_pair:
-                if (
-                    prev_val == rec.get(key, FieldValues.UNKNOWN)
-                    or prev_val == "_FIRST_VAL"
-                ):
-                    line = f"{rec.get(key, '')}"
-                else:
-                    similarity = 0.0
-                    if (
-                        prev_val != FieldValues.UNKNOWN
-                        and rec.get(key, "") != ""
-                        and rec[key] is not None
-                    ):
-                        similarity = fuzz.partial_ratio(prev_val, rec[key]) / 100
-                        # Note : the fuzz.partial_ratio works better for partial substrings
-                        # from difflib import SequenceMatcher
-                        # similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
-                    if (
-                        prev_val == FieldValues.UNKNOWN
-                        and rec.get(key, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
-                    ):
-                        line = f"{Colors.GREEN}{rec.get(key, '')}{Colors.END}"
-                    elif (
-                        rec.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
-                        and prev_val != FieldValues.UNKNOWN
-                    ):
-                        line = f"{Colors.RED}[REMOVED]{Colors.END}"
-                    elif similarity < 0.5 or key in [
-                        Fields.VOLUME,
-                        Fields.NUMBER,
-                        Fields.YEAR,
-                    ]:
-                        line = f"{Colors.RED}{rec.get(key, '')}{Colors.END}"
-                    else:
-                        line = print_diff((prev_val, rec.get(key, "")))
-                print(f"{key} : {line}")
-                prev_val = rec.get(key, FieldValues.UNKNOWN)
-            print()
 
     def cleanup_pdf_processing_fields(self) -> None:
         """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""

@@ -1170,15 +1170,6 @@ def test_get_toc_key() -> None:
         colrev.record.Record(data=input_value).get_toc_key()
 
 
-def test_print_diff_pair() -> None:
-    """Test record.print_diff_pair()"""
-
-    colrev.record.Record.print_diff_pair(
-        record_pair=[r1.data, r2.data],
-        keys=[Fields.TITLE, Fields.JOURNAL, Fields.BOOKTITLE],
-    )
-
-
 def test_prescreen_exclude() -> None:
     """Test record.prescreen_exclude()"""
 
