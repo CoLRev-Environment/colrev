@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import inquirer
+
 import colrev.record
 from colrev.constants import Colors
 
@@ -23,7 +25,6 @@ class CLISourceAdder:
         *,
         source_candidates: list,
     ) -> dict:
-        import inquirer
 
         choices = [
             (
