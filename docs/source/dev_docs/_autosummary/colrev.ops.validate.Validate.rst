@@ -19,12 +19,12 @@ colrev.ops.validate.Validate
       ~Validate.check_precondition
       ~Validate.conclude
       ~Validate.decorate
+      ~Validate.get_dedupe_change_for_validation
+      ~Validate.get_prep_change_for_validation
       ~Validate.load_changed_records
       ~Validate.main
-      ~Validate.validate_dedupe_changes
       ~Validate.validate_merge_changes
       ~Validate.validate_merge_prescreen_screen
-      ~Validate.validate_preparation_changes
       ~Validate.validate_properties
 
 

@@ -55,7 +55,6 @@ colrev.record.Record
       ~Record.prefix_non_standardized_field_keys
       ~Record.prescreen_exclude
       ~Record.print_citation_format
-      ~Record.print_diff_pair
       ~Record.print_pdf_prep_man
       ~Record.print_prescreen_record
       ~Record.remove_data_provenance_note

@@ -62,7 +62,6 @@ colrev.record.PrepRecord
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
-      ~PrepRecord.print_diff_pair
       ~PrepRecord.print_pdf_prep_man
       ~PrepRecord.print_prescreen_record
       ~PrepRecord.remove_data_provenance_note
