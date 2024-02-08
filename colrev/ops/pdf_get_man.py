@@ -195,19 +195,20 @@ class PDFGetMan(colrev.operation.Operation):
             )
 
         records = self.review_manager.dataset.load_records_dict()
+        pdf_get_man_package_endpoints = (
+            self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints
+        )
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_get_man_package_endpoints: dict[str, typing.Any] = (
             package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
-                selected_packages=self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints,
+                selected_packages=pdf_get_man_package_endpoints,
                 operation=self,
             )
         )
 
-        for (
-            pdf_get_man_package_endpoint
-        ) in self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints:
+        for pdf_get_man_package_endpoint in pdf_get_man_package_endpoints:
             endpoint = self.pdf_get_man_package_endpoints[
                 pdf_get_man_package_endpoint["endpoint"]
             ]
