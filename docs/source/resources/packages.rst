@@ -18,9 +18,9 @@ CoLRev comes with batteries included, i.e., a reference implementation for all s
     },
     ...
 
-The interfaces for the package endpoints are documented in the :doc:`package interfaces </dev_docs/extensions>` section.
+The interfaces for the package endpoints are documented in the :doc:`package interfaces </dev_docs/packages>` section.
 
-Registered packages are public Python packages that can be installed via PyPI. A package can have different `endpoints` (see :doc:`package interfaces </dev_docs/extensions>` for the interfaces). Registered packages contain a ``.colrev_endpoints.json`` file in the package directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/.colrev_endpoints.json>`_ provides an example).
+Registered packages are public Python packages that can be installed via PyPI. A package can have different `endpoints` (see :doc:`package interfaces </dev_docs/packages>` for the interfaces). Registered packages contain a ``.colrev_endpoints.json`` file in the package directory (`colrev <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/.colrev_endpoints.json>`_ provides an example).
 
 To *register a new package*:
 
@@ -47,7 +47,7 @@ To create a new package endpoint:
    :maxdepth: 1
    :caption: Package development resources
 
-   extensions/development
-   extensions/python
-   extensions/r
-   extensions/custom_extensions
+   packages/development
+   packages/python
+   packages/r
+   packages/custom_packages

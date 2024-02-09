@@ -807,8 +807,8 @@ class PackageManager:
         return packages_dict
 
     def __import_package_docs(self, docs_link: str, identifier: str) -> str:
-        extensions_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/resources/extensions_index"
+        packages_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/package_index"
         )
         local_built_in_path = Path(__file__).parent.parent / Path("ops/built_in")
 
@@ -827,7 +827,7 @@ class PackageManager:
             return "NotImplemented"
 
         file_path = Path(f"{identifier}.rst")
-        target = extensions_index_path / file_path
+        target = packages_index_path / file_path
         with open(target, "w", encoding="utf-8") as file:
             # NOTE: at this point, we may add metadata
             # (such as package status, authors, url etc.)
@@ -836,15 +836,13 @@ class PackageManager:
         return str(file_path)
 
     def __write_docs_for_index(self, docs_for_index: dict) -> None:
-        extensions_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/resources/extensions_index.rst"
+        packages_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/package_index.rst"
         )
-        extensions_index_path_content = extensions_index_path.read_text(
-            encoding="utf-8"
-        )
+        packages_index_path_content = packages_index_path.read_text(encoding="utf-8")
         new_doc = []
         # append header
-        for line in extensions_index_path_content.split("\n"):
+        for line in packages_index_path_content.split("\n"):
             new_doc.append(line)
             if ":caption:" in line:
                 new_doc.append("")
@@ -879,9 +877,9 @@ class PackageManager:
                 if doc_item == "NotImplemented":
                     print(doc_item["path"])
                     continue
-                new_doc.append(f"   extensions_index/{doc_item['path']}")
+                new_doc.append(f"   package_index/{doc_item['path']}")
 
-        with open(extensions_index_path, "w", encoding="utf-8") as file:
+        with open(packages_index_path, "w", encoding="utf-8") as file:
             for line in new_doc:
                 file.write(line + "\n")
 
@@ -985,7 +983,7 @@ class PackageManager:
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
                     endpoint_item["short_description"]
-                    + " (:doc:`instructions </resources/extensions_index/"
+                    + " (:doc:`instructions </resources/package_index/"
                     + f"{endpoint_item['package_endpoint_identifier']}>`)"
                 )
                 if endpoint_type == "search_source":

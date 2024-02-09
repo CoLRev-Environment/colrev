@@ -1,7 +1,7 @@
 Package development process
 =============================
 
-Packages are referred through its respective endpoints, these endpoints can be enabled in ``settings.json`` of a project. The interfaces for the package endpoints are documented in the :doc:`package interfaces </dev_docs/extensions>` section.
+Packages are referred through its respective endpoints, these endpoints can be enabled in ``settings.json`` of a project. The interfaces for the package endpoints are documented in the :doc:`package interfaces </dev_docs/packages>` section.
 
 Package development base guidelines
 -------------------------------------

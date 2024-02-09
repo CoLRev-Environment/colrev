@@ -57,7 +57,7 @@ SearchSources metadata in the settings::
         "filename": "data/search/CROSSREF.bib"
     }
 
-The endpoint can be any :doc:`SearchSource package </resources/extensions_index>`.
+The endpoint can be any :doc:`SearchSource package </resources/package_index>`.
 
 The **search_type** can be DB, API, BACKWARD, FORWARD, TOC, OTHER, FILES, or MD. (TBD: duplicate documentation from retrieval/search?)
 

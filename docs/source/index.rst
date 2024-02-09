@@ -101,8 +101,8 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
 
    resources/quality_model
    resources/pdf_quality_model
-   resources/extensions
-   resources/extensions_index
+   resources/packages
+   resources/package_index
    resources/curation
    resources/reference_manager
    resources/help
@@ -115,7 +115,7 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    dev_docs/setup
    dev_docs/linters
    dev_docs/api
-   dev_docs/extensions
+   dev_docs/packages
    dev_docs/dev_status
    Github repository <https://github.com/CoLRev-Environment/colrev>
    PyPI <https://pypi.org/project/colrev/>
