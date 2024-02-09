@@ -2364,6 +2364,21 @@ def env(
 
     # pylint: disable=too-many-branches
 
+    if update_package_list:
+        if "y" != input(
+            "The following process instantiates objects listed in the "
+            + "colrev/template/package_endpoints.json "
+            + "(including ones that may not be secure).\n"
+            + "Please confirm (y) to proceed."
+        ):
+            return
+
+        package_manager = colrev.env.package_manager.PackageManager()
+        package_manager.update_package_list()
+        return
+
+    # The following options may need a review_manager
+
     review_manager = get_review_manager(
         ctx,
         {
@@ -2371,6 +2386,12 @@ def env(
             "force_mode": True,
         },
     )
+
+    if index:
+        local_index = review_manager.get_local_index()
+        local_index.index()
+        local_index.load_journal_rankings()
+        return
 
     if install:
         env_resources = review_manager.get_resources()
@@ -2427,24 +2448,6 @@ def env(
             )
             logging.info("Removed from local registry: %s", unregister)
         return
-
-    if update_package_list:
-        if "y" != input(
-            "The following process instantiates objects listed in the "
-            + "colrev/template/package_endpoints.json "
-            + "(including ones that may not be secure).\n"
-            + "Please confirm (y) to proceed."
-        ):
-            return
-
-        package_manager = colrev.env.package_manager.PackageManager()
-        package_manager.update_package_list()
-
-    local_index = review_manager.get_local_index()
-
-    if index:
-        local_index.index()
-        local_index.load_journal_rankings()
 
 
 @main.command(help_priority=21)
