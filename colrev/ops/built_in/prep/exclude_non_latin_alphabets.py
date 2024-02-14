@@ -68,7 +68,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
             ]
         )
 
-        if not self.__mostly_latin_alphabet(str_to_check):
+        if str_to_check and not self.__mostly_latin_alphabet(str_to_check):
             record.prescreen_exclude(reason="non_latin_alphabet")
 
         return record
