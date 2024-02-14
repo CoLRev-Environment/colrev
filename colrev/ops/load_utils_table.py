@@ -169,8 +169,6 @@ class TableLoader:
 
             if "author_count" in r_dict:
                 del r_dict["author_count"]
-            if "ENTRYTYPE" in r_dict:
-                del r_dict["ENTRYTYPE"]
             if "citation_key" in r_dict:
                 del r_dict["citation_key"]
 
