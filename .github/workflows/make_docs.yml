@@ -50,5 +50,11 @@ jobs:
           else
             git commit -m "Update documentation"
             git push --set-upstream origin ${{ env.BRANCH_NAME }}
-            gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
+            # Fetch the main branch and check for differences
+            git fetch origin main:main
+            if git diff ${{ env.BRANCH_NAME }} main --quiet; then
+              echo "No effective changes to apply"
+            else
+              gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
+            fi
           fi
