@@ -876,8 +876,9 @@ class FilesSearchSource(JsonSchemaMixin):
                 )
 
             # Typical error in old papers: title fields are equal to journal/booktitle fields
-            if record.data.get(Fields.TITLE, "no_title").lower() == record.data.get(
-                Fields.JOURNAL, "no_journal"
+            if (
+                record.data.get(Fields.TITLE, "no_title").lower()
+                == record.data.get(Fields.JOURNAL, "no_journal").lower()
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
                 record.set_status(
