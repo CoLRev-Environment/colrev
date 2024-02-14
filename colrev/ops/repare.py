@@ -190,6 +190,11 @@ class Repare(colrev.operation.Operation):
             for origin in record.data[Fields.ORIGIN]:
                 origin_source = origin.split("/")[0]
                 origin_id = origin[len(origin_source) + 1 :]
+                if (
+                    origin_source not in source_feeds
+                    or origin_id not in source_feeds[origin_source]
+                ):
+                    continue
                 if key in source_feeds[origin_source][origin_id]:
                     record.add_data_provenance(key=key, source=origin, note="")
         if key == Fields.LANGUAGE:
@@ -204,6 +209,8 @@ class Repare(colrev.operation.Operation):
 
         for _, prov_details in record.data[Fields.D_PROV].items():
             if prov_details["source"] in record.data[Fields.ORIGIN] + ["manual"]:
+                continue
+            if prov_details["source"].startswith("file|"):
                 continue
             # Note : simple heuristic
             prov_details["source"] = record.data[Fields.ORIGIN][0]
