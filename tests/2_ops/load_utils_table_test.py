@@ -5,7 +5,7 @@ from pathlib import Path
 import colrev.ops.load_utils_bib
 import colrev.review_manager
 import colrev.settings
-import shutil
+
 
 def test_load(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
@@ -40,6 +40,12 @@ def test_load(  # type: ignore
 
     actual = base_repo_review_manager.dataset.parse_bibtex_str(recs_dict_in=records)
     if expected != actual:
-        with open(helpers.test_data_path / Path("load_utils/") / Path("table_tests_expected.bib"), "w", encoding="utf-8") as f:
+        with open(
+            helpers.test_data_path
+            / Path("load_utils/")
+            / Path("table_tests_expected.bib"),
+            "w",
+            encoding="utf-8",
+        ) as f:
             f.write(actual)
     assert actual == expected
