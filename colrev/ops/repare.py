@@ -222,6 +222,11 @@ class Repare(colrev.operation.Operation):
         for origin in record.data[Fields.ORIGIN]:
             origin_source = origin.split("/")[0]
             origin_id = origin[len(origin_source) + 1 :]
+            if (
+                origin_source not in source_feeds
+                or origin_id not in source_feeds[origin_source]
+            ):
+                continue
             if key in source_feeds[origin_source][origin_id]:
                 options[origin_source] = source_feeds[origin_source][origin_id][key]
 
@@ -243,9 +248,11 @@ class Repare(colrev.operation.Operation):
                 source_origin = [k for k, v in options.items() if v == value][0]
 
             for origin in record.data[Fields.ORIGIN]:
-                origin_source, origin_id = origin.split("/")
-                if source_origin == origin_source:
-                    source_value = origin
+                origin_parts = origin.split("/", 1)  # Split on the first "/"
+                if len(origin_parts) == 2:
+                    origin_source, origin_id = origin.split("/")
+                    if source_origin == origin_source:
+                        source_value = origin
 
         record.add_masterdata_provenance(key=key, source=source_value, note="")
 
