@@ -283,7 +283,11 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         self.pdf_get_man_operation.export_retrieval_table(records=records)
         pdf_get_man_data = self.pdf_get_man_operation.get_data()
-
+        if pdf_get_man_data["nr_tasks"] == 0:
+            self.review_manager.logger.info(
+                "No tasks for PDF retrieval (run colrev pdf-get )."
+            )
+            return records
         print(
             "\nInstructions\n\n      "
             "Get the pdfs, rename them (ID.pdf) and store them in the pdfs directory.\n"
