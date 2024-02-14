@@ -61,7 +61,7 @@ class Validate(colrev.operation.Operation):
             return prior_records_dict
         return {}
 
-    def get_prep_change_for_validation(self) -> list:
+    def get_prep_change_for_validation(self, *, validation_details: dict) -> None:
         """Validate preparation changes"""
 
         self.review_manager.logger.debug("Load records...")
@@ -77,6 +77,25 @@ class Validate(colrev.operation.Operation):
                 origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
 
         records = self.review_manager.dataset.load_records_dict()
+
+        target_commit = self.__get_target_commit(scope="HEAD~1")
+
+        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+        prep_prescreen_exclusions = []
+        for record_dict in records.values():
+            for prior_record_dict in prior_records_dict.values():
+                if set(record_dict[Fields.ORIGIN]).intersection(
+                    set(prior_record_dict[Fields.ORIGIN])
+                ):
+                    if (
+                        prior_record_dict[Fields.STATUS]
+                        != colrev.record.RecordState.rev_prescreen_excluded
+                        and record_dict[Fields.STATUS]
+                        == colrev.record.RecordState.rev_prescreen_excluded
+                    ):
+                        prep_prescreen_exclusions.append(record_dict)
+
+        validation_details["prep_prescreen_exclusions"] = prep_prescreen_exclusions
 
         self.review_manager.logger.debug("Calculating preparation differences...")
 
@@ -115,7 +134,7 @@ class Validate(colrev.operation.Operation):
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score_max"], reverse=True)
 
-        return change_diff
+        validation_details["prep"] = change_diff
 
     def __export_merge_candidates_file(self, *, records: list[dict]) -> None:
         merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
@@ -570,7 +589,7 @@ class Validate(colrev.operation.Operation):
         # extension: filter_setting for changes of contributor (git author)
 
         if filter_setting in ["prepare", "all"]:
-            validation_details["prep"] = self.get_prep_change_for_validation()
+            self.get_prep_change_for_validation(validation_details=validation_details)
 
         if filter_setting in ["dedupe", "all"]:
             records = self.load_changed_records(target_commit=target_commit)

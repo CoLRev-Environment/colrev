@@ -31,6 +31,7 @@ keys = [
 
 
 def print_string_diff(change: tuple) -> str:
+    """Generates a string representation of the differences between two strings."""
     diff = difflib.Differ()
     letters = list(diff.compare(change[1], change[0]))
     for i, letter in enumerate(letters):
@@ -72,7 +73,7 @@ def print_diff(origin: dict, record_dict: dict) -> None:
         print(f"  diff {key} : {line}")
 
 
-def print_diff_pair(record_pair: list, keys: list) -> None:
+def print_diff_pair(record_pair: list) -> None:
     """Print the diff between two records"""
 
     for key in keys:
@@ -132,7 +133,6 @@ def __validate_dedupe(
                 validation_item["prior_record_a"],
                 validation_item["prior_record_b"],
             ],
-            keys=keys,
         )
 
         user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
@@ -148,28 +148,20 @@ def __validate_dedupe(
             continue
 
 
-def __validate_prep(
+def __validate_prep_prescreen_exclusions(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: list,
-    threshold: float,
 ) -> None:
-    # Note : for testing:
-    # prescreen_excluded_to_validate = [
-    # e for e in validation_details if not e["prescreen_exclusion_mark"]
-    # ]
 
-    prescreen_excluded_to_validate = [
-        e for e in validation_details if e["prescreen_exclusion_mark"]
-    ]
+    prescreen_excluded_to_validate = validation_details
     if prescreen_excluded_to_validate:
         print("Prescreen excluded:")
         prescreen_errors = []
 
         choices = [
             (
-                f"{e['record_dict']['ID']} : "
-                f"{Colors.ORANGE}{e['record_dict']['title']}{Colors.END}",
+                f"{e['ID']} : " f"{Colors.ORANGE}{e['title']}{Colors.END}",
                 i,
             )
             for i, e in enumerate(prescreen_excluded_to_validate)
@@ -187,13 +179,21 @@ def __validate_prep(
             prescreen_errors.append(prescreen_excluded_to_validate[index])
 
         for error in prescreen_errors:
-            colrev.record.Record(data=error["record_dict"]).set_status(
+            colrev.record.Record(data=error).set_status(
                 target_state=colrev.record.RecordState.md_needs_manual_preparation
             )
             validate_operation.review_manager.dataset.save_records_dict(
-                records={error["record_dict"][Fields.ID]: error["record_dict"]},
+                records={error[Fields.ID]: error},
                 partial=True,
             )
+
+
+def __validate_prep(
+    *,
+    validate_operation: colrev.operation.Operation,
+    validation_details: list,
+    threshold: float,
+) -> None:
 
     displayed = False
     for validation_element in validation_details:
@@ -258,6 +258,11 @@ def validate(
                 validate_operation=validate_operation,
                 validation_details=details,
                 threshold=threshold,
+            )
+        elif key == "prep_prescreen_exclusions":
+            __validate_prep_prescreen_exclusions(
+                validate_operation=validate_operation,
+                validation_details=details,
             )
         elif key == "dedupe":
             __validate_dedupe(
