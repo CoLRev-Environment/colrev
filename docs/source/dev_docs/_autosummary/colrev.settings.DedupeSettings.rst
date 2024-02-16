@@ -34,5 +34,4 @@ colrev.settings.DedupeSettings
 
    .. autosummary::
 
-      ~DedupeSettings.same_source_merges
       ~DedupeSettings.dedupe_package_endpoints
