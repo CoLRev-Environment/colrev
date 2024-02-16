@@ -475,7 +475,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 if added:
                     self.review_manager.logger.info(
-                        " retrieve " + retrieved_record.data[Fields.DBLP_KEY]
+                        " retrieve " + retrieved_record.data["dblp_key"]
                     )
                 else:
                     dblp_feed.update_existing_record(
