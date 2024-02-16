@@ -11,7 +11,6 @@ Preparation
    - prep (colrev.resolve_crossrefs,colrev.source_specific_prep,colrev.exclude_non_latin_alphabets,...)
  - fields_to_keep: []
 Dedupe
- - same_source_merges: SameSourceMergePolicy.prevent
  - colrev.active_learning_training,colrev.active_learning_automated
 Prescreen
 Prescreen package endoints: colrev.scope_prescreen,colrev.colrev_cli_prescreen

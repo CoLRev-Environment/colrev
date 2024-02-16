@@ -174,6 +174,25 @@ class Validate(colrev.operation.Operation):
         # at some point, we may allow users to validate
         # all duplicates/non-duplicates (across commits)
 
+        # if self.__gids_conflict(main_record=main_record, dupe_record=dupe_record):
+        #     self.review_manager.logger.info(
+        #         "Prevented merge with conflicting global IDs: "
+        #         f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
+        #     )
+        #     return True
+
+        # def __gids_conflict(
+        #     self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+        # ) -> bool:
+        #     gid_conflict = False
+        #     if Fields.DOI in main_record.data and Fields.DOI in dupe_record.data:
+        #         doi_main = main_record.data.get(Fields.DOI, "a").replace("\\", "")
+        #         doi_dupe = dupe_record.data.get(Fields.DOI, "b").replace("\\", "")
+        #         if doi_main != doi_dupe:
+        #             gid_conflict = True
+
+        #     return gid_conflict
+
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
         change_diff = []

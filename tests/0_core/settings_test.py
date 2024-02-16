@@ -69,7 +69,6 @@ def test_settings_load() -> None:
             "prep_man_package_endpoints": [{"endpoint": "colrev.export_man_prep"}],
         },
         "dedupe": {
-            "same_source_merges": colrev.settings.SameSourceMergePolicy.prevent,
             "dedupe_package_endpoints": [
                 {"endpoint": "colrev.dedupe"},
             ],

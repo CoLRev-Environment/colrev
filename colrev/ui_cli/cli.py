@@ -866,6 +866,8 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         print(f"\n\n{Colors.RED}Same source merges to check:{Colors.END}")
         print("\n- " + "\n- ".join(info["same_source_merges"]))
 
+    print(info["source_overlaps"])
+
 
 @main.command(help_priority=8)
 @click.option(

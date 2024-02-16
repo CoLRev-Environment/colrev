@@ -118,6 +118,9 @@ def test_dedupe_get_info(
         notify_state_transition_operation=True
     )
     actual = dedupe_operation.get_info()
-    expected: typing.Dict[str, typing.Any] = {"same_source_merges": []}
+    expected: typing.Dict[str, typing.Any] = {
+        "same_source_merges": [],
+        "source_overlaps": [],
+    }
 
     assert expected == actual

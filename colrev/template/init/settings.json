@@ -87,7 +87,6 @@
         ]
     },
     "dedupe": {
-        "same_source_merges": "prevent",
         "dedupe_package_endpoints": [
             {
                 "endpoint": "colrev.dedupe"

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import string
 import typing
-from collections import Counter
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
@@ -69,7 +68,6 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
         )
         self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
-        self.policy = self.review_manager.settings.dedupe.same_source_merges
 
     @classmethod
     def __dfs(cls, node: str, graph: dict, visited: dict, component: list) -> None:
@@ -223,41 +221,16 @@ class Dedupe(colrev.operation.Operation):
             )
             return
 
-        if self.policy == colrev.settings.SameSourceMergePolicy.apply:
-            return
-
-        if self.policy == colrev.settings.SameSourceMergePolicy.warn:
-            self.review_manager.logger.warning(
-                f"{Colors.ORANGE}"
-                "Apply same source merge "
-                f"{Colors.END} "
-                f"{merge_info}\n"
-                f"  {main_record.format_bib_style()}\n"
-                f"  {dupe_record.format_bib_style()}\n"
-                f"  {main_record.data.get(Fields.ORIGIN, ['ERROR'])} x "
-                f"{dupe_record.data.get(Fields.ORIGIN, ['ERROR'])}\n"
-            )
-            with self.same_source_merge_file.open("a", encoding="utf8") as file:
-                file.write(merge_info + "\n")
-            return
-
-        if self.policy == colrev.settings.SameSourceMergePolicy.prevent:
-            self.review_manager.logger.warning(
-                f"Prevented same-source merge: ({merge_info})"
-            )
-
-            with self.prevented_same_source_merge_file.open(
-                "a", encoding="utf8"
-            ) as file:
-                file.write(merge_info + "\n")
-
-            self.review_manager.logger.info(
-                "To force merge use colrev dedupe --merge "
-                f"{main_record.data[Fields.ID]},{dupe_record.data[Fields.ID]}"
-            )
-            raise colrev_exceptions.InvalidMerge(
-                record_a=main_record, record_b=dupe_record
-            )
+        self.review_manager.logger.warning(
+            f"{Colors.ORANGE}"
+            "Apply same source merge "
+            f"{Colors.END} "
+            f"{merge_info}\n"
+            f"  {main_record.format_bib_style()}\n"
+            f"  {dupe_record.format_bib_style()}\n"
+            f"  {main_record.data.get(Fields.ORIGIN, ['ERROR'])} x "
+            f"{dupe_record.data.get(Fields.ORIGIN, ['ERROR'])}\n"
+        )
 
     def __is_cross_level_merge(
         self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
@@ -281,18 +254,6 @@ class Dedupe(colrev.operation.Operation):
             is_cross_level_merge_attempt = True
 
         return is_cross_level_merge_attempt
-
-    def __gids_conflict(
-        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
-    ) -> bool:
-        gid_conflict = False
-        if Fields.DOI in main_record.data and Fields.DOI in dupe_record.data:
-            doi_main = main_record.data.get(Fields.DOI, "a").replace("\\", "")
-            doi_dupe = dupe_record.data.get(Fields.DOI, "b").replace("\\", "")
-            if doi_main != doi_dupe:
-                gid_conflict = True
-
-        return gid_conflict
 
     # pylint: disable=too-many-arguments
     def __print_merge_stats(
@@ -378,22 +339,15 @@ class Dedupe(colrev.operation.Operation):
             )
             return True
 
-        if self.__gids_conflict(main_record=main_record, dupe_record=dupe_record):
-            self.review_manager.logger.info(
-                "Prevented merge with conflicting global IDs: "
-                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
-            )
-            return True
-
-        if (
-            self.__same_source_merge(main_record=main_record, dupe_record=dupe_record)
-            and self.policy == colrev.settings.SameSourceMergePolicy.prevent
-        ):
-            self.review_manager.logger.info(
-                "Prevented same-source merge: "
-                f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
-            )
-            return True
+        # if (
+        #     self.__same_source_merge(main_record=main_record, dupe_record=dupe_record)
+        #     and self.policy == colrev.settings.SameSourceMergePolicy.prevent
+        # ):
+        #     self.review_manager.logger.info(
+        #         "Prevented same-source merge: "
+        #         f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
+        #     )
+        #     return True
 
         return False
 
@@ -639,45 +593,19 @@ class Dedupe(colrev.operation.Operation):
     def get_info(self) -> dict:
         """Get info on cuts (overlap of search sources) and same source merges"""
 
-        records = self.review_manager.dataset.load_records_dict()
+        same_source_merges: typing.Any = []
+        source_overlaps: typing.Any = []
 
-        origins = [record[Fields.ORIGIN] for record in records.values()]
-        origins = [item.split("/")[0] for sublist in origins for item in sublist]
-        origins = list(set(origins))
-
-        same_source_merges = []
-
-        for record in records.values():
-            rec_sources = [x.split("/")[0] for x in record[Fields.ORIGIN]]
-
-            duplicated_sources = [
-                item for item, count in Counter(rec_sources).items() if count > 1
-            ]
-            if len(duplicated_sources) > 0:
-                all_cases = []
-                for duplicated_source in duplicated_sources:
-                    cases = [
-                        o.split("/")[1]
-                        for o in record[Fields.ORIGIN]
-                        if duplicated_source in o
-                    ]
-                    all_cases.append(f"{duplicated_source}: {cases}")
-                same_source_merges.append(
-                    f"{record[Fields.ID]} ({', '.join(all_cases)})"
-                )
+        # TODO / to implement
 
         info = {
             "same_source_merges": same_source_merges,
+            "source_overlaps": source_overlaps,
         }
         return info
 
     def merge_records(self, *, merge: list) -> None:
         """Merge records by ID sets"""
-
-        self.review_manager.settings.dedupe.same_source_merges = (
-            colrev.settings.SameSourceMergePolicy.apply
-        )
-        self.policy = colrev.settings.SameSourceMergePolicy.apply
 
         self.apply_merges(id_sets=merge)
 
@@ -724,9 +652,6 @@ class Dedupe(colrev.operation.Operation):
                 id_sets.extend(list(combinations(duplicate, 2)))
 
         if apply:
-            self.review_manager.settings.dedupe.same_source_merges = (
-                colrev.settings.SameSourceMergePolicy.warn
-            )
             self.apply_merges(id_sets=id_sets)
             self.review_manager.create_commit(
                 msg="Merge records (identical global IDs)"
