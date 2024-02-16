@@ -906,11 +906,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     colrev_exceptions.NotFeedIdentifiableException,
                 ):
                     pass
-        except KeyError as exc:
+        except RuntimeError as exc:
             print(exc)
-            # KeyError  # error in crossref package:
-            # if len(result['message']['items']) == 0:
-            # KeyError: 'items'
 
         crossref_feed.print_post_run_search_infos(records=records)
 
