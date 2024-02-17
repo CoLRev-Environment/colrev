@@ -185,7 +185,7 @@ class Upgrade(colrev.operation.Operation):
                 "version": CoLRevVersion("0.10.2"),
                 "target_version": CoLRevVersion("0.11.0"),
                 "script": self.__migrate_0_11_0,
-                "released": False,
+                "released": True,
             },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
@@ -580,6 +580,9 @@ class Upgrade(colrev.operation.Operation):
         settings = self.__load_settings_dict()
         if settings["project"]["review_type"] == "curated_masterdata":
             settings["project"]["review_type"] = "colrev.curated_masterdata"
+
+        if "dedupe" in settings:
+            settings["dedupe"].pop("same_source_merges", None)
 
         settings["pdf_get"]["defects_to_ignore"] = []
 
