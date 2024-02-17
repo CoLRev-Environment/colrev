@@ -13,7 +13,7 @@ Giving team members access
 - Replace the following (git pull/push) by colrev pull/push, add clone
 - Distinguish within/beyond project collaboration
 
-Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
+Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/repositories/creating-and-managing-repositories/quickstart-for-repositories>`_ or other git hosting services)
 
 Users can pull an existing one (with the url provided by the project manager):
 
