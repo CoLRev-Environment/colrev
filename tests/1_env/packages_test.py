@@ -185,7 +185,7 @@ def test_prescreen_package_interfaces(
             }
             for p in prescreen_identifiers
             # Note : asreview dependency fails on gh actions
-            if p not in ["colrev.asreview_prescreen"]
+            if p not in ["colrev_asreview.colrev_asreview"]
         ],
         operation=prescreen_operation,
         instantiate_objects=True,
