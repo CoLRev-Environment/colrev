@@ -2,7 +2,7 @@
 """Checker for inconsistent-with-url-metadata."""
 from __future__ import annotations
 
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.qm.quality_model

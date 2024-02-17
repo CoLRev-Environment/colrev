@@ -20,7 +20,7 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from defusedxml.ElementTree import fromstring
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions

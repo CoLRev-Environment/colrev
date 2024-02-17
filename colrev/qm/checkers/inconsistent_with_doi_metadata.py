@@ -2,7 +2,7 @@
 """Checker for inconsistent-with-doi-metadata."""
 from __future__ import annotations
 
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector

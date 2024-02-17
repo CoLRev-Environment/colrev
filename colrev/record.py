@@ -29,7 +29,7 @@ from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions

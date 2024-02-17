@@ -23,7 +23,7 @@ from crossref.restful import Journals
 from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions

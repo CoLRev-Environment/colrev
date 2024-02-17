@@ -18,7 +18,7 @@ from bib_dedupe.bib_dedupe import prep
 from bib_dedupe.merge import merge
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager

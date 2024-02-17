@@ -11,7 +11,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.env.language_service
 import colrev.env.package_manager

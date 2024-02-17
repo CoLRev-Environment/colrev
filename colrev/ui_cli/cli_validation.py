@@ -7,7 +7,7 @@ import subprocess  # nosec
 from typing import TYPE_CHECKING
 
 import inquirer
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.record
 from colrev.constants import Colors

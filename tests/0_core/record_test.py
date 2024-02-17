@@ -882,7 +882,7 @@ def test_get_tei_filename() -> None:
 def test_get_record_similarity() -> None:
     """Test record.get_record_similarity()"""
 
-    expected = 0.854
+    expected = 0.8541
     actual = colrev.record.Record.get_record_similarity(record_a=r1, record_b=r2)
     assert expected == actual
 
@@ -1313,7 +1313,7 @@ def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> No
 def test_get_retrieval_similarity() -> None:
     """Test record.get_retrieval_similarity()"""
 
-    expected = 0.934
+    expected = 0.9333
     actual = colrev.record.PrepRecord.get_retrieval_similarity(
         record_original=r1, retrieved_record_original=r2
     )

@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager

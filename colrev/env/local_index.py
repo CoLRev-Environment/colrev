@@ -19,7 +19,7 @@ import pandas as pd
 import requests_cache
 from git.exc import GitCommandError
 from pybtex.database.input import bibtex
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.constants as c
