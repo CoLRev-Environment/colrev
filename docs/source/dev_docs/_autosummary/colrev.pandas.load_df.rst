@@ -1,4 +1,4 @@
-colrev.pandas.load\_df
+﻿colrev.pandas.load\_df
 ======================
 
 .. currentmodule:: colrev.pandas

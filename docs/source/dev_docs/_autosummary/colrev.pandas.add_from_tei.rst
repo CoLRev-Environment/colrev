@@ -1,4 +1,4 @@
-colrev.pandas.add\_from\_tei
+﻿colrev.pandas.add\_from\_tei
 ============================
 
 .. currentmodule:: colrev.pandas

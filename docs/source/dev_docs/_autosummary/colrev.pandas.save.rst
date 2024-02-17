@@ -1,4 +1,4 @@
-colrev.pandas.save
+﻿colrev.pandas.save
 ==================
 
 .. currentmodule:: colrev.pandas

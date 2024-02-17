@@ -1,4 +1,4 @@
-colrev.pandas.load\_resolved\_papers
+﻿colrev.pandas.load\_resolved\_papers
 ====================================
 
 .. currentmodule:: colrev.pandas
