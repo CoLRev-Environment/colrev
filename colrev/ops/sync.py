@@ -222,7 +222,8 @@ class Sync:
 
             first = True
             for record_id, record_dict in recs_dict_in.items():
-                # Note : temporarily (to prevent pandoc fails, which does not support "." in fiel names)
+                # Note : temporarily
+                # (to prevent pandoc fails, which does not support "." in fiel names)
                 record_dict = {k: v for k, v in record_dict.items() if "." not in k}
 
                 if not first:

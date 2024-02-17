@@ -151,7 +151,7 @@ def __validate_dedupe(
 def __validate_prep_prescreen_exclusions(
     *,
     validate_operation: colrev.operation.Operation,
-    validation_details: list,
+    validation_details: dict,
 ) -> None:
 
     prescreen_excluded_to_validate = validation_details
@@ -191,7 +191,7 @@ def __validate_prep_prescreen_exclusions(
 def __validate_prep(
     *,
     validate_operation: colrev.operation.Operation,
-    validation_details: list,
+    validation_details: dict,
     threshold: float,
 ) -> None:
 
@@ -244,6 +244,82 @@ def __validate_prep(
         )
 
 
+def __validate_properties(
+    *,
+    validate_operation: colrev.operation.Operation,
+    validation_details: dict,
+) -> None:
+
+    validate_operation.review_manager.logger.info(
+        " Traceability of records".ljust(32, " ")
+        + str(validation_details["record_traceability"])
+    )
+    validate_operation.review_manager.logger.info(
+        " Consistency (based on hooks)".ljust(32, " ")
+        + str(validation_details["consistency"])
+    )
+    validate_operation.review_manager.logger.info(
+        " Completeness of iteration".ljust(32, " ")
+        + str(validation_details["completeness"])
+    )
+
+
+def __validate_contributor_commits(
+    *,
+    validate_operation: colrev.operation.Operation,
+    validation_details: dict,
+) -> None:
+    validate_operation.review_manager.logger.info(
+        "Showing commits in which the contributor was involved as the author or committer."
+    )
+
+    print()
+    print("Commits to validate:")
+    print()
+    for item in validation_details:
+        for _, item_values in item.items():
+            print(item_values["msg"])
+            print(f"  date      {item_values['date']}")
+            print(
+                f"  author    {item_values['author']} ({item_values['author_email']})"
+            )
+            print(
+                f"  committer {item_values['committer']} ({item_values['committer_email']})"
+            )
+            print(f"  {Colors.ORANGE}{item_values['validate']}{Colors.END}")
+
+    print()
+
+
+def __validate_general(
+    *,
+    validate_operation: colrev.operation.Operation,
+    validation_details: dict,
+) -> None:
+    validate_operation.review_manager.logger.info("Start general validation")
+    validate_operation.review_manager.logger.info(
+        "Next, an interface will open and "
+        "display the changes introduced in the selected commit."
+    )
+    validate_operation.review_manager.logger.info(
+        "To undo minor changes, edit the corresponding files directly and run "
+        f"{Colors.ORANGE}git add FILENAME && "
+        f"git commit -m 'DESCRIPTION OF CHANGES UNDONE'{Colors.END}"
+    )
+    validate_operation.review_manager.logger.info(
+        "To undo all changes introduced in a commit, run "
+        f"{Colors.ORANGE}git revert COMMIT_ID{Colors.END}"
+    )
+    input("Enter to continue")
+    if "commit_relative" in validation_details:
+        subprocess.run(  # nosec
+            ["gitk", f"--select-commit={validation_details['commit_relative']}"],
+            check=False,
+        )
+    else:
+        subprocess.run(["gitk"], check=False)  # nosec
+
+
 def validate(
     *,
     validate_operation: colrev.operation.Operation,
@@ -271,63 +347,20 @@ def validate(
                 threshold=threshold,
             )
         elif key == "properties":
-            validate_operation.review_manager.logger.info(
-                " Traceability of records".ljust(32, " ")
-                + str(details["record_traceability"])
-            )
-            validate_operation.review_manager.logger.info(
-                " Consistency (based on hooks)".ljust(32, " ")
-                + str(details["consistency"])
-            )
-            validate_operation.review_manager.logger.info(
-                " Completeness of iteration".ljust(32, " ")
-                + str(details["completeness"])
+            __validate_properties(
+                validate_operation=validate_operation,
+                validation_details=details,
             )
         elif key == "contributor_commits":
-            validate_operation.review_manager.logger.info(
-                "Showing commits in which the contributor was involved as the author or committer."
+            __validate_contributor_commits(
+                validate_operation=validate_operation,
+                validation_details=details,
             )
-
-            print()
-            print("Commits to validate:")
-            print()
-            for item in details:
-                for _, item_values in item.items():
-                    print(item_values["msg"])
-                    print(f"  date      {item_values['date']}")
-                    print(
-                        f"  author    {item_values['author']} ({item_values['author_email']})"
-                    )
-                    print(
-                        f"  committer {item_values['committer']} ({item_values['committer_email']})"
-                    )
-                    print(f"  {Colors.ORANGE}{item_values['validate']}{Colors.END}")
-
-            print()
         elif key == "general":
-            validate_operation.review_manager.logger.info("Start general validation")
-            validate_operation.review_manager.logger.info(
-                "Next, an interface will open and "
-                "display the changes introduced in the selected commit."
+            __validate_general(
+                validate_operation=validate_operation,
+                validation_details=details,
             )
-            validate_operation.review_manager.logger.info(
-                "To undo minor changes, edit the corresponding files directly and run "
-                f"{Colors.ORANGE}git add FILENAME && "
-                f"git commit -m 'DESCRIPTION OF CHANGES UNDONE'{Colors.END}"
-            )
-            validate_operation.review_manager.logger.info(
-                "To undo all changes introduced in a commit, run "
-                f"{Colors.ORANGE}git revert COMMIT_ID{Colors.END}"
-            )
-            input("Enter to continue")
-            if "commit_relative" in details:
-                subprocess.run(  # nosec
-                    ["gitk", f"--select-commit={details['commit_relative']}"],
-                    check=False,
-                )
-            else:
-                subprocess.run(["gitk"], check=False)  # nosec
-
         else:
             print("Not yet implemented")
             print(validation_details)

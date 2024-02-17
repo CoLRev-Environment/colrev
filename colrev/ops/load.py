@@ -208,6 +208,18 @@ class Load(colrev.operation.Operation):
         source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
         select_new_records: bool = True,
     ) -> None:
+        """
+        Prepares a search source for loading records into the review manager's dataset.
+
+        This method initializes the loading process by selecting new records from the source
+        based on the `select_new_records` flag. It then prepares the source records for import
+        by filtering out already imported records if `select_new_records` is True.
+
+        Args:
+            source: The search source package endpoint interface to prepare for loading.
+            select_new_records: A boolean flag indicating whether to filter out records
+                                that have already been imported. Defaults to True.
+        """
         search_records = source.load(self)  # type: ignore
 
         source_records_list = self.__prep_records_for_import(
@@ -237,6 +249,17 @@ class Load(colrev.operation.Operation):
         source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
         keep_ids: bool,
     ) -> None:
+        """
+        Loads records from a specified source into the review manager's dataset.
+
+        This method prepares the source for loading by calling `setup_source_for_load`
+        and then proceeds to load the records. It takes into account whether the IDs
+        of the records should be kept as is or generated anew.
+
+        Args:
+            source: The search source package endpoint interface from which records are loaded.
+            keep_ids: A boolean flag indicating whether to keep the original IDs of the records.
+        """
         self.setup_source_for_load(source=source)
         records = self.review_manager.dataset.load_records_dict()
 
@@ -317,6 +340,12 @@ class Load(colrev.operation.Operation):
                 )
 
     def load_active_sources(self) -> list:
+        """
+        Loads and returns a list of active source endpoints from the settings.
+
+        Returns:
+            list: A list of active source endpoint objects.
+        """
         checker = self.review_manager.get_checker()
         checker.check_sources()
         sources_settings = []

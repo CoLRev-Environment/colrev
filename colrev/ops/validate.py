@@ -61,25 +61,10 @@ class Validate(colrev.operation.Operation):
             return prior_records_dict
         return {}
 
-    def get_prep_change_for_validation(self, *, validation_details: dict) -> None:
-        """Validate preparation changes"""
-
-        self.review_manager.logger.debug("Load records...")
-
-        load_operation = self.review_manager.get_load_operation()
-        origin_records = {}
-        for source in load_operation.load_active_sources():
-
-            load_operation.setup_source_for_load(
-                source=source, select_new_records=False
-            )
-            for origin_record in source.search_source.source_records_list:
-                origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
-
-        records = self.review_manager.dataset.load_records_dict()
+    def __get_prep_prescreen_exclusions(self, *, records: dict) -> list:
+        self.review_manager.logger.debug("Get prescreen exclusions...")
 
         target_commit = self.__get_target_commit(scope="HEAD~1")
-
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
         prep_prescreen_exclusions = []
         for record_dict in records.values():
@@ -95,8 +80,9 @@ class Validate(colrev.operation.Operation):
                     ):
                         prep_prescreen_exclusions.append(record_dict)
 
-        validation_details["prep_prescreen_exclusions"] = prep_prescreen_exclusions
+        return prep_prescreen_exclusions
 
+    def __get_change_diff(self, *, records: dict, origin_records: dict) -> list:
         self.review_manager.logger.debug("Calculating preparation differences...")
 
         change_diff = []
@@ -133,8 +119,31 @@ class Validate(colrev.operation.Operation):
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score_max"], reverse=True)
+        return change_diff
 
-        validation_details["prep"] = change_diff
+    def get_prep_change_for_validation(self, *, validation_details: dict) -> None:
+        """Validate preparation changes"""
+
+        self.review_manager.logger.debug("Load records...")
+
+        load_operation = self.review_manager.get_load_operation()
+        origin_records = {}
+        for source in load_operation.load_active_sources():
+
+            load_operation.setup_source_for_load(
+                source=source, select_new_records=False
+            )
+            for origin_record in source.search_source.source_records_list:
+                origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
+
+        records = self.review_manager.dataset.load_records_dict()
+
+        validation_details["prep_prescreen_exclusions"] = (
+            self.__get_prep_prescreen_exclusions(records=records)
+        )
+        validation_details["prep"] = self.__get_change_diff(
+            records=records, origin_records=origin_records
+        )
 
     def __export_merge_candidates_file(self, *, records: list[dict]) -> None:
         merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")

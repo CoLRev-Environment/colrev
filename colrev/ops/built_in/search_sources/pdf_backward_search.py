@@ -146,7 +146,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         return True
 
-    def __get_reference_records(self, *, record_dict: dict) -> list:
+    def __get_reference_records_from_open_citations(self, *, record_dict: dict) -> list:
         references = []
 
         url = f"{self.__api_url}{record_dict['doi']}"
@@ -247,7 +247,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 df_all_references["meets_criteria"] = df_all_references[
                     Fields.NR_INTEXT_CITATIONS
                 ].apply(
-                    lambda x: len(
+                    lambda x, in_text_citation_threshold=in_text_citation_threshold: len(
                         [
                             citation
                             for citation in x.split(",")
@@ -282,42 +282,93 @@ class BackwardSearchSource(JsonSchemaMixin):
         records: dict,
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
-        for origins in {
-            x["bw_search_origins"]
-            for x in pdf_backward_search_feed.feed_records.values()
-        }:
-            bwsearch_ref = origins.split(";")[0]
-            parent_record_id = bwsearch_ref[: bwsearch_ref.find("_backward_search_")]
-            parent_record = records[parent_record_id]
 
-            if Fields.DOI not in parent_record:
+        for feed_record_dict in pdf_backward_search_feed.feed_records.values():
+            parent_record = self.__get_parent_record(feed_record_dict, records)
+            if not parent_record:
                 continue
 
-            backward_references = self.__get_reference_records(
+            backward_references = self.__get_reference_records_from_open_citations(
                 record_dict=parent_record
             )
-            updated = 0
-            overall = 0
-            for feed_record_dict in pdf_backward_search_feed.feed_records.values():
-                if feed_record_dict["bw_search_origins"].split(";")[0] != bwsearch_ref:
-                    continue
-                overall += 1
-                feed_record = colrev.record.Record(data=feed_record_dict)
-                max_similarity = 0.0
-                pos = -1
-                for i, backward_reference in enumerate(backward_references):
-                    similarity = self.__get_similarity(
-                        record=feed_record, retrieved_record_dict=backward_reference
-                    )
-                    if similarity > max_similarity:
-                        pos = i
-                        max_similarity = similarity
-                if max_similarity > 0.9:
-                    feed_record.data.update(**backward_references[pos - 1])
-                    updated += 1
-            self.review_manager.logger.info(
-                f" updated {updated}/{overall} of the references in {parent_record_id}"
+            self.__update_feed_records_with_open_citations_data(
+                feed_record_dict, backward_references
             )
+
+    def __get_parent_record(self, feed_record_dict: dict, records: dict) -> dict:
+        bw_search_origin = feed_record_dict["bw_search_origins"].split(";")[0]
+        parent_record_id = bw_search_origin[
+            : bw_search_origin.find("_backward_search_")
+        ]
+        return records.get(parent_record_id, {})
+
+    def __update_feed_records_with_open_citations_data(
+        self, feed_record_dict: dict, backward_references: list
+    ) -> None:
+        feed_record = colrev.record.Record(data=feed_record_dict)
+        max_similarity, best_match = self.__find_best_match(
+            feed_record, backward_references
+        )
+
+        if max_similarity > 0.9:
+            feed_record.data.update(**best_match)
+            self.review_manager.logger.info(
+                f"Updated record {feed_record.data[Fields.ID]} with OpenCitations data."
+            )
+
+    def __find_best_match(
+        self, feed_record: colrev.record.Record, backward_references: list
+    ) -> tuple:
+        max_similarity = 0.0
+        best_match = None
+        for backward_reference in backward_references:
+            similarity = self.__get_similarity(
+                record=feed_record, retrieved_record_dict=backward_reference
+            )
+            if similarity > max_similarity:
+                best_match = backward_reference
+                max_similarity = similarity
+        return max_similarity, best_match
+
+    def __get_new_record(
+        self,
+        *,
+        item: dict,
+        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
+    ) -> dict:
+        item[Fields.ID] = "new"
+        # Note: multiple source_identifiers are merged in origin field.
+        for feed_record in pdf_backward_search_feed.feed_records.values():
+            feed_record_origins = feed_record["bw_search_origins"].split(",")
+            new_record_origins = item["bw_search_origins"].split(",")
+            if set(feed_record_origins) & set(new_record_origins):
+                item[Fields.ID] = feed_record[Fields.ID]
+                break
+
+        if item[Fields.ID] == "new":
+            max_id = max(
+                [
+                    int(r[Fields.ID])
+                    for r in pdf_backward_search_feed.feed_records.values()
+                ]
+                or [0]
+            )
+            item[Fields.ID] = str(max_id + 1).rjust(6, "0")
+
+        fields_to_drop = [
+            "meets_criteria",
+            "record_id",
+            "nr_references",
+            "nr_intext_citations",
+            "bwsearch_ref",
+        ]
+        for field in fields_to_drop:
+            if field in item:
+                del item[field]
+        item = {
+            k: v for k, v in item.items() if not pd.isna(v)
+        }  # Drop fields where value is NaN
+        return item
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
@@ -347,39 +398,16 @@ class BackwardSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info(
             f"Set nr_references_threshold={nr_references_threshold}"
         )
-        all_references = {}
 
-        for record in records.values():
-            try:
-                if not self.__bw_search_condition(record=record):
-                    continue
+        selected_records = {
+            rid: record
+            for rid, record in records.items()
+            if self.__bw_search_condition(record=record)
+        }
 
-                self.review_manager.logger.info(
-                    f" run backward search for {record[Fields.ID]}"
-                )
-
-                pdf_path = self.review_manager.path / Path(record[Fields.FILE])
-
-                tei = self.review_manager.get_tei(
-                    pdf_path=pdf_path,
-                    tei_path=colrev.record.Record(data=record).get_tei_filename(),
-                )
-
-                references = tei.get_references(add_intext_citation_count=True)
-
-                for reference in references:
-                    if "tei_id" in reference:
-                        del reference["tei_id"]
-                    reference["bwsearch_ref"] = (
-                        record[Fields.ID] + "_backward_search_" + reference[Fields.ID]
-                    )
-
-                all_references[record[Fields.ID]] = references
-
-            except colrev_exceptions.TEIException:
-                self.review_manager.logger.info("Error accessing TEI")
-            except KeyError as exc:
-                print(exc)
+        all_references = self.__get_all_references(
+            selected_records=selected_records, review_manager=self.review_manager
+        )
 
         df_all_references = self.__deduplicate_all_references(all_references)
 
@@ -403,39 +431,10 @@ class BackwardSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        for new_record in selected_references.to_dict(orient="records"):
-            new_record[Fields.ID] = "new"
-            # Note: multiple source_identifiers are merged in origin field.
-            for feed_record in pdf_backward_search_feed.feed_records.values():
-                feed_record_origins = feed_record["bw_search_origins"].split(",")
-                new_record_origins = new_record["bw_search_origins"].split(",")
-                if set(feed_record_origins) & set(new_record_origins):
-                    new_record[Fields.ID] = feed_record[Fields.ID]
-                    break
-
-            if new_record[Fields.ID] == "new":
-                max_id = max(
-                    [
-                        int(r[Fields.ID])
-                        for r in pdf_backward_search_feed.feed_records.values()
-                    ]
-                    or [0]
-                )
-                new_record[Fields.ID] = str(max_id + 1).rjust(6, "0")
-
-            fields_to_drop = [
-                "meets_criteria",
-                "record_id",
-                "nr_references",
-                "nr_intext_citations",
-                "bwsearch_ref",
-            ]
-            for field in fields_to_drop:
-                if field in new_record:
-                    del new_record[field]
-            new_record = {
-                k: v for k, v in new_record.items() if not pd.isna(v)
-            }  # Drop fields where value is NaN
+        for item in selected_references.to_dict(orient="records"):
+            new_record = self.__get_new_record(
+                item=item, pdf_backward_search_feed=pdf_backward_search_feed
+            )
 
             prev_record_dict_version = {}
             if new_record[Fields.ID] in pdf_backward_search_feed.feed_records:
@@ -483,6 +482,45 @@ class BackwardSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
+    def __get_all_references(
+        cls,
+        *,
+        selected_records: dict,
+        review_manager: colrev.review_manager.ReviewManager,
+    ) -> dict:
+
+        all_references = {}
+
+        for record in tqdm(selected_records.values()):
+            try:
+
+                review_manager.logger.info(
+                    f" run backward search for {record[Fields.ID]}"
+                )
+
+                pdf_path = review_manager.path / Path(record[Fields.FILE])
+                tei = review_manager.get_tei(
+                    pdf_path=pdf_path,
+                    tei_path=colrev.record.Record(data=record).get_tei_filename(),
+                )
+
+                references = tei.get_references(add_intext_citation_count=True)
+                for reference in references:
+                    if "tei_id" in reference:
+                        del reference["tei_id"]
+                    reference["bwsearch_ref"] = (
+                        record[Fields.ID] + "_backward_search_" + reference[Fields.ID]
+                    )
+
+                all_references[record[Fields.ID]] = references
+
+            except colrev_exceptions.TEIException:
+                review_manager.logger.info("Error accessing TEI")
+            except KeyError as exc:
+                review_manager.logger.info(exc)
+        return all_references
+
+    @classmethod
     def __get_settings_from_ui(
         cls, *, params: dict, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
@@ -500,7 +538,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         # For example: cls.create_min_intext_citations_overview(params)
 
         all_records = review_manager.dataset.load_records_dict()
-        records = {
+        selected_records = {
             record_id: record
             for record_id, record in all_records.items()
             if record[Fields.STATUS]
@@ -510,33 +548,9 @@ class BackwardSearchSource(JsonSchemaMixin):
             ]
         }
 
-        all_references = {}
-
-        for record in tqdm(records.values()):
-            try:
-                if record[Fields.STATUS] not in [
-                    colrev.record.RecordState.rev_included,
-                    colrev.record.RecordState.rev_synthesized,
-                ]:
-                    continue
-
-                # review_manager.logger.info(
-                #     f" run backward search for {record[Fields.ID]}"
-                # )
-
-                pdf_path = review_manager.path / Path(record[Fields.FILE])
-                tei = review_manager.get_tei(
-                    pdf_path=pdf_path,
-                    tei_path=colrev.record.Record(data=record).get_tei_filename(),
-                )
-
-                references = tei.get_references(add_intext_citation_count=True)
-                all_references[record[Fields.ID]] = references
-
-            except colrev_exceptions.TEIException:
-                review_manager.logger.info("Error accessing TEI")
-            except KeyError as exc:
-                review_manager.logger.info(exc)
+        all_references = cls.__get_all_references(
+            selected_records=selected_records, review_manager=review_manager
+        )
 
         df_all_references = cls.__deduplicate_all_references(all_references)
 

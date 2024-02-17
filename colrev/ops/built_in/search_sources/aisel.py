@@ -600,7 +600,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key=Fields.JOURNAL, case=Fields.TITLE)
         record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
         record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
-        # TODO : polish/format title: capitalize ERP, CIO, MIS, ... (IS-Specific)
 
     def __exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
         if re.match(
