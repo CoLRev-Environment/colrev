@@ -20,6 +20,11 @@ jobs:
           poetry install -E docs -E dev
       - name: Install pre-commit
         run: poetry run pip install pre-commit
+      - name: Install modules from packages.json via poetry, skipping "colrev"
+        run: |
+          jq -r '.[] | select(.module != "colrev") | .module' colrev/template/packages.json | while read module; do
+            poetry run pip install $module
+          done
       - name: Setup git
         run: |
           git config --global user.name 'github-actions'

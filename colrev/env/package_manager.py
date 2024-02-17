@@ -1047,7 +1047,6 @@ class PackageManager:
         os.chdir(self.__colrev_path)
         packages = self.__load_packages_json()
         package_status = self.__load_package_status_json()
-        self.__package_endpoints_json_file.unlink(missing_ok=True)
 
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
@@ -1055,39 +1054,43 @@ class PackageManager:
         docs_for_index: typing.Dict[str, list] = {}
 
         for package in packages:
-            print(f'Loading package endpoints from {package["module"]}')
-            module_spec = importlib.util.find_spec(package["module"])
-
-            endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
-                ".colrev_endpoints.json"
-            )
-            if not endpoints_path.is_file():  # pragma: no cover
-                print(f"File does not exist: {endpoints_path}")
-                continue
-
             try:
+                print(f'Loading package endpoints from {package["module"]}')
+                module_spec = importlib.util.find_spec(package["module"])
+
+                endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
+                    ".colrev_endpoints.json"
+                )
+                if not endpoints_path.is_file():  # pragma: no cover
+                    print(f"File does not exist: {endpoints_path}")
+                    continue
+
                 with open(endpoints_path, encoding="utf-8") as file:
                     package_endpoints = json.load(file)
+                self.__add_package_endpoints(
+                    selected_package=package["module"],
+                    package_endpoints_json=package_endpoints_json,
+                    package_endpoints=package_endpoints,
+                    docs_for_index=docs_for_index,
+                    package_status=package_status,
+                )
+                self.__extract_search_source_types(
+                    package_endpoints_json=package_endpoints_json
+                )
             except json.decoder.JSONDecodeError as exc:  # pragma: no cover
                 print(f"Invalid json {exc}")
                 continue
+            except AttributeError as exc:
+                print(exc)
+                continue
 
-            self.__add_package_endpoints(
-                selected_package=package["module"],
-                package_endpoints_json=package_endpoints_json,
-                package_endpoints=package_endpoints,
-                docs_for_index=docs_for_index,
-                package_status=package_status,
-            )
-            self.__extract_search_source_types(
-                package_endpoints_json=package_endpoints_json
-            )
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(
                 package_endpoints_json[key],
                 key=lambda d: d["package_endpoint_identifier"],
             )
 
+        self.__package_endpoints_json_file.unlink(missing_ok=True)
         json_object = json.dumps(package_endpoints_json, indent=4)
         with open(self.__package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
