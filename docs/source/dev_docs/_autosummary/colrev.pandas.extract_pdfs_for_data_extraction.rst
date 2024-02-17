@@ -1,4 +1,4 @@
-﻿colrev.pandas.extract\_pdfs\_for\_data\_extraction
+colrev.pandas.extract\_pdfs\_for\_data\_extraction
 ==================================================
 
 .. currentmodule:: colrev.pandas
