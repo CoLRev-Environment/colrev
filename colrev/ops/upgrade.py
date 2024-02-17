@@ -595,6 +595,7 @@ class Upgrade(colrev.operation.Operation):
                 "colrev.pdf_check_ocr",
                 "colrev.validate_pdf_metadata",
                 "colrev.validate_completeness",
+                "colrev.create_tei",
                 "colrev.tei_prep",
             ]
         ]
