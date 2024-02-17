@@ -121,7 +121,6 @@ prescreen
    package_index/colrev.conditional_prescreen.rst
    package_index/colrev.prescreen_table.rst
    package_index/colrev.scope_prescreen.rst
-   package_index/NotImplemented
 
 pdf_get
 -----------------------------
