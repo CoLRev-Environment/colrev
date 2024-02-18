@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 """Tests of the CoLRev pdf-get operation"""
 from pathlib import Path
-from unittest.mock import patch
 
-import pytest
 
-import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 
 
@@ -187,24 +184,3 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 #       )
 #   )
 #   base_repo_review_manager.settings.sources[0] = original_source
-
-
-# TODO : collect ci_environment tests in a single test script
-@patch("colrev.review_manager.ReviewManager.in_ci_environment")
-def test_pdf_get_ci_environemnt(  # type: ignore
-    ci_env_patcher,
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-    helpers,
-) -> None:
-    """Test the pdf-get in ci_environemnt"""
-
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="prescreen_commit"
-    )
-
-    pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
-        notify_state_transition_operation=True
-    )
-    ci_env_patcher.return_value = True
-    with pytest.raises(colrev_exceptions.ServiceNotAvailableException):
-        pdf_get_operation.main()

@@ -237,7 +237,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
 
     prep_operation = review_manager.get_prep_operation()
-    prep_operation.main(keep_ids=False)
+    prep_operation.main(keep_ids=True)
     review_manager.prep_commit = review_manager.dataset.get_last_commit_sha()
 
     dedupe_operation = review_manager.get_dedupe_operation(
