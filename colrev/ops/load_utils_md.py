@@ -25,18 +25,12 @@ Example markdown reference section::
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import requests
 
 import colrev.env.package_manager
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.load
-
 # pylint: disable=too-few-public-methods
-# pylint: disable=unused-argument
 # pylint: disable=duplicate-code
 
 
@@ -64,10 +58,7 @@ class MarkdownLoader:
 
         grobid_service.check_grobid_availability()
         with open(self.source.filename, encoding="utf8") as file:
-            if self.source.filename.suffix == ".md":
-                references = [line.rstrip() for line in file if "#" not in line[:2]]
-            else:
-                references = [line.rstrip() for line in file]
+            references = [line.rstrip() for line in file if "#" not in line[:2]]
 
         data = ""
         ind = 0
