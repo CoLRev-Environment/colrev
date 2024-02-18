@@ -82,6 +82,12 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             record.remove_field(key=Fields.LANGUAGE)
             return record
 
+        if (
+            Fields.LANGUAGE in record.data
+            and record.data[Fields.LANGUAGE] in self.languages_to_include
+        ):
+            return record
+
         # To avoid misclassifications for short titles
         if len(record.data.get(Fields.TITLE, "")) < 30:
             # If language not in record, add language
