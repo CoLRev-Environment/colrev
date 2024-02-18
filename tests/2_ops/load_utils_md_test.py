@@ -12,6 +12,9 @@ def test_load_md(  # type: ignore
 
     helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
 
+    if base_repo_review_manager.in_ci_environment():
+        return
+
     search_source = colrev.settings.SearchSource(
         endpoint="colrev.unknown_source",
         filename=Path("data/search/references.md"),

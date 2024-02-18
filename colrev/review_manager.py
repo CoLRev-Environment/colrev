@@ -718,8 +718,8 @@ class ReviewManager:
     ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
 
-        if "pytest" in os.getcwd():
-            return False
+        # if "pytest" in os.getcwd():
+        #     return False
 
         identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
         if identifier:
