@@ -8,6 +8,7 @@ import typing
 from pathlib import Path
 from typing import Optional
 
+import git
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
@@ -27,7 +28,8 @@ class Validate(colrev.operation.Operation):
 
         self.cpus = 4
 
-    def __load_prior_records_dict(self, *, target_commit: str) -> dict:
+    def __load_prior_records_dict(self, *, commit_sha: str) -> dict:
+        """If commit is "": return the last commited version of records"""
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = str(
@@ -35,18 +37,18 @@ class Validate(colrev.operation.Operation):
         ).replace("\\", "/")
         revlist = (
             (
-                commit.hexsha,
-                (commit.tree / records_file_path).data_stream.read(),
+                commit_i.hexsha,
+                (commit_i.tree / records_file_path).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(
+            for commit_i in git_repo.iter_commits(
                 paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
             )
         )
 
         found_target_commit = False
         for commit_id, filecontents in list(revlist):
-            if target_commit:
-                if commit_id == target_commit:
+            if commit_sha:
+                if commit_id == commit_sha:
                     found_target_commit = True
                     continue
                 if not found_target_commit:
@@ -64,8 +66,8 @@ class Validate(colrev.operation.Operation):
     def __get_prep_prescreen_exclusions(self, *, records: dict) -> list:
         self.review_manager.logger.debug("Get prescreen exclusions...")
 
-        target_commit = self.__get_target_commit(scope="HEAD~1")
-        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+        commit = self.__get_target_commit(scope="HEAD~1")
+        prior_records_dict = self.__load_prior_records_dict(commit_sha=commit)
         prep_prescreen_exclusions = []
         for record_dict in records.values():
             for prior_record_dict in prior_records_dict.values():
@@ -121,7 +123,7 @@ class Validate(colrev.operation.Operation):
         change_diff.sort(key=lambda x: x["change_score_max"], reverse=True)
         return change_diff
 
-    def get_prep_change_for_validation(self, *, validation_details: dict) -> None:
+    def __validate_prep_changes(self, *, report: dict) -> None:
         """Validate preparation changes"""
 
         self.review_manager.logger.debug("Load records...")
@@ -138,10 +140,10 @@ class Validate(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        validation_details["prep_prescreen_exclusions"] = (
-            self.__get_prep_prescreen_exclusions(records=records)
+        report["prep_prescreen_exclusions"] = self.__get_prep_prescreen_exclusions(
+            records=records
         )
-        validation_details["prep"] = self.__get_change_diff(
+        report["prep"] = self.__get_change_diff(
             records=records, origin_records=origin_records
         )
 
@@ -175,9 +177,7 @@ class Validate(colrev.operation.Operation):
         if merge_candidates_file.read_text(encoding="utf-8") == "":
             merge_candidates_file.unlink()
 
-    def get_dedupe_change_for_validation(
-        self, *, records: list[dict], target_commit: str
-    ) -> list:
+    def __validate_dedupe_changes(self, *, report: dict, commit_sha: str) -> None:
         """Validate dedupe changes"""
 
         # at some point, we may allow users to validate
@@ -202,7 +202,16 @@ class Validate(colrev.operation.Operation):
 
         #     return gid_conflict
 
-        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+        records = self.__load_changed_records(commit_sha=commit_sha)
+
+        prior_records_dict = self.__load_prior_records_dict(commit_sha=commit_sha)
+        # Note : the if-statement avoids time-consuming procedures when the
+        # origin-sets have not changed (no duplicates merged)
+        if not self.__deduplicated_records(
+            records=records, prior_records_dict=prior_records_dict
+        ):
+            report["dedupe"] = []
+            return
 
         change_diff = []
         merged_records = False
@@ -257,13 +266,11 @@ class Validate(colrev.operation.Operation):
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
 
-        return change_diff
+        report["dedupe"] = change_diff
 
-    def load_changed_records(
-        self, *, target_commit: Optional[str] = None
-    ) -> list[dict]:
+    def __load_changed_records(self, *, commit_sha: Optional[str] = None) -> list[dict]:
         """Load the records that were changed in the target commit"""
-        if target_commit is None:
+        if commit_sha is None:
             self.review_manager.logger.info("Loading data...")
             records = self.review_manager.dataset.load_records_dict()
             for record_dict in records.values():
@@ -272,11 +279,11 @@ class Validate(colrev.operation.Operation):
 
         self.review_manager.logger.info("Loading data from history...")
         dataset = self.review_manager.dataset
-        changed_records = dataset.get_changed_records(target_commit=target_commit)
+        changed_records = dataset.get_changed_records(target_commit=commit_sha)
 
         return changed_records
 
-    def validate_properties(self, *, commit: str) -> dict:
+    def __validate_properties(self, *, commit_sha: str) -> dict:
         """Validate properties"""
 
         # option: --history: check all preceding commits (create a list...)
@@ -285,45 +292,52 @@ class Validate(colrev.operation.Operation):
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
+        report: typing.Dict[str, typing.Any] = {}
 
-        validation_details: typing.Dict[str, bool] = {}
-
-        if git_repo.is_dirty() and not commit == cur_sha:
+        if git_repo.is_dirty() and not commit_sha == cur_sha:
             self.review_manager.logger.error(
                 "Error: Need a clean repository to validate properties "
                 "of prior commit"
             )
-            return validation_details
+            return {}
 
-        if not commit == cur_sha:
-            self.review_manager.logger.info(f"Check out target_commit = {commit}")
-            git_repo.git.checkout(commit)
+        if not commit_sha == cur_sha:
+            self.review_manager.logger.info(f"Check out target_commit = {commit_sha}")
+            git_repo.git.checkout(commit_sha)
 
         ret = self.review_manager.check_repo()
         if 0 == ret["status"]:
-            validation_details["record_traceability"] = True
-            validation_details["consistency"] = True
+            report["record_traceability"] = True
+            report["consistency"] = True
 
         else:
-            validation_details["record_traceability"] = False
-            validation_details["consistency"] = False
+            report["record_traceability"] = False
+            report["consistency"] = False
 
         completeness_condition = self.review_manager.get_completeness_condition()
         if completeness_condition:
-            validation_details["completeness"] = True
+            report["completeness"] = True
 
         else:
-            validation_details["completeness"] = False
+            report["completeness"] = False
 
         git_repo.git.checkout(cur_branch, force=True)
 
-        return validation_details
+        return {"properties": report}
 
-    def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
+    def __validate_general(self, *, commit_sha: str) -> dict:
+        return {
+            "general": {
+                "commit": commit_sha,
+                "commit_relative": self.__get_relative_commit(commit_sha=commit_sha),
+            }
+        }
+
+    def __set_scope_based_on_target_commit(self, *, commit_sha: str) -> str:
         # pylint: disable=too-many-branches
 
-        if not target_commit:
-            target_commit = self.review_manager.dataset.get_last_commit_sha()
+        if not commit_sha:
+            commit_sha = self.review_manager.dataset.get_last_commit_sha()
 
         git_repo = self.review_manager.dataset.get_repo()
 
@@ -338,7 +352,7 @@ class Validate(colrev.operation.Operation):
         scope = ""
         # Note : simple heuristic: commit messages
         for commit_id, msg in revlist:
-            if commit_id == target_commit:
+            if commit_id == commit_sha:
                 if "colrev prep" in msg:
                     scope = "prepare"
                 elif "colrev dedupe" in msg:
@@ -364,11 +378,11 @@ class Validate(colrev.operation.Operation):
         # Otherwise: compare records
         if scope in ["general"]:
             # detect transition types in the respective commit and
-            # use them to calculate the validation_details
+            # use them to calculate the report
             records: typing.Dict[str, typing.Dict] = {}
             hist_records: typing.Dict[str, typing.Dict] = {}
             for recs in self.review_manager.dataset.load_records_from_history(
-                commit_sha=target_commit
+                commit_sha=commit_sha
             ):
                 # continue
                 if not records:
@@ -384,6 +398,22 @@ class Validate(colrev.operation.Operation):
                 scope = "dedupe"
 
         return scope
+
+    def __get_filter_setting(
+        self, *, filter_setting: str, properties: bool, commit_sha: str, scope: str
+    ) -> str:
+        if self.__is_contributor_validation_condition(scope):
+            filter_setting = "contributor"
+
+        elif properties:
+            filter_setting = "properties"
+        elif filter_setting == "all":
+            filter_setting = self.__set_scope_based_on_target_commit(
+                commit_sha=commit_sha
+            )
+
+        self.review_manager.logger.info(f"Filter: {filter_setting} changes")
+        return filter_setting
 
     def validate_merge_prescreen_screen(
         self,
@@ -419,7 +449,7 @@ class Validate(colrev.operation.Operation):
         }
         return prescreen_validation
 
-    def validate_merge_changes(self) -> list:
+    def __validate_merge_changes(self) -> dict:
         """Validate merge changes (reconciliation between branches)"""
 
         merge_validation = []
@@ -465,12 +495,15 @@ class Validate(colrev.operation.Operation):
                 )
                 merge_validation.append(prescreen_validation)
 
-        return merge_validation
+        return {"merge": merge_validation}
 
-    def __get_target_commit(self, *, scope: str) -> str:
+    def __get_target_commit(self, *, scope: str, filter_setting: str = "") -> str:
         """Get the commit from commit sha or tree hash"""
 
         commit = ""
+        if filter_setting == "contributor":
+            return commit
+
         git_repo = self.review_manager.dataset.get_repo()
         if scope in ["HEAD", "."]:
             scope = "HEAD~0"
@@ -517,13 +550,13 @@ class Validate(colrev.operation.Operation):
             for x in [r[Fields.ORIGIN] for r in prior_records_dict.values()]
         }
 
-    def __get_contributor_validation(self, *, contributor: str) -> dict:
-        validation_details: typing.Dict[str, typing.Any] = {"contributor_commits": []}
+    def __validate_contributor(self, *, scope: str) -> dict:
+        report: typing.Dict[str, typing.Any] = {"contributor_commits": []}
         valid_options = []
         git_repo = self.review_manager.dataset.get_repo()
         for commit in git_repo.iter_commits():
             if any(
-                x == contributor
+                x == scope
                 for x in [
                     commit.author.email,
                     commit.author.name,
@@ -532,17 +565,16 @@ class Validate(colrev.operation.Operation):
                 ]
             ):
                 commit_date = datetime.datetime.fromtimestamp(commit.committed_date)
-                validation_details["contributor_commits"].append(
+                report["contributor_commits"].append(
                     {
-                        commit.hexsha: {
-                            "msg": commit.message.split("\n", maxsplit=1)[0],
-                            "date": commit_date,
-                            "author": commit.author.name,
-                            "author_email": commit.author.email,
-                            "committer": commit.committer.name,
-                            "committer_email": commit.committer.email,
-                            "validate": f"colrev validate {commit.hexsha}",
-                        }
+                        "msg": commit.message.split("\n", maxsplit=1)[0],
+                        "date": commit_date,
+                        "author": commit.author.name,
+                        "author_email": commit.author.email,
+                        "commit_sha": commit.hexsha,
+                        "committer": commit.committer.name,
+                        "committer_email": commit.committer.email,
+                        "validate": f"colrev validate {commit.hexsha}",
                     }
                 )
 
@@ -554,24 +586,31 @@ class Validate(colrev.operation.Operation):
             if commit.author.email not in valid_options:
                 valid_options.append(commit.author.email)
 
-        if not validation_details["contributor_commits"]:
+        if not report["contributor_commits"]:
             raise colrev_exceptions.ParameterError(
                 parameter="validate.contributor",
-                value=contributor,
+                value=scope,
                 options=valid_options,
             )
-        return validation_details
+        return report
 
-    def __get_relative_commit(self, target_commit: str) -> str:
+    def __get_relative_commit(self, commit_sha: git.Commit) -> str:
         git_repo = self.review_manager.dataset.get_repo()
 
         relative_to_head = 0
-        for commit in git_repo.iter_commits():
-            if target_commit == commit.hexsha:
+        for commit_i in git_repo.iter_commits():
+            if commit_sha == commit_i.hexsha:
                 return f"HEAD~{relative_to_head}"
             relative_to_head += 1
 
-        return target_commit
+        return commit_sha
+
+    def __is_contributor_validation_condition(self, scope: str) -> bool:
+        return (
+            "HEAD" not in scope
+            and not re.match(r"[0-9a-f]{5,40}", scope)
+            and "." != scope
+        )
 
     @colrev.operation.Operation.decorate()
     def main(
@@ -583,59 +622,32 @@ class Validate(colrev.operation.Operation):
     ) -> dict:
         """Validate a commit (main entrypoint)"""
 
-        if (
-            "HEAD" not in scope
-            and not re.match(r"[0-9a-f]{5,40}", scope)
-            and "." != scope
-        ):
-            return self.__get_contributor_validation(contributor=scope)
+        target_commit = self.__get_target_commit(
+            scope=scope, filter_setting=filter_setting
+        )
 
-        target_commit = self.__get_target_commit(scope=scope)
+        filter_setting = self.__get_filter_setting(
+            filter_setting=filter_setting,
+            properties=properties,
+            commit_sha=target_commit,
+            scope=scope,
+        )
 
-        validation_details: typing.Dict[str, typing.Any] = {}
-        if properties:
-            validation_details["properties"] = self.validate_properties(
-                commit=target_commit
-            )
-            return validation_details
-
-        if filter_setting == "all":
-            filter_setting = self.__set_scope_based_on_target_commit(
-                target_commit=target_commit
-            )
         if filter_setting == "general":
-            validation_details["general"] = {
-                "commit": target_commit,
-                "commit_relative": self.__get_relative_commit(
-                    target_commit=target_commit
-                ),
-            }
-            return validation_details
+            return self.__validate_general(commit_sha=target_commit)
 
-        self.review_manager.logger.info(f"Filter: {filter_setting} changes")
+        if filter_setting == "contributor":
+            return self.__validate_contributor(scope=scope)
 
-        # extension: filter_setting for changes of contributor (git author)
+        if filter_setting == "properties":
+            return self.__validate_properties(commit_sha=target_commit)
 
+        if filter_setting == "merge":  # for git branches (not colrev dedupe)
+            return self.__validate_merge_changes()
+
+        report: typing.Dict[str, typing.Any] = {}
         if filter_setting in ["prepare", "all"]:
-            self.get_prep_change_for_validation(validation_details=validation_details)
-
+            self.__validate_prep_changes(report=report)
         if filter_setting in ["dedupe", "all"]:
-            records = self.load_changed_records(target_commit=target_commit)
-            prior_records_dict = self.__load_prior_records_dict(
-                target_commit=target_commit
-            )
-
-            # Note : the if-statement avoids time-consuming procedures when the
-            # origin-sets have not changed (no duplicates merged)
-            if self.__deduplicated_records(
-                records=records, prior_records_dict=prior_records_dict
-            ):
-                validation_details["dedupe"] = self.get_dedupe_change_for_validation(
-                    records=records, target_commit=target_commit
-                )
-
-        # Note : merge for git branches
-        if filter_setting == "merge":
-            validation_details["merge"] = self.validate_merge_changes()
-
-        return validation_details
+            self.__validate_dedupe_changes(report=report, commit_sha=target_commit)
+        return report
