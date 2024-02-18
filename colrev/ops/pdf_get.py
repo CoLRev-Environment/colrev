@@ -624,7 +624,10 @@ class PDFGet(colrev.operation.Operation):
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
 
-        if self.review_manager.in_ci_environment():
+        if (
+            self.review_manager.in_ci_environment()
+            and not self.review_manager.in_test_environment()
+        ):
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep",
                 detailed_trace="pdf-prep not available in ci environment",

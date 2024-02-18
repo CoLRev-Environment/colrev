@@ -711,15 +711,18 @@ class ReviewManager:
         )
 
     @classmethod
+    def in_test_environment(cls) -> bool:
+        """Check whether CoLRev runs in a test environment"""
+
+        return "pytest" in os.getcwd()
+
+    @classmethod
     def in_ci_environment(
         cls,
         *,
         identifier: Optional[str] = None,
     ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
-
-        # if "pytest" in os.getcwd():
-        #     return False
 
         identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
         if identifier:
