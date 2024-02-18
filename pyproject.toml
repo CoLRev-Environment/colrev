@@ -126,6 +126,7 @@ omit = [
     "colrev/env/grobid_service.py",
     "/tmp/*",
     "tests/*",
+    "*/bib-dedupe/bib_dedupe/*",
 ]
 
 [tool.coverage.run]
@@ -137,6 +138,7 @@ omit = [
     "colrev/ops/upgrade.py",
     "/tmp/*",
     "tests/*",
+    "*/bib-dedupe/bib_dedupe/*",
 ]
 
 [tool.ruff]
