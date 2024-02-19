@@ -6,7 +6,7 @@ Prerequisites for web-based usage:
 - Firefox or Chromium-based Browser
 
 Setup `Codespaces here <https://github.com/features/codespaces>`__
-                                                           
+
 - Click: Get started for free
 - Click: New codespace
 - Click: Select a repository
@@ -16,7 +16,7 @@ Setup `Codespaces here <https://github.com/features/codespaces>`__
 - Leave the rest on default settings (Branch: main, Region: Europe West)
 - Uncheck "Auto-delete codespace" in "..." menu
 - Let "GitHub Codespaces configuration" do some initial setup (happens automatically)
-                                                             
+
 While on "@username ➜ /workspaces/colrev (main) $" run the following commands:
 
 Setup the CoLRev development environment:
@@ -55,9 +55,9 @@ Setup the CoLRev development environment:
 
 ::
 
-   # check if $PATH variable is correctly setup                                                          
+   # check if $PATH variable is correctly setup
    echo $PATH | grep :/home/codespace/.local/bin:
-   # print effective user name                                                          
+   # print effective user name
    whoami
    # print system information (kernel and distro version)
    uname -a
