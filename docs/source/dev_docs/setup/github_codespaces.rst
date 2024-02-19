@@ -38,7 +38,7 @@ Setup the CoLRev development environment:
 ::
 
    # In local VSCode setup click on "File" (top left menu)-> "Add Folder To Workspace..." -> enter absolute path to git repository
-   # The newly added repo will be visible in Git Graph "Repo" drop-down menu 
+   # The newly added repo will be visible in Git Graph "Repo" drop-down menu
 
 [Optional] Update your git credentials:
 
