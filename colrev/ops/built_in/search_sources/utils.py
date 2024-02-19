@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import re
+from copy import deepcopy
 
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
@@ -15,6 +16,7 @@ TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 
 def __get_year(*, item: dict) -> str:
+    year = "-1"
     try:
         if "published-print" in item:
             date_parts = item["published-print"]["date-parts"]
@@ -177,7 +179,7 @@ def json_to_record(*, item: dict) -> dict:
     """Convert a crossref item to a record dict"""
 
     try:
-        record_dict = __item_to_record(item=item)
+        record_dict = __item_to_record(item=deepcopy(item))
         record_dict = __set_forthcoming(record_dict=record_dict)
         record_dict = __flag_retracts(record_dict=record_dict)
         record_dict = __format_fields(record_dict=record_dict)

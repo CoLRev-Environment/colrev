@@ -346,32 +346,10 @@ class PrepSettings(JsonSchemaMixin):
 # Dedupe
 
 
-class SameSourceMergePolicy(Enum):
-    """Policy for applying merges within the same search source"""
-
-    # pylint: disable=invalid-name
-    prevent = "prevent"
-    warn = "warn"
-    apply = "apply"
-
-    @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        """Get the field details"""
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        """Get the options"""
-        # pylint: disable=no-member
-        return cls._member_names_
-
-
 @dataclass
 class DedupeSettings(JsonSchemaMixin):
     """Dedupe settings"""
 
-    same_source_merges: SameSourceMergePolicy
     dedupe_package_endpoints: list
 
     def __str__(self) -> str:
@@ -380,9 +358,7 @@ class DedupeSettings(JsonSchemaMixin):
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
                 [s["endpoint"] for s in self.dedupe_package_endpoints]
             )
-        return (
-            f"- same_source_merges: {self.same_source_merges.value}\n" + endpoints_str
-        )
+        return endpoints_str
 
 
 # Prescreen
@@ -439,6 +415,8 @@ class PDFGetSettings(JsonSchemaMixin):
     pdf_get_package_endpoints: list
 
     pdf_get_man_package_endpoints: list
+
+    defects_to_ignore: list
 
     def __str__(self) -> str:
         endpoints_str = "- endpoints: []\n"
@@ -690,9 +668,16 @@ class Settings(JsonSchemaMixin):
         return schema
 
 
+def __add_missing_attributes(loaded_dict: dict) -> None:
+    # TODO : replace dict with defaults if values are missing (to avoid exceptions)
+    if "defects_to_ignore" not in loaded_dict["pdf_get"]:
+        loaded_dict["pdf_get"]["defects_to_ignore"] = []
+
+
 def __load_settings_from_dict(*, loaded_dict: dict) -> Settings:
     try:
         converters = {Path: Path, Enum: Enum}
+        __add_missing_attributes(loaded_dict)
         settings = from_dict(
             data_class=Settings,
             data=loaded_dict,

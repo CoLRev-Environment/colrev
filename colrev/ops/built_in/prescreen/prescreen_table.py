@@ -28,7 +28,6 @@ if typing.TYPE_CHECKING:
 )
 @dataclass
 class TablePrescreen(JsonSchemaMixin):
-
     """Table-based prescreen (exported and imported)"""
 
     settings_class = colrev.env.package_manager.DefaultSettings
@@ -147,7 +146,13 @@ class TablePrescreen(JsonSchemaMixin):
                 f"Did not find {import_table_path} - exiting."
             )
             return
-        prescreen_df = pd.read_csv(import_table_path)
+
+        if import_table_path.endswith(".csv"):
+            prescreen_df = pd.read_csv(import_table_path)
+        elif import_table_path.endswith(".xlsx") or import_table_path.endswith(".xls"):
+            prescreen_df = pd.read_excel(import_table_path)
+        else:
+            raise ValueError(f"Unsupported file format: {import_table_path}")
         prescreen_df.fillna("", inplace=True)
         prescreened_records = prescreen_df.to_dict("records")
 
@@ -223,10 +228,8 @@ class TablePrescreen(JsonSchemaMixin):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.logger.info("Completed import")
 
-    # pylint: disable=unused-argument
     def run_prescreen(
         self,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
         split: list,
     ) -> dict:

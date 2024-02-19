@@ -28,6 +28,36 @@ class Sync:
         self.logger = self.__setup_logger(level=logging.DEBUG)
         self.paper_md = self.__get_md_file()
 
+    def add_hook(self) -> None:
+        """Add a pre-commit hook for colrev sync"""
+        if not Path(".git").is_dir():
+            print("Not in a git directory.")
+            return
+        if not Path("records.bib").is_file() or not Path("paper.md").is_file():
+            print("Warning: records.bib or paper.md does not exist.")
+            print("Other filenames are not (yet) supported.")
+            return
+
+        if Path(".pre-commit-config.yaml").is_file():
+            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
+                encoding="utf-8"
+            ):
+                print("Hook already registered")
+                return
+
+        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
+            file.write(
+                """\n-   repo: local
+        hooks:
+        -   id: colrev-hooks-update
+            name: "CoLRev ReviewManager: update"
+            entry: colrev-hooks-update
+            language: python
+            stages: [commit]
+            files: 'records.bib|paper.md'"""
+            )
+        print("Added pre-commit hook for colrev sync.")
+
     def __setup_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         """Setup the sync logger"""
         # pylint: disable=duplicate-code
@@ -133,7 +163,7 @@ class Sync:
 
         local_index = colrev.env.local_index.LocalIndex()
         for citation_key in citation_keys:
-            if citation_key in ids_in_bib:
+            if citation_key in ids_in_bib + ["tbl"]:
                 continue
 
             if Path(f"{citation_key}.pdf").is_file():
@@ -192,6 +222,10 @@ class Sync:
 
             first = True
             for record_id, record_dict in recs_dict_in.items():
+                # Note : temporarily
+                # (to prevent pandoc fails, which does not support "." in fiel names)
+                record_dict = {k: v for k, v in record_dict.items() if "." not in k}
+
                 if not first:
                     bibtex_str += "\n"
                 first = False
@@ -240,6 +274,31 @@ class Sync:
 
         with open(save_path, "w", encoding="utf-8") as out:
             out.write(bibtex_str)
+
+    def add_paper(self, add: str) -> None:
+        """Add a paper to the bibliography"""
+
+        local_index = colrev.env.local_index.LocalIndex()
+
+        def parse_record_str(add: str) -> list:
+            # DOI: from crossref
+            if add.startswith("10."):
+                returned_records = local_index.search(query=f"doi='{add}'")
+            else:
+                returned_records = local_index.search(query=f"title LIKE '{add}'")
+
+            return returned_records
+
+        self.get_cited_papers()
+        records = parse_record_str(add)
+
+        if len(records) == 0:
+            print("not found")
+            return
+
+        self.records_to_import = records
+        input(self.records_to_import)
+        print(records[0].data["ID"])
 
     def add_to_bib(self) -> None:
         """Add records to the bibliography"""
@@ -308,8 +367,10 @@ class Sync:
                 "%s Loaded %s papers%s", Colors.GREEN, len(added), Colors.END
             )
 
-        records_dict = {
-            r[Fields.ID]: r for r in records if r[Fields.ID] in self.cited_papers
-        }
+        # records_dict = {
+        #     r[Fields.ID]: r for r in records if r[Fields.ID] in self.cited_papers
+        # }
+
+        records_dict = {r[Fields.ID]: r for r in records}
 
         self.__save_to_bib(records=records_dict, save_path=references_file)

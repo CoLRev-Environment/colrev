@@ -211,7 +211,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             else:
                 if not source_operation.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("Pubmed")
-        except (requests.exceptions.RequestException, IndexError) as exc:
+        except (requests.exceptions.RequestException, IndexError, KeyError) as exc:
             print(exc)
             if not source_operation.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
@@ -685,20 +685,21 @@ class PubMedSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".csv":
-            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+            table_loader = colrev.ops.load_utils_table.TableLoader(
                 load_operation=load_operation,
                 source=self.search_source,
                 unique_id_field="pmid",
             )
-            table_entries = csv_loader.load_table_entries()
-            records = csv_loader.convert_to_records(entries=table_entries)
+            table_entries = table_loader.load_table_entries()
+            records = table_loader.convert_to_records(entries=table_entries)
             self.__load_fixes(records=records)
             return records
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError

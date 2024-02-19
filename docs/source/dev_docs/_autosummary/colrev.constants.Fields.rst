@@ -32,6 +32,8 @@ colrev.constants.Fields
       ~Fields.CHAPTER
       ~Fields.CITED_BY
       ~Fields.COLREV_ID
+      ~Fields.CONTAINER_TITLE
+      ~Fields.DATE
       ~Fields.DBLP_KEY
       ~Fields.DOI
       ~Fields.D_PROV
@@ -53,20 +55,24 @@ colrev.constants.Fields
       ~Fields.MD_PROV
       ~Fields.METADATA_SOURCE_REPOSITORY_PATHS
       ~Fields.MONTH
+      ~Fields.NR_INTEXT_CITATIONS
       ~Fields.NUMBER
       ~Fields.ORIGIN
       ~Fields.PAGES
+      ~Fields.PAGES_IN_FILE
       ~Fields.PDF_ID
       ~Fields.PMCID
       ~Fields.PRESCREEN_EXCLUSION
       ~Fields.PUBLISHER
       ~Fields.PUBMED_ID
+      ~Fields.REFERENCES
       ~Fields.SCHOOL
       ~Fields.SCREENING_CRITERIA
       ~Fields.SEMANTIC_SCHOLAR_ID
       ~Fields.SERIES
       ~Fields.STATUS
       ~Fields.TEI_ID
+      ~Fields.TEXT_FROM_PDF
       ~Fields.TITLE
       ~Fields.URL
       ~Fields.VOLUME

@@ -48,7 +48,6 @@ def test_settings_load() -> None:
                     "name": "prep",
                     "similarity": 0.8,
                     "prep_package_endpoints": [
-                        {"endpoint": "colrev.resolve_crossrefs"},
                         {"endpoint": "colrev.source_specific_prep"},
                         {"endpoint": "colrev.exclude_non_latin_alphabets"},
                         {"endpoint": "colrev.exclude_collections"},
@@ -70,10 +69,8 @@ def test_settings_load() -> None:
             "prep_man_package_endpoints": [{"endpoint": "colrev.export_man_prep"}],
         },
         "dedupe": {
-            "same_source_merges": colrev.settings.SameSourceMergePolicy.prevent,
             "dedupe_package_endpoints": [
-                {"endpoint": "colrev.active_learning_training"},
-                {"endpoint": "colrev.active_learning_automated"},
+                {"endpoint": "colrev.dedupe"},
             ],
         },
         "prescreen": {
@@ -85,10 +82,12 @@ def test_settings_load() -> None:
         "pdf_get": {
             "pdf_path_type": colrev.settings.PDFPathType.symlink,
             "pdf_required_for_screen_and_synthesis": True,
+            "defects_to_ignore": [],
             "rename_pdfs": True,
             "pdf_get_package_endpoints": [
                 {"endpoint": "colrev.local_index"},
                 {"endpoint": "colrev.unpaywall"},
+                {"endpoint": "colrev.download_from_website"},
                 {"endpoint": "colrev.website_screenshot"},
             ],
             "pdf_get_man_package_endpoints": [
@@ -98,12 +97,10 @@ def test_settings_load() -> None:
         "pdf_prep": {
             "keep_backup_of_pdfs": True,
             "pdf_prep_package_endpoints": [
-                {"endpoint": "colrev.pdf_check_ocr"},
+                {"endpoint": "colrev.ocrmypdf"},
                 {"endpoint": "colrev.remove_coverpage"},
                 {"endpoint": "colrev.remove_last_page"},
-                {"endpoint": "colrev.validate_pdf_metadata"},
-                {"endpoint": "colrev.validate_completeness"},
-                {"endpoint": "colrev.create_tei"},
+                {"endpoint": "colrev.grobid_tei"},
             ],
             "pdf_prep_man_package_endpoints": [
                 {"endpoint": "colrev.colrev_cli_pdf_prep_man"}

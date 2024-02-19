@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import inquirer
+
 import colrev.record
 from colrev.constants import Colors
 
@@ -23,26 +25,24 @@ class CLISourceAdder:
         *,
         source_candidates: list,
     ) -> dict:
-        print(f"{Colors.ORANGE}Select search source{Colors.END}:")
-        for i, heuristic_source in enumerate(source_candidates):
-            highlight_color = ""
-            if heuristic_source["confidence"] >= 0.7:
-                highlight_color = Colors.GREEN
-            elif heuristic_source["confidence"] >= 0.5:
-                highlight_color = Colors.ORANGE
-            print(
-                f"{highlight_color}{i+1} "
-                f"(confidence: {round(heuristic_source['confidence'], 2)}):"
-                f" {heuristic_source['source_candidate'].endpoint}{Colors.END}"
-            )
 
-        while True:
-            selection = input("select nr")
-            if not selection.isdigit():
-                continue
-            if int(selection) in range(1, len(source_candidates) + 1):
-                heuristic_source = source_candidates[int(selection) - 1]
-                return heuristic_source
+        choices = [
+            (
+                f"{heuristic_source['source_candidate'].endpoint} "
+                f"(confidence: {round(heuristic_source['confidence'], 2)}): ",
+                heuristic_source,
+            )
+            for heuristic_source in source_candidates
+        ]
+        questions = [
+            inquirer.List(
+                "source",
+                message=f"{Colors.ORANGE}Select search source{Colors.END}:",
+                choices=choices,
+            ),
+        ]
+        selected_heuristic_source = inquirer.prompt(questions)["source"]
+        return selected_heuristic_source
 
     def __select_source_from_heuristics(
         self, *, filename: Path, source_candidates: list

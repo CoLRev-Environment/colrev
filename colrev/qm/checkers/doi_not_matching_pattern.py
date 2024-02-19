@@ -24,10 +24,15 @@ class DOIPatternChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the doi-not-matching-pattern checks"""
 
-        if Fields.DOI not in record.data:
+        if Fields.DOI not in record.data or record.ignored_defect(
+            field=Fields.DOI, defect=self.msg
+        ):
             return
 
-        if not re.match(self.__DOI_REGEX, record.data[Fields.DOI]):
+        if (
+            not re.match(self.__DOI_REGEX, record.data[Fields.DOI])
+            or record.data[Fields.DOI].islower()
+        ):
             record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)

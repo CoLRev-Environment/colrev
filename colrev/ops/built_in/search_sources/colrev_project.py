@@ -193,9 +193,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #         record=colrev.record.Record(data=record_to_import)
             #     )
 
-            record_to_import[
-                "colrev_project_identifier"
-            ] = f"{project_url}#{record_to_import['ID']}"
+            record_to_import["colrev_project_identifier"] = (
+                f"{project_url}#{record_to_import['ID']}"
+            )
             record_to_import = {
                 k: v for k, v in record_to_import.items() if k not in keys_to_drop
             }
@@ -237,9 +237,11 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
+
             for record_id in records:
                 records[record_id] = {
                     k: v

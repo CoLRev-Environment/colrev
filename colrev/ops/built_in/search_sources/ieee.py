@@ -423,17 +423,17 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             return self.__load_ris(load_operation)
 
         if self.search_source.filename.suffix == ".csv":
-            csv_loader = colrev.ops.load_utils_table.CSVLoader(
+            table_loader = colrev.ops.load_utils_table.TableLoader(
                 load_operation=load_operation,
                 source=self.search_source,
                 unique_id_field="accession_number",
             )
-            table_entries = csv_loader.load_table_entries()
+            table_entries = table_loader.load_table_entries()
             for entry_id, entry in table_entries.items():
                 table_entries[entry_id]["accession_number"] = entry["pdf_link"].split(
                     "="
                 )[-1]
-            records = csv_loader.convert_to_records(entries=table_entries)
+            records = table_loader.convert_to_records(entries=table_entries)
             self.__fix_csv_records(records=records)
             return records
 
@@ -446,10 +446,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if source.filename.suffix == ".csv":
             if Fields.AUTHOR in record.data:
-                record.data[
-                    Fields.AUTHOR
-                ] = colrev.record.PrepRecord.format_author_field(
-                    input_string=record.data[Fields.AUTHOR]
+                record.data[Fields.AUTHOR] = (
+                    colrev.record.PrepRecord.format_author_field(
+                        input_string=record.data[Fields.AUTHOR]
+                    )
                 )
             return record
         return record

@@ -79,7 +79,7 @@ class BrokenFilesError(CoLRevException):
     def __init__(self, msg: str) -> None:
         self.message = (
             f"Detected broken files ({msg}). To fix use\n     "
-            f"{Colors.ORANGE}colrev repair{Colors.END}"
+            f"{Colors.ORANGE}colrev repare{Colors.END}"
         )
         super().__init__(self.message)
 
@@ -99,7 +99,7 @@ class CoLRevUpgradeError(CoLRevException):
         super().__init__(self.message)
 
 
-class ReviewManagerNotNofiedError(CoLRevException):
+class ReviewManagerNotNotifiedError(CoLRevException):
     """
     The ReviewManager was not notified about the operation.
     """
@@ -623,6 +623,7 @@ class InvalidLanguageCodeException(CoLRevException):
 
     def __init__(self, invalid_language_codes: list) -> None:
         self.invalid_language_codes = invalid_language_codes
+
         super().__init__(f"Invalid language codes: {', '.join(invalid_language_codes)}")
 
 

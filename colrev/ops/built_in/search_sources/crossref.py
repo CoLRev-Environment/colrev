@@ -23,7 +23,7 @@ from crossref.restful import Journals
 from crossref.restful import Works
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -810,7 +810,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 except (
                     colrev_exceptions.RecordNotParsableException,
                     colrev_exceptions.NotFeedIdentifiableException,
-                    KeyError  # error in crossref package:
+                    KeyError,  # error in crossref package:
                     # if len(result['message']['items']) == 0:
                     # KeyError: 'items'
                 ):
@@ -906,11 +906,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     colrev_exceptions.NotFeedIdentifiableException,
                 ):
                     pass
-        except KeyError as exc:
+        except RuntimeError as exc:
             print(exc)
-            # KeyError  # error in crossref package:
-            # if len(result['message']['items']) == 0:
-            # KeyError: 'items'
 
         crossref_feed.print_post_run_search_infos(records=records)
 
@@ -986,9 +983,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     .lstrip("+")
                 )
 
-                filename = operation.get_unique_filename(
-                    file_path_string=f"crossref_{query}"
-                )
+                filename = operation.get_unique_filename(file_path_string="crossref")
                 add_source = colrev.settings.SearchSource(
                     endpoint="colrev.crossref",
                     filename=filename,
@@ -1005,9 +1000,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 source = cls.__add_toc_interactively(operation=operation)
                 return source
 
-            filename = operation.get_unique_filename(
-                file_path_string=f"crossref_{params}"
-            )
+            filename = operation.get_unique_filename(file_path_string="crossref")
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
                 filename=filename,
@@ -1055,9 +1048,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
+
             return records
 
         raise NotImplementedError

@@ -29,6 +29,7 @@ For example, the data operation may involve structured data extraction or a narr
    Within this standardized structure, each operation can be configured.
    Through the settings, it is possible to rely on the default configuration (the CoLRev reference implementation with reasonable parameters), to adapt selected parameters, to plug in CoLRev packages (community packages or custom built ones).
 
+There are two **quality models**, one for :doc:`metadata </resources/quality_model>` and one for :doc:`PDF documents </resources/pdf_quality_model>`. If records or PDFs do not pass the corresponding checks, they are marked for manual preparation.
 
 .. collapse:: References
 

@@ -95,7 +95,12 @@ class Trace(colrev.operation.Operation):
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
             try:
-                filecontents = (commit.tree / "data" / "records.bib").data_stream.read()
+                # Ensure the path uses forward slashes, which is compatible with Git's path handling
+                records_file_path = str(
+                    self.review_manager.dataset.RECORDS_FILE_RELATIVE
+                ).replace("\\", "/")
+                filecontents = (commit.tree / records_file_path).data_stream.read()
+
             except KeyError:
                 continue
 

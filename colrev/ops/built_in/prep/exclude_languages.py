@@ -72,11 +72,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return True
         return False
 
-    def prepare(
-        self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
-        record: colrev.record.PrepRecord,
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
         # Note : other languages are not yet supported
@@ -86,19 +82,10 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             record.remove_field(key=Fields.LANGUAGE)
             return record
 
-        if Fields.LANGUAGE in record.data:
-            # Note: classification of non-english titles is not reliable.
-            # Other languages should be checked in man-prep.
-            # if "eng" != language:
-            #     return record
-
-            # if record.data[Fields.LANGUAGE] not in self.languages_to_include:
-            #     record.prescreen_exclude(
-            #         reason=(
-            #             "language of title not in "
-            #             f"[{','.join(self.languages_to_include)}]"
-            #         )
-            #     )
+        if (
+            Fields.LANGUAGE in record.data
+            and record.data[Fields.LANGUAGE] in self.languages_to_include
+        ):
             return record
 
         # To avoid misclassifications for short titles
@@ -116,8 +103,6 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             )
             # Note: classification of non-english titles is not reliable.
             # Other languages should be checked in man-prep.
-            if "eng" != language:
-                return record
             record.update_field(
                 key=Fields.LANGUAGE,
                 value=language,
@@ -165,11 +150,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return record
 
         if record.data.get(Fields.LANGUAGE, "") not in self.languages_to_include:
-            record.remove_field(key=Fields.LANGUAGE)
-            # record.prescreen_exclude(
-            #     reason=f"language of title not in [{','.join(self.languages_to_include)}]"
-            # )
-            record.set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            record.prescreen_exclude(
+                reason=f"language of title not in [{','.join(self.languages_to_include)}]"
             )
         return record

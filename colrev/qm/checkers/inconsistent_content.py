@@ -21,7 +21,9 @@ class InconsistentContentChecker:
         """Run the inconsistent-content checks"""
 
         for key in [Fields.JOURNAL, Fields.BOOKTITLE, Fields.AUTHOR]:
-            if key not in record.data:
+            if key not in record.data or record.ignored_defect(
+                field=key, defect=self.msg
+            ):
                 continue
 
             if self.__inconsistent_content(record=record, key=key):

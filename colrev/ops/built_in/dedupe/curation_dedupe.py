@@ -9,11 +9,10 @@ import numpy as np
 import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager
-import colrev.ops.built_in.pdf_prep.metadata_validation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -61,13 +60,7 @@ class CurationDedupe(JsonSchemaMixin):
         self.dedupe_operation = dedupe_operation
         self.review_manager = dedupe_operation.review_manager
 
-        pdf_prep_operation = self.review_manager.get_pdf_prep_operation()
-        self.pdf_metadata_validation = (
-            colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation(
-                pdf_prep_operation=pdf_prep_operation,
-                settings={"endpoint": "dedupe_pdf_md_validation"},
-            )
-        )
+        self.pdf_qm = self.review_manager.get_pdf_qm()
 
     def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
         author_similarity = fuzz.ratio(df_a[Fields.AUTHOR], df_b[Fields.AUTHOR]) / 100
@@ -104,11 +97,11 @@ class CurationDedupe(JsonSchemaMixin):
             for comparison_entry_i in range(1, references.shape[0]):
                 if base_entry_i > comparison_entry_i:
                     if -1 != similarity_array[base_entry_i, comparison_entry_i]:
-                        similarity_array[
-                            base_entry_i, comparison_entry_i
-                        ] = self.__get_similarity(
-                            df_a=references.iloc[base_entry_i],
-                            df_b=references.iloc[comparison_entry_i],
+                        similarity_array[base_entry_i, comparison_entry_i] = (
+                            self.__get_similarity(
+                                df_a=references.iloc[base_entry_i],
+                                df_b=references.iloc[comparison_entry_i],
+                            )
                         )
 
         tuples_to_process = []
@@ -273,7 +266,7 @@ class CurationDedupe(JsonSchemaMixin):
                 # print(processed_same_toc_same_source_records)
 
         for record in records.values():
-            record.pop("container_title")
+            record.pop(Fields.CONTAINER_TITLE)
         self.review_manager.dataset.save_records_dict(records=records)
 
         if self.review_manager.dataset.has_changes():
@@ -302,8 +295,8 @@ class CurationDedupe(JsonSchemaMixin):
             Fields.BOOKTITLE,
         ]
         for record in records.values():
-            if "container_title" not in record:
-                record["container_title"] = (
+            if Fields.CONTAINER_TITLE not in record:
+                record[Fields.CONTAINER_TITLE] = (
                     record.get(Fields.JOURNAL, "")
                     + record.get(Fields.BOOKTITLE, "")
                     + record.get(Fields.SERIES, "")
@@ -314,7 +307,7 @@ class CurationDedupe(JsonSchemaMixin):
                     record[required_field] = ""
         return records
 
-    def __dedupe_source(self, *, records: dict) -> list[dict]:
+    def __dedupe_source(self, *, records: dict) -> list[list]:
         self.review_manager.logger.info(
             "Processing as a non-pdf source (matching exact colrev_ids)"
         )
@@ -331,7 +324,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         toc_items = self.__get_toc_items(records_list=source_records)
 
-        decision_list: list[dict] = []
+        decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
         # match based on overlapping  colrev_ids
@@ -368,32 +361,26 @@ class CurationDedupe(JsonSchemaMixin):
                         )
                         if overlapping_colrev_ids:
                             decision_list.append(
-                                {
-                                    "ID1": new_same_toc_record[Fields.ID],
-                                    "ID2": rec2[Fields.ID],
-                                    "decision": "duplicate",
-                                }
+                                [new_same_toc_record[Fields.ID], rec2[Fields.ID]]
                             )
                             print("TODO : validate whether it merges correctly:")
                             input(decision_list)
 
         return decision_list
 
-    def __validate_potential_merge(self, *, rec1: dict, rec2: dict) -> dict:
+    def __validate_potential_merge(self, *, rec1: dict, rec2: dict) -> bool:
         if Fields.FILE in rec2:
-            updated_record = rec1.copy()
-            updated_record[Fields.FILE] = rec2[Fields.FILE]
+            updated_record_dict = rec1.copy()
+            updated_record_dict[Fields.FILE] = rec2[Fields.FILE]
         elif Fields.FILE in rec1:
-            updated_record = rec2.copy()
-            updated_record[Fields.FILE] = rec1[Fields.FILE]
+            updated_record_dict = rec2.copy()
+            updated_record_dict[Fields.FILE] = rec1[Fields.FILE]
         else:  # None of the records is curated
             raise FileNotFoundError
 
-        record = colrev.record.Record(data=updated_record)
-        validation_info = self.pdf_metadata_validation.validates_based_on_metadata(
-            record=record,
-        )
-        return validation_info
+        updated_record = colrev.record.Record(data=updated_record_dict)
+        updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
+        return updated_record.has_pdf_defects()
 
     def __process_pdf_tuple(
         self,
@@ -418,58 +405,20 @@ class CurationDedupe(JsonSchemaMixin):
             return
 
         try:
-            validation_info = self.__validate_potential_merge(rec1=rec1, rec2=rec2)
+            validated = self.__validate_potential_merge(rec1=rec1, rec2=rec2)
         except FileNotFoundError:
             return
 
         overlapping_colrev_ids = colrev.record.Record(
             data=rec1
         ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
-        if validation_info["validates"] or overlapping_colrev_ids:
-            # Note : make sure that we merge into the CURATED record
-            if Fields.FILE in rec1:
-                if tuple_to_process[0] in [x["ID1"] for x in decision_list]:
-                    return
-                if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[1],
-                            "ID2": tuple_to_process[0],
-                            "decision": "duplicate",
-                        }
-                    )
-                else:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[0],
-                            "ID2": tuple_to_process[1],
-                            "decision": "duplicate",
-                        }
-                    )
-            else:
-                if tuple_to_process[1] in [x["ID1"] for x in decision_list]:
-                    return
-                if rec1[Fields.STATUS] < rec2[Fields.STATUS]:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[1],
-                            "ID2": tuple_to_process[0],
-                            "decision": "duplicate",
-                        }
-                    )
-                else:
-                    decision_list.append(
-                        {
-                            "ID1": tuple_to_process[0],
-                            "ID2": tuple_to_process[1],
-                            "decision": "duplicate",
-                        }
-                    )
+        if validated or overlapping_colrev_ids:
+            decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 
     def __dedupe_pdf_toc_item(
         self,
         *,
-        decision_list: list[dict],
+        decision_list: list[list],
         toc_item: dict,
         records: dict,
         source_records: list,
@@ -524,7 +473,7 @@ class CurationDedupe(JsonSchemaMixin):
                 pdf_record_ids=pdf_record_ids,
             )
 
-    def __dedupe_pdf_source(self, *, records: dict) -> list[dict]:
+    def __dedupe_pdf_source(self, *, records: dict) -> list[list]:
         self.review_manager.logger.info("Processing as a pdf source")
 
         source_records = [
@@ -537,7 +486,7 @@ class CurationDedupe(JsonSchemaMixin):
             )
         ]
 
-        decision_list: list[dict] = []
+        decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
         for toc_item in tqdm(self.__get_toc_items(records_list=source_records)):
@@ -569,9 +518,10 @@ class CurationDedupe(JsonSchemaMixin):
             ]
         )
 
-    # pylint: disable=unused-argument
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(self) -> None:
         """Run the curation dedupe procedure"""
+
+        self.dedupe_operation.merge_based_on_global_ids(apply=True)
 
         records = self.review_manager.dataset.load_records_dict()
         records = self.__prep_records(records=records)
@@ -591,8 +541,8 @@ class CurationDedupe(JsonSchemaMixin):
             f"curated_records and {self.settings.selected_source} (within toc_items)"
         )
 
-        decision_list: list[dict] = []
-        # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
+        decision_list: list[list] = []
+        # decision_list =[['ID1', 'ID2'], ...]
         if not self.__pdf_source_selected():
             decision_list = self.__dedupe_source(records=records)
         else:
@@ -610,16 +560,13 @@ class CurationDedupe(JsonSchemaMixin):
             f"{Colors.GREEN}Duplicates identified{Colors.END}"
         )
 
-        # decision_list =
-        # [{'ID1': '0000000053', 'ID2': 'BellMillsFadel2013', 'decision': 'duplicate'}, .. . ]
-
         preferred_masterdata_sources = [
             s
             for s in self.review_manager.settings.sources
             if s.endpoint != "colrev.files_dir"
         ]
         self.dedupe_operation.apply_merges(
-            results=decision_list,
+            id_sets=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
         self.review_manager.create_commit(

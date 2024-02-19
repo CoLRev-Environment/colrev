@@ -18,7 +18,9 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_nbib
 import colrev.ops.search
 import colrev.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -299,21 +301,51 @@ class ERICSearchSource(JsonSchemaMixin):
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
+        nbib_mapping = {
+            ENTRYTYPES.ARTICLE: {
+                "TI": Fields.TITLE,
+                "AU": Fields.AUTHOR,
+                "DP": Fields.YEAR,
+                "JT": Fields.JOURNAL,
+                "VI": Fields.VOLUME,
+                "IP": Fields.NUMBER,
+                "PG": Fields.PAGES,
+                "AB": Fields.ABSTRACT,
+                "AID": Fields.DOI,
+                "ISSN": Fields.ISSN,
+                "OID": "eric_id",
+                "OT": Fields.KEYWORDS,
+                "LA": Fields.LANGUAGE,
+                "PT": "type",
+            }
+        }
+
+        entrytype_map = {
+            "Journal Articles, Reports - Research": ENTRYTYPES.ARTICLE,
+        }
 
         if self.search_source.filename.suffix == ".nbib":
             nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
                 load_operation=load_operation,
                 source=self.search_source,
+                list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
                 unique_id_field="eric_id",
             )
-            entries = nbib_loader.load_nbib_entries()
-            records = nbib_loader.convert_to_records(entries=entries)
+            records = nbib_loader.load_nbib_entries()
+
+            for record_dict in records.values():
+                nbib_loader.apply_entrytype_mapping(
+                    record_dict=record_dict, entrytype_map=entrytype_map
+                )
+                nbib_loader.map_keys(record_dict=record_dict, key_map=nbib_mapping)
+
             return records
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError

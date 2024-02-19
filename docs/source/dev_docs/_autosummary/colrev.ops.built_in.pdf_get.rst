@@ -26,6 +26,7 @@ colrev.ops.built\_in.pdf\_get
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.ops.built_in.pdf_get.download_from_website
    colrev.ops.built_in.pdf_get.local_index_pdf_get
    colrev.ops.built_in.pdf_get.unpaywall
    colrev.ops.built_in.pdf_get.website_screenshot

@@ -17,9 +17,6 @@ Projects that power CoLRev:
 .. |dockerpyactivity| image:: https://img.shields.io/github/commit-activity/y/docker/docker-py?color=green&style=plastic
    :height: 12pt
 
-.. |dedupeioactivity| image:: https://img.shields.io/github/commit-activity/y/dedupeio/dedupe?color=green&style=plastic
-   :height: 12pt
-
 .. |pandasactivity| image:: https://img.shields.io/github/commit-activity/y/pandas-dev/pandas?color=green&style=plastic
    :height: 12pt
 
@@ -74,18 +71,6 @@ Projects that power CoLRev:
    * - `CiteAs.org <https://citeas.org/>`_ (metadata on research software, datasets, etc.)
      - Cross-disciplinary
      - Unknown
-
-.. list-table::
-   :widths: 54 24 22
-   :header-rows: 1
-   :class: fullwidthtable
-
-   * - Dedupe
-     - License
-     - Activity
-   * - `dedupe <https://github.com/dedupeio/dedupe>`_ : duplicate identification (active learning)
-     - `MIT <https://github.com/dedupeio/dedupe/blob/main/LICENSE>`__
-     - |dedupeioactivity|
 
 .. list-table::
    :widths: 54 24 22
@@ -167,9 +152,6 @@ Projects that power CoLRev:
    * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
      - `Apache-2.0 <https://github.com/docker/docker-py/blob/main/LICENSE>`__
      - |dockerpyactivity|
-   * - `pybtex <https://bitbucket.org/pybtex-devs/pybtex/src>`_ \*: Saving and loading record data (BiBTeX)
-     - `MIT <https://bitbucket.org/pybtex-devs/pybtex/src/master/COPYING>`__
-     - |pybtexactivity|
    * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
      - `BSD 3 <https://github.com/pandas-dev/pandas/blob/main/LICENSE>`__
      - |pandasactivity|

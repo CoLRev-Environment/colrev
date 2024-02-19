@@ -177,9 +177,9 @@ class Dataset:
                             continue
 
             try:
-                filecontents = (
-                    commit.tree / str(self.RECORDS_FILE_RELATIVE)
-                ).data_stream.read()
+                # Ensure the path uses forward slashes, which is compatible with Git's path handling
+                records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
+                filecontents = (commit.tree / records_file_path).data_stream.read()
                 # Note : reinitialize parser (otherwise, bib_data does not change)
                 parser = bibtex.Parser()
                 bib_data = parser.parse_string(filecontents.decode("utf-8"))
@@ -187,15 +187,18 @@ class Dataset:
             except (StopIteration, KeyError):
                 found_but_not_changed = True
                 continue
+
             yield records_dict
 
     def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
         """Get the records that changed in a selected commit"""
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
 
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / "data" / "records.bib").data_stream.read(),
+                (commit.tree / records_file_path).data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
@@ -329,18 +332,39 @@ class Dataset:
                 **dict(
                     {
                         # Cast status to Enum
-                        k: colrev.record.RecordState[v] if (Fields.STATUS == k)
-                        # DOIs are case insensitive -> use upper case.
-                        else v.upper() if (Fields.DOI == k)
-                        # Note : the following two lines are a temporary fix
-                        # to converg colrev_origins to list items
-                        else [el.rstrip().lstrip() for el in v.split(";") if "" != el]
-                        if k == Fields.ORIGIN
-                        else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
-                        if k in colrev.record.Record.list_fields_keys
-                        else Dataset.__load_field_dict(value=v, field=k)
-                        if k in colrev.record.Record.dict_fields_keys
-                        else v
+                        k: (
+                            colrev.record.RecordState[v]
+                            if (Fields.STATUS == k)
+                            # DOIs are case insensitive -> use upper case.
+                            else (
+                                v.upper()
+                                if (Fields.DOI == k)
+                                # Note : the following two lines are a temporary fix
+                                # to converg colrev_origins to list items
+                                else (
+                                    [
+                                        el.rstrip().lstrip()
+                                        for el in v.split(";")
+                                        if "" != el
+                                    ]
+                                    if k == Fields.ORIGIN
+                                    else (
+                                        [
+                                            el.rstrip()
+                                            for el in (v + " ").split("; ")
+                                            if "" != el
+                                        ]
+                                        if k in colrev.record.Record.list_fields_keys
+                                        else (
+                                            Dataset.__load_field_dict(value=v, field=k)
+                                            if k
+                                            in colrev.record.Record.dict_fields_keys
+                                            else v
+                                        )
+                                    )
+                                )
+                            )
+                        )
                         for k, v in v.fields.items()
                     }
                 ),
@@ -471,7 +495,7 @@ class Dataset:
         """
 
         if self.review_manager.notified_next_operation is None:
-            raise colrev_exceptions.ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNotifiedError()
 
         pybtex.errors.set_strict_mode(False)
         if header_only:
@@ -520,7 +544,7 @@ class Dataset:
         bibtex_str = ""
         language_service = colrev.env.language_service.LanguageService()
         first = True
-        for record_id, record_dict in recs_dict.items():
+        for record_id, record_dict in sorted(recs_dict.items()):
             if not first:
                 bibtex_str += "\n"
             first = False
@@ -982,7 +1006,7 @@ class Dataset:
         """Get the git repository object (requires review_manager.notify(...))"""
 
         if self.review_manager.notified_next_operation is None:
-            raise colrev_exceptions.ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNotifiedError()
         return self.__git_repo
 
     def has_changes(
@@ -1041,10 +1065,12 @@ class Dataset:
         return self.__git_repo.untracked_files
 
     def __get_last_records_filecontents(self) -> bytes:
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / "data" / "records.bib").data_stream.read(),
+                (commit.tree / records_file_path).data_stream.read(),
             )
             for commit in self.__git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)

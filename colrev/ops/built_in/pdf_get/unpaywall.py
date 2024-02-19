@@ -41,6 +41,7 @@ class Unpaywall(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = pdf_get_operation.review_manager
+        self.pdf_get_operation = pdf_get_operation
 
         self.email = self.get_email()
 
@@ -64,7 +65,6 @@ class Unpaywall(JsonSchemaMixin):
     def __unpaywall(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         doi: str,
         retry: int = 0,
         pdfonly: bool = True,
@@ -74,9 +74,7 @@ class Unpaywall(JsonSchemaMixin):
         try:
             ret = requests.get(url, params={"email": self.email}, timeout=30)
             if ret.status_code == 500 and retry < 3:
-                return self.__unpaywall(
-                    review_manager=review_manager, doi=doi, retry=retry + 1
-                )
+                return self.__unpaywall(doi=doi, retry=retry + 1)
 
             if ret.status_code in [404, 500]:
                 return "NA"
@@ -105,19 +103,15 @@ class Unpaywall(JsonSchemaMixin):
         except (PDFException, TypeError):
             return False
 
-    def get_pdf(
-        self, pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: colrev.record.Record
-    ) -> colrev.record.Record:
+    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
         """Get PDFs from unpaywall"""
 
         if Fields.DOI not in record.data:
             return record
 
-        pdf_filepath = pdf_get_operation.get_target_filepath(record=record)
+        pdf_filepath = self.pdf_get_operation.get_target_filepath(record=record)
 
-        url = self.__unpaywall(
-            review_manager=pdf_get_operation.review_manager, doi=record.data[Fields.DOI]
-        )
+        url = self.__unpaywall(doi=record.data[Fields.DOI])
         if url == "NA":
             return record
         if "Invalid/unknown DOI" in url:
@@ -139,7 +133,7 @@ class Unpaywall(JsonSchemaMixin):
                 with open(pdf_filepath, "wb") as file:
                     file.write(res.content)
                 if self.__is_pdf(path_to_file=pdf_filepath):
-                    pdf_get_operation.review_manager.report_logger.debug(
+                    self.review_manager.report_logger.debug(
                         "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                     )
                     source = (
@@ -149,15 +143,15 @@ class Unpaywall(JsonSchemaMixin):
                     record.update_field(
                         key=Fields.FILE, value=str(pdf_filepath), source=source
                     )
-                    pdf_get_operation.import_pdf(record=record)
+                    self.pdf_get_operation.import_pdf(record=record)
 
                 else:
                     os.remove(pdf_filepath)
             else:
                 if Fields.FULLTEXT not in record.data:
                     record.data[Fields.FULLTEXT] = url
-                if pdf_get_operation.review_manager.verbose_mode:
-                    pdf_get_operation.review_manager.logger.info(
+                if self.review_manager.verbose_mode:
+                    self.review_manager.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code} - {url}"
                     )
         except (

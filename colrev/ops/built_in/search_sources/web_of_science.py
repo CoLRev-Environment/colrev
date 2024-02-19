@@ -115,9 +115,10 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file(check_bib_file=False)
             return records
 
         raise NotImplementedError
@@ -135,5 +136,21 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         record.remove_field(key="colrev.web_of_science.researcherid-numbers")
         record.remove_field(key="colrev.web_of_science.orcid-numbers")
+        record.remove_field(key="colrev.web_of_science.book-group-author")
+        record.remove_field(key="colrev.web_of_science.note")
+        record.remove_field(key="colrev.web_of_science.organization")
+        record.remove_field(key="colrev.web_of_science.eissn")
+        record.remove_field(key="colrev.web_of_science.earlyaccessdate")
+
+        record.remove_field(key="colrev.web_of_science.meeting")
+        record.remove_field(key="colrev.web_of_science.article-number")
+
+        record.fix_name_particles()
+
+        if record.data[Fields.AUTHOR] == "[Anonymous]":
+            del record.data[Fields.AUTHOR]
+            record.add_masterdata_provenance(
+                key=Fields.AUTHOR, source="web_of_scienc.prep", note="IGNORE:missing"
+            )
 
         return record

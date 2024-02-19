@@ -181,7 +181,7 @@ class PrepPackageEndpointInterface(
     )
 
     # pylint: disable=no-self-argument
-    def prepare(prep_operation: colrev.ops.prep.Prep, prep_record: dict) -> dict:  # type: ignore
+    def prepare(prep_record: dict) -> dict:  # type: ignore
         """Run the prep operation"""
 
 
@@ -194,9 +194,7 @@ class PrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def prepare_manual(  # type: ignore
-        prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
-    ) -> dict:
+    def prepare_manual(records: dict) -> dict:  # type: ignore
         """Run the prep-man operation"""
 
 
@@ -209,7 +207,8 @@ class DedupePackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_dedupe(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:  # type: ignore
+    # pylint: disable=no-method-argument
+    def run_dedupe() -> None:  # type: ignore
         """Run the dedupe operation"""
 
 
@@ -222,9 +221,7 @@ class PrescreenPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_prescreen(  # type: ignore
-        prescreen_operation: colrev.ops.prescreen.Prescreen, records: dict, split: list
-    ) -> dict:
+    def run_prescreen(records: dict, split: list) -> dict:  # type: ignore
         """Run the prescreen operation"""
 
 
@@ -237,7 +234,7 @@ class PDFGetPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def get_pdf(pdf_get_operation: colrev.ops.pdf_get.PDFGet, record: dict) -> dict:  # type: ignore
+    def get_pdf(record: dict) -> dict:  # type: ignore
         """Run the pdf-get operation"""
         return record  # pragma: no cover
 
@@ -251,9 +248,7 @@ class PDFGetManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def pdf_get_man(  # type: ignore
-        pdf_get_man_operation: colrev.ops.pdf_get_man.PDFGetMan, records: dict
-    ) -> dict:
+    def pdf_get_man(records: dict) -> dict:
         """Run the pdf-get-man operation"""
         return records  # pragma: no cover
 
@@ -269,7 +264,6 @@ class PDFPrepPackageEndpointInterface(
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(  # type: ignore
-        pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,
         record: colrev.record.PrepRecord,
         pad: int,
     ) -> dict:
@@ -286,9 +280,7 @@ class PDFPrepManPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def pdf_prep_man(  # type: ignore
-        pdf_prep_man_operation: colrev.ops.prep_man.PrepMan, records: dict
-    ) -> dict:
+    def pdf_prep_man(records: dict) -> dict:
         """Run the prep-man operation"""
         return records  # pragma: no cover
 
@@ -302,9 +294,7 @@ class ScreenPackageEndpointInterface(
     settings_class = zope.interface.Attribute("""Class for the package settings""")
 
     # pylint: disable=no-self-argument
-    def run_screen(  # type: ignore
-        screen_operation: colrev.ops.screen.Screen, records: dict, split: list
-    ) -> dict:
+    def run_screen(records: dict, split: list) -> dict:  # type: ignore
         """Run the screen operation"""
 
 
@@ -318,15 +308,22 @@ class DataPackageEndpointInterface(
     # pylint: disable=no-self-argument
 
     def update_data(  # type: ignore
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        """Run the data operation (data extraction, analysis, synthesis)"""
+        """
+        Update the data by running the data operation. This includes data extraction,
+        analysis, and synthesis.
+
+        Parameters:
+        records (dict): The records to be updated.
+        synthesized_record_status_matrix (dict): The status matrix for the synthesized records.
+        silent_mode (bool): Whether the operation is run in silent mode
+        (for checks of review_manager/status).
+        """
 
     def update_record_status_matrix(  # type: ignore
-        data_operation: colrev.ops.data.Data,
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -334,9 +331,8 @@ class DataPackageEndpointInterface(
         i.e., indicate whether the record is rev_synthesized for the given endpoint_identifier
         """
 
-    def get_advice(  # type: ignore
-        review_manager: colrev.review_manager.ReviewManager,
-    ) -> dict:
+    # pylint: disable=no-method-argument
+    def get_advice() -> dict:  # type: ignore
         """Get advice on how to operate the data package endpoint"""
 
 
@@ -581,24 +577,24 @@ class PackageManager:
             if parameter not in settings_class._details:
                 continue
             if "tooltip" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "tooltip"
-                ] = settings_class._details[parameter]["tooltip"]
+                package_details["properties"][parameter]["tooltip"] = (
+                    settings_class._details[parameter]["tooltip"]
+                )
 
             if "min" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "min"
-                ] = settings_class._details[parameter]["min"]
+                package_details["properties"][parameter]["min"] = (
+                    settings_class._details[parameter]["min"]
+                )
 
             if "max" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "max"
-                ] = settings_class._details[parameter]["max"]
+                package_details["properties"][parameter]["max"] = (
+                    settings_class._details[parameter]["max"]
+                )
 
             if "options" in settings_class._details[parameter]:
-                package_details["properties"][parameter][
-                    "options"
-                ] = settings_class._details[parameter]["options"]
+                package_details["properties"][parameter]["options"] = (
+                    settings_class._details[parameter]["options"]
+                )
 
         self.__apply_package_details_fixes(
             package_type=package_type, package_details=package_details
@@ -702,10 +698,10 @@ class PackageManager:
                         f"Dependency {package_identifier} ({package_type}) not found. "
                         f"Please install it\n  pip install {package_identifier.split('.')[0]}"
                     )
-                packages_dict[package_identifier][
-                    "endpoint"
-                ] = self.load_package_endpoint(
-                    package_type=package_type, package_identifier=package_identifier
+                packages_dict[package_identifier]["endpoint"] = (
+                    self.load_package_endpoint(
+                        package_type=package_type, package_identifier=package_identifier
+                    )
                 )
 
             #     except ModuleNotFoundError as exc:
@@ -726,9 +722,9 @@ class PackageManager:
                     # to import custom packages from the project dir
                     sys.path.append(".")
                     packages_dict[package_identifier]["settings"] = selected_package
-                    packages_dict[package_identifier][
-                        "endpoint"
-                    ] = importlib.import_module(package_identifier, ".")
+                    packages_dict[package_identifier]["endpoint"] = (
+                        importlib.import_module(package_identifier, ".")
+                    )
                     packages_dict[package_identifier]["custom_flag"] = True
                 except ModuleNotFoundError as exc:  # pragma: no cover
                     if ignore_not_available:
@@ -811,8 +807,8 @@ class PackageManager:
         return packages_dict
 
     def __import_package_docs(self, docs_link: str, identifier: str) -> str:
-        extensions_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/resources/extensions_index"
+        packages_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/package_index"
         )
         local_built_in_path = Path(__file__).parent.parent / Path("ops/built_in")
 
@@ -831,7 +827,7 @@ class PackageManager:
             return "NotImplemented"
 
         file_path = Path(f"{identifier}.rst")
-        target = extensions_index_path / file_path
+        target = packages_index_path / file_path
         with open(target, "w", encoding="utf-8") as file:
             # NOTE: at this point, we may add metadata
             # (such as package status, authors, url etc.)
@@ -840,15 +836,13 @@ class PackageManager:
         return str(file_path)
 
     def __write_docs_for_index(self, docs_for_index: dict) -> None:
-        extensions_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/resources/extensions_index.rst"
+        packages_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/resources/package_index.rst"
         )
-        extensions_index_path_content = extensions_index_path.read_text(
-            encoding="utf-8"
-        )
+        packages_index_path_content = packages_index_path.read_text(encoding="utf-8")
         new_doc = []
         # append header
-        for line in extensions_index_path_content.split("\n"):
+        for line in packages_index_path_content.split("\n"):
             new_doc.append(line)
             if ":caption:" in line:
                 new_doc.append("")
@@ -883,9 +877,9 @@ class PackageManager:
                 if doc_item == "NotImplemented":
                     print(doc_item["path"])
                     continue
-                new_doc.append(f"   extensions_index/{doc_item['path']}")
+                new_doc.append(f"   package_index/{doc_item['path']}")
 
-        with open(extensions_index_path, "w", encoding="utf-8") as file:
+        with open(packages_index_path, "w", encoding="utf-8") as file:
             for line in new_doc:
                 file.write(line + "\n")
 
@@ -989,7 +983,7 @@ class PackageManager:
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
                     endpoint_item["short_description"]
-                    + " (:doc:`instructions </resources/extensions_index/"
+                    + " (:doc:`instructions </resources/package_index/"
                     + f"{endpoint_item['package_endpoint_identifier']}>`)"
                 )
                 if endpoint_type == "search_source":
@@ -1053,7 +1047,6 @@ class PackageManager:
         os.chdir(self.__colrev_path)
         packages = self.__load_packages_json()
         package_status = self.__load_package_status_json()
-        self.__package_endpoints_json_file.unlink(missing_ok=True)
 
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
@@ -1061,39 +1054,43 @@ class PackageManager:
         docs_for_index: typing.Dict[str, list] = {}
 
         for package in packages:
-            print(f'Loading package endpoints from {package["module"]}')
-            module_spec = importlib.util.find_spec(package["module"])
-
-            endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
-                ".colrev_endpoints.json"
-            )
-            if not endpoints_path.is_file():  # pragma: no cover
-                print(f"File does not exist: {endpoints_path}")
-                continue
-
             try:
+                print(f'Loading package endpoints from {package["module"]}')
+                module_spec = importlib.util.find_spec(package["module"])
+
+                endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
+                    ".colrev_endpoints.json"
+                )
+                if not endpoints_path.is_file():  # pragma: no cover
+                    print(f"File does not exist: {endpoints_path}")
+                    continue
+
                 with open(endpoints_path, encoding="utf-8") as file:
                     package_endpoints = json.load(file)
+                self.__add_package_endpoints(
+                    selected_package=package["module"],
+                    package_endpoints_json=package_endpoints_json,
+                    package_endpoints=package_endpoints,
+                    docs_for_index=docs_for_index,
+                    package_status=package_status,
+                )
+                self.__extract_search_source_types(
+                    package_endpoints_json=package_endpoints_json
+                )
             except json.decoder.JSONDecodeError as exc:  # pragma: no cover
                 print(f"Invalid json {exc}")
                 continue
+            except AttributeError as exc:
+                print(exc)
+                continue
 
-            self.__add_package_endpoints(
-                selected_package=package["module"],
-                package_endpoints_json=package_endpoints_json,
-                package_endpoints=package_endpoints,
-                docs_for_index=docs_for_index,
-                package_status=package_status,
-            )
-            self.__extract_search_source_types(
-                package_endpoints_json=package_endpoints_json
-            )
         for key in package_endpoints_json.keys():
             package_endpoints_json[key] = sorted(
                 package_endpoints_json[key],
                 key=lambda d: d["package_endpoint_identifier"],
             )
 
+        self.__package_endpoints_json_file.unlink(missing_ok=True)
         json_object = json.dumps(package_endpoints_json, indent=4)
         with open(self.__package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
@@ -1116,7 +1113,7 @@ class PackageManager:
         package_identifier: str,
         params: str,
         prompt_on_same_source: bool = True,
-    ) -> None:
+    ) -> dict:
         """Add a package_endpoint"""
 
         settings = operation.review_manager.settings
@@ -1180,7 +1177,7 @@ class PackageManager:
                 f"Package {package_identifier} already in {endpoints}"
             )
             if "y" != input("Continue [y/n]?"):
-                return
+                return {}
 
         operation.review_manager.logger.info(
             f"{Colors.GREEN}Add {operation.type} package:{Colors.END} {package_identifier}"
@@ -1213,6 +1210,7 @@ class PackageManager:
             operation.review_manager.dataset.add_changes(
                 path=add_source.filename, ignore_missing=True
             )
+            add_package = add_source.to_dict()
 
         else:
             add_package = {"endpoint": package_identifier}
@@ -1222,3 +1220,4 @@ class PackageManager:
         operation.review_manager.create_commit(
             msg=f"Add {operation.type} {package_identifier}",
         )
+        return add_package

@@ -84,6 +84,7 @@ def run_around_tests(  # type: ignore
     yield  # run test-code
 
     # post-test-code
+    print("Post-test teardown: Restore repository state")
     os.chdir(str(base_repo_review_manager.path))
     base_repo_review_manager.load_settings()
     repo = git.Repo(base_repo_review_manager.path)
@@ -196,13 +197,12 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
-        {"endpoint": "colrev.resolve_crossrefs"},
         {"endpoint": "colrev.source_specific_prep"},
         # {"endpoint": "colrev.exclude_non_latin_alphabets"},
         # {"endpoint": "colrev.exclude_collections"},
     ]
     review_manager.settings.dedupe.dedupe_package_endpoints = [
-        {"endpoint": "colrev.simple_dedupe"}
+        {"endpoint": "colrev.dedupe"}
     ]
     review_manager.settings.prescreen.prescreen_package_endpoints = [
         {"endpoint": "colrev.conditional_prescreen"}
@@ -280,6 +280,14 @@ def fixture_quality_model(
     return base_repo_review_manager.get_qm()
 
 
+@pytest.fixture(scope="session", name="pdf_quality_model")
+def fixture_pdf_quality_model(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.qm.quality_model.QualityModel:
+    """Fixture returning the pdf quality model"""
+    return base_repo_review_manager.get_pdf_qm()
+
+
 @pytest.fixture(scope="module")
 def language_service() -> colrev.env.language_service.LanguageService:  # type: ignore
     """Return a language service object"""
@@ -293,6 +301,14 @@ def fixture_prep_operation(
 ) -> colrev.ops.prep.Prep:
     """Fixture returning a prep operation"""
     return base_repo_review_manager.get_prep_operation()
+
+
+@pytest.fixture(scope="package", name="dedupe_operation")
+def fixture_pdedupe_operation(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> colrev.ops.dedupe.Dedupe:
+    """Fixture returning a dedupe operation"""
+    return base_repo_review_manager.get_dedupe_operation()
 
 
 @pytest.fixture

@@ -10,7 +10,6 @@
 - After running the following commands, a detailed coverage report is available at ``htmlcov/index.html``
 
 ```
-poetry run pytest
 coverage run -m pytest
 coverage html
 rm tests/coverage.svg
@@ -25,6 +24,7 @@ pytest tests/0_core/record_test.py
 pytest tests/0_core/record_test.py -k "test_update_metadata_status"
 ```
 
+Note: after each test, conf.run_around_tests() restores the state of the repository (even if tests fail!). For debugging, it may be helpful to deactivate the code temporarily.
 
 
 References

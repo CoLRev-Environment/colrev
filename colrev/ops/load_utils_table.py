@@ -1,6 +1,25 @@
 #! /usr/bin/env python
 """Convenience functions to load tabular files (csv, xlsx)
 
+This module provides utility functions to load data from tabular files (e.g., CSV and Excel).
+The data is loaded using pandas and then converted into a dictionary of records.
+The records are then preprocessed to ensure they are in the correct format for the CoLRev system.
+
+Usage::
+
+    import colrev.ops.load_utils_table
+    from colrev.constants import Fields
+
+    table_loader = colrev.ops.load_utils_table.TableLoader(
+        load_operation=load_operation,
+        source=self.search_source,
+    )
+
+    # Note : fixes can be applied before each of the following steps
+
+    records = table_loader.load_table_entries()
+    records = table_loader.convert_to_records(entries=records)
+
 Example csv records::
 
     title;author;year;
@@ -27,8 +46,19 @@ if TYPE_CHECKING:
 # pylint: disable=duplicate-code
 
 
-class TableLoadUtility:
-    """Utility for tables loading"""
+class TableLoader:
+    """Loads csv and Excel files (based on pandas)"""
+
+    def __init__(
+        self,
+        *,
+        load_operation: colrev.ops.load.Load,
+        source: colrev.settings.SearchSource,
+        unique_id_field: str = "",
+    ):
+        self.load_operation = load_operation
+        self.source = source
+        self.unique_id_field = unique_id_field
 
     @classmethod
     def __rename_fields(cls, *, record_dict: dict) -> dict:
@@ -139,8 +169,6 @@ class TableLoadUtility:
 
             if "author_count" in r_dict:
                 del r_dict["author_count"]
-            if "ENTRYTYPE" in r_dict:
-                del r_dict["ENTRYTYPE"]
             if "citation_key" in r_dict:
                 del r_dict["citation_key"]
 
@@ -164,22 +192,6 @@ class TableLoadUtility:
 
         return records_dict
 
-
-class CSVLoader:
-
-    """Loads csv files (based on pandas)"""
-
-    def __init__(
-        self,
-        *,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        unique_id_field: str = "",
-    ):
-        self.load_operation = load_operation
-        self.source = source
-        self.unique_id_field = unique_id_field
-
     def load_table_entries(self) -> dict:
         """Load table entries from the source"""
 
@@ -187,10 +199,17 @@ class CSVLoader:
             self.load_operation.ensure_append_only(file=self.source.filename)
 
         try:
-            data = pd.read_csv(self.source.filename)
+            if self.source.filename.name.endswith(".csv"):
+                data = pd.read_csv(self.source.filename)
+            elif self.source.filename.name.endswith((".xls", ".xlsx")):
+                data = pd.read_excel(
+                    self.source.filename, dtype=str
+                )  # dtype=str to avoid type casting
+            else:
+                raise ValueError("Unsupported file format")
         except pd.errors.ParserError as exc:
             raise colrev_exceptions.ImportException(
-                f"Error: Not a csv file? {self.source.filename.name}"
+                f"Error: Not a valid file? {self.source.filename.name}"
             ) from exc
 
         data.columns = data.columns.str.replace(" ", "_")
@@ -198,59 +217,7 @@ class CSVLoader:
         data.columns = data.columns.str.lower()
         records_value_list = data.to_dict("records")
 
-        records_dict = TableLoadUtility.preprocess_records(records=records_value_list)
-        return records_dict
-
-    def convert_to_records(self, *, entries: dict) -> dict:
-        """Converts table entries it to bib records"""
-
-        for i, record in enumerate(entries.values()):
-            if self.unique_id_field == "":
-                _id = str(i + 1).zfill(6)
-            else:
-                _id = record[self.unique_id_field].replace(" ", "").replace(";", "_")
-            record[Fields.ID] = _id
-
-        records = {r[Fields.ID]: r for r in entries.values()}
-
-        return records
-
-
-class ExcelLoader:
-    """Loads Excel (xls, xlsx) files (based on pandas)"""
-
-    def __init__(
-        self,
-        *,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
-        unique_id_field: str = "",
-    ):
-        self.load_operation = load_operation
-        self.source = source
-        self.unique_id_field = unique_id_field
-
-    def load_table_entries(self) -> dict:
-        """Load records from the source"""
-
-        if self.unique_id_field == "":
-            self.load_operation.ensure_append_only(file=self.source.filename)
-
-        try:
-            data = pd.read_excel(
-                self.source.filename, dtype=str
-            )  # dtype=str to avoid type casting
-        except pd.errors.ParserError:
-            self.load_operation.review_manager.logger.error(
-                f"Error: Not an xlsx file: {self.source.filename.name}"
-            )
-            return {}
-
-        data.columns = data.columns.str.replace(" ", "_")
-        data.columns = data.columns.str.replace("-", "_")
-        data.columns = data.columns.str.lower()
-        record_value_list = data.to_dict("records")
-        records_dict = TableLoadUtility.preprocess_records(records=record_value_list)
+        records_dict = self.preprocess_records(records=records_value_list)
         return records_dict
 
     def convert_to_records(self, *, entries: dict) -> dict:

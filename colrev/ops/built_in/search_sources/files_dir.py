@@ -326,8 +326,8 @@ class FilesSearchSource(JsonSchemaMixin):
                     record = colrev.record.Record(data=record_dict)
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
-                    if "text_from_pdf" in record_dict:
-                        text: str = record_dict["text_from_pdf"]
+                    if Fields.TEXT_FROM_PDF in record_dict:
+                        text: str = record_dict[Fields.TEXT_FROM_PDF]
                         if "bookreview" in text.replace(" ", "").lower():
                             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                             record_dict["note"] = "Book review"
@@ -343,11 +343,11 @@ class FilesSearchSource(JsonSchemaMixin):
                         if "withdrawal" in text.replace(" ", "").lower():
                             record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
                             record_dict["note"] = "Withdrawal"
-                        del record_dict["text_from_pdf"]
+                        del record_dict[Fields.TEXT_FROM_PDF]
                     # else:
                     #     print(f'text extraction error in {record_dict[Fields.ID]}')
-                    if "pages_in_file" in record_dict:
-                        del record_dict["pages_in_file"]
+                    if Fields.PAGES_IN_FILE in record_dict:
+                        del record_dict[Fields.PAGES_IN_FILE]
 
                 record_dict = {k: v for k, v in record_dict.items() if v is not None}
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
@@ -639,10 +639,10 @@ class FilesSearchSource(JsonSchemaMixin):
             return
         record = colrev.record.Record(data=record_dict)
         record.set_text_from_pdf()
-        res = re.findall(self.__doi_regex, record.data["text_from_pdf"])
+        res = re.findall(self.__doi_regex, record.data[Fields.TEXT_FROM_PDF])
         if res:
             record.data[Fields.DOI] = res[0].upper()
-        del record.data["text_from_pdf"]
+        del record.data[Fields.TEXT_FROM_PDF]
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
@@ -754,14 +754,10 @@ class FilesSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
-            missing_field_checker = (
-                colrev.qm.checkers.missing_field.MissingFieldChecker(
-                    quality_model=load_operation.review_manager.get_qm()
-                )
-            )
+            records = bib_loader.load_bib_file()
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
@@ -774,8 +770,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 record_dict = self.__update_fields_based_on_pdf_dirs(
                     record_dict=record_dict, params=self.search_source.search_parameters
                 )
-                record = colrev.record.Record(data=record_dict)
-                missing_field_checker.apply_curation_restrictions(record=record)
+
             return records
 
         raise NotImplementedError
@@ -881,8 +876,9 @@ class FilesSearchSource(JsonSchemaMixin):
                 )
 
             # Typical error in old papers: title fields are equal to journal/booktitle fields
-            if record.data.get(Fields.TITLE, "no_title").lower() == record.data.get(
-                Fields.JOURNAL, "no_journal"
+            if (
+                record.data.get(Fields.TITLE, "no_title").lower()
+                == record.data.get(Fields.JOURNAL, "no_journal").lower()
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
                 record.set_status(

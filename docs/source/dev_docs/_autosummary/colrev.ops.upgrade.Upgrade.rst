@@ -19,7 +19,9 @@ colrev.ops.upgrade.Upgrade
       ~Upgrade.check_precondition
       ~Upgrade.conclude
       ~Upgrade.decorate
+      ~Upgrade.load_records_dict
       ~Upgrade.main
+      ~Upgrade.save_records_dict
 
 
 

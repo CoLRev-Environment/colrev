@@ -20,7 +20,10 @@ colrev.ops.load.Load
       ~Load.conclude
       ~Load.decorate
       ~Load.ensure_append_only
+      ~Load.load_active_sources
+      ~Load.load_source_records
       ~Load.main
+      ~Load.setup_source_for_load
 
 
 

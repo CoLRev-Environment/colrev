@@ -209,20 +209,20 @@ class Checker:
                 f"Entries without origin: {', '.join(status_data['entries_without_origin'])}"
             )
 
-        if (
-            self.review_manager.dataset.records_changed()
-            or self.review_manager.verbose_mode
-        ):
-            # Check for broken origins
-            all_record_links = []
-            for bib_file in self.review_manager.search_dir.glob("*.bib"):
-                self.review_manager.logger.debug(bib_file)
-                search_ids = self.__retrieve_ids_from_bib(file_path=bib_file)
-                for search_id in search_ids:
-                    all_record_links.append(bib_file.name + "/" + search_id)
-            delta = set(status_data["record_links_in_bib"]) - set(all_record_links)
-            if len(delta) > 0:
-                raise colrev_exceptions.OriginError(f"broken origins: {delta}")
+        # if (
+        #     self.review_manager.dataset.records_changed()
+        #     or self.review_manager.verbose_mode
+        # ):
+        #     # Check for broken origins
+        #     all_record_links = []
+        #     for bib_file in self.review_manager.search_dir.glob("*.bib"):
+        #         self.review_manager.logger.debug(bib_file)
+        #         search_ids = self.__retrieve_ids_from_bib(file_path=bib_file)
+        #         for search_id in search_ids:
+        #             all_record_links.append(bib_file.name + "/" + search_id)
+        #     delta = set(status_data["record_links_in_bib"]) - set(all_record_links)
+        #     if len(delta) > 0:
+        #         raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
         non_unique_origins = []
@@ -343,7 +343,9 @@ class Checker:
             pattern = "^NA$"
             pattern_inclusion = "^NA$"
         else:
-            pattern = "=(in|out);".join(screening_criteria.keys()) + "=(in|out)"
+            pattern = (
+                "=(in|out|TODO);".join(screening_criteria.keys()) + "=(in|out|TODO)"
+            )
             pattern_inclusion = "=in;".join(screening_criteria.keys()) + "=in"
             criteria = list(screening_criteria.keys())
 

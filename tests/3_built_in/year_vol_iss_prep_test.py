@@ -68,6 +68,6 @@ def test_prep_year_vol_iss(
     """Test year_vol_iss_prep()"""
     # TODO : reactivate test
     record = colrev.record.PrepRecord(data=input_rec)
-    returned_record = yvip.prepare(prep_operation=prep_operation, record=record)
+    returned_record = yvip.prepare(record=record)
     actual = returned_record.data
     assert expected == actual

@@ -42,7 +42,6 @@ colrev.settings
       PrescreenSettings
       ProjectSettings
       Protocol
-      SameSourceMergePolicy
       ScreenCriterion
       ScreenCriterionType
       ScreenSettings

@@ -117,11 +117,14 @@ class Merge(colrev.operation.Operation):
         # Note : only two-way merges supported for now.
         assert all(len(v) == 3 for k, v in unmerged_blobs.items())
 
-        path = "data/records.bib"
-        if path in unmerged_blobs:
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(
+            self.review_manager.dataset.RECORDS_FILE_RELATIVE
+        ).replace("\\", "/")
+        if records_file_path in unmerged_blobs:
             current_branch_records = {}
             other_branch_records = {}
-            for stage, blob in unmerged_blobs[path]:
+            for stage, blob in unmerged_blobs[records_file_path]:
                 # stage == 1: common ancestor (often md_processed for prescreen)
                 # stage == 2: own branch
                 # stage == 3: other branch

@@ -20,7 +20,7 @@
 [![Downloads](https://static.pepy.tech/badge/colrev/month)](https://pepy.tech/project/colrev)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7148/badge)](https://bestpractices.coreinfrastructure.org/projects/7148)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/CoLRev-Environment/colrev/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/CoLRev-Environment/colrev/)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- ![PyPI](https://img.shields.io/pypi/v/colrev) -->
 <!-- [![](https://img.shields.io/badge/-documentation-green)](https://colrev.readthedocs.io/) -->
@@ -34,6 +34,7 @@ CoLRev is an open-source environment for collaborative literature reviews. It in
 To accomplish these goals, CoLRev advances the design of review technology at the intersection of methods, design, cognition, and community building.
 The following features stand out:
 
+- Supports all literature review steps: problem formulation, search, dedupe, (pre)screen, pdf retrieval and preparation, and synthesis
 - An open and extensible environment based on shared data and process standards
 - Builds on git and its transparent collaboration model for the entire literature review process
 - Offers a self-explanatory, fault-tolerant, and configurable user workflow
@@ -80,6 +81,10 @@ For further information, see [tests](tests/readme.md), [changes](CHANGELOG.md), 
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ThomasFleischmann"><img src="https://avatars.githubusercontent.com/u/131684139?v=4?s=100" width="100px;" alt="ThomasFleischmann"/><br /><sub><b>ThomasFleischmann</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=ThomasFleischmann" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/AntonFrisch"><img src="https://avatars.githubusercontent.com/u/131719653?v=4?s=100" width="100px;" alt="AntonFrisch"/><br /><sub><b>AntonFrisch</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=AntonFrisch" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LouisLangenhan"><img src="https://avatars.githubusercontent.com/u/148447366?v=4?s=100" width="100px;" alt="LouisLangenhan"/><br /><sub><b>LouisLangenhan</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=LouisLangenhan" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=LouisLangenhan" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Peteer98"><img src="https://avatars.githubusercontent.com/u/148191162?v=4?s=100" width="100px;" alt="Peter Eckhardt"/><br /><sub><b>Peter Eckhardt</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=Peteer98" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=Peteer98" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/user123projekt"><img src="https://avatars.githubusercontent.com/u/149078858?v=4?s=100" width="100px;" alt="User123projekt"/><br /><sub><b>User123projekt</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=User123projekt" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=User123projekt" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LuminousLynx"><img src="https://avatars.githubusercontent.com/u/148456911?v=4?s=100" width="100px;" alt="LuminousLynx"/><br /><sub><b>LuminousLynx</b></sub></a><br /><a href="https://github.com/CoLRev-Environment/colrev/commits?author=LuminousLynx" title="Code">💻</a> <a href="https://github.com/CoLRev-Environment/colrev/commits?author=LuminousLynx" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

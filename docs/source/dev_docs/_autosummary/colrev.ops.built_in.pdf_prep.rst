@@ -26,9 +26,7 @@ colrev.ops.built\_in.pdf\_prep
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.ops.built_in.pdf_prep.check_ocr
-   colrev.ops.built_in.pdf_prep.completeness_validation
-   colrev.ops.built_in.pdf_prep.cover_page
-   colrev.ops.built_in.pdf_prep.last_page
-   colrev.ops.built_in.pdf_prep.metadata_validation
-   colrev.ops.built_in.pdf_prep.tei_prep
+   colrev.ops.built_in.pdf_prep.grobid_tei
+   colrev.ops.built_in.pdf_prep.ocrmypdf
+   colrev.ops.built_in.pdf_prep.remove_cover_page
+   colrev.ops.built_in.pdf_prep.remove_last_page

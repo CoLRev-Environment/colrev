@@ -206,11 +206,10 @@ class ColrevCuration(JsonSchemaMixin):
     def __update_table_in_readme(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
         markdown_output: str,
     ) -> None:
         table_summary_tag = "<!-- TABLE_SUMMARY -->"
-        readme_path = review_manager.readme
+        readme_path = self.review_manager.readme
         with open(readme_path, "r+b") as file:
             appended = False
             seekpos = file.tell()
@@ -250,11 +249,10 @@ class ColrevCuration(JsonSchemaMixin):
         self,
         *,
         records: dict,
-        review_manager: colrev.review_manager.ReviewManager,
         silent_mode: bool,
     ) -> None:
         if not silent_mode:
-            review_manager.logger.info("Calculate statistics for readme")
+            self.review_manager.logger.info("Calculate statistics for readme")
 
         # alternatively: get sources from search_sources.filename (name/stem?)
         sources = []
@@ -266,10 +264,10 @@ class ColrevCuration(JsonSchemaMixin):
 
         stats = self.__get_stats(records=records, sources=sources)
         markdown_output = self.__get_stats_markdown_table(stats=stats, sources=sources)
-        self.__update_table_in_readme(
-            review_manager=review_manager, markdown_output=markdown_output
+        self.__update_table_in_readme(markdown_output=markdown_output)
+        self.review_manager.dataset.add_changes(
+            path=self.review_manager.README_RELATIVE
         )
-        review_manager.dataset.add_changes(path=review_manager.README_RELATIVE)
 
     def __source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
@@ -315,7 +313,6 @@ class ColrevCuration(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
@@ -325,14 +322,12 @@ class ColrevCuration(JsonSchemaMixin):
         if self.settings.curated_masterdata:
             self.__update_stats_in_readme(
                 records=records,
-                review_manager=self.review_manager,
                 silent_mode=silent_mode,
             )
             self.__source_comparison(silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -343,11 +338,10 @@ class ColrevCuration(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
-        records = review_manager.dataset.load_records_dict()
+        records = self.review_manager.dataset.load_records_dict()
         advice = {
             "msg": "TODO (add curation-specific advice...)",
             "detailed_msg": "TODO",

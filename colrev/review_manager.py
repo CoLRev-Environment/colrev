@@ -191,15 +191,16 @@ class ReviewManager:
 
     def __get_project_home_dir(self, *, path_str: Optional[str] = None) -> Path:
         if path_str:
-            return Path(path_str)
+            original_dir = Path(path_str)
+        else:
+            original_dir = Path.cwd()
 
-        original_dir = Path.cwd()
-        while ".git" not in [f.name for f in Path.cwd().iterdir() if f.is_dir()]:
-            os.chdir("..")
-            if Path("/") == Path.cwd():
-                os.chdir(original_dir)
+        while ".git" not in [f.name for f in original_dir.iterdir() if f.is_dir()]:
+            if original_dir.parent == original_dir:  # reached root
                 break
-        return Path.cwd()
+            original_dir = original_dir.parent
+
+        return original_dir
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
@@ -384,6 +385,11 @@ class ReviewManager:
 
         return colrev.qm.quality_model.QualityModel(review_manager=self)
 
+    def get_pdf_qm(self) -> colrev.qm.quality_model.QualityModel:
+        """Get the PDF quality model"""
+
+        return colrev.qm.quality_model.QualityModel(review_manager=self, pdf_mode=True)
+
     def get_status_stats(
         self, *, records: Optional[dict] = None
     ) -> colrev.ops.status.StatusStats:
@@ -437,8 +443,8 @@ class ReviewManager:
 
         return colrev.env.tei_parser.TEIParser(
             environment_manager=self.environment_manager,
-            pdf_path=pdf_path,
-            tei_path=tei_path,
+            pdf_path=self.path / pdf_path if pdf_path else None,
+            tei_path=self.path / tei_path if tei_path else None,
         )
 
     @classmethod

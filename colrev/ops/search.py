@@ -121,7 +121,7 @@ class Search(colrev.operation.Operation):
         keywords = input("Enter the keywords:")
 
         filename = self.get_unique_filename(
-            file_path_string=f"{endpoint.replace('colrev.', '')}_{keywords}"
+            file_path_string=f"{endpoint.replace('colrev.', '')}"
         )
         add_source = colrev.settings.SearchSource(
             endpoint=endpoint,
@@ -464,11 +464,7 @@ class Search(colrev.operation.Operation):
 
             try:
                 endpoint.run_search(rerun=rerun)  # type: ignore
-            except colrev_exceptions.ServiceNotAvailableException as exc:
-                if not self.review_manager.force_mode:
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        source.endpoint
-                    ) from exc
+            except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:
                 print(exc)

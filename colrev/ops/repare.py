@@ -133,13 +133,13 @@ class Repare(colrev.operation.Operation):
     def __get_source_feeds(self) -> dict:
         source_feeds = {}
         for source in self.review_manager.settings.sources:
-            source_feeds[
-                str(source.filename).replace("data/search/", "")
-            ] = source.get_feed(
-                review_manager=self.review_manager,
-                source_identifier="NA",
-                update_only=False,
-            ).feed_records
+            source_feeds[str(source.filename).replace("data/search/", "")] = (
+                source.get_feed(
+                    review_manager=self.review_manager,
+                    source_identifier="NA",
+                    update_only=False,
+                ).feed_records
+            )
         return source_feeds
 
     # pylint: disable=too-many-branches
@@ -166,7 +166,7 @@ class Repare(colrev.operation.Operation):
                 if (
                     key not in record.data
                     and FieldValues.CURATED != key
-                    and DefectCodes.NOT_MISSING
+                    and f"IGNORE:{DefectCodes.MISSING}"
                     not in record.data[Fields.MD_PROV][key]["note"]
                 ):
                     mdk_to_remove += [key]
@@ -190,6 +190,11 @@ class Repare(colrev.operation.Operation):
             for origin in record.data[Fields.ORIGIN]:
                 origin_source = origin.split("/")[0]
                 origin_id = origin[len(origin_source) + 1 :]
+                if (
+                    origin_source not in source_feeds
+                    or origin_id not in source_feeds[origin_source]
+                ):
+                    continue
                 if key in source_feeds[origin_source][origin_id]:
                     record.add_data_provenance(key=key, source=origin, note="")
         if key == Fields.LANGUAGE:
@@ -205,6 +210,8 @@ class Repare(colrev.operation.Operation):
         for _, prov_details in record.data[Fields.D_PROV].items():
             if prov_details["source"] in record.data[Fields.ORIGIN] + ["manual"]:
                 continue
+            if prov_details["source"].startswith("file|"):
+                continue
             # Note : simple heuristic
             prov_details["source"] = record.data[Fields.ORIGIN][0]
 
@@ -215,6 +222,11 @@ class Repare(colrev.operation.Operation):
         for origin in record.data[Fields.ORIGIN]:
             origin_source = origin.split("/")[0]
             origin_id = origin[len(origin_source) + 1 :]
+            if (
+                origin_source not in source_feeds
+                or origin_id not in source_feeds[origin_source]
+            ):
+                continue
             if key in source_feeds[origin_source][origin_id]:
                 options[origin_source] = source_feeds[origin_source][origin_id][key]
 
@@ -236,9 +248,11 @@ class Repare(colrev.operation.Operation):
                 source_origin = [k for k, v in options.items() if v == value][0]
 
             for origin in record.data[Fields.ORIGIN]:
-                origin_source, origin_id = origin.split("/")
-                if source_origin == origin_source:
-                    source_value = origin
+                origin_parts = origin.split("/", 1)  # Split on the first "/"
+                if len(origin_parts) == 2:
+                    origin_source, origin_id = origin.split("/")
+                    if source_origin == origin_source:
+                        source_value = origin
 
         record.add_masterdata_provenance(key=key, source=source_value, note="")
 

@@ -163,7 +163,7 @@ def test_remove_field() -> None:
             Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
             Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
             Fields.VOLUME: {"source": "import.bib/id_0001", "note": ""},
-            Fields.NUMBER: {"source": "test", "note": "not-missing"},
+            Fields.NUMBER: {"source": "test", "note": f"IGNORE:{DefectCodes.MISSING}"},
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
@@ -584,8 +584,8 @@ def test_set_masterdata_complete() -> None:
             Fields.TITLE: {"source": "import.bib/id_0001", "note": ""},
             Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
             Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
-            Fields.VOLUME: {"source": "test", "note": "not-missing"},
-            Fields.NUMBER: {"source": "test", "note": "not-missing"},
+            Fields.VOLUME: {"source": "test", "note": f"IGNORE:{DefectCodes.MISSING}"},
+            Fields.NUMBER: {"source": "test", "note": f"IGNORE:{DefectCodes.MISSING}"},
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
@@ -616,8 +616,8 @@ def test_set_masterdata_complete() -> None:
             Fields.TITLE: {"source": "import.bib/id_0001", "note": ""},
             Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
             Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
-            Fields.VOLUME: {"source": "test", "note": "not-missing"},
-            Fields.NUMBER: {"source": "test", "note": "not-missing"},
+            Fields.VOLUME: {"source": "test", "note": f"IGNORE:{DefectCodes.MISSING}"},
+            Fields.NUMBER: {"source": "test", "note": f"IGNORE:{DefectCodes.MISSING}"},
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
@@ -882,7 +882,7 @@ def test_get_tei_filename() -> None:
 def test_get_record_similarity() -> None:
     """Test record.get_record_similarity()"""
 
-    expected = 0.854
+    expected = 0.8541
     actual = colrev.record.Record.get_record_similarity(record_a=r1, record_b=r2)
     assert expected == actual
 
@@ -1170,15 +1170,6 @@ def test_get_toc_key() -> None:
         colrev.record.Record(data=input_value).get_toc_key()
 
 
-def test_print_diff_pair() -> None:
-    """Test record.print_diff_pair()"""
-
-    colrev.record.Record.print_diff_pair(
-        record_pair=[r1.data, r2.data],
-        keys=[Fields.TITLE, Fields.JOURNAL, Fields.BOOKTITLE],
-    )
-
-
 def test_prescreen_exclude() -> None:
     """Test record.prescreen_exclude()"""
 
@@ -1322,7 +1313,7 @@ def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> No
 def test_get_retrieval_similarity() -> None:
     """Test record.get_retrieval_similarity()"""
 
-    expected = 0.934
+    expected = 0.9333
     actual = colrev.record.PrepRecord.get_retrieval_similarity(
         record_original=r1, retrieved_record_original=r2
     )

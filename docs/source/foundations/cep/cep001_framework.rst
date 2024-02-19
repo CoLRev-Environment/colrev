@@ -244,7 +244,6 @@ The data structures distinguish raw data sources (stored in `data/search/`) and 
 Raw data sources:
 
 - Raw data sources represent the latest version of the records retrieved from source, i.e., they can be updated by API-based sources. Manual edits should be applied to the main records (`data/records.bib`).
-- Input reference formats (e.g., RIS, BibTeX, Endnote) are transformed to BibTeX to facilitate more efficient processing.
 
 ..
    - Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
@@ -276,6 +275,8 @@ For the main records and the converted raw data, the BibTeX is selected for the 
 - BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
 - BibTeX can be augmented (including additional fields for the `colrev_origin`, `colrev_status`, etc.).
 - BibTeX is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL).
+
+[Overview of bibliographic data formats](https://format.gbv.de/).
 
 ..
    - Upper/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the Git history simple

@@ -288,10 +288,10 @@ class Initializer:
                 for x in settings.pdf_prep.pdf_prep_package_endpoints
                 if x["endpoint"]
                 not in [
-                    "colrev.pdf_check_ocr",
+                    "colrev.ocrmypdf",
                     "colrev.remove_coverpage",
                     "colrev.remove_last_page",
-                    "colrev.create_tei",
+                    "colrev.grobid_tei",
                 ]
             ]
 
@@ -428,9 +428,7 @@ class Initializer:
         with open("settings.json", encoding="utf-8") as file:
             settings = json.load(file)
 
-        settings["dedupe"]["dedupe_package_endpoints"] = [
-            {"endpoint": "colrev.simple_dedupe"}
-        ]
+        settings["dedupe"]["dedupe_package_endpoints"] = [{"endpoint": "colrev.dedupe"}]
         settings["sources"] = [
             {
                 "endpoint": "colrev.unknown_source",

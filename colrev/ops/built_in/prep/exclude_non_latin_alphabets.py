@@ -38,39 +38,37 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
+        prep_operation: colrev.ops.prep.Prep,
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
+
+    def __mostly_latin_alphabet(self, str_to_check: str) -> bool:
+        assert len(str_to_check) != 0
+        nr_latin = 0
+        for character in str_to_check:
+            if self.alphabet_detector.only_alphabet_chars(character, "LATIN"):
+                nr_latin += 1
+        return nr_latin / len(str_to_check) > 0.75
 
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the records by excluding records whose metadata is not in Latin alphabet"""
 
-        if prep_operation.polish:
+        if self.prep_operation.polish:
             return record
-
-        def mostly_latin_alphabet(str_to_check: str) -> bool:
-            assert len(str_to_check) != 0
-            nr_non_latin = 0
-            for character in str_to_check:
-                if not self.alphabet_detector.only_alphabet_chars(character, "LATIN"):
-                    nr_non_latin += 1
-            return nr_non_latin / len(str_to_check) > 0.75
 
         # TB:D join or check independently?
         str_to_check = " ".join(
             [
                 record.data.get(Fields.TITLE, ""),
-                record.data.get(Fields.AUTHOR, ""),
-                record.data.get(Fields.JOURNAL, ""),
-                record.data.get(Fields.BOOKTITLE, ""),
             ]
         )
-        if mostly_latin_alphabet(str_to_check):
+
+        if str_to_check and not self.__mostly_latin_alphabet(str_to_check):
             record.prescreen_exclude(reason="non_latin_alphabet")
 
         return record

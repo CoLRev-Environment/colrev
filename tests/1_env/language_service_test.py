@@ -93,6 +93,16 @@ def test_compute_language_confidence_values(
             "“Escaping the rat race”: Justifications in digital nomadism",
             "eng",
         ),
+        ("ελληνικά", "ell"),
+        (
+            "공유경제 참여자의 비즈니스 등록정책에 대한 인식과 심적기재: 온라인 발화에 대한 텍스트마이닝",
+            "kor",
+        ),
+        ("سماوي يدور", "ara"),
+        ("שלום", "heb"),
+        ("кириллический", "rus"),
+        ("平台经济的典型特征、垄断分析与反垄断监管", "chi"),
+        ("공유경제 플랫폼 규제접근방법에 대한 연구", "kor"),
     ],
 )
 def test_compute_language(

@@ -16,7 +16,6 @@ colrev.qm.checkers.missing\_field.MissingFieldChecker
    .. autosummary::
       :nosignatures:
 
-      ~MissingFieldChecker.apply_curation_restrictions
       ~MissingFieldChecker.run
 
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "colrev"
-version = "0.10.4"
+version = "0.11.0"
 description = "CoLRev: An open-source environment for collaborative reviews"
 authors = ["Gerit Wagner <gerit.wagner@uni-bamberg.de>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
@@ -50,9 +50,8 @@ alphabet-detector = "^0.0.7"
 crossrefapi = "^1.5.0"
 dacite = "^1.6.0"
 daff = "^1.3.46"
-dedupe = "2.0.23"
 dictdiffer = "^0.9.0"
-lingua-language-detector = ">1.3"
+lingua-language-detector = "^2.0.2"
 lxml = "^4.9.1"
 nameparser = "^1.1.2"
 pandas = "^1.5.0"
@@ -62,7 +61,6 @@ psutil = "^5.9.2"
 pybtex = "^0.24.0"
 PyPDF2 = "^1.28.6"
 PyYAML = "^6.0.0"
-thefuzz = "^0.19.0"
 pycountry = "^22.3.5"
 glom = "^22.1.0"
 Jinja2 = "^3.1.2"
@@ -74,7 +72,6 @@ defusedxml = "^0.7.1"
 dash = "^2.11.1"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance (for thefuzz)
 pyalex = "^0.10"
-colrev-asreview = "^0.1.0"
 m2r = "^0.3.1"
 inquirer = "^3.1.3"
 Sphinx = {version = "^5.2.3", optional = true }
@@ -91,10 +88,15 @@ types-click = {version = "^7.1.8", optional = true }
 pytest-mock = {version = "^3.10.0", optional = true }
 requests-mock = {version = "^1.10.0", optional = true }
 feedparser = "^6.0.10"
+semanticscholar = "^0.6.0"
+rapidfuzz = "^3.5.2"
+pytest-skip-slow = "^0.0.5"
+bib-dedupe = "^0.7.0"
+number-parser = "^0.3.2"
 
 [tool.poetry.extras]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface"]
-dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock"]
+dev = ["pylint", "pytest", "coverage", "types-click", "pytest-mock", "requests-mock", "pytest-skip-slow"]
 
 [tool.mypy]
 python_version = 3.8
@@ -124,6 +126,7 @@ omit = [
     "colrev/env/grobid_service.py",
     "/tmp/*",
     "tests/*",
+    "*/bib-dedupe/bib_dedupe/*",
 ]
 
 [tool.coverage.run]
@@ -132,15 +135,17 @@ omit = [
     "/usr/*", # omit everything in /usr
     "*crossrefapi/crossref/*",
     "colrev/env/grobid_service.py",
+    "colrev/ops/upgrade.py",
     "/tmp/*",
     "tests/*",
+    "*/bib-dedupe/bib_dedupe/*",
 ]
 
 [tool.ruff]
 line-length = 160
 
-[tool.ruff.per-file-ignores]
-"**/{tests,docs}/*" = ["E501"]
+[tool.ruff.lint]
+per-file-ignores = { "**/{tests,docs}/*" = ["E501"] }
 
 [build-system]
 # requires = ["poetry>=1.2.0b1"]

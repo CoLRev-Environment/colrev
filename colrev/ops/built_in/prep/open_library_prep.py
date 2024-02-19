@@ -44,6 +44,7 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
+        self.prep_operation = prep_operation
         self.open_library_connector = open_library_connector.OpenLibrarySearchSource(
             source_operation=prep_operation
         )
@@ -56,16 +57,14 @@ class OpenLibraryMetadataPrep(JsonSchemaMixin):
             source_operation=source_operation
         )
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare the record metadata based on OpenLibrary"""
 
         if record.data.get(Fields.ENTRYTYPE, "NA") != "book":
             return record
 
         self.open_library_connector.get_masterdata(
-            prep_operation=prep_operation, record=record
+            prep_operation=self.prep_operation, record=record
         )
 
         return record

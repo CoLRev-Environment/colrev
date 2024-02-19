@@ -41,6 +41,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
     ):
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = dedupe_operation.review_manager
+        self.dedupe_operation = dedupe_operation
 
         self.__post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
             state=colrev.record.RecordState.md_processed
@@ -262,19 +263,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         rec2 = same_toc_recs[int(ret) - 1]
                         if record.data[Fields.STATUS] < rec2[Fields.STATUS]:
                             results["decision_list"].append(
-                                {
-                                    "ID1": rec2[Fields.ID],
-                                    "ID2": record.data[Fields.ID],
-                                    "decision": "duplicate",
-                                }
+                                [rec2[Fields.ID], record.data[Fields.ID]]
                             )
                         else:
                             results["decision_list"].append(
-                                {
-                                    "ID1": record.data[Fields.ID],
-                                    "ID2": rec2[Fields.ID],
-                                    "decision": "duplicate",
-                                }
+                                [rec2[Fields.ID], record.data[Fields.ID]]
                             )
 
                         valid_selection = True
@@ -283,7 +276,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 break
         return results
 
-    def run_dedupe(self, dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+    def run_dedupe(self) -> None:
         """Run the dedupe procedure for remaining records in curations"""
 
         # pylint: disable=too-many-branches
@@ -319,8 +312,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 if s.endpoint != "colrev.files_dir"
             ]
 
-            dedupe_operation.apply_merges(
-                results=ret["decision_list"],
+            self.dedupe_operation.apply_merges(
+                id_sets=ret["decision_list"],
                 preferred_masterdata_sources=preferred_masterdata_sources,
             )
 

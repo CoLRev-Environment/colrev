@@ -1,7 +1,21 @@
 #! /usr/bin/env python
 """Load conversion of reference sections (bibliographies) in md-documents based on GROBID
 
-Example reference section::
+Usage::
+
+    import colrev.ops.load_utils_md
+    from colrev.constants import Fields
+
+    md_loader = colrev.ops.load_utils_md.MarkdownLoader(
+        load_operation=load_operation,
+        source=self.search_source,
+    )
+
+    # Note : fixes can be applied before each of the following steps
+
+    records = md_loader.load()
+
+Example markdown reference section::
 
     # References
 
@@ -27,7 +41,6 @@ if TYPE_CHECKING:
 
 
 class MarkdownLoader:
-
     """Loads reference strings from text (md) files (based on GROBID)"""
 
     def __init__(

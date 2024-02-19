@@ -42,7 +42,6 @@ class AddJournalRanking(JsonSchemaMixin):
 
     def prepare(
         self,
-        prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
         record: colrev.record.PrepRecord,
     ) -> colrev.record.Record:
         """Add Journalranking to Metadata"""

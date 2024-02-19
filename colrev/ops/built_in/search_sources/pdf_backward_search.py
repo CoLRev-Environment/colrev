@@ -7,11 +7,19 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import inquirer
+import pandas as pd
 import requests
 import zope.interface
+from bib_dedupe.bib_dedupe import block
+from bib_dedupe.bib_dedupe import cluster
+from bib_dedupe.bib_dedupe import match
+from bib_dedupe.bib_dedupe import prep
+from bib_dedupe.merge import merge
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
+from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
@@ -38,7 +46,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.pdf_backward_search"
-    source_identifier = "bwsearch_ref"
+    source_identifier = Fields.ID
     search_types = [colrev.settings.SearchType.BACKWARD_SEARCH]
 
     ci_supported: bool = False
@@ -138,7 +146,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         return True
 
-    def __get_reference_records(self, *, record_dict: dict) -> list:
+    def __get_reference_records_from_open_citations(self, *, record_dict: dict) -> list:
         references = []
 
         url = f"{self.__api_url}{record_dict['doi']}"
@@ -173,7 +181,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         self, *, record: colrev.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
-            retrieved_record_dict.get(Fields.TITLE, "NA").lower(),
+            retrieved_record_dict.get(Fields.TITLE, "").lower(),
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
@@ -188,6 +196,85 @@ class BackwardSearchSource(JsonSchemaMixin):
         similarity = sum(similarities[g] * weights[g] for g in range(len(similarities)))
         return similarity
 
+    @classmethod
+    def __deduplicate_all_references(cls, all_references: dict) -> pd.DataFrame:
+        print("Resolving entities in citation network")
+        # Flatten the list of lists into a single list of references, including the record ID
+        all_references_flat = [
+            {**ref, "record_id": record_id}
+            for record_id, refs in all_references.items()
+            for ref in refs
+        ]
+
+        for ref in all_references_flat:
+            ref[Fields.ID] = ref["record_id"] + "_backward_search_" + ref[Fields.ID]
+
+        # Create a DataFrame from the flattened list of references
+        df_all_references = pd.DataFrame(all_references_flat)
+        df_all_references["nr_references"] = 1
+
+        def merge_into_list(values: list) -> str:
+            """Concatenate all values into a single string, separated by commas."""
+            merged_string = ",".join(str(value) for value in values)
+            return merged_string
+
+        def sum_nr_references(values: list) -> int:
+            """Sum all integers in a list."""
+            return sum(values)
+
+        records_df = prep(df_all_references, verbosity_level=0)
+        deduplication_pairs = block(records_df, verbosity_level=0)
+        matched_df = match(deduplication_pairs, verbosity_level=0)
+        duplicate_id_sets = cluster(matched_df, verbosity_level=0)
+        df_all_references = merge(
+            df_all_references,
+            duplicate_id_sets=duplicate_id_sets,
+            merge_functions={
+                Fields.NR_INTEXT_CITATIONS: merge_into_list,
+                "nr_references": sum_nr_references,
+            },
+        )
+        df_all_references.rename(columns={"origin": "bw_search_origins"}, inplace=True)
+        return df_all_references
+
+    @classmethod
+    def __export_crosstab_thresholds(cls, df_all_references: pd.DataFrame) -> None:
+        cross_tabulated_data: typing.Dict[int, dict] = {}
+
+        for in_text_citation_threshold in range(1, 20):
+            for ref_freq_threshold in range(1, 20):
+
+                df_all_references["meets_criteria"] = df_all_references[
+                    Fields.NR_INTEXT_CITATIONS
+                ].apply(
+                    lambda x, in_text_citation_threshold=in_text_citation_threshold: len(
+                        [
+                            citation
+                            for citation in x.split(",")
+                            if int(citation) >= in_text_citation_threshold
+                        ]
+                    )
+                    >= ref_freq_threshold
+                )
+
+                total_references = df_all_references["meets_criteria"].sum()
+
+                if ref_freq_threshold not in cross_tabulated_data:
+                    cross_tabulated_data[ref_freq_threshold] = {}
+                cross_tabulated_data[ref_freq_threshold][
+                    in_text_citation_threshold
+                ] = total_references
+
+        cross_tabulated_df = pd.DataFrame(cross_tabulated_data).T
+        cross_tabulated_df.reset_index(inplace=True)
+        cross_tabulated_df.columns = ["ref_freq_threshold"] + [
+            "in_text_citation_threshold_" + str(i) for i in range(1, 20)
+        ]
+        cross_tabulated_df.to_csv(
+            "cross_tabulated_evaluation.csv", header=True, index=False
+        )
+        print("Exported to cross_tabulated_evaluation.csv.")
+
     def __complement_with_open_citations_data(
         self,
         *,
@@ -195,78 +282,159 @@ class BackwardSearchSource(JsonSchemaMixin):
         records: dict,
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
-        for parent_record_id in {
-            x["bwsearch_ref"] for x in pdf_backward_search_feed.feed_records.values()
-        }:
-            parent_record = records[
-                parent_record_id[: parent_record_id.find("_backward_search_")]
-            ]
 
-            if Fields.DOI not in parent_record:
+        for feed_record_dict in pdf_backward_search_feed.feed_records.values():
+            parent_record = self.__get_parent_record(feed_record_dict, records)
+            if not parent_record:
                 continue
 
-            backward_references = self.__get_reference_records(
+            backward_references = self.__get_reference_records_from_open_citations(
                 record_dict=parent_record
             )
-            updated = 0
-            overall = 0
-            for feed_record_dict in pdf_backward_search_feed.feed_records.values():
-                if feed_record_dict["bwsearch_ref"] != parent_record_id:
-                    continue
-                overall += 1
-                feed_record = colrev.record.Record(data=feed_record_dict)
-                max_similarity = 0.0
-                pos = -1
-                for i, backward_reference in enumerate(backward_references):
-                    similarity = self.__get_similarity(
-                        record=feed_record, retrieved_record_dict=backward_reference
-                    )
-                    if similarity > max_similarity:
-                        pos = i
-                        max_similarity = similarity
-                if max_similarity > 0.9:
-                    feed_record.data.update(**backward_references[pos - 1])
-                    # del backward_references[pos-1]
-                    updated += 1
-            self.review_manager.logger.info(
-                f" updated {updated}/{overall} records cited by {parent_record_id}"
+            self.__update_feed_records_with_open_citations_data(
+                feed_record_dict, backward_references
             )
 
-    def __run_backward_search_on_pdf(
+    def __get_parent_record(self, feed_record_dict: dict, records: dict) -> dict:
+        bw_search_origin = feed_record_dict["bw_search_origins"].split(";")[0]
+        parent_record_id = bw_search_origin[
+            : bw_search_origin.find("_backward_search_")
+        ]
+        return records.get(parent_record_id, {})
+
+    def __update_feed_records_with_open_citations_data(
+        self, feed_record_dict: dict, backward_references: list
+    ) -> None:
+        feed_record = colrev.record.Record(data=feed_record_dict)
+        max_similarity, best_match = self.__find_best_match(
+            feed_record, backward_references
+        )
+
+        if max_similarity > 0.9:
+            feed_record.data.update(**best_match)
+            self.review_manager.logger.info(
+                f"Updated record {feed_record.data[Fields.ID]} with OpenCitations data."
+            )
+
+    def __find_best_match(
+        self, feed_record: colrev.record.Record, backward_references: list
+    ) -> tuple:
+        max_similarity = 0.0
+        best_match = None
+        for backward_reference in backward_references:
+            similarity = self.__get_similarity(
+                record=feed_record, retrieved_record_dict=backward_reference
+            )
+            if similarity > max_similarity:
+                best_match = backward_reference
+                max_similarity = similarity
+        return max_similarity, best_match
+
+    def __get_new_record(
         self,
         *,
-        record: dict,
+        item: dict,
         pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
-        records: dict,
-        rerun: bool,
-    ) -> None:
-        # Note: IDs generated by GROBID for cited references
-        # may change across grobid versions
-        # -> challenge for key-handling/updating searches...
+    ) -> dict:
+        item[Fields.ID] = "new"
+        # Note: multiple source_identifiers are merged in origin field.
+        for feed_record in pdf_backward_search_feed.feed_records.values():
+            feed_record_origins = feed_record["bw_search_origins"].split(",")
+            new_record_origins = item["bw_search_origins"].split(",")
+            if set(feed_record_origins) & set(new_record_origins):
+                item[Fields.ID] = feed_record[Fields.ID]
+                break
 
-        self.review_manager.logger.info(f" run backward search for {record[Fields.ID]}")
-
-        pdf_path = self.review_manager.path / Path(record[Fields.FILE])
-        tei = self.review_manager.get_tei(
-            pdf_path=pdf_path,
-        )
-
-        new_records = tei.get_bibliography(
-            min_intext_citations=self.search_source.search_parameters[
-                "min_intext_citations"
-            ]
-        )
-
-        for new_record in new_records:
-            if "tei_id" in new_record:
-                del new_record["tei_id"]
-            new_record["bwsearch_ref"] = (
-                record[Fields.ID] + "_backward_search_" + new_record[Fields.ID]
+        if item[Fields.ID] == "new":
+            max_id = max(
+                [
+                    int(r[Fields.ID])
+                    for r in pdf_backward_search_feed.feed_records.values()
+                ]
+                or [0]
             )
-            try:
-                pdf_backward_search_feed.set_id(record_dict=new_record)
-            except colrev_exceptions.NotFeedIdentifiableException:
-                continue
+            item[Fields.ID] = str(max_id + 1).rjust(6, "0")
+
+        fields_to_drop = [
+            "meets_criteria",
+            "record_id",
+            "nr_references",
+            "nr_intext_citations",
+            "bwsearch_ref",
+        ]
+        for field in fields_to_drop:
+            if field in item:
+                del item[field]
+        item = {
+            k: v for k, v in item.items() if not pd.isna(v)
+        }  # Drop fields where value is NaN
+        return item
+
+    def run_search(self, rerun: bool) -> None:
+        """Run a search of PDFs (backward search based on GROBID)"""
+
+        self.__validate_source()
+
+        # Do not run in continuous-integration environment
+        if self.review_manager.in_ci_environment():
+            raise colrev_exceptions.SearchNotAutomated(
+                "PDF Backward Search not automated."
+            )
+
+        records = self.review_manager.dataset.load_records_dict()
+
+        if not records:
+            self.review_manager.logger.info(
+                "No records imported. Cannot run backward search yet."
+            )
+            return
+        min_intext_citations = self.search_source.search_parameters[
+            "min_intext_citations"
+        ]
+        self.review_manager.logger.info(
+            f"Set min_intext_citations={min_intext_citations}"
+        )
+        nr_references_threshold = self.search_source.search_parameters["min_ref_freq"]
+        self.review_manager.logger.info(
+            f"Set nr_references_threshold={nr_references_threshold}"
+        )
+
+        selected_records = {
+            rid: record
+            for rid, record in records.items()
+            if self.__bw_search_condition(record=record)
+        }
+
+        all_references = self.__get_all_references(
+            selected_records=selected_records, review_manager=self.review_manager
+        )
+
+        df_all_references = self.__deduplicate_all_references(all_references)
+
+        df_all_references["meets_criteria"] = df_all_references[
+            Fields.NR_INTEXT_CITATIONS
+        ].apply(
+            lambda x: len(
+                [
+                    citation
+                    for citation in x.split(",")
+                    if int(citation) >= int(min_intext_citations)
+                ]
+            )
+            >= int(nr_references_threshold)
+        )
+
+        selected_references = df_all_references[df_all_references["meets_criteria"]]
+        pdf_backward_search_feed = self.search_source.get_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+        )
+
+        for item in selected_references.to_dict(orient="records"):
+            new_record = self.__get_new_record(
+                item=item, pdf_backward_search_feed=pdf_backward_search_feed
+            )
 
             prev_record_dict_version = {}
             if new_record[Fields.ID] in pdf_backward_search_feed.feed_records:
@@ -288,57 +456,14 @@ class BackwardSearchSource(JsonSchemaMixin):
                     update_time_variant_fields=rerun,
                 )
 
-    def run_search(self, rerun: bool) -> None:
-        """Run a search of PDFs (backward search based on GROBID)"""
-
-        self.__validate_source()
-
-        # Do not run in continuous-integration environment
-        if self.review_manager.in_ci_environment():
-            raise colrev_exceptions.SearchNotAutomated(
-                "PDF Backward Search not automated."
-            )
-
-        records = self.review_manager.dataset.load_records_dict()
-
-        if not records:
-            self.review_manager.logger.info(
-                "No records imported. Cannot run backward search yet."
-            )
-            return
-
-        self.review_manager.logger.info(
-            "Set min_intext_citations="
-            f"{self.search_source.search_parameters['min_intext_citations']}"
+        pdf_backward_search_feed.print_post_run_search_infos(
+            records=records,
         )
-
-        pdf_backward_search_feed = self.search_source.get_feed(
-            review_manager=self.review_manager,
-            source_identifier=self.source_identifier,
-            update_only=(not rerun),
-        )
-        for record in records.values():
-            try:
-                if not self.__bw_search_condition(record=record):
-                    continue
-
-                self.__run_backward_search_on_pdf(
-                    record=record,
-                    pdf_backward_search_feed=pdf_backward_search_feed,
-                    records=records,
-                    rerun=rerun,
-                )
-
-            except colrev_exceptions.TEIException:
-                self.review_manager.logger.info("Eror accessing TEI")
 
         self.__complement_with_open_citations_data(
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
         )
 
-        pdf_backward_search_feed.print_post_run_search_infos(
-            records=records,
-        )
         pdf_backward_search_feed.save_feed_file()
 
         if self.review_manager.dataset.has_changes():
@@ -357,6 +482,98 @@ class BackwardSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
+    def __get_all_references(
+        cls,
+        *,
+        selected_records: dict,
+        review_manager: colrev.review_manager.ReviewManager,
+    ) -> dict:
+
+        all_references = {}
+
+        for record in tqdm(selected_records.values()):
+            try:
+
+                review_manager.logger.info(
+                    f" run backward search for {record[Fields.ID]}"
+                )
+
+                pdf_path = review_manager.path / Path(record[Fields.FILE])
+                tei = review_manager.get_tei(
+                    pdf_path=pdf_path,
+                    tei_path=colrev.record.Record(data=record).get_tei_filename(),
+                )
+
+                references = tei.get_references(add_intext_citation_count=True)
+                for reference in references:
+                    if "tei_id" in reference:
+                        del reference["tei_id"]
+                    reference["bwsearch_ref"] = (
+                        record[Fields.ID] + "_backward_search_" + reference[Fields.ID]
+                    )
+
+                all_references[record[Fields.ID]] = references
+
+            except colrev_exceptions.TEIException:
+                review_manager.logger.info("Error accessing TEI")
+            except KeyError as exc:
+                review_manager.logger.info(exc)
+        return all_references
+
+    @classmethod
+    def __get_settings_from_ui(
+        cls, *, params: dict, review_manager: colrev.review_manager.ReviewManager
+    ) -> None:
+
+        question = "Do you want to create an overview for min_ref_freq and min_intext_citations?"
+        create_overview = inquirer.confirm(question)
+
+        if not create_overview:
+            return
+
+        print(
+            "Calculating sample sizes for parameters min_ref_freq and min_intext_citations"
+        )
+        # Assuming there's a function to create an overview, it would be called here.
+        # For example: cls.create_min_intext_citations_overview(params)
+
+        all_records = review_manager.dataset.load_records_dict()
+        selected_records = {
+            record_id: record
+            for record_id, record in all_records.items()
+            if record[Fields.STATUS]
+            in [
+                colrev.record.RecordState.rev_included,
+                colrev.record.RecordState.rev_synthesized,
+            ]
+        }
+
+        all_references = cls.__get_all_references(
+            selected_records=selected_records, review_manager=review_manager
+        )
+
+        df_all_references = cls.__deduplicate_all_references(all_references)
+
+        cls.__export_crosstab_thresholds(df_all_references)
+
+        questions = [
+            inquirer.Text(
+                "in_text_citation_threshold", message="Enter in-text citation threshold"
+            ),
+            inquirer.Text(
+                "ref_freq_threshold", message="Enter reference frequency threshold"
+            ),
+        ]
+        answers = inquirer.prompt(questions)
+
+        try:
+            params["min_intext_citations"] = int(answers["in_text_citation_threshold"])
+            params["min_ref_freq"] = int(answers["ref_freq_threshold"])
+        except ValueError:
+            print("Both thresholds must be integers. Please try again.")
+            return
+
+    @classmethod
     def add_endpoint(
         cls,
         operation: colrev.ops.search.Search,
@@ -364,21 +581,34 @@ class BackwardSearchSource(JsonSchemaMixin):
     ) -> colrev.settings.SearchSource:
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
+        if "min_intext_citations" not in params:
+            cls.__get_settings_from_ui(
+                params=params, review_manager=operation.review_manager
+            )
+        else:
+            assert params["min_intext_citations"].isdigit()
+            assert params["min_ref_freq"].isdigit()
+
         add_source = cls.get_default_source()
         if "min_intext_citations" in params:
-            assert params["min_intext_citations"].isdigit()
             add_source.search_parameters["min_intext_citations"] = int(
                 params["min_intext_citations"]
             )
+        if "min_ref_freq" in params:
+            add_source.search_parameters["min_ref_freq"] = int(params["min_ref_freq"])
+
         return add_source
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
+            for record_dict in records.values():
+                record_dict.pop("bw_search_origins")
             return records
 
         raise NotImplementedError

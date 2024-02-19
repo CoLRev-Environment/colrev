@@ -1,0 +1,65 @@
+name: Make Documentation
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' # Specify the Python version here
+      - name: Install dependencies using Poetry with docs extra
+        run: |
+          python -m pip install poetry
+          poetry install -E docs -E dev
+      - name: Install pre-commit
+        run: poetry run pip install pre-commit
+      - name: Install modules from packages.json via poetry, skipping "colrev"
+        run: |
+          jq -r '.[] | select(.module != "colrev") | .module' colrev/template/packages.json | while read module; do
+            poetry run pip install $module
+          done
+      - name: Setup git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+      - name: Set branch name
+        run: |
+          echo "BRANCH_NAME=docs-update-$(date '+%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+          echo ${{ env.BRANCH_NAME }}
+      - name: Switch to branch ${{ env.BRANCH_NAME }}
+        run: |
+          git checkout -b ${{ env.BRANCH_NAME }}
+      - name: Clean old documentation build
+        run: rm -rf docs/source/dev_docs/_autosummary/*
+      - name: Build documentation with Sphinx
+        run: poetry run sphinx-build -b html docs/source docs/build
+      - name: Run pre-commit hooks excluding black
+        continue-on-error: true
+        run: |
+          poetry run pre-commit run --all-files
+      - name: Commit changes and create pull request
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update documentation"
+            git push --set-upstream origin ${{ env.BRANCH_NAME }}
+            # Fetch the main branch and check for differences
+            git fetch origin main:main
+            if git diff ${{ env.BRANCH_NAME }} main --quiet; then
+              echo "No effective changes to apply"
+            else
+              gh pr create --title "Update documentation" --body "This PR updates the documentation." --head ${{ env.BRANCH_NAME }} --base main
+            fi
+          fi

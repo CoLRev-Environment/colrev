@@ -41,12 +41,12 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.AUTHOR: "Wagner, Gerit and Lukyanenko, Roman and Par, Guy and Paré, Guy",
         Fields.DOI: "10.1177/02683962211048201",
-        Fields.JOURNAL: "NA",
-        Fields.NUMBER: "NA",
-        Fields.PAGES: "NA",
+        Fields.JOURNAL: "",
+        Fields.NUMBER: "",
+        Fields.PAGES: "",
         Fields.TITLE: "Debates and Perspectives Paper",
-        Fields.VOLUME: "NA",
-        Fields.YEAR: "NA",
+        Fields.VOLUME: "",
+        Fields.YEAR: "",
     } == tei_doc.get_metadata()
 
     assert [
@@ -1360,46 +1360,7 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
             Fields.NUMBER: "3",
             Fields.PAGES: "777--794",
         },
-    ] == tei_doc.get_bibliography()
-
-    assert [
-        {
-            Fields.ID: "b58",
-            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-            Fields.TEI_ID: "b58",
-            Fields.AUTHOR: "Larsen, K. and Hovorka, D. and Dennis, A. R",
-            Fields.TITLE: "Understanding the elephant: the discourse approach to boundary identification and corpus construction for theory review articles",
-            Fields.YEAR: "2019",
-            Fields.JOURNAL: "Journal of the Association for Information Systems",
-            Fields.VOLUME: "20",
-            Fields.NUMBER: "7",
-            Fields.PAGES: "887--928",
-        },
-        {
-            Fields.ID: "b62",
-            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-            Fields.TEI_ID: "b62",
-            Fields.AUTHOR: "Li, J. and Larsen, K. and Abbasi, A.",
-            Fields.TITLE: "TheoryOn: a design framework and system for unlocking behavioral knowledge through ontology learning",
-            Fields.YEAR: "2020",
-            Fields.JOURNAL: "MIS Quarterly",
-            Fields.VOLUME: "44",
-            Fields.NUMBER: "4",
-            Fields.PAGES: "1733--1772",
-        },
-        {
-            Fields.ID: "b101",
-            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-            Fields.TEI_ID: "b101",
-            Fields.AUTHOR: "Templier, M. and Paré, G.",
-            Fields.TITLE: "Transparency in literature reviews: an assessment of reporting practices across review types and genres in top IS journals",
-            Fields.YEAR: "2018",
-            Fields.JOURNAL: "European Journal of Information Systems",
-            Fields.VOLUME: "27",
-            Fields.NUMBER: "5",
-            Fields.PAGES: "503--550",
-        },
-    ] == tei_doc.get_bibliography(min_intext_citations=6)
+    ] == tei_doc.get_references()
 
     assert {
         "introduction": [

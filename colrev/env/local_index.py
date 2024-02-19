@@ -19,7 +19,7 @@ import pandas as pd
 import requests_cache
 from git.exc import GitCommandError
 from pybtex.database.input import bibtex
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.constants as c
@@ -117,7 +117,7 @@ class LocalIndex:
         "dblp_key",  # Note : no dots in key names
         "colrev_pdf_id",
         "bibtex",
-        "layered_fields"
+        "layered_fields",
         # "curation_ID"
     ]
 
@@ -868,9 +868,9 @@ class LocalIndex:
 
         if filedata:
             for masterdata_curation in filedata.decode("utf-8").splitlines():
-                masterdata_curations[
+                masterdata_curations[masterdata_curation.lower()] = (
                     masterdata_curation.lower()
-                ] = masterdata_curation.lower()
+                )
 
         return masterdata_curations
 

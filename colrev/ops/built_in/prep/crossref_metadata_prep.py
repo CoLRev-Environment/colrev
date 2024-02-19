@@ -48,7 +48,7 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-
+        self.prep_operation = prep_operation
         self.crossref_source = crossref_connector.CrossrefSearchSource(
             source_operation=prep_operation
         )
@@ -65,9 +65,7 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Crossref API"""
         self.crossref_source.check_availability(source_operation=source_operation)
 
-    def prepare(
-        self, prep_operation: colrev.ops.prep.Prep, record: colrev.record.PrepRecord
-    ) -> colrev.record.Record:
+    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on Crossref metadata"""
 
         if any(
@@ -79,6 +77,6 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
             return record
 
         self.crossref_source.get_masterdata(
-            prep_operation=prep_operation, record=record
+            prep_operation=self.prep_operation, record=record
         )
         return record

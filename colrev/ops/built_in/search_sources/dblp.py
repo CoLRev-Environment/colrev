@@ -42,6 +42,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     __api_url_venues = "https://dblp.org/search/venue/api?q="
     __START_YEAR = 1980
 
+    # TODO : standardize?! should the search-feed already contain namespaced fields?!
     source_identifier = "dblp_key"
     search_types = [
         colrev.settings.SearchType.API,
@@ -260,7 +261,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 item[Fields.AUTHOR] = author_string
 
         if "key" in item:
-            item[Fields.DBLP_KEY] = "https://dblp.org/rec/" + item["key"]
+            item["dblp_key"] = "https://dblp.org/rec/" + item["key"]
 
         if Fields.DOI in item:
             item[Fields.DOI] = item[Fields.DOI].upper()
@@ -335,7 +336,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 if Fields.PAGES in retrieved_record.data:
                     del retrieved_record.data[Fields.PAGES]
                 retrieved_record.add_provenance_all(
-                    source=retrieved_record.data[Fields.DBLP_KEY]
+                    source=retrieved_record.data["dblp_key"]
                 )
 
         # pylint: disable=duplicate-code
@@ -395,10 +396,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             for retrieved_record in self.__retrieve_dblp_records(
                 query=query,
             ):
-                if (
-                    retrieved_record.data[Fields.DBLP_KEY]
-                    != feed_record.data["dblp_key"]
-                ):
+                if retrieved_record.data["dblp_key"] != feed_record.data["dblp_key"]:
                     continue
                 if retrieved_record.data.get("type", "") == "Editorship":
                     continue
@@ -443,7 +441,6 @@ class DBLPSearchSource(JsonSchemaMixin):
                 + f"&format=json&h={batch_size}&f={batch_size_cumulative}"
             )
             batch_size_cumulative += batch_size
-
             retrieved = False
             for retrieved_record in self.__retrieve_dblp_records(url=url):
                 retrieved = True
@@ -452,7 +449,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     "scope" in self.search_source.search_parameters
                     and (
                         f"{self.search_source.search_parameters['scope']['venue_key']}/"
-                        not in retrieved_record.data[Fields.DBLP_KEY]
+                        not in retrieved_record.data["dblp_key"]
                     )
                 ) or retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
                     "article",
@@ -462,7 +459,8 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 try:
                     dblp_feed.set_id(record_dict=retrieved_record.data)
-                except colrev_exceptions.NotFeedIdentifiableException:
+                except colrev_exceptions.NotFeedIdentifiableException as exc:
+                    print(exc)
                     continue
 
                 prev_record_dict_version = {}
@@ -477,7 +475,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 if added:
                     self.review_manager.logger.info(
-                        " retrieve " + retrieved_record.data[Fields.DBLP_KEY]
+                        " retrieve " + retrieved_record.data["dblp_key"]
                     )
                 else:
                     dblp_feed.update_existing_record(
@@ -619,9 +617,10 @@ class DBLPSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils_bib.load_bib_file(
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_operation=load_operation, source=self.search_source
             )
+            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
@@ -652,7 +651,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         save_feed: bool = True,
-        timeout: int = 10,
+        timeout: int = 60,
     ) -> colrev.record.Record:
         """Retrieve masterdata from DBLP based on similarity with the record provided"""
 
@@ -673,7 +672,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             ):
                 if Fields.DBLP_KEY in record.data:
                     if (
-                        retrieved_record.data[Fields.DBLP_KEY]
+                        retrieved_record.data["dblp_key"]
                         != record.data[Fields.DBLP_KEY]
                     ):
                         continue
@@ -699,6 +698,12 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                     dblp_feed.set_id(record_dict=retrieved_record.data)
                     dblp_feed.add_record(record=retrieved_record)
+
+                    # TODO : extract as function (apply similarly in other search sources)
+                    # Assign schema
+                    retrieved_record.data[Fields.DBLP_KEY] = retrieved_record.data.pop(
+                        "dblp_key"
+                    )
 
                     record.merge(
                         merging_record=retrieved_record,

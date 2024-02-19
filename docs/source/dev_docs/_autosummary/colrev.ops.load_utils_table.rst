@@ -20,6 +20,4 @@ colrev.ops.load\_utils\_table
       :template: custom-class-template.rst
       :nosignatures:
 
-      CSVLoader
-      ExcelLoader
-      TableLoadUtility
+      TableLoader

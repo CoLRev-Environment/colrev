@@ -2,6 +2,7 @@
 """SearchSource: Transport Research International Documentation"""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,7 +17,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -184,5 +184,13 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for Transport Research International Documentation"""
+
+        if Fields.YEAR in record.data:
+            if not re.match(r"^\d{4}$", record.data[Fields.YEAR]):
+                result = re.search(r"\d{4}", record.data[Fields.YEAR])
+                if result:
+                    year = result.group(0)
+                    if 1900 < int(year) < 2030:
+                        record.data[Fields.YEAR] = year
 
         return record

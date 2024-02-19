@@ -2,6 +2,8 @@
 """Service to detect languages and handle language codes"""
 from __future__ import annotations
 
+import re
+
 import pycountry
 from lingua import LanguageDetectorBuilder
 
@@ -34,6 +36,52 @@ class LanguageService:
         for country in pycountry.languages:
             self.__lang_code_mapping[country.name.lower()] = country.alpha_3
 
+    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-branches
+    def __determine_alphabet(self, str_to_check: str) -> str:
+        assert len(str_to_check) != 0
+
+        str_to_check = re.sub(r"[\s\d\.\:]*", "", str_to_check)
+
+        nr_greek_letters = 0
+        nr_hangul_characters = 0
+        nr_cyrillic_characters = 0
+        nr_hebrew_characters = 0
+        nr_arabic_characters = 0
+        nr_chinese_characters = 0
+        for character in str_to_check:
+            if "\u0370" <= character <= "\u03FF" or "\u1F00" <= character <= "\u1FFF":
+                nr_greek_letters += 1
+            elif "\uAC00" <= character <= "\uD7A3":
+                nr_hangul_characters += 1
+            elif "\u0400" <= character <= "\u04FF" or "\u0500" <= character <= "\u052F":
+                nr_cyrillic_characters += 1
+            elif "\u0590" <= character <= "\u05FF" or "\uFB1D" <= character <= "\uFB4F":
+                nr_hebrew_characters += 1
+            elif (
+                "\u0600" <= character <= "\u06FF"
+                or "\u0750" <= character <= "\u077F"
+                or "\u08A0" <= character <= "\u08FF"
+                or "\uFB50" <= character <= "\uFDFF"
+                or "\uFE70" <= character <= "\uFEFF"
+            ):
+                nr_arabic_characters += 1
+            elif "\u4E00" <= character <= "\u9FFF" or "\u3400" <= character <= "\u4DBF":
+                nr_chinese_characters += 1
+        if nr_greek_letters / len(str_to_check) > 0.75:
+            return "ell"
+        if nr_hangul_characters / len(str_to_check) > 0.75:
+            return "kor"
+        if nr_cyrillic_characters / len(str_to_check) > 0.75:
+            return "rus"
+        if nr_hebrew_characters / len(str_to_check) > 0.75:
+            return "heb"
+        if nr_arabic_characters / len(str_to_check) > 0.75:
+            return "ara"
+        if nr_chinese_characters / len(str_to_check) > 0.75:
+            return "chi"
+        return ""
+
     def compute_language(self, *, text: str) -> str:
         """Compute the most likely language code"""
 
@@ -41,9 +89,14 @@ class LanguageService:
             return "eng"
 
         language = self.__lingua_language_detector.detect_language_of(text)
+
         if language:
+            # There are too many errors/classifying papers as latin
+            if language.iso_code_639_3.name.lower() == "lat":
+                return ""
             return language.iso_code_639_3.name.lower()
-        return ""
+
+        return self.__determine_alphabet(text)
 
     def compute_language_confidence_values(self, *, text: str) -> list:
         """Computes the most likely languages of a string and their language codes"""

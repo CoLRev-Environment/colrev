@@ -19,14 +19,14 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.apply_merges
       ~Dedupe.check_precondition
       ~Dedupe.conclude
+      ~Dedupe.connected_components
       ~Dedupe.decorate
       ~Dedupe.fix_errors
       ~Dedupe.get_info
+      ~Dedupe.get_records_for_dedupe
       ~Dedupe.main
       ~Dedupe.merge_based_on_global_ids
       ~Dedupe.merge_records
-      ~Dedupe.prep_records
-      ~Dedupe.read_data
       ~Dedupe.unmerge_records
 
 
@@ -42,5 +42,6 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.NON_DUPLICATE_FILE_XLSX
       ~Dedupe.PREVENTED_SAME_SOURCE_MERGE_FILE
       ~Dedupe.SAME_SOURCE_MERGE_FILE
+      ~Dedupe.debug
       ~Dedupe.force_mode
       ~Dedupe.type

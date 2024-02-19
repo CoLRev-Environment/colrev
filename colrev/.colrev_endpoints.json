@@ -28,9 +28,6 @@
             {"package_endpoint_identifier": "colrev.remove_broken_ids",
              "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep"
             },
-            {"package_endpoint_identifier": "colrev.resolve_crossrefs",
-             "endpoint": "colrev.ops.built_in.prep.bibtex_crossref_resolution.BibTexCrossrefResolutionPrep"
-            },
             {"package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
              "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep"
             },
@@ -84,14 +81,8 @@
             }
         ],
         "dedupe": [
-            {"package_endpoint_identifier": "colrev.simple_dedupe",
-             "endpoint": "colrev.ops.built_in.dedupe.simple_dedupe.SimpleDedupe"
-            },
-            {"package_endpoint_identifier": "colrev.active_learning_training",
-             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeTraining"
-            },
-            {"package_endpoint_identifier": "colrev.active_learning_automated",
-             "endpoint": "colrev.ops.built_in.dedupe.active_learning_dedup_io.ActiveLearningDedupeAutomated"
+            {"package_endpoint_identifier": "colrev.dedupe",
+             "endpoint": "colrev.ops.built_in.dedupe.dedupe.Dedupe"
             },
             {"package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
              "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe"
@@ -123,7 +114,10 @@
             },
             {"package_endpoint_identifier": "colrev.website_screenshot",
              "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot"
-            }
+            },
+            {"package_endpoint_identifier": "colrev.download_from_website",
+            "endpoint": "colrev.ops.built_in.pdf_get.download_from_website.WebsiteDownload"
+           }
         ],
         "pdf_get_man": [
             {"package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",
@@ -131,23 +125,17 @@
             }
         ],
         "pdf_prep": [
-            {"package_endpoint_identifier": "colrev.pdf_check_ocr",
-             "endpoint": "colrev.ops.built_in.pdf_prep.check_ocr.PDFCheckOCR"
+            {"package_endpoint_identifier": "colrev.ocrmypdf",
+             "endpoint": "colrev.ops.built_in.pdf_prep.ocrmypdf.OCRMyPDF"
             },
             {"package_endpoint_identifier": "colrev.remove_coverpage",
-             "endpoint": "colrev.ops.built_in.pdf_prep.cover_page.PDFCoverPage"
+             "endpoint": "colrev.ops.built_in.pdf_prep.remove_cover_page.PDFCoverPage"
             },
             {"package_endpoint_identifier": "colrev.remove_last_page",
-             "endpoint": "colrev.ops.built_in.pdf_prep.last_page.PDFLastPage"
+             "endpoint": "colrev.ops.built_in.pdf_prep.remove_last_page.PDFLastPage"
             },
-            {"package_endpoint_identifier": "colrev.validate_pdf_metadata",
-             "endpoint": "colrev.ops.built_in.pdf_prep.metadata_validation.PDFMetadataValidation"
-            },
-            {"package_endpoint_identifier": "colrev.validate_completeness",
-             "endpoint": "colrev.ops.built_in.pdf_prep.completeness_validation.PDFCompletenessValidation"
-            },
-            {"package_endpoint_identifier": "colrev.create_tei",
-             "endpoint": "colrev.ops.built_in.pdf_prep.tei_prep.TEIPDFPrep"
+            {"package_endpoint_identifier": "colrev.grobid_tei",
+             "endpoint": "colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI"
             }
         ],
         "pdf_prep_man": [
@@ -273,6 +261,9 @@
             },
             {"package_endpoint_identifier": "colrev.trid",
              "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation"
+            },
+            {"package_endpoint_identifier": "colrev.semanticscholar",
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource"
             }
         ],
         "review_type": [

@@ -12,7 +12,7 @@ API reference
    :alt: Logo
 
 
-The package interfaces are documented :doc:`here </dev_docs/extensions>`.
+The package interfaces are documented :doc:`here </dev_docs/packages>`.
 
 .. autosummary::
    :toctree: _autosummary

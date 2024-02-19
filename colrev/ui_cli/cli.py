@@ -273,7 +273,6 @@ def init(
 
     Docs: https://colrev.readthedocs.io/en/latest/manual/problem_formulation/init.html
     """
-    import colrev.ops.init
 
     colrev.review_manager.get_init_operation(
         review_type=type,
@@ -515,9 +514,11 @@ def search(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        source_dict = package_manager.add_endpoint_for_operation(
             operation=search_operation, package_identifier=add, params=params
         )
+        search_operation.main(selection_str=str(source_dict["filename"]), rerun=False)
+        return
 
     if not skip:
         import colrev.ui_cli.cli_add_source
@@ -865,6 +866,8 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
         print(f"\n\n{Colors.RED}Same source merges to check:{Colors.END}")
         print("\n- " + "\n- ".join(info["same_source_merges"]))
 
+    print(info["source_overlaps"])
+
 
 @main.command(help_priority=8)
 @click.option(
@@ -914,6 +917,13 @@ def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
 )
 @click.option("--view", is_flag=True, default=False, help="View dedupe info")
 @click.option(
+    "-d",
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Debug mode",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -938,6 +948,7 @@ def dedupe(
     fix_errors: bool,
     gid: bool,
     view: bool,
+    debug: bool,
     verbose: bool,
     force: bool,
 ) -> None:
@@ -962,10 +973,10 @@ def dedupe(
         return
 
     if merge:
-        review_manager.settings.dedupe.same_source_merges = (
-            colrev.settings.SameSourceMergePolicy.warn
-        )
-        dedupe_operation.merge_records(merge=merge)
+        assert "," in merge
+        merge_ids = [i.split(",") for i in merge.split(";")]
+
+        dedupe_operation.merge_records(merge=merge_ids)
         return
 
     if unmerge:
@@ -1006,7 +1017,7 @@ def dedupe(
         __view_dedupe_details(dedupe_operation)
         return
 
-    dedupe_operation.main()
+    dedupe_operation.main(debug=debug)
 
 
 @main.command(help_priority=9)
@@ -1047,7 +1058,7 @@ def dedupe(
 @click.option(
     "--import_table",
     type=click.Path(exists=True),
-    help="Import file with the screening decisions (csv supported)",
+    help="Import file with the screening decisions (csv/xlsx supported)",
 )
 @click.option(
     "--create_split",
@@ -1142,7 +1153,7 @@ def prescreen(
         prescreen_operation.include_records(ids=include)
 
     elif exclude:
-        prescreen_operation.exclude_records(ids=include)
+        prescreen_operation.exclude_records(ids=exclude)
 
     elif setup_custom_script:
         prescreen_operation.setup_custom_script()
@@ -2355,6 +2366,21 @@ def env(
 
     # pylint: disable=too-many-branches
 
+    if update_package_list:
+        if "y" != input(
+            "The following process instantiates objects listed in the "
+            + "colrev/template/package_endpoints.json "
+            + "(including ones that may not be secure).\n"
+            + "Please confirm (y) to proceed."
+        ):
+            return
+
+        package_manager = colrev.env.package_manager.PackageManager()
+        package_manager.update_package_list()
+        return
+
+    # The following options may need a review_manager
+
     review_manager = get_review_manager(
         ctx,
         {
@@ -2362,6 +2388,12 @@ def env(
             "force_mode": True,
         },
     )
+
+    if index:
+        local_index = review_manager.get_local_index()
+        local_index.index()
+        local_index.load_journal_rankings()
+        return
 
     if install:
         env_resources = review_manager.get_resources()
@@ -2418,24 +2450,6 @@ def env(
             )
             logging.info("Removed from local registry: %s", unregister)
         return
-
-    if update_package_list:
-        if "y" != input(
-            "The following process instantiates objects listed in the "
-            + "colrev/template/package_endpoints.json "
-            + "(including ones that may not be secure).\n"
-            + "Please confirm (y) to proceed."
-        ):
-            return
-
-        package_manager = colrev.env.package_manager.PackageManager()
-        package_manager.update_package_list()
-
-    local_index = review_manager.get_local_index()
-
-    if index:
-        local_index.index()
-        local_index.load_journal_rankings()
 
 
 @main.command(help_priority=21)
@@ -2565,6 +2579,11 @@ def settings(
 @main.command(help_priority=22)
 @click.option(
     "-a",
+    "--add",
+    help="Paper to add.",
+    required=False,
+)
+@click.option(
     "--add_hook",
     is_flag=True,
     default=False,
@@ -2578,47 +2597,28 @@ def settings(
 @click.pass_context
 def sync(
     ctx: click.core.Context,
+    add: str,
     add_hook: bool,
     src: Path,
 ) -> None:
     """Sync records from CoLRev environment to non-CoLRev repo"""
 
+    sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
     if add_hook:
-        if not Path(".git").is_dir():
-            print("Not in a git directory.")
-            return
-        if not Path("records.bib").is_file() or not Path("paper.md").is_file():
-            print("Warning: records.bib or paper.md does not exist.")
-            print("Other filenames are not (yet) supported.")
-            return
-
-        if Path(".pre-commit-config.yaml").is_file():
-            if "colrev-hooks-update" in Path(".pre-commit-config.yaml").read_text(
-                encoding="utf-8"
-            ):
-                print("Hook already registered")
-                return
-
-        with open(".pre-commit-config.yaml", "a", encoding="utf-8") as file:
-            file.write(
-                """\n-   repo: local
-    hooks:
-    -   id: colrev-hooks-update
-        name: "CoLRev ReviewManager: update"
-        entry: colrev-hooks-update
-        language: python
-        stages: [commit]
-        files: 'records.bib|paper.md'"""
-            )
-        print("Added pre-commit hook for colrev sync.")
+        sync_operation.add_hook()
         return
+
     if src:
-        sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
         sync_operation.get_cited_papers_from_source(src=Path(src))
         sync_operation.add_to_bib()
         return
 
-    sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
+    if add:
+        sync_operation.add_paper(add)
+        sync_operation.add_to_bib()
+
+        return
+
     sync_operation.get_cited_papers()
 
     if len(sync_operation.non_unique_for_import) > 0:

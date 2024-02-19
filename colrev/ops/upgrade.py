@@ -11,13 +11,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import git
+from pybtex.database.input import bibtex
 from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Colors
-from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -66,6 +66,32 @@ class Upgrade(colrev.operation.Operation):
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
         self.repo.index.add(["settings.json"])
+
+    def load_records_dict(self) -> dict:
+        """
+        Load the records dictionary from a file and parse it using the bibtex parser.
+
+        Returns:
+            dict: The loaded records dictionary.
+        """
+        parser = bibtex.Parser()
+        bib_data = parser.parse_file("data/records.bib")
+        records = colrev.dataset.Dataset.parse_records_dict(
+            records_dict=bib_data.entries
+        )
+        return records
+
+    def save_records_dict(self, *, records: dict) -> None:
+        """
+        Save the records dictionary to a file and add it to the repository index.
+
+        Args:
+            records (dict): The records dictionary to save.
+        """
+        bibtex_str = colrev.dataset.Dataset.parse_bibtex_str(recs_dict_in=records)
+        with open("data/records.bib", "w", encoding="utf-8") as out:
+            out.write(bibtex_str + "\n")
+        self.repo.index.add(["data/records.bib"])
 
     def main(self) -> None:
         """Upgrade a CoLRev project (main entrypoint)"""
@@ -157,8 +183,8 @@ class Upgrade(colrev.operation.Operation):
             },
             {
                 "version": CoLRevVersion("0.10.2"),
-                "target_version": CoLRevVersion("0.10.3"),
-                "script": self.__migrate_0_10_3,
+                "target_version": CoLRevVersion("0.11.0"),
+                "script": self.__migrate_0_11_0,
                 "released": True,
             },
         ]
@@ -375,11 +401,11 @@ class Upgrade(colrev.operation.Operation):
                 continue
             not_missing_fields = []
             for key, prov in record_dict[Fields.MD_PROV].items():
-                if DefectCodes.NOT_MISSING in prov["note"]:
+                if "not-missing" in prov["note"]:
                     not_missing_fields.append(key)
                 prov["note"] = ""
             for key in not_missing_fields:
-                record_dict[Fields.MD_PROV][key]["note"] = DefectCodes.NOT_MISSING
+                record_dict[Fields.MD_PROV][key]["note"] = "not-missing"
             if "cited_by_file" in record_dict:
                 del record_dict["cited_by_file"]
             if "cited_by_id" in record_dict:
@@ -440,7 +466,7 @@ class Upgrade(colrev.operation.Operation):
 
         self.__save_settings(settings)
 
-        records = self.review_manager.dataset.load_records_dict()
+        records = self.load_records_dict()
         for record_dict in records.values():
             if "pubmedid" in record_dict:
                 record = colrev.record.Record(data=record_dict)
@@ -485,7 +511,8 @@ class Upgrade(colrev.operation.Operation):
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.save_records_dict(records=records)
+
         return self.repo.is_dirty()
 
     # pylint: disable=too-many-branches
@@ -549,8 +576,33 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_10_3(self) -> bool:
+    def __migrate_0_11_0(self) -> bool:
         settings = self.__load_settings_dict()
+        if settings["project"]["review_type"] == "curated_masterdata":
+            settings["project"]["review_type"] = "colrev.curated_masterdata"
+
+        if "dedupe" in settings:
+            settings["dedupe"].pop("same_source_merges", None)
+
+        settings["pdf_get"]["defects_to_ignore"] = []
+
+        settings["pdf_prep"]["pdf_prep_package_endpoints"] = [
+            {"endpoint": "colrev.ocrmypdf"},
+            {"endpoint": "colrev.grobid_tei"},
+        ] + [
+            x
+            for x in settings["pdf_prep"]["pdf_prep_package_endpoints"]
+            if x["endpoint"]
+            not in [
+                "colrev.check_ocr",
+                "colrev.pdf_check_ocr",
+                "colrev.validate_pdf_metadata",
+                "colrev.validate_completeness",
+                "colrev.create_tei",
+                "colrev.tei_prep",
+            ]
+        ]
+
         if settings["project"]["review_type"] == "curated_masterdata":
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
@@ -567,6 +619,28 @@ class Upgrade(colrev.operation.Operation):
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
+
+        for p_round in settings["prep"]["prep_rounds"]:
+            p_round["prep_package_endpoints"] = [
+                x
+                for x in p_round["prep_package_endpoints"]
+                if x["endpoint"] != "colrev.resolve_crossrefs"
+            ]
+            if settings["project"]["review_type"] == "colrev.curated_masterdata":
+                p_round["prep_package_endpoints"] = [
+                    {"endpoint": "colrev.colrev_curation"}
+                ] + p_round["prep_package_endpoints"]
+
+        self.__save_settings(settings)
+
+        records = self.load_records_dict()
+        for record_dict in records.values():
+            if Fields.MD_PROV in record_dict:
+                for key, value in record_dict[Fields.MD_PROV].items():
+                    record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
+                        "not-missing", "IGNORE:missing"
+                    )
+        self.save_records_dict(records=records)
 
         return self.repo.is_dirty()
 

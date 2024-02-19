@@ -20,6 +20,9 @@ class ThesisWithMultipleAuthorsChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the thesis-with-multiple-authors checks"""
 
+        if record.ignored_defect(field=Fields.AUTHOR, defect=self.msg):
+            return
+
         if self.__multiple_authored_thesis(record=record):
             record.add_masterdata_provenance_note(key=Fields.AUTHOR, note=self.msg)
         else:

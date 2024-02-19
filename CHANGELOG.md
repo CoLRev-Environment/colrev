@@ -15,6 +15,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+## 0.11.0 - 2024-02-17
+
+### Added
+
+- Separate PDF quality model ([#268](https://github.com/CoLRev-Environment/colrev/pull/268))
+- `download_from_website` pdf-get package
+- Separate loader utilities for nbib, ris, bib
+- SearchSources: SemanticScholar ([#288](https://github.com/CoLRev-Environment/colrev/pull/288)), Arxiv ([#203](https://github.com/CoLRev-Environment/colrev/pull/203))
+- Constants module for Fields, ENTRYTYPES, etc.
+- CEP003 for SearchSources
+- New default dedupe package based on [bib-dedupe](https://github.com/CoLRev-Environment/bib-dedupe)
+- Colrev pandas for Jupyter notebooks
+- GitHub actions: pip-install test, make documentation
+
+### Changed
+
+- Integrated `colrev.resolve_crossrefs` into `load_utils_bib.py`
+- Defect codes can be ignored based on the `IGNORE:` prefix ([#269](https://github.com/CoLRev-Environment/colrev/pull/269))
+- Documentation for setup (VM, MacOS, WSL)
+- Revised interfaces for SearchSources
+- Integrated: pdf_dir + video_dir > files_dir
+- poetry extras
+- Backward search: export of parameters and expected sample sizes
+- Replace thefuzz witz rapidfuzz
+
+### Removed
+
+- Package based on dedupe-io, including incompatible dependencies
+- Crossref resolution package (integrated in bib-loader)
+
 ## 0.10.4 - 2023-10-15
 
 ### Fixed

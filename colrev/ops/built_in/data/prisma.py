@@ -48,6 +48,7 @@ class PRISMA(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.review_manager = data_operation.review_manager
+        self.data_operation = data_operation
 
         # Set default values (if necessary)
         if "version" not in settings:
@@ -61,7 +62,6 @@ class PRISMA(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
 
         self.csv_path = self.review_manager.output_dir / Path("PRISMA.csv")
-        self.data_operation = data_operation
 
         self.settings.diagram_path = [
             self.review_manager.output_dir / path for path in self.settings.diagram_path
@@ -85,9 +85,7 @@ class PRISMA(JsonSchemaMixin):
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __export_csv(
-        self, data_operation: colrev.ops.data.Data, silent_mode: bool
-    ) -> None:
+    def __export_csv(self, silent_mode: bool) -> None:
         csv_resource_path = Path("template/") / Path("prisma/PRISMA.csv")
         self.csv_path.parent.mkdir(exist_ok=True, parents=True)
 
@@ -103,30 +101,30 @@ class PRISMA(JsonSchemaMixin):
         prisma_data["ind"] = prisma_data["data"]
         prisma_data.set_index("ind", inplace=True)
         prisma_data.loc["database_results", "n"] = status_stats.overall.md_retrieved
-        prisma_data.loc[
-            "duplicates", "n"
-        ] = status_stats.currently.md_duplicates_removed
+        prisma_data.loc["duplicates", "n"] = (
+            status_stats.currently.md_duplicates_removed
+        )
         prisma_data.loc["records_screened", "n"] = status_stats.overall.rev_prescreen
-        prisma_data.loc[
-            "records_excluded", "n"
-        ] = status_stats.overall.rev_prescreen_excluded
+        prisma_data.loc["records_excluded", "n"] = (
+            status_stats.overall.rev_prescreen_excluded
+        )
         if status_stats.currently.exclusion:
             prisma_data.loc["dbr_excluded", "n"] = "; ".join(
                 f"{key}, {val}" for key, val in status_stats.currently.exclusion.items()
             )
         else:
-            prisma_data.loc[
-                "dbr_excluded", "n"
-            ] = f"Overall, {status_stats.overall.rev_excluded}"
+            prisma_data.loc["dbr_excluded", "n"] = (
+                f"Overall, {status_stats.overall.rev_excluded}"
+            )
 
         prisma_data.loc["dbr_assessed", "n"] = status_stats.overall.rev_screen
         prisma_data.loc["new_studies", "n"] = status_stats.overall.rev_included
-        prisma_data.loc[
-            "dbr_notretrieved_reports", "n"
-        ] = status_stats.overall.pdf_not_available
-        prisma_data.loc[
-            "dbr_sought_reports", "n"
-        ] = status_stats.overall.rev_prescreen_included
+        prisma_data.loc["dbr_notretrieved_reports", "n"] = (
+            status_stats.overall.pdf_not_available
+        )
+        prisma_data.loc["dbr_sought_reports", "n"] = (
+            status_stats.overall.rev_prescreen_included
+        )
 
         prisma_data.to_csv(self.csv_path, index=False)
         self.review_manager.logger.debug(f"Exported {self.csv_path}")
@@ -134,9 +132,7 @@ class PRISMA(JsonSchemaMixin):
         if not status_stats.completeness_condition and not silent_mode:
             self.review_manager.logger.info("Review not (yet) complete")
 
-    def __export_diagram(
-        self, data_operation: colrev.ops.data.Data, silent_mode: bool
-    ) -> None:
+    def __export_diagram(self, silent_mode: bool) -> None:
         if not self.csv_path.is_file():
             self.review_manager.logger.error("File %s does not exist.", self.csv_path)
             self.review_manager.logger.info("Complete processing and use colrev data")
@@ -165,14 +161,10 @@ class PRISMA(JsonSchemaMixin):
                     + f"/data/{diagram_relative_path}"
                 )
 
-            self.__call_docker_build_process(
-                data_operation=data_operation, script=script
-            )
+            self.__call_docker_build_process(script=script)
             csv_relative_path.unlink()
 
-    def __call_docker_build_process(
-        self, *, data_operation: colrev.ops.data.Data, script: str
-    ) -> None:
+    def __call_docker_build_process(self, *, script: str) -> None:
         try:
             uid = os.stat(self.review_manager.settings_path).st_uid
             gid = os.stat(self.review_manager.settings_path).st_gid
@@ -204,19 +196,17 @@ class PRISMA(JsonSchemaMixin):
 
     def update_data(
         self,
-        data_operation: colrev.ops.data.Data,
         records: dict,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,  # pylint: disable=unused-argument
         silent_mode: bool,
     ) -> None:
         """Update the data/prisma diagram"""
 
-        self.__export_csv(data_operation=data_operation, silent_mode=silent_mode)
-        self.__export_diagram(data_operation=data_operation, silent_mode=silent_mode)
+        self.__export_csv(silent_mode=silent_mode)
+        self.__export_diagram(silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,
-        data_operation: colrev.ops.data.Data,  # pylint: disable=unused-argument
         synthesized_record_status_matrix: dict,
         endpoint_identifier: str,
     ) -> None:
@@ -228,7 +218,6 @@ class PRISMA(JsonSchemaMixin):
 
     def get_advice(
         self,
-        review_manager: colrev.review_manager.ReviewManager,  # pylint: disable=unused-argument
     ) -> dict:
         """Get advice on the next steps (for display in the colrev status)"""
 
@@ -236,7 +225,7 @@ class PRISMA(JsonSchemaMixin):
 
         path_str = ",".join(
             [
-                str(x.relative_to(review_manager.path))
+                str(x.relative_to(self.review_manager.path))
                 for x in self.settings.diagram_path
             ]
         )

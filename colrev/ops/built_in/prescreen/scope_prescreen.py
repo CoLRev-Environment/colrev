@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.language_service
 import colrev.env.local_index
 import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
 
@@ -20,13 +21,14 @@ if typing.TYPE_CHECKING:
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
 
+# to check: https://asistdl.onlinelibrary.wiley.com/doi/full/10.1002/asi.24816
+
 
 @zope.interface.implementer(
     colrev.env.package_manager.PrescreenPackageEndpointInterface
 )
 @dataclass
 class ScopePrescreen(JsonSchemaMixin):
-
     """Rule-based prescreen (scope)"""
 
     settings: ScopePrescreenSettings
@@ -97,9 +99,17 @@ class ScopePrescreen(JsonSchemaMixin):
             assert settings["TimeScopeTo"] < 2100
         if "LanguageScope" in settings:
             self.language_service = colrev.env.language_service.LanguageService()
-            self.language_service.validate_iso_639_3_language_codes(
-                lang_code_list=settings["LanguageScope"]
-            )
+            try:
+                self.language_service.validate_iso_639_3_language_codes(
+                    lang_code_list=settings["LanguageScope"]
+                )
+            except colrev_exceptions.InvalidLanguageCodeException as exc:
+                raise colrev_exceptions.InvalidSettingsError(
+                    msg=f"Invalid LanguageScope in scope_prescreen: {settings['LanguageScope']}"
+                    + " (should be iso_639_3 language code)",
+                    fix_per_upgrade=False,
+                ) from exc
+
         if "ExcludePredatoryJournals" not in settings:
             settings["ExcludePredatoryJournals"] = True
 
@@ -117,7 +127,6 @@ class ScopePrescreen(JsonSchemaMixin):
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
     def __predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
-        print(self.settings.ExcludePredatoryJournals)
         if not self.settings.ExcludePredatoryJournals:
             return
         if Fields.JOURNAL not in record.data:
@@ -264,12 +273,10 @@ class ScopePrescreen(JsonSchemaMixin):
             0, {**{"endpoint": "colrev.scope_prescreen"}, **params_dict}
         )
 
-    # pylint: disable=unused-argument
     def run_prescreen(
         self,
-        prescreen_operation: colrev.ops.prescreen.Prescreen,
         records: dict,
-        split: list,
+        split: list,  # pylint: disable=unused-argument
     ) -> dict:
         """Prescreen records based on the scope parameters"""
 

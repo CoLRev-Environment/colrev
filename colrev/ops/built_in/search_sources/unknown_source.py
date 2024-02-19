@@ -11,7 +11,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from thefuzz import fuzz
+from rapidfuzz import fuzz
 
 import colrev.env.language_service
 import colrev.env.package_manager
@@ -296,21 +296,23 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        records = colrev.ops.load_utils_bib.load_bib_file(
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
             load_operation=load_operation, source=self.search_source
         )
+        records = bib_loader.load_bib_file()
+
         return records
 
     def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        csv_loader = colrev.ops.load_utils_table.CSVLoader(
+        table_loader = colrev.ops.load_utils_table.TableLoader(
             load_operation=load_operation, source=self.search_source
         )
-        table_entries = csv_loader.load_table_entries()
-        records = csv_loader.convert_to_records(entries=table_entries)
+        table_entries = table_loader.load_table_entries()
+        records = table_loader.convert_to_records(entries=table_entries)
         return records
 
     def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        excel_loader = colrev.ops.load_utils_table.ExcelLoader(
+        excel_loader = colrev.ops.load_utils_table.TableLoader(
             load_operation=load_operation, source=self.search_source
         )
         table_entries = excel_loader.load_table_entries()
@@ -325,11 +327,63 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     def __load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        enl_mapping = {
+            ENTRYTYPES.ARTICLE: {
+                "T": Fields.TITLE,
+                "A": Fields.AUTHOR,
+                "D": Fields.YEAR,
+                "B": Fields.JOURNAL,
+                "V": Fields.VOLUME,
+                "N": Fields.NUMBER,
+                "P": Fields.PAGES,
+                "X": Fields.ABSTRACT,
+                "U": Fields.URL,
+                "8": "date",
+                "0": "type",
+            },
+            ENTRYTYPES.MISC: {
+                "T": Fields.TITLE,
+                "A": Fields.AUTHOR,
+                "D": Fields.YEAR,
+                "B": Fields.JOURNAL,
+                "V": Fields.VOLUME,
+                "N": Fields.NUMBER,
+                "P": Fields.PAGES,
+                "X": Fields.ABSTRACT,
+                "U": Fields.URL,
+                "8": "date",
+                "0": "type",
+            },
+        }
+
+        entrytype_map = {
+            "Journal Article": ENTRYTYPES.ARTICLE,
+            "Inproceedings": ENTRYTYPES.MISC,
+        }
+
+        list_fields = {"A": " and "}
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            load_operation=load_operation, source=self.search_source
+            load_operation=load_operation,
+            source=self.search_source,
+            list_fields=list_fields,
         )
-        entries = enl_loader.load_enl_entries()
-        records = enl_loader.convert_to_records(entries=entries)
+        records = enl_loader.load_enl_entries()
+
+        for record_dict in records.values():
+            if "0" not in record_dict:
+                keys_to_check = ["V", "N"]
+                if any(k in record_dict for k in keys_to_check):
+                    record_dict["0"] = "Journal Article"
+                else:
+                    record_dict["0"] = "Inproceedings"
+            enl_loader.apply_entrytype_mapping(
+                record_dict=record_dict, entrytype_map=entrytype_map
+            )
+            enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
+            record_dict[Fields.ID] = record_dict[Fields.URL].replace(
+                "https://aisel.aisnet.org/", ""
+            )
+
         return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:

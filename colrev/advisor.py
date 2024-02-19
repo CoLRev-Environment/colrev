@@ -211,9 +211,9 @@ class Advisor:
         if remote_connected:
             collaboration_instructions["title"] = "Versioning and collaboration"
         else:
-            collaboration_instructions[
-                "title"
-            ] = "Versioning (not connected to shared repository)"
+            collaboration_instructions["title"] = (
+                "Versioning (not connected to shared repository)"
+            )
             item = {
                 "title": "Project not yet shared",
                 "level": "WARNING",
@@ -432,9 +432,11 @@ class Advisor:
                         selected_packages=[data_package_endpoint],
                         operation=check_operation,
                     )
+                    if data_package_endpoint["endpoint"] not in endpoint_dict:
+                        continue
                     endpoint = endpoint_dict[data_package_endpoint["endpoint"]]
 
-                    advice = endpoint.get_advice(self.review_manager)  # type: ignore
+                    advice = endpoint.get_advice()  # type: ignore
                     if advice:
                         review_instructions.append(advice)
 
@@ -532,8 +534,8 @@ class Advisor:
             if not self.review_manager.dataset.has_untracked_search_records():
                 instruction = {
                     "info": "Review iteration completed.",
-                    "msg": "To start the next iteration of the review, "
-                    + "add new search results (to data/search)",
+                    "msg": "To start the next iteration of the review, run the search",
+                    "cmd": "colrev search",
                 }
                 review_instructions.append(instruction)
             else:
