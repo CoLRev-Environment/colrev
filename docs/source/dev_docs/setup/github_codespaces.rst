@@ -40,12 +40,13 @@ While on "@username ➜ /workspaces/colrev (main) $" run the following commands 
    git config --global user.email "lisa.smith@stud.uni-bamberg.de"
    git config --global credential.helper store
 
-[Optional] Add additional repos to GitGraph:
+[Optional] Add additional repos to current workspace and Git Graph:
 
 ::
 
    # In local VSCode setup click on "File" (top left menu)-> "Add Folder To Workspace..." -> enter absolute path to git repository
    # The newly added repo will be visible in Git Graph "Repo" drop-down menu
+   # If the workspace settings is not saved, newly added repositories will not persist
 
 [Optional] Navigation in the terminal, open and edit text files:
 
@@ -54,8 +55,11 @@ While on "@username ➜ /workspaces/colrev (main) $" run the following commands 
    # navigate with
    ls
    cd
-   # open any text files with
+   # open any text files directly in VSCode
    code mytextfile.txt
+   # or in the terminal window with nano or vim
+   nano mytextfile2.txt
+   vim mytextfile3.txt
 
 [Optional, diagnostics] Check if everything is setup correctly:
 
