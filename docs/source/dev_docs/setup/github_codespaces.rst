@@ -1,25 +1,24 @@
 Install GitHub Codespaces
 -------------------------
+A short introduction video into GitHub Codespaces: `How to use GitHub Codespaces for Coding and Data Science <https://www.youtube.com/watch?v=kvJf8s18Vr4>`__
+
 Prerequisites for web-based usage:
 
 - GitHub Account
 - Firefox or Chromium-based Browser
 
-Setup `Codespaces here <https://github.com/features/codespaces>`__
+Setup `Codespaces here <https://github.com/features/codespaces>`__:
 
 - Click: Get started for free
 - Click: New codespace
 - Click: Select a repository
 - Enter: colrev
 - Select: ColRev-Environment/colrev
-- Select: Machine type 4-core
-- Leave the rest on default settings (Branch: main, Region: Europe West)
+- Leave the rest on default settings (Branch: main; Region: Europe West; Machine type 2-core)
 - Uncheck "Auto-delete codespace" in "..." menu
 - Let "GitHub Codespaces configuration" do some initial setup (happens automatically)
 
-While on "@username ➜ /workspaces/colrev (main) $" run the following commands:
-
-Setup the CoLRev development environment:
+While on "@username ➜ /workspaces/colrev (main) $" run the following commands to setup the CoLRev development environment:
 
 ::
 
@@ -33,20 +32,20 @@ Setup the CoLRev development environment:
 - Install Visual Studio Code available for Windows, Linux and macOS (`download <https://code.visualstudio.com/download>`__)
 - `Short intro <https://www.youtube.com/watch?v=u9ZQpKGTog4>`__ to "Git Graph" extension for VSCode (only for local installation of VSCode, web-based view does not work/stays blank)
 
-[Optional] Add additional repos to GitGraph:
-
-::
-
-   # In local VSCode setup click on "File" (top left menu)-> "Add Folder To Workspace..." -> enter absolute path to git repository
-   # The newly added repo will be visible in Git Graph "Repo" drop-down menu
-
-[Optional] Update your git credentials:
+[Optional, recommended] Update your git credentials:
 
 ::
 
    git config --global user.name "Lisa Smith"
    git config --global user.email "lisa.smith@stud.uni-bamberg.de"
    git config --global credential.helper store
+
+[Optional] Add additional repos to GitGraph:
+
+::
+
+   # In local VSCode setup click on "File" (top left menu)-> "Add Folder To Workspace..." -> enter absolute path to git repository
+   # The newly added repo will be visible in Git Graph "Repo" drop-down menu
 
 [Optional] Navigation in the terminal, open and edit text files:
 
