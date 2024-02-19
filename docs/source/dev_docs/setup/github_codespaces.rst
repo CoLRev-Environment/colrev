@@ -1,5 +1,5 @@
-Install GitHub Codespaces for web-based programming
----------------------------------------------------
+Install GitHub Codespaces
+-------------------------
 Prerequisites for web-based usage:
 
 - GitHub Account
@@ -32,6 +32,13 @@ Setup the CoLRev development environment:
 
 - Install Visual Studio Code available for Windows, Linux and macOS (`download <https://code.visualstudio.com/download>`__)
 - `Short intro <https://www.youtube.com/watch?v=u9ZQpKGTog4>`__ to "Git Graph" extension for VSCode (only for local installation of VSCode, web-based view does not work/stays blank)
+
+[Optional] Add additional repos to GitGraph:
+
+::
+
+   # In local VSCode setup click on "File" (top left menu)-> "Add Folder To Workspace..." -> enter absolute path to git repository
+   # The newly added repo will be visible in Git Graph "Repo" drop-down menu 
 
 [Optional] Update your git credentials:
 
