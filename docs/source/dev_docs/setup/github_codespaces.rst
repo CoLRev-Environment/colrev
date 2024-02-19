@@ -46,7 +46,7 @@ While on "@username ➜ /workspaces/colrev (main) $" run the following commands 
 
    # In local VSCode setup click on "File" (top left menu)-> "Add Folder To Workspace..." -> enter absolute path to git repository
    # The newly added repo will be visible in Git Graph "Repo" drop-down menu
-   # If the workspace settings is not saved, newly added repositories will not persist
+   # If the workspace settings is not saved, newly added repositories will not persist in Git Graph
 
 [Optional] Navigation in the terminal, open and edit text files:
 
