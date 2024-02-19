@@ -47,3 +47,4 @@ The last sections of the setup explain how to setup CoLRev on Windows using the 
    setup/part_3_colrev
    setup/windows_wsl2
    setup/macos_vm
+   setup/github_codespaces
