@@ -440,7 +440,7 @@ def retrieve(
     type=str,
     help="Parameters",
 )
-@click.option("-v", "--view", is_flag=True, default=False, help="View search sources")
+@click.option("--view", is_flag=True, default=False, help="View search sources")
 @click.option(
     "-s",
     "--selected",
@@ -512,6 +512,11 @@ def search(
 
     search_operation = review_manager.get_search_operation()
 
+    if view:
+        for source in search_operation.sources:
+            search_operation.review_manager.p_printer.pprint(source)
+        return
+
     if add:
         package_manager = review_manager.get_package_manager()
         source_dict = package_manager.add_endpoint_for_operation(
@@ -528,10 +533,6 @@ def search(
         )
         cli_source_adder.add_new_sources()
 
-    if view:
-        for source in search_operation.sources:
-            search_operation.review_manager.p_printer.pprint(source)
-        return
     if setup_custom_script:
         import colrev.ui_cli.setup_custom_scripts
 
