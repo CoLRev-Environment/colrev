@@ -255,7 +255,6 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         file_provenance = record.get_field_provenance(key=Fields.FILE)
 
         record.print_pdf_prep_man()
-
         record_dict = records[item[Fields.ID]]
         record = colrev.record.Record(data=record_dict)
         if (
@@ -272,6 +271,12 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         filepath = self.review_manager.path / Path(record_dict[Fields.FILE])
         if not filepath.is_file():
             filepath = self.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
+        if not filepath.is_file():
+            input(
+                f"{Colors.ORANGE}Warning: PDF file for record {record_dict['ID']} not found. "
+                f"Manual retrieval may be required.{Colors.END}"
+            )
+            return records
 
         try:
             record.data.update(
