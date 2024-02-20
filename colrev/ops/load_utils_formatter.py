@@ -92,8 +92,7 @@ class LoadFormatter:
                 continue
             if "\\" in record.data[field]:
                 record.data[field] = self.__unescape_latex(input_str=record.data[field])
-            if "<" in record.data[field]:
-                record.data[field] = self.__unescape_html(input_str=record.data[field])
+            record.data[field] = self.__unescape_html(input_str=record.data[field])
 
             record.data[field] = (
                 record.data[field]
