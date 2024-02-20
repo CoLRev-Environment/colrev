@@ -1090,7 +1090,7 @@ def dedupe(
     "--setup_custom_script",
     is_flag=True,
     default=False,
-    help="Setup template for custom search script.",
+    help="Setup template for custom prescreen script.",
 )
 @click.option(
     "-v",
@@ -1241,7 +1241,7 @@ def prescreen(
     "--setup_custom_script",
     is_flag=True,
     default=False,
-    help="Setup template for custom search script.",
+    help="Setup template for custom screen script.",
 )
 @click.option(
     "-v",
@@ -1478,7 +1478,7 @@ def pdfs(
     "--setup_custom_script",
     is_flag=True,
     default=False,
-    help="Setup template for custom search script.",
+    help="Setup template for custom pdf-get script.",
 )
 @click.option(
     "-v",
@@ -1753,7 +1753,7 @@ def __print_pdf_hashes(*, pdf_path: Path) -> None:
     "--setup_custom_script",
     is_flag=True,
     default=False,
-    help="Setup template for custom search script.",
+    help="Setup template for custom pdf-prep script.",
 )
 @click.option(
     "-v",
@@ -1998,7 +1998,7 @@ def pdf_prep_man(
     "--setup_custom_script",
     is_flag=True,
     default=False,
-    help="Setup template for custom search script.",
+    help="Setup template for custom data script.",
 )
 @click.option(
     "-v",
