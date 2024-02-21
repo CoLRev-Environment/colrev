@@ -128,33 +128,20 @@ class Screen(colrev.operation.Operation):
         # )
         return screen_data
 
-    def add_criterion(self, *, criterion_to_add: str) -> None:
+    def add_criterion(
+        self, *, criterion_name: str, criterion: colrev.settings.ScreenCriterion
+    ) -> None:
         """Add a screening criterion to the records and settings"""
 
-        assert criterion_to_add.count(",") == 2
-        (
-            criterion_name,
-            criterion_type_str,
-            criterion_explanation,
-        ) = criterion_to_add.split(",")
-        criterion_type = colrev.settings.ScreenCriterionType[criterion_type_str]
-
-        records = self.review_manager.dataset.load_records_dict()
-
-        if criterion_name not in self.review_manager.settings.screen.criteria:
-            add_criterion = colrev.settings.ScreenCriterion(
-                explanation=criterion_explanation,
-                criterion_type=criterion_type,
-                comment="",
-            )
-            self.review_manager.settings.screen.criteria[criterion_name] = add_criterion
-
-            self.review_manager.save_settings()
-            self.review_manager.dataset.add_setting_changes()
-        else:
+        if criterion_name in self.review_manager.settings.screen.criteria:
             print(f"Error: criterion {criterion_name} already in settings")
             return
 
+        self.review_manager.settings.screen.criteria[criterion_name] = criterion
+        self.review_manager.save_settings()
+        self.review_manager.dataset.add_setting_changes()
+
+        records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if record_dict[Fields.STATUS] not in [
                 colrev.record.RecordState.rev_included,

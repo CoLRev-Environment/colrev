@@ -1294,7 +1294,21 @@ def screen(
         screen_operation.include_all_in_screen(persist=include_all_always)
         return
     if add_criterion:
-        screen_operation.add_criterion(criterion_to_add=add_criterion)
+        assert add_criterion.count(",") == 2
+        (
+            criterion_name,
+            criterion_type_str,
+            criterion_explanation,
+        ) = add_criterion.split(",")
+        criterion_type = colrev.settings.ScreenCriterionType[criterion_type_str]
+        criterion = colrev.settings.ScreenCriterion(
+            explanation=criterion_explanation,
+            criterion_type=criterion_type,
+            comment="",
+        )
+        screen_operation.add_criterion(
+            criterion_name=criterion_name, criterion=criterion
+        )
         return
     if delete_criterion:
         screen_operation.delete_criterion(criterion_to_delete=delete_criterion)
