@@ -118,7 +118,7 @@ def print_diff_pair(record_pair: list) -> None:
         print()
 
 
-def __validate_dedupe(
+def _validate_dedupe(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: dict,
@@ -148,7 +148,7 @@ def __validate_dedupe(
             continue
 
 
-def __validate_prep_prescreen_exclusions(
+def _validate_prep_prescreen_exclusions(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: dict,
@@ -188,7 +188,7 @@ def __validate_prep_prescreen_exclusions(
             )
 
 
-def __validate_prep(
+def _validate_prep(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: dict,
@@ -244,7 +244,7 @@ def __validate_prep(
         )
 
 
-def __validate_properties(
+def _validate_properties(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: dict,
@@ -264,7 +264,7 @@ def __validate_properties(
     )
 
 
-def __validate_contributor_commits(
+def _validate_contributor_commits(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: dict,
@@ -291,7 +291,7 @@ def __validate_contributor_commits(
     print()
 
 
-def __validate_general(
+def _validate_general(
     *,
     validate_operation: colrev.operation.Operation,
     validation_details: dict,
@@ -330,34 +330,34 @@ def validate(
 
     for key, details in validation_details.items():
         if key == "prep":
-            __validate_prep(
+            _validate_prep(
                 validate_operation=validate_operation,
                 validation_details=details,
                 threshold=threshold,
             )
         elif key == "prep_prescreen_exclusions":
-            __validate_prep_prescreen_exclusions(
+            _validate_prep_prescreen_exclusions(
                 validate_operation=validate_operation,
                 validation_details=details,
             )
         elif key == "dedupe":
-            __validate_dedupe(
+            _validate_dedupe(
                 validate_operation=validate_operation,
                 validation_details=details,
                 threshold=threshold,
             )
         elif key == "properties":
-            __validate_properties(
+            _validate_properties(
                 validate_operation=validate_operation,
                 validation_details=details,
             )
         elif key == "contributor_commits":
-            __validate_contributor_commits(
+            _validate_contributor_commits(
                 validate_operation=validate_operation,
                 validation_details=details,
             )
         elif key == "general":
-            __validate_general(
+            _validate_general(
                 validate_operation=validate_operation,
                 validation_details=details,
             )

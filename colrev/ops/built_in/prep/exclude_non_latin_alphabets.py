@@ -44,7 +44,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.prep_operation = prep_operation
 
-    def __mostly_latin_alphabet(self, str_to_check: str) -> bool:
+    def _mostly_latin_alphabet(self, str_to_check: str) -> bool:
         assert len(str_to_check) != 0
         nr_latin = 0
         for character in str_to_check:
@@ -68,7 +68,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
             ]
         )
 
-        if str_to_check and not self.__mostly_latin_alphabet(str_to_check):
+        if str_to_check and not self._mostly_latin_alphabet(str_to_check):
             record.prescreen_exclude(reason="non_latin_alphabet")
 
         return record

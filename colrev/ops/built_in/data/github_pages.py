@@ -77,7 +77,7 @@ class GithubPages(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __setup_github_pages_branch(self) -> None:
+    def _setup_github_pages_branch(self) -> None:
         # if branch does not exist: create and add index.html
         self.review_manager.logger.info("Setup gh-pages branch")
         self.git_repo.git.checkout("--orphan", self.GH_PAGES_BRANCH_NAME)
@@ -122,7 +122,7 @@ class GithubPages(JsonSchemaMixin):
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
-    def __update_data(
+    def _update_data(
         self,
         *,
         silent_mode: bool,
@@ -160,7 +160,7 @@ class GithubPages(JsonSchemaMixin):
 
         self.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
 
-    def __push_branch(
+    def _push_branch(
         self,
         *,
         silent_mode: bool,
@@ -200,7 +200,7 @@ class GithubPages(JsonSchemaMixin):
             if not silent_mode:
                 self.review_manager.logger.info("No remotes specified")
 
-    def __check_gh_pages_setup(self) -> None:
+    def _check_gh_pages_setup(self) -> None:
         username, project = (
             self.git_repo.remotes.origin.url.replace("https://github.com/", "")
             .replace(".git", "")
@@ -265,13 +265,13 @@ class GithubPages(JsonSchemaMixin):
 
                     # update
                     self.git_repo.git.checkout(active_branch)
-                    self.__update_data(
+                    self._update_data(
                         silent_mode=silent_mode,
                     )
 
                     # Push gh-pages branch to remote origin
                     if self.settings.auto_push:
-                        self.__push_branch(
+                        self._push_branch(
                             silent_mode=silent_mode,
                         )
                 except git.exc.GitCommandError as exc:  # pylint: disable=no-member
@@ -283,21 +283,21 @@ class GithubPages(JsonSchemaMixin):
                 if self.GH_PAGES_BRANCH_NAME not in [
                     h.name for h in self.git_repo.heads
                 ]:
-                    self.__setup_github_pages_branch()
+                    self._setup_github_pages_branch()
 
                 # update
                 self.git_repo.git.checkout(active_branch)
-                self.__update_data(
+                self._update_data(
                     silent_mode=silent_mode,
                 )
 
                 # Push gh-pages branch to remote origin
                 if self.settings.auto_push:
-                    self.__push_branch(
+                    self._push_branch(
                         silent_mode=silent_mode,
                     )
             self.git_repo.git.checkout(active_branch)
-            self.__check_gh_pages_setup()
+            self._check_gh_pages_setup()
         else:
             self.review_manager.logger.warning(
                 "Cannot push github pages because there is no remote origin. "
@@ -305,11 +305,11 @@ class GithubPages(JsonSchemaMixin):
             )
             # create branch
             if self.GH_PAGES_BRANCH_NAME not in [h.name for h in self.git_repo.heads]:
-                self.__setup_github_pages_branch()
+                self._setup_github_pages_branch()
 
             # update
             self.git_repo.git.checkout(active_branch)
-            self.__update_data(
+            self._update_data(
                 silent_mode=silent_mode,
             )
 

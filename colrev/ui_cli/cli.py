@@ -49,7 +49,7 @@ package_manager = colrev.env.package_manager.PackageManager()
 SHELL_MODE = False
 
 
-def __custom_startswith(string: str, incomplete: str) -> bool:
+def _custom_startswith(string: str, incomplete: str) -> bool:
     """A custom completion matching that supports case insensitive matching"""
     if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
         string = string.lower()
@@ -57,7 +57,7 @@ def __custom_startswith(string: str, incomplete: str) -> bool:
     return string.startswith(incomplete)
 
 
-click_completion.core.startswith = __custom_startswith
+click_completion.core.startswith = _custom_startswith
 click_completion.init()
 
 
@@ -860,7 +860,7 @@ def prep_man(
     prep_man_operation.main()
 
 
-def __view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
+def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     info = dedupe_operation.get_info()
 
     if len(info["same_source_merges"]) > 0:
@@ -1015,7 +1015,7 @@ def dedupe(
         return
 
     if view:
-        __view_dedupe_details(dedupe_operation)
+        _view_dedupe_details(dedupe_operation)
         return
 
     dedupe_operation.main(debug=debug)
@@ -1312,7 +1312,7 @@ def screen(
     screen_operation.main(split_str=split)
 
 
-def __extract_coverpage(*, cover: Path) -> None:
+def _extract_coverpage(*, cover: Path) -> None:
     cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
     cp_path.mkdir(exist_ok=True)
 
@@ -1337,9 +1337,9 @@ def pdf(
     while ret in ["c", "h", ""]:
         ret = input("Option (c: remove cover page, h: show hashes, q: quit)")
         if ret == "c":
-            __extract_coverpage(cover=Path(path))
+            _extract_coverpage(cover=Path(path))
         elif ret == "h":
-            __print_pdf_hashes(pdf_path=Path(path))
+            _print_pdf_hashes(pdf_path=Path(path))
         # elif ret == "o":
         #     print("TODO : ocr")
         # elif ret == "r":
@@ -1667,7 +1667,7 @@ def pdf_get_man(
     pdf_get_man_operation.main()
 
 
-def __print_pdf_hashes(*, pdf_path: Path) -> None:
+def _print_pdf_hashes(*, pdf_path: Path) -> None:
     from PyPDF2 import PdfFileReader
     import colrev.qm.colrev_pdf_id
 
@@ -1825,7 +1825,7 @@ def pdf_prep(
         print("Stopped the process")
 
 
-def __delete_first_pages_cli(
+def _delete_first_pages_cli(
     pdf_prep_man_operation: colrev.ops.pdf_prep_man.PDFPrepMan, record_id: str
 ) -> None:
     records = pdf_prep_man_operation.review_manager.dataset.load_records_dict()
@@ -1945,7 +1945,7 @@ def pdf_prep_man(
             operation=pdf_prep_man_operation, package_identifier=add, params=params
         )
     if delete_first_page:
-        __delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
+        _delete_first_pages_cli(pdf_prep_man_operation, delete_first_page)
         return
     if discard:
         pdf_prep_man_operation.discard()
@@ -2195,7 +2195,7 @@ def trace(
     trace_operation.main(record_id=id)
 
 
-def __select_target_repository(environment_registry: list) -> Path:
+def _select_target_repository(environment_registry: list) -> Path:
     while True:
         for i, local_source in enumerate(environment_registry):
             print(
@@ -2246,13 +2246,13 @@ def distribute(ctx: click.core.Context, path: Path, verbose: bool, force: bool) 
     distribute_operation = review_manager.get_distribute_operation()
     environment_registry = distribute_operation.get_environment_registry()
 
-    target = __select_target_repository(environment_registry=environment_registry)
+    target = _select_target_repository(environment_registry=environment_registry)
     # Note : add a "distribution mode" option?
     # (whole file -> add as source/load vs. records individually like a prescreen)
     distribute_operation.main(path=path, target=target)
 
 
-def __print_environment_status(
+def _print_environment_status(
     review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     environment_manager = review_manager.get_environment_manager()
@@ -2425,7 +2425,7 @@ def env(
         return
 
     if status:
-        __print_environment_status(review_manager)
+        _print_environment_status(review_manager)
         return
 
     if register:
@@ -2758,7 +2758,7 @@ def push(
     )
 
 
-def __validate_show(ctx: click.core.Context, param: str, value: str) -> None:
+def _validate_show(ctx: click.core.Context, param: str, value: str) -> None:
     if value not in ["sample", "settings", "prisma", "venv"]:
         raise click.BadParameter("Invalid argument")
 
@@ -2785,7 +2785,7 @@ def show(  # type: ignore
     keyword: str,
     verbose: bool,
     force: bool,
-    callback=__validate_show,
+    callback=_validate_show,
 ) -> None:
     """Show aspects (sample, ...)"""
 

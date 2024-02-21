@@ -15,7 +15,7 @@ from colrev.constants import Fields
 class LanguageService:
     """Service to detect languages and handle language codes"""
 
-    __eng_false_negatives = ["editorial", "introduction"]
+    _eng_false_negatives = ["editorial", "introduction"]
 
     def __init__(self) -> None:
         # Note : Lingua is tested/evaluated relative to other libraries:
@@ -24,7 +24,7 @@ class LanguageService:
         # The langdetect library is non-deterministic, especially for short strings
         # https://pypi.org/project/langdetect/
 
-        self.__lingua_language_detector = (
+        self._lingua_language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
         )
 
@@ -32,13 +32,13 @@ class LanguageService:
         # https://pypi.org/project/langcodes/
         # https://github.com/flyingcircusio/pycountry
 
-        self.__lang_code_mapping = {}
+        self._lang_code_mapping = {}
         for country in pycountry.languages:
-            self.__lang_code_mapping[country.name.lower()] = country.alpha_3
+            self._lang_code_mapping[country.name.lower()] = country.alpha_3
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
-    def __determine_alphabet(self, str_to_check: str) -> str:
+    def _determine_alphabet(self, str_to_check: str) -> str:
         assert len(str_to_check) != 0
 
         str_to_check = re.sub(r"[\s\d\.\:]*", "", str_to_check)
@@ -85,10 +85,10 @@ class LanguageService:
     def compute_language(self, *, text: str) -> str:
         """Compute the most likely language code"""
 
-        if text.lower() in self.__eng_false_negatives:
+        if text.lower() in self._eng_false_negatives:
             return "eng"
 
-        language = self.__lingua_language_detector.detect_language_of(text)
+        language = self._lingua_language_detector.detect_language_of(text)
 
         if language:
             # There are too many errors/classifying papers as latin
@@ -96,18 +96,16 @@ class LanguageService:
                 return ""
             return language.iso_code_639_3.name.lower()
 
-        return self.__determine_alphabet(text)
+        return self._determine_alphabet(text)
 
     def compute_language_confidence_values(self, *, text: str) -> list:
         """Computes the most likely languages of a string and their language codes"""
 
-        if text.lower() in self.__eng_false_negatives:
+        if text.lower() in self._eng_false_negatives:
             return [("eng", 1.0)]
 
-        predictions = (
-            self.__lingua_language_detector.compute_language_confidence_values(
-                text=text
-            )
+        predictions = self._lingua_language_detector.compute_language_confidence_values(
+            text=text
         )
         predictions_unified = []
         for prediction in predictions:
@@ -149,8 +147,8 @@ class LanguageService:
             record.data[Fields.LANGUAGE] = "deu"
 
         if len(record.data[Fields.LANGUAGE]) != 3:
-            if record.data[Fields.LANGUAGE].lower() in self.__lang_code_mapping:
-                record.data[Fields.LANGUAGE] = self.__lang_code_mapping[
+            if record.data[Fields.LANGUAGE].lower() in self._lang_code_mapping:
+                record.data[Fields.LANGUAGE] = self._lang_code_mapping[
                     record.data[Fields.LANGUAGE].lower()
                 ]
 

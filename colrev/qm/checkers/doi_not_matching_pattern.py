@@ -16,7 +16,7 @@ class DOIPatternChecker:
 
     msg = DefectCodes.DOI_NOT_MATCHING_PATTERN
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-    __DOI_REGEX = r"^10.\d{4,9}\/"
+    _DOI_REGEX = r"^10.\d{4,9}\/"
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -30,7 +30,7 @@ class DOIPatternChecker:
             return
 
         if (
-            not re.match(self.__DOI_REGEX, record.data[Fields.DOI])
+            not re.match(self._DOI_REGEX, record.data[Fields.DOI])
             or record.data[Fields.DOI].islower()
         ):
             record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)

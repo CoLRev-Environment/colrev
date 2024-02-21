@@ -114,8 +114,8 @@ class Prep(colrev.operation.Operation):
         "cited_by_file",
     ]
 
-    __cpu = 1
-    __prep_commit_id = "HEAD"
+    _cpu = 1
+    _prep_commit_id = "HEAD"
 
     def __init__(
         self,
@@ -139,25 +139,25 @@ class Prep(colrev.operation.Operation):
         self.polish = False
         self.debug_mode = False
         self.pad = 0
-        self.__stats: typing.Dict[str, typing.List[timedelta]] = {}
+        self._stats: typing.Dict[str, typing.List[timedelta]] = {}
 
         self.temp_prep_lock = Lock()
         self.current_temp_records = Path(".colrev/cur_temp_recs.bib")
         self.temp_records = Path(".colrev/temp_recs.bib")
 
-    def __add_stats(
+    def _add_stats(
         self, *, prep_round_package_endpoint: dict, start_time: datetime
     ) -> None:
-        if prep_round_package_endpoint["endpoint"] not in self.__stats:
-            self.__stats[prep_round_package_endpoint["endpoint"]] = [
+        if prep_round_package_endpoint["endpoint"] not in self._stats:
+            self._stats[prep_round_package_endpoint["endpoint"]] = [
                 datetime.now() - start_time
             ]
         else:
-            self.__stats[prep_round_package_endpoint["endpoint"]].append(
+            self._stats[prep_round_package_endpoint["endpoint"]].append(
                 datetime.now() - start_time
             )
 
-    def __print_stats(self) -> None:
+    def _print_stats(self) -> None:
         if self.review_manager.verbose_mode:
             print("Runtime statistics (averages)")
             averaged_list = [
@@ -165,7 +165,7 @@ class Prep(colrev.operation.Operation):
                     "script": script,
                     "average": sum(deltalist, timedelta(0)) / len(deltalist),
                 }
-                for script, deltalist in self.__stats.items()
+                for script, deltalist in self._stats.items()
             ]
             for item in sorted(
                 averaged_list,
@@ -186,7 +186,7 @@ class Prep(colrev.operation.Operation):
                 )
             print()
 
-    def __print_diffs_for_debug(
+    def _print_diffs_for_debug(
         self,
         *,
         prior: colrev.record.PrepRecord,
@@ -226,7 +226,7 @@ class Prep(colrev.operation.Operation):
             print("\n")
             time.sleep(0.1)
 
-    def __package_prep(
+    def _package_prep(
         self,
         prep_round_package_endpoint: dict,
         record: colrev.record.PrepRecord,
@@ -251,12 +251,12 @@ class Prep(colrev.operation.Operation):
 
             start_time = datetime.now()
             preparation_record = endpoint.prepare(preparation_record)
-            self.__add_stats(
+            self._add_stats(
                 start_time=start_time,
                 prep_round_package_endpoint=prep_round_package_endpoint,
             )
 
-            self.__print_diffs_for_debug(
+            self._print_diffs_for_debug(
                 prior=prior,
                 preparation_record=preparation_record,
                 prep_package_endpoint=endpoint,
@@ -272,7 +272,7 @@ class Prep(colrev.operation.Operation):
                 record.update_by_record(update_record=preparation_record)
                 raise colrev_exceptions.PreparationBreak
         except ReadTimeout:
-            self.__add_stats(
+            self._add_stats(
                 start_time=start_time,
                 prep_round_package_endpoint=prep_round_package_endpoint,
             )
@@ -284,7 +284,7 @@ class Prep(colrev.operation.Operation):
 
         except colrev_exceptions.ServiceNotAvailableException as exc:
             if self.review_manager.force_mode:
-                self.__add_stats(
+                self._add_stats(
                     start_time=start_time,
                     prep_round_package_endpoint=prep_round_package_endpoint,
                 )
@@ -292,7 +292,7 @@ class Prep(colrev.operation.Operation):
             else:
                 raise exc
 
-    def __print_post_package_prep_polish_info(
+    def _print_post_package_prep_polish_info(
         self,
         *,
         record: colrev.record.PrepRecord,
@@ -350,7 +350,7 @@ class Prep(colrev.operation.Operation):
                 + f"{progress}{prior_state} →  {record.data['colrev_status']}{Colors.END}"
             )
 
-    def __print_post_package_prep_info(
+    def _print_post_package_prep_info(
         self,
         record: colrev.record.PrepRecord,
         item: dict,
@@ -366,7 +366,7 @@ class Prep(colrev.operation.Operation):
             )
 
         if self.polish:
-            self.__print_post_package_prep_polish_info(
+            self._print_post_package_prep_polish_info(
                 record=record, prior_state=prior_state, progress=progress
             )
         else:
@@ -410,7 +410,7 @@ class Prep(colrev.operation.Operation):
                     + f"{progress}{prior_state} →  {target_state}{Colors.END}"
                 )
 
-    def __post_package_prep(
+    def _post_package_prep(
         self,
         record: colrev.record.PrepRecord,
         preparation_record: colrev.record.PrepRecord,
@@ -430,11 +430,11 @@ class Prep(colrev.operation.Operation):
         record.run_quality_model(qm=self.quality_model, set_prepared=not self.polish)
 
         if not self.review_manager.verbose_mode:
-            self.__print_post_package_prep_info(
+            self._print_post_package_prep_info(
                 record=record, item=item, prior_state=prior_state
             )
 
-    def __save_to_temp(self, *, record: colrev.record.Record) -> None:
+    def _save_to_temp(self, *, record: colrev.record.Record) -> None:
         rec_str = self.review_manager.dataset.parse_bibtex_str(
             recs_dict_in={record.data[Fields.ID]: record.get_data()}
         )
@@ -447,7 +447,7 @@ class Prep(colrev.operation.Operation):
         except ValueError:
             pass
 
-    def __complete_resumed_operation(self, *, prepared_records: list) -> None:
+    def _complete_resumed_operation(self, *, prepared_records: list) -> None:
         if self.temp_records.is_file():
             temp_recs = self.review_manager.dataset.load_records_dict(
                 file_path=self.temp_records
@@ -460,7 +460,7 @@ class Prep(colrev.operation.Operation):
         self.temp_records.unlink(missing_ok=True)
         self.current_temp_records.unlink(missing_ok=True)
 
-    def __validate_record(
+    def _validate_record(
         self, *, record: colrev.record.Record, prep_round_package_endpoint: str
     ) -> None:
         if Fields.STATUS not in record.data:
@@ -526,30 +526,30 @@ class Prep(colrev.operation.Operation):
             item["prep_round_package_endpoints"]
         ):
             try:
-                self.__package_prep(
+                self._package_prep(
                     prep_round_package_endpoint,
                     record,
                     preparation_record,
                 )
-                self.__validate_record(
+                self._validate_record(
                     record=record,
                     prep_round_package_endpoint=prep_round_package_endpoint,
                 )
             except colrev_exceptions.PreparationBreak:
                 break
 
-        self.__post_package_prep(
+        self._post_package_prep(
             record=record,
             preparation_record=preparation_record,
             item=item,
             prior_state=prior_state,
         )
 
-        self.__save_to_temp(record=record)
+        self._save_to_temp(record=record)
 
         return record.get_data()
 
-    def __select_record_list_for_reset(self, *, record_list: list[dict]) -> list[dict]:
+    def _select_record_list_for_reset(self, *, record_list: list[dict]) -> list[dict]:
         record_list = [
             rec
             for rec in record_list
@@ -577,7 +577,7 @@ class Prep(colrev.operation.Operation):
             self.review_manager.report_logger.error(msg)
         return record_list
 
-    def __get_revlist_for_reset(self) -> typing.Iterator[tuple]:
+    def _get_revlist_for_reset(self) -> typing.Iterator[tuple]:
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = str(
@@ -595,9 +595,9 @@ class Prep(colrev.operation.Operation):
         )
         return revlist
 
-    def __reset(self, *, record_list: list[dict]) -> None:
-        record_list = self.__select_record_list_for_reset(record_list=record_list)
-        revlist = self.__get_revlist_for_reset()
+    def _reset(self, *, record_list: list[dict]) -> None:
+        record_list = self._select_record_list_for_reset(record_list=record_list)
+        revlist = self._get_revlist_for_reset()
 
         record_reset_list = [[record, deepcopy(record)] for record in record_list]
 
@@ -660,7 +660,7 @@ class Prep(colrev.operation.Operation):
             else:
                 print(f"Error: record not found (ID={reset_id})")
 
-        self.__reset(record_list=records_to_reset)
+        self._reset(record_list=records_to_reset)
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.create_commit(
@@ -761,7 +761,7 @@ class Prep(colrev.operation.Operation):
         prep_round.prep_package_endpoints.append({"endpoint": "custom_prep_script"})
         self.review_manager.save_settings()
 
-    def __load_prep_data(self, *, polish: bool = False) -> dict:
+    def _load_prep_data(self, *, polish: bool = False) -> dict:
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -796,7 +796,7 @@ class Prep(colrev.operation.Operation):
 
         return prep_data
 
-    def __get_preparation_data(
+    def _get_preparation_data(
         self,
         *,
         prep_round: colrev.settings.PrepRound,
@@ -805,13 +805,13 @@ class Prep(colrev.operation.Operation):
         polish: bool = False,
     ) -> list:
         if self.debug_mode:
-            prepare_data = self.__load_prep_data_for_debug(
+            prepare_data = self._load_prep_data_for_debug(
                 debug_ids=debug_ids, debug_file=debug_file
             )
             if prepare_data["nr_tasks"] == 0:
                 print("ID not found in history.")
         else:
-            prepare_data = self.__load_prep_data(polish=polish)
+            prepare_data = self._load_prep_data(polish=polish)
         nr_items = len(prepare_data["items"])
 
         if self.current_temp_records.is_file():
@@ -882,7 +882,7 @@ class Prep(colrev.operation.Operation):
             )
         return prep_data
 
-    def __retrieve_records_from_history(
+    def _retrieve_records_from_history(
         self,
         *,
         original_records: list[dict],
@@ -913,7 +913,7 @@ class Prep(colrev.operation.Operation):
 
         return prior_records
 
-    def __load_prep_data_for_debug(
+    def _load_prep_data_for_debug(
         self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
         if debug_file:
@@ -947,7 +947,7 @@ class Prep(colrev.operation.Operation):
             )
             # self.review_manager.logger.info("Current record")
             # self.review_manager.p_printer.pprint(original_records)
-            records = self.__retrieve_records_from_history(
+            records = self._retrieve_records_from_history(
                 original_records=original_records,
                 condition_state=colrev.record.RecordState.md_imported,
             )
@@ -962,7 +962,7 @@ class Prep(colrev.operation.Operation):
             }
         return prep_data
 
-    def __setup_prep_round(
+    def _setup_prep_round(
         self, *, i: int, prep_round: colrev.settings.PrepRound
     ) -> None:
         # pylint: disable=redefined-outer-name,invalid-name,global-statement
@@ -1020,7 +1020,7 @@ class Prep(colrev.operation.Operation):
                 )
                 endpoint.check_availability(source_operation=self)  # type: ignore
 
-    def __log_record_change_scores(
+    def _log_record_change_scores(
         self, *, preparation_data: list, prepared_records: list
     ) -> None:
         for previous_record_item in preparation_data:
@@ -1041,7 +1041,7 @@ class Prep(colrev.operation.Operation):
                     + f"Change score: {round(change, 2)}"
                 )
 
-    def __log_details(self, *, prepared_records: list) -> None:
+    def _log_details(self, *, prepared_records: list) -> None:
         nr_recs = len(
             [
                 record
@@ -1112,7 +1112,7 @@ class Prep(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.create_commit(msg="Skip prep")
 
-    def __initialize_prep(self, *, polish: bool, debug_ids: str, cpu: int) -> None:
+    def _initialize_prep(self, *, polish: bool, debug_ids: str, cpu: int) -> None:
         if not polish:
             self.review_manager.logger.info("Prep")
         else:
@@ -1143,15 +1143,15 @@ class Prep(colrev.operation.Operation):
         if debug_ids != "NA":
             self.debug_mode = True
 
-        self.__cpu = cpu
+        self._cpu = cpu
 
         # Note: for unit testing, we use a simple loop (instead of parallel)
         # to ensure that the IDs of feed records don't change
         unit_testing = "test_prep" == inspect.stack()[1][3]
         if unit_testing or self.debug_mode:
-            self.__cpu = 1
+            self._cpu = 1
 
-    def __prep_packages_ram_heavy(self, prep_round: colrev.settings.PrepRound) -> bool:
+    def _prep_packages_ram_heavy(self, prep_round: colrev.settings.PrepRound) -> bool:
         prep_pe_names = [r["endpoint"] for r in prep_round.prep_package_endpoints]
         ram_reavy = "colrev.exclude_languages" in prep_pe_names  # type: ignore
         self.review_manager.logger.info(
@@ -1159,28 +1159,28 @@ class Prep(colrev.operation.Operation):
         )
         return ram_reavy
 
-    def __get_prep_pool(
+    def _get_prep_pool(
         self, *, prep_round: colrev.settings.PrepRound
     ) -> mp.pool.ThreadPool:
-        if self.__prep_packages_ram_heavy(prep_round=prep_round):
+        if self._prep_packages_ram_heavy(prep_round=prep_round):
             pool = Pool(mp.cpu_count() // 2)
         else:
             # Note : if we use too many CPUS,
             # a "too many open files" exception is thrown
-            pool = Pool(self.__cpu)
+            pool = Pool(self._cpu)
         self.review_manager.logger.info(
             "Info: ✔ = quality-assured by CoLRev community curators"
         )
         return pool
 
-    def __create_prep_commit(
+    def _create_prep_commit(
         self,
         *,
         previous_preparation_data: list,
         prepared_records: list,
         prep_round: colrev.settings.PrepRound,
     ) -> None:
-        self.__log_record_change_scores(
+        self._log_record_change_scores(
             preparation_data=previous_preparation_data,
             prepared_records=prepared_records,
         )
@@ -1190,28 +1190,28 @@ class Prep(colrev.operation.Operation):
                 records={r[Fields.ID]: r for r in prepared_records}, partial=True
             )
 
-            self.__log_details(prepared_records=prepared_records)
+            self._log_details(prepared_records=prepared_records)
 
             self.review_manager.create_commit(
                 msg=f"Prepare records ({prep_round.name})",
             )
-            self.__prep_commit_id = (
+            self._prep_commit_id = (
                 self.review_manager.dataset.get_repo().head.commit.hexsha
             )
             if not self.review_manager.high_level_operation:
                 print()
         self.review_manager.reset_report_logger()
 
-        self.__print_stats()
+        self._print_stats()
 
-    def __post_prep(self) -> None:
+    def _post_prep(self) -> None:
         if not self.review_manager.high_level_operation:
             print()
 
         self.review_manager.logger.info("To validate the changes, use")
 
         self.review_manager.logger.info(
-            f"{Colors.ORANGE}colrev validate {self.__prep_commit_id}{Colors.END}"
+            f"{Colors.ORANGE}colrev validate {self._prep_commit_id}{Colors.END}"
         )
         if not self.review_manager.high_level_operation:
             print()
@@ -1235,15 +1235,15 @@ class Prep(colrev.operation.Operation):
     ) -> None:
         """Preparation of records (main entrypoint)"""
 
-        self.__initialize_prep(polish=polish, debug_ids=debug_ids, cpu=cpu)
+        self._initialize_prep(polish=polish, debug_ids=debug_ids, cpu=cpu)
 
         try:
             for i, prep_round in enumerate(
                 self.review_manager.settings.prep.prep_rounds
             ):
-                self.__setup_prep_round(i=i, prep_round=prep_round)
+                self._setup_prep_round(i=i, prep_round=prep_round)
 
-                preparation_data = self.__get_preparation_data(
+                preparation_data = self._get_preparation_data(
                     prep_round=prep_round,
                     debug_file=debug_file,
                     debug_ids=debug_ids,
@@ -1256,21 +1256,21 @@ class Prep(colrev.operation.Operation):
                     print()
                     return
 
-                if self.__cpu == 1:
+                if self._cpu == 1:
                     # Note: preparation_data is not turned into a list of records.
                     prepared_records = []
                     for item in preparation_data:
                         record = self.prepare(item)
                         prepared_records.append(record)
                 else:
-                    pool = self.__get_prep_pool(prep_round=prep_round)
+                    pool = self._get_prep_pool(prep_round=prep_round)
                     prepared_records = pool.map(self.prepare, preparation_data)
                     pool.close()
                     pool.join()
 
-                self.__complete_resumed_operation(prepared_records=prepared_records)
+                self._complete_resumed_operation(prepared_records=prepared_records)
 
-                self.__create_prep_commit(
+                self._create_prep_commit(
                     previous_preparation_data=previous_preparation_data,
                     prepared_records=prepared_records,
                     prep_round=prep_round,
@@ -1297,4 +1297,4 @@ class Prep(colrev.operation.Operation):
             self.review_manager.dataset.set_ids()
             self.review_manager.create_commit(msg="Set IDs")
 
-        self.__post_prep()
+        self._post_prep()

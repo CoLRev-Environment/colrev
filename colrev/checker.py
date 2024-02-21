@@ -47,7 +47,7 @@ class Checker:
             last_colrev_version += "0"
         return [last_colrev_version, current_colrev_version]
 
-    def __check_software(self) -> None:
+    def _check_software(self) -> None:
         last_version, current_version = self.get_colrev_versions()
         if last_version != current_version:
             raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
@@ -63,11 +63,11 @@ class Checker:
         """Check the repository setup"""
 
         # 1. git repository?
-        if not self.__is_git_repo():
+        if not self._is_git_repo():
             raise colrev_exceptions.RepoSetupError()
 
         # 2. colrev project?
-        if not self.__is_colrev_project():
+        if not self._is_colrev_project():
             raise colrev_exceptions.RepoSetupError(
                 "No colrev repository."
                 + "To retrieve a shared repository, use colrev init."
@@ -76,7 +76,7 @@ class Checker:
             )
 
         # 3. Pre-commit hooks installed?
-        self.__require_colrev_hooks_installed()
+        self._require_colrev_hooks_installed()
 
     @classmethod
     def in_virtualenv(cls) -> bool:
@@ -91,7 +91,7 @@ class Checker:
 
         return get_base_prefix_compat() != sys.prefix
 
-    def __check_git_conflicts(self) -> None:
+    def _check_git_conflicts(self) -> None:
         # Note: when check is called directly from the command line.
         # pre-commit hooks automatically notify on merge conflicts
 
@@ -103,7 +103,7 @@ class Checker:
                 if stage != 0:
                     raise colrev_exceptions.GitConflictError(Path(path))
 
-    def __is_git_repo(self) -> bool:
+    def _is_git_repo(self) -> bool:
         try:
             if not (self.review_manager.path / Path(".git")).is_dir():
                 return False
@@ -112,7 +112,7 @@ class Checker:
         except InvalidGitRepositoryError:
             return False
 
-    def __is_colrev_project(self) -> bool:
+    def _is_colrev_project(self) -> bool:
         required_paths = [
             Path(".pre-commit-config.yaml"),
             Path(".gitignore"),
@@ -122,7 +122,7 @@ class Checker:
             return False
         return True
 
-    def __get_installed_hooks(self) -> list:
+    def _get_installed_hooks(self) -> list:
         installed_hooks = []
         with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
             pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.SafeLoader)
@@ -130,14 +130,14 @@ class Checker:
             installed_hooks.extend([hook["id"] for hook in repository["hooks"]])
         return installed_hooks
 
-    def __require_colrev_hooks_installed(self) -> bool:
+    def _require_colrev_hooks_installed(self) -> bool:
         required_hooks = [
             "colrev-hooks-check",
             "colrev-hooks-format",
             "colrev-hooks-report",
             "colrev-hooks-share",
         ]
-        installed_hooks = self.__get_installed_hooks()
+        installed_hooks = self._get_installed_hooks()
         hooks_activated = set(required_hooks).issubset(set(installed_hooks))
         if not hooks_activated:
             missing_hooks = [x for x in required_hooks if x not in installed_hooks]
@@ -188,7 +188,7 @@ class Checker:
 
         return True
 
-    def __retrieve_ids_from_bib(self, *, file_path: Path) -> list:
+    def _retrieve_ids_from_bib(self, *, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         record_ids = []
         with open(file_path, encoding="utf8") as file:
@@ -200,7 +200,7 @@ class Checker:
                 line = file.readline()
         return record_ids
 
-    def __check_colrev_origins(self, *, status_data: dict) -> None:
+    def _check_colrev_origins(self, *, status_data: dict) -> None:
         """Check colrev_origins"""
 
         # Check whether each record has an origin
@@ -217,7 +217,7 @@ class Checker:
         #     all_record_links = []
         #     for bib_file in self.review_manager.search_dir.glob("*.bib"):
         #         self.review_manager.logger.debug(bib_file)
-        #         search_ids = self.__retrieve_ids_from_bib(file_path=bib_file)
+        #         search_ids = self._retrieve_ids_from_bib(file_path=bib_file)
         #         for search_id in search_ids:
         #             all_record_links.append(bib_file.name + "/" + search_id)
         #     delta = set(status_data["record_links_in_bib"]) - set(all_record_links)
@@ -268,7 +268,7 @@ class Checker:
         #     )
 
     # pylint: disable=too-many-arguments
-    def __check_individual_record_screen(
+    def _check_individual_record_screen(
         self,
         *,
         record_id: str,
@@ -329,7 +329,7 @@ class Checker:
                     f"{record_id}, {status}, {screen_crit}"
                 )
 
-    def __check_records_screen(self, *, status_data: dict) -> None:
+    def _check_records_screen(self, *, status_data: dict) -> None:
         """Check consistency of screening criteria and status"""
 
         if not status_data["screening_criteria_list"]:
@@ -350,7 +350,7 @@ class Checker:
             criteria = list(screening_criteria.keys())
 
         for [record_id, status, screen_crit] in status_data["screening_criteria_list"]:
-            self.__check_individual_record_screen(
+            self._check_individual_record_screen(
                 record_id=record_id,
                 status=status,
                 screen_crit=screen_crit,
@@ -366,7 +366,7 @@ class Checker:
             )
 
     # pylint: disable=too-many-arguments
-    def __check_change_in_propagated_id_in_file(
+    def _check_change_in_propagated_id_in_file(
         self,
         *,
         notifications: list,
@@ -385,7 +385,7 @@ class Checker:
 
         # self.review_manager.logger.debug("Checking %s", name)
         if filename.endswith(".bib"):
-            retrieved_ids = self.__retrieve_ids_from_bib(
+            retrieved_ids = self._retrieve_ids_from_bib(
                 file_path=Path(os.path.join(root, filename))
             )
             if prior_id in retrieved_ids:
@@ -437,7 +437,7 @@ class Checker:
                 ) or not any(filename.endswith(x) for x in text_formats):
                     # self.review_manager.logger.debug("Skipping %s", name)
                     continue
-                self.__check_change_in_propagated_id_in_file(
+                self._check_change_in_propagated_id_in_file(
                     notifications=notifications,
                     root=root,
                     filename=filename,
@@ -455,7 +455,7 @@ class Checker:
                     )
         return notifications
 
-    def __check_change_in_propagated_ids(
+    def _check_change_in_propagated_ids(
         self, *, prior: dict, status_data: dict
     ) -> None:
         """Check for changes in propagated IDs"""
@@ -487,7 +487,7 @@ class Checker:
                     f"Search details without file: {source.filename}"
                 )
 
-    def __retrieve_prior(self) -> dict:
+    def _retrieve_prior(self) -> dict:
         prior: dict = {Fields.STATUS: [], "persisted_IDs": []}
         prior_records = next(self.review_manager.dataset.load_records_from_history())
         for prior_record in prior_records.values():
@@ -502,7 +502,7 @@ class Checker:
         return prior
 
     # pylint: disable=too-many-arguments
-    def __get_status_transitions(
+    def _get_status_transitions(
         self,
         *,
         record_id: str,
@@ -549,7 +549,7 @@ class Checker:
                 status_transition[record_id] = proc_transition
         return status_transition
 
-    def __retrieve_status_data(self, *, prior: dict, records: dict) -> dict:
+    def _retrieve_status_data(self, *, prior: dict, records: dict) -> dict:
         status_data: dict = {
             "pdf_not_exists": [],
             "status_fields": [],
@@ -602,7 +602,7 @@ class Checker:
                 ]
                 status_data["screening_criteria_list"].append(ec_case)
 
-            status_transition = self.__get_status_transitions(
+            status_transition = self._get_status_transitions(
                 record_id=record_dict[Fields.ID],
                 origin=record_dict[Fields.ORIGIN],
                 prior=prior,
@@ -690,16 +690,16 @@ class Checker:
                 "script": environment_manager.check_git_installed,
                 "params": [],
             },
-            {"script": self.__check_git_conflicts, "params": []},
+            {"script": self._check_git_conflicts, "params": []},
             {"script": self.check_repository_setup, "params": []},
-            {"script": self.__check_software, "params": []},
+            {"script": self._check_software, "params": []},
         ]
 
         if self.review_manager.dataset.records_file.is_file():
             if self.review_manager.dataset.file_in_history(
                 filepath=self.review_manager.dataset.RECORDS_FILE_RELATIVE
             ):
-                prior = self.__retrieve_prior()
+                prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")
                 self.review_manager.logger.debug(
                     self.review_manager.p_printer.pformat(prior)
@@ -707,7 +707,7 @@ class Checker:
             else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 
-            status_data = self.__retrieve_status_data(prior=prior, records=self.records)
+            status_data = self._retrieve_status_data(prior=prior, records=self.records)
 
             main_refs_checks = [
                 {"script": self.check_sources, "params": []},
@@ -718,11 +718,11 @@ class Checker:
                 main_refs_checks.extend(
                     [
                         {
-                            "script": self.__check_colrev_origins,
+                            "script": self._check_colrev_origins,
                             "params": {"status_data": status_data},
                         },
                         {
-                            "script": self.__check_change_in_propagated_ids,
+                            "script": self._check_change_in_propagated_ids,
                             "params": {"prior": prior, "status_data": status_data},
                         },
                         {
@@ -730,7 +730,7 @@ class Checker:
                             "params": {"status_data": status_data},
                         },
                         {
-                            "script": self.__check_records_screen,
+                            "script": self._check_records_screen,
                             "params": {"status_data": status_data},
                         },
                         {

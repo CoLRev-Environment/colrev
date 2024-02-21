@@ -150,7 +150,7 @@ class NBIBLoader:
         self._add_tag(tag, line)
         raise NextLine
 
-    def __parse_lines(self, lines: list) -> typing.Iterator[dict]:
+    def _parse_lines(self, lines: list) -> typing.Iterator[dict]:
         for line in lines:
             try:
                 yield self._parse_tag(line)
@@ -172,7 +172,7 @@ class NBIBLoader:
         text = self.source.filename.read_text(encoding="utf-8")
         # clean_text?
         lines = text.split("\n")
-        records_list = list(r for r in self.__parse_lines(lines) if r)
+        records_list = list(r for r in self._parse_lines(lines) if r)
 
         records = {}
         for ind, record in enumerate(records_list):

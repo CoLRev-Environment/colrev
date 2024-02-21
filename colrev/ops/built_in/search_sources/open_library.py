@@ -50,7 +50,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_library.md"
     )
-    __open_library_md_filename = Path("data/search/md_open_library.bib")
+    _open_library_md_filename = Path("data/search/md_open_library.bib")
 
     def __init__(
         self,
@@ -70,14 +70,14 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             open_library_md_source_l = [
                 s
                 for s in self.review_manager.settings.sources
-                if s.filename == self.__open_library_md_filename
+                if s.filename == self._open_library_md_filename
             ]
             if open_library_md_source_l:
                 self.search_source = open_library_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.open_library",
-                    filename=self.__open_library_md_filename,
+                    filename=self._open_library_md_filename,
                     search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
@@ -122,7 +122,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
-    def __open_library_json_to_record(
+    def _open_library_json_to_record(
         cls, *, item: dict, url: str
     ) -> colrev.record.PrepRecord:
         retrieved_record: dict = {}
@@ -155,7 +155,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         record.add_provenance_all(source=url)
         return record
 
-    def __get_record_from_open_library(
+    def _get_record_from_open_library(
         self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
     ) -> colrev.record.Record:
         session = prep_operation.review_manager.get_cached_session()
@@ -234,7 +234,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 )
             item = items[0]
 
-        retrieved_record = self.__open_library_json_to_record(item=item, url=url)
+        retrieved_record = self._open_library_json_to_record(item=item, url=url)
 
         return retrieved_record
 
@@ -278,7 +278,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             return record
 
         try:
-            retrieved_record = self.__get_record_from_open_library(
+            retrieved_record = self._get_record_from_open_library(
                 prep_operation=prep_operation, record=record
             )
 

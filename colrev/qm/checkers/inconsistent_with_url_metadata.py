@@ -16,7 +16,7 @@ class InconsistentWithURLMetadataChecker:
     """The InconsistentWithURLMetadataChecker"""
 
     msg = DefectCodes.INCONSISTENT_WITH_URL_METADATA
-    __fields_to_check = [
+    _fields_to_check = [
         Fields.AUTHOR,
         Fields.TITLE,
         Fields.JOURNAL,
@@ -28,7 +28,7 @@ class InconsistentWithURLMetadataChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-        self.__url_connector = website_connector.WebsiteConnector(
+        self._url_connector = website_connector.WebsiteConnector(
             review_manager=quality_model.review_manager
         )
 
@@ -44,16 +44,16 @@ class InconsistentWithURLMetadataChecker:
         if "md_curated.bib" in record.data[Fields.D_PROV][Fields.URL]["source"]:
             return
 
-        if self.__url_metadata_conflicts(record=record):
+        if self._url_metadata_conflicts(record=record):
             record.add_masterdata_provenance_note(key=Fields.URL, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.URL, note=self.msg)
 
-    def __url_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
+    def _url_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
         url_record = record.copy_prep_rec()
-        self.__url_connector.retrieve_md_from_website(record=url_record)
+        self._url_connector.retrieve_md_from_website(record=url_record)
         for key, value in url_record.data.items():
-            if key not in self.__fields_to_check:
+            if key not in self._fields_to_check:
                 continue
             if not isinstance(value, str):
                 continue

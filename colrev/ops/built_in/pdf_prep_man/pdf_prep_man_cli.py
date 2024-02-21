@@ -37,7 +37,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
 
-    __to_skip: int = 0
+    _to_skip: int = 0
 
     def __init__(
         self,
@@ -49,9 +49,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         self.review_manager = pdf_prep_man_operation.review_manager
         self.pdf_prep_man_operation = pdf_prep_man_operation
 
-    def __update_metadata(
-        self, *, record: colrev.record.Record
-    ) -> colrev.record.Record:
+    def _update_metadata(self, *, record: colrev.record.Record) -> colrev.record.Record:
         questions = [
             inquirer.List(
                 "field",
@@ -115,7 +113,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         return record
 
-    def __open_pdf(self, *, filepath: Path) -> None:
+    def _open_pdf(self, *, filepath: Path) -> None:
         try:
             system_platform = platform.system().lower()
 
@@ -130,7 +128,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"Error: {e}")
 
-    def __remove_page(
+    def _remove_page(
         self,
         *,
         user_selection: str,
@@ -169,17 +167,17 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             except colrev_exceptions.InvalidPDFException:
                 pass
 
-    def __is_inside_wsl(self) -> bool:
+    def _is_inside_wsl(self) -> bool:
         return "wsl" in platform.uname().release.lower()
 
-    def __man_pdf_prep_item(
+    def _man_pdf_prep_item(
         self,
         *,
         filepath: Path,
         record: colrev.record.Record,
     ) -> None:
-        if not self.__is_inside_wsl():
-            self.__open_pdf(filepath=filepath)
+        if not self._is_inside_wsl():
+            self._open_pdf(filepath=filepath)
 
         # if PDF > 100 pages, we may check on which page we find the title & print
 
@@ -205,7 +203,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
             # if user_selection.startswith("s"):
             #     if user_selection[1:].isdigit():
-            #         self.__to_skip = int(user_selection[1:])
+            #         self._to_skip = int(user_selection[1:])
             #     return
             if user_selection == "Skip":
                 return
@@ -214,7 +212,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                 "Remove last page",
                 "Remove page range",
             ]:
-                self.__remove_page(
+                self._remove_page(
                     user_selection=user_selection,
                     filepath=filepath,
                 )
@@ -231,12 +229,12 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                     filepath.unlink()
                 return
             elif user_selection == "Metadata needs to be updated":
-                self.__update_metadata(record=record)
+                self._update_metadata(record=record)
 
             elif user_selection == "Quit":
                 raise QuitPressedException()
 
-    def __man_pdf_prep_item_init(
+    def _man_pdf_prep_item_init(
         self,
         *,
         records: dict,
@@ -286,7 +284,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             pass
 
         if filepath.is_file():
-            self.__man_pdf_prep_item(
+            self._man_pdf_prep_item(
                 filepath=filepath,
                 record=record,
             )
@@ -306,12 +304,12 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
 
         for i, item in enumerate(pdf_prep_man_data["items"]):
-            if self.__to_skip > 0:
-                self.__to_skip -= 1
+            if self._to_skip > 0:
+                self._to_skip -= 1
                 continue
             try:
                 stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
-                records = self.__man_pdf_prep_item_init(
+                records = self._man_pdf_prep_item_init(
                     records=records,
                     item=item,
                     stat=stat,

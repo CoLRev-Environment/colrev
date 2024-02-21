@@ -45,13 +45,13 @@ def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
 def get_template(*, template_path: str) -> Template:
     """Load a jinja template"""
     environment = Environment(
-        loader=FunctionLoader(__load_jinja_template), autoescape=True
+        loader=FunctionLoader(_load_jinja_template), autoescape=True
     )
     template = environment.get_template(template_path)
     return template
 
 
-def __load_jinja_template(template_path: str) -> str:
+def _load_jinja_template(template_path: str) -> str:
     filedata_b = pkgutil.get_data("colrev", template_path)
     if filedata_b:
         filedata = filedata_b.decode("utf-8")

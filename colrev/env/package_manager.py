@@ -451,22 +451,22 @@ class PackageManager:
 
     def __init__(self, *, verbose: bool = False) -> None:
         self.verbose = verbose
-        self.packages = self.__load_package_endpoints_index()
-        self.__flag_installed_packages()
+        self.packages = self._load_package_endpoints_index()
+        self._flag_installed_packages()
         colrev_spec = importlib.util.find_spec("colrev")
         if colrev_spec is None:  # pragma: no cover
             raise colrev_exceptions.MissingDependencyError(dep="colrev")
         if colrev_spec.origin is None:  # pragma: no cover
             raise colrev_exceptions.MissingDependencyError(dep="colrev")
-        self.__colrev_path = Path(colrev_spec.origin).parents[1]
-        self.__package_endpoints_json_file = self.__colrev_path / Path(
+        self._colrev_path = Path(colrev_spec.origin).parents[1]
+        self._package_endpoints_json_file = self._colrev_path / Path(
             "colrev/template/package_endpoints.json"
         )
-        self.__search_source_types_json_file = self.__colrev_path / Path(
+        self._search_source_types_json_file = self._colrev_path / Path(
             "colrev/template/search_source_types.json"
         )
 
-    def __load_package_endpoints_index(self) -> dict:
+    def _load_package_endpoints_index(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/package_endpoints.json")
         )
@@ -490,7 +490,7 @@ class PackageManager:
 
         return packages
 
-    def __flag_installed_packages(self) -> None:
+    def _flag_installed_packages(self) -> None:
         for package_type, package_list in self.packages.items():
             for package_identifier, package in package_list.items():
                 try:
@@ -507,10 +507,10 @@ class PackageManager:
 
                     package["installed"] = False
 
-    def __replace_path_by_str(self, *, orig_dict):  # type: ignore
+    def _replace_path_by_str(self, *, orig_dict):  # type: ignore
         for key, value in orig_dict.items():
             if isinstance(value, collections.abc.Mapping):
-                orig_dict[key] = self.__replace_path_by_str(orig_dict=value)
+                orig_dict[key] = self._replace_path_by_str(orig_dict=value)
             else:
                 if isinstance(value, Path):
                     orig_dict[key] = str(value)
@@ -518,7 +518,7 @@ class PackageManager:
                     orig_dict[key] = value
         return orig_dict
 
-    def __apply_package_details_fixes(
+    def _apply_package_details_fixes(
         self, *, package_type: PackageEndpointType, package_details: dict
     ) -> None:
         # gh_issue https://github.com/CoLRev-Environment/colrev/issues/66
@@ -536,7 +536,7 @@ class PackageManager:
         if PackageEndpointType.search_source == package_type:
             package_details["properties"]["filename"] = {"type": "path"}
 
-        package_details = self.__replace_path_by_str(orig_dict=package_details)  # type: ignore
+        package_details = self._replace_path_by_str(orig_dict=package_details)  # type: ignore
 
     def get_package_details(
         self, *, package_type: PackageEndpointType, package_identifier: str
@@ -596,7 +596,7 @@ class PackageManager:
                     settings_class._details[parameter]["options"]
                 )
 
-        self.__apply_package_details_fixes(
+        self._apply_package_details_fixes(
             package_type=package_type, package_details=package_details
         )
 
@@ -640,7 +640,7 @@ class PackageManager:
         package_class = getattr(imported_package, package_class)
         return package_class
 
-    def __drop_broken_packages(
+    def _drop_broken_packages(
         self,
         *,
         packages_dict: dict,
@@ -667,7 +667,7 @@ class PackageManager:
                 print(f"Skipping broken package ({k})")
                 packages_dict.pop(k, None)
 
-    def __get_packages_dict(
+    def _get_packages_dict(
         self,
         *,
         selected_packages: list,
@@ -753,12 +753,12 @@ class PackageManager:
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         """Load the packages for a particular package_type"""
 
-        packages_dict = self.__get_packages_dict(
+        packages_dict = self._get_packages_dict(
             selected_packages=selected_packages,
             package_type=package_type,
             ignore_not_available=ignore_not_available,
         )
-        self.__drop_broken_packages(
+        self._drop_broken_packages(
             packages_dict=packages_dict,
             package_type=package_type,
             ignore_not_available=ignore_not_available,
@@ -806,7 +806,7 @@ class PackageManager:
 
         return packages_dict
 
-    def __import_package_docs(self, docs_link: str, identifier: str) -> str:
+    def _import_package_docs(self, docs_link: str, identifier: str) -> str:
         packages_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/resources/package_index"
         )
@@ -835,7 +835,7 @@ class PackageManager:
 
         return str(file_path)
 
-    def __write_docs_for_index(self, docs_for_index: dict) -> None:
+    def _write_docs_for_index(self, docs_for_index: dict) -> None:
         packages_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/resources/package_index.rst"
         )
@@ -885,7 +885,7 @@ class PackageManager:
 
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-arguments
-    def __add_package_endpoints(
+    def _add_package_endpoints(
         self,
         *,
         selected_package: str,
@@ -966,7 +966,7 @@ class PackageManager:
                 else:
                     docs_link = code_link
 
-                package_index_path = self.__import_package_docs(
+                package_index_path = self._import_package_docs(
                     docs_link, endpoint_item["package_endpoint_identifier"]
                 )
 
@@ -997,7 +997,7 @@ class PackageManager:
                 if x["package_endpoint_identifier"].split(".")[0] == selected_package
             ]
 
-    def __extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
+    def _extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
         search_source_types: typing.Dict[str, list] = {}
         for search_source_type in colrev.settings.SearchType:
             if search_source_type.value not in search_source_types:
@@ -1013,11 +1013,11 @@ class PackageManager:
             )
 
         json_object = json.dumps(search_source_types, indent=4)
-        with open(self.__search_source_types_json_file, "w", encoding="utf-8") as file:
+        with open(self._search_source_types_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
-    def __load_packages_json(self) -> list:
+    def _load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/packages.json")
         )
@@ -1028,7 +1028,7 @@ class PackageManager:
         packages = json.loads(filedata.decode("utf-8"))
         return packages
 
-    def __load_package_status_json(self) -> dict:
+    def _load_package_status_json(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/package_status.json")
         )
@@ -1044,9 +1044,9 @@ class PackageManager:
         based on the packages in template/packages.json
         and the endpoints.json files in the top directory of each package."""
 
-        os.chdir(self.__colrev_path)
-        packages = self.__load_packages_json()
-        package_status = self.__load_package_status_json()
+        os.chdir(self._colrev_path)
+        packages = self._load_packages_json()
+        package_status = self._load_package_status_json()
 
         package_endpoints_json: typing.Dict[str, list] = {
             x.name: [] for x in self.package_type_overview
@@ -1067,14 +1067,14 @@ class PackageManager:
 
                 with open(endpoints_path, encoding="utf-8") as file:
                     package_endpoints = json.load(file)
-                self.__add_package_endpoints(
+                self._add_package_endpoints(
                     selected_package=package["module"],
                     package_endpoints_json=package_endpoints_json,
                     package_endpoints=package_endpoints,
                     docs_for_index=docs_for_index,
                     package_status=package_status,
                 )
-                self.__extract_search_source_types(
+                self._extract_search_source_types(
                     package_endpoints_json=package_endpoints_json
                 )
             except json.decoder.JSONDecodeError as exc:  # pragma: no cover
@@ -1090,9 +1090,9 @@ class PackageManager:
                 key=lambda d: d["package_endpoint_identifier"],
             )
 
-        self.__package_endpoints_json_file.unlink(missing_ok=True)
+        self._package_endpoints_json_file.unlink(missing_ok=True)
         json_object = json.dumps(package_endpoints_json, indent=4)
-        with open(self.__package_endpoints_json_file, "w", encoding="utf-8") as file:
+        with open(self._package_endpoints_json_file, "w", encoding="utf-8") as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
@@ -1103,7 +1103,7 @@ class PackageManager:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
-        self.__write_docs_for_index(docs_for_index)
+        self._write_docs_for_index(docs_for_index)
 
     # pylint: disable=too-many-locals
     def add_endpoint_for_operation(

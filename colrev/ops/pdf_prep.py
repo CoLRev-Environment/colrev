@@ -48,7 +48,7 @@ class PDFPrep(colrev.operation.Operation):
 
         self.pdf_qm = self.review_manager.get_pdf_qm()
 
-    def __complete_successful_pdf_prep(
+    def _complete_successful_pdf_prep(
         self, *, record: colrev.record.Record, original_filename: str
     ) -> None:
         record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
@@ -220,7 +220,7 @@ class PDFPrep(colrev.operation.Operation):
             )
 
         if successfully_prepared:
-            self.__complete_successful_pdf_prep(
+            self._complete_successful_pdf_prep(
                 record=record, original_filename=original_filename
             )
 
@@ -228,7 +228,7 @@ class PDFPrep(colrev.operation.Operation):
 
         return record.get_data()
 
-    def __get_data(self, *, batch_size: int) -> dict:
+    def _get_data(self, *, batch_size: int) -> dict:
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -260,7 +260,7 @@ class PDFPrep(colrev.operation.Operation):
 
         return prep_data
 
-    def __set_to_reprocess(self) -> None:
+    def _set_to_reprocess(self) -> None:
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if (
@@ -276,7 +276,7 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
 
     # Note : no named arguments (multiprocessing)
-    def __update_colrev_pdf_ids(self, record_dict: dict) -> dict:
+    def _update_colrev_pdf_ids(self, record_dict: dict) -> dict:
         if Fields.FILE in record_dict:
             pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
             record_dict.update(
@@ -289,7 +289,7 @@ class PDFPrep(colrev.operation.Operation):
         self.review_manager.logger.info("Update colrev_pdf_ids")
         records = self.review_manager.dataset.load_records_dict()
         pool = Pool(self.cpus)
-        records_list = pool.map(self.__update_colrev_pdf_ids, records.values())
+        records_list = pool.map(self._update_colrev_pdf_ids, records.values())
         pool.close()
         pool.join()
         records = {r[Fields.ID]: r for r in records_list}
@@ -414,9 +414,9 @@ class PDFPrep(colrev.operation.Operation):
             print()
 
         if reprocess:
-            self.__set_to_reprocess()
+            self._set_to_reprocess()
 
-        pdf_prep_data = self.__get_data(batch_size=batch_size)
+        pdf_prep_data = self._get_data(batch_size=batch_size)
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_prep_package_endpoints = package_manager.load_packages(

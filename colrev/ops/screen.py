@@ -30,7 +30,7 @@ class Screen(colrev.operation.Operation):
 
         self.verbose = True
 
-    def __include_all_in_screen_precondition(self, *, records: dict) -> bool:
+    def _include_all_in_screen_precondition(self, *, records: dict) -> bool:
         if not [
             r
             for r in records.values()
@@ -59,7 +59,7 @@ class Screen(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        if not self.__include_all_in_screen_precondition(records=records):
+        if not self._include_all_in_screen_precondition(records=records):
             return
 
         selected_record_ids = [
@@ -88,7 +88,7 @@ class Screen(colrev.operation.Operation):
             record.update(colrev_status=colrev.record.RecordState.rev_included)
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.__print_stats(selected_record_ids=selected_record_ids)
+        self._print_stats(selected_record_ids=selected_record_ids)
         self.review_manager.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
@@ -277,7 +277,7 @@ class Screen(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def __screen_include_all(self, *, records: dict) -> None:
+    def _screen_include_all(self, *, records: dict) -> None:
         self.review_manager.logger.info("Screen: Include all records")
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == colrev.record.RecordState.pdf_prepared:
@@ -289,7 +289,7 @@ class Screen(colrev.operation.Operation):
             manual_author=False,
         )
 
-    def __print_stats(self, *, selected_record_ids: list) -> None:
+    def _print_stats(self, *, selected_record_ids: list) -> None:
         records = self.review_manager.dataset.load_records_dict(header_only=True)
         screen_excluded = [
             r[Fields.ID]
@@ -378,7 +378,7 @@ class Screen(colrev.operation.Operation):
             records={record_dict[Fields.ID]: record_dict}, partial=True
         )
 
-    def __auto_include(self, *, records: dict) -> list:
+    def _auto_include(self, *, records: dict) -> list:
         selected_auto_include_ids = [
             r[Fields.ID]
             for r in records.values()
@@ -432,7 +432,7 @@ class Screen(colrev.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
 
         if not self.review_manager.settings.screen.screen_package_endpoints:
-            self.__screen_include_all(records=records)
+            self._screen_include_all(records=records)
             return
 
         for (
@@ -459,7 +459,7 @@ class Screen(colrev.operation.Operation):
 
             endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
 
-            selected_auto_include_ids = self.__auto_include(records=records)
+            selected_auto_include_ids = self._auto_include(records=records)
 
             selected_record_ids = [
                 r[Fields.ID]
@@ -472,7 +472,7 @@ class Screen(colrev.operation.Operation):
 
             endpoint.run_screen(records, selected_record_ids)  # type: ignore
 
-            self.__print_stats(
+            self._print_stats(
                 selected_record_ids=selected_record_ids + selected_auto_include_ids
             )
 

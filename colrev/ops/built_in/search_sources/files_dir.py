@@ -56,8 +56,8 @@ class FilesSearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/files_dir.md"
     )
 
-    __doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
-    __batch_size = 20
+    _doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
+    _batch_size = 20
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
@@ -96,7 +96,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
-        self.__etiquette = self.crossref_connector.get_etiquette(
+        self._etiquette = self.crossref_connector.get_etiquette(
             review_manager=self.review_manager
         )
         self.url_connector = website_connector.WebsiteConnector(
@@ -104,7 +104,7 @@ class FilesSearchSource(JsonSchemaMixin):
         )
         self.zotero_lock = Lock()
 
-    def __update_if_pdf_renamed(
+    def _update_if_pdf_renamed(
         self,
         *,
         record_dict: dict,
@@ -142,7 +142,7 @@ class FilesSearchSource(JsonSchemaMixin):
                         return updated
         return not_updated
 
-    def __remove_records_if_pdf_no_longer_exists(self) -> None:
+    def _remove_records_if_pdf_no_longer_exists(self) -> None:
         # search_operation.review_manager.logger.debug(
         #     "Checking for PDFs that no longer exist"
         # )
@@ -163,7 +163,7 @@ class FilesSearchSource(JsonSchemaMixin):
             x_file_path = self.review_manager.path / Path(record_dict[Fields.FILE])
             if not x_file_path.is_file():
                 if records:
-                    updated = self.__update_if_pdf_renamed(
+                    updated = self._update_if_pdf_renamed(
                         record_dict=record_dict,
                         records=records,
                         search_source=self.search_source.filename,
@@ -200,7 +200,7 @@ class FilesSearchSource(JsonSchemaMixin):
             records = {k: v for k, v in records.items() if v[Fields.ORIGIN]}
             self.review_manager.dataset.save_records_dict(records=records)
 
-    def __update_fields_based_on_pdf_dirs(
+    def _update_fields_based_on_pdf_dirs(
         self, *, record_dict: dict, params: dict
     ) -> dict:
         if not self.subdir_pattern:
@@ -250,7 +250,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def __get_missing_fields_from_doc_info(self, *, record_dict: dict) -> None:
+    def _get_missing_fields_from_doc_info(self, *, record_dict: dict) -> None:
         file_path = self.review_manager.path / Path(record_dict[Fields.FILE])
         with open(file_path, "rb") as file:
             parser = PDFParser(file)
@@ -278,7 +278,7 @@ class FilesSearchSource(JsonSchemaMixin):
     # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-    def __get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
+    def _get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
         if colrev.record.RecordState.md_prepared == record_dict.get(
             Fields.STATUS, "NA"
         ):
@@ -296,7 +296,7 @@ class FilesSearchSource(JsonSchemaMixin):
             if val:
                 record_dict[key] = str(val)
 
-        self.__get_missing_fields_from_doc_info(record_dict=record_dict)
+        self._get_missing_fields_from_doc_info(record_dict=record_dict)
 
         if Fields.ABSTRACT in record_dict:
             del record_dict[Fields.ABSTRACT]
@@ -310,13 +310,13 @@ class FilesSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def __get_grobid_metadata(self, *, file_path: Path) -> dict:
+    def _get_grobid_metadata(self, *, file_path: Path) -> dict:
         record_dict: typing.Dict[str, typing.Any] = {
             Fields.FILE: str(file_path),
             Fields.ENTRYTYPE: ENTRYTYPES.MISC,
         }
         try:
-            record_dict = self.__get_record_from_pdf_grobid(record_dict=record_dict)
+            record_dict = self._get_record_from_pdf_grobid(record_dict=record_dict)
 
             with open(file_path, "rb") as file:
                 parser = PDFParser(file)
@@ -353,7 +353,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
 
                 # add details based on path
-                record_dict = self.__update_fields_based_on_pdf_dirs(
+                record_dict = self._update_fields_based_on_pdf_dirs(
                     record_dict=record_dict, params=self.search_source.search_parameters
                 )
 
@@ -362,7 +362,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def __is_broken_filepath(
+    def _is_broken_filepath(
         self,
         file_path: Path,
     ) -> bool:
@@ -385,7 +385,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         return False
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
@@ -420,7 +420,7 @@ class FilesSearchSource(JsonSchemaMixin):
             )
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def __add_md_string(self, *, record_dict: dict) -> dict:
+    def _add_md_string(self, *, record_dict: dict) -> dict:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return record_dict
 
@@ -450,7 +450,7 @@ class FilesSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __index_file(
+    def _index_file(
         self,
         *,
         file_path: Path,
@@ -459,14 +459,14 @@ class FilesSearchSource(JsonSchemaMixin):
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
         if file_path.suffix == ".pdf":
-            return self.__index_pdf(
+            return self._index_pdf(
                 file_path=file_path,
                 files_dir_feed=files_dir_feed,
                 linked_file_paths=linked_file_paths,
                 local_index=local_index,
             )
         if file_path.suffix == ".mp4":
-            return self.__index_mp4(
+            return self._index_mp4(
                 file_path=file_path,
                 files_dir_feed=files_dir_feed,
                 linked_file_paths=linked_file_paths,
@@ -474,7 +474,7 @@ class FilesSearchSource(JsonSchemaMixin):
             )
         raise NotImplementedError
 
-    def __index_pdf(
+    def _index_pdf(
         self,
         *,
         file_path: Path,
@@ -484,7 +484,7 @@ class FilesSearchSource(JsonSchemaMixin):
     ) -> dict:
         new_record: dict = {}
 
-        if self.__is_broken_filepath(file_path=file_path):
+        if self._is_broken_filepath(file_path=file_path):
             return new_record
 
         if not self.review_manager.force_mode:
@@ -520,7 +520,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 # is to just add the curation_ID
                 # (and retrieve the curated metadata separately/non-redundantly)
             else:
-                new_record = self.__get_grobid_metadata(file_path=file_path)
+                new_record = self._get_grobid_metadata(file_path=file_path)
         except FileNotFoundError:
             return {}
         except (
@@ -528,9 +528,9 @@ class FilesSearchSource(JsonSchemaMixin):
             colrev_exceptions.RecordNotInIndexException,
         ):
             # otherwise, get metadata from grobid (indexing)
-            new_record = self.__get_grobid_metadata(file_path=file_path)
+            new_record = self._get_grobid_metadata(file_path=file_path)
 
-        new_record = self.__add_md_string(record_dict=new_record)
+        new_record = self._add_md_string(record_dict=new_record)
 
         # Note: identical md_string as a heuristic for duplicates
         potential_duplicates = [
@@ -552,7 +552,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 pass
         return new_record
 
-    def __index_mp4(
+    def _index_mp4(
         self,
         *,
         file_path: Path,
@@ -563,7 +563,7 @@ class FilesSearchSource(JsonSchemaMixin):
         record_dict = {Fields.ENTRYTYPE: "online", Fields.FILE: file_path}
         return record_dict
 
-    def __get_file_batches(self) -> list:
+    def _get_file_batches(self) -> list:
         types = ("**/*.pdf", "**/*.mp4")
         files_grabbed: typing.List[Path] = []
         for suffix in types:
@@ -574,15 +574,15 @@ class FilesSearchSource(JsonSchemaMixin):
         ]
 
         file_batches = [
-            files_to_index[i * self.__batch_size : (i + 1) * self.__batch_size]
+            files_to_index[i * self._batch_size : (i + 1) * self._batch_size]
             for i in range(
-                (len(files_to_index) + self.__batch_size - 1) // self.__batch_size
+                (len(files_to_index) + self._batch_size - 1) // self._batch_size
             )
         ]
         return file_batches
 
     # pylint: disable=too-many-arguments
-    def __run_dir_search(
+    def _run_dir_search(
         self,
         *,
         records: dict,
@@ -591,12 +591,12 @@ class FilesSearchSource(JsonSchemaMixin):
         linked_file_paths: list,
         rerun: bool,
     ) -> None:
-        for file_batch in self.__get_file_batches():
+        for file_batch in self._get_file_batches():
             for record in files_dir_feed.feed_records.values():
-                record = self.__add_md_string(record_dict=record)
+                record = self._add_md_string(record_dict=record)
 
             for file_path in file_batch:
-                new_record = self.__index_file(
+                new_record = self._index_file(
                     file_path=file_path,
                     files_dir_feed=files_dir_feed,
                     linked_file_paths=linked_file_paths,
@@ -613,7 +613,7 @@ class FilesSearchSource(JsonSchemaMixin):
                     record=colrev.record.Record(data=new_record),
                 )
                 if added:
-                    self.__add_doi_from_pdf_if_not_available(record_dict=new_record)
+                    self._add_doi_from_pdf_if_not_available(record_dict=new_record)
 
                 elif self.review_manager.force_mode:
                     # Note : only re-index/update
@@ -632,14 +632,14 @@ class FilesSearchSource(JsonSchemaMixin):
 
         files_dir_feed.print_post_run_search_infos(records=records)
 
-    def __add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
+    def _add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
         if Fields.DOI in record_dict:
             return
         record = colrev.record.Record(data=record_dict)
         record.set_text_from_pdf()
-        res = re.findall(self.__doi_regex, record.data[Fields.TEXT_FROM_PDF])
+        res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
         if res:
             record.data[Fields.DOI] = res[0].upper()
         del record.data[Fields.TEXT_FROM_PDF]
@@ -647,7 +647,7 @@ class FilesSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
-        self.__validate_source()
+        self._validate_source()
 
         # Do not run in continuous-integration environment
         if self.review_manager.in_ci_environment():
@@ -660,7 +660,7 @@ class FilesSearchSource(JsonSchemaMixin):
         # In regular repositories, it may be confusing (e.g., if PDFs are renamed)
         # In these cases, we may simply print a warning instead of modifying/removing records?
         if self.review_manager.settings.is_curated_masterdata_repo():
-            self.__remove_records_if_pdf_no_longer_exists()
+            self._remove_records_if_pdf_no_longer_exists()
 
         grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
@@ -678,7 +678,7 @@ class FilesSearchSource(JsonSchemaMixin):
             Path(r[Fields.FILE]) for r in records.values() if Fields.FILE in r
         ]
 
-        self.__run_dir_search(
+        self._run_dir_search(
             records=records,
             files_dir_feed=files_dir_feed,
             linked_file_paths=linked_file_paths,
@@ -719,12 +719,12 @@ class FilesSearchSource(JsonSchemaMixin):
         )
         return add_source
 
-    def __update_based_on_doi(self, *, record_dict: dict) -> None:
+    def _update_based_on_doi(self, *, record_dict: dict) -> None:
         if Fields.DOI not in record_dict:
             return
         try:
             retrieved_record = self.crossref_connector.query_doi(
-                doi=record_dict[Fields.DOI], etiquette=self.__etiquette
+                doi=record_dict[Fields.DOI], etiquette=self._etiquette
             )
             if (
                 colrev.record.PrepRecord.get_retrieval_similarity(
@@ -763,11 +763,11 @@ class FilesSearchSource(JsonSchemaMixin):
                 if Fields.GROBID_VERSION in record_dict:
                     del record_dict[Fields.GROBID_VERSION]
 
-                self.__update_based_on_doi(record_dict=record_dict)
+                self._update_based_on_doi(record_dict=record_dict)
 
                 # Rerun restrictions and __update_fields_based_on_pdf_dirs
                 # because the restrictions/subdir-pattern may change
-                record_dict = self.__update_fields_based_on_pdf_dirs(
+                record_dict = self._update_fields_based_on_pdf_dirs(
                     record_dict=record_dict, params=self.search_source.search_parameters
                 )
 
@@ -775,7 +775,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __fix_special_chars(self, *, record: colrev.record.Record) -> None:
+    def _fix_special_chars(self, *, record: colrev.record.Record) -> None:
         # We may also apply the following upon loading tei content
         if Fields.TITLE in record.data:
             record.data[Fields.TITLE] = (
@@ -803,7 +803,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 .replace("a ˜", "ã")
             )
 
-    def __fix_title_suffix(self, *, record: colrev.record.Record) -> None:
+    def _fix_title_suffix(self, *, record: colrev.record.Record) -> None:
         if Fields.TITLE not in record.data:
             return
         if record.data[Fields.TITLE].endswith("Formula 1"):
@@ -813,7 +813,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if record.data.get(Fields.TITLE, "").endswith(" 1"):
             record.data[Fields.TITLE] = record.data[Fields.TITLE][:-2]
 
-    def __fix_special_outlets(self, *, record: colrev.record.Record) -> None:
+    def _fix_special_outlets(self, *, record: colrev.record.Record) -> None:
         # Erroneous suffixes in IS conferences
         if record.data.get(Fields.BOOKTITLE, "") in [
             "Americas Conference on Information Systems",
@@ -891,8 +891,8 @@ class FilesSearchSource(JsonSchemaMixin):
                 record.set_status(
                     target_state=colrev.record.RecordState.md_needs_manual_preparation
                 )
-            self.__fix_title_suffix(record=record)
-            self.__fix_special_chars(record=record)
-            self.__fix_special_outlets(record=record)
+            self._fix_title_suffix(record=record)
+            self._fix_special_chars(record=record)
+            self._fix_special_outlets(record=record)
 
         return record

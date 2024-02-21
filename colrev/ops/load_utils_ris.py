@@ -144,11 +144,11 @@ class RISLoader:
             for line in lines:
                 file.write(f"{line}\n")
 
-    def __get_tag(self, line: str) -> str:
+    def _get_tag(self, line: str) -> str:
         """Get the tag from a line in the RIS file."""
         return line[0 : line.find(" ")].rstrip()
 
-    def __get_content(self, line: str) -> str:
+    def _get_content(self, line: str) -> str:
         """Get the content from a line"""
         return line[line.find(" - ") + 3 :].strip()
 
@@ -164,7 +164,7 @@ class RISLoader:
             self.current[name] = [value]
 
     def _add_tag(self, tag: str, line: str) -> None:
-        new_value = self.__get_content(line)
+        new_value = self._get_content(line)
 
         if tag in self.list_fields:
             self._add_list_value(tag, new_value)
@@ -172,7 +172,7 @@ class RISLoader:
             self._add_single_value(tag, new_value)
 
     def _parse_tag(self, line: str) -> dict:
-        tag = self.__get_tag(line)
+        tag = self._get_tag(line)
 
         if tag.strip() == "":
             return self.current
@@ -180,7 +180,7 @@ class RISLoader:
         self._add_tag(tag, line)
         raise NextLine
 
-    def __parse_lines(self, lines: list) -> typing.Iterator[dict]:
+    def _parse_lines(self, lines: list) -> typing.Iterator[dict]:
         for line in lines:
             try:
                 yield self._parse_tag(line)
@@ -188,7 +188,7 @@ class RISLoader:
             except NextLine:
                 continue
 
-    def __clean_text(self, text: str) -> str:
+    def _clean_text(self, text: str) -> str:
         # Example:
         # Provider: JSTOR http://www.jstor.org
         # Database: JSTOR
@@ -219,10 +219,10 @@ class RISLoader:
 
         if content == "":
             content = self.source.filename.read_text(encoding="utf-8")
-            content = self.__clean_text(content)
+            content = self._clean_text(content)
 
         lines = content.split("\n")
-        records_list = list(r for r in self.__parse_lines(lines) if r)
+        records_list = list(r for r in self._parse_lines(lines) if r)
         for counter, entry in enumerate(records_list):
             _id = str(counter + 1).zfill(5)
 

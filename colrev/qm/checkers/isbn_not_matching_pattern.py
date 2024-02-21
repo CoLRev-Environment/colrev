@@ -16,7 +16,7 @@ class ISBNPatternChecker:
 
     msg = DefectCodes.ISBN_NOT_MATCHING_PATTERN
 
-    __ISBN_REGEX = re.compile(
+    _ISBN_REGEX = re.compile(
         "^(?:ISBN(?:-1[03])?:? )?(?=[-0-9 ]{17}$|[-0-9X ]{13}$|[0-9X]{10}$)|"
         "(?:97[89][- ]?)?[0-9]{1,5}[- ]?(?:[0-9]+[- ]?){2}[0-9X]$"
     )
@@ -32,7 +32,7 @@ class ISBNPatternChecker:
         ):
             return
 
-        if not re.match(self.__ISBN_REGEX, record.data[Fields.ISBN]):
+        if not re.match(self._ISBN_REGEX, record.data[Fields.ISBN]):
             record.add_masterdata_provenance_note(key=Fields.ISBN, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.ISBN, note=self.msg)

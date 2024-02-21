@@ -35,12 +35,12 @@ class MostlyAllCapsFieldChecker:
             ):
                 continue
 
-            if self.__is_mostly_all_caps(record=record, key=key):
+            if self._is_mostly_all_caps(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def __is_mostly_all_caps(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _is_mostly_all_caps(self, *, record: colrev.record.Record, key: str) -> bool:
         """Check if the field is mostly all caps"""
 
         # Online sources/software can be short/have caps

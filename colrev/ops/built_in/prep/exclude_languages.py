@@ -61,7 +61,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
         )
         self.languages_to_include = list(set(languages_to_include))
 
-    def __title_has_multiple_languages(self, *, title: str) -> bool:
+    def _title_has_multiple_languages(self, *, title: str) -> bool:
         if "[" not in title:
             return False
         split_titles = [
@@ -95,7 +95,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             record.data[Fields.LANGUAGE] = "eng"
             return record
 
-        if not self.__title_has_multiple_languages(
+        if not self._title_has_multiple_languages(
             title=record.data.get(Fields.TITLE, "")
         ):
             language = self.language_service.compute_language(

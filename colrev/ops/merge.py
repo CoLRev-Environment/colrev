@@ -34,7 +34,7 @@ class Merge(colrev.operation.Operation):
             notify_state_transition_operation=False,
         )
 
-    def __get_non_status_changes(
+    def _get_non_status_changes(
         self,
         *,
         current_branch_records: dict,
@@ -148,7 +148,7 @@ class Merge(colrev.operation.Operation):
 
         # There may be removed records / renamed IDs, changed fields...
         # if so: print, ask to resolve and exit
-        non_status_changes = self.__get_non_status_changes(
+        non_status_changes = self._get_non_status_changes(
             current_branch_records=current_branch_records,
             other_branch_records=other_branch_records,
             current_branch_name=current_branch,

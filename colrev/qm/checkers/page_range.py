@@ -29,12 +29,12 @@ class PageRangeChecker:
         ):
             return
 
-        if self.__pages_descending(pages=record.data[Fields.PAGES]):
+        if self._pages_descending(pages=record.data[Fields.PAGES]):
             record.add_masterdata_provenance_note(key=Fields.PAGES, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.PAGES, note=self.msg)
 
-    def __pages_descending(self, *, pages: str) -> bool:
+    def _pages_descending(self, *, pages: str) -> bool:
         from_page, to_page = re.findall(r"(\d+)", pages)
         if int(from_page) > int(to_page):
             return True

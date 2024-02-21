@@ -121,12 +121,12 @@ class ScopePrescreen(JsonSchemaMixin):
             colrev.env.utils.load_complementary_material_keywords()
         )
 
-    def __conditional_prescreen_entrytypes(self, record: colrev.record.Record) -> None:
+    def _conditional_prescreen_entrytypes(self, record: colrev.record.Record) -> None:
         if self.settings.ENTRYTYPEScope:
             if record.data[Fields.ENTRYTYPE] not in self.settings.ENTRYTYPEScope:
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
-    def __predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
+    def _predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
         if not self.settings.ExcludePredatoryJournals:
             return
         if Fields.JOURNAL not in record.data:
@@ -136,7 +136,7 @@ class ScopePrescreen(JsonSchemaMixin):
         if any(x["predatory"] == "yes" for x in rankings):
             record.prescreen_exclude(reason="predatory_journals_beal")
 
-    def __conditional_prescreen_outlets_exclusion(
+    def _conditional_prescreen_outlets_exclusion(
         self, record: colrev.record.Record
     ) -> None:
         if not self.settings.OutletExclusionScope:
@@ -149,7 +149,7 @@ class ScopePrescreen(JsonSchemaMixin):
                 if key in record.data and record.data.get(key, "") == value:
                     record.prescreen_exclude(reason="in OutletExclusionScope")
 
-    def __conditional_prescreen_outlets_inclusion(
+    def _conditional_prescreen_outlets_inclusion(
         self, record: colrev.record.Record
     ) -> None:
         if not self.settings.OutletInclusionScope:
@@ -164,7 +164,7 @@ class ScopePrescreen(JsonSchemaMixin):
         if not in_outlet_scope:
             record.prescreen_exclude(reason="not in OutletInclusionScope")
 
-    def __conditional_prescreen_timescope(self, record: colrev.record.Record) -> None:
+    def _conditional_prescreen_timescope(self, record: colrev.record.Record) -> None:
         if self.settings.TimeScopeFrom:
             if int(record.data.get(Fields.YEAR, 0)) < self.settings.TimeScopeFrom:
                 record.prescreen_exclude(
@@ -177,7 +177,7 @@ class ScopePrescreen(JsonSchemaMixin):
                     reason="not in TimeScopeTo " f"(<{self.settings.TimeScopeTo})"
                 )
 
-    def __conditional_prescreen_complementary_materials(
+    def _conditional_prescreen_complementary_materials(
         self, record: colrev.record.Record
     ) -> None:
         if not self.settings.ExcludeComplementaryMaterials:
@@ -190,7 +190,7 @@ class ScopePrescreen(JsonSchemaMixin):
             ):
                 record.prescreen_exclude(reason="complementary material")
 
-    def __conditional_presecreen_not_in_ranking(
+    def _conditional_presecreen_not_in_ranking(
         self, record: colrev.record.Record
     ) -> None:
         if not self.settings.RequireRankedJournals:
@@ -201,7 +201,7 @@ class ScopePrescreen(JsonSchemaMixin):
                 target_state=colrev.record.RecordState.rev_prescreen_excluded
             )
 
-    def __conditional_prescreen(
+    def _conditional_prescreen(
         self,
         *,
         record_dict: dict,
@@ -213,13 +213,13 @@ class ScopePrescreen(JsonSchemaMixin):
         # because dedupe cannot handle merges between languages
         record = colrev.record.Record(data=record_dict)
 
-        self.__predatory_journal_exclusion(record=record)
-        self.__conditional_prescreen_entrytypes(record=record)
-        self.__conditional_prescreen_outlets_inclusion(record=record)
-        self.__conditional_prescreen_outlets_exclusion(record=record)
-        self.__conditional_prescreen_timescope(record=record)
-        self.__conditional_prescreen_complementary_materials(record=record)
-        self.__conditional_presecreen_not_in_ranking(record=record)
+        self._predatory_journal_exclusion(record=record)
+        self._conditional_prescreen_entrytypes(record=record)
+        self._conditional_prescreen_outlets_inclusion(record=record)
+        self._conditional_prescreen_outlets_exclusion(record=record)
+        self._conditional_prescreen_timescope(record=record)
+        self._conditional_prescreen_complementary_materials(record=record)
+        self._conditional_presecreen_not_in_ranking(record=record)
 
         if (
             record.data[Fields.STATUS]
@@ -281,7 +281,7 @@ class ScopePrescreen(JsonSchemaMixin):
         """Prescreen records based on the scope parameters"""
 
         for record_dict in records.values():
-            self.__conditional_prescreen(
+            self._conditional_prescreen(
                 record_dict=record_dict,
             )
 

@@ -152,7 +152,7 @@ class StatusStats:
         self.completed_atomic_steps = 0
         self.nr_incomplete = 0
 
-        self.__overall_stats_backward_calculation()
+        self._overall_stats_backward_calculation()
 
         self.currently.non_processed = (
             self.currently.md_imported
@@ -210,7 +210,7 @@ class StatusStats:
         if denominator > 0:
             self.perc_curated = int((self.nr_curated_records / (denominator)) * 100)
 
-    def __overall_stats_backward_calculation(self) -> None:
+    def _overall_stats_backward_calculation(self) -> None:
         """Calculate the state_x overall stats (based on backward calculation)"""
         # self.review_manager.logger.debug(
         #     "Set overall colrev_status statistics (going backwards)"
@@ -447,39 +447,39 @@ class StatusStats:
         ) -> None:
             self.status_stats = status_stats
 
-            self.md_retrieved = self.__get_freq(colrev.record.RecordState.md_retrieved)
+            self.md_retrieved = self._get_freq(colrev.record.RecordState.md_retrieved)
 
-            self.md_imported = self.__get_freq(colrev.record.RecordState.md_imported)
-            self.md_needs_manual_preparation = self.__get_freq(
+            self.md_imported = self._get_freq(colrev.record.RecordState.md_imported)
+            self.md_needs_manual_preparation = self._get_freq(
                 colrev.record.RecordState.md_needs_manual_preparation
             )
-            self.md_prepared = self.__get_freq(colrev.record.RecordState.md_prepared)
-            self.md_processed = self.__get_freq(colrev.record.RecordState.md_processed)
-            self.rev_prescreen_excluded = self.__get_freq(
+            self.md_prepared = self._get_freq(colrev.record.RecordState.md_prepared)
+            self.md_processed = self._get_freq(colrev.record.RecordState.md_processed)
+            self.rev_prescreen_excluded = self._get_freq(
                 colrev.record.RecordState.rev_prescreen_excluded
             )
-            self.rev_prescreen_included = self.__get_freq(
+            self.rev_prescreen_included = self._get_freq(
                 colrev.record.RecordState.rev_prescreen_included
             )
-            self.pdf_needs_manual_retrieval = self.__get_freq(
+            self.pdf_needs_manual_retrieval = self._get_freq(
                 colrev.record.RecordState.pdf_needs_manual_retrieval
             )
-            self.pdf_imported = self.__get_freq(colrev.record.RecordState.pdf_imported)
-            self.pdf_not_available = self.__get_freq(
+            self.pdf_imported = self._get_freq(colrev.record.RecordState.pdf_imported)
+            self.pdf_not_available = self._get_freq(
                 colrev.record.RecordState.pdf_not_available
             )
-            self.pdf_needs_manual_preparation = self.__get_freq(
+            self.pdf_needs_manual_preparation = self._get_freq(
                 colrev.record.RecordState.pdf_needs_manual_preparation
             )
-            self.pdf_prepared = self.__get_freq(colrev.record.RecordState.pdf_prepared)
-            self.rev_excluded = self.__get_freq(colrev.record.RecordState.rev_excluded)
-            self.rev_included = self.__get_freq(colrev.record.RecordState.rev_included)
-            self.rev_synthesized = self.__get_freq(
+            self.pdf_prepared = self._get_freq(colrev.record.RecordState.pdf_prepared)
+            self.rev_excluded = self._get_freq(colrev.record.RecordState.rev_excluded)
+            self.rev_included = self._get_freq(colrev.record.RecordState.rev_included)
+            self.rev_synthesized = self._get_freq(
                 colrev.record.RecordState.rev_synthesized
             )
             self.md_duplicates_removed = self.status_stats.md_duplicates_removed
 
-        def __get_freq(self, colrev_status: colrev.record.RecordState) -> int:
+        def _get_freq(self, colrev_status: colrev.record.RecordState) -> int:
             return len([x for x in self.status_stats.status_list if colrev_status == x])
 
     @dataclass
@@ -550,11 +550,11 @@ class StatusStats:
             self.rev_screen = 0
             self.rev_prescreen = 0
             super().__init__(status_stats=status_stats)
-            self.md_retrieved = self.__get_nr_search(
+            self.md_retrieved = self._get_nr_search(
                 search_dir=self.status_stats.review_manager.search_dir
             )
 
-        def __get_nr_search(self, *, search_dir: Path) -> int:
+        def _get_nr_search(self, *, search_dir: Path) -> int:
             if not search_dir.is_dir():
                 return 0
             bib_files = search_dir.glob("*.bib")

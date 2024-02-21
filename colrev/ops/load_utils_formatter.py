@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class LoadFormatter:
     """Load formatter class"""
 
-    __LATEX_SPECIAL_CHAR_MAPPING = {
+    _LATEX_SPECIAL_CHAR_MAPPING = {
         '\\"u': "ü",
         "\\&": "&",
         '\\"o': "ö",
@@ -37,7 +37,7 @@ class LoadFormatter:
     def __init__(self) -> None:
         self.language_service = colrev.env.language_service.LanguageService()
 
-    def __apply_strict_requirements(self, *, record: colrev.record.Record) -> None:
+    def _apply_strict_requirements(self, *, record: colrev.record.Record) -> None:
         if Fields.DOI in record.data:
             record.data[Fields.DOI] = (
                 record.data[Fields.DOI].replace("http://dx.doi.org/", "").upper()
@@ -47,18 +47,18 @@ class LoadFormatter:
         if Fields.NUMBER not in record.data and "issue" in record.data:
             record.data[Fields.NUMBER] = record.data.pop("issue")
 
-    def __lower_case_keys(self, *, record: colrev.record.Record) -> None:
+    def _lower_case_keys(self, *, record: colrev.record.Record) -> None:
         # Consistently set keys to lower case
         lower_keys = [k.lower() for k in list(record.data.keys())]
         for key, n_key in zip(list(record.data.keys()), lower_keys):
             if key not in [Fields.ID, Fields.ENTRYTYPE]:
                 record.data[n_key] = record.data.pop(key)
 
-    def __unescape_latex(self, *, input_str: str) -> str:
+    def _unescape_latex(self, *, input_str: str) -> str:
         # Based on
         # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
 
-        for latex_char, repl_char in self.__LATEX_SPECIAL_CHAR_MAPPING.items():
+        for latex_char, repl_char in self._LATEX_SPECIAL_CHAR_MAPPING.items():
             input_str = input_str.replace(latex_char, repl_char)
 
         input_str = input_str.replace("\\emph", "")
@@ -66,13 +66,13 @@ class LoadFormatter:
 
         return input_str
 
-    def __unescape_html(self, *, input_str: str) -> str:
+    def _unescape_html(self, *, input_str: str) -> str:
         input_str = html.unescape(input_str)
         if "<" in input_str:
             input_str = re.sub(r"<.*?>", "", input_str)
         return input_str
 
-    def __unescape_field_values(self, *, record: colrev.record.Record) -> None:
+    def _unescape_field_values(self, *, record: colrev.record.Record) -> None:
         fields_to_process = [
             Fields.AUTHOR,
             Fields.YEAR,
@@ -91,8 +91,8 @@ class LoadFormatter:
             if field not in fields_to_process:
                 continue
             if "\\" in record.data[field]:
-                record.data[field] = self.__unescape_latex(input_str=record.data[field])
-            record.data[field] = self.__unescape_html(input_str=record.data[field])
+                record.data[field] = self._unescape_latex(input_str=record.data[field])
+            record.data[field] = self._unescape_html(input_str=record.data[field])
 
             record.data[field] = (
                 record.data[field]
@@ -103,7 +103,7 @@ class LoadFormatter:
                 .replace("}", "")
             )
 
-    def __standardize_field_values(self, *, record: colrev.record.Record) -> None:
+    def _standardize_field_values(self, *, record: colrev.record.Record) -> None:
         if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
             record.data[Fields.TITLE] = re.sub(
                 r"\s+", " ", record.data[Fields.TITLE]
@@ -132,11 +132,11 @@ class LoadFormatter:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the load formatter"""
 
-        self.__apply_strict_requirements(record=record)
+        self._apply_strict_requirements(record=record)
 
         if record.data[Fields.STATUS] != colrev.record.RecordState.md_retrieved:
             return
 
-        self.__lower_case_keys(record=record)
-        self.__unescape_field_values(record=record)
-        self.__standardize_field_values(record=record)
+        self._lower_case_keys(record=record)
+        self._unescape_field_values(record=record)
+        self._standardize_field_values(record=record)

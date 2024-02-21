@@ -47,9 +47,9 @@ class CurationPrep(JsonSchemaMixin):
         self.quality_model = prep_operation.review_manager.get_qm()
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
-        self.curation_restrictions = self.__load_curation_restrictions()
+        self.curation_restrictions = self._load_curation_restrictions()
 
-    def __load_curation_restrictions(self) -> dict:
+    def _load_curation_restrictions(self) -> dict:
         curation_restrictions = {}
         curated_endpoints = [
             x
@@ -61,7 +61,7 @@ class CurationPrep(JsonSchemaMixin):
             curation_restrictions = curated_endpoint.get("masterdata_restrictions", {})
         return curation_restrictions
 
-    def __get_applicable_curation_restrictions(
+    def _get_applicable_curation_restrictions(
         self, *, record: colrev.record.Record
     ) -> dict:
         """Get the applicable curation restrictions"""
@@ -86,7 +86,7 @@ class CurationPrep(JsonSchemaMixin):
 
     def apply_curation_restrictions(self, *, record: colrev.record.Record) -> None:
         """Apply the curation restrictions"""
-        applicable_curation_restrictions = self.__get_applicable_curation_restrictions(
+        applicable_curation_restrictions = self._get_applicable_curation_restrictions(
             record=record
         )
         if Fields.ENTRYTYPE in applicable_curation_restrictions:

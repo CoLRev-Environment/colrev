@@ -75,12 +75,12 @@ class TEIParser:
                 load_from_tei = True
 
         if pdf_path is not None and not load_from_tei:
-            self.__create_tei()
+            self._create_tei()
 
         elif tei_path is not None:
-            self.root = self.__read_from_tei()  # type: ignore
+            self.root = self._read_from_tei()  # type: ignore
 
-    def __read_from_tei(self):  # type: ignore
+    def _read_from_tei(self):  # type: ignore
         """Read a TEI from file"""
         with open(self.tei_path, "rb") as data:
             xslt_content = data.read()
@@ -90,7 +90,7 @@ class TEIParser:
 
         return etree.ElementTree.XML(xslt_content)
 
-    def __create_tei(self) -> None:
+    def _create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
         grobid_service = colrev.env.grobid_service.GrobidService(
             environment_manager=self.environment_manager
@@ -171,7 +171,7 @@ class TEIParser:
                         grobid_version = application_node.get("version")
         return grobid_version
 
-    def __get_paper_title(self) -> str:
+    def _get_paper_title(self) -> str:
         title_text = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "fileDesc")
         if file_description is not None:
@@ -190,7 +190,7 @@ class TEIParser:
                     )
         return title_text
 
-    def __get_paper_journal(self) -> str:
+    def _get_paper_journal(self) -> str:
         # pylint: disable=too-many-nested-blocks
         journal_name = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
@@ -210,7 +210,7 @@ class TEIParser:
                                 journal_name = " ".join(words)
         return journal_name
 
-    def __get_paper_journal_volume(self) -> str:
+    def _get_paper_journal_volume(self) -> str:
         volume = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
@@ -226,7 +226,7 @@ class TEIParser:
                             volume = vnode.text if vnode.text is not None else ""
         return volume
 
-    def __get_paper_journal_issue(self) -> str:
+    def _get_paper_journal_issue(self) -> str:
         issue = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
@@ -244,7 +244,7 @@ class TEIParser:
                             )
         return issue
 
-    def __get_paper_journal_pages(self) -> str:
+    def _get_paper_journal_pages(self) -> str:
         pages = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
@@ -267,7 +267,7 @@ class TEIParser:
                             )
         return pages
 
-    def __get_paper_year(self) -> str:
+    def _get_paper_year(self) -> str:
         year = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
@@ -286,7 +286,7 @@ class TEIParser:
                             year = re.sub(r".*([1-2][0-9]{3}).*", r"\1", year)
         return year
 
-    def __parse_author_dict(self, *, author_pers_node: Element) -> dict:
+    def _parse_author_dict(self, *, author_pers_node: Element) -> dict:
         author_dict = {}
         surname_node = author_pers_node.find(self.ns["tei"] + "surname")
         if surname_node is not None:
@@ -321,14 +321,14 @@ class TEIParser:
 
         return author_dict
 
-    def __get_author_name_from_node(self, *, author_node: Element) -> str:
+    def _get_author_name_from_node(self, *, author_node: Element) -> str:
         authorname = ""
 
         author_pers_node = author_node.find(self.ns["tei"] + "persName")
         if author_pers_node is None:
             return authorname
 
-        author_dict = self.__parse_author_dict(author_pers_node=author_pers_node)
+        author_dict = self._parse_author_dict(author_pers_node=author_pers_node)
 
         authorname = author_dict["surname"] + ", " + author_dict["forename"]
         if "middlename" in author_dict:
@@ -352,7 +352,7 @@ class TEIParser:
         authorname = re.sub("^Paper, Short; ", "", authorname)
         return authorname
 
-    def __get_paper_authors(self) -> str:
+    def _get_paper_authors(self) -> str:
         author_string = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         author_list = []
@@ -366,7 +366,7 @@ class TEIParser:
                     for author_node in analytic_node.iterfind(
                         self.ns["tei"] + "author"
                     ):
-                        authorname = self.__get_author_name_from_node(
+                        authorname = self._get_author_name_from_node(
                             author_node=author_node
                         )
                         if authorname in ["Paper, Short"]:
@@ -384,7 +384,7 @@ class TEIParser:
                         author_string = ""
         return author_string
 
-    def __get_paper_doi(self) -> str:
+    def _get_paper_doi(self) -> str:
         doi = ""
         file_description = self.root.find(".//" + self.ns["tei"] + "sourceDesc")
         if file_description is not None:
@@ -421,14 +421,14 @@ class TEIParser:
 
         record = {
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-            Fields.TITLE: self.__get_paper_title(),
-            Fields.AUTHOR: self.__get_paper_authors(),
-            Fields.JOURNAL: self.__get_paper_journal(),
-            Fields.YEAR: self.__get_paper_year(),
-            Fields.VOLUME: self.__get_paper_journal_volume(),
-            Fields.NUMBER: self.__get_paper_journal_issue(),
-            Fields.PAGES: self.__get_paper_journal_pages(),
-            Fields.DOI: self.__get_paper_doi(),
+            Fields.TITLE: self._get_paper_title(),
+            Fields.AUTHOR: self._get_paper_authors(),
+            Fields.JOURNAL: self._get_paper_journal(),
+            Fields.YEAR: self._get_paper_year(),
+            Fields.VOLUME: self._get_paper_journal_volume(),
+            Fields.NUMBER: self._get_paper_journal_issue(),
+            Fields.PAGES: self._get_paper_journal_pages(),
+            Fields.DOI: self._get_paper_doi(),
         }
 
         for key, value in record.items():
@@ -466,7 +466,7 @@ class TEIParser:
                         if author_pers_node is None:
                             continue
 
-                        author_dict = self.__parse_author_dict(
+                        author_dict = self._parse_author_dict(
                             author_pers_node=author_pers_node
                         )
 
@@ -487,10 +487,10 @@ class TEIParser:
 
     # (individual) bibliography-reference elements  ----------------------------
 
-    def __get_reference_bibliography_tei_id(self, *, reference: Element) -> str:
+    def _get_reference_bibliography_tei_id(self, *, reference: Element) -> str:
         return reference.attrib[self.ns["w3"] + "id"]
 
-    def __get_reference_author_string(self, *, reference: Element) -> str:
+    def _get_reference_author_string(self, *, reference: Element) -> str:
         author_list = []
         if reference.find(self.ns["tei"] + "analytic") is not None:
             authors_node = reference.find(self.ns["tei"] + "analytic")
@@ -499,7 +499,7 @@ class TEIParser:
 
         if authors_node is not None:
             for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
-                authorname = self.__get_author_name_from_node(author_node=author_node)
+                authorname = self._get_author_name_from_node(author_node=author_node)
 
                 if authorname not in [", ", ""]:
                     author_list.append(authorname)
@@ -527,7 +527,7 @@ class TEIParser:
             author_string = ""
         return author_string
 
-    def __get_reference_title_string(self, *, reference: Element) -> str:
+    def _get_reference_title_string(self, *, reference: Element) -> str:
         title_string = ""
         if reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
@@ -544,7 +544,7 @@ class TEIParser:
 
         return title_string
 
-    def __get_reference_year_string(self, *, reference: Element) -> str:
+    def _get_reference_year_string(self, *, reference: Element) -> str:
         year_string = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -566,7 +566,7 @@ class TEIParser:
             year_string = ""
         return year_string
 
-    def __get_reference_page_string(self, *, reference: Element) -> str:
+    def _get_reference_page_string(self, *, reference: Element) -> str:
         page_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -598,7 +598,7 @@ class TEIParser:
 
         return page_string
 
-    def __get_reference_number_string(self, *, reference: Element) -> str:
+    def _get_reference_number_string(self, *, reference: Element) -> str:
         number_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -624,7 +624,7 @@ class TEIParser:
 
         return number_string
 
-    def __get_reference_volume_string(self, *, reference: Element) -> str:
+    def _get_reference_volume_string(self, *, reference: Element) -> str:
         volume_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -650,7 +650,7 @@ class TEIParser:
 
         return volume_string
 
-    def __get_reference_journal_string(self, *, reference: Element) -> str:
+    def _get_reference_journal_string(self, *, reference: Element) -> str:
         journal_title = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -662,7 +662,7 @@ class TEIParser:
 
         return journal_title
 
-    def __get_entrytype(self, *, reference: Element) -> str:
+    def _get_entrytype(self, *, reference: Element) -> str:
         entrytype = ENTRYTYPES.MISC
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -675,7 +675,7 @@ class TEIParser:
                         entrytype = ENTRYTYPES.ARTICLE
         return entrytype
 
-    def __get_tei_id_count(self, *, tei_id: str) -> int:
+    def _get_tei_id_count(self, *, tei_id: str) -> int:
         count = 0
 
         for reference in self.root.iter(self.ns["tei"] + "ref"):
@@ -694,37 +694,37 @@ class TEIParser:
         for bibliography in bibliographies:
             for reference in bibliography:
                 try:
-                    entrytype = self.__get_entrytype(reference=reference)
-                    tei_id = self.__get_reference_bibliography_tei_id(
+                    entrytype = self._get_entrytype(reference=reference)
+                    tei_id = self._get_reference_bibliography_tei_id(
                         reference=reference
                     )
 
-                    in_text_citation_count = self.__get_tei_id_count(tei_id=tei_id)
+                    in_text_citation_count = self._get_tei_id_count(tei_id=tei_id)
 
                     if entrytype == ENTRYTYPES.ARTICLE:
                         ref_rec = {
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
                             Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self.__get_reference_author_string(
+                            Fields.AUTHOR: self._get_reference_author_string(
                                 reference=reference
                             ),
-                            Fields.TITLE: self.__get_reference_title_string(
+                            Fields.TITLE: self._get_reference_title_string(
                                 reference=reference
                             ),
-                            Fields.YEAR: self.__get_reference_year_string(
+                            Fields.YEAR: self._get_reference_year_string(
                                 reference=reference
                             ),
-                            Fields.JOURNAL: self.__get_reference_journal_string(
+                            Fields.JOURNAL: self._get_reference_journal_string(
                                 reference=reference
                             ),
-                            Fields.VOLUME: self.__get_reference_volume_string(
+                            Fields.VOLUME: self._get_reference_volume_string(
                                 reference=reference
                             ),
-                            Fields.NUMBER: self.__get_reference_number_string(
+                            Fields.NUMBER: self._get_reference_number_string(
                                 reference=reference
                             ),
-                            Fields.PAGES: self.__get_reference_page_string(
+                            Fields.PAGES: self._get_reference_page_string(
                                 reference=reference
                             ),
                         }
@@ -733,13 +733,13 @@ class TEIParser:
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
                             Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self.__get_reference_author_string(
+                            Fields.AUTHOR: self._get_reference_author_string(
                                 reference=reference
                             ),
-                            Fields.TITLE: self.__get_reference_title_string(
+                            Fields.TITLE: self._get_reference_title_string(
                                 reference=reference
                             ),
-                            Fields.YEAR: self.__get_reference_year_string(
+                            Fields.YEAR: self._get_reference_year_string(
                                 reference=reference
                             ),
                         }
@@ -748,10 +748,10 @@ class TEIParser:
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
                             Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self.__get_reference_author_string(
+                            Fields.AUTHOR: self._get_reference_author_string(
                                 reference=reference
                             ),
-                            Fields.TITLE: self.__get_reference_title_string(
+                            Fields.TITLE: self._get_reference_title_string(
                                 reference=reference
                             ),
                         }
