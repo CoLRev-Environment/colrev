@@ -10,7 +10,6 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 import docker
 import requests
@@ -24,9 +23,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 # pylint: disable=too-many-instance-attributes

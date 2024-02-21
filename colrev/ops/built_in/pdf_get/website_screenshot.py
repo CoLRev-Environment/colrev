@@ -6,7 +6,6 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import docker
 import requests
@@ -21,8 +20,6 @@ from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_get
 
 # pylint: disable=too-few-public-methods
 

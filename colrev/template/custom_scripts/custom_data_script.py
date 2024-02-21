@@ -2,15 +2,10 @@
 """Template for a custom data PackageEndpoint"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import zope.interface
 from dacite import from_dict
 
 import colrev.operation
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

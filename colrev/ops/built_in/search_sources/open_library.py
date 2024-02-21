@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -19,8 +18,6 @@ import colrev.ops.load_utils_bib
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)

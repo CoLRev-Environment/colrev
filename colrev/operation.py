@@ -8,7 +8,6 @@ from enum import Enum
 from typing import Any
 from typing import Callable
 from typing import Optional
-from typing import TYPE_CHECKING
 from typing import TypeVar
 
 import docker
@@ -18,8 +17,6 @@ from docker.errors import DockerException
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 F = TypeVar("F", bound=Callable[..., Any])
 

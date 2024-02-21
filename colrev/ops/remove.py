@@ -3,14 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.env.utils
 import colrev.operation
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods

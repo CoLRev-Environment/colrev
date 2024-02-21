@@ -7,7 +7,6 @@ from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -31,10 +30,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
-
-if TYPE_CHECKING:
-    import colrev.ops.search
-    import colrev.ops.prep
 
 
 # pylint: disable=unused-argument

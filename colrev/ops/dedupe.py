@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import pandas as pd
 from bib_dedupe.bib_dedupe import prep
@@ -23,9 +22,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 # pylint: disable=too-many-lines
 

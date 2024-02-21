@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.constants as c
 import colrev.env.utils
@@ -13,9 +12,6 @@ import colrev.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods

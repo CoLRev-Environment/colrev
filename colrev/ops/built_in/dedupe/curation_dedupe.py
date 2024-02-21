@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -17,8 +16,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods

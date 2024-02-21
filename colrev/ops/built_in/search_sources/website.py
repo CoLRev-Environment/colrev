@@ -6,7 +6,6 @@ import json
 import re
 from multiprocessing import Lock
 from typing import Optional
-from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests
@@ -15,8 +14,6 @@ import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
 
 # Note: not implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)

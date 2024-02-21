@@ -10,16 +10,12 @@ import tempfile
 from importlib.metadata import version
 from pathlib import Path
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import git
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 
 class Commit:

@@ -5,7 +5,6 @@ from __future__ import annotations
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -15,9 +14,6 @@ import colrev.ops.pdf_get
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.pdf_get_man
 
 
 # pylint: disable=too-few-public-methods

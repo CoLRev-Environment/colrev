@@ -8,7 +8,6 @@ import sys
 import typing
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import yaml
 from git.exc import InvalidGitRepositoryError
@@ -17,9 +16,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 
 class Checker:

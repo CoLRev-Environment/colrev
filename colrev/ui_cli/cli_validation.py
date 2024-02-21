@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import difflib
 import subprocess  # nosec
-from typing import TYPE_CHECKING
 
 import inquirer
 from rapidfuzz import fuzz
@@ -13,9 +12,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:
-    import colrev.ops.status
 
 # pylint: disable=duplicate-code
 keys = [

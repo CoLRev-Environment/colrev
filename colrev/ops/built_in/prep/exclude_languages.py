@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 import statistics
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -17,8 +16,6 @@ import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 

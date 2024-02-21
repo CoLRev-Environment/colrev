@@ -6,7 +6,6 @@ import platform
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -24,9 +23,6 @@ from colrev.constants import FieldValues
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
-
-if TYPE_CHECKING:
-    import colrev.ops.prep_man
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)

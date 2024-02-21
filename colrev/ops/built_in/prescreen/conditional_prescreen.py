@@ -2,7 +2,6 @@
 """Conditional prescreen"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 
 import zope.interface
@@ -12,8 +11,6 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
