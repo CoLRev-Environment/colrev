@@ -159,7 +159,7 @@ def __get_colrev_id_from_record(*, record: colrev.record.Record) -> str:
         # srep = __robust_append(srep, pages)
     except KeyError as exc:
         if "ENTRYTYPE" in str(exc):
-            print(f"Missing ENTRYTYPE in {record.data['ID']}")
+            print(f"Missing ENTRYTYPE in {record.data.get('ID', record.data)}")
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="Missing field:" + str(exc), missing_fields=["ENTRYTYPE"]
         )

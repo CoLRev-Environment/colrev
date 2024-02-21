@@ -796,7 +796,7 @@ class Dataset:
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
-    def __generate_temp_id(
+    def _generate_temp_id(
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
     ) -> str:
         # pylint: disable=too-many-branches
@@ -832,7 +832,8 @@ class Dataset:
 
             id_pattern = self.review_manager.settings.project.id_pattern
             if colrev.settings.IDPattern.first_author_year == id_pattern:
-                temp_id = f'{author.replace(" ", "")}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
+                first_author = authors[0].split(",")[0].replace(" ", "")
+                temp_id = f'{first_author}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
             elif colrev.settings.IDPattern.three_authors_year == id_pattern:
                 temp_id = ""
                 indices = len(authors)
@@ -905,7 +906,7 @@ class Dataset:
         # screen or data will not be replaced
         # (this would break the chain of evidence)
 
-        temp_id = self.__generate_temp_id(
+        temp_id = self._generate_temp_id(
             local_index=local_index, record_dict=record_dict
         )
 
