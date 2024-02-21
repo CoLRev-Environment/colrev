@@ -234,11 +234,15 @@ class Commit:
 
             self.review_manager.logger.info("Created commit")
             self.review_manager.reset_report_logger()
-            if self.review_manager.dataset.has_changes():
-                raise colrev_exceptions.DirtyRepoAfterProcessingError(
-                    "A clean repository is expected."
-                )
-            return True
+            if not self.review_manager.dataset.has_changes():
+                return True
+
+            if self.review_manager.force_mode:
+                self.review_manager.logger.warn("No clean repository after commit.")
+                return True
+            raise colrev_exceptions.DirtyRepoAfterProcessingError(
+                "A clean repository is expected."
+            )
 
         return False
 
