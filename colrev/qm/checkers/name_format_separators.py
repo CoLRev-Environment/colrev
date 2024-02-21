@@ -31,12 +31,12 @@ class NameFormatSeparatorsChecker:
             ):
                 continue
 
-            if self.__name_separator_error(record=record, key=key):
+            if self._name_separator_error(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def __name_separator_error(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _name_separator_error(self, *, record: colrev.record.Record, key: str) -> bool:
         if "," not in record.data[key]:
             return False
         sanitized_names_list = re.sub(

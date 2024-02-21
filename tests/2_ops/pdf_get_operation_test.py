@@ -2,7 +2,6 @@
 """Tests of the CoLRev pdf-get operation"""
 from pathlib import Path
 
-
 import colrev.review_manager
 
 

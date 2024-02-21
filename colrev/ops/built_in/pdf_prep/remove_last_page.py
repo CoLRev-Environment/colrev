@@ -56,7 +56,7 @@ class PDFLastPage(JsonSchemaMixin):
         lp_path = local_index.local_environment_path / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
-        def __get_last_pages(*, pdf: str) -> typing.List[int]:
+        def _get_last_pages(*, pdf: str) -> typing.List[int]:
             last_pages: typing.List[int] = []
             try:
                 pdf_reader = PdfFileReader(str(pdf), strict=False)
@@ -115,7 +115,7 @@ class PDFLastPage(JsonSchemaMixin):
 
             return list(set(last_pages))
 
-        last_pages = __get_last_pages(pdf=record.data[Fields.FILE])
+        last_pages = _get_last_pages(pdf=record.data[Fields.FILE])
         if not last_pages:
             return record.data
         if last_pages:

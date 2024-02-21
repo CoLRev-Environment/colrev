@@ -32,7 +32,7 @@ class PrepMan(colrev.operation.Operation):
 
         self.verbose = True
 
-    def __get_crosstab_df(self) -> pd.DataFrame:
+    def _get_crosstab_df(self) -> pd.DataFrame:
         # pylint: disable=too-many-branches
         # pylint: disable=duplicate-code
 
@@ -181,7 +181,7 @@ class PrepMan(colrev.operation.Operation):
         """Print statistics on prep_man"""
         # pylint: disable=duplicate-code
 
-        crosstab_df = self.__get_crosstab_df()
+        crosstab_df = self._get_crosstab_df()
 
         if crosstab_df.empty:
             print("No records to prepare manually.")

@@ -104,10 +104,10 @@ class Operation:
 
         return decorator_func
 
-    def __check_record_state_model_precondition(self) -> None:
+    def _check_record_state_model_precondition(self) -> None:
         colrev.record.RecordStateModel.check_operation_precondition(operation=self)
 
-    def __require_clean_repo_general(
+    def _require_clean_repo_general(
         self,
         *,
         git_repo: Optional[git.Repo] = None,
@@ -163,52 +163,52 @@ class Operation:
             return
 
         if OperationsType.load == self.type:
-            self.__require_clean_repo_general(
+            self._require_clean_repo_general(
                 ignore_pattern=[
                     self.review_manager.SEARCHDIR_RELATIVE,
                     self.review_manager.SETTINGS_RELATIVE,
                 ]
             )
-            self.__check_record_state_model_precondition()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.prep == self.type:
             if self.notify_state_transition_operation:
-                self.__require_clean_repo_general()
-                self.__check_record_state_model_precondition()
+                self._require_clean_repo_general()
+                self._check_record_state_model_precondition()
 
         elif OperationsType.prep_man == self.type:
-            self.__require_clean_repo_general(
+            self._require_clean_repo_general(
                 ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
             )
-            self.__check_record_state_model_precondition()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.dedupe == self.type:
-            self.__require_clean_repo_general()
-            self.__check_record_state_model_precondition()
+            self._require_clean_repo_general()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.prescreen == self.type:
-            self.__require_clean_repo_general()
-            self.__check_record_state_model_precondition()
+            self._require_clean_repo_general()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_get == self.type:
-            self.__require_clean_repo_general(
+            self._require_clean_repo_general(
                 ignore_pattern=[self.review_manager.PDF_DIR_RELATIVE]
             )
-            self.__check_record_state_model_precondition()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_get_man == self.type:
-            self.__require_clean_repo_general(
+            self._require_clean_repo_general(
                 ignore_pattern=[self.review_manager.PDF_DIR_RELATIVE]
             )
-            self.__check_record_state_model_precondition()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_prep == self.type:
-            self.__require_clean_repo_general()
-            self.__check_record_state_model_precondition()
+            self._require_clean_repo_general()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.screen == self.type:
-            self.__require_clean_repo_general()
-            self.__check_record_state_model_precondition()
+            self._require_clean_repo_general()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.data == self.type:
             # __require_clean_repo_general(
@@ -216,7 +216,7 @@ class Operation:
             #         # data.csv, paper.md etc.?,
             #     ]
             # )
-            self.__check_record_state_model_precondition()
+            self._check_record_state_model_precondition()
 
         # ie., implicit pass for format, explore, check, pdf_prep_man
 

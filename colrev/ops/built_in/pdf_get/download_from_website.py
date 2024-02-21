@@ -47,7 +47,7 @@ class WebsiteDownload(JsonSchemaMixin):
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
 
-    def __download_from_jmir(
+    def _download_from_jmir(
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> None:
         article_url = record.data[Fields.URL]
@@ -86,7 +86,7 @@ class WebsiteDownload(JsonSchemaMixin):
                 f"Failed to retrieve the article page. Status code: {response.status_code}"
             )
 
-    def __download_from_bmj_open_science(
+    def _download_from_bmj_open_science(
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> None:
         url = record.data[Fields.URL]
@@ -126,7 +126,7 @@ class WebsiteDownload(JsonSchemaMixin):
                 f"Failed to retrieve the article page. Status code: {response.status_code}"
             )
 
-    def __download_unknown(
+    def _download_unknown(
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> None:
         url = record.data[Fields.URL]
@@ -183,15 +183,15 @@ class WebsiteDownload(JsonSchemaMixin):
                 x in record.data[Fields.URL]
                 for x in ["jmir.org", "iproc.org", "researchprotocols.org"]
             ):
-                self.__download_from_jmir(record=record, pdf_filepath=pdf_filepath)
+                self._download_from_jmir(record=record, pdf_filepath=pdf_filepath)
 
             if "bmjopensem.bmj.com" in record.data[Fields.URL]:
-                self.__download_from_bmj_open_science(
+                self._download_from_bmj_open_science(
                     record=record, pdf_filepath=pdf_filepath
                 )
 
             else:
-                self.__download_unknown(record=record, pdf_filepath=pdf_filepath)
+                self._download_unknown(record=record, pdf_filepath=pdf_filepath)
 
             if pdf_filepath.is_file():
                 record.update_field(

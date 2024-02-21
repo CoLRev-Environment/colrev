@@ -145,7 +145,7 @@ class PDFGet(colrev.operation.Operation):
 
         record.data[Fields.FILE] = str(new_fp)
 
-    def __log_infos(self, *, record: colrev.record.Record) -> None:
+    def _log_infos(self, *, record: colrev.record.Record) -> None:
         if Fields.FILE not in record.data:
             if (
                 not self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis
@@ -222,11 +222,11 @@ class PDFGet(colrev.operation.Operation):
                 colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
             )
 
-        self.__log_infos(record=record)
+        self._log_infos(record=record)
 
         return record.get_data()
 
-    def __relink_pdfs(
+    def _relink_pdfs(
         self,
         *,
         records: typing.Dict[str, typing.Dict],
@@ -321,7 +321,7 @@ class PDFGet(colrev.operation.Operation):
             "Checking PDFs in same directory to reassig when the cpid is identical"
         )
         records = self.review_manager.dataset.load_records_dict()
-        records = self.__relink_pdfs(records=records)
+        records = self._relink_pdfs(records=records)
 
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.create_commit(msg="Relink PDFs")
@@ -415,7 +415,7 @@ class PDFGet(colrev.operation.Operation):
 
         return records
 
-    def __rename_pdf(
+    def _rename_pdf(
         self,
         *,
         record_dict: dict,
@@ -491,7 +491,7 @@ class PDFGet(colrev.operation.Operation):
             if str(file) == str(new_filename):
                 continue
 
-            self.__rename_pdf(
+            self._rename_pdf(
                 record_dict=record_dict,
                 file=file,
                 new_filename=new_filename,
@@ -503,7 +503,7 @@ class PDFGet(colrev.operation.Operation):
         if pdfs_search_file.is_file():
             self.review_manager.dataset.add_changes(path=pdfs_search_file)
 
-    def __get_data(self) -> dict:
+    def _get_data(self) -> dict:
         # pylint: disable=duplicate-code
 
         records_headers = self.review_manager.dataset.load_records_dict(
@@ -573,7 +573,7 @@ class PDFGet(colrev.operation.Operation):
         self.review_manager.logger.info(retrieved_string)
         self.review_manager.logger.info(not_retrieved_string)
 
-    def __set_status_if_pdf_linked(self, *, records: dict) -> dict:
+    def _set_status_if_pdf_linked(self, *, records: dict) -> dict:
         for record_dict in records.values():
             if record_dict[Fields.STATUS] in [
                 colrev.record.RecordState.rev_prescreen_included,
@@ -646,10 +646,10 @@ class PDFGet(colrev.operation.Operation):
         )
 
         records = self.review_manager.dataset.load_records_dict()
-        records = self.__set_status_if_pdf_linked(records=records)
+        records = self._set_status_if_pdf_linked(records=records)
         records = self.check_existing_unlinked_pdfs(records=records)
 
-        pdf_get_data = self.__get_data()
+        pdf_get_data = self._get_data()
 
         if pdf_get_data["nr_tasks"] == 0:
             self.review_manager.logger.info("No additional pdfs to retrieve")

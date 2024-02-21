@@ -16,7 +16,7 @@ class PubmedIDPatternChecker:
 
     msg = DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN
 
-    __PMID_REGEX = r"^\d{1,8}(\.\d)?$"
+    _PMID_REGEX = r"^\d{1,8}(\.\d)?$"
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -29,7 +29,7 @@ class PubmedIDPatternChecker:
         ):
             return
 
-        if not re.match(self.__PMID_REGEX, record.data[Fields.PUBMED_ID]):
+        if not re.match(self._PMID_REGEX, record.data[Fields.PUBMED_ID]):
             record.add_masterdata_provenance_note(key=Fields.PUBMED_ID, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(

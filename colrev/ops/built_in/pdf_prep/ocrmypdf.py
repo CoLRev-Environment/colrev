@@ -47,7 +47,7 @@ class OCRMyPDF(JsonSchemaMixin):
                 imagename=self.ocrmypdf_image
             )
 
-    def __apply_ocr(
+    def _apply_ocr(
         self,
         *,
         record: colrev.record.Record,
@@ -101,6 +101,6 @@ class OCRMyPDF(JsonSchemaMixin):
             return record.data
 
         self.review_manager.report_logger.info(f"apply_ocr({record.data[Fields.ID]})")
-        record = self.__apply_ocr(record=record)
+        record = self._apply_ocr(record=record)
 
         return record.data

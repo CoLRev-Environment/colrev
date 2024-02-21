@@ -18,7 +18,7 @@ class InconsistentWithDOIMetadataChecker:
     """The InconsistentWithDOIMetadataChecker"""
 
     msg = DefectCodes.INCONSISTENT_WITH_DOI_METADATA
-    __fields_to_check = [
+    _fields_to_check = [
         Fields.AUTHOR,
         Fields.TITLE,
         Fields.JOURNAL,
@@ -29,7 +29,7 @@ class InconsistentWithDOIMetadataChecker:
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
-        self.__etiquette = crossref_connector.CrossrefSearchSource.get_etiquette(
+        self._etiquette = crossref_connector.CrossrefSearchSource.get_etiquette(
             review_manager=quality_model.review_manager
         )
 
@@ -44,21 +44,21 @@ class InconsistentWithDOIMetadataChecker:
             if "md_curated.bib" in record.data[Fields.D_PROV][Fields.DOI]["source"]:
                 return
 
-        if self.__doi_metadata_conflicts(record=record):
+        if self._doi_metadata_conflicts(record=record):
             record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
 
-    def __doi_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
+    def _doi_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
         record_copy = record.copy_prep_rec()
 
         try:
             crossref_md = crossref_connector.CrossrefSearchSource.query_doi(
-                doi=record_copy.data[Fields.DOI], etiquette=self.__etiquette
+                doi=record_copy.data[Fields.DOI], etiquette=self._etiquette
             )
 
             for key, value in crossref_md.data.items():
-                if key not in self.__fields_to_check:
+                if key not in self._fields_to_check:
                     continue
                 if not isinstance(value, str):
                     continue

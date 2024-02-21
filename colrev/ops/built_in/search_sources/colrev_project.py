@@ -54,7 +54,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.review_manager = source_operation.review_manager
 
     # pylint: disable=colrev-missed-constant-usage
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
 
@@ -96,7 +96,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __load_records_to_import(self, *, project_url: str, project_name: str) -> dict:
+    def _load_records_to_import(self, *, project_url: str, project_name: str) -> dict:
         temp_path = tempfile.gettempdir() / Path(project_name)
         temp_path.mkdir()
         Repo.clone_from(project_url, temp_path, depth=1)
@@ -132,7 +132,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         # pdf_get_operation =
         # self.review_manager.get_pdf_get_operation(notify_state_transition_operation=False)
 
-        self.__validate_source()
+        self._validate_source()
 
         colrev_project_search_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -142,7 +142,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         # pylint: disable=colrev-missed-constant-usage
         project_url = self.search_source.search_parameters["scope"]["url"]
         project_name = project_url.split("/")[-1].rstrip(".git")
-        records_to_import = self.__load_records_to_import(
+        records_to_import = self._load_records_to_import(
             project_url=project_url, project_name=project_name
         )
 

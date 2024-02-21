@@ -39,16 +39,16 @@ class EnvironmentManager:
 
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
-        self.__registered_ports: typing.List[str] = []
+        self._registered_ports: typing.List[str] = []
 
     def register_ports(self, *, ports: typing.List[str]) -> None:
         """Register a localhost port to avoid conflicts"""
         for port_to_register in ports:
-            if port_to_register in self.__registered_ports:
+            if port_to_register in self._registered_ports:
                 raise colrev_exceptions.PortAlreadyRegisteredException(
                     f"Port {port_to_register} already registered"
                 )
-            self.__registered_ports.append(port_to_register)
+            self._registered_ports.append(port_to_register)
 
     def load_environment_registry(self) -> dict:
         """Load the local registry"""
@@ -89,13 +89,13 @@ class EnvironmentManager:
             return []
         return self.environment_registry["local_index"]["repos"]
 
-    def __cast_values_to_str(self, data) -> dict:  # type: ignore
+    def _cast_values_to_str(self, data) -> dict:  # type: ignore
         result = {}
         for key, value in data.items():
             if isinstance(value, dict):
-                result[key] = self.__cast_values_to_str(value)
+                result[key] = self._cast_values_to_str(value)
             elif isinstance(value, list):
-                result[key] = [self.__cast_values_to_str(v) for v in value]  # type: ignore
+                result[key] = [self._cast_values_to_str(v) for v in value]  # type: ignore
             else:
                 result[key] = str(value)  # type: ignore
         return result
@@ -105,7 +105,7 @@ class EnvironmentManager:
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
             json.dump(
-                dict(self.__cast_values_to_str(updated_registry)), indent=4, fp=file
+                dict(self._cast_values_to_str(updated_registry)), indent=4, fp=file
             )
 
     def register_repo(self, *, path_to_register: Path) -> None:

@@ -49,10 +49,10 @@ class YearVolIssPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
         self.local_index = prep_operation.review_manager.get_local_index()
-        self.vol_nr_dict = self.__get_vol_nr_dict()
+        self.vol_nr_dict = self._get_vol_nr_dict()
         self.quality_model = self.review_manager.get_qm()
 
-    def __get_vol_nr_dict(self) -> dict:
+    def _get_vol_nr_dict(self) -> dict:
         vol_nr_dict: dict = {}
         if not hasattr(self.review_manager, "dataset"):
             return vol_nr_dict
@@ -92,7 +92,7 @@ class YearVolIssPrep(JsonSchemaMixin):
 
         return vol_nr_dict
 
-    def __get_year_from_toc(self, *, record: colrev.record.Record) -> None:
+    def _get_year_from_toc(self, *, record: colrev.record.Record) -> None:
         # TBD: maybe extract the following three lines as a separate script...
         try:
             year = self.local_index.get_year_from_toc(record_dict=record.get_data())
@@ -106,7 +106,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         except colrev_exceptions.TOCNotAvailableException:
             pass
 
-    def __get_year_from_vol_nr_dict(self, *, record: colrev.record.Record) -> None:
+    def _get_year_from_vol_nr_dict(self, *, record: colrev.record.Record) -> None:
         if Fields.JOURNAL not in record.data or Fields.VOLUME not in record.data:
             return
 
@@ -152,7 +152,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                 )
                 record.run_quality_model(qm=self.quality_model)
 
-    def __get_year_from_crossref(self, *, record: colrev.record.Record) -> None:
+    def _get_year_from_crossref(self, *, record: colrev.record.Record) -> None:
         try:
             crossref_source = crossref_connector.CrossrefSearchSource(
                 source_operation=self.prep_operation
@@ -210,16 +210,16 @@ class YearVolIssPrep(JsonSchemaMixin):
         ):
             return record
 
-        self.__get_year_from_toc(record=record)
+        self._get_year_from_toc(record=record)
 
         if Fields.YEAR in record.data:
             return record
 
-        self.__get_year_from_vol_nr_dict(record=record)
+        self._get_year_from_vol_nr_dict(record=record)
 
         if Fields.YEAR in record.data:
             return record
 
-        self.__get_year_from_crossref(record=record)
+        self._get_year_from_crossref(record=record)
 
         return record

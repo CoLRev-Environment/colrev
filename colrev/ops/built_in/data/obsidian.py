@@ -94,7 +94,7 @@ class Obsidian(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __get_obsidian_missing(self, *, included: list) -> list:
+    def _get_obsidian_missing(self, *, included: list) -> list:
         in_obsidian = []
         for md_file in self.endpoint_paper_path.glob("*.md"):
             # missing: if todo in file
@@ -102,7 +102,7 @@ class Obsidian(JsonSchemaMixin):
                 in_obsidian.append(str(md_file.name).replace(".md", ""))
         return [x for x in included if x not in in_obsidian]
 
-    def __get_keywords(self, *, record_dict: dict) -> list:
+    def _get_keywords(self, *, record_dict: dict) -> list:
         keywords = []
 
         try:
@@ -124,9 +124,9 @@ class Obsidian(JsonSchemaMixin):
 
         return keywords
 
-    def __append_missing_records(self, *, records: dict, silent_mode: bool) -> None:
+    def _append_missing_records(self, *, records: dict, silent_mode: bool) -> None:
         included = self.data_operation.get_record_ids_for_synthesis(records)
-        missing_records = self.__get_obsidian_missing(included=included)
+        missing_records = self._get_obsidian_missing(included=included)
         if len(missing_records) == 0:
             if not silent_mode:
                 self.review_manager.logger.info(
@@ -151,9 +151,7 @@ class Obsidian(JsonSchemaMixin):
             paper_summary_path = self.endpoint_paper_path / Path(f"{missing_record}.md")
 
             missing_record_entities[paper_summary_path] = {
-                Fields.KEYWORDS: self.__get_keywords(
-                    record_dict=records[missing_record]
-                )
+                Fields.KEYWORDS: self._get_keywords(record_dict=records[missing_record])
             }
 
         all_keywords = [x[Fields.KEYWORDS] for x in missing_record_entities.values()]
@@ -222,7 +220,7 @@ class Obsidian(JsonSchemaMixin):
 
         self.review_manager.logger.debug("Export to obsidian endpoint")
 
-        self.__append_missing_records(records=records, silent_mode=silent_mode)
+        self._append_missing_records(records=records, silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,
@@ -231,7 +229,7 @@ class Obsidian(JsonSchemaMixin):
     ) -> None:
         """Update the record_status_matrix"""
 
-        missing_records = self.__get_obsidian_missing(
+        missing_records = self._get_obsidian_missing(
             included=list(synthesized_record_status_matrix.keys())
         )
 

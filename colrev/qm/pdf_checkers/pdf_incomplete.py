@@ -43,12 +43,12 @@ class PDFIncompletenessChecker:
         ):
             return
 
-        if not self.__pages_match_pdf(record=record):
+        if not self._pages_match_pdf(record=record):
             record.add_data_provenance_note(key=Fields.FILE, note=self.msg)
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def __longer_with_appendix(
+    def _longer_with_appendix(
         self,
         *,
         record: colrev.record.Record,
@@ -66,8 +66,8 @@ class PDFIncompletenessChecker:
                 return True
         return False
 
-    def __pages_match_pdf(self, *, record: colrev.record.Record) -> bool:
-        def __roman_to_int(*, s: str) -> int:
+    def _pages_match_pdf(self, *, record: colrev.record.Record) -> bool:
+        def _roman_to_int(*, s: str) -> int:
             s = s.lower()
             roman = {
                 "i": 1,
@@ -95,7 +95,7 @@ class PDFIncompletenessChecker:
                     i += 1
             return num
 
-        def __get_nr_pages_in_metadata(*, pages_metadata: str) -> int:
+        def _get_nr_pages_in_metadata(*, pages_metadata: str) -> int:
             if "--" in pages_metadata:
                 nr_pages_metadata = (
                     int(pages_metadata.split("--")[1])
@@ -120,17 +120,15 @@ class PDFIncompletenessChecker:
         if roman_pages_matched:
             start_page, end_page = roman_pages_matched.group().split("--")
             pages_metadata = (
-                f"{__roman_to_int(s=start_page)}--{__roman_to_int(s=end_page)}"
+                f"{_roman_to_int(s=start_page)}--{_roman_to_int(s=end_page)}"
             )
         roman_page_matched = re.match(self.roman_page_pattern, pages_metadata)
         if roman_page_matched:
             page = roman_page_matched.group()
-            pages_metadata = f"{__roman_to_int(s=page)}"
+            pages_metadata = f"{_roman_to_int(s=page)}"
 
         try:
-            nr_pages_metadata = __get_nr_pages_in_metadata(
-                pages_metadata=pages_metadata
-            )
+            nr_pages_metadata = _get_nr_pages_in_metadata(pages_metadata=pages_metadata)
         except ValueError:
             # e.g., S49--S50
             return True
@@ -142,7 +140,7 @@ class PDFIncompletenessChecker:
         if nr_pages_metadata == record.data[Fields.PAGES_IN_FILE]:
             return True
 
-        if self.__longer_with_appendix(
+        if self._longer_with_appendix(
             record=record,
             nr_pages_metadata=nr_pages_metadata,
         ):

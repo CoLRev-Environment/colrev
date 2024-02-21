@@ -62,7 +62,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         self.pdf_qm = self.review_manager.get_pdf_qm()
 
-    def __get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
+    def _get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
         author_similarity = fuzz.ratio(df_a[Fields.AUTHOR], df_b[Fields.AUTHOR]) / 100
 
         title_similarity = (
@@ -85,7 +85,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         return similarity_score
 
-    def __calculate_similarities(
+    def _calculate_similarities(
         self,
         *,
         similarity_array: np.ndarray,
@@ -98,7 +98,7 @@ class CurationDedupe(JsonSchemaMixin):
                 if base_entry_i > comparison_entry_i:
                     if -1 != similarity_array[base_entry_i, comparison_entry_i]:
                         similarity_array[base_entry_i, comparison_entry_i] = (
-                            self.__get_similarity(
+                            self._get_similarity(
                                 df_a=references.iloc[base_entry_i],
                                 df_b=references.iloc[comparison_entry_i],
                             )
@@ -125,7 +125,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         return similarity_array, tuples_to_process
 
-    def __get_toc_items(self, *, records_list: list) -> list:
+    def _get_toc_items(self, *, records_list: list) -> list:
         toc_items = []
         for record in records_list:
             toc_item = {}
@@ -148,7 +148,7 @@ class CurationDedupe(JsonSchemaMixin):
         toc_items = list(map(dict, temp))  # type: ignore
         return toc_items
 
-    def __warn_on_missing_sources(self, *, first_source: bool) -> None:
+    def _warn_on_missing_sources(self, *, first_source: bool) -> None:
         # warn if not all SOURCE.filenames are included in a dedupe script
         if first_source:
             available_sources = [
@@ -189,7 +189,7 @@ class CurationDedupe(JsonSchemaMixin):
                             f"to dedupe.scripts{Colors.END}"
                         )
 
-    def __add_first_source_if_deduplicated(self, *, records: dict) -> None:
+    def _add_first_source_if_deduplicated(self, *, records: dict) -> None:
         self.review_manager.logger.info(
             f"Starting with records from {self.settings.selected_source}"
             " (setting to md_processed as the initial records)"
@@ -205,7 +205,7 @@ class CurationDedupe(JsonSchemaMixin):
             )
         ]
 
-        toc_items = self.__get_toc_items(records_list=source_records)
+        toc_items = self._get_toc_items(records_list=source_records)
 
         for toc_item in toc_items:
             # Note : these would be potential errors (duplicates)
@@ -283,7 +283,7 @@ class CurationDedupe(JsonSchemaMixin):
                 f"{Colors.GREEN}No duplicates found{Colors.END}"
             )
 
-    def __prep_records(self, *, records: dict) -> dict:
+    def _prep_records(self, *, records: dict) -> dict:
         required_fields = [
             Fields.TITLE,
             Fields.AUTHOR,
@@ -307,7 +307,7 @@ class CurationDedupe(JsonSchemaMixin):
                     record[required_field] = ""
         return records
 
-    def __dedupe_source(self, *, records: dict) -> list[list]:
+    def _dedupe_source(self, *, records: dict) -> list[list]:
         self.review_manager.logger.info(
             "Processing as a non-pdf source (matching exact colrev_ids)"
         )
@@ -322,7 +322,7 @@ class CurationDedupe(JsonSchemaMixin):
             )
         ]
 
-        toc_items = self.__get_toc_items(records_list=source_records)
+        toc_items = self._get_toc_items(records_list=source_records)
 
         decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
@@ -368,7 +368,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         return decision_list
 
-    def __validate_potential_merge(self, *, rec1: dict, rec2: dict) -> bool:
+    def _validate_potential_merge(self, *, rec1: dict, rec2: dict) -> bool:
         if Fields.FILE in rec2:
             updated_record_dict = rec1.copy()
             updated_record_dict[Fields.FILE] = rec2[Fields.FILE]
@@ -382,7 +382,7 @@ class CurationDedupe(JsonSchemaMixin):
         updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
         return updated_record.has_pdf_defects()
 
-    def __process_pdf_tuple(
+    def _process_pdf_tuple(
         self,
         *,
         tuple_to_process: tuple,
@@ -405,7 +405,7 @@ class CurationDedupe(JsonSchemaMixin):
             return
 
         try:
-            validated = self.__validate_potential_merge(rec1=rec1, rec2=rec2)
+            validated = self._validate_potential_merge(rec1=rec1, rec2=rec2)
         except FileNotFoundError:
             return
 
@@ -415,7 +415,7 @@ class CurationDedupe(JsonSchemaMixin):
         if validated or overlapping_colrev_ids:
             decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 
-    def __dedupe_pdf_toc_item(
+    def _dedupe_pdf_toc_item(
         self,
         *,
         decision_list: list[list],
@@ -456,7 +456,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         # Note : min_similarity only means that the PDF will be considered
         # for validates_based_on_metadata(...), which is the acutal test!
-        similarity_array, tuples_to_process = self.__calculate_similarities(
+        similarity_array, tuples_to_process = self._calculate_similarities(
             similarity_array=similarity_array,
             references=references,
             min_similarity=0.7,
@@ -465,7 +465,7 @@ class CurationDedupe(JsonSchemaMixin):
         curated_record_ids = [r[Fields.ID] for r in processed_same_toc_records]
         pdf_record_ids = [r[Fields.ID] for r in pdf_same_toc_records]
         for tuple_to_process in tuples_to_process:
-            self.__process_pdf_tuple(
+            self._process_pdf_tuple(
                 tuple_to_process=tuple_to_process,
                 records=records,
                 decision_list=decision_list,
@@ -473,7 +473,7 @@ class CurationDedupe(JsonSchemaMixin):
                 pdf_record_ids=pdf_record_ids,
             )
 
-    def __dedupe_pdf_source(self, *, records: dict) -> list[list]:
+    def _dedupe_pdf_source(self, *, records: dict) -> list[list]:
         self.review_manager.logger.info("Processing as a pdf source")
 
         source_records = [
@@ -489,8 +489,8 @@ class CurationDedupe(JsonSchemaMixin):
         decision_list: list[list] = []
         # decision_list =[{'ID1': ID1, 'ID2': ID2, 'decision': 'duplicate'}]
 
-        for toc_item in tqdm(self.__get_toc_items(records_list=source_records)):
-            self.__dedupe_pdf_toc_item(
+        for toc_item in tqdm(self._get_toc_items(records_list=source_records)):
+            self._dedupe_pdf_toc_item(
                 decision_list=decision_list,
                 toc_item=toc_item,
                 records=records,
@@ -499,7 +499,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         return decision_list
 
-    def __pdf_source_selected(self) -> bool:
+    def _pdf_source_selected(self) -> bool:
         pdf_source = False
         relevant_source = [
             s
@@ -510,7 +510,7 @@ class CurationDedupe(JsonSchemaMixin):
             pdf_source = "colrev.files_dir" == relevant_source[0].endpoint
         return pdf_source
 
-    def __first_source_selected(self) -> bool:
+    def _first_source_selected(self) -> bool:
         return (
             self.settings.selected_source
             == self.review_manager.settings.dedupe.dedupe_package_endpoints[0][
@@ -524,16 +524,16 @@ class CurationDedupe(JsonSchemaMixin):
         self.dedupe_operation.merge_based_on_global_ids(apply=True)
 
         records = self.review_manager.dataset.load_records_dict()
-        records = self.__prep_records(records=records)
+        records = self._prep_records(records=records)
 
         # first_source should be the highest quality source
         # (which moves to md_processed first)
-        first_source = self.__first_source_selected()
+        first_source = self._first_source_selected()
 
-        self.__warn_on_missing_sources(first_source=first_source)
+        self._warn_on_missing_sources(first_source=first_source)
 
         if first_source:
-            self.__add_first_source_if_deduplicated(records=records)
+            self._add_first_source_if_deduplicated(records=records)
             return
 
         self.review_manager.logger.info(
@@ -543,10 +543,10 @@ class CurationDedupe(JsonSchemaMixin):
 
         decision_list: list[list] = []
         # decision_list =[['ID1', 'ID2'], ...]
-        if not self.__pdf_source_selected():
-            decision_list = self.__dedupe_source(records=records)
+        if not self._pdf_source_selected():
+            decision_list = self._dedupe_source(records=records)
         else:
-            decision_list = self.__dedupe_pdf_source(records=records)
+            decision_list = self._dedupe_pdf_source(records=records)
 
         # Note : dedupe.apply_merges reloads the records and
         # thereby discards previous changes

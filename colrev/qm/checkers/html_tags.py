@@ -15,7 +15,7 @@ class HTMLTagChecker:
     """The HTMLTagChecker"""
 
     msg = DefectCodes.HTML_TAGS
-    __fields_to_check = [
+    _fields_to_check = [
         Fields.TITLE,
         Fields.JOURNAL,
         Fields.BOOKTITLE,
@@ -30,7 +30,7 @@ class HTMLTagChecker:
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the html-tags checks"""
 
-        for key in self.__fields_to_check:
+        for key in self._fields_to_check:
             if key not in record.data or record.ignored_defect(
                 field=key, defect=self.msg
             ):

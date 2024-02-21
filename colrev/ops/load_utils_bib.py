@@ -55,7 +55,7 @@ class BIBLoader:
         self.unique_id_field = unique_id_field
         self.review_manager = self.load_operation.review_manager
 
-    def __apply_file_fixes(self) -> None:
+    def _apply_file_fixes(self) -> None:
         # pylint: disable=duplicate-code
         # pylint: disable=too-many-statements
 
@@ -159,7 +159,7 @@ class BIBLoader:
                 seekpos = file.tell()
                 line = file.readline()
 
-    def __check_bib_file(self, *, records: dict) -> None:
+    def _check_bib_file(self, *, records: dict) -> None:
         if len(records.items()) <= 3:
             return
         if not any(Fields.AUTHOR in r for r in records.values()):
@@ -211,7 +211,7 @@ class BIBLoader:
                                 )
                         line = file.readline()
 
-        def __load_records() -> dict:
+        def _load_records() -> dict:
             if not self.source.filename.is_file():
                 return {}
             with open(self.source.filename, encoding="utf8") as bibtex_file:
@@ -256,9 +256,9 @@ class BIBLoader:
             for crossref_id in crossref_ids:
                 del records[crossref_id]
 
-        self.__apply_file_fixes()
+        self._apply_file_fixes()
 
-        records = __load_records()
+        records = _load_records()
         if len(records) == 0:
             return records
 
@@ -268,5 +268,5 @@ class BIBLoader:
         records = dict(sorted(records.items()))
         check_nr_in_bib(records=records)
         if check_bib_file:
-            self.__check_bib_file(records=records)
+            self._check_bib_file(records=records)
         return records

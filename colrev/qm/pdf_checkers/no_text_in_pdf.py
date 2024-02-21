@@ -32,12 +32,12 @@ class TextInPDFChecker:
         ):
             return
 
-        if not self.__text_in_pdf(record=record):
+        if not self._text_in_pdf(record=record):
             record.add_data_provenance_note(key=Fields.FILE, note=self.msg)
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def __text_in_pdf(
+    def _text_in_pdf(
         self,
         *,
         record: colrev.record.Record,

@@ -44,9 +44,9 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         self.review_manager = pdf_get_man_operation.review_manager
         self.pdf_get_man_operation = pdf_get_man_operation
 
-        self.__get_from_downloads_folder = False
+        self._get_from_downloads_folder = False
 
-    def __get_pdf_from_google(
+    def _get_pdf_from_google(
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
         # import webbrowser
@@ -58,7 +58,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         print(url)
         return record
 
-    def __ask_authors_for_pdf(
+    def _ask_authors_for_pdf(
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
         # get the recipient email(s) from the local author index
@@ -85,7 +85,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         return record
 
-    def __get_filepath(self, *, record: colrev.record.Record) -> Path:
+    def _get_filepath(self, *, record: colrev.record.Record) -> Path:
         filepath = (
             self.review_manager.pdf_dir
             / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
@@ -120,7 +120,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         return filepath
 
-    def __retrieve_record_from_downloads_folder(
+    def _retrieve_record_from_downloads_folder(
         self,
         *,
         record: colrev.record.Record,
@@ -209,7 +209,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         print(ret_str)
 
-    def __pdf_get_man_record_cli(
+    def _pdf_get_man_record_cli(
         self,
         *,
         record: colrev.record.Record,
@@ -228,12 +228,12 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             return
 
         retrieval_scripts = {
-            "get_pdf_from_google": self.__get_pdf_from_google,
-            "ask_authors": self.__ask_authors_for_pdf,
+            "get_pdf_from_google": self._get_pdf_from_google,
+            "ask_authors": self._ask_authors_for_pdf,
             # 'get_pdf_from_researchgate': get_pdf_from_researchgate,
         }
 
-        filepath = self.__get_filepath(record=record)
+        filepath = self._get_filepath(record=record)
         for retrieval_script in retrieval_scripts.values():
             # self.review_manager.logger.debug(
             #     f'{script_name}({record.data[Fields.ID]}) called'
@@ -241,13 +241,13 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             record = retrieval_script(record)
 
             if input("Retrieved (y/n)?") == "y":
-                if self.__get_from_downloads_folder:
-                    self.__retrieve_record_from_downloads_folder(record=record)
-                filepath = self.__get_filepath(record=record)
+                if self._get_from_downloads_folder:
+                    self._retrieve_record_from_downloads_folder(record=record)
+                filepath = self._get_filepath(record=record)
                 if not filepath.is_file():
                     print(f"File does not exist: {record.data[Fields.ID]}.pdf")
                 else:
-                    filepath = self.__get_filepath(record=record)
+                    filepath = self._get_filepath(record=record)
                     self.pdf_get_man_operation.pdf_get_man_record(
                         record=record,
                         filepath=filepath,
@@ -275,7 +275,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
 
         if input("Get PDF from Downloads folder (y/n)?") == "y":
-            self.__get_from_downloads_folder = True
+            self._get_from_downloads_folder = True
 
         for record_dict in records.values():
             record = colrev.record.Record(data=record_dict)
@@ -301,7 +301,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
             print(f"\n\n{stat}")
 
-            self.__pdf_get_man_record_cli(record=record)
+            self._pdf_get_man_record_cli(record=record)
 
         if self.review_manager.dataset.has_changes():
             if input("Create commit (y/n)?") == "y":

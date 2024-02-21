@@ -49,7 +49,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/open_alex.md"
     )
     short_name = "OpenAlex"
-    __open_alex_md_filename = Path("data/search/md_open_alex.bib")
+    _open_alex_md_filename = Path("data/search/md_open_alex.bib")
 
     def __init__(
         self,
@@ -70,14 +70,14 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         open_alex_md_source_l = [
             s
             for s in self.review_manager.settings.sources
-            if s.filename == self.__open_alex_md_filename
+            if s.filename == self._open_alex_md_filename
         ]
         if open_alex_md_source_l:
             self.search_source = open_alex_md_source_l[0]
         else:
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.open_alex",
-                filename=self.__open_alex_md_filename,
+                filename=self._open_alex_md_filename,
                 search_type=colrev.settings.SearchType.MD,
                 search_parameters={},
                 comment="",
@@ -94,7 +94,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     ) -> None:
         """Check status (availability) of the OpenAlex API"""
 
-    def __set_author_from_item(self, *, record_dict: dict, item: dict) -> None:
+    def _set_author_from_item(self, *, record_dict: dict, item: dict) -> None:
         author_list = []
         # pylint: disable=colrev-missed-constant-usage
         for author in item["authorships"]:
@@ -109,7 +109,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         record_dict[Fields.AUTHOR] = " and ".join(author_list)
 
-    def __parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
+    def _parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
         def set_entrytype(*, record_dict: dict, item: dict) -> None:
             # pylint: disable=colrev-missed-constant-usage
             if "title" in record_dict and record_dict["title"] is None:
@@ -169,13 +169,13 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         if "last_page" in item["biblio"] and item["biblio"]["last_page"] is not None:
             record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
 
-        self.__set_author_from_item(record_dict=record_dict, item=item)
+        self._set_author_from_item(record_dict=record_dict, item=item)
         record = colrev.record.Record(data=record_dict)
 
-        self.__fix_errors(record=record)
+        self._fix_errors(record=record)
         return record
 
-    def __fix_errors(self, *, record: colrev.record.Record) -> None:
+    def _fix_errors(self, *, record: colrev.record.Record) -> None:
         if "PubMed" == record.data.get(Fields.JOURNAL, ""):
             record.remove_field(key=Fields.JOURNAL)
         try:
@@ -183,11 +183,11 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         except colrev_exceptions.InvalidLanguageCodeException:
             record.remove_field(key=Fields.LANGUAGE)
 
-    def __get_masterdata_record(
+    def _get_masterdata_record(
         self, *, record: colrev.record.Record
     ) -> colrev.record.Record:
         try:
-            retrieved_record = self.__parse_item_to_record(
+            retrieved_record = self._parse_item_to_record(
                 item=Works()[record.data["colrev.open_alex.id"]]
             )
 
@@ -242,10 +242,10 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
             # if len(record.data.get(Fields.TITLE, "")) < 35 and Fields.DOI not in record.data:
             #     return record
-            # record = self.__check_doi_masterdata(record=record)
+            # record = self._check_doi_masterdata(record=record)
             return record
 
-        record = self.__get_masterdata_record(record=record)
+        record = self._get_masterdata_record(record=record)
 
         return record
 
@@ -262,12 +262,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         # try:
         #     if self.search_source.search_type == colrev.settings.SearchType.MD:
-        #         self.__run_md_search_update(
+        #         self._run_md_search_update(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #         )
         #     elif self.search_source.search_type == colrev.settings.SearchType.API:
-        #         self.__run_parameter_search(
+        #         self._run_parameter_search(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #             rerun=rerun,
@@ -280,10 +280,10 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         #     # https://github.com/fabiobatalha/crossrefapi/issues/46
         #     if "504 Gateway Time-out" in str(exc):
         #         raise colrev_exceptions.ServiceNotAvailableException(
-        #             self.__availability_exception_message
+        #             self._availability_exception_message
         #         )
         #     raise colrev_exceptions.ServiceNotAvailableException(
-        #         self.__availability_exception_message
+        #         self._availability_exception_message
         #     )
 
         # if self.search_source.search_type == colrev.settings.SearchType.DB:

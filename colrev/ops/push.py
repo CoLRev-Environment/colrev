@@ -32,18 +32,18 @@ class Push(colrev.operation.Operation):
         """Push a CoLRev project and records (main entrypoint)"""
 
         if project_only:
-            self.__push_project()
+            self._push_project()
 
         if records_only:
-            self.__push_record_corrections(all_records=all_records)
+            self._push_record_corrections(all_records=all_records)
 
-    def __push_project(self) -> None:
+    def _push_project(self) -> None:
         git_repo = self.review_manager.dataset.get_repo()
         origin = git_repo.remotes.origin
         self.review_manager.logger.info(f"Push changes to {git_repo.remotes.origin}")
         origin.push()
 
-    def __get_change_sets(self) -> dict:
+    def _get_change_sets(self) -> dict:
         self.review_manager.logger.info("Collect corrections")
 
         search_source_mappings = {
@@ -77,10 +77,10 @@ class Push(colrev.operation.Operation):
 
         return change_sets
 
-    def __push_record_corrections(self, *, all_records: bool) -> None:
+    def _push_record_corrections(self, *, all_records: bool) -> None:
         """Push corrections of records"""
 
-        change_sets = self.__get_change_sets()
+        change_sets = self._get_change_sets()
         package_manager = self.review_manager.get_package_manager()
 
         for source_prefix, change_itemsets in change_sets.items():
@@ -118,9 +118,9 @@ class Push(colrev.operation.Operation):
                 self.review_manager.logger.debug(
                     f"No correction function in {endpoint_dict}"
                 )
-                self.__share_correction(source=source, change_list=change_itemsets)
+                self._share_correction(source=source, change_list=change_itemsets)
 
-    def __share_correction(
+    def _share_correction(
         self, *, source: colrev.settings.SearchSource, change_list: list
     ) -> None:
         prepared_change_list = []

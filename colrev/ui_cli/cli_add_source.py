@@ -20,7 +20,7 @@ class CLISourceAdder:
         self.review_manager = search_operation.review_manager
         self.package_manager = self.review_manager.get_package_manager()
 
-    def __select_source(
+    def _select_source(
         self,
         *,
         source_candidates: list,
@@ -44,13 +44,13 @@ class CLISourceAdder:
         selected_heuristic_source = inquirer.prompt(questions)["source"]
         return selected_heuristic_source
 
-    def __select_source_from_heuristics(
+    def _select_source_from_heuristics(
         self, *, filename: Path, source_candidates: list
     ) -> None:
         if 1 == len(source_candidates):
             heuristic_source_dict = source_candidates[0]
         else:
-            heuristic_source_dict = self.__select_source(
+            heuristic_source_dict = self._select_source(
                 source_candidates=source_candidates
             )
 
@@ -78,7 +78,7 @@ class CLISourceAdder:
 
         heuristic_list = self.search_operation.get_new_sources_heuristic_list()
         for filename, source_candidates in heuristic_list.items():
-            self.__select_source_from_heuristics(
+            self._select_source_from_heuristics(
                 filename=filename, source_candidates=source_candidates
             )
         self.search_operation.review_manager.save_settings()

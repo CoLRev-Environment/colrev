@@ -49,7 +49,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
             imagename=self.chrome_browserless_image
         )
 
-    def __start_screenshot_service(self) -> None:
+    def _start_screenshot_service(self) -> None:
         """Start the screenshot service"""
 
         # pylint: disable=duplicate-code
@@ -106,7 +106,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
             return True
         return False
 
-    def __add_screenshot(
+    def _add_screenshot(
         self, *, record: colrev.record.Record, pdf_filepath: Path
     ) -> colrev.record.Record:
         """Add a PDF screenshot to the record"""
@@ -157,12 +157,12 @@ class WebsiteScreenshot(JsonSchemaMixin):
         if record.data[Fields.ENTRYTYPE] != "online":
             return record
 
-        self.__start_screenshot_service()
+        self._start_screenshot_service()
 
         pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
             f"{record.data['ID']}.pdf"
         )
-        record = self.__add_screenshot(record=record, pdf_filepath=pdf_filepath)
+        record = self._add_screenshot(record=record, pdf_filepath=pdf_filepath)
 
         if Fields.FILE in record.data:
             self.pdf_get_operation.import_pdf(record=record)

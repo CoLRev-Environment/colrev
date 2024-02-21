@@ -668,16 +668,16 @@ class Settings(JsonSchemaMixin):
         return schema
 
 
-def __add_missing_attributes(loaded_dict: dict) -> None:
+def _add_missing_attributes(loaded_dict: dict) -> None:
     # TODO : replace dict with defaults if values are missing (to avoid exceptions)
     if "defects_to_ignore" not in loaded_dict["pdf_get"]:
         loaded_dict["pdf_get"]["defects_to_ignore"] = []
 
 
-def __load_settings_from_dict(*, loaded_dict: dict) -> Settings:
+def _load_settings_from_dict(*, loaded_dict: dict) -> Settings:
     try:
         converters = {Path: Path, Enum: Enum}
-        __add_missing_attributes(loaded_dict)
+        _add_missing_attributes(loaded_dict)
         settings = from_dict(
             data_class=Settings,
             data=loaded_dict,
@@ -711,7 +711,7 @@ def load_settings(*, settings_path: Path) -> Settings:
     with open(settings_path, encoding="utf-8") as file:
         loaded_dict = json.load(file)
 
-    return __load_settings_from_dict(loaded_dict=loaded_dict)
+    return _load_settings_from_dict(loaded_dict=loaded_dict)
 
 
 def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> None:

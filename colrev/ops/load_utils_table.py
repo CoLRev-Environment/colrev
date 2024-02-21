@@ -61,7 +61,7 @@ class TableLoader:
         self.unique_id_field = unique_id_field
 
     @classmethod
-    def __rename_fields(cls, *, record_dict: dict) -> dict:
+    def _rename_fields(cls, *, record_dict: dict) -> dict:
         if "issue" in record_dict and Fields.NUMBER not in record_dict:
             record_dict[Fields.NUMBER] = record_dict["issue"]
             if record_dict[Fields.NUMBER] == "no issue":
@@ -88,7 +88,7 @@ class TableLoader:
         return record_dict
 
     @classmethod
-    def __set_entrytype(cls, *, record_dict: dict) -> dict:
+    def _set_entrytype(cls, *, record_dict: dict) -> dict:
         record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
         if "type" in record_dict:
             record_dict[Fields.ENTRYTYPE] = record_dict["type"]
@@ -116,18 +116,18 @@ class TableLoader:
         return record_dict
 
     @classmethod
-    def __parse_record_dict(cls, *, record_dict: dict) -> dict:
-        record_dict = cls.__set_entrytype(record_dict=record_dict)
+    def _parse_record_dict(cls, *, record_dict: dict) -> dict:
+        record_dict = cls._set_entrytype(record_dict=record_dict)
 
         for key, value in record_dict.items():
             record_dict[key] = str(value)
 
-        record_dict = cls.__rename_fields(record_dict=record_dict)
+        record_dict = cls._rename_fields(record_dict=record_dict)
 
         return record_dict
 
     @classmethod
-    def __get_records_dict(cls, *, records: list) -> dict:
+    def _get_records_dict(cls, *, records: list) -> dict:
         next_id = 1
         for record_dict in records:
             if Fields.ID not in record_dict:
@@ -136,7 +136,7 @@ class TableLoader:
                 else:
                     record_dict[Fields.ID] = next_id
                     next_id += 1
-            record_dict = cls.__parse_record_dict(record_dict=record_dict)
+            record_dict = cls._parse_record_dict(record_dict=record_dict)
 
         if all(Fields.ID in r for r in records):
             records_dict = {r[Fields.ID]: r for r in records}
@@ -149,7 +149,7 @@ class TableLoader:
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
-    def __drop_fields(cls, *, records_dict: dict) -> dict:
+    def _drop_fields(cls, *, records_dict: dict) -> dict:
         for r_dict in records_dict.values():
             for key in list(r_dict.keys()):
                 if r_dict[key] in [f"no {key}", "", "nan"]:
@@ -175,7 +175,7 @@ class TableLoader:
         return records_dict
 
     @classmethod
-    def __fix_authors(cls, *, records_dict: dict) -> dict:
+    def _fix_authors(cls, *, records_dict: dict) -> dict:
         for record in records_dict.values():
             if "author" in record and ";" in record["author"]:
                 record["author"] = record["author"].replace("; ", " and ")
@@ -186,9 +186,9 @@ class TableLoader:
     def preprocess_records(cls, *, records: list) -> dict:
         """Preprocess records imported from a table"""
 
-        records_dict = cls.__get_records_dict(records=records)
-        records_dict = cls.__drop_fields(records_dict=records_dict)
-        records_dict = cls.__fix_authors(records_dict=records_dict)
+        records_dict = cls._get_records_dict(records=records)
+        records_dict = cls._drop_fields(records_dict=records_dict)
+        records_dict = cls._fix_authors(records_dict=records_dict)
 
         return records_dict
 

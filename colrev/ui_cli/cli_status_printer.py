@@ -54,7 +54,7 @@ def print_review_instructions(review_instructions: dict) -> None:
         print()
 
 
-def __print_collaboration_instructions_status(
+def _print_collaboration_instructions_status(
     *, collaboration_instructions: dict
 ) -> None:
     if "status" not in collaboration_instructions:
@@ -71,7 +71,7 @@ def __print_collaboration_instructions_status(
         print(f'  {collaboration_instructions["status"]["msg"]}')
 
 
-def __print_collaboration_instructions_items(
+def _print_collaboration_instructions_items(
     *, collaboration_instructions: dict
 ) -> None:
     for item in collaboration_instructions["items"]:
@@ -107,10 +107,10 @@ def print_collaboration_instructions(
             return
 
     print("Versioning and collaboration")
-    __print_collaboration_instructions_status(
+    _print_collaboration_instructions_status(
         collaboration_instructions=collaboration_instructions
     )
-    __print_collaboration_instructions_items(
+    _print_collaboration_instructions_items(
         collaboration_instructions=collaboration_instructions
     )
 

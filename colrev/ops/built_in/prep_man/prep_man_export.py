@@ -41,7 +41,7 @@ class ExportManPrep(JsonSchemaMixin):
     RELATIVE_PREP_MAN_INFO_PATH = Path("records_prep_man_info.csv")
     RELATIVE_PREP_MAN_INFO_PATH_XLS = Path("records_prep_man_info.xlsx")
 
-    __FIELDS_TO_KEEP = [
+    _FIELDS_TO_KEEP = [
         Fields.ENTRYTYPE,
         Fields.AUTHOR,
         Fields.TITLE,
@@ -101,7 +101,7 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
 
-    def __copy_files_for_man_prep(self, *, records: dict) -> None:
+    def _copy_files_for_man_prep(self, *, records: dict) -> None:
         prep_man_path_pdfs = self.review_manager.prep_dir / Path("pdfs")
         if prep_man_path_pdfs.is_dir():
             input(f"Remove {prep_man_path_pdfs} and press Enter.")
@@ -126,7 +126,7 @@ class ExportManPrep(JsonSchemaMixin):
                         with open(target_path, "wb") as outfile:
                             writer.write(outfile)
 
-    def __export_prep_man(
+    def _export_prep_man(
         self,
         *,
         records: typing.Dict[str, typing.Dict],
@@ -141,7 +141,7 @@ class ExportManPrep(JsonSchemaMixin):
         filtered_man_prep_recs = {}
         for citation, fields in man_prep_recs.copy().items():
             for key in fields.copy():
-                if key not in self.__FIELDS_TO_KEEP:
+                if key not in self._FIELDS_TO_KEEP:
                     del fields[key]
             filtered_man_prep_recs.update({citation: fields})
 
@@ -149,9 +149,9 @@ class ExportManPrep(JsonSchemaMixin):
             records=filtered_man_prep_recs, save_path=self.prep_man_bib_path
         )
         if any(Fields.FILE in r for r in man_prep_recs.values()):
-            self.__copy_files_for_man_prep(records=man_prep_recs)
+            self._copy_files_for_man_prep(records=man_prep_recs)
 
-    def __create_info_dataframe(
+    def _create_info_dataframe(
         self,
         *,
         records: typing.Dict[str, typing.Dict],
@@ -183,7 +183,7 @@ class ExportManPrep(JsonSchemaMixin):
         else:
             man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
-    def __drop_unnecessary_provenance_fiels(
+    def _drop_unnecessary_provenance_fiels(
         self, *, record: colrev.record.Record
     ) -> None:
         colrev_data_provenance_keys_to_drop = []
@@ -206,13 +206,13 @@ class ExportManPrep(JsonSchemaMixin):
         for md_prov_key_to_drop in md_prov_keys_to_drop:
             del record.data[Fields.MD_PROV][md_prov_key_to_drop]
 
-    def __update_original_record_based_on_man_prepped(
+    def _update_original_record_based_on_man_prepped(
         self, *, original_record: colrev.record.Record, man_prepped_record_dict: dict
     ) -> None:
         dropped_keys = [
             k
             for k in original_record.data
-            if (k not in man_prepped_record_dict) and k in self.__FIELDS_TO_KEEP
+            if (k not in man_prepped_record_dict) and k in self._FIELDS_TO_KEEP
         ]
 
         if (
@@ -252,7 +252,7 @@ class ExportManPrep(JsonSchemaMixin):
                 key=dropped_key, not_missing_note=True, source="man_prep"
             )
 
-    def __print_stats(self, *, original_record: colrev.record.Record) -> None:
+    def _print_stats(self, *, original_record: colrev.record.Record) -> None:
         if (
             original_record.data[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
@@ -282,7 +282,7 @@ class ExportManPrep(JsonSchemaMixin):
                 + f"{Colors.END}"
             )
 
-    def __import_record(
+    def _import_record(
         self,
         *,
         man_prepped_record_dict: dict,
@@ -295,12 +295,12 @@ class ExportManPrep(JsonSchemaMixin):
             == colrev.record.RecordState.md_prepared
         )
 
-        self.__update_original_record_based_on_man_prepped(
+        self._update_original_record_based_on_man_prepped(
             original_record=original_record,
             man_prepped_record_dict=man_prepped_record_dict,
         )
 
-        self.__drop_unnecessary_provenance_fiels(record=original_record)
+        self._drop_unnecessary_provenance_fiels(record=original_record)
         if (
             man_prepped_record_dict[Fields.STATUS]
             == colrev.record.RecordState.rev_prescreen_excluded
@@ -318,9 +318,9 @@ class ExportManPrep(JsonSchemaMixin):
                 target_state=colrev.record.RecordState.md_prepared, force=True
             )
 
-        self.__print_stats(original_record=original_record)
+        self._print_stats(original_record=original_record)
 
-    def __import_prep_man(self) -> None:
+    def _import_prep_man(self) -> None:
         self.review_manager.logger.info(
             "Load import changes from "
             f"{self.prep_man_bib_path.relative_to(self.review_manager.path)}"
@@ -355,7 +355,7 @@ class ExportManPrep(JsonSchemaMixin):
             original_record = colrev.record.Record(
                 data=records[man_prepped_record_dict[Fields.ID]]
             )
-            self.__import_record(
+            self._import_record(
                 man_prepped_record_dict=man_prepped_record_dict,
                 original_record=original_record,
                 imported_records=imported_records,
@@ -367,7 +367,7 @@ class ExportManPrep(JsonSchemaMixin):
         self.review_manager.dataset.set_ids(selected_ids=imported_records)
         self.review_manager.create_commit(msg="Set IDs")
 
-    def __print_export_prep_man_instructions(self) -> None:
+    def _print_export_prep_man_instructions(self) -> None:
         print("Created two files:")
         if platform.system() == "Windows":
             print(
@@ -398,12 +398,12 @@ class ExportManPrep(JsonSchemaMixin):
         """Prepare records manually by extracting the subset of records to a separate BiBTex file"""
 
         if not self.prep_man_bib_path.is_file():
-            self.__create_info_dataframe(records=records)
-            self.__export_prep_man(records=records)
-            self.__print_export_prep_man_instructions()
+            self._create_info_dataframe(records=records)
+            self._export_prep_man(records=records)
+            self._print_export_prep_man_instructions()
         else:
             selected_path = self.prep_man_bib_path.relative_to(self.review_manager.path)
             if input(f"Import changes from {selected_path} [y,n]?") == "y":
-                self.__import_prep_man()
+                self._import_prep_man()
 
         return records

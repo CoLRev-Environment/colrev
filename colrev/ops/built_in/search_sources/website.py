@@ -33,7 +33,7 @@ class WebsiteConnector:
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/website.py"
     )
-    __requests_headers = {
+    _requests_headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
     }
@@ -50,7 +50,7 @@ class WebsiteConnector:
         self.review_manager = review_manager
 
     # pylint: disable=colrev-missed-constant-usage
-    def __set_url(
+    def _set_url(
         self,
         *,
         record: colrev.record.Record,
@@ -73,13 +73,13 @@ class WebsiteConnector:
         else:
             record.data[Fields.URL] = item["url"]
 
-    def __set_keywords(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_keywords(self, *, record: colrev.record.Record, item: dict) -> None:
         if "tags" not in item or len(item["tags"]) == 0:
             return
         keywords = ", ".join([k["tag"] for k in item["tags"]])
         record.data[Fields.KEYWORDS] = keywords
 
-    def __set_author(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_author(self, *, record: colrev.record.Record, item: dict) -> None:
         if "creators" not in item:
             return
         author_str = ""
@@ -94,7 +94,7 @@ class WebsiteConnector:
         record.data[Fields.AUTHOR] = author_str
 
     # pylint: disable=colrev-missed-constant-usage
-    def __set_entrytype(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_entrytype(self, *, record: colrev.record.Record, item: dict) -> None:
         record.data[Fields.ENTRYTYPE] = "article"  # default
         if item.get("itemType", "") == "journalArticle":
             record.data[Fields.ENTRYTYPE] = "article"
@@ -110,18 +110,18 @@ class WebsiteConnector:
                 record.data[Fields.BOOKTITLE] = item["proceedingsTitle"]
 
     # pylint: disable=colrev-missed-constant-usage
-    def __set_title(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_title(self, *, record: colrev.record.Record, item: dict) -> None:
         if "title" not in item:
             return
         record.data[Fields.TITLE] = item["title"]
 
     # pylint: disable=colrev-missed-constant-usage
-    def __set_doi(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_doi(self, *, record: colrev.record.Record, item: dict) -> None:
         if "doi" not in item:
             return
         record.data[Fields.DOI] = item["doi"].upper()
 
-    def __set_date(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_date(self, *, record: colrev.record.Record, item: dict) -> None:
         if "date" not in item:
             return
         year = re.search(r"\d{4}", item["date"])
@@ -129,25 +129,25 @@ class WebsiteConnector:
             record.data[Fields.YEAR] = year.group(0)
 
     # pylint: disable=colrev-missed-constant-usage
-    def __set_pages(self, *, record: colrev.record.Record, item: dict) -> None:
+    def _set_pages(self, *, record: colrev.record.Record, item: dict) -> None:
         if "pages" not in item:
             return
         record.data[Fields.PAGES] = item["pages"]
 
-    def __update_record(
+    def _update_record(
         self,
         record: colrev.record.Record,
         item: dict,
     ) -> None:
         record.data[Fields.ID] = item["key"]
-        self.__set_entrytype(record=record, item=item)
-        self.__set_author(record=record, item=item)
-        self.__set_title(record=record, item=item)
-        self.__set_doi(record=record, item=item)
-        self.__set_date(record=record, item=item)
-        self.__set_pages(record=record, item=item)
-        self.__set_url(record=record, item=item)
-        self.__set_keywords(record=record, item=item)
+        self._set_entrytype(record=record, item=item)
+        self._set_author(record=record, item=item)
+        self._set_title(record=record, item=item)
+        self._set_doi(record=record, item=item)
+        self._set_date(record=record, item=item)
+        self._set_pages(record=record, item=item)
+        self._set_url(record=record, item=item)
+        self._set_keywords(record=record, item=item)
 
     def retrieve_md_from_website(self, *, record: colrev.record.Record) -> None:
         """Retrieve the metadata of the associated website (url) based on Zotero"""
@@ -160,7 +160,7 @@ class WebsiteConnector:
         zotero_translation_service.start()
         try:
             content_type_header = {"Content-type": "text/plain"}
-            headers = {**self.__requests_headers, **content_type_header}
+            headers = {**self._requests_headers, **content_type_header}
             export = requests.post(
                 "http://127.0.0.1:1969/web",
                 headers=headers,
@@ -181,7 +181,7 @@ class WebsiteConnector:
                 self.zotero_lock.release()
                 return
 
-            self.__update_record(record=record, item=item)
+            self._update_record(record=record, item=item)
 
         except (
             json.decoder.JSONDecodeError,
