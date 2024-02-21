@@ -806,7 +806,7 @@ class Dataset:
             temp_id = retrieved_record[Fields.ID]
 
             # Do not use IDs from local_index for curated_metadata repositories
-            if "curated_metadata" in str(self.review_manager.path):
+            if self.review_manager.settings.is_curated_masterdata_repo():
                 raise colrev_exceptions.RecordNotInIndexException()
 
         except (
