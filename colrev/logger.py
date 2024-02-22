@@ -59,7 +59,6 @@ def setup_report_logger(
             fmt="%(asctime)s [%(levelname)s] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-
         report_file_handler = logging.FileHandler(review_manager.report_path, mode="a")
         report_file_handler.setFormatter(formatter)
 
@@ -72,11 +71,12 @@ def setup_report_logger(
         report_logger.propagate = False
     except FileNotFoundError as exc:
         raise colrev_exceptions.RepoSetupError("Missing file") from exc
+
     return report_logger
 
 
-def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
-    """Reset the report log file (used for the git commit report)"""
+def stop_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Stop and remove the report log file"""
 
     if review_manager.report_logger.handlers:
         report_handler = review_manager.report_logger.handlers[0]
@@ -86,6 +86,12 @@ def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) 
     if review_manager.report_path.is_file():
         with open(review_manager.report_path, "r+", encoding="utf8") as file:
             file.truncate(0)
+
+
+def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
+    """Reset the report log file (used for the git commit report)"""
+
+    stop_logger(review_manager=review_manager)
 
     file_handler = logging.FileHandler(review_manager.report_path, mode="a")
     file_handler.setLevel(logging.INFO)

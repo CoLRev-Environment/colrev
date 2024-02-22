@@ -489,7 +489,9 @@ class Checker:
 
     def _retrieve_prior(self) -> dict:
         prior: dict = {Fields.STATUS: [], "persisted_IDs": []}
-        prior_records = next(self.review_manager.dataset.load_records_from_history())
+        prior_records = next(
+            self.review_manager.dataset.load_records_from_history(), {}
+        )
         for prior_record in prior_records.values():
             for orig in prior_record[Fields.ORIGIN]:
                 prior[Fields.STATUS].append([orig, prior_record[Fields.STATUS]])

@@ -13,7 +13,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
     """Test repo init error (non-empty dir)"""
 
     review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(tmp_path), force_mode=True
+        path_str=str(tmp_path), force_mode=True, navigate_to_home_dir=False
     )
     review_manager.settings = colrev.settings.load_settings(
         settings_path=helpers.test_data_path.parents[1]

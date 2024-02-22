@@ -112,10 +112,10 @@ class ReviewManager:
 
         try:
             if self.settings_path.is_file():
-                self.data_dir.mkdir(exist_ok=True)
-                self.search_dir.mkdir(exist_ok=True)
-                self.pdf_dir.mkdir(exist_ok=True)
-                self.output_dir.mkdir(exist_ok=True)
+                self.data_dir.mkdir(parents=True, exist_ok=True)
+                self.search_dir.mkdir(parents=True, exist_ok=True)
+                self.pdf_dir.mkdir(parents=True, exist_ok=True)
+                self.output_dir.mkdir(parents=True, exist_ok=True)
 
             report_logger, logger = self.get_loggers_by_debug_mode()
             self.report_logger = report_logger
@@ -199,6 +199,13 @@ class ReviewManager:
             if original_dir.parent == original_dir:  # reached root
                 break
             original_dir = original_dir.parent
+
+        if original_dir.parent == original_dir:  # reached root
+            raise colrev.exceptions.RepoSetupError(
+                "Failed to locate a .git directory. "
+                "Ensure you are within a Git repository, "
+                "or set navigate_to_home_dir=False for init."
+            )
 
         return original_dir
 

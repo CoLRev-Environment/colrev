@@ -193,7 +193,7 @@ class Corrections:
         records = self.review_manager.dataset.load_records_dict()
 
         prior_records_dict = next(
-            self.review_manager.dataset.load_records_from_history()
+            self.review_manager.dataset.load_records_from_history(), {}
         )
         # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
         # The following code should be much simpler...

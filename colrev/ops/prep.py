@@ -727,7 +727,7 @@ class Prep(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         try:
             prior_records_dict = next(
-                self.review_manager.dataset.load_records_from_history()
+                self.review_manager.dataset.load_records_from_history(), {}
             )
 
             for record in records.values():

@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING
 
 import git
 import pybtex.errors
+from git import InvalidGitRepositoryError
 from git.exc import GitCommandError
-from git.exc import InvalidGitRepositoryError
 from pybtex.database import Person
 from pybtex.database.input import bibtex
 from tqdm import tqdm
@@ -44,6 +44,34 @@ class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
+    RECORDS_FIELD_ORDER = [
+        Fields.ORIGIN,  # must be in second line
+        Fields.STATUS,
+        Fields.MD_PROV,
+        Fields.D_PROV,
+        Fields.PDF_ID,
+        Fields.SCREENING_CRITERIA,
+        Fields.FILE,  # Note : do not change this order (parsers rely on it)
+        Fields.PRESCREEN_EXCLUSION,
+        Fields.DOI,
+        Fields.GROBID_VERSION,
+        Fields.DBLP_KEY,
+        Fields.SEMANTIC_SCHOLAR_ID,
+        Fields.WEB_OF_SCIENCE_ID,
+        Fields.AUTHOR,
+        Fields.BOOKTITLE,
+        Fields.JOURNAL,
+        Fields.TITLE,
+        Fields.YEAR,
+        Fields.VOLUME,
+        Fields.NUMBER,
+        Fields.PAGES,
+        Fields.EDITOR,
+        Fields.PUBLISHER,
+        Fields.URL,
+        Fields.ABSTRACT,
+    ]
+
     GIT_IGNORE_FILE_RELATIVE = Path(".gitignore")
     DEFAULT_GIT_IGNORE_ITEMS = [
         ".history",
@@ -73,7 +101,7 @@ class Dataset:
     ]
 
     records_file: Path
-    __git_repo: git.Repo
+    _git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
@@ -81,6 +109,8 @@ class Dataset:
         self.git_ignore_file = review_manager.path / self.GIT_IGNORE_FILE_RELATIVE
 
         try:
+            # In most cases, the repo should exist
+            # due to review_manager._get_project_home_dir()
             self._git_repo = git.Repo(self.review_manager.path)
         except InvalidGitRepositoryError as exc:
             msg = "Not a CoLRev/git repository. Run\n    colrev init"
@@ -188,7 +218,8 @@ class Dataset:
                 found_but_not_changed = True
                 continue
 
-            yield records_dict
+            if records_dict:
+                yield records_dict
 
     def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
         """Get the records that changed in a selected commit"""
@@ -241,17 +272,8 @@ class Dataset:
 
         return_dict = {}
         if field == Fields.MD_PROV:
-            # pylint: disable=colrev-missed-constant-usage
-            if value[:7] == "CURATED":
-                if value.count(";") == 0:
-                    value += ";;"  # Note : temporary fix (old format)
-                if value.count(";") == 1:
-                    value += ";"  # Note : temporary fix (old format)
-
-                if ":" in value:
-                    source = value[value.find(":") + 1 : value[:-1].rfind(";")]
-                else:
-                    source = ""
+            if value[:7] == FieldValues.CURATED:
+                source = value[value.find(":") + 1 : value[:-1].rfind(";")]
                 return_dict[FieldValues.CURATED] = {
                     "source": source,
                     "note": "",
@@ -558,38 +580,10 @@ class Dataset:
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record_dict[Fields.LANGUAGE]
 
-            field_order = [
-                Fields.ORIGIN,  # must be in second line
-                Fields.STATUS,
-                Fields.MD_PROV,
-                Fields.D_PROV,
-                Fields.PDF_ID,
-                Fields.SCREENING_CRITERIA,
-                Fields.FILE,  # Note : do not change this order (parsers rely on it)
-                Fields.PRESCREEN_EXCLUSION,
-                Fields.DOI,
-                Fields.GROBID_VERSION,
-                Fields.DBLP_KEY,
-                Fields.SEMANTIC_SCHOLAR_ID,
-                Fields.WEB_OF_SCIENCE_ID,
-                Fields.AUTHOR,
-                Fields.BOOKTITLE,
-                Fields.JOURNAL,
-                Fields.TITLE,
-                Fields.YEAR,
-                Fields.VOLUME,
-                Fields.NUMBER,
-                Fields.PAGES,
-                Fields.EDITOR,
-                Fields.PUBLISHER,
-                Fields.URL,
-                Fields.ABSTRACT,
-            ]
-
             record = colrev.record.Record(data=record_dict)
             record_dict = record.get_data(stringify=True)
 
-            for ordered_field in field_order:
+            for ordered_field in cls.RECORDS_FIELD_ORDER:
                 if ordered_field in record_dict:
                     if record_dict[ordered_field] == "":
                         continue
@@ -598,7 +592,7 @@ class Dataset:
                     )
 
             for key in sorted(record_dict.keys()):
-                if key in field_order + [Fields.ID, Fields.ENTRYTYPE]:
+                if key in cls.RECORDS_FIELD_ORDER + [Fields.ID, Fields.ENTRYTYPE]:
                     continue
 
                 bibtex_str += format_field(key, record_dict[key])
@@ -772,29 +766,6 @@ class Dataset:
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
     # ID creation, update and lookup ---------------------------------------
-
-    def reprocess_id(self, *, paper_ids: str) -> None:
-        """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
-
-        saved_args = locals()
-        if paper_ids == "all":
-            # self.review_manager.logger.info("Removing/reprocessing all records")
-            os.remove(self.records_file)
-            self._git_repo.index.remove(
-                [str(self.RECORDS_FILE_RELATIVE)],
-                working_tree=True,
-            )
-        else:
-            records = self.load_records_dict()
-            records = {
-                ID: record
-                for ID, record in records.items()
-                if ID not in paper_ids.split(",")
-            }
-            self.save_records_dict(records=records)
-            self._add_record_changes()
-
-        self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
     def _generate_temp_id(
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
