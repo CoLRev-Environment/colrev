@@ -89,6 +89,7 @@ class Trace(colrev.operation.Operation):
         """Trace a record (main entrypoint)"""
 
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
+        records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
 
         revlist = self.review_manager.dataset.get_repo().iter_commits()
 
@@ -96,9 +97,6 @@ class Trace(colrev.operation.Operation):
         for commit in reversed(list(revlist)):
             try:
                 # Ensure the path uses forward slashes, which is compatible with Git's path handling
-                records_file_path = str(
-                    self.review_manager.dataset.RECORDS_FILE_RELATIVE
-                ).replace("\\", "/")
                 filecontents = (commit.tree / records_file_path).data_stream.read()
 
             except KeyError:

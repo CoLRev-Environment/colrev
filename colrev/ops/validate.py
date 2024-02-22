@@ -459,9 +459,7 @@ class Validate(colrev.operation.Operation):
             paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
         )
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(
-            self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        ).replace("\\", "/")
+        records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
 
         for commit in list(revlist):
             if len(commit.parents) <= 1:

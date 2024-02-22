@@ -580,9 +580,7 @@ class Prep(colrev.operation.Operation):
     def _get_revlist_for_reset(self) -> typing.Iterator[tuple]:
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(
-            self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        ).replace("\\", "/")
+        records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
         revlist = (
             (
                 commit.hexsha,

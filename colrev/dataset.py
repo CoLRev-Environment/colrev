@@ -44,6 +44,8 @@ class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
+    # Ensure the path uses forward slashes, which is compatible with Git's path handling
+    RECORDS_FILE_RELATIVE_GIT = str(RECORDS_FILE_RELATIVE).replace("\\", "/")
     RECORDS_FIELD_ORDER = [
         Fields.ORIGIN,  # must be in second line
         Fields.STATUS,
@@ -192,19 +194,17 @@ class Dataset:
         """
         Iterates through Git history, yielding records file contents as dictionaries.
 
-        Starts iteration from a provided commit SHA. Skips commits where the records file is unchanged. 
+        Starts iteration from a provided commit SHA. Skips commits where the records file is unchanged.
         Useful for tracking dataset changes over time.
 
         Parameters:
-            commit_sha (str, optional): Start iteration from this commit SHA. 
+            commit_sha (str, optional): Start iteration from this commit SHA.
             Defaults to beginning of Git history if not provided.
 
         Yields:
             dict: Records file contents at a specific Git history point, as a dictionary.
         """
 
-        # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
         reached_target_commit = False  # if no commit_sha provided
         for current_commit in self._git_repo.iter_commits():
 
@@ -217,7 +217,9 @@ class Dataset:
 
             # Read and parse the records file from the current commit
             parser = bibtex.Parser()
-            filecontents = (current_commit.tree / records_file_path).data_stream.read()
+            filecontents = (
+                current_commit.tree / self.RECORDS_FILE_RELATIVE_GIT
+            ).data_stream.read()
             # Note : reinitialize parser (otherwise, bib_data does not change)
             bib_data = parser.parse_string(filecontents.decode("utf-8"))
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
@@ -227,13 +229,11 @@ class Dataset:
 
     def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
         """Get the records that changed in a selected commit"""
-        # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
 
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / records_file_path).data_stream.read(),
+                (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
             )
             for commit in self._git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
@@ -1042,14 +1042,14 @@ class Dataset:
 
     def _get_last_records_filecontents(self) -> bytes:
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
+
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / records_file_path).data_stream.read(),
+                (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
             )
             for commit in self._git_repo.iter_commits(
-                paths=str(self.RECORDS_FILE_RELATIVE)
+                paths=str(self.RECORDS_FILE_RELATIVE_GIT)
             )
         )
         filecontents = list(revlist)[0][1]
@@ -1058,7 +1058,7 @@ class Dataset:
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
         try:
-            main_recs_changed = str(self.RECORDS_FILE_RELATIVE) in [
+            main_recs_changed = str(self.RECORDS_FILE_RELATIVE_GIT) in [
                 item.a_path for item in self._git_repo.index.diff(None)
             ] + [x.a_path for x in self._git_repo.head.commit.diff()]
             self._get_last_records_filecontents()

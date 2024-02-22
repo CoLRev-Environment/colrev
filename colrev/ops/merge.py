@@ -118,9 +118,7 @@ class Merge(colrev.operation.Operation):
         assert all(len(v) == 3 for k, v in unmerged_blobs.items())
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(
-            self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        ).replace("\\", "/")
+        records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
         if records_file_path in unmerged_blobs:
             current_branch_records = {}
             other_branch_records = {}
