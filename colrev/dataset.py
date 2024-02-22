@@ -189,34 +189,38 @@ class Dataset:
     def load_records_from_history(
         self, *, commit_sha: str = ""
     ) -> typing.Iterator[dict]:
-        """Returns an iterator of the records_dict based on git history"""
+        """
+        Iterates through Git history, yielding records file contents as dictionaries.
 
-        # If the records are not in the commit (commit_sha), we note that the
-        # commit_sha was foud, but that the records were not changed in that commit.
-        # It means that we ignore the StopIterations and
-        # return the records from the next (prior) commit
-        found_but_not_changed = False
-        skipped_prior_commits = False  # if no commit_sha provided
-        for commit in self._git_repo.iter_commits():
-            if commit_sha:
-                if not skipped_prior_commits:
-                    if not found_but_not_changed:
-                        if commit_sha == commit.hexsha:
-                            skipped_prior_commits = True
-                        else:
-                            continue
+        Starts iteration from a provided commit SHA. Skips commits where the records file is unchanged. 
+        Useful for tracking dataset changes over time.
 
-            try:
-                # Ensure the path uses forward slashes, which is compatible with Git's path handling
-                records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
-                filecontents = (commit.tree / records_file_path).data_stream.read()
-                # Note : reinitialize parser (otherwise, bib_data does not change)
-                parser = bibtex.Parser()
-                bib_data = parser.parse_string(filecontents.decode("utf-8"))
-                records_dict = self.parse_records_dict(records_dict=bib_data.entries)
-            except (StopIteration, KeyError):
-                found_but_not_changed = True
-                continue
+        Parameters:
+            commit_sha (str, optional): Start iteration from this commit SHA. 
+            Defaults to beginning of Git history if not provided.
+
+        Yields:
+            dict: Records file contents at a specific Git history point, as a dictionary.
+        """
+
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
+        reached_target_commit = False  # if no commit_sha provided
+        for current_commit in self._git_repo.iter_commits():
+
+            # Skip all commits before the specified commit_sha, if provided
+            if commit_sha and not reached_target_commit:
+                if commit_sha == current_commit.hexsha:
+                    reached_target_commit = True
+                else:
+                    continue  # Move to the next commit
+
+            # Read and parse the records file from the current commit
+            parser = bibtex.Parser()
+            filecontents = (current_commit.tree / records_file_path).data_stream.read()
+            # Note : reinitialize parser (otherwise, bib_data does not change)
+            bib_data = parser.parse_string(filecontents.decode("utf-8"))
+            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
             if records_dict:
                 yield records_dict

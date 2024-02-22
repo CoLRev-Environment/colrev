@@ -32,11 +32,26 @@ def test_load_records_from_history(  # type: ignore
     """Test loading records from git history."""
 
     helpers.reset_commit(
+        review_manager=base_repo_review_manager, commit="changed_settings_commit"
+    )
+    last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
+
+    records_from_history = list(
+        base_repo_review_manager.dataset.load_records_from_history(
+            commit_sha=last_commit_sha
+        )
+    )
+
+    helpers.reset_commit(
         review_manager=base_repo_review_manager, commit="dedupe_commit"
     )
 
     # Retrieve the last commit sha to use as a reference for loading history
     last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
+
+    helpers.reset_commit(
+        review_manager=base_repo_review_manager, commit="prescreen_commit"
+    )
 
     # Load records from history using the last commit sha
     records_from_history = list(
