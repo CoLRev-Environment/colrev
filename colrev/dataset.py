@@ -962,20 +962,6 @@ class Dataset:
 
         return records
 
-    def get_next_id(self, *, bib_file: Path) -> int:
-        """Get the next ID (incrementing counter)"""
-        ids = []
-        if bib_file.is_file():
-            with open(bib_file, encoding="utf8") as file:
-                line = file.readline()
-                while line:
-                    if "@" in line[:3]:
-                        current_id = line[line.find("{") + 1 : line.rfind(",")]
-                        ids.append(current_id)
-                    line = file.readline()
-        max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
-        return max_id
-
     # GIT operations -----------------------------------------------
 
     def get_repo(self) -> git.Repo:

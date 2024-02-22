@@ -36,6 +36,20 @@ class Distribute(colrev.operation.Operation):
             if "curated_metadata/" not in x["repo_source_path"]
         ]
 
+    def get_next_id(self, *, bib_file: Path) -> int:
+        """Get the next ID (incrementing counter)"""
+        ids = []
+        if bib_file.is_file():
+            with open(bib_file, encoding="utf8") as file:
+                line = file.readline()
+                while line:
+                    if "@" in line[:3]:
+                        current_id = line[line.find("{") + 1 : line.rfind(",")]
+                        ids.append(current_id)
+                    line = file.readline()
+        max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
+        return max_id
+
     @colrev.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
         """Distribute records to other CoLRev repositories (main entrypoint)"""
@@ -104,11 +118,7 @@ class Distribute(colrev.operation.Operation):
                     self.review_manager.save_settings()
 
                 if 0 != len(import_records):
-                    record_id = int(
-                        self.review_manager.dataset.get_next_id(
-                            bib_file=target_bib_file
-                        )
-                    )
+                    record_id = int(self.get_next_id(bib_file=target_bib_file))
 
                 record[Fields.ID] = f"{record_id}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))
