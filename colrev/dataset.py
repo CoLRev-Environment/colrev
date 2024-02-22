@@ -13,7 +13,6 @@ from copy import deepcopy
 from pathlib import Path
 from random import randint
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import git
 import pybtex.errors
@@ -33,8 +32,6 @@ from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-lines
@@ -81,7 +78,7 @@ class Dataset:
         self.git_ignore_file = review_manager.path / self.GIT_IGNORE_FILE_RELATIVE
 
         try:
-            self.__git_repo = git.Repo(self.review_manager.path)
+            self._git_repo = git.Repo(self.review_manager.path)
         except InvalidGitRepositoryError as exc:
             msg = "Not a CoLRev/git repository. Run\n    colrev init"
             raise colrev_exceptions.RepoSetupError(msg) from exc
@@ -126,7 +123,7 @@ class Dataset:
 
         current_origin_states_dict = {}
         if self.records_file.is_file():
-            for record_header_item in self.__read_record_header_items(
+            for record_header_item in self._read_record_header_items(
                 file_object=file_object
             ):
                 for origin in record_header_item[Fields.ORIGIN]:
@@ -138,7 +135,7 @@ class Dataset:
     def get_committed_origin_state_dict(self) -> dict:
         """Get the committed origin_state_dict"""
 
-        filecontents = self.__get_last_records_filecontents()
+        filecontents = self._get_last_records_filecontents()
         committed_origin_state_dict = self.get_origin_state_dict(
             file_object=io.StringIO(filecontents.decode("utf-8"))
         )
@@ -167,7 +164,7 @@ class Dataset:
         # return the records from the next (prior) commit
         found_but_not_changed = False
         skipped_prior_commits = False  # if no commit_sha provided
-        for commit in self.__git_repo.iter_commits():
+        for commit in self._git_repo.iter_commits():
             if commit_sha:
                 if not skipped_prior_commits:
                     if not found_but_not_changed:
@@ -200,7 +197,7 @@ class Dataset:
                 commit.hexsha,
                 (commit.tree / records_file_path).data_stream.read(),
             )
-            for commit in self.__git_repo.iter_commits(
+            for commit in self._git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
             )
         )
@@ -236,7 +233,7 @@ class Dataset:
         return list(records_dict.values())
 
     @classmethod
-    def __load_field_dict(cls, *, value: str, field: str) -> dict:
+    def _load_field_dict(cls, *, value: str, field: str) -> dict:
         # pylint: disable=too-many-branches
 
         return_dict = {}
@@ -356,7 +353,7 @@ class Dataset:
                                         ]
                                         if k in colrev.record.Record.list_fields_keys
                                         else (
-                                            Dataset.__load_field_dict(value=v, field=k)
+                                            Dataset._load_field_dict(value=v, field=k)
                                             if k
                                             in colrev.record.Record.dict_fields_keys
                                             else v
@@ -380,7 +377,7 @@ class Dataset:
 
         return records_dict
 
-    def __parse_k_v(self, item_string: str) -> tuple:
+    def _parse_k_v(self, item_string: str) -> tuple:
         try:
             if " = " in item_string:
                 key, value = item_string.split(" = ", 1)
@@ -397,7 +394,7 @@ class Dataset:
             if key == Fields.STATUS:
                 return key, colrev.record.RecordState[value]
             if key == Fields.MD_PROV:
-                return key, self.__load_field_dict(value=value, field=key)
+                return key, self._load_field_dict(value=value, field=key)
             if key == Fields.FILE:
                 return key, Path(value)
         except IndexError as exc:
@@ -405,7 +402,7 @@ class Dataset:
 
         return key, value
 
-    def __read_record_header_items(
+    def _read_record_header_items(
         self, *, file_object: Optional[typing.TextIO] = None
     ) -> list:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
@@ -452,7 +449,7 @@ class Dataset:
 
             item_string += line
             if "}," in line or "@" in line[:2]:
-                key, value = self.__parse_k_v(item_string)
+                key, value = self._parse_k_v(item_string)
                 if key == Fields.MD_PROV:
                     if value == "NA":
                         value = {}
@@ -502,7 +499,7 @@ class Dataset:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
             record_header_list = (
-                self.__read_record_header_items() if self.records_file.is_file() else []
+                self._read_record_header_items() if self.records_file.is_file() else []
             )
             record_header_dict = {r[Fields.ID]: r for r in record_header_list}
             return record_header_dict
@@ -622,11 +619,11 @@ class Dataset:
         if not add_changes:
             return
         if save_path == self.records_file:
-            self.__add_record_changes()
+            self._add_record_changes()
         else:
             self.add_changes(path=save_path)
 
-    def __save_record_list_by_id(
+    def _save_record_list_by_id(
         self, *, records: dict, append_new: bool = False
     ) -> None:
         # Note : currently no use case for append_new=True??
@@ -689,7 +686,7 @@ class Dataset:
                     f"{[x[Fields.ID] for x in record_list]}"
                 )
 
-        self.__add_record_changes()
+        self._add_record_changes()
 
     def save_records_dict(
         self, *, records: dict, partial: bool = False, add_changes: bool = True
@@ -697,7 +694,7 @@ class Dataset:
         """Save the records dict in RECORDS_FILE"""
 
         if partial:
-            self.__save_record_list_by_id(records=records)
+            self._save_record_list_by_id(records=records)
             return
         self.save_records_dict_to_file(
             records=records, save_path=self.records_file, add_changes=add_changes
@@ -755,7 +752,7 @@ class Dataset:
 
             self.save_records_dict(records=records)
             changed = self.RECORDS_FILE_RELATIVE in [
-                r.a_path for r in self.__git_repo.index.diff(None)
+                r.a_path for r in self._git_repo.index.diff(None)
             ]
             self.review_manager.update_status_yaml()
             self.review_manager.load_settings()
@@ -780,7 +777,7 @@ class Dataset:
         if paper_ids == "all":
             # self.review_manager.logger.info("Removing/reprocessing all records")
             os.remove(self.records_file)
-            self.__git_repo.index.remove(
+            self._git_repo.index.remove(
                 [str(self.RECORDS_FILE_RELATIVE)],
                 working_tree=True,
             )
@@ -792,11 +789,11 @@ class Dataset:
                 if ID not in paper_ids.split(",")
             }
             self.save_records_dict(records=records)
-            self.__add_record_changes()
+            self._add_record_changes()
 
         self.review_manager.create_commit(msg="Reprocess", saved_args=saved_args)
 
-    def __generate_temp_id(
+    def _generate_temp_id(
         self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
     ) -> str:
         # pylint: disable=too-many-branches
@@ -806,7 +803,7 @@ class Dataset:
             temp_id = retrieved_record[Fields.ID]
 
             # Do not use IDs from local_index for curated_metadata repositories
-            if "curated_metadata" in str(self.review_manager.path):
+            if self.review_manager.settings.is_curated_masterdata_repo():
                 raise colrev_exceptions.RecordNotInIndexException()
 
         except (
@@ -886,7 +883,7 @@ class Dataset:
 
         return False
 
-    def __generate_id(
+    def _generate_id(
         self,
         *,
         local_index: colrev.env.local_index.LocalIndex,
@@ -905,7 +902,7 @@ class Dataset:
         # screen or data will not be replaced
         # (this would break the chain of evidence)
 
-        temp_id = self.__generate_temp_id(
+        temp_id = self._generate_temp_id(
             local_index=local_index, record_dict=record_dict
         )
 
@@ -957,7 +954,7 @@ class Dataset:
                     record.set_status(
                         target_state=colrev.record.RecordState.md_prepared
                     )
-                new_id = self.__generate_id(
+                new_id = self._generate_id(
                     local_index=local_index,
                     record_dict=record_dict,
                     existing_ids=[x for x in id_list if x != record_id],
@@ -982,7 +979,7 @@ class Dataset:
                 print(exc)
 
         self.save_records_dict(records=records)
-        self.__add_record_changes()
+        self._add_record_changes()
 
         return records
 
@@ -1007,7 +1004,7 @@ class Dataset:
 
         if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNotifiedError()
-        return self.__git_repo
+        return self._git_repo
 
     def has_changes(
         self, *, relative_path: Optional[Path] = None, change_type: str = "all"
@@ -1019,22 +1016,22 @@ class Dataset:
             try:
                 if change_type == "all":
                     main_recs_changed = str(relative_path) in [
-                        item.a_path for item in self.__git_repo.index.diff(None)
-                    ] + [item.a_path for item in self.__git_repo.head.commit.diff()]
+                        item.a_path for item in self._git_repo.index.diff(None)
+                    ] + [item.a_path for item in self._git_repo.head.commit.diff()]
                 elif change_type == "staged":
                     main_recs_changed = str(relative_path) in [
-                        item.a_path for item in self.__git_repo.head.commit.diff()
+                        item.a_path for item in self._git_repo.head.commit.diff()
                     ]
 
                 elif change_type == "unstaged":
                     main_recs_changed = str(relative_path) in [
-                        item.a_path for item in self.__git_repo.index.diff(None)
+                        item.a_path for item in self._git_repo.index.diff(None)
                     ]
             except ValueError:
                 pass
             return main_recs_changed
 
-        return self.__git_repo.is_dirty()
+        return self._git_repo.is_dirty()
 
     def add_changes(
         self, *, path: Path, remove: bool = False, ignore_missing: bool = False
@@ -1050,9 +1047,9 @@ class Dataset:
 
         try:
             if remove:
-                self.__git_repo.index.remove([str(path)])
+                self._git_repo.index.remove([str(path)])
             else:
-                self.__git_repo.index.add([str(path)])
+                self._git_repo.index.add([str(path)])
         except GitCommandError:
             pass
         except FileNotFoundError as exc:
@@ -1062,9 +1059,9 @@ class Dataset:
     def get_untracked_files(self) -> list:
         """Get the files that are untracked by git"""
 
-        return self.__git_repo.untracked_files
+        return self._git_repo.untracked_files
 
-    def __get_last_records_filecontents(self) -> bytes:
+    def _get_last_records_filecontents(self) -> bytes:
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = str(self.RECORDS_FILE_RELATIVE).replace("\\", "/")
         revlist = (
@@ -1072,7 +1069,7 @@ class Dataset:
                 commit.hexsha,
                 (commit.tree / records_file_path).data_stream.read(),
             )
-            for commit in self.__git_repo.iter_commits(
+            for commit in self._git_repo.iter_commits(
                 paths=str(self.RECORDS_FILE_RELATIVE)
             )
         )
@@ -1083,22 +1080,22 @@ class Dataset:
         """Check whether the records were changed"""
         try:
             main_recs_changed = str(self.RECORDS_FILE_RELATIVE) in [
-                item.a_path for item in self.__git_repo.index.diff(None)
-            ] + [x.a_path for x in self.__git_repo.head.commit.diff()]
-            self.__get_last_records_filecontents()
+                item.a_path for item in self._git_repo.index.diff(None)
+            ] + [x.a_path for x in self._git_repo.head.commit.diff()]
+            self._get_last_records_filecontents()
         except (IndexError, ValueError, KeyError):
             main_recs_changed = False
         return main_recs_changed
 
     def remove_file_from_git(self, *, path: str) -> None:
         """Remove a file from git"""
-        self.__git_repo.index.remove([path], working_tree=True)
+        self._git_repo.index.remove([path], working_tree=True)
 
     def create_commit(
         self, *, msg: str, author: git.Actor, committer: git.Actor, hook_skipping: bool
     ) -> None:
         """Create a commit"""
-        self.__git_repo.index.commit(
+        self._git_repo.index.commit(
             msg,
             author=author,
             committer=committer,
@@ -1108,23 +1105,23 @@ class Dataset:
     def file_in_history(self, *, filepath: Path) -> bool:
         """Check whether a file is in the git history"""
         return str(filepath) in [
-            o.path for o in self.__git_repo.head.commit.tree.traverse()
+            o.path for o in self._git_repo.head.commit.tree.traverse()
         ]
 
     def get_commit_message(self, *, commit_nr: int) -> str:
         """Get the commit message for commit #"""
-        master = self.__git_repo.head.reference
+        master = self._git_repo.head.reference
         assert commit_nr == 0  # extension : implement other cases
         if commit_nr == 0:
             cmsg = master.commit.message
         return cmsg
 
-    def __add_record_changes(self) -> None:
+    def _add_record_changes(self) -> None:
         """Add changes in records to git"""
         while (self.review_manager.path / Path(".git/index.lock")).is_file():
             time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
-        self.__git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
+        self._git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
@@ -1132,7 +1129,7 @@ class Dataset:
             time.sleep(randint(1, 50) * 0.1)  # nosec
             print("Waiting for previous git operation to complete")
 
-        self.__git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
+        self._git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
 
     def has_untracked_search_records(self) -> bool:
         """Check whether there are untracked search records"""
@@ -1142,20 +1139,20 @@ class Dataset:
 
     def reset_log_if_no_changes(self) -> None:
         """Reset the report log file if there are not changes"""
-        if not self.__git_repo.is_dirty():
+        if not self._git_repo.is_dirty():
             self.review_manager.reset_report_logger()
 
     def get_last_commit_sha(self) -> str:  # pragma: no cover
         """Get the last commit sha"""
-        return str(self.__git_repo.head.commit.hexsha)
+        return str(self._git_repo.head.commit.hexsha)
 
     def get_tree_hash(self) -> str:  # pragma: no cover
         """Get the current tree hash"""
-        tree_hash = self.__git_repo.git.execute(["git", "write-tree"])
+        tree_hash = self._git_repo.git.execute(["git", "write-tree"])
         return str(tree_hash)
 
-    def __get_remote_commit_differences(self) -> list:  # pragma: no cover
-        origin = self.__git_repo.remotes.origin
+    def _get_remote_commit_differences(self) -> list:  # pragma: no cover
+        origin = self._git_repo.remotes.origin
         if origin.exists():
             try:
                 origin.fetch()
@@ -1163,17 +1160,17 @@ class Dataset:
                 return [-1, -1]
 
         nr_commits_behind, nr_commits_ahead = -1, -1
-        if self.__git_repo.active_branch.tracking_branch() is not None:
-            branch_name = str(self.__git_repo.active_branch)
-            tracking_branch_name = str(self.__git_repo.active_branch.tracking_branch())
+        if self._git_repo.active_branch.tracking_branch() is not None:
+            branch_name = str(self._git_repo.active_branch)
+            tracking_branch_name = str(self._git_repo.active_branch.tracking_branch())
             # self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
-            commits_behind = self.__git_repo.iter_commits(behind_operation)
+            commits_behind = self._git_repo.iter_commits(behind_operation)
             nr_commits_behind = sum(1 for c in commits_behind)
 
             ahead_operation = tracking_branch_name + ".." + branch_name
-            commits_ahead = self.__git_repo.iter_commits(ahead_operation)
+            commits_ahead = self._git_repo.iter_commits(ahead_operation)
             nr_commits_ahead = sum(1 for c in commits_ahead)
 
         return [nr_commits_behind, nr_commits_ahead]
@@ -1181,48 +1178,48 @@ class Dataset:
     def behind_remote(self) -> bool:  # pragma: no cover
         """Check whether the repository is behind the remote"""
         nr_commits_behind = 0
-        connected_remote = 0 != len(self.__git_repo.remotes)
+        connected_remote = 0 != len(self._git_repo.remotes)
         if connected_remote:
-            origin = self.__git_repo.remotes.origin
+            origin = self._git_repo.remotes.origin
             if origin.exists():
                 (
                     nr_commits_behind,
                     _,
-                ) = self.__get_remote_commit_differences()
+                ) = self._get_remote_commit_differences()
         if nr_commits_behind > 0:
             return True
         return False
 
     def remote_ahead(self) -> bool:  # pragma: no cover
         """Check whether the remote is ahead"""
-        connected_remote = 0 != len(self.__git_repo.remotes)
+        connected_remote = 0 != len(self._git_repo.remotes)
         if connected_remote:
-            origin = self.__git_repo.remotes.origin
+            origin = self._git_repo.remotes.origin
             if origin.exists():
                 (
                     _,
                     nr_commits_ahead,
-                ) = self.__get_remote_commit_differences()
+                ) = self._get_remote_commit_differences()
         if nr_commits_ahead > 0:
             return True
         return False
 
     def pull_if_repo_clean(self) -> None:  # pragma: no cover
         """Pull project if repository is clean"""
-        if not self.__git_repo.is_dirty():
-            origin = self.__git_repo.remotes.origin
+        if not self._git_repo.is_dirty():
+            origin = self._git_repo.remotes.origin
             origin.pull()
 
     def get_remote_url(self) -> str:  # pragma: no cover
         """Get the remote url"""
         remote_url = "NA"
-        for remote in self.__git_repo.remotes:
+        for remote in self._git_repo.remotes:
             if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
 
     def stash_unstaged_changes(self) -> bool:
         """Stash unstaged changes"""
-        return "No local changes to save" != self.__git_repo.git.stash(
+        return "No local changes to save" != self._git_repo.git.stash(
             "push", "--keep-index"
         )

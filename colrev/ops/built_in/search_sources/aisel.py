@@ -53,7 +53,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     )
     db_url = "https://aisel.aisnet.org/"
 
-    __conference_abbreviations = {
+    _conference_abbreviations = {
         "ICIS": "International Conference on Information Systems",
         "PACIS": "Pacific-Asia Conference on Information Systems",
         "ECIS": "European Conference on Information Systems",
@@ -65,7 +65,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         "CONF-IRM": "International Conference on Information Resources Management",
     }
 
-    __link_confs = {
+    _link_confs = {
         "https://aisel.aisnet.org/hicss": "Hawaii International Conference on System Sciences",
         "https://aisel.aisnet.org/amcis": "Americas Conference on Information Systems",
         "https://aisel.aisnet.org/pacis": "Pacific-Asia Conference on Information Systems",
@@ -103,7 +103,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def __parse_query(cls, *, query: str) -> dict:
+    def _parse_query(cls, *, query: str) -> dict:
         peer_reviewed = "peer_reviewed=true" in query
         start_date = ""
         if "start_date=" in query:
@@ -187,7 +187,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             if "url" in params:
                 host = urlparse(params["url"]).hostname
                 assert host and host.endswith("aisel.aisnet.org")
-                q_params = cls.__parse_query(query=params["url"])
+                q_params = cls._parse_query(query=params["url"])
                 filename = operation.get_unique_filename(file_path_string="ais")
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
@@ -202,7 +202,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
@@ -216,7 +216,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def __get_ais_query_return(self) -> list:
+    def _get_ais_query_return(self) -> list:
         def query_from_params(params: dict) -> str:
             final = ""
             for i in params["query"]:
@@ -292,7 +292,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         records = enl_loader.load_enl_entries()
         for record_dict in records.values():
-            self.__fix_entrytype_before_conversion(record_dict=record_dict)
+            self._fix_entrytype_before_conversion(record_dict=record_dict)
             enl_loader.apply_entrytype_mapping(
                 record_dict=record_dict, entrytype_map=entrytype_map
             )
@@ -302,7 +302,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             )
         return list(records.values())
 
-    def __run_api_search(
+    def _run_api_search(
         self,
         *,
         ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -318,7 +318,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
 
         try:
-            for record_dict in self.__get_ais_query_return():
+            for record_dict in self._get_ais_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
                     Fields.TITLE, ""
@@ -376,7 +376,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of AISeLibrary"""
 
-        self.__validate_source()
+        self._validate_source()
 
         ais_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -385,7 +385,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:
-            self.__run_api_search(
+            self._run_api_search(
                 ais_feed=ais_feed,
                 rerun=rerun,
             )
@@ -453,7 +453,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             records = enl_loader.load_enl_entries()
 
             for record_dict in records.values():
-                self.__fix_entrytype_before_conversion(record_dict=record_dict)
+                self._fix_entrytype_before_conversion(record_dict=record_dict)
                 enl_loader.apply_entrytype_mapping(
                     record_dict=record_dict, entrytype_map=entrytype_map
                 )
@@ -477,7 +477,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __fix_entrytype_before_conversion(self, *, record_dict: dict) -> None:
+    def _fix_entrytype_before_conversion(self, *, record_dict: dict) -> None:
         """
         Fix entrytype
         :param record_dict: record that is being prepared
@@ -490,7 +490,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             else:
                 record_dict["0"] = "Inproceedings"
 
-    def __fix_entrytype(self, *, record: colrev.record.Record) -> None:
+    def _fix_entrytype(self, *, record: colrev.record.Record) -> None:
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
         if (
@@ -545,7 +545,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         key=Fields.BOOKTITLE, value="ECIS", source="prep_ais_source"
                     )
 
-    def __unify_container_titles(self, *, record: colrev.record.Record) -> None:
+    def _unify_container_titles(self, *, record: colrev.record.Record) -> None:
         if "https://aisel.aisnet.org/misq/" in record.data.get(Fields.URL, ""):
             record.update_field(
                 key=Fields.JOURNAL, value="MIS Quarterly", source="prep_ais_source"
@@ -569,7 +569,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             record.remove_field(key=Fields.BOOKTITLE)
 
         if record.data[Fields.ENTRYTYPE] == "inproceedings":
-            for conf_abbreviation, conf_name in self.__conference_abbreviations.items():
+            for conf_abbreviation, conf_name in self._conference_abbreviations.items():
                 if conf_abbreviation in record.data.get(Fields.BOOKTITLE, ""):
                     record.update_field(
                         key=Fields.BOOKTITLE,
@@ -577,7 +577,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         source="prep_ais_source",
                     )
 
-        for link_part, conf_name in self.__link_confs.items():
+        for link_part, conf_name in self._link_confs.items():
             if link_part in record.data.get(Fields.URL, ""):
                 record.update_field(
                     key=Fields.BOOKTITLE,
@@ -585,7 +585,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     source="prep_ais_source",
                 )
 
-    def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         if Fields.ABSTRACT in record.data:
             if record.data[Fields.ABSTRACT] == "N/A":
                 record.remove_field(key=Fields.ABSTRACT)
@@ -601,7 +601,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
         record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
 
-    def __exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
+    def _exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
         if re.match(
             r"MISQ Volume \d{1,2}, Issue \d Table of Contents",
             record.data.get(Fields.TITLE, ""),
@@ -613,10 +613,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 
-        self.__fix_entrytype(record=record)
-        self.__unify_container_titles(record=record)
-        self.__format_fields(record=record)
-        self.__exclude_complementary_material(record=record)
+        self._fix_entrytype(record=record)
+        self._unify_container_titles(record=record)
+        self._format_fields(record=record)
+        self._exclude_complementary_material(record=record)
 
         record.fix_name_particles()
 

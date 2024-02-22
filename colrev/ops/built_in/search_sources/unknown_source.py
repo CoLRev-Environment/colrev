@@ -59,7 +59,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     db_url = ""
 
     HTML_CLEANER = re.compile("<.*?>")
-    __padding = 40
+    _padding = 40
 
     def __init__(
         self, *, source_operation: colrev.operation.Operation, settings: dict
@@ -113,7 +113,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __rename_erroneous_extensions(self) -> None:
+    def _rename_erroneous_extensions(self) -> None:
         if self.search_source.filename.suffix in [".xls", ".xlsx"]:
             return
         data = self.search_source.filename.read_text(encoding="utf-8")
@@ -155,7 +155,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 msg=f"Rename {self.search_source.filename}"
             )
 
-    def __load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
         # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
         reference_types = {
             "JOUR": ENTRYTYPES.ARTICLE,
@@ -295,7 +295,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         return records
 
-    def __load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
         bib_loader = colrev.ops.load_utils_bib.BIBLoader(
             load_operation=load_operation, source=self.search_source
         )
@@ -303,7 +303,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         return records
 
-    def __load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
         table_loader = colrev.ops.load_utils_table.TableLoader(
             load_operation=load_operation, source=self.search_source
         )
@@ -311,7 +311,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         records = table_loader.convert_to_records(entries=table_entries)
         return records
 
-    def __load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
         excel_loader = colrev.ops.load_utils_table.TableLoader(
             load_operation=load_operation, source=self.search_source
         )
@@ -319,14 +319,14 @@ class UnknownSearchSource(JsonSchemaMixin):
         records = excel_loader.convert_to_records(entries=table_entries)
         return records
 
-    def __load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
         md_loader = colrev.ops.load_utils_md.MarkdownLoader(
             load_operation=load_operation, source=self.search_source
         )
         records = md_loader.load()
         return records
 
-    def __load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
         enl_mapping = {
             ENTRYTYPES.ARTICLE: {
                 "T": Fields.TITLE,
@@ -392,16 +392,16 @@ class UnknownSearchSource(JsonSchemaMixin):
         if not self.search_source.filename.is_file():
             return {}
 
-        self.__rename_erroneous_extensions()
+        self._rename_erroneous_extensions()
 
         __load_methods = {
-            ".ris": self.__load_ris,
-            ".bib": self.__load_bib,
-            ".csv": self.__load_csv,
-            ".xls": self.__load_xlsx,
-            ".xlsx": self.__load_xlsx,
-            ".md": self.__load_md,
-            ".enl": self.__load_enl,
+            ".ris": self._load_ris,
+            ".bib": self._load_bib,
+            ".csv": self._load_csv,
+            ".xls": self._load_xlsx,
+            ".xlsx": self._load_xlsx,
+            ".md": self._load_md,
+            ".enl": self._load_enl,
         }
 
         if self.search_source.filename.suffix not in __load_methods:
@@ -411,7 +411,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             load_operation=load_operation
         )
 
-    def __heuristically_fix_entrytypes(
+    def _heuristically_fix_entrytypes(
         self, *, record: colrev.record.PrepRecord
     ) -> None:
         """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
@@ -461,7 +461,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
             self.review_manager.report_logger.info(
-                f" {record.data[Fields.ID]}".ljust(self.__padding, " ")
+                f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("dissertation" in fulltext link)'
             )
@@ -475,7 +475,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
             self.review_manager.report_logger.info(
-                f" {record.data[Fields.ID]}".ljust(self.__padding, " ")
+                f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in fulltext link)'
             )
@@ -489,12 +489,12 @@ class UnknownSearchSource(JsonSchemaMixin):
                 key=Fields.ENTRYTYPE, value="phdthesis", source="unkown_source_prep"
             )
             self.review_manager.report_logger.info(
-                f" {record.data[Fields.ID]}".ljust(self.__padding, " ")
+                f" {record.data[Fields.ID]}".ljust(self._padding, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in abstract)'
             )
 
-    def __format_inproceedings(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_inproceedings(self, *, record: colrev.record.PrepRecord) -> None:
         if (
             record.data.get(Fields.BOOKTITLE, FieldValues.UNKNOWN)
             == FieldValues.UNKNOWN
@@ -525,7 +525,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
-    def __format_article(self, record: colrev.record.PrepRecord) -> None:
+    def _format_article(self, record: colrev.record.PrepRecord) -> None:
         if (
             record.data.get(Fields.JOURNAL, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
             and len(record.data[Fields.JOURNAL]) > 10
@@ -542,13 +542,13 @@ class UnknownSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
-    def __format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record.PrepRecord) -> None:
         """Format fields"""
 
         if record.data.get(Fields.ENTRYTYPE, "") == "inproceedings":
-            self.__format_inproceedings(record=record)
+            self._format_inproceedings(record=record)
         elif record.data.get(Fields.ENTRYTYPE, "") == "article":
-            self.__format_article(record=record)
+            self._format_article(record=record)
 
         if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
             # fix name format
@@ -582,7 +582,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 and not re.match(r"^[xivXIV]*--[xivXIV]*$", record.data[Fields.PAGES])
             ):
                 self.review_manager.report_logger.info(
-                    f" {record.data[Fields.ID]}:".ljust(self.__padding, " ")
+                    f" {record.data[Fields.ID]}:".ljust(self._padding, " ")
                     + f"Unusual pages: {record.data[Fields.PAGES]}"
                 )
 
@@ -605,7 +605,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data[Fields.LANGUAGE]
 
-    def __remove_redundant_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _remove_redundant_fields(self, *, record: colrev.record.PrepRecord) -> None:
         if (
             record.data[Fields.ENTRYTYPE] == "article"
             and Fields.JOURNAL in record.data
@@ -633,7 +633,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             if similarity_journal_booktitle / 100 > 0.9:
                 record.remove_field(key=Fields.JOURNAL)
 
-    def __impute_missing_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _impute_missing_fields(self, *, record: colrev.record.PrepRecord) -> None:
         if "date" in record.data and Fields.YEAR not in record.data:
             year = re.search(r"\d{4}", record.data["date"])
             if year:
@@ -644,7 +644,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                     keep_source_if_equal=True,
                 )
 
-    def __unify_special_characters(self, *, record: colrev.record.PrepRecord) -> None:
+    def _unify_special_characters(self, *, record: colrev.record.PrepRecord) -> None:
         # Remove html entities
         for field in list(record.data.keys()):
             # Skip dois (and their provenance), which may contain html entities
@@ -668,16 +668,16 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         # we may assign fields heuristically (e.g., to colrev.pubmed.pubmedid)
 
-        self.__heuristically_fix_entrytypes(
+        self._heuristically_fix_entrytypes(
             record=record,
         )
 
-        self.__impute_missing_fields(record=record)
+        self._impute_missing_fields(record=record)
 
-        self.__format_fields(record=record)
+        self._format_fields(record=record)
 
-        self.__remove_redundant_fields(record=record)
+        self._remove_redundant_fields(record=record)
 
-        self.__unify_special_characters(record=record)
+        self._unify_special_characters(record=record)
 
         return record

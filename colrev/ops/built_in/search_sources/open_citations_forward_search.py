@@ -55,7 +55,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
-        self.__etiquette = self.crossref_connector.get_etiquette(
+        self._etiquette = self.crossref_connector.get_etiquette(
             review_manager=self.review_manager
         )
 
@@ -72,7 +72,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             comment="",
         )
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
@@ -96,7 +96,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def __fw_search_condition(self, *, record: dict) -> bool:
+    def _fw_search_condition(self, *, record: dict) -> bool:
         if Fields.DOI not in record:
             return False
 
@@ -115,7 +115,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         return True
 
-    def __get_forward_search_records(self, *, record_dict: dict) -> list:
+    def _get_forward_search_records(self, *, record_dict: dict) -> list:
         forward_citations = []
 
         url = f"https://opencitations.net/index/coci/api/v1/citations/{record_dict['doi']}"
@@ -128,7 +128,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
             for doi in [x["citing"] for x in items]:
                 retrieved_record = self.crossref_connector.query_doi(
-                    doi=doi, etiquette=self.__etiquette
+                    doi=doi, etiquette=self._etiquette
                 )
                 # if not crossref_query_return:
                 #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
@@ -146,7 +146,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         # pylint: disable=too-many-branches
 
-        self.__validate_source()
+        self._validate_source()
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -161,14 +161,14 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         )
 
         for record in records.values():
-            if not self.__fw_search_condition(record=record):
+            if not self._fw_search_condition(record=record):
                 continue
 
             self.review_manager.logger.info(
                 f"Run forward search for {record[Fields.ID]}"
             )
 
-            new_records = self.__get_forward_search_records(record_dict=record)
+            new_records = self._get_forward_search_records(record_dict=record)
 
             for new_record in new_records:
                 new_record["fwsearch_ref"] = (

@@ -6,7 +6,6 @@ import shutil
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -20,8 +19,6 @@ from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 
@@ -43,11 +40,11 @@ class PDFCoverPage(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = pdf_prep_operation.review_manager
 
-    def __check_scholarworks_first_page(self, *, page0: str, coverpages: list) -> None:
+    def _check_scholarworks_first_page(self, *, page0: str, coverpages: list) -> None:
         if "followthisandadditionalworksat:https://scholarworks" in page0:
             coverpages.append(0)
 
-    def __check_researchgate_first_page(self, *, page0: str, coverpages: list) -> None:
+    def _check_researchgate_first_page(self, *, page0: str, coverpages: list) -> None:
         if (
             "discussions,stats,andauthorprofilesforthispublicationat:"
             + "https://www.researchgate.net/publication"
@@ -58,7 +55,7 @@ class PDFCoverPage(JsonSchemaMixin):
         ):
             coverpages.append(0)
 
-    def __check_jstor_first_page(self, *, page0: str, coverpages: list) -> None:
+    def _check_jstor_first_page(self, *, page0: str, coverpages: list) -> None:
         if (
             "pleasecontactsupport@jstor.org.youruseofthejstorarchiveindicatesy"
             + "ouracceptanceoftheterms&conditionsofuse"
@@ -68,7 +65,7 @@ class PDFCoverPage(JsonSchemaMixin):
         ):
             coverpages.append(0)
 
-    def __check_emerald_first_page(self, *, page0: str, coverpages: list) -> None:
+    def _check_emerald_first_page(self, *, page0: str, coverpages: list) -> None:
         if (
             "emeraldisbothcounter4andtransfercompliant.theorganizationisapartnero"
             "fthecommitteeonpublicationethics(cope)andalsoworkswithporticoandthe"
@@ -77,7 +74,7 @@ class PDFCoverPage(JsonSchemaMixin):
         ):
             coverpages.append(0)
 
-    def __check_informs_first_page(
+    def _check_informs_first_page(
         self, *, page0: str, page1: str, coverpages: list
     ) -> None:
         if (
@@ -94,7 +91,7 @@ class PDFCoverPage(JsonSchemaMixin):
         ):
             coverpages.append(0)
 
-    def __check_ais_first_page(self, *, page0: str, coverpages: list) -> None:
+    def _check_ais_first_page(self, *, page0: str, coverpages: list) -> None:
         if (
             "associationforinformationsystemsaiselectroniclibrary(aisel)" in page0
             and "abstract" not in page0
@@ -102,7 +99,7 @@ class PDFCoverPage(JsonSchemaMixin):
         ):
             coverpages.append(0)
 
-    def __check_tandf_first_page(
+    def _check_tandf_first_page(
         self, *, page0: str, page1: str, coverpages: list
     ) -> None:
         if ("pleasescrolldownforarticle" in page0) or ("viewrelatedarticles" in page0):
@@ -115,7 +112,7 @@ class PDFCoverPage(JsonSchemaMixin):
                 ):
                     coverpages.append(1)
 
-    def __get_coverpages(self, *, pdf: str) -> typing.List[int]:
+    def _get_coverpages(self, *, pdf: str) -> typing.List[int]:
         coverpages: typing.List[int] = []
 
         try:
@@ -158,13 +155,13 @@ class PDFCoverPage(JsonSchemaMixin):
 
         # input(page0)
 
-        self.__check_scholarworks_first_page(page0=page0, coverpages=coverpages)
-        self.__check_researchgate_first_page(page0=page0, coverpages=coverpages)
-        self.__check_jstor_first_page(page0=page0, coverpages=coverpages)
-        self.__check_emerald_first_page(page0=page0, coverpages=coverpages)
-        self.__check_informs_first_page(page0=page0, page1=page1, coverpages=coverpages)
-        self.__check_ais_first_page(page0=page0, coverpages=coverpages)
-        self.__check_tandf_first_page(page0=page0, page1=page1, coverpages=coverpages)
+        self._check_scholarworks_first_page(page0=page0, coverpages=coverpages)
+        self._check_researchgate_first_page(page0=page0, coverpages=coverpages)
+        self._check_jstor_first_page(page0=page0, coverpages=coverpages)
+        self._check_emerald_first_page(page0=page0, coverpages=coverpages)
+        self._check_informs_first_page(page0=page0, page1=page1, coverpages=coverpages)
+        self._check_ais_first_page(page0=page0, coverpages=coverpages)
+        self._check_tandf_first_page(page0=page0, page1=page1, coverpages=coverpages)
 
         return list(set(coverpages))
 
@@ -182,7 +179,7 @@ class PDFCoverPage(JsonSchemaMixin):
         cp_path = local_index.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
-        coverpages = self.__get_coverpages(pdf=record.data[Fields.FILE])
+        coverpages = self._get_coverpages(pdf=record.data[Fields.FILE])
         if not coverpages:
             return record.data
         if coverpages:

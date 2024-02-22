@@ -50,7 +50,7 @@ class ArXivSource:
         + "colrev/ops/built_in/search_sources/arxiv.md"
     )
     db_url = "https://arxiv.org/"
-    __arxiv_md_filename = Path("data/search/md_arxiv.bib")
+    _arxiv_md_filename = Path("data/search/md_arxiv.bib")
 
     def __init__(
         self,
@@ -69,14 +69,14 @@ class ArXivSource:
             arxiv_md_source_l = [
                 s
                 for s in self.review_manager.settings.sources
-                if s.filename == self.__arxiv_md_filename
+                if s.filename == self._arxiv_md_filename
             ]
             if arxiv_md_source_l:
                 self.search_source = arxiv_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.arxiv",
-                    filename=self.__arxiv_md_filename,
+                    filename=self._arxiv_md_filename,
                     search_type=colrev.settings.SearchType.API,
                     search_parameters={},
                     comment="",
@@ -140,7 +140,7 @@ class ArXivSource:
             f"Validate SearchSource {source.filename}"
         )
 
-        if source.filename.name != self.__arxiv_md_filename.name:
+        if source.filename.name != self._arxiv_md_filename.name:
             if "query" not in source.search_parameters:
                 raise colrev_exceptions.InvalidQueryException(
                     f"Source missing query search_parameter ({source.filename})"
@@ -168,7 +168,7 @@ class ArXivSource:
         #         "ENTRYTYPE": "article",  # might not be needed in ArXiv
         #         "arxivid": "arXiv:2306.03090",
         #     }
-        #     returned_record_dict = self.__arxiv_query_id(
+        #     returned_record_dict = self._arxiv_query_id(
         #         arxiv_id=test_rec["arxivid"],
         #         timeout=20,
         #     )
@@ -184,7 +184,7 @@ class ArXivSource:
         #     if not source_operation.force_mode:
         #         raise colrev_exceptions.ServiceNotAvailableException("ArXiv") from exc
 
-    # def __arxiv_query_id(
+    # def _arxiv_query_id(
     #     self,
     #     *,
     #     arxiv_id: str,
@@ -214,7 +214,7 @@ class ArXivSource:
 
     #         input(str.encode(ret.text))
     #         root = fromstring(str.encode(ret.text))
-    #         retrieved_record = self.__arxiv_xml_to_record(root=root)
+    #         retrieved_record = self._arxiv_xml_to_record(root=root)
     #         if not retrieved_record:
     #             return {"arxiv_id": arxiv_id}
     #     except requests.exceptions.RequestException:
@@ -244,7 +244,7 @@ class ArXivSource:
 
     # pylint: disable=too-many-branches
     # pylint: disable=colrev-missed-constant-usage
-    def __parse_record(self, entry: dict) -> dict:
+    def _parse_record(self, entry: dict) -> dict:
         entry[Fields.ENTRYTYPE] = "techreport"
         entry["arxivid"] = entry.pop("id").replace("http://arxiv.org/abs/", "")
         entry[Fields.AUTHOR] = " and ".join([a["name"] for a in entry.pop("authors")])
@@ -297,7 +297,7 @@ class ArXivSource:
             del entry["keywords"]
         return entry
 
-    def __get_arxiv_ids(self, query: str, retstart: int) -> typing.List[dict]:
+    def _get_arxiv_ids(self, query: str, retstart: int) -> typing.List[dict]:
         url = (
             "https://export.arxiv.org/api/query?search_query="
             + f"all:{query}&start={retstart}&max_results=20"
@@ -305,19 +305,19 @@ class ArXivSource:
         feed = feedparser.parse(url)
         return feed["entries"]
 
-    def __get_arxiv_query_return(self) -> typing.Iterator[dict]:
+    def _get_arxiv_query_return(self) -> typing.Iterator[dict]:
         params = self.search_source.search_parameters
         retstart = 0
         while True:
-            entries = self.__get_arxiv_ids(query=params["query"], retstart=retstart)
+            entries = self._get_arxiv_ids(query=params["query"], retstart=retstart)
             if not entries:
                 break
             for entry in entries:
-                yield self.__parse_record(entry)
+                yield self._parse_record(entry)
 
             retstart += 20
 
-    def __run_parameter_search(
+    def _run_parameter_search(
         self,
         *,
         arxiv_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -330,7 +330,7 @@ class ArXivSource:
 
         records = self.review_manager.dataset.load_records_dict()
         try:
-            for record_dict in self.__get_arxiv_query_return():
+            for record_dict in self._get_arxiv_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
                     Fields.TITLE, ""
@@ -392,7 +392,7 @@ class ArXivSource:
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-    # def __run_md_search_update(
+    # def _run_md_search_update(
     #     self,
     #     *,
     #     arxiv_feed: colrev.ops.search.GeneralOriginFeed,
@@ -403,7 +403,7 @@ class ArXivSource:
     #         feed_record = colrev.record.Record(data=feed_record_dict)
 
     #         try:
-    #             retrieved_record = self.__arxiv_query_id(
+    #             retrieved_record = self._arxiv_query_id(
     #                 arxiv_id=feed_record_dict["arxivid"]
     #             )
 
@@ -449,12 +449,12 @@ class ArXivSource:
         )
 
         # if self.search_source.search_type == colrev.settings.SearchType.MD:
-        #     self.__run_md_search_update(
+        #     self._run_md_search_update(
         #         arxiv_feed=arxiv_feed,
         #     )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:
-            self.__run_parameter_search(
+            self._run_parameter_search(
                 arxiv_feed=arxiv_feed,
                 rerun=rerun,
             )

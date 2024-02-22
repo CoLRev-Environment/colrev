@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -16,8 +15,6 @@ import colrev.ops.search_sources
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -49,7 +46,7 @@ class CiteAsPrep(JsonSchemaMixin):
         self.session = prep_operation.review_manager.get_cached_session()
         _, self.email = prep_operation.review_manager.get_committer()
 
-    def __cite_as_json_to_record(
+    def _cite_as_json_to_record(
         self, *, json_str: str, url: str
     ) -> colrev.record.PrepRecord:
         retrieved_record: dict = {}
@@ -104,7 +101,7 @@ class CiteAsPrep(JsonSchemaMixin):
             )
             ret.raise_for_status()
 
-            retrieved_record = self.__cite_as_json_to_record(json_str=ret.text, url=url)
+            retrieved_record = self._cite_as_json_to_record(json_str=ret.text, url=url)
 
             similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                 record_original=retrieved_record,

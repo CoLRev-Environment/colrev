@@ -27,7 +27,7 @@ class RecordNotInTOCChecker:
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             if record.ignored_defect(field=Fields.JOURNAL, defect=self.msg):
                 return
-            if not self.__is_in_toc(record=record):
+            if not self._is_in_toc(record=record):
                 record.add_masterdata_provenance_note(key=Fields.JOURNAL, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(
@@ -38,7 +38,7 @@ class RecordNotInTOCChecker:
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
             if record.ignored_defect(field=Fields.BOOKTITLE, defect=self.msg):
                 return
-            if not self.__is_in_toc(record=record):
+            if not self._is_in_toc(record=record):
                 record.add_masterdata_provenance_note(
                     key=Fields.BOOKTITLE, note=self.msg
                 )
@@ -48,7 +48,7 @@ class RecordNotInTOCChecker:
                 )
             return
 
-    def __is_in_toc(self, *, record: colrev.record.Record) -> bool:
+    def _is_in_toc(self, *, record: colrev.record.Record) -> bool:
         try:
             # Search within the table-of-content in local_index
             self.local_index.retrieve_from_toc(

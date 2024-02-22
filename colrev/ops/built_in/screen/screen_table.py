@@ -6,7 +6,6 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -17,9 +16,6 @@ import colrev.ops.built_in.screen.utils as util_cli_screen
 import colrev.record
 import colrev.settings
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.screen
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -43,7 +39,7 @@ class TableScreen(JsonSchemaMixin):
         self.screen_operation = screen_operation
         self.settings = self.settings_class.load_settings(data=settings)
 
-    def __create_screening_table(self, *, records: dict, split: list) -> list:
+    def _create_screening_table(self, *, records: dict, split: list) -> list:
         # pylint: disable=too-many-branches
         self.review_manager.logger.info("Loading records for export")
 
@@ -127,7 +123,7 @@ class TableScreen(JsonSchemaMixin):
             print("File already exists. Please rename it.")
             return
 
-        tbl = self.__create_screening_table(records=records, split=split)
+        tbl = self._create_screening_table(records=records, split=split)
 
         self.screen_table_path.parents[0].mkdir(parents=True, exist_ok=True)
 

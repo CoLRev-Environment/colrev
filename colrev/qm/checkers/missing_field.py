@@ -94,7 +94,7 @@ class MissingFieldChecker:
             if record.ignored_defect(field=required_fields_key, defect=self.msg):
                 continue
 
-            if self.__is_missing(record=record, key=required_fields_key):
+            if self._is_missing(record=record, key=required_fields_key):
                 record.update_field(
                     key=required_fields_key,
                     value=FieldValues.UNKNOWN,
@@ -108,14 +108,14 @@ class MissingFieldChecker:
                     key=required_fields_key, note=self.msg
                 )
 
-    def __is_missing(self, *, key: str, record: colrev.record.Record) -> bool:
-        if not self.__required_in_forthcoming(key=key, record=record):
+    def _is_missing(self, *, key: str, record: colrev.record.Record) -> bool:
+        if not self._required_in_forthcoming(key=key, record=record):
             return False
         if key in record.data and record.data[key] != FieldValues.UNKNOWN:
             return False
         return True
 
-    def __required_in_forthcoming(
+    def _required_in_forthcoming(
         self, *, key: str, record: colrev.record.Record
     ) -> bool:
         if record.data.get(Fields.YEAR, "") != FieldValues.FORTHCOMING:

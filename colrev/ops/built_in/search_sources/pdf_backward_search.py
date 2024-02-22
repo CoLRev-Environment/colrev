@@ -42,7 +42,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
-    __api_url = "https://opencitations.net/index/coci/api/v1/references/"
+    _api_url = "https://opencitations.net/index/coci/api/v1/references/"
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.pdf_backward_search"
@@ -75,7 +75,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
-        self.__etiquette = self.crossref_connector.get_etiquette(
+        self._etiquette = self.crossref_connector.get_etiquette(
             review_manager=self.review_manager
         )
 
@@ -94,7 +94,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             comment="",
         )
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
@@ -119,7 +119,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def __bw_search_condition(self, *, record: dict) -> bool:
+    def _bw_search_condition(self, *, record: dict) -> bool:
         # rev_included/rev_synthesized required, but record not in rev_included/rev_synthesized
         if (
             "colrev_status" in self.search_source.search_parameters["scope"]
@@ -146,10 +146,10 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         return True
 
-    def __get_reference_records_from_open_citations(self, *, record_dict: dict) -> list:
+    def _get_reference_records_from_open_citations(self, *, record_dict: dict) -> list:
         references = []
 
-        url = f"{self.__api_url}{record_dict['doi']}"
+        url = f"{self._api_url}{record_dict['doi']}"
         # headers = {"authorization": "YOUR-OPENCITATIONS-ACCESS-TOKEN"}
         headers: typing.Dict[str, str] = {}
         ret = requests.get(url, headers=headers, timeout=300)
@@ -159,7 +159,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             for doi in [x["cited"] for x in items]:
                 try:
                     retrieved_record = self.crossref_connector.query_doi(
-                        doi=doi, etiquette=self.__etiquette
+                        doi=doi, etiquette=self._etiquette
                     )
                     # if not crossref_query_return:
                     #     raise colrev_exceptions.RecordNotFoundInPrepSourceException()
@@ -177,7 +177,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
         return references
 
-    def __get_similarity(
+    def _get_similarity(
         self, *, record: colrev.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
@@ -197,7 +197,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         return similarity
 
     @classmethod
-    def __deduplicate_all_references(cls, all_references: dict) -> pd.DataFrame:
+    def _deduplicate_all_references(cls, all_references: dict) -> pd.DataFrame:
         print("Resolving entities in citation network")
         # Flatten the list of lists into a single list of references, including the record ID
         all_references_flat = [
@@ -238,7 +238,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         return df_all_references
 
     @classmethod
-    def __export_crosstab_thresholds(cls, df_all_references: pd.DataFrame) -> None:
+    def _export_crosstab_thresholds(cls, df_all_references: pd.DataFrame) -> None:
         cross_tabulated_data: typing.Dict[int, dict] = {}
 
         for in_text_citation_threshold in range(1, 20):
@@ -275,7 +275,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
         print("Exported to cross_tabulated_evaluation.csv.")
 
-    def __complement_with_open_citations_data(
+    def _complement_with_open_citations_data(
         self,
         *,
         pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -284,29 +284,29 @@ class BackwardSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info("Comparing records with open-citations data")
 
         for feed_record_dict in pdf_backward_search_feed.feed_records.values():
-            parent_record = self.__get_parent_record(feed_record_dict, records)
+            parent_record = self._get_parent_record(feed_record_dict, records)
             if not parent_record:
                 continue
 
-            backward_references = self.__get_reference_records_from_open_citations(
+            backward_references = self._get_reference_records_from_open_citations(
                 record_dict=parent_record
             )
-            self.__update_feed_records_with_open_citations_data(
+            self._update_feed_records_with_open_citations_data(
                 feed_record_dict, backward_references
             )
 
-    def __get_parent_record(self, feed_record_dict: dict, records: dict) -> dict:
+    def _get_parent_record(self, feed_record_dict: dict, records: dict) -> dict:
         bw_search_origin = feed_record_dict["bw_search_origins"].split(";")[0]
         parent_record_id = bw_search_origin[
             : bw_search_origin.find("_backward_search_")
         ]
         return records.get(parent_record_id, {})
 
-    def __update_feed_records_with_open_citations_data(
+    def _update_feed_records_with_open_citations_data(
         self, feed_record_dict: dict, backward_references: list
     ) -> None:
         feed_record = colrev.record.Record(data=feed_record_dict)
-        max_similarity, best_match = self.__find_best_match(
+        max_similarity, best_match = self._find_best_match(
             feed_record, backward_references
         )
 
@@ -316,13 +316,13 @@ class BackwardSearchSource(JsonSchemaMixin):
                 f"Updated record {feed_record.data[Fields.ID]} with OpenCitations data."
             )
 
-    def __find_best_match(
+    def _find_best_match(
         self, feed_record: colrev.record.Record, backward_references: list
     ) -> tuple:
         max_similarity = 0.0
         best_match = None
         for backward_reference in backward_references:
-            similarity = self.__get_similarity(
+            similarity = self._get_similarity(
                 record=feed_record, retrieved_record_dict=backward_reference
             )
             if similarity > max_similarity:
@@ -330,7 +330,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 max_similarity = similarity
         return max_similarity, best_match
 
-    def __get_new_record(
+    def _get_new_record(
         self,
         *,
         item: dict,
@@ -373,7 +373,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
 
-        self.__validate_source()
+        self._validate_source()
 
         # Do not run in continuous-integration environment
         if self.review_manager.in_ci_environment():
@@ -402,14 +402,14 @@ class BackwardSearchSource(JsonSchemaMixin):
         selected_records = {
             rid: record
             for rid, record in records.items()
-            if self.__bw_search_condition(record=record)
+            if self._bw_search_condition(record=record)
         }
 
-        all_references = self.__get_all_references(
+        all_references = self._get_all_references(
             selected_records=selected_records, review_manager=self.review_manager
         )
 
-        df_all_references = self.__deduplicate_all_references(all_references)
+        df_all_references = self._deduplicate_all_references(all_references)
 
         df_all_references["meets_criteria"] = df_all_references[
             Fields.NR_INTEXT_CITATIONS
@@ -432,7 +432,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
 
         for item in selected_references.to_dict(orient="records"):
-            new_record = self.__get_new_record(
+            new_record = self._get_new_record(
                 item=item, pdf_backward_search_feed=pdf_backward_search_feed
             )
 
@@ -460,7 +460,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             records=records,
         )
 
-        self.__complement_with_open_citations_data(
+        self._complement_with_open_citations_data(
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
         )
 
@@ -482,7 +482,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def __get_all_references(
+    def _get_all_references(
         cls,
         *,
         selected_records: dict,
@@ -521,7 +521,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         return all_references
 
     @classmethod
-    def __get_settings_from_ui(
+    def _get_settings_from_ui(
         cls, *, params: dict, review_manager: colrev.review_manager.ReviewManager
     ) -> None:
 
@@ -548,13 +548,13 @@ class BackwardSearchSource(JsonSchemaMixin):
             ]
         }
 
-        all_references = cls.__get_all_references(
+        all_references = cls._get_all_references(
             selected_records=selected_records, review_manager=review_manager
         )
 
-        df_all_references = cls.__deduplicate_all_references(all_references)
+        df_all_references = cls._deduplicate_all_references(all_references)
 
-        cls.__export_crosstab_thresholds(df_all_references)
+        cls._export_crosstab_thresholds(df_all_references)
 
         questions = [
             inquirer.Text(
@@ -582,7 +582,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
 
         if "min_intext_citations" not in params:
-            cls.__get_settings_from_ui(
+            cls._get_settings_from_ui(
                 params=params, review_manager=operation.review_manager
             )
         else:

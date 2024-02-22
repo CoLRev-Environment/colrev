@@ -16,7 +16,7 @@ class NameFormatTitleChecker:
 
     fields_to_check = [Fields.AUTHOR, Fields.EDITOR]
     titles = ["Dr", "PhD", "Prof", "Dipl Ing"]
-    __words_rgx = re.compile(r"(\w[\w']*\w|\w)")
+    _words_rgx = re.compile(r"(\w[\w']*\w|\w)")
 
     msg = DefectCodes.NAME_FORMAT_TITLES
 
@@ -32,13 +32,13 @@ class NameFormatTitleChecker:
             ):
                 continue
 
-            if self.__title_in_name(name=record.data[key]):
+            if self._title_in_name(name=record.data[key]):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def __title_in_name(self, *, name: str) -> bool:
-        name_parts = self.__words_rgx.findall(name.lower().replace(".", ""))
+    def _title_in_name(self, *, name: str) -> bool:
+        name_parts = self._words_rgx.findall(name.lower().replace(".", ""))
         return any(title.lower() in name_parts for title in self.titles)
 
 

@@ -49,7 +49,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/local_index.md"
     )
-    __local_index_md_filename = Path("data/search/md_curated.bib")
+    _local_index_md_filename = Path("data/search/md_curated.bib")
 
     essential_md_keys = [
         Fields.TITLE,
@@ -83,14 +83,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             li_md_source_l = [
                 s
                 for s in self.review_manager.settings.sources
-                if s.filename == self.__local_index_md_filename
+                if s.filename == self._local_index_md_filename
             ]
             if li_md_source_l:
                 self.search_source = li_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
-                    filename=self.__local_index_md_filename,
+                    filename=self._local_index_md_filename,
                     search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
@@ -102,7 +102,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         self.local_index = self.review_manager.get_local_index()
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
@@ -135,7 +135,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def __retrieve_from_index(self) -> typing.List[dict]:
+    def _retrieve_from_index(self) -> typing.List[dict]:
         params = self.search_source.search_parameters
         query = params["query"]
 
@@ -160,7 +160,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return records_to_import
 
-    def __run_md_search(
+    def _run_md_search(
         self,
         *,
         local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -205,7 +205,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         local_index_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
 
-    def __run_api_search(
+    def _run_api_search(
         self,
         *,
         local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -213,7 +213,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
 
-        for retrieved_record_dict in self.__retrieve_from_index():
+        for retrieved_record_dict in self._retrieve_from_index():
             try:
                 local_index_feed.set_id(record_dict=retrieved_record_dict)
             except colrev_exceptions.NotFeedIdentifiableException:
@@ -249,7 +249,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of local-index"""
 
-        self.__validate_source()
+        self._validate_source()
 
         local_index_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -258,13 +258,13 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.MD:
-            self.__run_md_search(local_index_feed=local_index_feed)
+            self._run_md_search(local_index_feed=local_index_feed)
 
         elif self.search_source.search_type in [
             colrev.settings.SearchType.API,
             colrev.settings.SearchType.TOC,
         ]:
-            self.__run_api_search(
+            self._run_api_search(
                 local_index_feed=local_index_feed,
                 rerun=rerun,
             )
@@ -333,7 +333,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def __add_cpid(self, *, record: colrev.record.Record) -> bool:
+    def _add_cpid(self, *, record: colrev.record.Record) -> bool:
         # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
         if Fields.FILE in record.data and "colrev_pdf_id" not in record.data:
             pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))
@@ -349,14 +349,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     pass
         return False
 
-    def __retrieve_record_from_local_index(
+    def _retrieve_record_from_local_index(
         self,
         *,
         record: colrev.record.Record,
         retrieval_similarity: float,
     ) -> colrev.record.Record:
         # add colrev_pdf_id
-        added_colrev_pdf_id = self.__add_cpid(record=record)
+        added_colrev_pdf_id = self._add_cpid(record=record)
 
         retrieved_record_dict = {}
         try:
@@ -402,7 +402,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return colrev.record.PrepRecord(data=retrieved_record_dict)
 
-    def __store_retrieved_record_in_feed(
+    def _store_retrieved_record_in_feed(
         self,
         *,
         record: colrev.record.Record,
@@ -483,7 +483,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
-        retrieved_record = self.__retrieve_record_from_local_index(
+        retrieved_record = self._retrieve_record_from_local_index(
             record=record,
             retrieval_similarity=prep_operation.retrieval_similarity,
         )
@@ -500,7 +500,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     FieldValues.CURATED
                 ]["source"]
 
-        self.__store_retrieved_record_in_feed(
+        self._store_retrieved_record_in_feed(
             record=record,
             retrieved_record=retrieved_record,
             default_source=default_source,
@@ -509,7 +509,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def __get_local_base_repos(self, *, change_itemsets: list) -> dict:
+    def _get_local_base_repos(self, *, change_itemsets: list) -> dict:
         base_repos = []
         for item in change_itemsets:
             if FieldValues.CURATED in item["original_record"].get(Fields.MD_PROV, {}):
@@ -529,7 +529,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         }
         return local_base_repos
 
-    def __print_changes(self, *, local_base_repo: str, change_itemsets: list) -> list:
+    def _print_changes(self, *, local_base_repo: str, change_itemsets: list) -> list:
         def print_diff(change: tuple) -> str:
             diff = difflib.Differ()
             letters = list(diff.compare(change[1], change[0]))
@@ -596,10 +596,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def apply_correction(self, *, change_itemsets: list) -> None:
         """Apply a correction by opening a pull request in the original repository"""
 
-        local_base_repos = self.__get_local_base_repos(change_itemsets=change_itemsets)
+        local_base_repos = self._get_local_base_repos(change_itemsets=change_itemsets)
 
         for local_base_repo_url, local_base_repo_path in local_base_repos.items():
-            selected_changes = self.__print_changes(
+            selected_changes = self._print_changes(
                 local_base_repo=local_base_repo_url, change_itemsets=change_itemsets
             )
 
@@ -610,7 +610,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     break
 
             if response == "y":
-                self.__apply_correction(
+                self._apply_correction(
                     source_url=local_base_repo_path,
                     change_list=selected_changes,
                 )
@@ -619,7 +619,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     for selected_change in selected_changes:
                         Path(selected_change[Fields.FILE]).unlink()
 
-    def __apply_corrections_precondition(
+    def _apply_corrections_precondition(
         self, *, check_operation: colrev.operation.Operation, source_url: str
     ) -> bool:
         git_repo = check_operation.review_manager.dataset.get_repo()
@@ -642,7 +642,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         return True
 
-    def __retrieve_by_colrev_id(
+    def _retrieve_by_colrev_id(
         self, *, indexed_record_dict: dict, records: list[dict]
     ) -> dict:
         indexed_record = colrev.record.Record(data=indexed_record_dict)
@@ -664,7 +664,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             raise colrev_exceptions.RecordNotInRepoException
         return record_l[0]
 
-    def __retrieve_record_for_correction(
+    def _retrieve_record_for_correction(
         self,
         *,
         records: dict,
@@ -690,7 +690,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             pass
 
         try:
-            record_dict = self.__retrieve_by_colrev_id(
+            record_dict = self._retrieve_by_colrev_id(
                 indexed_record_dict=original_record,
                 records=list(records.values()),
             )
@@ -719,7 +719,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         )
         raise colrev_exceptions.RecordNotInIndexException()
 
-    def __create_correction_branch(
+    def _create_correction_branch(
         self, *, git_repo: git.Repo, record_dict: dict
     ) -> str:
         record_branch_name = record_dict[Fields.ID]
@@ -733,7 +733,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         git_repo.git.branch(record_branch_name)
         return record_branch_name
 
-    def __apply_record_correction(
+    def _apply_record_correction(
         self,
         *,
         check_operation: colrev.operation.Operation,
@@ -766,7 +766,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             msg=f"Update {record_dict['ID']}", script_call="colrev push"
         )
 
-    def __push_corrections_and_reset_branch(
+    def _push_corrections_and_reset_branch(
         self,
         *,
         git_repo: git.Repo,
@@ -788,7 +788,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.info("Removed local corrections branch")
 
-    def __reset_record_after_correction(
+    def _reset_record_after_correction(
         self, *, record_dict: dict, rec_for_reset: dict, change_item: dict
     ) -> None:
         # reset the record - each branch should have changes for one record
@@ -805,7 +805,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         if Path(change_item[Fields.FILE]).is_file():
             Path(change_item[Fields.FILE]).unlink()
 
-    def __apply_change_item_correction(
+    def _apply_change_item_correction(
         self,
         *,
         check_operation: colrev.operation.Operation,
@@ -822,14 +822,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         pull_request_links = []
         for change_item in change_list:
             try:
-                record_dict = self.__retrieve_record_for_correction(
+                record_dict = self._retrieve_record_for_correction(
                     records=records,
                     change_item=change_item,
                 )
                 if not record_dict:
                     continue
 
-                record_branch_name = self.__create_correction_branch(
+                record_branch_name = self._create_correction_branch(
                     git_repo=git_repo, record_dict=record_dict
                 )
                 prev_branch_name = git_repo.active_branch.name
@@ -841,21 +841,21 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
                 rec_for_reset = record_dict.copy()
 
-                self.__apply_record_correction(
+                self._apply_record_correction(
                     check_operation=check_operation,
                     records=records,
                     record_dict=record_dict,
                     change_item=change_item,
                 )
 
-                self.__push_corrections_and_reset_branch(
+                self._push_corrections_and_reset_branch(
                     git_repo=git_repo,
                     record_branch_name=record_branch_name,
                     prev_branch_name=prev_branch_name,
                     source_url=source_url,
                 )
 
-                self.__reset_record_after_correction(
+                self._reset_record_after_correction(
                     record_dict=record_dict,
                     rec_for_reset=rec_for_reset,
                     change_item=change_item,
@@ -887,7 +887,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # handle cases where update branch already exists
         return success
 
-    def __apply_correction(self, *, source_url: str, change_list: list) -> None:
+    def _apply_correction(self, *, source_url: str, change_list: list) -> None:
         """Apply a (list of) corrections"""
 
         # TBD: other modes of accepting changes?
@@ -909,7 +909,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             self.review_manager.logger.info(res)
 
         try:
-            if not self.__apply_corrections_precondition(
+            if not self._apply_corrections_precondition(
                 check_operation=check_operation, source_url=source_url
             ):
                 return
@@ -921,7 +921,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             "Precondition for correction (pull-request) checked."
         )
 
-        success = self.__apply_change_item_correction(
+        success = self._apply_change_item_correction(
             check_operation=check_operation,
             source_url=source_url,
             change_list=change_list,

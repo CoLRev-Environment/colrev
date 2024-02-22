@@ -49,7 +49,7 @@ SUPPORTED_FIELDS = [
 ]
 
 
-def __assign_entrytype(*, record_dict: dict) -> None:
+def _assign_entrytype(*, record_dict: dict) -> None:
     """Method to assign the ENTRYTYPE"""
 
     publication_types = record_dict.get("publicationTypes")
@@ -65,7 +65,7 @@ def __assign_entrytype(*, record_dict: dict) -> None:
         record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
 
 
-def __assign_authors(*, record_dict: dict) -> None:
+def _assign_authors(*, record_dict: dict) -> None:
     """Method to assign authors from item"""
 
     authors = [
@@ -76,7 +76,7 @@ def __assign_authors(*, record_dict: dict) -> None:
     )
 
 
-def __assign_issn(*, record_dict: dict) -> None:
+def _assign_issn(*, record_dict: dict) -> None:
     """Method to assign the issn"""
 
     issn = (record_dict.get("publicationVenue", {}) or {}).get("issn")
@@ -84,7 +84,7 @@ def __assign_issn(*, record_dict: dict) -> None:
         record_dict[Fields.ISSN] = issn
 
 
-def __assign_ids(*, record_dict: dict) -> None:
+def _assign_ids(*, record_dict: dict) -> None:
     """Method to assign external IDs from item"""
     ext_ids = record_dict.get("externalIds", {})
 
@@ -94,7 +94,7 @@ def __assign_ids(*, record_dict: dict) -> None:
         record_dict[Fields.DBLP_KEY] = str(ext_ids["DBLP"])
 
 
-def __assign_abstract(*, record_dict: dict) -> None:
+def _assign_abstract(*, record_dict: dict) -> None:
     """Method to assign external IDs from item"""
     abstract = record_dict.get("abstract", "")
     if abstract is not None:
@@ -103,7 +103,7 @@ def __assign_abstract(*, record_dict: dict) -> None:
         record_dict[Fields.ABSTRACT] = ""
 
 
-def __assign_article_fields(*, record_dict: dict) -> None:
+def _assign_article_fields(*, record_dict: dict) -> None:
     """Method to assign pages and volume from item"""
 
     if record_dict.get("journal") is None:
@@ -133,7 +133,7 @@ def __assign_article_fields(*, record_dict: dict) -> None:
     record_dict[Fields.JOURNAL] = record_dict.get("venue", "")
 
 
-def __assign_book_fields(*, record_dict: dict) -> None:
+def _assign_book_fields(*, record_dict: dict) -> None:
     """Method to assign book specific details from item"""
     book_title = record_dict.get("journal", {}).get("name")
     title = record_dict.get(Fields.TITLE, "")
@@ -145,7 +145,7 @@ def __assign_book_fields(*, record_dict: dict) -> None:
             record_dict[Fields.BOOKTITLE] = book_title
 
 
-def __assign_inproc_fields(*, record_dict: dict) -> None:
+def _assign_inproc_fields(*, record_dict: dict) -> None:
     """Method to assign inproceedings specific details from item"""
 
     if "journal" in record_dict:
@@ -156,42 +156,42 @@ def __assign_inproc_fields(*, record_dict: dict) -> None:
         record_dict[Fields.BOOKTITLE] = venue
 
 
-def __assign_fulltext(*, record_dict: dict) -> None:
+def _assign_fulltext(*, record_dict: dict) -> None:
     """Method to assign fulltext from item."""
     fulltext_url = (record_dict.get("openAccessPdf") or {}).get("url", "")
     if fulltext_url:
         record_dict[Fields.FULLTEXT] = fulltext_url
 
 
-def __item_to_record(item: Paper) -> dict:
+def _item_to_record(item: Paper) -> dict:
     """Method to convert the different fields and information within item to record dictionary"""
 
     record_dict = dict(item)
 
     record_dict[Fields.SEMANTIC_SCHOLAR_ID] = record_dict["paperId"]
     record_dict[Fields.TITLE] = record_dict.get("title", "")
-    __assign_authors(record_dict=record_dict)
-    __assign_fulltext(record_dict=record_dict)
-    __assign_issn(record_dict=record_dict)
-    __assign_ids(record_dict=record_dict)
-    __assign_abstract(record_dict=record_dict)
+    _assign_authors(record_dict=record_dict)
+    _assign_fulltext(record_dict=record_dict)
+    _assign_issn(record_dict=record_dict)
+    _assign_ids(record_dict=record_dict)
+    _assign_abstract(record_dict=record_dict)
     record_dict[Fields.YEAR] = record_dict.get("year", "")
     record_dict[Fields.CITED_BY] = record_dict.get("citationCount", "")
 
-    __assign_entrytype(record_dict=record_dict)
+    _assign_entrytype(record_dict=record_dict)
     if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-        __assign_article_fields(record_dict=record_dict)
+        _assign_article_fields(record_dict=record_dict)
 
     elif record_dict[Fields.ENTRYTYPE] in [ENTRYTYPES.BOOK, ENTRYTYPES.INBOOK]:
-        __assign_book_fields(record_dict=record_dict)
+        _assign_book_fields(record_dict=record_dict)
 
     elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-        __assign_inproc_fields(record_dict=record_dict)
+        _assign_inproc_fields(record_dict=record_dict)
 
     return record_dict
 
 
-def __remove_fields(*, record: dict) -> dict:
+def _remove_fields(*, record: dict) -> dict:
     """Method to remove unsupported fields from semanticscholar record"""
 
     record_dict = {k: v for k, v in record.items() if k in SUPPORTED_FIELDS and v != ""}
@@ -203,8 +203,8 @@ def s2_dict_to_record(*, item: dict) -> dict:
     """Convert a semanticscholar item to a record dict"""
 
     try:
-        record_dict = __item_to_record(item=item)
-        record_dict = __remove_fields(record=record_dict)
+        record_dict = _item_to_record(item=item)
+        record_dict = _remove_fields(record=record_dict)
 
     except (IndexError, KeyError) as exc:
         raise colrev_exceptions.RecordNotParsableException(

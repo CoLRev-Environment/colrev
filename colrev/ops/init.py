@@ -81,33 +81,33 @@ class Initializer:
                 options=list(res.all_available_packages_names.keys()),
             ) from exc
 
-        self.__check_init_precondition()
+        self._check_init_precondition()
 
         self.title = str(self.target_path.name)
-        self.logger = self.__setup_init_logger(level=logging.INFO)
+        self.logger = self._setup_init_logger(level=logging.INFO)
 
-        self.__setup_git()
-        self.__setup_files(path=self.target_path)
+        self._setup_git()
+        self._setup_files(path=self.target_path)
 
         if example:
-            self.__create_example_repo()
+            self._create_example_repo()
 
         self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
-        self.__create_commit(saved_args=saved_args)
+        self._create_commit(saved_args=saved_args)
         if not example:
             if "pytest" not in os.getcwd():
-                self.__register_repo()
+                self._register_repo()
         if local_pdf_collection:
-            self.__create_local_pdf_collection()
+            self._create_local_pdf_collection()
 
-        self.__post_commit_edits()
+        self._post_commit_edits()
 
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
 
-    def __check_init_precondition(self) -> None:
+    def _check_init_precondition(self) -> None:
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]
@@ -137,7 +137,7 @@ class Initializer:
                     f"{Colors.ORANGE}colrev init --light{Colors.END}"
                 ) from exc
 
-    def __setup_init_logger(self, *, level: int = logging.INFO) -> logging.Logger:
+    def _setup_init_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         # pylint: disable=duplicate-code
         init_logger = logging.getLogger("colrev-init_logger")
 
@@ -160,20 +160,20 @@ class Initializer:
 
         return init_logger
 
-    def __register_repo(self) -> None:
+    def _register_repo(self) -> None:
         self.review_manager.logger.info("Register CoLRev repository")
 
         environment_manager = self.review_manager.get_environment_manager()
         environment_manager.register_repo(path_to_register=self.target_path)
 
-    def __create_commit(self, *, saved_args: dict) -> None:
+    def _create_commit(self, *, saved_args: dict) -> None:
         del saved_args["local_pdf_collection"]
         self.review_manager.create_commit(
             msg="Initial commit",
             manual_author=True,
         )
 
-    def __setup_files(self, *, path: Path) -> None:
+    def _setup_files(self, *, path: Path) -> None:
         # pylint: disable=too-many-locals
 
         # Note: parse instead of copy to avoid format changes
@@ -322,7 +322,7 @@ class Initializer:
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.git.add(all=True)
 
-    def __post_commit_edits(self) -> None:
+    def _post_commit_edits(self) -> None:
         if self.review_type == "colrev.curated_masterdata":
             self.review_manager.logger.info("Post-commit edits")
             self.review_manager.settings.project.curation_url = "TODO"
@@ -360,7 +360,7 @@ class Initializer:
 
             self.review_manager.logger.info("Completed setup.")
 
-    def __setup_git(self) -> None:
+    def _setup_git(self) -> None:
         self.logger.info("Create CoLRev repository")
 
         self.logger.info("Set up git repository")
@@ -411,7 +411,7 @@ class Initializer:
                         Colors.END,
                     )
 
-    def __create_example_repo(self) -> None:
+    def _create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
         of CoLRev. It focuses on a quick overview of the process and does
         not cover advanced features or special cases."""
@@ -445,7 +445,7 @@ class Initializer:
             json.dump(settings, outfile, indent=4)
         git_repo.index.add(["settings.json"])
 
-    def __create_local_pdf_collection(self) -> None:
+    def _create_local_pdf_collection(self) -> None:
         self.review_manager.report_logger.handlers = []
 
         local_index = self.review_manager.get_local_index()

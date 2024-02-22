@@ -23,12 +23,12 @@ class ThesisWithMultipleAuthorsChecker:
         if record.ignored_defect(field=Fields.AUTHOR, defect=self.msg):
             return
 
-        if self.__multiple_authored_thesis(record=record):
+        if self._multiple_authored_thesis(record=record):
             record.add_masterdata_provenance_note(key=Fields.AUTHOR, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.AUTHOR, note=self.msg)
 
-    def __multiple_authored_thesis(self, *, record: colrev.record.Record) -> bool:
+    def _multiple_authored_thesis(self, *, record: colrev.record.Record) -> bool:
         if record.data["ENTRYTYPE"] in [
             "thesis",
             "phdthesis",

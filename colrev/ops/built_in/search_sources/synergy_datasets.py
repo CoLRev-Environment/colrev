@@ -125,7 +125,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         )
         return add_source
 
-    def __load_dataset(self) -> pd.DataFrame:
+    def _load_dataset(self) -> pd.DataFrame:
         date_now_string = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         temp_path = tempfile.gettempdir() / Path(f"{date_now_string}-synergy")
         temp_path.mkdir()
@@ -157,7 +157,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             )
         return dataset_df
 
-    def __validate_decisions(self, *, decisions: dict, record: dict) -> None:
+    def _validate_decisions(self, *, decisions: dict, record: dict) -> None:
         if "doi" in record:
             doi = record["doi"].lower()
             if doi in decisions["doi"]:
@@ -179,7 +179,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             else:
                 decisions["openalex_id"][oaid] = [record["label_included"]]
 
-    def __check_quality(self, *, decisions: dict) -> None:
+    def _check_quality(self, *, decisions: dict) -> None:
         decisions[Fields.DOI] = {
             d: v
             for d, v in decisions[Fields.DOI].items()
@@ -211,7 +211,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             else:
                 raise colrev_exceptions.SearchSourceException(msg)
 
-    def __prep_record(self, *, record: dict, ind: int) -> None:
+    def _prep_record(self, *, record: dict, ind: int) -> None:
         record[Fields.ID] = ind
         record[Fields.ENTRYTYPE] = "article"
         for k in list(record.keys()):
@@ -231,7 +231,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 "https://openalex.org/", ""
             )
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
         assert source.search_type == colrev.settings.SearchType.API
@@ -239,9 +239,9 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets"""
 
-        self.__validate_source()
+        self._validate_source()
 
-        dataset_df = self.__load_dataset()
+        dataset_df = self._load_dataset()
 
         synergy_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -271,8 +271,8 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         }
         empty_records, duplicates = 0, 0
         for ind, record in enumerate(dataset_df.to_dict(orient="records")):
-            self.__prep_record(record=record, ind=ind)
-            self.__validate_decisions(decisions=decisions, record=record)
+            self._prep_record(record=record, ind=ind)
+            self._validate_decisions(decisions=decisions, record=record)
             # Skip records without metadata
             if {Fields.ID, Fields.ENTRYTYPE, "label_included"} == set(record.keys()):
                 empty_records += 1
@@ -309,7 +309,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
             # The linking of doi/... should happen in the prep operation
 
-        self.__check_quality(decisions=decisions)
+        self._check_quality(decisions=decisions)
         self.review_manager.logger.info(f"Dropped {empty_records} empty records")
         self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
         records = self.review_manager.dataset.load_records_dict()

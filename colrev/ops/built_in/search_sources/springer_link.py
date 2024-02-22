@@ -115,12 +115,12 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             )
             table_entries = table_loader.load_table_entries()
             records = table_loader.convert_to_records(entries=table_entries)
-            self.__load_fixes(records=records)
+            self._load_fixes(records=records)
             return records
 
         raise NotImplementedError
 
-    def __load_fixes(
+    def _load_fixes(
         self,
         records: typing.Dict,
     ) -> None:

@@ -2,15 +2,10 @@
 """Screening utilities"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import colrev.env.package_manager
 import colrev.record
 import colrev.settings
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.screen
 
 
 __FULL_SCREEN_EXPLANATION = (
@@ -30,7 +25,7 @@ Add a screening criterion [y,n]?"""
 #     - explanation       : Exclude records reporting on non-experimental designs
 
 
-def __get_add_screening_criterion_dialogue(*, screening_criteria: dict) -> str:
+def _get_add_screening_criterion_dialogue(*, screening_criteria: dict) -> str:
     if not screening_criteria:
         return __FULL_SCREEN_EXPLANATION
     return "Add another screening criterion [y,n]?"
@@ -57,9 +52,7 @@ def get_screening_criteria_from_user_input(
         print()
         screening_criteria = {}
         while "y" == input(
-            __get_add_screening_criterion_dialogue(
-                screening_criteria=screening_criteria
-            )
+            _get_add_screening_criterion_dialogue(screening_criteria=screening_criteria)
         ):
             short_name = input("Provide a short name: ")
             if input("Inclusion or exclusion criterion [i,e]?: ") == "i":

@@ -120,7 +120,7 @@ class ERICSearchSource(JsonSchemaMixin):
         return result
 
     @classmethod
-    def __search_split(cls, search: str) -> str:
+    def _search_split(cls, search: str) -> str:
         if " AND " in search:
             search_parts = search.split(" AND ")
             field_values = []
@@ -160,7 +160,7 @@ class ERICSearchSource(JsonSchemaMixin):
             start = new_query.get("start", ["0"])[0]
             rows = new_query.get("rows", ["2000"])[0]
             if ":" in search:
-                search = ERICSearchSource.__search_split(search)
+                search = ERICSearchSource._search_split(search)
             filename = operation.get_unique_filename(file_path_string=f"eric_{search}")
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
@@ -177,7 +177,7 @@ class ERICSearchSource(JsonSchemaMixin):
 
     def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
         """Get the records from a query"""
-        full_url = self.__build_search_url()
+        full_url = self._build_search_url()
 
         response = requests.get(full_url, timeout=90)
         if response.status_code != 200:
@@ -192,10 +192,10 @@ class ERICSearchSource(JsonSchemaMixin):
             )
 
         for doc in data["response"]["docs"]:
-            record = self.__create_record(doc)
+            record = self._create_record(doc)
             yield record
 
-    def __run_api_search(
+    def _run_api_search(
         self, *, eric_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
@@ -228,11 +228,11 @@ class ERICSearchSource(JsonSchemaMixin):
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:
-            self.__run_api_search(eric_feed=eric_feed, rerun=rerun)
+            self._run_api_search(eric_feed=eric_feed, rerun=rerun)
         else:
             raise NotImplementedError
 
-    def __build_search_url(self) -> str:
+    def _build_search_url(self) -> str:
         url = "https://api.ies.ed.gov/eric/"
         params = self.search_source.search_parameters
         query = params["query"]
@@ -241,7 +241,7 @@ class ERICSearchSource(JsonSchemaMixin):
         rows_param = params.get("rows", "2000")
         return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
 
-    def __create_record(self, doc: dict) -> colrev.record.Record:
+    def _create_record(self, doc: dict) -> colrev.record.Record:
         # pylint: disable=too-many-branches
         record_dict = {Fields.ID: doc["id"]}
         record_dict[Fields.ENTRYTYPE] = "other"

@@ -35,12 +35,12 @@ class TitleNotInPDFChecker:
         ):
             return
 
-        if not self.__title_in_pdf(record=record):
+        if not self._title_in_pdf(record=record):
             record.add_data_provenance_note(key=Fields.FILE, note=self.msg)
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def __title_in_pdf(self, *, record: colrev.record.Record) -> bool:
+    def _title_in_pdf(self, *, record: colrev.record.Record) -> bool:
         text = record.data[Fields.TEXT_FROM_PDF]
         text = text.replace(" ", "").replace("\n", "").lower()
         text = colrev.env.utils.remove_accents(input_str=text)

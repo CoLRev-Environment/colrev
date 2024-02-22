@@ -55,8 +55,8 @@ class GeneralOriginFeed:
         self.review_manager = review_manager
         self.origin_prefix = self.source.get_origin_prefix()
 
-        self.__available_ids = {}
-        self.__max_id = 1
+        self._available_ids = {}
+        self._max_id = 1
         if not self.feed_file.is_file():
             self.feed_records = {}
         else:
@@ -65,12 +65,12 @@ class GeneralOriginFeed:
                     load_str=bibtex_file.read()
                 )
 
-            self.__available_ids = {
+            self._available_ids = {
                 x[self.source_identifier]: x[Fields.ID]
                 for x in self.feed_records.values()
                 if self.source_identifier in x
             }
-            self.__max_id = (
+            self._max_id = (
                 max(
                     [
                         int(x[Fields.ID])
@@ -90,12 +90,12 @@ class GeneralOriginFeed:
         if self.source_identifier not in record_dict:
             raise colrev_exceptions.NotFeedIdentifiableException()
 
-        if record_dict[self.source_identifier] in self.__available_ids:
-            record_dict[Fields.ID] = self.__available_ids[
+        if record_dict[self.source_identifier] in self._available_ids:
+            record_dict[Fields.ID] = self._available_ids[
                 record_dict[self.source_identifier]
             ]
         else:
-            record_dict[Fields.ID] = str(self.__max_id).rjust(6, "0")
+            record_dict[Fields.ID] = str(self._max_id).rjust(6, "0")
 
         return record_dict
 
@@ -105,10 +105,10 @@ class GeneralOriginFeed:
         # Feed:
         feed_record_dict = record.data.copy()
         added_new = True
-        if feed_record_dict[self.source_identifier] in self.__available_ids:
+        if feed_record_dict[self.source_identifier] in self._available_ids:
             added_new = False
         else:
-            self.__max_id += 1
+            self._max_id += 1
             self.nr_added += 1
 
         if Fields.D_PROV in feed_record_dict:
@@ -118,7 +118,7 @@ class GeneralOriginFeed:
         if Fields.STATUS in feed_record_dict:
             del feed_record_dict[Fields.STATUS]
 
-        self.__available_ids[feed_record_dict[self.source_identifier]] = (
+        self._available_ids[feed_record_dict[self.source_identifier]] = (
             feed_record_dict[Fields.ID]
         )
 
@@ -174,7 +174,7 @@ class GeneralOriginFeed:
                     search_operation.review_manager.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))  # nosec
 
-    def __have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
+    def _have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
         # To ignore changes introduced by saving/loading the feed-records,
         # we parse and load them in the following.
         record_a = deepcopy(record_a_orig)
@@ -213,13 +213,13 @@ class GeneralOriginFeed:
                 return True
         return changed
 
-    def __get_record_based_on_origin(self, origin: str, records: dict) -> dict:
+    def _get_record_based_on_origin(self, origin: str, records: dict) -> dict:
         for main_record_dict in records.values():
             if origin in main_record_dict[Fields.ORIGIN]:
                 return main_record_dict
         return {}
 
-    def __update_existing_record_retract(
+    def _update_existing_record_retract(
         self, *, record: colrev.record.Record, main_record_dict: dict
     ) -> bool:
         if record.check_potential_retracts():
@@ -235,7 +235,7 @@ class GeneralOriginFeed:
             return True
         return False
 
-    def __update_existing_record_forthcoming(
+    def _update_existing_record_forthcoming(
         self, *, record: colrev.record.Record, main_record_dict: dict
     ) -> None:
         if "forthcoming" == main_record_dict.get(
@@ -250,7 +250,7 @@ class GeneralOriginFeed:
             record = colrev.record.PrepRecord(data=main_record_dict)
 
     # pylint: disable=too-many-arguments
-    def __update_existing_record_fields(
+    def _update_existing_record_fields(
         self,
         *,
         record_dict: dict,
@@ -312,7 +312,7 @@ class GeneralOriginFeed:
                     append_edit=False,
                 )
 
-    def __forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
+    def _forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
         # Forthcoming paper published if volume and number are assigned
         # i.e., no longer UNKNOWN
         if record_dict[Fields.ENTRYTYPE] != "article":
@@ -341,7 +341,7 @@ class GeneralOriginFeed:
         """Convenience function to update existing records (main data/records.bib)"""
 
         origin = f"{source.get_origin_prefix()}/{record_dict['ID']}"
-        main_record_dict = self.__get_record_based_on_origin(
+        main_record_dict = self._get_record_based_on_origin(
             origin=origin, records=records
         )
 
@@ -353,10 +353,10 @@ class GeneralOriginFeed:
 
         record = colrev.record.Record(data=record_dict)
         record.prefix_non_standardized_field_keys(prefix=source.endpoint)
-        changed = self.__update_existing_record_retract(
+        changed = self._update_existing_record_retract(
             record=record, main_record_dict=main_record_dict
         )
-        self.__update_existing_record_forthcoming(
+        self._update_existing_record_forthcoming(
             record=record, main_record_dict=main_record_dict
         )
 
@@ -374,7 +374,7 @@ class GeneralOriginFeed:
             other_record=colrev.record.Record(data=prev_record_dict_version)
         )
 
-        self.__update_existing_record_fields(
+        self._update_existing_record_fields(
             record_dict=record_dict,
             main_record_dict=main_record_dict,
             prev_record_dict_version=prev_record_dict_version,
@@ -383,14 +383,14 @@ class GeneralOriginFeed:
             source=source,
         )
 
-        if self.__have_changed(
+        if self._have_changed(
             record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
-        ) or self.__have_changed(  # Note : not (yet) in the main records but changed
+        ) or self._have_changed(  # Note : not (yet) in the main records but changed
             record_a_orig=record_dict, record_b_orig=prev_record_dict_version
         ):
             changed = True
             self.nr_changed += 1
-            if self.__forthcoming_published(
+            if self._forthcoming_published(
                 record_dict=record_dict, prev_record=prev_record_dict_version
             ):
                 self.review_manager.logger.info(

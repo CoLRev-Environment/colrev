@@ -7,7 +7,6 @@ import os
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -18,9 +17,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -89,7 +85,7 @@ class ColrevCuration(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __get_stats(
+    def _get_stats(
         self,
         *,
         records: dict,
@@ -154,7 +150,7 @@ class ColrevCuration(JsonSchemaMixin):
                     stats[key] = {source: {r_status: 1}}
         return stats
 
-    def __get_stats_markdown_table(self, *, stats: dict, sources: list) -> str:
+    def _get_stats_markdown_table(self, *, stats: dict, sources: list) -> str:
         cell_width = 16
         sources += ["all_merged"]
         output = "|TOC".ljust(cell_width - 1, " ") + "|"
@@ -166,14 +162,14 @@ class ColrevCuration(JsonSchemaMixin):
         output += "\n" + sub_header_lines
         ordered_stats = collections.OrderedDict(sorted(stats.items(), reverse=True))
 
-        output += self.__get_stats_markdown_table_cell(
+        output += self._get_stats_markdown_table_cell(
             ordered_stats=ordered_stats, sources=sources, cell_width=cell_width
         )
 
         output += "\n\nLegend: *md_imported*, md_processed, **pdf_prepared**"
         return output
 
-    def __get_stats_markdown_table_cell(
+    def _get_stats_markdown_table_cell(
         self, *, ordered_stats: collections.OrderedDict, sources: list, cell_width: int
     ) -> str:
         output = ""
@@ -203,7 +199,7 @@ class ColrevCuration(JsonSchemaMixin):
                     output += row.get("all_merged", "").rjust(cell_width, " ") + "|"
         return output
 
-    def __update_table_in_readme(
+    def _update_table_in_readme(
         self,
         *,
         markdown_output: str,
@@ -245,7 +241,7 @@ class ColrevCuration(JsonSchemaMixin):
                 file.write(markdown_output.encode("utf-8"))
                 file.write(b"\n")
 
-    def __update_stats_in_readme(
+    def _update_stats_in_readme(
         self,
         *,
         records: dict,
@@ -262,14 +258,14 @@ class ColrevCuration(JsonSchemaMixin):
                 if source not in sources:
                     sources.append(source)
 
-        stats = self.__get_stats(records=records, sources=sources)
-        markdown_output = self.__get_stats_markdown_table(stats=stats, sources=sources)
-        self.__update_table_in_readme(markdown_output=markdown_output)
+        stats = self._get_stats(records=records, sources=sources)
+        markdown_output = self._get_stats_markdown_table(stats=stats, sources=sources)
+        self._update_table_in_readme(markdown_output=markdown_output)
         self.review_manager.dataset.add_changes(
             path=self.review_manager.README_RELATIVE
         )
 
-    def __source_comparison(self, *, silent_mode: bool) -> None:
+    def _source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
 
@@ -320,11 +316,11 @@ class ColrevCuration(JsonSchemaMixin):
         """Update the CoLRev curation"""
 
         if self.settings.curated_masterdata:
-            self.__update_stats_in_readme(
+            self._update_stats_in_readme(
                 records=records,
                 silent_mode=silent_mode,
             )
-            self.__source_comparison(silent_mode=silent_mode)
+            self._source_comparison(silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,

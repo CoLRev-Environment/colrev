@@ -2,7 +2,6 @@
 """Prescreen based on CLI"""
 from __future__ import annotations
 
-import typing
 from dataclasses import dataclass
 
 import zope.interface
@@ -13,8 +12,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 
@@ -39,7 +36,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         self.prescreen_operation = prescreen_operation
         self.review_manager = prescreen_operation.review_manager
 
-    def __fun_cli_prescreen(
+    def _fun_cli_prescreen(
         self,
         *,
         prescreen_data: dict,
@@ -123,7 +120,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         stat_len = len(split) if len(split) > 0 else prescreen_data["nr_tasks"]
         padding = prescreen_data["PAD"]
 
-        self.__fun_cli_prescreen(
+        self._fun_cli_prescreen(
             prescreen_data=prescreen_data,
             split=split,
             stat_len=stat_len,
@@ -134,7 +131,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         # Upon continuing the prescreen, the scope-based prescreen commits the changes,
         # which is misleading.
         # Users can still squash commits.
-        # Note: originall: completed = self.__fun_cli_prescreen(...
+        # Note: original: completed = self._fun_cli_prescreen(...
         # if not completed:
         #     if input("Create commit (y/n)?") != "y":
         #         return records

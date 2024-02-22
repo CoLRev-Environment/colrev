@@ -99,7 +99,7 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
         references_types = {
             "JOUR": ENTRYTYPES.ARTICLE,
             "RPRT": ENTRYTYPES.TECHREPORT,
@@ -182,7 +182,7 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            return self.__load_ris(load_operation)
+            return self._load_ris(load_operation)
 
         raise NotImplementedError
 

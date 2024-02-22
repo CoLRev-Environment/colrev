@@ -25,8 +25,8 @@ class Sync:
         self.records_to_import: typing.List[colrev.record.Record] = []
         self.non_unique_for_import: typing.List[typing.Dict] = []
 
-        self.logger = self.__setup_logger(level=logging.DEBUG)
-        self.paper_md = self.__get_md_file()
+        self.logger = self._setup_logger(level=logging.DEBUG)
+        self.paper_md = self._get_md_file()
 
     def add_hook(self) -> None:
         """Add a pre-commit hook for colrev sync"""
@@ -58,7 +58,7 @@ class Sync:
             )
         print("Added pre-commit hook for colrev sync.")
 
-    def __setup_logger(self, *, level: int = logging.INFO) -> logging.Logger:
+    def _setup_logger(self, *, level: int = logging.INFO) -> logging.Logger:
         """Setup the sync logger"""
         # pylint: disable=duplicate-code
 
@@ -85,7 +85,7 @@ class Sync:
 
         return logger
 
-    def __get_md_file(self) -> Path:
+    def _get_md_file(self) -> Path:
         paper_md = Path("")
         if Path("paper.md").is_file():
             paper_md = Path("paper.md")
@@ -95,7 +95,7 @@ class Sync:
             paper_md = Path("review.md")
         return paper_md
 
-    def __get_cited_papers_citation_keys(self) -> list:
+    def _get_cited_papers_citation_keys(self) -> list:
         rst_files = list(Path.cwd().rglob("*.rst"))
 
         citation_keys = []
@@ -128,9 +128,9 @@ class Sync:
     def get_cited_papers_from_source(self, *, src: Path) -> None:
         """Get the cited papers from a source file"""
 
-        citation_keys = self.__get_cited_papers_citation_keys()
+        citation_keys = self._get_cited_papers_citation_keys()
 
-        ids_in_bib = self.__get_ids_in_paper()
+        ids_in_bib = self._get_ids_in_paper()
         self.logger.info("References in bib: %s", len(ids_in_bib))
 
         if src.suffix == ".bib":
@@ -156,9 +156,9 @@ class Sync:
     def get_cited_papers(self) -> None:
         """Get the cited papers"""
 
-        citation_keys = self.__get_cited_papers_citation_keys()
+        citation_keys = self._get_cited_papers_citation_keys()
 
-        ids_in_bib = self.__get_ids_in_paper()
+        ids_in_bib = self._get_ids_in_paper()
         self.logger.info("References in bib: %s", len(ids_in_bib))
 
         local_index = colrev.env.local_index.LocalIndex()
@@ -188,7 +188,7 @@ class Sync:
                     listed_item[citation_key].append(returned_record)
                 self.non_unique_for_import.append(listed_item)
 
-    def __get_ids_in_paper(self) -> typing.List:
+    def _get_ids_in_paper(self) -> typing.List:
         pybtex.errors.set_strict_mode(False)
 
         if Path("references.bib").is_file():
@@ -210,7 +210,7 @@ class Sync:
         ]:
             self.records_to_import.append(record)
 
-    def __save_to_bib(self, *, records: dict, save_path: Path) -> None:
+    def _save_to_bib(self, *, records: dict, save_path: Path) -> None:
         # pylint: disable=duplicate-code
 
         def parse_bibtex_str(*, recs_dict_in: dict) -> str:
@@ -307,13 +307,13 @@ class Sync:
             return
 
         if self.paper_md.read_text(encoding="utf-8").startswith("---"):
-            self.__export_to_bib()
+            self._export_to_bib()
 
         else:
             # Append to # References if no header (mardown with linked)
-            self.__append_as_citations()
+            self._append_as_citations()
 
-    def __append_as_citations(self) -> None:
+    def _append_as_citations(self) -> None:
         if "# References" in self.paper_md.read_text(encoding="utf-8"):
             print("Already contains a reference section.")
             return
@@ -326,7 +326,7 @@ class Sync:
             ]
             file.write("\n".join(sorted(ref_list)))
 
-    def __export_to_bib(self) -> None:
+    def _export_to_bib(self) -> None:
         pybtex.errors.set_strict_mode(False)
 
         references_file = Path("references.bib")
@@ -373,4 +373,4 @@ class Sync:
 
         records_dict = {r[Fields.ID]: r for r in records}
 
-        self.__save_to_bib(records=records_dict, save_path=references_file)
+        self._save_to_bib(records=records_dict, save_path=references_file)

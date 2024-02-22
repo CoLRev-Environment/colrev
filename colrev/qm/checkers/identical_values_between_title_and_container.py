@@ -24,12 +24,12 @@ class IdenticalValuesChecker:
         if record.ignored_defect(field=Fields.TITLE, defect=self.msg):
             return
 
-        if self.__identical_values_between_title_and_container(record=record):
+        if self._identical_values_between_title_and_container(record=record):
             record.add_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
 
-    def __identical_values_between_title_and_container(
+    def _identical_values_between_title_and_container(
         self, *, record: colrev.record.Record
     ) -> bool:
         if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:

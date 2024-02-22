@@ -62,7 +62,7 @@ class Unpaywall(JsonSchemaMixin):
         email = env_mail or email
         return email
 
-    def __unpaywall(
+    def _unpaywall(
         self,
         *,
         doi: str,
@@ -74,7 +74,7 @@ class Unpaywall(JsonSchemaMixin):
         try:
             ret = requests.get(url, params={"email": self.email}, timeout=30)
             if ret.status_code == 500 and retry < 3:
-                return self.__unpaywall(doi=doi, retry=retry + 1)
+                return self._unpaywall(doi=doi, retry=retry + 1)
 
             if ret.status_code in [404, 500]:
                 return "NA"
@@ -96,7 +96,7 @@ class Unpaywall(JsonSchemaMixin):
 
         return best_loc["url_for_pdf"]
 
-    def __is_pdf(self, *, path_to_file: Path) -> bool:
+    def _is_pdf(self, *, path_to_file: Path) -> bool:
         try:
             extract_text(str(path_to_file))
             return True
@@ -111,7 +111,7 @@ class Unpaywall(JsonSchemaMixin):
 
         pdf_filepath = self.pdf_get_operation.get_target_filepath(record=record)
 
-        url = self.__unpaywall(doi=record.data[Fields.DOI])
+        url = self._unpaywall(doi=record.data[Fields.DOI])
         if url == "NA":
             return record
         if "Invalid/unknown DOI" in url:
@@ -132,7 +132,7 @@ class Unpaywall(JsonSchemaMixin):
                 pdf_filepath.parents[0].mkdir(exist_ok=True, parents=True)
                 with open(pdf_filepath, "wb") as file:
                     file.write(res.content)
-                if self.__is_pdf(path_to_file=pdf_filepath):
+                if self._is_pdf(path_to_file=pdf_filepath):
                     self.review_manager.report_logger.debug(
                         "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                     )
