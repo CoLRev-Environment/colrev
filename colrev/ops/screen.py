@@ -89,7 +89,7 @@ class Screen(colrev.operation.Operation):
 
         self.review_manager.dataset.save_records_dict(records=records)
         self._print_stats(selected_record_ids=selected_record_ids)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
         )
@@ -168,7 +168,7 @@ class Screen(colrev.operation.Operation):
                 # because at least one of the other criteria led to exclusion decision
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg=f"Add screening criterion: {criterion_name}",
         )
 
@@ -222,7 +222,7 @@ class Screen(colrev.operation.Operation):
                     )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg=f"Removed screening criterion: {criterion_to_delete}",
         )
 
@@ -271,7 +271,7 @@ class Screen(colrev.operation.Operation):
                 record = colrev.record.Record(data=record_dict)
                 record.set_status(target_state=colrev.record.RecordState.rev_included)
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
         )
@@ -389,7 +389,7 @@ class Screen(colrev.operation.Operation):
             )
             record.remove_field(key="include_flag")
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Include records (include_flag)", manual_author=True
         )
         return selected_auto_include_ids

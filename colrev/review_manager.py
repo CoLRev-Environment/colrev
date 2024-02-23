@@ -321,32 +321,6 @@ class ReviewManager:
         if add_to_git:
             self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
-    # pylint: disable=too-many-arguments
-    def create_commit(
-        self,
-        *,
-        msg: str,
-        manual_author: bool = False,
-        script_call: str = "",
-        saved_args: Optional[dict] = None,
-        skip_status_yaml: bool = False,
-    ) -> bool:
-        """Create a commit (including a commit report)"""
-        import colrev.ops.commit
-
-        if self.exact_call and script_call == "":
-            script_call = self.exact_call
-
-        commit = colrev.ops.commit.Commit(
-            review_manager=self,
-            msg=msg,
-            manual_author=manual_author,
-            script_name=script_call,
-            saved_args=saved_args,
-        )
-        ret = commit.create(skip_status_yaml=skip_status_yaml)
-        return ret
-
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:
         """Get an upgrade object"""
 

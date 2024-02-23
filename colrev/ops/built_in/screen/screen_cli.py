@@ -275,7 +275,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             if input("Create commit (y/n)?") != "y":
                 return records
 
-        self.review_manager.create_commit(msg="Screening (manual)", manual_author=True)
+        self.review_manager.dataset.create_commit(
+            msg="Screening (manual)", manual_author=True
+        )
         return records
 
     def run_screen(self, records: dict, split: list) -> dict:

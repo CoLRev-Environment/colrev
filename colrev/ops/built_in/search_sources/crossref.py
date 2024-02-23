@@ -826,7 +826,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self.review_manager.dataset.save_records_dict(records=records)
 
         self.review_manager.dataset.add_changes(path=self.search_source.filename)
-        self.review_manager.create_commit(msg="Run search")
+        self.review_manager.dataset.create_commit(msg="Run search")
 
     def _potentially_overlapping_issn_search(self) -> bool:
         params = self.search_source.search_parameters

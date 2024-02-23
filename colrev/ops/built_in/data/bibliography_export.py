@@ -105,7 +105,7 @@ class BibliographyExport(JsonSchemaMixin):
             records=selected_records, save_path=export_filepath
         )
         self.review_manager.dataset.add_changes(path=export_filepath)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
         )
 
@@ -167,7 +167,7 @@ class BibliographyExport(JsonSchemaMixin):
                 export_file.write(export.content.decode("utf-8"))
             self.review_manager.dataset.add_changes(path=export_filepath)
 
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg=f"Create {self.settings.bib_format.name} bibliography",
             )
 

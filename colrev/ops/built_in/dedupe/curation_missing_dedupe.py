@@ -329,7 +329,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             self.review_manager.dataset.save_records_dict(records=records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Merge duplicate records",
             )
 
@@ -350,7 +350,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             self.review_manager.dataset.save_records_dict(records=records)
             input("Edit records (if any), add to git, and press Enter")
 
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Add non-duplicate records",
             )
 

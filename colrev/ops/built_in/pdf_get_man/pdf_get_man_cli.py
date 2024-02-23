@@ -303,9 +303,9 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
             self._pdf_get_man_record_cli(record=record)
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             if input("Create commit (y/n)?") == "y":
-                self.review_manager.create_commit(
+                self.review_manager.dataset.create_commit(
                     msg="Retrieve PDFs manually",
                     manual_author=True,
                 )

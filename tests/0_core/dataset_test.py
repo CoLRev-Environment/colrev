@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Tests for the dataset"""
-import git
+from pathlib import Path
+from unittest.mock import MagicMock
+
 import pytest
 
 import colrev.exceptions as colrev_exceptions
@@ -110,10 +112,10 @@ def test_get_changed_records(
 
     # Simulate changes in records and commit those changes
     changed_record_dict = {
-        "Srivastava2015": {
+        "SrivastavaShainesh2015": {
             "colrev_origin": "test_records.bib/Srivastava2015",
             "colrev_status": colrev.record.RecordState.pdf_prepared,
-            "ID": "Srivastava2015",
+            "ID": "SrivastavaShainesh2015",
             "ENTRYTYPE": "article",
             "author": "Srivastava, Shirish C. and Shainesh, G.",
             "journal": "Nature",
@@ -128,14 +130,15 @@ def test_get_changed_records(
     base_repo_review_manager.dataset.save_records_dict(records=changed_record_dict)
     base_repo_review_manager.dataset._add_record_changes()
     commit_message = "Test commit for changed records"
-    author = git.Actor("Author Name", "author@example.com")
-    committer = git.Actor("Committer Name", "committer@example.com")
     base_repo_review_manager.dataset.create_commit(
-        msg=commit_message, author=author, committer=committer, hook_skipping=True
+        msg=commit_message, manual_author=True
     )
-
     # Retrieve the last commit SHA
     last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
+
+    base_repo_review_manager.notified_next_operation = (
+        colrev.operation.OperationsType.check
+    )
 
     # Retrieve changed records based on the last commit
     changed_records = base_repo_review_manager.dataset.get_changed_records(
@@ -143,7 +146,7 @@ def test_get_changed_records(
     )
     expected_changes = [
         {
-            "ID": "Srivastava2015",
+            "ID": "SrivastavaShainesh2015",
             "ENTRYTYPE": "article",
             "colrev_origin": ["test_records.bib/Srivastava2015"],
             "colrev_status": colrev.record.RecordState.pdf_prepared,
@@ -230,11 +233,56 @@ def test_id_generation_three_authors_year(  # type: ignore
     ), "ID generation with author failed for three_authors_year pattern"
 
 
+@pytest.mark.parametrize(
+    "record_id, expected_result",
+    [
+        ("Doe2021", True),
+        ("Smith2022", False),
+        ("Johnson2023", True),
+    ],
+)
+def test_propagated_id(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    record_id: str,
+    expected_result: bool,
+) -> None:
+    """Test the propagated_id method."""
+    original_load_records_dict = base_repo_review_manager.dataset.load_records_dict
+
+    # Mocking the load_records_dict method to return a dictionary with specific IDs and statuses
+    base_repo_review_manager.dataset.load_records_dict = MagicMock(  # type: ignore
+        return_value={
+            "Doe2021": {
+                "ID": "Doe2021",
+                "colrev_status": colrev.record.RecordState.pdf_prepared,
+            },
+            "Smith2022": {
+                "ID": "Smith2022",
+                "colrev_status": colrev.record.RecordState.md_imported,
+            },
+            "Johnson2023": {
+                "ID": "Johnson2023",
+                "colrev_status": colrev.record.RecordState.rev_excluded,
+            },
+        }
+    )
+
+    result = base_repo_review_manager.dataset.propagated_id(record_id=record_id)
+    assert result == expected_result, f"Propagated ID check failed for {record_id}"
+
+    base_repo_review_manager.dataset.load_records_dict = original_load_records_dict  # type: ignore
+
+
 def test_get_format_report(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     """Test the get_format_report method."""
     # TODO : develop the following test
+
+    base_repo_review_manager.notified_next_operation = (
+        colrev.operation.OperationsType.check
+    )
+
     records = base_repo_review_manager.dataset.load_records_dict()
     base_repo_review_manager.dataset.save_records_dict(records=records)
     # Test for None status
@@ -276,11 +324,14 @@ def test_get_commit_message(
 ) -> None:
     """Test the get_commit_message method."""
     # Setup
-    commit_message = "Initial commit"
-    author = git.Actor("An Author", "author@example.com")
-    committer = git.Actor("A Committer", "committer@example.com")
+    commit_message = "Initial commit X"
+    trivial_file_path = base_repo_review_manager.path / "trivial_file.txt"
+    with open(trivial_file_path, "w") as file:
+        file.write("This is a trivial change.")
+    base_repo_review_manager.dataset.add_changes(path=trivial_file_path)
+
     base_repo_review_manager.dataset.create_commit(
-        msg=commit_message, author=author, committer=committer, hook_skipping=True
+        msg=commit_message, manual_author=True
     )
 
     # Test
@@ -290,5 +341,295 @@ def test_get_commit_message(
 
     # Assert
     assert (
-        retrieved_commit_message == commit_message
-    ), f"Commit message did not match expected. Expected: {commit_message}, Got: {retrieved_commit_message}"
+        retrieved_commit_message.splitlines()[0] == commit_message
+    ), f"Commit message did not match expected. Expected: {commit_message}, Got: {retrieved_commit_message.splitlines()[0]}"
+
+
+def test_get_untracked_files(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the get_untracked_files method."""
+    # Setup: Create a new file that is not tracked by git
+    untracked_file_path = base_repo_review_manager.path / "untracked_file.txt"
+    with open(untracked_file_path, "w") as file:
+        file.write("This is an untracked file.")
+
+    # Test
+    untracked_files = base_repo_review_manager.dataset.get_untracked_files()
+
+    # Assert
+    assert (
+        Path(untracked_file_path.name) in untracked_files
+    ), "Untracked file was not detected."
+
+    # Cleanup: Remove the untracked file
+    untracked_file_path.unlink()
+
+
+def test_has_untracked_search_records(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the has_untracked_search_records method."""
+    # Setup: Create a new search record file that is not tracked by git
+    search_dir = base_repo_review_manager.SEARCHDIR_RELATIVE
+    untracked_search_file_path = (
+        base_repo_review_manager.path / search_dir / "untracked_search_record.txt"
+    )
+    untracked_search_file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(untracked_search_file_path, "w") as file:
+        file.write("This is an untracked search record.")
+
+    # Test
+    has_untracked = base_repo_review_manager.dataset.has_untracked_search_records()
+
+    # Assert
+    assert has_untracked, "Untracked search record was not detected."
+
+    # Cleanup: Remove the untracked search record file
+    untracked_search_file_path.unlink()
+
+
+def test_has_untracked_search_records_empty(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the has_untracked_search_records method when there are no untracked search records."""
+    # Setup: Ensure there are no untracked search records
+    search_dir = base_repo_review_manager.SEARCHDIR_RELATIVE
+    search_dir_path = base_repo_review_manager.path / search_dir
+    if search_dir_path.exists():
+        for file in search_dir_path.iterdir():
+            file.unlink()
+        search_dir_path.rmdir()
+
+    # Test
+    has_untracked = base_repo_review_manager.dataset.has_untracked_search_records()
+
+    # Assert
+    assert not has_untracked, "Untracked search records were incorrectly detected."
+
+
+def test_has_untracked_search_records_present(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the has_untracked_search_records method when there are untracked search records."""
+    # Setup: Create a new search record file that is not tracked by git
+    search_dir = base_repo_review_manager.SEARCHDIR_RELATIVE
+    untracked_search_file_path = (
+        base_repo_review_manager.path
+        / search_dir
+        / "another_untracked_search_record.txt"
+    )
+    untracked_search_file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(untracked_search_file_path, "w") as file:
+        file.write("This is another untracked search record.")
+
+    # Test
+    has_untracked = base_repo_review_manager.dataset.has_untracked_search_records()
+
+    # Assert
+    assert has_untracked, "Untracked search record was not detected."
+
+    # Cleanup: Remove the untracked search record file
+    untracked_search_file_path.unlink()
+
+
+def test_get_repo(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test the get_repo method."""
+    # Test
+    with pytest.raises(colrev_exceptions.ReviewManagerNotNotifiedError):
+        base_repo_review_manager.dataset.get_repo()
+
+    base_repo_review_manager.notified_next_operation = (
+        colrev.operation.OperationsType.check
+    )
+
+    # Test
+    base_repo_review_manager.dataset.get_repo()
+
+
+def test_has_changes_no_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method when there are no changes."""
+
+    # Test
+    has_changes = base_repo_review_manager.dataset.has_record_changes()
+
+    # Assert
+    assert not has_changes, "has_changes incorrectly detected changes."
+
+
+def test_has_changes_with_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method when there are changes."""
+    # Setup
+    # Create a new file to simulate changes
+    new_file_path = base_repo_review_manager.path / "new_file.txt"
+    new_file_path.write_text("This is a new file.")
+    base_repo_review_manager.dataset._git_repo.git.add("-A")
+
+    # Test
+    has_changes = base_repo_review_manager.dataset.has_changes(
+        relative_path=Path("new_file.txt")
+    )
+
+    # Assert
+    assert has_changes, "has_changes failed to detect changes."
+
+
+def test_has_changes_with_relative_path_new_file(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method with relative path for a new file."""
+    # Setup
+    # Create a new file to simulate changes
+    new_file_path = base_repo_review_manager.path / "new_file_relative.txt"
+    new_file_path.write_text("This is a new file with relative path.")
+    base_repo_review_manager.dataset._git_repo.git.add("-A")
+
+    # Test
+    has_changes = base_repo_review_manager.dataset.has_changes(
+        relative_path=Path("new_file_relative.txt")
+    )
+
+    # Assert
+    assert (
+        has_changes
+    ), "has_changes failed to detect changes with relative path for new file."
+
+
+def test_has_changes_staged_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method with change_type 'staged' when there are staged changes."""
+    # Setup
+    # Create a new file and stage it to simulate staged changes
+    new_file_path = base_repo_review_manager.path / "staged_file.txt"
+    new_file_path.write_text("This is a staged file.")
+    base_repo_review_manager.dataset._git_repo.git.add(new_file_path)
+
+    # Test
+    has_staged_changes = base_repo_review_manager.dataset.has_changes(
+        relative_path=Path("staged_file.txt"), change_type="staged"
+    )
+
+    # Assert
+    assert has_staged_changes, "has_changes failed to detect staged changes."
+
+
+def test_has_changes_staged_no_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method with change_type 'staged' when there are no staged changes."""
+
+    base_repo_review_manager.notified_next_operation = (
+        colrev.operation.OperationsType.check
+    )
+
+    # Test
+    has_staged_changes = base_repo_review_manager.dataset.has_record_changes(
+        change_type="staged"
+    )
+
+    # Assert
+    assert not has_staged_changes, "has_changes incorrectly detected staged changes."
+
+
+def test_has_changes_unstaged_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method with change_type 'unstaged' when there are unstaged changes."""
+    # Setup
+    # Create a new file to simulate unstaged changes
+    new_file_path = base_repo_review_manager.path / "unstaged_file.txt"
+    new_file_path.write_text("This is an unstaged file.")
+    # Note: Do not stage the file to keep it as an unstaged change
+
+    base_repo_review_manager.notified_next_operation = (
+        colrev.operation.OperationsType.check
+    )
+
+    # Test
+    has_changes = base_repo_review_manager.dataset.has_changes(
+        relative_path=Path("unstaged_file.txt"), change_type="unstaged"
+    )
+
+    # Assert
+    assert has_changes, "has_changes failed to detect unstaged changes."
+
+
+def test_has_changes_unstaged_no_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method with change_type 'unstaged' when there are no unstaged changes."""
+    # Setup
+    # Ensure there are no unstaged changes by staging any existing changes
+    base_repo_review_manager.dataset._git_repo.git.add("-A")
+
+    base_repo_review_manager.notified_next_operation = (
+        colrev.operation.OperationsType.check
+    )
+
+    # Test
+    has_changes = base_repo_review_manager.dataset.has_record_changes(
+        change_type="unstaged"
+    )
+
+    # Assert
+    assert not has_changes, "has_changes incorrectly detected unstaged changes."
+
+
+def test_has_changes_with_relative_path_settings(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test has_changes method with relative path for settings.json."""
+
+    # Test
+    has_changes = base_repo_review_manager.dataset.has_changes(
+        relative_path=Path("settings.json")
+    )
+
+    # Assert
+    assert (
+        not has_changes
+    ), "has_changes failed to detect changes with relative path for settings.json."
+
+
+def test_add_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test add_changes method."""
+    # Setup
+    # Create a new file to simulate changes
+    new_file_path = base_repo_review_manager.path / "new_file_to_add.txt"
+    new_file_path.write_text("This file will be added.")
+
+    # Test
+    base_repo_review_manager.dataset.add_changes(path=new_file_path)
+
+    # Assert
+    assert (
+        new_file_path.name in base_repo_review_manager.dataset._git_repo.git.ls_files()
+    ), "add_changes failed to add the new file to the repository."
+
+
+def test_stash_unstaged_changes(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test stash_unstaged_changes method."""
+    # Setup
+    # Create a new file to simulate unstaged changes
+    unstaged_file_path = base_repo_review_manager.path / "readme.md"
+    unstaged_file_path.write_text("This is an unstaged file.")
+
+    # Test
+    base_repo_review_manager.dataset.stash_unstaged_changes()
+
+    # Assert
+    assert (
+        Path(unstaged_file_path.name)
+        not in base_repo_review_manager.dataset.get_untracked_files()
+    ), "The file should not be recognized as an unstaged change after stashing."

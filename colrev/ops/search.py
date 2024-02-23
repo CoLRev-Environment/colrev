@@ -475,7 +475,7 @@ class Search(colrev.operation.Operation):
             self.remove_forthcoming(source=source)
             self.review_manager.dataset.add_changes(path=source.filename)
             if not skip_commit:
-                self.review_manager.create_commit(msg="Run search")
+                self.review_manager.dataset.create_commit(msg="Run search")
 
         if self.review_manager.in_ci_environment():
             print("\n\n")

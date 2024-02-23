@@ -53,7 +53,7 @@ class CustomPrescreen:
                 )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records=records)
-        prescreen_operation.review_manager.create_commit(
+        prescreen_operation.review_manager.dataset.create_commit(
             msg="Pre-screen (random)",
             manual_author=False,
             script_call="colrev prescreen",

@@ -88,7 +88,7 @@ class Dedupe(JsonSchemaMixin):
             id_sets=duplicate_id_sets, complete_dedupe=True
         )
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Merge duplicate records",
         )
         # TODO : export to custom path

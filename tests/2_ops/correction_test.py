@@ -21,7 +21,7 @@ def test_corrections(  # type: ignore
         "CURATED": {"source": "url...", "note": ""}
     }
     base_repo_review_manager.dataset.save_records_dict(records=records)
-    base_repo_review_manager.create_commit(msg="switch to curated")
+    base_repo_review_manager.dataset.create_commit(msg="switch to curated")
 
     records["SrivastavaShainesh2015"]["title"] = "Changed-title"
     base_repo_review_manager.dataset.save_records_dict(records=records)

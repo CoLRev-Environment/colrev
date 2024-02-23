@@ -87,6 +87,7 @@ def run_around_tests(  # type: ignore
     print("Post-test teardown: Restore repository state")
     os.chdir(str(base_repo_review_manager.path))
     base_repo_review_manager.load_settings()
+    base_repo_review_manager.notified_next_operation = None
     repo = git.Repo(base_repo_review_manager.path)
     repo.git.clean("-df")
     helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
@@ -215,7 +216,8 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager.settings.screen.screen_package_endpoints = []
     review_manager.settings.data.data_package_endpoints = []
     review_manager.save_settings()
-    review_manager.create_commit(msg="change settings", manual_author=True)
+
+    review_manager.dataset.create_commit(msg="change settings", manual_author=True)
     review_manager.changed_settings_commit = (
         review_manager.dataset.get_last_commit_sha()
     )
@@ -225,7 +227,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         target=Path("data/search/test_records.bib"),
     )
     review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
-    review_manager.create_commit(msg="add test_records.bib", manual_author=True)
+    review_manager.dataset.create_commit(msg="add test_records.bib", manual_author=True)
     review_manager.add_test_records_commit = (
         review_manager.dataset.get_last_commit_sha()
     )
@@ -266,7 +268,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     data_operation = review_manager.get_data_operation()
     data_operation.main()
-    review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+    review_manager.dataset.create_commit(msg="Data and synthesis", manual_author=True)
     review_manager.data_commit = review_manager.dataset.get_last_commit_sha()
 
     return review_manager

@@ -58,7 +58,7 @@ class ConditionalPrescreen(JsonSchemaMixin):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
         )

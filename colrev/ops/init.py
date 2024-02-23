@@ -168,9 +168,10 @@ class Initializer:
 
     def _create_commit(self, *, saved_args: dict) -> None:
         del saved_args["local_pdf_collection"]
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Initial commit",
             manual_author=True,
+            skip_hooks=True,
         )
 
     def _setup_files(self, *, path: Path) -> None:

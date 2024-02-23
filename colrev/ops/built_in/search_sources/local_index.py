@@ -762,7 +762,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             # deal with remove/merge
 
         check_operation.review_manager.dataset.save_records_dict(records=records)
-        check_operation.review_manager.create_commit(
+        check_operation.review_manager.dataset.create_commit(
             msg=f"Update {record_dict['ID']}", script_call="colrev push"
         )
 

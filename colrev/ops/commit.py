@@ -13,6 +13,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import git
+import gitdb.exc
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -39,6 +40,7 @@ class Commit:
         manual_author: bool,
         script_name: str,
         saved_args: Optional[dict] = None,
+        skip_hooks: bool = False,
     ) -> None:
         self.review_manager = review_manager
         self.manual_author = manual_author
@@ -46,6 +48,7 @@ class Commit:
         self.msg = msg
         self.script_name = self._parse_script_name(script_name=script_name)
         self.saved_args = self._parse_saved_args(saved_args=saved_args)
+        self.skip_hooks = skip_hooks
         self.tree_hash = ""
 
         self.last_commit_sha = ""
@@ -201,50 +204,60 @@ class Commit:
     def create(self, *, skip_status_yaml: bool = False) -> bool:
         """Create a commit (including the commit message and details)"""
 
-        if self.review_manager.dataset.has_changes():
-            self.review_manager.logger.debug("Prepare commit: checks and updates")
-            if not skip_status_yaml:
-                self.review_manager.update_status_yaml()
-                self.review_manager.dataset.add_changes(
-                    path=self.review_manager.STATUS_RELATIVE
+        git_repo = self.review_manager.dataset.get_repo()
+
+        try:
+            if not git_repo.index.diff("HEAD"):
+                self.review_manager.logger.debug(
+                    "No staged changes / cannot create commit"
                 )
-
-            committer, email = self.review_manager.get_committer()
-
-            if self.manual_author:
-                git_author = git.Actor(committer, email)
-            else:
-                git_author = git.Actor(f"script:{self.script_name}", email)
-
-            # Note : this should run as the last command before creating the commit
-            # to ensure that the git tree_hash is up-to-date.
-            self.tree_hash = self.review_manager.dataset.get_tree_hash()
-            self.msg = (
-                self.msg
-                + self._get_version_flag()
-                + self._get_commit_report()
-                + self._get_detailed_processing_report()
-            )
-            self.review_manager.dataset.create_commit(
-                msg=self.msg,
-                author=git_author,
-                committer=git.Actor(committer, email),
-                hook_skipping=True,
+                return False
+        except gitdb.exc.BadName:
+            self.review_manager.logger.debug(
+                "HEAD does not exist, cannot create commit"
             )
 
-            self.review_manager.logger.info("Created commit")
-            self.review_manager.reset_report_logger()
-            if not self.review_manager.dataset.has_changes():
-                return True
-
-            if self.review_manager.force_mode:
-                self.review_manager.logger.warn("No clean repository after commit.")
-                return True
-            raise colrev_exceptions.DirtyRepoAfterProcessingError(
-                "A clean repository is expected."
+        self.review_manager.logger.debug("Prepare commit: checks and updates")
+        if not skip_status_yaml:
+            self.review_manager.update_status_yaml()
+            self.review_manager.dataset.add_changes(
+                path=self.review_manager.STATUS_RELATIVE
             )
 
-        return False
+        committer, email = self.review_manager.get_committer()
+
+        if self.manual_author:
+            git_author = git.Actor(committer, email)
+        else:
+            git_author = git.Actor(f"script:{self.script_name}", email)
+
+        # Note : this should run as the last command before creating the commit
+        # to ensure that the git tree_hash is up-to-date.
+        self.tree_hash = self.review_manager.dataset.get_tree_hash()
+        self.msg = (
+            self.msg
+            + self._get_version_flag()
+            + self._get_commit_report()
+            + self._get_detailed_processing_report()
+        )
+        git_repo.index.commit(
+            self.msg,
+            author=git_author,
+            committer=git.Actor(committer, email),
+            skip_hooks=self.skip_hooks,
+        )
+
+        self.review_manager.logger.info("Created commit")
+        self.review_manager.reset_report_logger()
+        if not self.review_manager.dataset.has_record_changes():
+            return True
+
+        if self.review_manager.force_mode:
+            self.review_manager.logger.warn("No clean repository after commit.")
+            return True
+        raise colrev_exceptions.DirtyRepoAfterProcessingError(
+            "A clean repository is expected."
+        )
 
     def update_report(self, *, msg_file: Path) -> None:
         """Update the report"""

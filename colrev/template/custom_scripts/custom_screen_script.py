@@ -71,7 +71,7 @@ class CustomScreen:
 
         screen_operation.review_manager.dataset.save_records_dict(records=records)
         screen_operation.review_manager.dataset.add_record_changes()
-        screen_operation.review_manager.create_commit(
+        screen_operation.review_manager.dataset.create_commit(
             msg="Screen (random)", manual_author=False, script_call="colrev screen"
         )
         return records

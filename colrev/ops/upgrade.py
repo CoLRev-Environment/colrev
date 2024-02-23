@@ -232,7 +232,7 @@ class Upgrade(colrev.operation.Operation):
             if not migrator["released"]:
                 msg += " (pre-release)"
             review_manager = colrev.review_manager.ReviewManager()
-            review_manager.create_commit(
+            review_manager.dataset.create_commit(
                 msg=msg,
             )
 

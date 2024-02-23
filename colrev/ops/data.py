@@ -394,6 +394,6 @@ class Data(colrev.operation.Operation):
         )
 
         return {
-            "ask_to_commit": self.review_manager.dataset.has_changes(),
+            "ask_to_commit": self.review_manager.dataset.has_record_changes(),
             "no_endpoints_registered": no_endpoints_registered,
         }

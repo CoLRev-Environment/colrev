@@ -139,7 +139,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         #     if input("Create commit (y/n)?") != "y":
         #         return records
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Pre-screening (manual)", manual_author=True
         )
         return records

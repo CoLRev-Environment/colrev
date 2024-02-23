@@ -60,4 +60,6 @@ class Remove(colrev.operation.Operation):
                     self.review_manager.dataset.add_changes(path=filepath)
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(msg="Remove records", manual_author=False)
+        self.review_manager.dataset.create_commit(
+            msg="Remove records", manual_author=False
+        )

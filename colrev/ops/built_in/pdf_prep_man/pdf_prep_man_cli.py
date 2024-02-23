@@ -321,7 +321,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         if self.pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":
-                self.review_manager.create_commit(
+                self.review_manager.dataset.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,
                 )

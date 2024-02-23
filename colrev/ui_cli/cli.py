@@ -2080,11 +2080,13 @@ def data(
     ret = data_operation.main()
     if data_operation.review_manager.in_ci_environment():
         if ret["ask_to_commit"]:
-            review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+            review_manager.dataset.create_commit(
+                msg="Data and synthesis", manual_author=True
+            )
     else:
         if ret["ask_to_commit"]:
             if input("Create commit (y/n)?") == "y":
-                review_manager.create_commit(
+                review_manager.dataset.create_commit(
                     msg="Data and synthesis", manual_author=True
                 )
         if ret["no_endpoints_registered"]:
@@ -2529,7 +2531,7 @@ def settings(
     if update_hooks:
         print("Update pre-commit hooks")
 
-        if review_manager.dataset.has_changes():
+        if review_manager.dataset.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
             return
 
@@ -2545,7 +2547,7 @@ def settings(
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
         review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
-        review_manager.create_commit(msg="Update pre-commit hooks")
+        review_manager.dataset.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2578,7 +2580,7 @@ def settings(
             json.dump(project_settings, outfile, indent=4)
 
         review_manager.dataset.add_changes(path=Path("settings.json"))
-        review_manager.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2944,7 +2946,7 @@ def upgrade(
 
         review_manager.settings.project.auto_upgrade = False
         review_manager.save_settings()
-        review_manager.create_commit(msg="Disable auto-upgrade")
+        review_manager.dataset.create_commit(msg="Disable auto-upgrade")
         return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose

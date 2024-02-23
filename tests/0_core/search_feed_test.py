@@ -35,6 +35,6 @@ def test_search_feed(  # type: ignore
 
     search_feed.print_post_run_search_infos(records={})
     search_feed.save_feed_file()
-    base_repo_review_manager.create_commit(msg="test")
+    base_repo_review_manager.dataset.create_commit(msg="test")
 
     # TODO : integrate crossref_feed.nr_added += 1 into feed (including update_existing_record())

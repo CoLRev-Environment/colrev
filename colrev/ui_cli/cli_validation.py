@@ -366,4 +366,4 @@ def validate(
             print(validation_details)
 
     if validate_operation.review_manager.dataset.records_changed():
-        validate_operation.review_manager.create_commit(msg="validate")
+        validate_operation.review_manager.dataset.create_commit(msg="validate")

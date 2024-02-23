@@ -206,8 +206,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         forward_search_feed.save_feed_file()
         forward_search_feed.print_post_run_search_infos(records=records)
 
-        if self.review_manager.dataset.has_changes():
-            self.review_manager.create_commit(
+        if self.review_manager.dataset.has_record_changes():
+            self.review_manager.dataset.create_commit(
                 msg="Forward search", script_call="colrev search"
             )
 

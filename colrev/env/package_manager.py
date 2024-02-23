@@ -1217,7 +1217,7 @@ class PackageManager:
             endpoints.append(add_package)  # type: ignore
 
         operation.review_manager.save_settings()
-        operation.review_manager.create_commit(
+        operation.review_manager.dataset.create_commit(
             msg=f"Add {operation.type} {package_identifier}",
         )
         return add_package

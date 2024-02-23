@@ -118,7 +118,7 @@ class GithubPages(JsonSchemaMixin):
         )
         self.review_manager.dataset.add_changes(path=Path("about.md"))
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
@@ -158,7 +158,9 @@ class GithubPages(JsonSchemaMixin):
         )
         self.review_manager.dataset.add_changes(path=data_file)
 
-        self.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
+        self.review_manager.dataset.create_commit(
+            msg="Update sample", skip_status_yaml=True
+        )
 
     def _push_branch(
         self,
@@ -234,7 +236,7 @@ class GithubPages(JsonSchemaMixin):
             )
             return
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.error(
                 "Cannot update github pages because there are uncommited changes."
             )

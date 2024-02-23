@@ -46,7 +46,7 @@ class PDFPrepMan(colrev.operation.Operation):
                     target_state=colrev.record.RecordState.pdf_not_available
                 )
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Discard man-prep PDFs", manual_author=True
         )
 
@@ -83,7 +83,7 @@ class PDFPrepMan(colrev.operation.Operation):
 
     def pdfs_prepared_manually(self) -> bool:
         """Check whether PDFs were prepared manually"""
-        return self.review_manager.dataset.has_changes()
+        return self.review_manager.dataset.has_record_changes()
 
     def pdf_prep_man_stats(self) -> None:
         """Determine PDF prep man statistics"""

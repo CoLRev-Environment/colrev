@@ -583,7 +583,7 @@ class Dedupe(colrev.operation.Operation):
         self.apply_merges(id_sets=false_negatives, complete_dedupe=False)
 
         if self.review_manager.dataset.records_changed():
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Validate and correct duplicates",
                 manual_author=True,
             )
@@ -651,7 +651,7 @@ class Dedupe(colrev.operation.Operation):
 
         if apply:
             self.apply_merges(id_sets=id_sets)
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Merge records (identical global IDs)"
             )
 
@@ -737,4 +737,4 @@ class Dedupe(colrev.operation.Operation):
                     )
 
             self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.create_commit(msg="Skip prescreen/include all")
+            self.review_manager.dataset.create_commit(msg="Skip prescreen/include all")

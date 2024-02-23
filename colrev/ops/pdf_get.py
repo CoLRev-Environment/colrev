@@ -324,7 +324,7 @@ class PDFGet(colrev.operation.Operation):
         records = self._relink_pdfs(records=records)
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(msg="Relink PDFs")
+        self.review_manager.dataset.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
         self,
@@ -674,7 +674,7 @@ class PDFGet(colrev.operation.Operation):
         if self.review_manager.settings.pdf_get.rename_pdfs:
             self.rename_pdfs()
 
-        self.review_manager.create_commit(msg="Get PDFs")
+        self.review_manager.dataset.create_commit(msg="Get PDFs")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-get operation{Colors.END}"
         )

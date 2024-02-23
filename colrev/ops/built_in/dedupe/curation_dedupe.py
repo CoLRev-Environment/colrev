@@ -269,9 +269,9 @@ class CurationDedupe(JsonSchemaMixin):
             record.pop(Fields.CONTAINER_TITLE)
         self.review_manager.dataset.save_records_dict(records=records)
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.info(f"{Colors.GREEN}Commit changes{Colors.END}")
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg=(
                     "Merge duplicate records (set unique records from "
                     f"{self.settings.selected_source} "
@@ -569,6 +569,6 @@ class CurationDedupe(JsonSchemaMixin):
             id_sets=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Merge duplicate records",
         )

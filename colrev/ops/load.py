@@ -418,8 +418,8 @@ class Load(colrev.operation.Operation):
         self.review_manager.exact_call = (
             f"{part_exact_call} -s {source.search_source.filename.name}"
         )
-        self.review_manager.create_commit(
-            msg=f"Load {source.search_source.filename.name}",
+        self.review_manager.dataset.create_commit(
+            msg=f"Load {source.search_source.filename.name}", skip_hooks=True
         )
         if stashed:
             git_repo.git.stash("pop")

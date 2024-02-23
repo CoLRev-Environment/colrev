@@ -241,9 +241,9 @@ class TablePrescreen(JsonSchemaMixin):
         if input("import prescreen table [y,n]?") == "y":
             self.import_table(records=records)
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             if input("create commit [y,n]?") == "y":
-                self.review_manager.create_commit(
+                self.review_manager.dataset.create_commit(
                     msg="Pre-screen (table)",
                     manual_author=True,
                 )

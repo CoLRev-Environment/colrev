@@ -274,6 +274,11 @@ class Dataset:
     def _load_field_dict(cls, *, value: str, field: str) -> dict:
         # pylint: disable=too-many-branches
 
+        assert field in [
+            Fields.MD_PROV,
+            Fields.D_PROV,
+        ], f"error loading dict_field: {field}"
+
         return_dict = {}
         if field == Fields.MD_PROV:
             if value[:7] == FieldValues.CURATED:
@@ -292,16 +297,16 @@ class Dataset:
 
                 for item in items:
                     key_source = item[: item[:-1].rfind(";")]
-                    if ":" in key_source:
-                        note = item[item[:-1].rfind(";") + 1 : -1]
-                        key, source = key_source.split(":", 1)
-                        # key = key.rstrip().lstrip()
-                        return_dict[key] = {
-                            "source": source,
-                            "note": note,
-                        }
-                    else:
-                        print(f"problem with masterdata_provenance_item {item}")
+                    assert (
+                        ":" in key_source
+                    ), f"problem with masterdata_provenance_item {item}"
+                    note = item[item[:-1].rfind(";") + 1 : -1]
+                    key, source = key_source.split(":", 1)
+                    # key = key.rstrip().lstrip()
+                    return_dict[key] = {
+                        "source": source,
+                        "note": note,
+                    }
 
         elif field == Fields.D_PROV:
             if value != "":
@@ -312,17 +317,14 @@ class Dataset:
                     item += ";"  # removed by split
                     key_source = item[: item[:-1].rfind(";")]
                     note = item[item[:-1].rfind(";") + 1 : -1]
-                    if ":" in key_source:
-                        key, source = key_source.split(":", 1)
-                        return_dict[key] = {
-                            "source": source,
-                            "note": note,
-                        }
-                    else:
-                        print(f"problem with data_provenance_item {item}")
-
-        else:
-            print(f"error loading dict_field: {field}")
+                    assert (
+                        ":" in key_source
+                    ), f"problem with data_provenance_item {item}"
+                    key, source = key_source.split(":", 1)
+                    return_dict[key] = {
+                        "source": source,
+                        "note": note,
+                    }
 
         return return_dict
 
@@ -971,32 +973,41 @@ class Dataset:
             raise colrev_exceptions.ReviewManagerNotNotifiedError()
         return self._git_repo
 
-    def has_changes(
-        self, *, relative_path: Optional[Path] = None, change_type: str = "all"
-    ) -> bool:
+    def has_record_changes(self, *, change_type: str = "all") -> bool:
+        """Check whether the records have changes"""
+        return self.has_changes(
+            relative_path=Path(self.RECORDS_FILE_RELATIVE_GIT), change_type=change_type
+        )
+
+    def has_changes(self, *, relative_path: Path, change_type: str = "all") -> bool:
         """Check whether the relative path (or the git repository) has changes"""
 
-        if relative_path:
-            main_recs_changed = False
-            try:
-                if change_type == "all":
-                    main_recs_changed = str(relative_path) in [
-                        item.a_path for item in self._git_repo.index.diff(None)
-                    ] + [item.a_path for item in self._git_repo.head.commit.diff()]
-                elif change_type == "staged":
-                    main_recs_changed = str(relative_path) in [
-                        item.a_path for item in self._git_repo.head.commit.diff()
-                    ]
+        assert change_type in [
+            "all",
+            "staged",
+            "unstaged",
+        ], "Invalid change_type specified"
 
-                elif change_type == "unstaged":
-                    main_recs_changed = str(relative_path) in [
-                        item.a_path for item in self._git_repo.index.diff(None)
-                    ]
-            except ValueError:
-                pass
-            return main_recs_changed
+        # Check if the repository has at least one commit
+        try:
+            bool(self._git_repo.head.commit)
+        except ValueError:
+            return True  # Repository has no commit
 
-        return self._git_repo.is_dirty()
+        diff_index = [item.a_path for item in self._git_repo.index.diff(None)]
+        diff_head = [item.a_path for item in self._git_repo.head.commit.diff()]
+        unstaged_changes = diff_index + self._git_repo.untracked_files
+
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
+        path_str = str(relative_path).replace("\\", "/")
+
+        if change_type == "all":
+            path_changed = path_str in diff_index + diff_head
+        elif change_type == "staged":
+            path_changed = path_str in diff_head
+        elif change_type == "unstaged":
+            path_changed = path_str in unstaged_changes
+        return path_changed
 
     def add_changes(
         self, *, path: Path, remove: bool = False, ignore_missing: bool = False
@@ -1024,7 +1035,7 @@ class Dataset:
     def get_untracked_files(self) -> list:
         """Get the files that are untracked by git"""
 
-        return self._git_repo.untracked_files
+        return [Path(x) for x in self._git_repo.untracked_files]
 
     def _get_last_records_filecontents(self) -> bytes:
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
@@ -1043,29 +1054,42 @@ class Dataset:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        try:
-            main_recs_changed = str(self.RECORDS_FILE_RELATIVE_GIT) in [
-                item.a_path for item in self._git_repo.index.diff(None)
-            ] + [x.a_path for x in self._git_repo.head.commit.diff()]
-            self._get_last_records_filecontents()
-        except (IndexError, ValueError, KeyError):
-            main_recs_changed = False
+        main_recs_changed = str(self.RECORDS_FILE_RELATIVE_GIT) in [
+            item.a_path for item in self._git_repo.index.diff(None)
+        ] + [x.a_path for x in self._git_repo.head.commit.diff()]
         return main_recs_changed
 
     def remove_file_from_git(self, *, path: str) -> None:
         """Remove a file from git"""
         self._git_repo.index.remove([path], working_tree=True)
 
+    # pylint: disable=too-many-arguments
     def create_commit(
-        self, *, msg: str, author: git.Actor, committer: git.Actor, hook_skipping: bool
-    ) -> None:
-        """Create a commit"""
-        self._git_repo.index.commit(
-            msg,
-            author=author,
-            committer=committer,
-            skip_hooks=hook_skipping,
+        self,
+        *,
+        msg: str,
+        manual_author: bool = False,
+        script_call: str = "",
+        saved_args: Optional[dict] = None,
+        skip_status_yaml: bool = False,
+        skip_hooks: bool = True,
+    ) -> bool:
+        """Create a commit (including a commit report)"""
+        import colrev.ops.commit
+
+        if self.review_manager.exact_call and script_call == "":
+            script_call = self.review_manager.exact_call
+
+        commit = colrev.ops.commit.Commit(
+            review_manager=self.review_manager,
+            msg=msg,
+            manual_author=manual_author,
+            script_name=script_call,
+            saved_args=saved_args,
+            skip_hooks=skip_hooks,
         )
+        ret = commit.create(skip_status_yaml=skip_status_yaml)
+        return ret
 
     def file_in_history(self, *, filepath: Path) -> bool:
         """Check whether a file is in the git history"""
@@ -1098,9 +1122,10 @@ class Dataset:
 
     def has_untracked_search_records(self) -> bool:
         """Check whether there are untracked search records"""
-        search_dir = str(self.review_manager.SEARCHDIR_RELATIVE) + "/"
-        untracked_files = self.get_untracked_files()
-        return any(search_dir in untracked_file for untracked_file in untracked_files)
+        return any(
+            str(self.review_manager.SEARCHDIR_RELATIVE) in str(untracked_file)
+            for untracked_file in self.get_untracked_files()
+        )
 
     def reset_log_if_no_changes(self) -> None:
         """Reset the report log file if there are not changes"""
@@ -1185,6 +1210,5 @@ class Dataset:
 
     def stash_unstaged_changes(self) -> bool:
         """Stash unstaged changes"""
-        return "No local changes to save" != self._git_repo.git.stash(
-            "push", "--keep-index"
-        )
+        ret = self._git_repo.git.stash("push", "--keep-index")
+        return "No local changes to save" != ret
