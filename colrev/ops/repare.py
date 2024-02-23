@@ -330,7 +330,7 @@ class Repare(colrev.operation.Operation):
             if search_source.endpoint != "colrev.local_index":
                 continue
             curation_recs = self.review_manager.dataset.load_records_dict(
-                file_path=search_source.filename
+                load_str=Path(search_source.filename).read_text(encoding="utf-8")
             )
             for record_id in list(curation_recs.keys()):
                 if "curation_ID" not in curation_recs[record_id]:

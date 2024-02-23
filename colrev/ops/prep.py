@@ -450,7 +450,7 @@ class Prep(colrev.operation.Operation):
     def _complete_resumed_operation(self, *, prepared_records: list) -> None:
         if self.temp_records.is_file():
             temp_recs = self.review_manager.dataset.load_records_dict(
-                file_path=self.temp_records
+                load_str=self.temp_records.read_text(encoding="utf-8")
             )
             prepared_records_ids = [x[Fields.ID] for x in prepared_records]
             for record in temp_recs.values():
@@ -815,14 +815,13 @@ class Prep(colrev.operation.Operation):
         if self.current_temp_records.is_file():
             # combine and remove redundant records
             cur_temp_recs = self.review_manager.dataset.load_records_dict(
-                file_path=self.current_temp_records
+                load_str=self.current_temp_records.read_text(encoding="utf-8")
             )
             temp_recs = {}
             if self.temp_records.is_file():
                 temp_recs = self.review_manager.dataset.load_records_dict(
-                    file_path=self.temp_records
+                    load_str=self.temp_records.read_text(encoding="utf-8")
                 )
-
             combined_recs = {**temp_recs, **cur_temp_recs}
             self.temp_records.parent.mkdir(exist_ok=True)
             self.review_manager.dataset.save_records_dict_to_file(
@@ -832,7 +831,7 @@ class Prep(colrev.operation.Operation):
 
         if self.temp_records.is_file():
             temp_recs = self.review_manager.dataset.load_records_dict(
-                file_path=self.temp_records
+                load_str=self.temp_records.read_text(encoding="utf-8")
             )
             self.review_manager.logger.info("Continue with existing records")
             skipped_items = 0
@@ -915,10 +914,9 @@ class Prep(colrev.operation.Operation):
         self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
         if debug_file:
-            with open(debug_file, encoding="utf8") as target_db:
-                records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=target_db.read()
-                )
+            records_dict = self.review_manager.dataset.load_records_dict(
+                load_str=debug_file.read_text(encoding="utf-8")
+            )
 
             for record_dict in records_dict.values():
                 if colrev.record.RecordState.md_imported != record_dict.get(

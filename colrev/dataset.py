@@ -194,7 +194,8 @@ class Dataset:
         """
         Iterates through Git history, yielding records file contents as dictionaries.
 
-        Starts iteration from a provided commit SHA. Skips commits where the records file is unchanged.
+        Starts iteration from a provided commit SHA.
+        Skips commits where the records file is unchanged.
         Useful for tracking dataset changes over time.
 
         Parameters:
@@ -210,10 +211,10 @@ class Dataset:
 
             # Skip all commits before the specified commit_sha, if provided
             if commit_sha and not reached_target_commit:
-                if commit_sha == current_commit.hexsha:
-                    reached_target_commit = True
-                else:
-                    continue  # Move to the next commit
+                if commit_sha != current_commit.hexsha:
+                    # Move to the next commit
+                    continue
+                reached_target_commit = True
 
             # Read and parse the records file from the current commit
             parser = bibtex.Parser()
@@ -261,12 +262,11 @@ class Dataset:
                 for rec in prior_records_dict.values()
                 if any(x in record[Fields.ORIGIN] for x in rec[Fields.ORIGIN])
             ]
-            if not prior_record_l:
-                continue
-            prior_record = prior_record_l[0]
-            # Note: the following is an exact comparison of all fields
-            if record != prior_record:
-                record.update(changed_in_target_commit="True")
+            if prior_record_l:
+                prior_record = prior_record_l[0]
+                # Note: the following is an exact comparison of all fields
+                if record != prior_record:
+                    record.update(changed_in_target_commit="True")
 
         return list(records_dict.values())
 
@@ -409,27 +409,24 @@ class Dataset:
         return records_dict
 
     def _parse_k_v(self, item_string: str) -> tuple:
-        try:
-            if " = " in item_string:
-                key, value = item_string.split(" = ", 1)
-            else:
-                key = Fields.ID
-                value = item_string.split("{")[1]
+        if " = " in item_string:
+            key, value = item_string.split(" = ", 1)
+        else:
+            key = Fields.ID
+            value = item_string.split("{")[1]
 
-            key = key.lstrip().rstrip()
-            value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-            if key == Fields.ORIGIN:
-                value_list = value.replace("\n", "").split(";")
-                value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
-                return key, value_list
-            if key == Fields.STATUS:
-                return key, colrev.record.RecordState[value]
-            if key == Fields.MD_PROV:
-                return key, self._load_field_dict(value=value, field=key)
-            if key == Fields.FILE:
-                return key, Path(value)
-        except IndexError as exc:
-            raise colrev_exceptions.BrokenFilesError(msg="parsing records.bib") from exc
+        key = key.lstrip().rstrip()
+        value = value.lstrip().rstrip().lstrip("{").rstrip("},")
+        if key == Fields.ORIGIN:
+            value_list = value.replace("\n", "").split(";")
+            value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
+            return key, value_list
+        if key == Fields.STATUS:
+            return key, colrev.record.RecordState[value]
+        if key == Fields.MD_PROV:
+            return key, self._load_field_dict(value=value, field=key)
+        if key == Fields.FILE:
+            return key, Path(value)
 
         return key, value
 
@@ -503,7 +500,6 @@ class Dataset:
     def load_records_dict(
         self,
         *,
-        file_path: Optional[Path] = None,
         load_str: Optional[str] = None,
         header_only: bool = False,
     ) -> dict:
@@ -534,10 +530,6 @@ class Dataset:
             )
             record_header_dict = {r[Fields.ID]: r for r in record_header_list}
             return record_header_dict
-
-        if file_path:
-            with open(file_path, encoding="utf-8") as file:
-                load_str = file.read()
 
         parser = bibtex.Parser()
         if load_str:
@@ -1079,6 +1071,8 @@ class Dataset:
         skip_hooks: bool = True,
     ) -> bool:
         """Create a commit (including a commit report)"""
+        # pylint: disable=import-outside-toplevel
+
         import colrev.ops.commit
 
         if self.review_manager.exact_call and script_call == "":
