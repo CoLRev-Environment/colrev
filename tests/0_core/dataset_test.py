@@ -616,6 +616,54 @@ def test_add_changes(
     ), "add_changes failed to add the new file to the repository."
 
 
+def test_add_changes_remove(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test add_changes method with remove flag."""
+    # Setup
+    # Create a new file and add it to simulate removal
+    file_to_remove_path = base_repo_review_manager.path / "file_to_remove.txt"
+    file_to_remove_path.write_text("This file will be removed.")
+    base_repo_review_manager.dataset.add_changes(path=file_to_remove_path)
+
+    # Ensure file is added
+    assert (
+        file_to_remove_path.name
+        in base_repo_review_manager.dataset._git_repo.git.ls_files()
+    ), "Setup failed: file_to_remove.txt was not added to the repository."
+
+    # Test removal
+    base_repo_review_manager.dataset.add_changes(path=file_to_remove_path, remove=True)
+
+    # Assert
+    assert (
+        file_to_remove_path.name
+        not in base_repo_review_manager.dataset._git_repo.git.ls_files()
+    ), "add_changes failed to remove the file from the repository."
+
+
+def test_add_changes_ignore_missing(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test add_changes method with ignore_missing flag."""
+    # Setup
+    # Create a path for a file that does not exist to simulate missing file
+    missing_file_path = base_repo_review_manager.path / "missing_file.txt"
+
+    # Test
+    # This should not raise FileNotFoundError because of the ignore_missing flag
+    base_repo_review_manager.dataset.add_changes(
+        path=missing_file_path, ignore_missing=True
+    )
+
+    # Assert
+    # Since the file does not exist, it should not be added, but also should not raise an error
+    assert (
+        missing_file_path.name
+        not in base_repo_review_manager.dataset._git_repo.git.ls_files()
+    ), "add_changes incorrectly handled the missing file with ignore_missing flag."
+
+
 def test_stash_unstaged_changes(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:

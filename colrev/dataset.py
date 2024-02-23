@@ -1036,8 +1036,6 @@ class Dataset:
                 self._git_repo.index.remove([str(path)])
             else:
                 self._git_repo.index.add([str(path)])
-        except GitCommandError:
-            pass
         except FileNotFoundError as exc:
             if not ignore_missing:
                 raise exc
@@ -1068,10 +1066,6 @@ class Dataset:
             item.a_path for item in self._git_repo.index.diff(None)
         ] + [x.a_path for x in self._git_repo.head.commit.diff()]
         return main_recs_changed
-
-    def remove_file_from_git(self, *, path: str) -> None:
-        """Remove a file from git"""
-        self._git_repo.index.remove([path], working_tree=True)
 
     # pylint: disable=too-many-arguments
     def create_commit(
