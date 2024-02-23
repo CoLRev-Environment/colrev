@@ -188,6 +188,16 @@ class DirtyRepoAfterProcessingError(CoLRevException):
         super().__init__(self.message)
 
 
+class GitNotAvailableError(CoLRevException):
+    """
+    Git is currently not available.
+    """
+
+    def __init__(self) -> None:
+        self.message = "Git is currently not available (remove .git/index.lock exists)."
+        super().__init__(self.message)
+
+
 class AppendOnlyViolation(Exception):
     """Invalid changes to a file in append-only mode."""
 

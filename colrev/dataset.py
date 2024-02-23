@@ -1009,6 +1009,18 @@ class Dataset:
             path_changed = path_str in unstaged_changes
         return path_changed
 
+    def _sleep_util_git_unlocked(self) -> None:
+        i = 0
+        while (
+            self.review_manager.path / Path(".git/index.lock")
+        ).is_file():  # pragma: no cover
+            i += 1
+            time.sleep(randint(1, 50) * 0.1)  # nosec
+            if i > 5:
+                print("Waiting for previous git operation to complete")
+            elif i > 30:
+                raise colrev_exceptions.GitNotAvailableError()
+
     def add_changes(
         self, *, path: Path, remove: bool = False, ignore_missing: bool = False
     ) -> None:
@@ -1017,9 +1029,7 @@ class Dataset:
         if path.is_absolute():
             path = path.relative_to(self.review_manager.path)
 
-        while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(randint(1, 50) * 0.1)  # nosec
-            print("Waiting for previous git operation to complete")
+        self._sleep_util_git_unlocked()
 
         try:
             if remove:
@@ -1107,16 +1117,12 @@ class Dataset:
 
     def _add_record_changes(self) -> None:
         """Add changes in records to git"""
-        while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(randint(1, 50) * 0.1)  # nosec
-            print("Waiting for previous git operation to complete")
+        self._sleep_util_git_unlocked()
         self._git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
-        while (self.review_manager.path / Path(".git/index.lock")).is_file():
-            time.sleep(randint(1, 50) * 0.1)  # nosec
-            print("Waiting for previous git operation to complete")
+        self._sleep_util_git_unlocked()
 
         self._git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
 
@@ -1126,6 +1132,11 @@ class Dataset:
             str(self.review_manager.SEARCHDIR_RELATIVE) in str(untracked_file)
             for untracked_file in self.get_untracked_files()
         )
+
+    def stash_unstaged_changes(self) -> bool:
+        """Stash unstaged changes"""
+        ret = self._git_repo.git.stash("push", "--keep-index")
+        return "No local changes to save" != ret
 
     def reset_log_if_no_changes(self) -> None:
         """Reset the report log file if there are not changes"""
@@ -1207,8 +1218,3 @@ class Dataset:
             if remote.name == "origin":
                 remote_url = remote.url
         return remote_url
-
-    def stash_unstaged_changes(self) -> bool:
-        """Stash unstaged changes"""
-        ret = self._git_repo.git.stash("push", "--keep-index")
-        return "No local changes to save" != ret
