@@ -13,7 +13,7 @@ import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import ExitCodes
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.status
 
 

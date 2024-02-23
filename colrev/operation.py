@@ -18,7 +18,7 @@ from docker.errors import DockerException
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 F = TypeVar("F", bound=Callable[..., Any])

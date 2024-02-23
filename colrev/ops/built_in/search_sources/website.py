@@ -15,7 +15,7 @@ import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.prep
 
 # Note: not implemented as a full search_source

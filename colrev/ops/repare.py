@@ -14,7 +14,7 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 

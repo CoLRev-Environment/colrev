@@ -11,7 +11,7 @@ from dacite import from_dict
 import colrev.operation
 import colrev.record
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.prescreen
 
 # pylint: disable=too-few-public-methods

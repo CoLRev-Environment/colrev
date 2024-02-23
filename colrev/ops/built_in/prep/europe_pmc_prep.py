@@ -13,7 +13,7 @@ import colrev.ops.built_in.search_sources.europe_pmc as europe_pmc_connector
 import colrev.ops.search_sources
 import colrev.record
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods

@@ -15,7 +15,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Operations
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
 # Should ensure that constants are used (instead of strings)

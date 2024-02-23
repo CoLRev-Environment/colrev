@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 

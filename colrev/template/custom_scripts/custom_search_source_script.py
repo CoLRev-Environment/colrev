@@ -12,7 +12,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.search.Search
 
 

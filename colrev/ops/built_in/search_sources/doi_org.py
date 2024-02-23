@@ -17,7 +17,7 @@ import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.prep
 
 # Note: not (yet) implemented as a full search_source

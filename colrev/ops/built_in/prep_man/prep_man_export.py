@@ -25,7 +25,7 @@ from colrev.constants import FieldValues
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.prep_man
 
 

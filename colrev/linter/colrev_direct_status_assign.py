@@ -10,7 +10,7 @@ from pylint.checkers.utils import only_required_for_messages
 
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
 

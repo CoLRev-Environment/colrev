@@ -9,7 +9,7 @@ import colrev.env.utils
 import colrev.operation
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 

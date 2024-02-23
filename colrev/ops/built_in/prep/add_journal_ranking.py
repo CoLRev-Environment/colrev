@@ -16,7 +16,7 @@ from colrev.constants import Fields
 if False:  # pylint: disable=using-constant-test
     from typing import TYPE_CHECKING
 
-    if TYPE_CHECKING:
+    if TYPE_CHECKING:  # pragma: no cover
         import colrev.ops.prep
 
 

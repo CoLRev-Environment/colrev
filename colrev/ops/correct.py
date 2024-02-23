@@ -11,7 +11,7 @@ from dictdiffer import diff
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 # pylint: disable=too-few-public-methods

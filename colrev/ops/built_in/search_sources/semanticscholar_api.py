@@ -32,7 +32,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.search
     import colrev.ops.prep
 

@@ -19,7 +19,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.screen
 
 

@@ -9,7 +9,7 @@ from dacite import from_dict
 
 import colrev.operation
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.data
 
 

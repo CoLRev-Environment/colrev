@@ -18,7 +18,7 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.dedupe
 
 # pylint: disable=too-few-public-methods

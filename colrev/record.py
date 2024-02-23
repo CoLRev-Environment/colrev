@@ -44,7 +44,7 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import Operations
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.qm.quality_model
 
