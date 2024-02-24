@@ -167,6 +167,17 @@ def test_get_changed_records(
     ), "The retrieved changed records do not match the expected changes."
 
 
+def test_load_records_dict_not_notified_exception(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    """Test load_records_dict raises not_notified_exception."""
+
+    base_repo_review_manager.notified_next_operation = None
+
+    with pytest.raises(Exception):
+        base_repo_review_manager.dataset.load_records_dict()
+
+
 @pytest.mark.parametrize(
     "record_dict, expected_id",
     [
