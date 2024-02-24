@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from multiprocessing import Lock
 from typing import Optional
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
+import docker
 import requests
+from docker.errors import DockerException
 
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.record
 from colrev.constants import Fields
@@ -40,6 +44,11 @@ class WebsiteConnector:
 
     # pylint: disable=unused-argument
 
+    # https://github.com/zotero/translators/
+    # https://www.zotero.org/support/dev/translators
+    # https://github.com/zotero/translation-server/blob/master/src/formats.js
+    IMAGE_NAME = "zotero/translation-server:2.0.4"
+
     def __init__(
         self,
         *,
@@ -48,6 +57,10 @@ class WebsiteConnector:
     ) -> None:
         self.zotero_lock = Lock()
         self.review_manager = review_manager
+
+        if not self.review_manager.in_ci_environment():
+            environment_manager = self.review_manager.get_environment_manager()
+            environment_manager.build_docker_image(imagename=self.IMAGE_NAME)
 
     # pylint: disable=colrev-missed-constant-usage
     def _set_url(
@@ -154,10 +167,7 @@ class WebsiteConnector:
 
         self.zotero_lock.acquire(timeout=60)
 
-        zotero_translation_service = (
-            self.review_manager.get_zotero_translation_service()
-        )
-        zotero_translation_service.start()
+        self.start_zotero()
         try:
             content_type_header = {"Content-type": "text/plain"}
             headers = {**self._requests_headers, **content_type_header}
@@ -192,3 +202,57 @@ class WebsiteConnector:
             pass
 
         self.zotero_lock.release()
+
+    def stop_zotero(self) -> None:
+        """Stop the zotero translation service"""
+
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if self.IMAGE_NAME in str(container.image):
+                    container.stop_zotero()
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=exc
+            ) from exc
+
+    def start_zotero(self) -> None:
+        """Start the zotero translation service"""
+
+        # pylint: disable=duplicate-code
+
+        try:
+            self.stop_zotero()
+
+            client = docker.from_env()
+            _ = client.containers.run(
+                self.IMAGE_NAME,
+                ports={"1969/tcp": ("127.0.0.1", 1969)},
+                auto_remove=True,
+                detach=True,
+            )
+
+            tries = 0
+            while tries < 10:
+                try:
+                    headers = {"Content-type": "text/plain"}
+                    requests.post(
+                        "http://127.0.0.1:1969/import",
+                        headers=headers,
+                        data=b"%T Paper title\n\n",
+                        timeout=10,
+                    )
+
+                except requests.ConnectionError:
+                    time.sleep(5)
+                    continue
+                return
+
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=""
+            )
+
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=exc
+            ) from exc

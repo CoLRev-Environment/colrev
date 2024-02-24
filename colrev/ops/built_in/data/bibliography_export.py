@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import copy
 import json
+import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import click
+import docker
 import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from docker.errors import DockerException
 
 import colrev.constants as c
 import colrev.env.package_manager
@@ -69,6 +72,11 @@ class BibliographyExport(JsonSchemaMixin):
 
     settings_class = BibliographyExportSettings
 
+    # https://github.com/zotero/translators/
+    # https://www.zotero.org/support/dev/translators
+    # https://github.com/zotero/translation-server/blob/master/src/formats.js
+    IMAGE_NAME = "zotero/translation-server:2.0.4"
+
     def __init__(
         self,
         *,
@@ -87,7 +95,8 @@ class BibliographyExport(JsonSchemaMixin):
         self.endpoint_path = self.review_manager.output_dir
 
         if not self.review_manager.in_ci_environment():
-            self.review_manager.get_zotero_translation_service()
+            environment_manager = self.review_manager.get_environment_manager()
+            environment_manager.build_docker_image(imagename=self.IMAGE_NAME)
 
     def _pybtex_conversion(self, *, selected_records: dict) -> None:
         self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
@@ -136,10 +145,7 @@ class BibliographyExport(JsonSchemaMixin):
             recs_dict_in=selected_records
         )
 
-        zotero_translation_service = (
-            self.review_manager.get_zotero_translation_service()
-        )
-        zotero_translation_service.start()
+        self.start_zotero()
 
         headers = {"Content-type": "text/plain"}
         ret = requests.post(
@@ -264,3 +270,57 @@ class BibliographyExport(JsonSchemaMixin):
             "detailed_msg": "TODO",
         }
         return advice
+
+    def stop_zotero(self) -> None:
+        """Stop the zotero translation service"""
+
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if self.IMAGE_NAME in str(container.image):
+                    container.stop_zotero()
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=exc
+            ) from exc
+
+    def start_zotero(self) -> None:
+        """Start the zotero translation service"""
+
+        # pylint: disable=duplicate-code
+
+        try:
+            self.stop_zotero()
+
+            client = docker.from_env()
+            _ = client.containers.run(
+                self.IMAGE_NAME,
+                ports={"1969/tcp": ("127.0.0.1", 1969)},
+                auto_remove=True,
+                detach=True,
+            )
+
+            tries = 0
+            while tries < 10:
+                try:
+                    headers = {"Content-type": "text/plain"}
+                    requests.post(
+                        "http://127.0.0.1:1969/import",
+                        headers=headers,
+                        data=b"%T Paper title\n\n",
+                        timeout=10,
+                    )
+
+                except requests.ConnectionError:
+                    time.sleep(5)
+                    continue
+                return
+
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=""
+            )
+
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=exc
+            ) from exc

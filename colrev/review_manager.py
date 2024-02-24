@@ -448,19 +448,6 @@ class ReviewManager:
         )
 
     @classmethod
-    def get_zotero_translation_service(
-        cls,
-    ) -> colrev.env.zotero_translation_service.ZoteroTranslationService:
-        """Get the zotero-translation service object"""
-        import colrev.env.zotero_translation_service
-
-        environment_manager = cls.get_environment_manager()
-
-        return colrev.env.zotero_translation_service.ZoteroTranslationService(
-            environment_manager=environment_manager
-        )
-
-    @classmethod
     def get_resources(cls) -> colrev.env.resources.Resources:
         """Get a resources object"""
         import colrev.env.resources
