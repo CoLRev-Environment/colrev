@@ -43,22 +43,18 @@ def test_prep_setup_custom_script(  # type: ignore
     prep_operation.setup_custom_script()
 
 
-def test_prep_reset_id(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
+def test_prep_with_polish_flag(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
-    """Test prep reset_id"""
+    """Test prep operation with polish flag"""
 
+    # Using helper to checkout to the specific commit for pdf-get
+    helpers.reset_commit(
+        review_manager=base_repo_review_manager, commit="pdf_get_commit"
+    )
+
+    # Setting up the prep operation with polish flag
     prep_operation = base_repo_review_manager.get_prep_operation()
-    prep_operation.reset_ids()
+    prep_operation.main(polish=True)
 
-
-def test_prep_reset_records(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test prep reset_records"""
-
-    prep_operation = base_repo_review_manager.get_prep_operation()
-    prep_operation.reset_records(reset_ids=["Srivastava2015"])
-
-
-# TODO : difference set_ids - reset_ids?
+    # Assertions can be added here based on expected outcomes

@@ -638,20 +638,6 @@ def load(
     help="Polish record metadata (includes records in md_processed or beyond).",
 )
 @click.option(
-    "--reset_records",
-    default="NA",
-    type=str,
-    help="Reset record metadata to the imported version. "
-    "Format: --reset_records ID1,ID2,ID3",
-)
-@click.option(
-    "-rid",
-    "--reset_ids",
-    is_flag=True,
-    default=False,
-    help="Reset IDs that have been changed (to fix the sort order in data/records.bib)",
-)
-@click.option(
     "-sid",
     "--set_ids",
     is_flag=True,
@@ -711,8 +697,6 @@ def prep(
     params: str,
     keep_ids: bool,
     polish: bool,
-    reset_records: str,
-    reset_ids: bool,
     set_ids: bool,
     debug: str,
     debug_file: Path,
@@ -734,16 +718,6 @@ def prep(
         )
         prep_operation = review_manager.get_prep_operation()
 
-        if reset_records != "NA":
-            try:
-                reset_records = str(reset_records)
-            except ValueError:
-                pass
-            prep_operation.reset_records(reset_ids=reset_records.split(","))
-            return
-        if reset_ids:
-            prep_operation.reset_ids()
-            return
         if set_ids:
             prep_operation.set_ids()
             return
