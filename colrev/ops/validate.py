@@ -130,12 +130,14 @@ class Validate(colrev.operation.Operation):
         load_operation = self.review_manager.get_load_operation()
         origin_records = {}
         for source in load_operation.load_active_sources():
-
-            load_operation.setup_source_for_load(
-                source=source, select_new_records=False
-            )
-            for origin_record in source.search_source.source_records_list:
-                origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
+            try:
+                load_operation.setup_source_for_load(
+                    source=source, select_new_records=False
+                )
+                for origin_record in source.search_source.source_records_list:
+                    origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
+            except Exception as e:
+                print(e)
 
         records = self.review_manager.dataset.load_records_dict()
 
