@@ -8,7 +8,6 @@ import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import git
 from pybtex.database.input import bibtex
@@ -20,9 +19,6 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods

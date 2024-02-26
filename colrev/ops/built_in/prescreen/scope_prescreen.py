@@ -15,8 +15,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
 
-if typing.TYPE_CHECKING:
-    import colrev.ops.prescreen.Prescreen
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

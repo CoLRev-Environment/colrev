@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -13,8 +12,6 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.prep_man
 
 # pylint: disable=too-few-public-methods
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 from git.exc import GitCommandError
@@ -12,9 +11,6 @@ import colrev.env.utils
 import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods

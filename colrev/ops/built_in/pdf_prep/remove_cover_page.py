@@ -6,7 +6,6 @@ import shutil
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -20,8 +19,6 @@ from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
 
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 

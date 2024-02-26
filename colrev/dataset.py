@@ -13,7 +13,6 @@ from copy import deepcopy
 from pathlib import Path
 from random import randint
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import git
 import pybtex.errors
@@ -33,8 +32,6 @@ from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-lines

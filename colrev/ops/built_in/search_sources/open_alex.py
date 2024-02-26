@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import pyalex
 import requests
@@ -20,10 +19,6 @@ import colrev.ops.load_utils_bib
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.search
-    import colrev.ops.prep
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

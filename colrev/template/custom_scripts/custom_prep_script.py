@@ -2,16 +2,12 @@
 """Template for a custom Prep PackageEndpoint"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import zope.interface
 from dacite import from_dict
 
 import colrev.operation
 from colrev.constants import Fields
 
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 

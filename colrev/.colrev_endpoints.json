@@ -263,7 +263,7 @@
              "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation"
             },
             {"package_endpoint_identifier": "colrev.semanticscholar",
-            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource"
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar.SemanticScholarSearchSource"
             }
         ],
         "review_type": [

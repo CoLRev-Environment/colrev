@@ -13,7 +13,6 @@ from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import inquirer
 import requests
@@ -33,10 +32,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.search
-    import colrev.ops.prep
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

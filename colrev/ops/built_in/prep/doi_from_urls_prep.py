@@ -6,7 +6,6 @@ import collections
 import re
 from dataclasses import dataclass
 from sqlite3 import OperationalError
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -18,9 +17,6 @@ import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.search_sources
 import colrev.record
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code

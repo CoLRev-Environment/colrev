@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dacite import from_dict
@@ -11,9 +10,6 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.search.Search
 
 
 @zope.interface.implementer(

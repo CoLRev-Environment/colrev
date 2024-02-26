@@ -1,7 +1,7 @@
-colrev.ops.built\_in.search\_sources.semanticscholar\_api.SemanticScholarSearchSource
-=====================================================================================
+colrev.ops.built\_in.search\_sources.semanticscholar.SemanticScholarSearchSource
+================================================================================
 
-.. currentmodule:: colrev.ops.built_in.search_sources.semanticscholar_api
+.. currentmodule:: colrev.ops.built_in.search_sources.semanticscholar
 
 .. autoclass:: SemanticScholarSearchSource
    :members:

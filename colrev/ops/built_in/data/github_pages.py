@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import git
 import zope.interface
@@ -15,9 +14,6 @@ import colrev.env.utils
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

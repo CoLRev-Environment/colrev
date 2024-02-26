@@ -1,4 +1,4 @@
-# SearchSource: arXiv.org
+# arXiv.org
 
 ## Add the search source
 

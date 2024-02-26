@@ -5,14 +5,10 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.operation
 import colrev.settings
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
 
 class Distribute(colrev.operation.Operation):

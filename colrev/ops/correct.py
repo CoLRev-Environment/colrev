@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
 # pylint: disable=too-few-public-methods
 

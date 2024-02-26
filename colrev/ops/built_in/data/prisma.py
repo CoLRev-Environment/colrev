@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import List
-from typing import TYPE_CHECKING
 
 import docker
 import pandas as pd
@@ -19,9 +18,6 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

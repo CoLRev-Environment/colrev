@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 from nameparser import HumanName
 
@@ -12,9 +11,6 @@ import colrev.record  # pylint: disable=cyclic-import
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.review_manager
 
 
 def _format_author_field_for_cid(input_string: str) -> str:

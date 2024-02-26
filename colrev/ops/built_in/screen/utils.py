@@ -2,15 +2,10 @@
 """Screening utilities"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import colrev.env.package_manager
 import colrev.record
 import colrev.settings
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.screen
 
 
 __FULL_SCREEN_EXPLANATION = (

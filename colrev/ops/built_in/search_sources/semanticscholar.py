@@ -58,7 +58,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     # SearchSourcePackageEndpointInterface constants
     docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/tree/main/"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni

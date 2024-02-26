@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import docker
 import zope.interface
@@ -17,8 +16,6 @@ import colrev.record
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
 
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
