@@ -54,7 +54,7 @@ search_source
    package_index/colrev.psycinfo.rst
    package_index/colrev.pubmed.rst
    package_index/colrev.scopus.rst
-   package_index/NotImplemented
+   package_index/colrev.semanticscholar.rst
    package_index/colrev.springer_link.rst
    package_index/colrev.synergy_datasets.rst
    package_index/colrev.taylor_and_francis.rst
