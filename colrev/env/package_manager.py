@@ -824,6 +824,7 @@ class PackageManager:
         else:
             # to be retreived through requests for external packages
             # output = convert('# Title\n\nSentence.')
+            print(f"Cannot retrieve docs-link for {identifier}")
             return "NotImplemented"
 
         file_path = Path(f"{identifier}.rst")

@@ -7,6 +7,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -31,6 +32,10 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
+if TYPE_CHECKING:  # pragma: no cover
+    import colrev.ops.search
+    import colrev.ops.prep
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -53,7 +58,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     # SearchSourcePackageEndpointInterface constants
     docs_link = (
-        "https://github.com/CoLRev-Environment/colrev/tree/main/"
+        "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni

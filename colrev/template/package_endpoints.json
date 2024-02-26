@@ -362,7 +362,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
-            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar_api.SemanticScholarSearchSource",
+            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar.SemanticScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Semantic Scholar API Search Source (:doc:`instructions </resources/package_index/colrev.semanticscholar>`)",
