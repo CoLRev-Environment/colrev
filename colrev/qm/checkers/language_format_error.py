@@ -32,9 +32,9 @@ class LanguageFormatChecker:
                 lang_code_list=[record.data[Fields.LANGUAGE]]
             )
         except colrev_exceptions.InvalidLanguageCodeException:
-            record.add_masterdata_provenance_note(key=Fields.LANGUAGE, note=self.msg)
+            record.add_data_provenance_note(key=Fields.LANGUAGE, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key=Fields.LANGUAGE, note=self.msg)
+            record.remove_data_provenance_note(key=Fields.LANGUAGE, note=self.msg)
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

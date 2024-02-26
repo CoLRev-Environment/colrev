@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 import typing
 from dataclasses import dataclass
-from multiprocessing import Lock
 from pathlib import Path
 
 import requests
@@ -20,7 +19,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
-import colrev.ops.built_in.search_sources.website as website_connector
 import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.qm.checkers.missing_field
@@ -99,10 +97,6 @@ class FilesSearchSource(JsonSchemaMixin):
         self._etiquette = self.crossref_connector.get_etiquette(
             review_manager=self.review_manager
         )
-        self.url_connector = website_connector.WebsiteConnector(
-            review_manager=self.review_manager
-        )
-        self.zotero_lock = Lock()
 
     def _update_if_pdf_renamed(
         self,
@@ -842,25 +836,6 @@ class FilesSearchSource(JsonSchemaMixin):
 
         if Fields.FILE not in record.data:
             return record
-
-        if Path(record.data[Fields.FILE]).suffix == ".mp4":
-            if Fields.URL in record.data:
-                self.zotero_lock = Lock()
-                url_record = record.copy_prep_rec()
-                self.url_connector.retrieve_md_from_website(record=url_record)
-                if url_record.data.get(Fields.AUTHOR, "") != "":
-                    record.update_field(
-                        key=Fields.AUTHOR,
-                        value=url_record.data[Fields.AUTHOR],
-                        source="website",
-                    )
-                if url_record.data.get(Fields.TITLE, "") != "":
-                    record.update_field(
-                        key=Fields.TITLE,
-                        value=url_record.data[Fields.TITLE],
-                        source="website",
-                    )
-                self.zotero_lock.release()
 
         if Path(record.data[Fields.FILE]).suffix == ".pdf":
             record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")

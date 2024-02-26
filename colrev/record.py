@@ -1052,6 +1052,15 @@ class Record:
 
         return {"source": source, "note": note}
 
+    def get_masterdata_provenance_notes(self, *, key: str) -> list:
+        """Get a masterdata provenance note based on a key"""
+        if Fields.MD_PROV not in self.data:
+            return []
+        if key not in self.data[Fields.MD_PROV]:
+            return []
+        notes = self.data[Fields.MD_PROV][key]["note"].split(",")
+        return [note for note in notes if note]
+
     def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Remove a masterdata provenance note"""
         if Fields.MD_PROV not in self.data:
@@ -1077,6 +1086,15 @@ class Record:
                 "source": "ORIGINAL",
                 "note": note,
             }
+
+    def get_data_provenance_notes(self, *, key: str) -> list:
+        """Get a data provenance note based on a key"""
+        if Fields.D_PROV not in self.data:
+            return []
+        if key not in self.data[Fields.D_PROV]:
+            return []
+        notes = self.data[Fields.D_PROV][key]["note"].split(",")
+        return [note.strip() for note in notes if note]
 
     def add_data_provenance_note(self, *, key: str, note: str) -> None:
         """Add a data provenance note (based on a key)"""
@@ -1203,7 +1221,11 @@ class Record:
         """Ignore a defect for a field"""
         ignore_code = f"IGNORE:{defect}"
 
-        if field in FieldSet.IDENTIFYING_FIELD_KEYS:
+        if field in FieldSet.IDENTIFYING_FIELD_KEYS + [
+            Fields.DOI,
+            Fields.PUBMED_ID,
+            Fields.ISBN,
+        ]:
             if (
                 Fields.MD_PROV not in self.data
                 or field not in self.data[Fields.MD_PROV]

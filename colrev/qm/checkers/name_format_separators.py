@@ -38,7 +38,8 @@ class NameFormatSeparatorsChecker:
 
     def _name_separator_error(self, *, record: colrev.record.Record, key: str) -> bool:
         if "," not in record.data[key]:
-            return False
+            return True
+
         sanitized_names_list = re.sub(
             "[^a-zA-Z, ;1]+",
             "",
@@ -65,13 +66,6 @@ class NameFormatSeparatorsChecker:
             for sanitized_name in sanitized_names_list
             for name_part in sanitized_name.split(",")
         ):
-            return True
-
-        # Note : patterns like "I N T R O D U C T I O N"
-        # that may result from grobid imports
-        if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", record.data[key]):
-            return True
-        if len(record.data[key]) < 5:
             return True
 
         return False

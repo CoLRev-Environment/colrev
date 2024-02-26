@@ -184,7 +184,6 @@ class DefectCodes:
     INCOMPLETE_FIELD = "incomplete-field"
     INCONSISTENT_CONTENT = "inconsistent-content"
     INCONSISTENT_WITH_DOI_METADATA = "inconsistent-with-doi-metadata"
-    INCONSISTENT_WITH_URL_METADATA = "inconsistent-with-url-metadata"
     ISBN_NOT_MATCHING_PATTERN = "isbn-not-matching-pattern"
     LANGUAGE_FORMAT_ERROR = "language-format-error"
     LANGUAGE_UNKNOWN = "language-unknown"

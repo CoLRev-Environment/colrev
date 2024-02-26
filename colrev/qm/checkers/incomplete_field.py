@@ -33,6 +33,7 @@ class IncompleteFieldChecker:
                 or record.data.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
                 or record.ignored_defect(field=key, defect=self.msg)
             ):
+                record.remove_masterdata_provenance_note(key=key, note=self.msg)
                 continue
             if self._incomplete_field(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
@@ -43,12 +44,15 @@ class IncompleteFieldChecker:
         """check for incomplete field"""
         if record.data[key].endswith("...") or record.data[key].endswith("…"):
             return True
-        return key == Fields.AUTHOR and (
-            # heuristics for missing first names:
-            ", and " in record.data[key]
-            or record.data[key].rstrip().endswith(",")
-            or "," not in record.data[key]
-        )
+        if key == Fields.AUTHOR:
+            if (
+                # heuristics for missing first names:
+                ", and " in record.data[key]
+                or record.data[key].rstrip().endswith(",")
+                or "," not in record.data[key]
+            ):
+                return True
+        return False
 
     def _institutional_author(self, *, key: str, record: colrev.record.Record) -> bool:
         if key != Fields.AUTHOR or Fields.AUTHOR not in record.data:
