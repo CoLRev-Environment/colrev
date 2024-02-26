@@ -1,7 +1,7 @@
-colrev.ops.built\_in.search\_sources.semanticscholar\_api.SemanticScholarSearchSource
-=====================================================================================
+colrev.ops.built\_in.search\_sources.semanticscholar.SemanticScholarSearchSource
+================================================================================
 
-.. currentmodule:: colrev.ops.built_in.search_sources.semanticscholar_api
+.. currentmodule:: colrev.ops.built_in.search_sources.semanticscholar
 
 .. autoclass:: SemanticScholarSearchSource
    :members:
@@ -9,13 +9,13 @@ colrev.ops.built\_in.search\_sources.semanticscholar\_api.SemanticScholarSearchS
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~SemanticScholarSearchSource.add_endpoint
       ~SemanticScholarSearchSource.all_json_schemas
       ~SemanticScholarSearchSource.author_search
@@ -35,15 +35,15 @@ colrev.ops.built\_in.search\_sources.semanticscholar\_api.SemanticScholarSearchS
       ~SemanticScholarSearchSource.run_search
       ~SemanticScholarSearchSource.to_dict
       ~SemanticScholarSearchSource.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~SemanticScholarSearchSource.SETTINGS
       ~SemanticScholarSearchSource.ci_supported
       ~SemanticScholarSearchSource.docs_link
@@ -52,3 +52,5 @@ colrev.ops.built\_in.search\_sources.semanticscholar\_api.SemanticScholarSearchS
       ~SemanticScholarSearchSource.search_types
       ~SemanticScholarSearchSource.short_name
       ~SemanticScholarSearchSource.source_identifier
+   
+   
