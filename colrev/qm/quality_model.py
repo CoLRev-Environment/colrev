@@ -48,13 +48,15 @@ class QualityModel:
 
             try:
                 module = importlib.import_module(module_path + filename.stem)
-            except ValueError as exc:
-                print(exc)
-            except ImportError as exc:
+            except ValueError as exc:  # pragma: no cover
+                print(f"Problem with filepath for module import {filename}: {exc}")
+            except ImportError as exc:  # pragma: no cover
                 print(f"Problem importing module {filename}: {exc}")
             else:
                 if hasattr(module, "register"):
                     module.register(self)
+                else:  # pragma: no cover
+                    print(f"Module {filename} does not have a register function")
 
     def register_checker(self, checker) -> None:  # type: ignore
         """Register a checker"""

@@ -283,10 +283,16 @@ def fixture_quality_model(
 
 
 @pytest.fixture(scope="session", name="pdf_quality_model")
-def fixture_pdf_quality_model(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
+def fixture_pdf_quality_model(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> colrev.qm.quality_model.QualityModel:
     """Fixture returning the pdf quality model"""
+
+    helpers.retrieve_test_file(
+        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        target=base_repo_review_manager.path
+        / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    )
     return base_repo_review_manager.get_pdf_qm()
 
 
