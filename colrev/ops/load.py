@@ -359,6 +359,8 @@ class Load(colrev.operation.Operation):
             # if source.endpoint.lower() not in endpoint_dict:
             #     raise ...
             endpoint = endpoint_dict[source.endpoint.lower()]
+            if endpoint.search_source.search_type == colrev.settings.SearchType.MD:  # type: ignore
+                continue
             sources.append(endpoint)
 
         return sources
