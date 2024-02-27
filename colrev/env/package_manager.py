@@ -805,7 +805,7 @@ class PackageManager:
 
         return packages_dict
 
-    def __import_package_docs(self, docs_link: str, identifier: str) -> str:
+    def _import_package_docs(self, docs_link: str, identifier: str) -> str:
         # pylint: disable=import-outside-toplevel
         from m2r import parse_from_file
 
