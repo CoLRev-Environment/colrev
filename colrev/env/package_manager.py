@@ -18,6 +18,7 @@ import dacite
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
+from m2r import parse_from_file
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
@@ -806,8 +807,6 @@ class PackageManager:
         return packages_dict
 
     def _import_package_docs(self, docs_link: str, identifier: str) -> str:
-        # pylint: disable=import-outside-toplevel
-        from m2r import parse_from_file
 
         packages_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/resources/package_index"
