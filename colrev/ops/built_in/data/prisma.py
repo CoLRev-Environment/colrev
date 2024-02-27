@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import List
-from typing import TYPE_CHECKING
 
 import docker
 import pandas as pd
@@ -19,9 +18,6 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -85,7 +81,7 @@ class PRISMA(JsonSchemaMixin):
         }
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __export_csv(self, silent_mode: bool) -> None:
+    def _export_csv(self, silent_mode: bool) -> None:
         csv_resource_path = Path("template/") / Path("prisma/PRISMA.csv")
         self.csv_path.parent.mkdir(exist_ok=True, parents=True)
 
@@ -132,7 +128,7 @@ class PRISMA(JsonSchemaMixin):
         if not status_stats.completeness_condition and not silent_mode:
             self.review_manager.logger.info("Review not (yet) complete")
 
-    def __export_diagram(self, silent_mode: bool) -> None:
+    def _export_diagram(self, silent_mode: bool) -> None:
         if not self.csv_path.is_file():
             self.review_manager.logger.error("File %s does not exist.", self.csv_path)
             self.review_manager.logger.info("Complete processing and use colrev data")
@@ -161,10 +157,10 @@ class PRISMA(JsonSchemaMixin):
                     + f"/data/{diagram_relative_path}"
                 )
 
-            self.__call_docker_build_process(script=script)
+            self._call_docker_build_process(script=script)
             csv_relative_path.unlink()
 
-    def __call_docker_build_process(self, *, script: str) -> None:
+    def _call_docker_build_process(self, *, script: str) -> None:
         try:
             uid = os.stat(self.review_manager.settings_path).st_uid
             gid = os.stat(self.review_manager.settings_path).st_gid
@@ -202,8 +198,8 @@ class PRISMA(JsonSchemaMixin):
     ) -> None:
         """Update the data/prisma diagram"""
 
-        self.__export_csv(silent_mode=silent_mode)
-        self.__export_diagram(silent_mode=silent_mode)
+        self._export_csv(silent_mode=silent_mode)
+        self._export_diagram(silent_mode=silent_mode)
 
     def update_record_status_matrix(
         self,

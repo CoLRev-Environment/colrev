@@ -56,7 +56,7 @@ class Prescreen(colrev.operation.Operation):
             import_table_path=import_table_path,
         )
 
-    def __include_all_in_prescreen_precondition(self, *, records: dict) -> bool:
+    def _include_all_in_prescreen_precondition(self, *, records: dict) -> bool:
         if not [
             r
             for r in records.values()
@@ -85,7 +85,7 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.save_settings()
 
         records = self.review_manager.dataset.load_records_dict()
-        if not self.__include_all_in_prescreen_precondition(records=records):
+        if not self._include_all_in_prescreen_precondition(records=records):
             return
 
         selected_record_ids = [
@@ -100,19 +100,19 @@ class Prescreen(colrev.operation.Operation):
             )
         )
         endpoint.run_prescreen(records, [])
-        self.__print_stats(selected_record_ids=selected_record_ids)
+        self._print_stats(selected_record_ids=selected_record_ids)
 
     def include_records(self, *, ids: str) -> None:
         """Include records in the prescreen"""
 
-        self.__prescreen_records(ids=ids, include=True)
+        self._prescreen_records(ids=ids, include=True)
 
     def exclude_records(self, *, ids: str) -> None:
         """Exclude records in the prescreen"""
 
-        self.__prescreen_records(ids=ids, include=False)
+        self._prescreen_records(ids=ids, include=False)
 
-    def __prescreen_records(self, *, ids: str, include: bool) -> None:
+    def _prescreen_records(self, *, ids: str, include: bool) -> None:
         records = self.review_manager.dataset.load_records_dict()
         for record_id in ids.split(","):
             if record_id not in records:
@@ -212,7 +212,7 @@ class Prescreen(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def __prescreen_include_all(self, *, records: dict) -> None:
+    def _prescreen_include_all(self, *, records: dict) -> None:
         # pylint: disable=duplicate-code
         self.review_manager.logger.info("Prescreen-including all records")
         for record_dict in records.values():
@@ -227,7 +227,7 @@ class Prescreen(colrev.operation.Operation):
             manual_author=False,
         )
 
-    def __print_stats(self, *, selected_record_ids: list) -> None:
+    def _print_stats(self, *, selected_record_ids: list) -> None:
         records = self.review_manager.dataset.load_records_dict(header_only=True)
         prescreen_excluded = [
             r[Fields.ID]
@@ -304,7 +304,7 @@ class Prescreen(colrev.operation.Operation):
                 records={record.data[Fields.ID]: record.get_data()}, partial=True
             )
 
-    def __auto_include(self, *, records: dict) -> list:
+    def _auto_include(self, *, records: dict) -> list:
         selected_auto_include_ids = [
             r[Fields.ID]
             for r in records.values()
@@ -344,7 +344,7 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.settings.prescreen.prescreen_package_endpoints
         )
         if not prescreen_package_endpoints:
-            self.__prescreen_include_all(records=records)
+            self._prescreen_include_all(records=records)
             return
 
         for prescreen_package_endpoint in prescreen_package_endpoints:
@@ -380,9 +380,9 @@ class Prescreen(colrev.operation.Operation):
             ]
             endpoint.run_prescreen(records, split)  # type: ignore
 
-            selected_auto_include_ids = self.__auto_include(records=records)
+            selected_auto_include_ids = self._auto_include(records=records)
 
-            self.__print_stats(
+            self._print_stats(
                 selected_record_ids=selected_record_ids + selected_auto_include_ids
             )
 

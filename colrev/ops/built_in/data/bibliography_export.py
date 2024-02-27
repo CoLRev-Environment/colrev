@@ -7,7 +7,6 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import click
 import requests
@@ -20,9 +19,6 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 @dataclass
@@ -89,7 +85,7 @@ class BibliographyExport(JsonSchemaMixin):
         if not self.review_manager.in_ci_environment():
             self.review_manager.get_zotero_translation_service()
 
-    def __pybtex_conversion(self, *, selected_records: dict) -> None:
+    def _pybtex_conversion(self, *, selected_records: dict) -> None:
         self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
 
         if self.settings.bib_format is BibFormats.zotero:
@@ -109,7 +105,7 @@ class BibliographyExport(JsonSchemaMixin):
             msg=f"Create {self.settings.bib_format.name} bibliography",
         )
 
-    def __zotero_conversion(self, *, selected_records: dict) -> None:
+    def _zotero_conversion(self, *, selected_records: dict) -> None:
         self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
 
         # https://github.com/zotero/translation-server/blob/master/src/formats.js
@@ -231,10 +227,10 @@ class BibliographyExport(JsonSchemaMixin):
             # TBD: maybe resolve file paths (symlinks to absolute paths)?
 
         if any(self.settings.bib_format is x for x in self.ZOTERO_FORMATS):
-            self.__zotero_conversion(selected_records=selected_records)
+            self._zotero_conversion(selected_records=selected_records)
 
         elif any(self.settings.bib_format is x for x in self.PYBTEX_FORMATS):
-            self.__pybtex_conversion(selected_records=selected_records)
+            self._pybtex_conversion(selected_records=selected_records)
 
         else:
             self.review_manager.logger.info(

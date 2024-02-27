@@ -15,7 +15,7 @@ from colrev.constants import FieldValues
 TAG_RE = re.compile(r"<[a-z/][^<>]{0,12}>")
 
 
-def __get_year(*, item: dict) -> str:
+def _get_year(*, item: dict) -> str:
     year = "-1"
     try:
         if "published-print" in item:
@@ -33,7 +33,7 @@ def __get_year(*, item: dict) -> str:
 
 
 # pylint: disable=colrev-missed-constant-usage
-def __get_authors(*, item: dict) -> str:
+def _get_authors(*, item: dict) -> str:
     authors_strings = []
     for author in item.get("author", "NA"):
         a_string = ""
@@ -45,14 +45,14 @@ def __get_authors(*, item: dict) -> str:
     return " and ".join(authors_strings).replace(",,", ",")
 
 
-def __get_number(*, item: dict) -> str:
+def _get_number(*, item: dict) -> str:
     if "journal-issue" in item:
         if "issue" in item["journal-issue"]:
             item["issue"] = item["journal-issue"]["issue"]
     return str(item.get("issue", ""))
 
 
-def __get_fulltext(*, item: dict) -> str:
+def _get_fulltext(*, item: dict) -> str:
     fulltext_link = ""
     # Note : better use the doi-link resolution
     fulltext_link_l = [
@@ -64,7 +64,7 @@ def __get_fulltext(*, item: dict) -> str:
 
 
 # pylint: disable=colrev-missed-constant-usage
-def __item_to_record(*, item: dict) -> dict:
+def _item_to_record(*, item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
 
     if isinstance(item["title"], list):
@@ -89,19 +89,19 @@ def __item_to_record(*, item: dict) -> dict:
         item[Fields.BOOKTITLE] = "book"
         item[Fields.SERIES] = item.get("container-title", "")
 
-    item[Fields.AUTHOR] = __get_authors(item=item)
-    item[Fields.YEAR] = __get_year(item=item)
+    item[Fields.AUTHOR] = _get_authors(item=item)
+    item[Fields.YEAR] = _get_year(item=item)
     item[Fields.VOLUME] = str(item.get(Fields.VOLUME, ""))
-    item[Fields.NUMBER] = __get_number(item=item)
+    item[Fields.NUMBER] = _get_number(item=item)
     item[Fields.PAGES] = item.get("page", "").replace("-", "--")
     item[Fields.CITED_BY] = item.get("is-referenced-by-count", "")
     item[Fields.DOI] = item.get("DOI", "").upper()
-    item[Fields.FULLTEXT] = __get_fulltext(item=item)
+    item[Fields.FULLTEXT] = _get_fulltext(item=item)
 
     return item
 
 
-def __flag_retracts(*, record_dict: dict) -> dict:
+def _flag_retracts(*, record_dict: dict) -> dict:
     if "update-to" in record_dict:
         for update_item in record_dict["update-to"]:
             if update_item["type"] == "retraction":
@@ -111,7 +111,7 @@ def __flag_retracts(*, record_dict: dict) -> dict:
     return record_dict
 
 
-def __format_fields(*, record_dict: dict) -> dict:
+def _format_fields(*, record_dict: dict) -> dict:
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")
         # Note : some dois (and their provenance) contain html entities
@@ -133,7 +133,7 @@ def __format_fields(*, record_dict: dict) -> dict:
     return record_dict
 
 
-def __set_forthcoming(*, record_dict: dict) -> dict:
+def _set_forthcoming(*, record_dict: dict) -> dict:
     if not any(x in record_dict for x in ["published-print", "published"]) or not any(
         x in record_dict for x in [Fields.VOLUME, Fields.NUMBER]
     ):
@@ -143,7 +143,7 @@ def __set_forthcoming(*, record_dict: dict) -> dict:
     return record_dict
 
 
-def __remove_fields(*, record_dict: dict) -> dict:
+def _remove_fields(*, record_dict: dict) -> dict:
     # Drop empty and non-supported fields
     supported_fields = [
         Fields.ENTRYTYPE,
@@ -179,11 +179,11 @@ def json_to_record(*, item: dict) -> dict:
     """Convert a crossref item to a record dict"""
 
     try:
-        record_dict = __item_to_record(item=deepcopy(item))
-        record_dict = __set_forthcoming(record_dict=record_dict)
-        record_dict = __flag_retracts(record_dict=record_dict)
-        record_dict = __format_fields(record_dict=record_dict)
-        record_dict = __remove_fields(record_dict=record_dict)
+        record_dict = _item_to_record(item=deepcopy(item))
+        record_dict = _set_forthcoming(record_dict=record_dict)
+        record_dict = _flag_retracts(record_dict=record_dict)
+        record_dict = _format_fields(record_dict=record_dict)
+        record_dict = _remove_fields(record_dict=record_dict)
     except (IndexError, KeyError) as exc:
         raise colrev_exceptions.RecordNotParsableException(
             f"RecordNotParsableException: {exc}"

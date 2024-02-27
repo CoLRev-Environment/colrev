@@ -96,7 +96,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 source=self.search_source,
             )
 
-    def __remove_duplicates(self, *, records: dict) -> None:
+    def _remove_duplicates(self, *, records: dict) -> None:
         to_delete = []
         for record in records.values():
             if re.search(r"-\d{1,2}$", record[Fields.ID]):
@@ -138,7 +138,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
         references_types = {
             "JOUR": ENTRYTYPES.ARTICLE,
             "BOOK": ENTRYTYPES.BOOK,
@@ -217,11 +217,11 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             )
             records = bib_loader.load_bib_file()
 
-            self.__remove_duplicates(records=records)
+            self._remove_duplicates(records=records)
             return records
 
         if self.search_source.filename.suffix == ".ris":
-            return self.__load_ris(load_operation)
+            return self._load_ris(load_operation)
 
         raise NotImplementedError
 

@@ -182,7 +182,7 @@ class Search(colrev.operation.Operation):
         input("Press enter to continue")
         self.review_manager.dataset.add_changes(path=source.filename)
 
-    def __get_search_sources(
+    def _get_search_sources(
         self, *, selection_str: Optional[str] = None
     ) -> list[colrev.settings.SearchSource]:
         sources_selected = self.sources
@@ -254,7 +254,7 @@ class Search(colrev.operation.Operation):
 
         return check_accepts
 
-    def __get_new_search_files(self) -> list[Path]:
+    def _get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
         files = [
@@ -275,7 +275,7 @@ class Search(colrev.operation.Operation):
 
         return sorted(list(set(files)))
 
-    def __get_heuristics_results_list(
+    def _get_heuristics_results_list(
         self,
         *,
         filepath: Path,
@@ -316,7 +316,7 @@ class Search(colrev.operation.Operation):
                 continue
         return results_list
 
-    def __apply_source_heuristics(
+    def _apply_source_heuristics(
         self, *, filepath: Path, search_sources: dict
     ) -> list[typing.Dict]:
         """Apply heuristics to identify source"""
@@ -327,7 +327,7 @@ class Search(colrev.operation.Operation):
         except UnicodeDecodeError:
             pass
 
-        results_list = self.__get_heuristics_results_list(
+        results_list = self._get_heuristics_results_list(
             filepath=filepath,
             search_sources=search_sources,
             data=data,
@@ -388,7 +388,7 @@ class Search(colrev.operation.Operation):
 
         # pylint: disable=redefined-outer-name
 
-        new_search_files = self.__get_new_search_files()
+        new_search_files = self._get_new_search_files()
         if not new_search_files:
             self.review_manager.logger.info("No new search files...")
             return {}
@@ -413,7 +413,7 @@ class Search(colrev.operation.Operation):
                 print()
             self.review_manager.logger.info(f"Discover new source: {sfp_name}")
 
-            heuristic_results[sfp_name] = self.__apply_source_heuristics(
+            heuristic_results[sfp_name] = self._apply_source_heuristics(
                 filepath=sfp_name,
                 search_sources=search_sources,
             )
@@ -445,7 +445,7 @@ class Search(colrev.operation.Operation):
         # Reload the settings because the search sources may have been updated
         self.review_manager.settings = self.review_manager.load_settings()
 
-        for source in self.__get_search_sources(selection_str=selection_str):
+        for source in self._get_search_sources(selection_str=selection_str):
             endpoint_dict = self.package_manager.load_packages(
                 package_type=colrev.env.package_manager.PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],

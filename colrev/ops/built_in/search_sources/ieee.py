@@ -194,7 +194,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:
-            self.__run_api_search(ieee_feed=ieee_feed, rerun=rerun)
+            self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
@@ -205,7 +205,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __get_api_key(self) -> str:
+    def _get_api_key(self) -> str:
         api_key = self.review_manager.environment_manager.get_settings_by_key(
             self.SETTINGS["api_key"]
         )
@@ -217,8 +217,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return api_key
 
     # pylint: disable=colrev-missed-constant-usage
-    def __run_api_query(self) -> colrev.ops.built_in.search_sources.ieee_api.XPLORE:
-        api_key = self.__get_api_key()
+    def _run_api_query(self) -> colrev.ops.built_in.search_sources.ieee_api.XPLORE:
+        api_key = self._get_api_key()
         query = colrev.ops.built_in.search_sources.ieee_api.XPLORE(api_key)
         query.dataType("json")
         query.dataFormat("object")
@@ -242,10 +242,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 method(value)
         return query
 
-    def __run_api_search(
+    def _run_api_search(
         self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
     ) -> None:
-        query = self.__run_api_query()
+        query = self._run_api_query()
         query.startRecord = 1
         response = query.callAPI()
         while "articles" in response:
@@ -254,7 +254,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
             for article in articles:
                 prev_record_dict_version: dict = {}
-                record_dict = self.__create_record_dict(article)
+                record_dict = self._create_record_dict(article)
                 record = colrev.record.Record(data=record_dict)
                 added = ieee_feed.add_record(record=record)
 
@@ -282,7 +282,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         ieee_feed.save_feed_file()
         self.review_manager.dataset.save_records_dict(records=records)
 
-    def __update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
+    def _update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
         if "start_page" in article:
             record_dict[Fields.PAGES] = article.pop("start_page")
             if "end_page" in article:
@@ -305,7 +305,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 article["index_terms"]["author_terms"]["terms"]
             )
 
-    def __create_record_dict(self, article: dict) -> dict:
+    def _create_record_dict(self, article: dict) -> dict:
         record_dict = {Fields.ID: article["article_number"]}
         # self.review_manager.p_printer.pprint(article)
 
@@ -328,7 +328,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 continue
             record_dict[rec_field] = record_dict.pop(api_field)
 
-        self.__update_special_case_fields(record_dict=record_dict, article=article)
+        self._update_special_case_fields(record_dict=record_dict, article=article)
 
         return record_dict
 
@@ -342,7 +342,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def __load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
+    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
         entrytype_map = {
             "JOUR": ENTRYTYPES.ARTICLE,
             "CONF": ENTRYTYPES.INPROCEEDINGS,
@@ -392,7 +392,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         return records
 
-    def __fix_csv_records(self, *, records: dict) -> None:
+    def _fix_csv_records(self, *, records: dict) -> None:
         for record in records.values():
             record[Fields.FULLTEXT] = record.pop("pdf_link")
             if "article_citation_count" in record:
@@ -420,7 +420,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            return self.__load_ris(load_operation)
+            return self._load_ris(load_operation)
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
@@ -434,7 +434,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                     "="
                 )[-1]
             records = table_loader.convert_to_records(entries=table_entries)
-            self.__fix_csv_records(records=records)
+            self._fix_csv_records(records=records)
             return records
 
         raise NotImplementedError

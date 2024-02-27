@@ -8,7 +8,6 @@ import shutil
 import typing
 from importlib.metadata import version
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import git
 from pybtex.database.input import bibtex
@@ -20,9 +19,6 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 
 # pylint: disable=too-few-public-methods
@@ -48,21 +44,21 @@ class Upgrade(colrev.operation.Operation):
         review_manager.force_mode = prev_force_mode
         self.review_manager = review_manager
 
-    def __move_file(self, source: Path, target: Path) -> None:
+    def _move_file(self, source: Path, target: Path) -> None:
         target.parent.mkdir(exist_ok=True, parents=True)
         if source.is_file():
             shutil.move(str(source), self.review_manager.path / target)
             self.repo.index.remove([str(source)])
             self.repo.index.add([str(target)])
 
-    def __load_settings_dict(self) -> dict:
+    def _load_settings_dict(self) -> dict:
         if not self.review_manager.settings_path.is_file():
             raise colrev_exceptions.CoLRevException()
         with open(self.review_manager.settings_path, encoding="utf-8") as file:
             settings = json.load(file)
         return settings
 
-    def __save_settings(self, settings: dict) -> None:
+    def _save_settings(self, settings: dict) -> None:
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
         self.repo.index.add(["settings.json"])
@@ -103,7 +99,7 @@ class Upgrade(colrev.operation.Operation):
             # Git repository has no initial commit
             return
 
-        settings = self.__load_settings_dict()
+        settings = self._load_settings_dict()
         settings_version_str = settings["project"]["colrev_version"]
 
         settings_version = CoLRevVersion(settings_version_str)
@@ -117,81 +113,81 @@ class Upgrade(colrev.operation.Operation):
             {
                 "version": CoLRevVersion("0.7.0"),
                 "target_version": CoLRevVersion("0.7.1"),
-                "script": self.__migrate_0_7_0,
+                "script": self._migrate_0_7_0,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.7.1"),
                 "target_version": CoLRevVersion("0.8.0"),
-                "script": self.__migrate_0_7_1,
+                "script": self._migrate_0_7_1,
                 "released": True,
             },
             # Note : we may add a flag to update to pre-released versions
             {
                 "version": CoLRevVersion("0.8.0"),
                 "target_version": CoLRevVersion("0.8.1"),
-                "script": self.__migrate_0_8_0,
+                "script": self._migrate_0_8_0,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.8.1"),
                 "target_version": CoLRevVersion("0.8.2"),
-                "script": self.__migrate_0_8_1,
+                "script": self._migrate_0_8_1,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.8.2"),
                 "target_version": CoLRevVersion("0.8.3"),
-                "script": self.__migrate_0_8_2,
+                "script": self._migrate_0_8_2,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.8.3"),
                 "target_version": CoLRevVersion("0.8.4"),
-                "script": self.__migrate_0_8_3,
+                "script": self._migrate_0_8_3,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.8.4"),
                 "target_version": CoLRevVersion("0.9.0"),
-                "script": self.__migrate_0_8_4,
+                "script": self._migrate_0_8_4,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.9.0"),
                 "target_version": CoLRevVersion("0.9.1"),
-                "script": self.__migrate_0_9_1,
+                "script": self._migrate_0_9_1,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.9.2"),
                 "target_version": CoLRevVersion("0.9.3"),
-                "script": self.__migrate_0_9_3,
+                "script": self._migrate_0_9_3,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.10.0"),
                 "target_version": CoLRevVersion("0.10.1"),
-                "script": self.__migrate_0_10_1,
+                "script": self._migrate_0_10_1,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.10.1"),
                 "target_version": CoLRevVersion("0.10.2"),
-                "script": self.__migrate_0_10_2,
+                "script": self._migrate_0_10_2,
                 "released": True,
             },
             {
                 "version": CoLRevVersion("0.10.2"),
                 "target_version": CoLRevVersion("0.11.0"),
-                "script": self.__migrate_0_11_0,
+                "script": self._migrate_0_11_0,
                 "released": True,
             },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
         # Note: we should always update the colrev_version in settings.json because the
-        # checker.__check_software requires the settings version and
+        # checker._check_software requires the settings version and
         # the installed version to be identical
 
         # skipping_versions_before_settings_version = True
@@ -213,7 +209,7 @@ class Upgrade(colrev.operation.Operation):
                 "Upgrade to: %s", migrator["target_version"]
             )
             if migrator["released"]:
-                self.__print_release_notes(selected_version=migrator["target_version"])
+                self._print_release_notes(selected_version=migrator["target_version"])
 
             updated = migration_script()
             if not updated:
@@ -223,9 +219,9 @@ class Upgrade(colrev.operation.Operation):
             print("migration not run")
             return
 
-        settings = self.__load_settings_dict()
+        settings = self._load_settings_dict()
         settings["project"]["colrev_version"] = str(installed_colrev_version)
-        self.__save_settings(settings)
+        self._save_settings(settings)
 
         if self.repo.is_dirty():
             msg = f"Upgrade to CoLRev {installed_colrev_version}"
@@ -236,7 +232,7 @@ class Upgrade(colrev.operation.Operation):
                 msg=msg,
             )
 
-    def __print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
+    def _print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("../CHANGELOG.md")
         )
@@ -256,7 +252,7 @@ class Upgrade(colrev.operation.Operation):
             print(f"{Colors.ORANGE}No release notes")
         print(f"{Colors.END}")
 
-    def __migrate_0_7_0(self) -> bool:
+    def _migrate_0_7_0(self) -> bool:
         pre_commit_contents = Path(".pre-commit-config.yaml").read_text(
             encoding="utf-8"
         )
@@ -270,7 +266,7 @@ class Upgrade(colrev.operation.Operation):
         self.repo.index.add([".pre-commit-config.yaml"])
         return self.repo.is_dirty()
 
-    def __migrate_0_7_1(self) -> bool:
+    def _migrate_0_7_1(self) -> bool:
         settings_content = (self.review_manager.path / Path("settings.json")).read_text(
             encoding="utf-8"
         )
@@ -285,20 +281,18 @@ class Upgrade(colrev.operation.Operation):
             self.review_manager.settings.project.delay_automated_processing = False
         self.review_manager.save_settings()
 
-        self.__move_file(
-            source=Path("data/paper.md"), target=Path("data/data/paper.md")
-        )
-        self.__move_file(
+        self._move_file(source=Path("data/paper.md"), target=Path("data/data/paper.md"))
+        self._move_file(
             source=Path("data/APA-7.docx"), target=Path("data/data/APA-7.docx")
         )
-        self.__move_file(
+        self._move_file(
             source=Path("data/non_sample_references.bib"),
             target=Path("data/data/non_sample_references.bib"),
         )
 
         return self.repo.is_dirty()
 
-    def __migrate_0_8_0(self) -> bool:
+    def _migrate_0_8_0(self) -> bool:
         Path(".github/workflows/").mkdir(exist_ok=True, parents=True)
 
         if "colrev/curated_metadata" in str(self.review_manager.path):
@@ -324,7 +318,7 @@ class Upgrade(colrev.operation.Operation):
         self.repo.index.add([".github/workflows/pre-commit.yml"])
         return self.repo.is_dirty()
 
-    def __migrate_0_8_1(self) -> bool:
+    def _migrate_0_8_1(self) -> bool:
         Path(".github/workflows/").mkdir(exist_ok=True, parents=True)
         if "colrev/curated_metadata" in str(self.review_manager.path):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
@@ -341,13 +335,13 @@ class Upgrade(colrev.operation.Operation):
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
 
-        settings = self.__load_settings_dict()
+        settings = self._load_settings_dict()
         settings["project"]["auto_upgrade"] = True
-        self.__save_settings(settings)
+        self._save_settings(settings)
 
         return self.repo.is_dirty()
 
-    def __migrate_0_8_2(self) -> bool:
+    def _migrate_0_8_2(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
 
         for record_dict in tqdm(records.values()):
@@ -367,9 +361,9 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_8_3(self) -> bool:
+    def _migrate_0_8_3(self) -> bool:
         # pylint: disable=too-many-branches
-        settings = self.__load_settings_dict()
+        settings = self._load_settings_dict()
         settings["prep"]["defects_to_ignore"] = []
         if "curated_metadata" in str(self.review_manager.path):
             settings["prep"]["defects_to_ignore"] = [
@@ -385,7 +379,7 @@ class Upgrade(colrev.operation.Operation):
                 for x in p_round["prep_package_endpoints"]
                 if x["endpoint"] != "colrev.global_ids_consistency_check"
             ]
-        self.__save_settings(settings)
+        self._save_settings(settings)
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.review_manager.path), force_mode=True
         )
@@ -430,7 +424,7 @@ class Upgrade(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(records=records)
         return self.repo.is_dirty()
 
-    def __migrate_0_8_4(self) -> bool:
+    def _migrate_0_8_4(self) -> bool:
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
             if Fields.EDITOR not in record.get(Fields.D_PROV, {}):
@@ -444,17 +438,17 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_9_1(self) -> bool:
-        settings = self.__load_settings_dict()
+    def _migrate_0_9_1(self) -> bool:
+        settings = self._load_settings_dict()
         for source in settings["sources"]:
             if "load_conversion_package_endpoint" in source:
                 del source["load_conversion_package_endpoint"]
-        self.__save_settings(settings)
+        self._save_settings(settings)
         return self.repo.is_dirty()
 
     # pylint: disable=too-many-branches
-    def __migrate_0_9_3(self) -> bool:
-        settings = self.__load_settings_dict()
+    def _migrate_0_9_3(self) -> bool:
+        settings = self._load_settings_dict()
         for source in settings["sources"]:
             if source["endpoint"] == "colrev.crossref":
                 if Fields.ISSN not in source["search_parameters"].get("scope", {}):
@@ -464,7 +458,7 @@ class Upgrade(colrev.operation.Operation):
                         source["search_parameters"]["scope"][Fields.ISSN]
                     ]
 
-        self.__save_settings(settings)
+        self._save_settings(settings)
 
         records = self.load_records_dict()
         for record_dict in records.values():
@@ -516,7 +510,7 @@ class Upgrade(colrev.operation.Operation):
         return self.repo.is_dirty()
 
     # pylint: disable=too-many-branches
-    def __migrate_0_10_1(self) -> bool:
+    def _migrate_0_10_1(self) -> bool:
         prep_replacements = {
             "colrev.open_alex_prep": "colrev.open_alex",
             "colrev.get_masterdata_from_dblp": "colrev.dblp",
@@ -529,7 +523,7 @@ class Upgrade(colrev.operation.Operation):
             "colrev.get_masterdata_from_local_index": "colrev.local_index",
         }
 
-        settings = self.__load_settings_dict()
+        settings = self._load_settings_dict()
         for prep_round in settings["prep"]["prep_rounds"]:
             for prep_package in prep_round["prep_package_endpoints"]:
                 for old, new in prep_replacements.items():
@@ -561,10 +555,10 @@ class Upgrade(colrev.operation.Operation):
             if source["search_type"] == "PDFS":
                 source["search_type"] = "FILES"
 
-        self.__save_settings(settings)
+        self._save_settings(settings)
         return self.repo.is_dirty()
 
-    def __migrate_0_10_2(self) -> bool:
+    def _migrate_0_10_2(self) -> bool:
         paper_md_path = Path("data/data/paper.md")
         if paper_md_path.is_file():
             paper_md_content = paper_md_path.read_text(encoding="utf-8")
@@ -576,8 +570,8 @@ class Upgrade(colrev.operation.Operation):
 
         return self.repo.is_dirty()
 
-    def __migrate_0_11_0(self) -> bool:
-        settings = self.__load_settings_dict()
+    def _migrate_0_11_0(self) -> bool:
+        settings = self._load_settings_dict()
         if settings["project"]["review_type"] == "curated_masterdata":
             settings["project"]["review_type"] = "colrev.curated_masterdata"
 
@@ -631,7 +625,7 @@ class Upgrade(colrev.operation.Operation):
                     {"endpoint": "colrev.colrev_curation"}
                 ] + p_round["prep_package_endpoints"]
 
-        self.__save_settings(settings)
+        self._save_settings(settings)
 
         records = self.load_records_dict()
         for record_dict in records.values():

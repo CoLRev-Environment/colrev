@@ -50,7 +50,7 @@ class Load(colrev.operation.Operation):
                 "See https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/load.html"
             )
 
-    def __get_currently_imported_origin_list(self) -> list:
+    def _get_currently_imported_origin_list(self) -> list:
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -92,7 +92,7 @@ class Load(colrev.operation.Operation):
                 f"{file} was changed (uncommitted file)"
             )
 
-    def __import_provenance(
+    def _import_provenance(
         self,
         *,
         record: colrev.record.Record,
@@ -127,7 +127,7 @@ class Load(colrev.operation.Operation):
             set_initial_import_provenance(record=record)
             record.run_quality_model(qm=self.quality_model)
 
-    def __import_record(self, *, record_dict: dict) -> dict:
+    def _import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
         record = colrev.record.Record(data=record_dict)
@@ -135,7 +135,7 @@ class Load(colrev.operation.Operation):
         # For better readability of the git diff:
         self.load_formatter.run(record=record)
 
-        self.__import_provenance(record=record)
+        self._import_provenance(record=record)
 
         if record.data[Fields.STATUS] in [
             colrev.record.RecordState.md_retrieved,
@@ -151,7 +151,7 @@ class Load(colrev.operation.Operation):
 
         return record.get_data()
 
-    def __prep_records_for_import(
+    def _prep_records_for_import(
         self, *, source_settings: colrev.settings.SearchSource, search_records: dict
     ) -> list:
         record_list = []
@@ -222,11 +222,11 @@ class Load(colrev.operation.Operation):
         """
         search_records = source.load(self)  # type: ignore
 
-        source_records_list = self.__prep_records_for_import(
+        source_records_list = self._prep_records_for_import(
             source_settings=source.search_source, search_records=search_records
         )
         if select_new_records:
-            imported_origins = self.__get_currently_imported_origin_list()
+            imported_origins = self._get_currently_imported_origin_list()
             source_records_list = [
                 x
                 for x in source_records_list
@@ -268,7 +268,7 @@ class Load(colrev.operation.Operation):
                 prefix=source.search_source.endpoint
             )
 
-            source_record = self.__import_record(record_dict=source_record)
+            source_record = self._import_record(record_dict=source_record)
 
             # Make sure not to replace existing records
             order = 0
@@ -292,36 +292,33 @@ class Load(colrev.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records=records)
-        self.__validate_load(source=source)
+        self._validate_load(source=source)
 
-        if source.search_source.to_import > 0:
-            if not keep_ids:
-                # Set IDs based on local_index
-                # (the same records are more likely to have the same ID on the same machine)
-                self.review_manager.logger.debug("Set IDs")
-                records = self.review_manager.dataset.set_ids(
-                    records=records,
-                    selected_ids=[
-                        r[Fields.ID] for r in source.search_source.source_records_list
-                    ],
-                )
+        if source.search_source.to_import == 0:
+            self.review_manager.logger.info("No additional records loaded")
+            if not self.review_manager.high_level_operation:
+                print()
 
-            self.review_manager.logger.info(
-                "New records loaded".ljust(38)
-                + f"{source.search_source.to_import} records"
+            return
+
+        if not keep_ids:
+            # Set IDs based on local_index
+            # (the same records are more likely to have the same ID on the same machine)
+            self.review_manager.logger.debug("Set IDs")
+            records = self.review_manager.dataset.set_ids(
+                records=records,
+                selected_ids=[
+                    r[Fields.ID] for r in source.search_source.source_records_list
+                ],
             )
-        else:
-            self.review_manager.logger.info("New additional records loaded")
 
+        self.review_manager.logger.info(
+            "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
+        )
         self.review_manager.dataset.add_setting_changes()
         self.review_manager.dataset.add_changes(path=source.search_source.filename)
-        if (
-            source.search_source.to_import == 0
-            and not self.review_manager.high_level_operation
-        ):
-            print()
 
-    def __add_source_to_settings(
+    def _add_source_to_settings(
         self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
     ) -> None:
         # Add to settings (if new filename)
@@ -366,10 +363,10 @@ class Load(colrev.operation.Operation):
 
         return sources
 
-    def __validate_load(
+    def _validate_load(
         self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
     ) -> None:
-        imported_origins = self.__get_currently_imported_origin_list()
+        imported_origins = self._get_currently_imported_origin_list()
         imported = len(imported_origins) - source.search_source.len_before
 
         if imported == source.search_source.to_import:
@@ -409,7 +406,7 @@ class Load(colrev.operation.Operation):
                 f"{Colors.RED}Records additionally imported: {additional_origins}{Colors.END}"
             )
 
-    def __create_load_commit(self, source: colrev.settings.SearchSource) -> None:
+    def _create_load_commit(self, source: colrev.settings.SearchSource) -> None:
         git_repo = self.review_manager.dataset.get_repo()
         stashed = "No local changes to save" != git_repo.git.stash(
             "push", "--keep-index"
@@ -440,9 +437,9 @@ class Load(colrev.operation.Operation):
         for source in self.load_active_sources():
             try:
                 self.review_manager.logger.info(f"Load {source.search_source.filename}")
-                self.__add_source_to_settings(source=source)
+                self._add_source_to_settings(source=source)
                 self.load_source_records(source=source, keep_ids=keep_ids)
-                self.__create_load_commit(source=source)
+                self._create_load_commit(source=source)
 
             except colrev_exceptions.ImportException as exc:
                 print(exc)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -16,8 +15,6 @@ import colrev.ops.search_sources
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -50,7 +47,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         self.headers = {"user-agent": f"{__name__} (mailto:{email})"}
         self.session = prep_operation.review_manager.get_cached_session()
 
-    def __get_record_from_item(
+    def _get_record_from_item(
         self, *, item: dict, record_in: colrev.record.PrepRecord
     ) -> colrev.record.PrepRecord:
         # pylint: disable=too-many-branches
@@ -126,7 +123,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         ret_ent.raise_for_status()
         item = json.loads(ret_ent.text)
 
-        record = self.__get_record_from_item(item=item, record_in=record_in)
+        record = self._get_record_from_item(item=item, record_in=record_in)
         record.add_provenance_all(source=record_retrieval_url)
 
         return record

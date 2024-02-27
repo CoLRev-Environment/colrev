@@ -10,16 +10,12 @@ import tempfile
 from importlib.metadata import version
 from pathlib import Path
 from typing import Optional
-from typing import TYPE_CHECKING
 
 import git
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 
 class Commit:
@@ -28,7 +24,7 @@ class Commit:
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
 
-    __temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+    _temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -44,8 +40,8 @@ class Commit:
         self.manual_author = manual_author
 
         self.msg = msg
-        self.script_name = self.__parse_script_name(script_name=script_name)
-        self.saved_args = self.__parse_saved_args(saved_args=saved_args)
+        self.script_name = self._parse_script_name(script_name=script_name)
+        self.saved_args = self._parse_saved_args(saved_args=saved_args)
         self.tree_hash = ""
 
         self.last_commit_sha = ""
@@ -85,9 +81,9 @@ class Commit:
                     self.ext_script_name = "unknown"
                     self.ext_script_version = "unknown"
 
-        self.__temp_path.mkdir(exist_ok=True, parents=True)
+        self._temp_path.mkdir(exist_ok=True, parents=True)
 
-    def __parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
+    def _parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
         saved_args_str = ""
         if saved_args is not None:
             for key, value in saved_args.items():
@@ -101,7 +97,7 @@ class Commit:
 
         return saved_args_str
 
-    def __parse_script_name(self, *, script_name: str) -> str:
+    def _parse_script_name(self, *, script_name: str) -> str:
         if script_name == "MANUAL":
             script_name = "Commit created manually or by external script"
         elif " " in script_name:
@@ -110,13 +106,13 @@ class Commit:
             )
         return script_name
 
-    def __get_version_flag(self) -> str:
+    def _get_version_flag(self) -> str:
         flag = ""
         if "dirty" in version("colrev"):
             flag = "*"
         return flag
 
-    def __get_commit_report_header(self) -> str:
+    def _get_commit_report_header(self) -> str:
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_header.txt"
         )
@@ -124,7 +120,7 @@ class Commit:
 
         return content
 
-    def __get_commit_report_details(self) -> str:
+    def _get_commit_report_details(self) -> str:
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_details.txt"
         )
@@ -132,7 +128,7 @@ class Commit:
 
         return content
 
-    def __get_detailed_processing_report(self) -> str:
+    def _get_detailed_processing_report(self) -> str:
         processing_report = ""
         if self.review_manager.report_path.is_file():
             # Reformat
@@ -144,7 +140,7 @@ class Commit:
             ]
 
             with tempfile.NamedTemporaryFile(
-                dir=self.__temp_path, mode="r+b", delete=False
+                dir=self._temp_path, mode="r+b", delete=False
             ) as temp:
                 with open(self.review_manager.report_path, "r+b") as file:
                     shutil.copyfileobj(file, temp)  # type: ignore
@@ -189,12 +185,12 @@ class Commit:
             processing_report = "\nProcessing report\n" + "".join(processing_report)
         return processing_report
 
-    def __get_commit_report(self) -> str:
+    def _get_commit_report(self) -> str:
         status_operation = self.review_manager.get_status_operation()
 
-        report = self.__get_commit_report_header()
+        report = self._get_commit_report_header()
         report += status_operation.get_review_status_report(colors=False)
-        report += self.__get_commit_report_details()
+        report += self._get_commit_report_details()
 
         return report
 
@@ -221,9 +217,9 @@ class Commit:
             self.tree_hash = self.review_manager.dataset.get_tree_hash()
             self.msg = (
                 self.msg
-                + self.__get_version_flag()
-                + self.__get_commit_report()
-                + self.__get_detailed_processing_report()
+                + self._get_version_flag()
+                + self._get_commit_report()
+                + self._get_detailed_processing_report()
             )
             self.review_manager.dataset.create_commit(
                 msg=self.msg,
@@ -244,6 +240,6 @@ class Commit:
 
     def update_report(self, *, msg_file: Path) -> None:
         """Update the report"""
-        report = self.__get_commit_report()
+        report = self._get_commit_report()
         with open(msg_file, "a", encoding="utf8") as file:
             file.write(report)

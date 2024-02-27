@@ -23,11 +23,11 @@ class Trace(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.check,
         )
 
-    def __lpad_multiline(self, *, s: str, lpad: int) -> str:
+    def _lpad_multiline(self, *, s: str, lpad: int) -> str:
         lines = s.splitlines()
         return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
-    def __print_record_changes(
+    def _print_record_changes(
         self,
         *,
         commit: git.objects.commit.Commit,
@@ -56,7 +56,7 @@ class Trace(colrev.operation.Operation):
                 if diff[0] == "add":
                     print(
                         Colors.GREEN
-                        + self.__lpad_multiline(
+                        + self._lpad_multiline(
                             s=self.review_manager.p_printer.pformat(diff),
                             lpad=5,
                         )
@@ -65,7 +65,7 @@ class Trace(colrev.operation.Operation):
                 if diff[0] == "change":
                     print(
                         Colors.ORANGE
-                        + self.__lpad_multiline(
+                        + self._lpad_multiline(
                             s=self.review_manager.p_printer.pformat(diff),
                             lpad=5,
                         )
@@ -74,7 +74,7 @@ class Trace(colrev.operation.Operation):
                 if diff[0] == "delete":
                     print(
                         Colors.RED
-                        + self.__lpad_multiline(
+                        + self._lpad_multiline(
                             s=self.review_manager.p_printer.pformat(diff),
                             lpad=5,
                         )
@@ -126,7 +126,7 @@ class Trace(colrev.operation.Operation):
                     print(f"record {record_id} not in commit.")
                 continue
 
-            prev_record = self.__print_record_changes(
+            prev_record = self._print_record_changes(
                 commit=commit,
                 records_dict=records_dict,
                 record_id=record_id,

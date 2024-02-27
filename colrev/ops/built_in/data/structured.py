@@ -7,7 +7,6 @@ import typing
 from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -20,9 +19,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 # an option: https://pypi.org/project/csv-schema/
@@ -60,7 +56,7 @@ class StructuredData(JsonSchemaMixin):
 
     settings_class = StructuredDataSettings
 
-    __FULL_DATA_FIELD_EXPLANATION = """Explanation: Data fields are used in the coding tables.
+    _FULL_DATA_FIELD_EXPLANATION = """Explanation: Data fields are used in the coding tables.
 Example 1:
     - name           : summary
     - explanation    : Brief summary of the principal findings
@@ -139,14 +135,14 @@ Example 2:
 
         # Note : missing IDs are added through update_data
 
-    def __set_fields(self) -> None:
+    def _set_fields(self) -> None:
         self.review_manager.logger.info("Add fields for data extraction")
         try:
             _ = self.review_manager.dataset.get_repo()
         except GitCommandError:
             return
 
-        print(self.__FULL_DATA_FIELD_EXPLANATION)
+        print(self._FULL_DATA_FIELD_EXPLANATION)
         while "y" == input("Add a data field [y,n]?"):
             short_name = input("Provide a short name: ")
             explanation = input("Provide a short explanation: ")
@@ -190,7 +186,7 @@ Example 2:
             synthesized_record_status_matrix: dict,
         ) -> typing.Dict:
             if not self.data_path.is_file():
-                self.__set_fields()
+                self._set_fields()
 
                 field_names = [f["name"] for f in self.settings.fields]
                 data_df = pd.DataFrame([], columns=[Fields.ID] + field_names)

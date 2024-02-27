@@ -88,7 +88,7 @@ class ReviewManager:
         # Note : mostly for formatting output
 
         if navigate_to_home_dir:
-            self.path = self.__get_project_home_dir(path_str=path_str)
+            self.path = self._get_project_home_dir(path_str=path_str)
         else:
             self.path = Path.cwd()
 
@@ -126,7 +126,7 @@ class ReviewManager:
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             # run update before settings/data (which may require changes/fail without update)
             if not skip_upgrade:
-                self.__check_update()
+                self._check_update()
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
 
@@ -177,7 +177,7 @@ class ReviewManager:
             review_manager=self, level=logging.INFO
         ), colrev.logger.setup_logger(review_manager=self, level=logging.INFO)
 
-    def __check_update(self) -> None:
+    def _check_update(self) -> None:
         # Once the following has run for all repositories,
         # it should only be called when the versions differ.
         # last_version, current_version = self.get_colrev_versions()
@@ -189,7 +189,7 @@ class ReviewManager:
         """Get the committer name and email"""
         return self.environment_manager.get_name_mail_from_git()
 
-    def __get_project_home_dir(self, *, path_str: Optional[str] = None) -> Path:
+    def _get_project_home_dir(self, *, path_str: Optional[str] = None) -> Path:
         if path_str:
             original_dir = Path(path_str)
         else:

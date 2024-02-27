@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -18,9 +17,6 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.screen
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -42,13 +38,13 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         self.screen_operation = screen_operation
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.__i = 0
-        self.__pad = 0
-        self.__stat_len = 0
+        self._i = 0
+        self._pad = 0
+        self._stat_len = 0
         self.screening_criteria: dict = {}
         self.criteria_available = 0
 
-    def __print_screening_criteria(self) -> None:
+    def _print_screening_criteria(self) -> None:
         if not self.review_manager.settings.screen.criteria:
             return
         print("\nIn the screen, the following criteria are applied:\n")
@@ -70,7 +66,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             if criterion_settings.comment is not None:
                 print(f"   {criterion_settings.comment}")
 
-    def __screen_with_criteria_print_overall_decision(
+    def _screen_with_criteria_print_overall_decision(
         self, *, record: colrev.record.Record, screen_inclusion: bool
     ) -> None:
         if screen_inclusion:
@@ -84,7 +80,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 f"{Colors.RED}exclude{Colors.END}"
             )
 
-    def __screen_record_with_criteria(
+    def _screen_record_with_criteria(
         self,
         *,
         record: colrev.record.Record,
@@ -132,7 +128,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
 
         screen_inclusion = all(decision == "in" for _, decision in decisions.items())
 
-        self.__screen_with_criteria_print_overall_decision(
+        self._screen_with_criteria_print_overall_decision(
             record=record, screen_inclusion=screen_inclusion
         )
 
@@ -144,11 +140,11 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             record=record,
             screen_inclusion=screen_inclusion,
             screening_criteria=c_field,
-            PAD=self.__pad,
+            PAD=self._pad,
         )
         return "screened"
 
-    def __screen_record_without_criteria(
+    def _screen_record_without_criteria(
         self,
         *,
         record: colrev.record.Record,
@@ -158,7 +154,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         decision, ret = "NA", "NA"
         while ret not in ["y", "n", "q", "s"]:
             ret = input(
-                f"({self.__i}/{self.__stat_len}) "
+                f"({self._i}/{self._stat_len}) "
                 "Include [y,n,q,s for yes, no, quit, skip/screen later]? "
             )
             if ret == "q":
@@ -186,11 +182,11 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 record=record,
                 screen_inclusion=False,
                 screening_criteria="NA",
-                PAD=self.__pad,
+                PAD=self._pad,
             )
         return "screened"
 
-    def __screen_record(
+    def _screen_record(
         self,
         *,
         record_dict: dict,
@@ -211,9 +207,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             except colrev_exceptions.TEIException:
                 pass
 
-        self.__i += 1
+        self._i += 1
         print("\n\n")
-        print(f"Record {self.__i} (of {self.__stat_len})")
+        print(f"Record {self._i} (of {self._stat_len})")
         print()
         print(record.data["ID"])
         print()
@@ -223,30 +219,30 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             print(record.data["abstract"])
 
         if self.criteria_available:
-            ret = self.__screen_record_with_criteria(
+            ret = self._screen_record_with_criteria(
                 record=record,
                 abstract_from_tei=abstract_from_tei,
             )
 
         else:
-            ret = self.__screen_record_without_criteria(
+            ret = self._screen_record_without_criteria(
                 record=record,
                 abstract_from_tei=abstract_from_tei,
             )
 
         return ret
 
-    def __screen_cli(self, split: list) -> dict:
+    def _screen_cli(self, split: list) -> dict:
         screen_data = self.screen_operation.get_data()
-        self.__pad = screen_data["PAD"]
-        self.__stat_len = screen_data["nr_tasks"]
+        self._pad = screen_data["PAD"]
+        self._stat_len = screen_data["nr_tasks"]
 
-        if 0 == self.__stat_len:
+        if 0 == self._stat_len:
             self.review_manager.logger.info("No records to prescreen")
 
         records = self.review_manager.dataset.load_records_dict()
 
-        self.__print_screening_criteria()
+        self._print_screening_criteria()
 
         self.screening_criteria = (
             util_cli_screen.get_screening_criteria_from_user_input(
@@ -259,7 +255,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             if record_dict[Fields.ID] not in split:
                 continue
 
-            ret = self.__screen_record(record_dict=record_dict)
+            ret = self._screen_record(record_dict=record_dict)
 
             if ret == "skip":
                 continue
@@ -267,11 +263,11 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 self.review_manager.logger.info("Stop screen")
                 break
 
-        if self.__stat_len == 0:
+        if self._stat_len == 0:
             self.review_manager.logger.info("No records to screen")
             return records
 
-        if self.__i < self.__stat_len and split:  # if records remain for screening
+        if self._i < self._stat_len and split:  # if records remain for screening
             if input("Create commit (y/n)?") != "y":
                 return records
 
@@ -281,6 +277,6 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on a cli"""
 
-        records = self.__screen_cli(split)
+        records = self._screen_cli(split)
 
         return records

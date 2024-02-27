@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import bib_dedupe.cluster
 import pandas as pd
@@ -18,8 +17,6 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
 
 # pylint: disable=too-few-public-methods
 

@@ -27,7 +27,7 @@ class Validate(colrev.operation.Operation):
 
         self.cpus = 4
 
-    def __load_prior_records_dict(self, *, target_commit: str) -> dict:
+    def _load_prior_records_dict(self, *, target_commit: str) -> dict:
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = str(
@@ -61,11 +61,11 @@ class Validate(colrev.operation.Operation):
             return prior_records_dict
         return {}
 
-    def __get_prep_prescreen_exclusions(self, *, records: dict) -> list:
+    def _get_prep_prescreen_exclusions(self, *, records: dict) -> list:
         self.review_manager.logger.debug("Get prescreen exclusions...")
 
-        target_commit = self.__get_target_commit(scope="HEAD~1")
-        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+        target_commit = self._get_target_commit(scope="HEAD~1")
+        prior_records_dict = self._load_prior_records_dict(target_commit=target_commit)
         prep_prescreen_exclusions = []
         for record_dict in records.values():
             for prior_record_dict in prior_records_dict.values():
@@ -82,7 +82,7 @@ class Validate(colrev.operation.Operation):
 
         return prep_prescreen_exclusions
 
-    def __get_change_diff(self, *, records: dict, origin_records: dict) -> list:
+    def _get_change_diff(self, *, records: dict, origin_records: dict) -> list:
         self.review_manager.logger.debug("Calculating preparation differences...")
 
         change_diff = []
@@ -139,13 +139,13 @@ class Validate(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         validation_details["prep_prescreen_exclusions"] = (
-            self.__get_prep_prescreen_exclusions(records=records)
+            self._get_prep_prescreen_exclusions(records=records)
         )
-        validation_details["prep"] = self.__get_change_diff(
+        validation_details["prep"] = self._get_change_diff(
             records=records, origin_records=origin_records
         )
 
-    def __export_merge_candidates_file(self, *, records: list[dict]) -> None:
+    def _export_merge_candidates_file(self, *, records: list[dict]) -> None:
         merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
         merge_candidates_file.parent.mkdir(exist_ok=True, parents=True)
 
@@ -183,14 +183,14 @@ class Validate(colrev.operation.Operation):
         # at some point, we may allow users to validate
         # all duplicates/non-duplicates (across commits)
 
-        # if self.__gids_conflict(main_record=main_record, dupe_record=dupe_record):
+        # if self._gids_conflict(main_record=main_record, dupe_record=dupe_record):
         #     self.review_manager.logger.info(
         #         "Prevented merge with conflicting global IDs: "
         #         f"{main_record.data[Fields.ID]} - {dupe_record.data[Fields.ID]}"
         #     )
         #     return True
 
-        # def __gids_conflict(
+        # def _gids_conflict(
         #     self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
         # ) -> bool:
         #     gid_conflict = False
@@ -202,7 +202,7 @@ class Validate(colrev.operation.Operation):
 
         #     return gid_conflict
 
-        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+        prior_records_dict = self._load_prior_records_dict(target_commit=target_commit)
 
         change_diff = []
         merged_records = False
@@ -252,7 +252,7 @@ class Validate(colrev.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        self.__export_merge_candidates_file(records=records)
+        self._export_merge_candidates_file(records=records)
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)
@@ -319,7 +319,7 @@ class Validate(colrev.operation.Operation):
 
         return validation_details
 
-    def __set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
+    def _set_scope_based_on_target_commit(self, *, target_commit: str) -> str:
         # pylint: disable=too-many-branches
 
         if not target_commit:
@@ -467,7 +467,7 @@ class Validate(colrev.operation.Operation):
 
         return merge_validation
 
-    def __get_target_commit(self, *, scope: str) -> str:
+    def _get_target_commit(self, *, scope: str) -> str:
         """Get the commit from commit sha or tree hash"""
 
         commit = ""
@@ -509,7 +509,7 @@ class Validate(colrev.operation.Operation):
             )
         return commit
 
-    def __deduplicated_records(
+    def _deduplicated_records(
         self, *, records: list[dict], prior_records_dict: dict
     ) -> bool:
         return {",".join(sorted(x)) for x in [r[Fields.ORIGIN] for r in records]} != {
@@ -517,7 +517,7 @@ class Validate(colrev.operation.Operation):
             for x in [r[Fields.ORIGIN] for r in prior_records_dict.values()]
         }
 
-    def __get_contributor_validation(self, *, contributor: str) -> dict:
+    def _get_contributor_validation(self, *, contributor: str) -> dict:
         validation_details: typing.Dict[str, typing.Any] = {"contributor_commits": []}
         valid_options = []
         git_repo = self.review_manager.dataset.get_repo()
@@ -562,7 +562,7 @@ class Validate(colrev.operation.Operation):
             )
         return validation_details
 
-    def __get_relative_commit(self, target_commit: str) -> str:
+    def _get_relative_commit(self, target_commit: str) -> str:
         git_repo = self.review_manager.dataset.get_repo()
 
         relative_to_head = 0
@@ -588,9 +588,9 @@ class Validate(colrev.operation.Operation):
             and not re.match(r"[0-9a-f]{5,40}", scope)
             and "." != scope
         ):
-            return self.__get_contributor_validation(contributor=scope)
+            return self._get_contributor_validation(contributor=scope)
 
-        target_commit = self.__get_target_commit(scope=scope)
+        target_commit = self._get_target_commit(scope=scope)
 
         validation_details: typing.Dict[str, typing.Any] = {}
         if properties:
@@ -600,13 +600,13 @@ class Validate(colrev.operation.Operation):
             return validation_details
 
         if filter_setting == "all":
-            filter_setting = self.__set_scope_based_on_target_commit(
+            filter_setting = self._set_scope_based_on_target_commit(
                 target_commit=target_commit
             )
         if filter_setting == "general":
             validation_details["general"] = {
                 "commit": target_commit,
-                "commit_relative": self.__get_relative_commit(
+                "commit_relative": self._get_relative_commit(
                     target_commit=target_commit
                 ),
             }
@@ -621,13 +621,13 @@ class Validate(colrev.operation.Operation):
 
         if filter_setting in ["dedupe", "all"]:
             records = self.load_changed_records(target_commit=target_commit)
-            prior_records_dict = self.__load_prior_records_dict(
+            prior_records_dict = self._load_prior_records_dict(
                 target_commit=target_commit
             )
 
             # Note : the if-statement avoids time-consuming procedures when the
             # origin-sets have not changed (no duplicates merged)
-            if self.__deduplicated_records(
+            if self._deduplicated_records(
                 records=records, prior_records_dict=prior_records_dict
             ):
                 validation_details["dedupe"] = self.get_dedupe_change_for_validation(

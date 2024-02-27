@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.review_manager
 
 # pylint: disable=too-few-public-methods
 
@@ -61,13 +58,13 @@ class Corrections:
         self.local_index = self.review_manager.get_local_index()
         self.resources = self.review_manager.get_resources()
 
-    def __record_corrected(self, *, prior_r: dict, record_dict: dict) -> bool:
+    def _record_corrected(self, *, prior_r: dict, record_dict: dict) -> bool:
         return not all(
             prior_r.get(k, "NA") == record_dict.get(k, "NA")
             for k in self.essential_md_keys
         )
 
-    def __prep_for_change_item_creation(
+    def _prep_for_change_item_creation(
         self, *, original_record: dict, corrected_record: dict
     ) -> None:
         # Cast to string for persistence
@@ -85,7 +82,7 @@ class Corrections:
         # if Fields.DBLP_KEY in corrected_record:
         #     del corrected_record[Fields.DBLP_KEY]
 
-    def __create_change_item(
+    def _create_change_item(
         self,
         *,
         original_record: dict,
@@ -93,7 +90,7 @@ class Corrections:
     ) -> None:
         # pylint: disable=too-many-branches
 
-        self.__prep_for_change_item_creation(
+        self._prep_for_change_item_creation(
             original_record=original_record,
             corrected_record=corrected_record,
         )
@@ -213,16 +210,16 @@ class Corrections:
                 continue
 
             for prior_r in record_prior:
-                if self.__record_corrected(prior_r=prior_r, record_dict=record_dict):
+                if self._record_corrected(prior_r=prior_r, record_dict=record_dict):
                     corrected_record = record_dict.copy()
 
                     # original_record = (
-                    #     self.__get_original_record_from_index(prior_r=prior_r)
+                    #     self._get_original_record_from_index(prior_r=prior_r)
                     # )
                     # if not original_record:
                     #     continue
 
-                    self.__create_change_item(
+                    self._create_change_item(
                         original_record=prior_r,
                         corrected_record=corrected_record,
                     )

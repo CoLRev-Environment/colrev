@@ -43,7 +43,7 @@ class Advisor:
     ) -> None:
         self.review_manager = review_manager
 
-    def __append_merge_conflict_warning(
+    def _append_merge_conflict_warning(
         self, *, collaboration_instructions: dict, git_repo: git.Repo
     ) -> None:
         found_a_conflict = False
@@ -63,7 +63,7 @@ class Advisor:
             }
             collaboration_instructions["items"].append(item)
 
-    def __notify_non_staged_files(
+    def _notify_non_staged_files(
         self, *, collaboration_instructions: dict, git_repo: git.Repo
     ) -> None:
         # Notify when changes in bib files are not staged
@@ -81,7 +81,7 @@ class Advisor:
             }
             collaboration_instructions["items"].append(item)
 
-    def __add_sharing_notifications(
+    def _add_sharing_notifications(
         self,
         *,
         collaboration_instructions: dict,
@@ -196,7 +196,7 @@ class Advisor:
                 }
 
     # pylint: disable=colrev-missed-constant-usage
-    def __get_collaboration_instructions(
+    def _get_collaboration_instructions(
         self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
     ) -> dict:
         """Get instructions related to collaboration"""
@@ -224,7 +224,7 @@ class Advisor:
             }
             collaboration_instructions["items"].append(item)
 
-        self.__append_merge_conflict_warning(
+        self._append_merge_conflict_warning(
             collaboration_instructions=collaboration_instructions, git_repo=git_repo
         )
         if len(collaboration_instructions["items"]) > 0:
@@ -232,12 +232,12 @@ class Advisor:
             # Resolving the merge conflict is always prio 1
             return collaboration_instructions
 
-        self.__notify_non_staged_files(
+        self._notify_non_staged_files(
             collaboration_instructions=collaboration_instructions, git_repo=git_repo
         )
 
         if remote_connected:
-            self.__add_sharing_notifications(
+            self._add_sharing_notifications(
                 collaboration_instructions=collaboration_instructions,
                 status_stats=status_stats,
             )
@@ -251,7 +251,7 @@ class Advisor:
 
         return collaboration_instructions
 
-    def __append_initial_load_instruction(self, *, review_instructions: list) -> None:
+    def _append_initial_load_instruction(self, *, review_instructions: list) -> None:
         if not self.review_manager.dataset.records_file.is_file():
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
@@ -262,7 +262,7 @@ class Advisor:
             ]:
                 review_instructions.append(instruction)
 
-    def __append_operation_in_progress_instructions(
+    def _append_operation_in_progress_instructions(
         self,
         *,
         review_instructions: list,
@@ -324,7 +324,7 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
 
-    def __append_initial_operations(
+    def _append_initial_operations(
         self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
     ) -> bool:
         if not Path(self.review_manager.search_dir).iterdir():
@@ -356,7 +356,7 @@ class Advisor:
                 return True
         return False
 
-    def __append_active_operations(
+    def _append_active_operations(
         self,
         *,
         status_stats: colrev.ops.status.StatusStats,
@@ -403,7 +403,7 @@ class Advisor:
             ]:
                 review_instructions.append(instruction)
 
-    def __append_data_operation_advice(self, *, review_instructions: list) -> None:
+    def _append_data_operation_advice(self, *, review_instructions: list) -> None:
         if (
             len(review_instructions) == 1
             or self.review_manager.verbose_mode
@@ -440,27 +440,27 @@ class Advisor:
                     if advice:
                         review_instructions.append(advice)
 
-    def __append_next_operation_instructions(
+    def _append_next_operation_instructions(
         self,
         *,
         review_instructions: list,
         status_stats: colrev.ops.status.StatusStats,
         current_origin_states_dict: dict,
     ) -> None:
-        if self.__append_initial_operations(
+        if self._append_initial_operations(
             review_instructions=review_instructions, status_stats=status_stats
         ):
             return
 
-        self.__append_active_operations(
+        self._append_active_operations(
             status_stats=status_stats,
             current_origin_states_dict=current_origin_states_dict,
             review_instructions=review_instructions,
         )
 
-        self.__append_data_operation_advice(review_instructions=review_instructions)
+        self._append_data_operation_advice(review_instructions=review_instructions)
 
-    def __get_missing_files(
+    def _get_missing_files(
         self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
         # excluding pdf_not_available
@@ -482,12 +482,12 @@ class Advisor:
 
         return missing_files
 
-    def __append_pdf_issue_instructions(
+    def _append_pdf_issue_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats, review_instructions: list
     ) -> None:
         # Check pdf files
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
-            missing_files = self.__get_missing_files(status_stats=status_stats)
+            missing_files = self._get_missing_files(status_stats=status_stats)
             if len(missing_files) > 0:
                 review_instructions.append(
                     {
@@ -524,7 +524,7 @@ class Advisor:
                 }
             )
 
-    def __append_iteration_completed_instructions(
+    def _append_iteration_completed_instructions(
         self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
     ) -> None:
         if (
@@ -557,32 +557,32 @@ class Advisor:
         review_instructions: typing.List[typing.Dict] = []
         current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
 
-        self.__append_initial_load_instruction(review_instructions=review_instructions)
+        self._append_initial_load_instruction(review_instructions=review_instructions)
 
-        self.__append_operation_in_progress_instructions(
+        self._append_operation_in_progress_instructions(
             review_instructions=review_instructions,
             status_stats=status_stats,
             current_origin_states_dict=current_origin_states_dict,
         )
 
-        self.__append_next_operation_instructions(
+        self._append_next_operation_instructions(
             review_instructions=review_instructions,
             status_stats=status_stats,
             current_origin_states_dict=current_origin_states_dict,
         )
 
-        self.__append_pdf_issue_instructions(
+        self._append_pdf_issue_instructions(
             status_stats=status_stats, review_instructions=review_instructions
         )
 
-        self.__append_iteration_completed_instructions(
+        self._append_iteration_completed_instructions(
             review_instructions=review_instructions, status_stats=status_stats
         )
 
         return review_instructions
 
     # Note : no named arguments for multiprocessing
-    def __append_registered_repo_instructions(self, registered_path: Path) -> dict:
+    def _append_registered_repo_instructions(self, registered_path: Path) -> dict:
         instruction = {}
 
         try:
@@ -644,7 +644,7 @@ class Advisor:
             pass
         return instruction
 
-    def __append_download_outlets_instruction(
+    def _append_download_outlets_instruction(
         self,
         environment_manager: colrev.env.environment_manager.EnvironmentManager,
         environment_instructions: list,
@@ -698,7 +698,7 @@ class Advisor:
                 }
                 environment_instructions.append(instruction)
 
-    def __get_environment_instructions(
+    def _get_environment_instructions(
         self, *, status_stats: colrev.ops.status.StatusStats
     ) -> list:
         """Get instructions related to the CoLRev environment"""
@@ -708,7 +708,7 @@ class Advisor:
         environment_instructions: list[dict] = []
 
         if status_stats.currently.md_imported > 10:
-            self.__append_download_outlets_instruction(
+            self._append_download_outlets_instruction(
                 environment_manager=environment_manager,
                 environment_instructions=environment_instructions,
             )
@@ -720,7 +720,7 @@ class Advisor:
         # it does not use a lot of CPU capacity
         pool = ThreadPool(50)
         add_instructions = pool.map(
-            self.__append_registered_repo_instructions, registered_paths
+            self._append_registered_repo_instructions, registered_paths
         )
 
         environment_instructions += list(filter(None, add_instructions))
@@ -746,10 +746,10 @@ class Advisor:
             "review_instructions": self.get_review_instructions(
                 status_stats=status_stats
             ),
-            "environment_instructions": self.__get_environment_instructions(
+            "environment_instructions": self._get_environment_instructions(
                 status_stats=status_stats
             ),
-            "collaboration_instructions": self.__get_collaboration_instructions(
+            "collaboration_instructions": self._get_collaboration_instructions(
                 status_stats=status_stats
             ),
         }
@@ -766,7 +766,7 @@ class Advisor:
     def get_sharing_instructions(self) -> dict:
         """Get instructions related to sharing the project"""
 
-        collaboration_instructions = self.__get_collaboration_instructions()
+        collaboration_instructions = self._get_collaboration_instructions()
 
         status_code = not all(
             x["level"] in ["SUCCESS", "WARNING"]

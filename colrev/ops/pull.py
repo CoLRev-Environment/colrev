@@ -24,9 +24,9 @@ class Pull(colrev.operation.Operation):
     def main(self) -> None:
         """Pull the CoLRev project and records (main entrypoint)"""
 
-        self.__pull_project()
+        self._pull_project()
 
-    def __pull_project(self) -> None:
+    def _pull_project(self) -> None:
         try:
             git_repo = self.review_manager.dataset.get_repo()
             origin = git_repo.remotes.origin

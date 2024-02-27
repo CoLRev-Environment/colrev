@@ -26,12 +26,12 @@ class InconsistentContentChecker:
             ):
                 continue
 
-            if self.__inconsistent_content(record=record, key=key):
+            if self._inconsistent_content(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def __inconsistent_content(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _inconsistent_content(self, *, record: colrev.record.Record, key: str) -> bool:
         if key == Fields.JOURNAL:
             if Fields.JOURNAL in record.data and any(
                 x in record.data[Fields.JOURNAL].lower()

@@ -24,9 +24,9 @@ class QualityModel:
         self.pdf_mode = pdf_mode
         self.review_manager = review_manager
         self.defects_to_ignore = self.review_manager.settings.prep.defects_to_ignore
-        self.__register_checkers()
+        self._register_checkers()
 
-    def __register_checkers(self) -> None:
+    def _register_checkers(self) -> None:
         """Register checkers from the checker directory, looking for a
         'register' function in each one.
         """

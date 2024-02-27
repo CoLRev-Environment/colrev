@@ -58,7 +58,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/pubmed.md"
     )
     db_url = "https://pubmed.ncbi.nlm.nih.gov/"
-    __pubmed_md_filename = Path("data/search/md_pubmed.bib")
+    _pubmed_md_filename = Path("data/search/md_pubmed.bib")
 
     def __init__(
         self,
@@ -77,14 +77,14 @@ class PubMedSearchSource(JsonSchemaMixin):
             pubmed_md_source_l = [
                 s
                 for s in self.review_manager.settings.sources
-                if s.filename == self.__pubmed_md_filename
+                if s.filename == self._pubmed_md_filename
             ]
             if pubmed_md_source_l:
                 self.search_source = pubmed_md_source_l[0]
             else:
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
-                    filename=self.__pubmed_md_filename,
+                    filename=self._pubmed_md_filename,
                     search_type=colrev.settings.SearchType.MD,
                     search_parameters={},
                     comment="",
@@ -166,13 +166,13 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __validate_source(self) -> None:
+    def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""
 
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        if source.filename.name != self.__pubmed_md_filename.name:
+        if source.filename.name != self._pubmed_md_filename.name:
             if "query" not in source.search_parameters:
                 raise colrev_exceptions.InvalidQueryException(
                     f"Source missing query search_parameter ({source.filename})"
@@ -198,7 +198,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 Fields.ENTRYTYPE: "article",
                 "pubmedid": "10024335",
             }
-            returned_record_dict = self.__pubmed_query_id(
+            returned_record_dict = self._pubmed_query_id(
                 pubmed_id=test_rec["pubmedid"],
                 timeout=20,
             )
@@ -215,7 +215,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
 
     @classmethod
-    def __get_author_string_from_node(cls, *, author_node: Element) -> str:
+    def _get_author_string_from_node(cls, *, author_node: Element) -> str:
         authors_string = ""
         author_last_name_node = author_node.find("LastName")
         if author_last_name_node is not None:
@@ -229,18 +229,18 @@ class PubMedSearchSource(JsonSchemaMixin):
         return authors_string
 
     @classmethod
-    def __get_author_string(cls, *, root) -> str:  # type: ignore
+    def _get_author_string(cls, *, root) -> str:  # type: ignore
         authors_list = []
         for author_node in root.xpath(
             "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/AuthorList/Author"
         ):
             authors_list.append(
-                cls.__get_author_string_from_node(author_node=author_node)
+                cls._get_author_string_from_node(author_node=author_node)
             )
         return " and ".join(authors_list)
 
     @classmethod
-    def __get_title_string(cls, *, root) -> str:  # type: ignore
+    def _get_title_string(cls, *, root) -> str:  # type: ignore
         title = root.xpath(
             "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/ArticleTitle"
         )
@@ -253,7 +253,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         return ""
 
     @classmethod
-    def __get_abstract_string(cls, *, root) -> str:  # type: ignore
+    def _get_abstract_string(cls, *, root) -> str:  # type: ignore
         abstract = root.xpath(
             "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Abstract"
         )
@@ -263,7 +263,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
-    def __pubmed_xml_to_record(cls, *, root) -> dict:  # type: ignore
+    def _pubmed_xml_to_record(cls, *, root) -> dict:  # type: ignore
         retrieved_record_dict: dict = {Fields.ENTRYTYPE: "misc"}
 
         pubmed_article = root.find("PubmedArticle")
@@ -272,8 +272,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         if pubmed_article.find("MedlineCitation") is None:
             return {}
 
-        retrieved_record_dict[Fields.TITLE] = cls.__get_title_string(root=root)
-        retrieved_record_dict[Fields.AUTHOR] = cls.__get_author_string(root=root)
+        retrieved_record_dict[Fields.TITLE] = cls._get_title_string(root=root)
+        retrieved_record_dict[Fields.AUTHOR] = cls._get_author_string(root=root)
 
         journal_path = "/PubmedArticleSet/PubmedArticle/MedlineCitation/Article/Journal"
         journal_name = root.xpath(journal_path + "/ISOAbbreviation")
@@ -293,7 +293,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         if year:
             retrieved_record_dict[Fields.YEAR] = year[0].text
 
-        retrieved_record_dict[Fields.ABSTRACT] = cls.__get_abstract_string(root=root)
+        retrieved_record_dict[Fields.ABSTRACT] = cls._get_abstract_string(root=root)
 
         article_id_list = root.xpath(
             "/PubmedArticleSet/PubmedArticle/PubmedData/ArticleIdList"
@@ -337,7 +337,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         displayed_uids = [tag.get("content") for tag in meta_tags][0].split(",")
         return displayed_uids
 
-    def __pubmed_query_id(
+    def _pubmed_query_id(
         self,
         *,
         pubmed_id: str,
@@ -382,7 +382,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             ) from exc
         return retrieved_record
 
-    def __get_masterdata_record(
+    def _get_masterdata_record(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -390,7 +390,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         timeout: int,
     ) -> colrev.record.Record:
         try:
-            retrieved_record_dict = self.__pubmed_query_id(
+            retrieved_record_dict = self._pubmed_query_id(
                 pubmed_id=record.data["pubmedid"],
                 timeout=timeout,
             )
@@ -402,7 +402,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             ):
                 retries += 1
 
-                retrieved_record_dict = self.__pubmed_query_id(
+                retrieved_record_dict = self._pubmed_query_id(
                     pubmed_id=record.data["pubmedid"],
                     timeout=timeout,
                 )
@@ -499,13 +499,13 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         # at this point, we coujld validate metadata
         # if "pubmedid" not in record.data:
-        #    record = self.__check_doi_masterdata(record=record)
+        #    record = self._check_doi_masterdata(record=record)
 
         # remove the following if we match basd on similarity
         if Fields.PUBMED_ID not in record.data:
             return record
 
-        record = self.__get_masterdata_record(
+        record = self._get_masterdata_record(
             prep_operation=prep_operation,
             record=record,
             timeout=timeout,
@@ -514,7 +514,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         return record
 
-    def __get_pubmed_query_return(self) -> typing.Iterator[dict]:
+    def _get_pubmed_query_return(self) -> typing.Iterator[dict]:
         params = self.search_source.search_parameters
 
         retstart = 10
@@ -526,11 +526,11 @@ class PubMedSearchSource(JsonSchemaMixin):
             if not pubmed_ids:
                 break
             for pubmed_id in pubmed_ids:
-                yield self.__pubmed_query_id(pubmed_id=pubmed_id)
+                yield self._pubmed_query_id(pubmed_id=pubmed_id)
 
             page += 1
 
-    def __run_api_search(
+    def _run_api_search(
         self,
         *,
         pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -543,7 +543,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         records = self.review_manager.dataset.load_records_dict()
         try:
-            for record_dict in self.__get_pubmed_query_return():
+            for record_dict in self._get_pubmed_query_return():
                 # Note : discard "empty" records
                 if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
                     Fields.TITLE, ""
@@ -603,7 +603,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-    def __run_md_search(
+    def _run_md_search(
         self,
         *,
         pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
@@ -614,7 +614,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
-                retrieved_record = self.__pubmed_query_id(
+                retrieved_record = self._pubmed_query_id(
                     pubmed_id=feed_record_dict["pubmedid"]
                 )
 
@@ -651,7 +651,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
 
-        self.__validate_source()
+        self._validate_source()
 
         pubmed_feed = self.search_source.get_feed(
             review_manager=self.review_manager,
@@ -660,10 +660,10 @@ class PubMedSearchSource(JsonSchemaMixin):
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.MD:
-            self.__run_md_search(pubmed_feed=pubmed_feed)
+            self._run_md_search(pubmed_feed=pubmed_feed)
 
         elif self.search_source.search_type == colrev.settings.SearchType.API:
-            self.__run_api_search(
+            self._run_api_search(
                 pubmed_feed=pubmed_feed,
                 rerun=rerun,
             )
@@ -688,7 +688,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             )
             table_entries = table_loader.load_table_entries()
             records = table_loader.convert_to_records(entries=table_entries)
-            self.__load_fixes(records=records)
+            self._load_fixes(records=records)
             return records
 
         if self.search_source.filename.suffix == ".bib":
@@ -700,7 +700,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def __load_fixes(
+    def _load_fixes(
         self,
         records: typing.Dict,
     ) -> None:

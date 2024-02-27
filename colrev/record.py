@@ -159,7 +159,7 @@ class Record:
         )
         return bib_formatted
 
-    def __save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
+    def _save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
         list_to_return = []
         assert input_key in [Fields.MD_PROV, Fields.D_PROV]
         if input_key == Fields.MD_PROV:
@@ -180,7 +180,7 @@ class Record:
     def get_data(self, *, stringify: bool = False) -> dict:
         """Get the record data (optionally: in stringified version, i.e., without lists/dicts)"""
 
-        def __get_stringified_record() -> dict:
+        def _get_stringified_record() -> dict:
             data_copy = deepcopy(self.data)
 
             def list_to_str(*, val: list) -> str:
@@ -199,7 +199,7 @@ class Record:
             for key in self.dict_fields_keys:
                 if key in data_copy:
                     if isinstance(data_copy[key], dict):
-                        data_copy[key] = self.__save_field_dict(
+                        data_copy[key] = self._save_field_dict(
                             input_dict=data_copy[key], input_key=key
                         )
                     if isinstance(data_copy[key], list):
@@ -212,7 +212,7 @@ class Record:
         assert isinstance(self.data.get(Fields.ORIGIN, []), list)
 
         if stringify:
-            return __get_stringified_record()
+            return _get_stringified_record()
 
         return self.data
 
@@ -502,14 +502,14 @@ class Record:
                     "note": "",
                 }
 
-    def __merge_origins(self, *, merging_record: Record) -> None:
+    def _merge_origins(self, *, merging_record: Record) -> None:
         """Merge the origins with those of the merging_record"""
 
         if Fields.ORIGIN in merging_record.data:
             origins = self.data[Fields.ORIGIN] + merging_record.data[Fields.ORIGIN]
             self.data[Fields.ORIGIN] = sorted(list(set(origins)))
 
-    def __merge_status(self, *, merging_record: Record) -> None:
+    def _merge_status(self, *, merging_record: Record) -> None:
         """Merge the status with the merging_record"""
 
         if Fields.STATUS in merging_record.data:
@@ -519,7 +519,7 @@ class Record:
             else:
                 merging_record.set_status(target_state=self.data[Fields.STATUS])
 
-    def __get_merging_val(self, *, merging_record: Record, key: str) -> str:
+    def _get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")
 
         if val == "":
@@ -541,7 +541,7 @@ class Record:
 
         return val
 
-    def __prevent_invalid_merges(self, *, merging_record: Record) -> None:
+    def _prevent_invalid_merges(self, *, merging_record: Record) -> None:
         """Prevents invalid merges like ... part 1 / ... part 2"""
 
         lower_title_a = self.data.get(Fields.TITLE, "").lower()
@@ -591,9 +591,9 @@ class Record:
             ):
                 merging_record_preferred = True
 
-        self.__prevent_invalid_merges(merging_record=merging_record)
-        self.__merge_origins(merging_record=merging_record)
-        self.__merge_status(merging_record=merging_record)
+        self._prevent_invalid_merges(merging_record=merging_record)
+        self._merge_origins(merging_record=merging_record)
+        self._merge_status(merging_record=merging_record)
 
         if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
             self.data[Fields.MD_PROV] = merging_record.data[Fields.MD_PROV]
@@ -605,7 +605,7 @@ class Record:
                     del self.data[k]
 
         for key in list(merging_record.data.keys()):
-            val = self.__get_merging_val(merging_record=merging_record, key=key)
+            val = self._get_merging_val(merging_record=merging_record, key=key)
             if val == "":
                 continue
 
@@ -638,7 +638,7 @@ class Record:
 
                 # Fuse best fields if none is curated
                 else:
-                    self.__fuse_best_field(
+                    self._fuse_best_field(
                         merging_record=merging_record,
                         key=key,
                         val=str(val),
@@ -660,7 +660,7 @@ class Record:
                 )
 
     @classmethod
-    def __select_best_author(cls, *, record: Record, merging_record: Record) -> str:
+    def _select_best_author(cls, *, record: Record, merging_record: Record) -> str:
         if not record.has_quality_defects(
             field=Fields.AUTHOR
         ) and merging_record.has_quality_defects(field=Fields.AUTHOR):
@@ -689,7 +689,7 @@ class Record:
         return record.data[Fields.AUTHOR]
 
     @classmethod
-    def __select_best_pages(
+    def _select_best_pages(
         cls,
         *,
         record: Record,
@@ -704,7 +704,7 @@ class Record:
         return best_pages
 
     @classmethod
-    def __select_best_title(
+    def _select_best_title(
         cls,
         *,
         record: Record,
@@ -729,31 +729,31 @@ class Record:
         return best_title
 
     @classmethod
-    def __select_best_journal(
+    def _select_best_journal(
         cls,
         *,
         record: Record,
         merging_record: Record,
     ) -> str:
-        return cls.__select_best_container_title(
+        return cls._select_best_container_title(
             default=record.data[Fields.JOURNAL],
             candidate=merging_record.data[Fields.JOURNAL],
         )
 
     @classmethod
-    def __select_best_booktitle(
+    def _select_best_booktitle(
         cls,
         *,
         record: Record,
         merging_record: Record,
     ) -> str:
-        return cls.__select_best_container_title(
+        return cls._select_best_container_title(
             default=record.data[Fields.BOOKTITLE],
             candidate=merging_record.data[Fields.BOOKTITLE],
         )
 
     @classmethod
-    def __select_best_container_title(cls, *, default: str, candidate: str) -> str:
+    def _select_best_container_title(cls, *, default: str, candidate: str) -> str:
         best_journal = default
 
         default_upper = colrev.env.utils.percent_upper_chars(default)
@@ -768,7 +768,7 @@ class Record:
             best_journal = candidate
         return best_journal
 
-    def __fuse_best_field(
+    def _fuse_best_field(
         self,
         *,
         merging_record: Record,
@@ -780,11 +780,11 @@ class Record:
         # only for authors
 
         custom_field_selectors = {
-            Fields.AUTHOR: self.__select_best_author,
-            Fields.PAGES: self.__select_best_pages,
-            Fields.TITLE: self.__select_best_title,
-            Fields.JOURNAL: self.__select_best_journal,
-            Fields.BOOKTITLE: self.__select_best_booktitle,
+            Fields.AUTHOR: self._select_best_author,
+            Fields.PAGES: self._select_best_pages,
+            Fields.TITLE: self._select_best_title,
+            Fields.JOURNAL: self._select_best_journal,
+            Fields.BOOKTITLE: self._select_best_booktitle,
         }
 
         if key in custom_field_selectors:
@@ -1755,7 +1755,7 @@ class PrepRecord(Record):
         return author_string
 
     @classmethod
-    def __format_authors_string_for_comparison(cls, *, record: Record) -> None:
+    def _format_authors_string_for_comparison(cls, *, record: Record) -> None:
         if Fields.AUTHOR not in record.data:
             return
         authors = record.data[Fields.AUTHOR]
@@ -1799,7 +1799,7 @@ class PrepRecord(Record):
         return False
 
     @classmethod
-    def __abbreviate_container_titles(
+    def _abbreviate_container_titles(
         cls,
         *,
         record: colrev.record.PrepRecord,
@@ -1835,13 +1835,13 @@ class PrepRecord(Record):
             abbreviate_container(record=retrieved_record, min_len=min_len)
 
     @classmethod
-    def __prep_records_for_similarity(
+    def _prep_records_for_similarity(
         cls,
         *,
         record: colrev.record.PrepRecord,
         retrieved_record: colrev.record.PrepRecord,
     ) -> None:
-        cls.__abbreviate_container_titles(
+        cls._abbreviate_container_titles(
             record=record, retrieved_record=retrieved_record
         )
 
@@ -1853,10 +1853,10 @@ class PrepRecord(Record):
             ]
 
         if Fields.AUTHOR in record.data:
-            cls.__format_authors_string_for_comparison(record=record)
+            cls._format_authors_string_for_comparison(record=record)
             record.data[Fields.AUTHOR] = record.data[Fields.AUTHOR][:45]
         if Fields.AUTHOR in retrieved_record.data:
-            cls.__format_authors_string_for_comparison(record=retrieved_record)
+            cls._format_authors_string_for_comparison(record=retrieved_record)
             retrieved_record.data[Fields.AUTHOR] = retrieved_record.data[Fields.AUTHOR][
                 :45
             ]
@@ -1906,7 +1906,7 @@ class PrepRecord(Record):
         record = record_original.copy_prep_rec()
         retrieved_record = retrieved_record_original.copy_prep_rec()
 
-        cls.__prep_records_for_similarity(
+        cls._prep_records_for_similarity(
             record=record, retrieved_record=retrieved_record
         )
 

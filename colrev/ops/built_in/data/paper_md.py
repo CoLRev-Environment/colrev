@@ -10,7 +10,6 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Timer
-from typing import TYPE_CHECKING
 
 import docker
 import requests
@@ -24,9 +23,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:
-    import colrev.ops.data
 
 
 # pylint: disable=too-many-instance-attributes
@@ -80,7 +76,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
     settings_class = PaperMarkdownSettings
 
-    __temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+    _temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
 
     def __init__(
         self,
@@ -121,7 +117,7 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.output_dir / self.settings.paper_output
         )
 
-        self.__create_non_sample_references_bib()
+        self._create_non_sample_references_bib()
 
         if not self.review_manager.in_ci_environment():
             self.pandoc_image = "pandoc/latex:3.1"
@@ -132,7 +128,7 @@ class PaperMarkdown(JsonSchemaMixin):
         self.paper_relative_path = self.settings.paper_path.relative_to(
             self.review_manager.path
         )
-        self.__temp_path.mkdir(exist_ok=True, parents=True)
+        self._temp_path.mkdir(exist_ok=True, parents=True)
 
         self.review_manager = self.review_manager
 
@@ -149,7 +145,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
-    def __retrieve_default_word_template(self) -> Path:
+    def _retrieve_default_word_template(self) -> Path:
         template_name = self.review_manager.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
@@ -162,7 +158,7 @@ class PaperMarkdown(JsonSchemaMixin):
         self.review_manager.dataset.add_changes(path=template_name)
         return template_name
 
-    def __retrieve_default_csl(self) -> None:
+    def _retrieve_default_csl(self) -> None:
         csl_link = ""
         with open(self.settings.paper_path, encoding="utf-8") as file:
             for line in file:
@@ -184,7 +180,7 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.dataset.add_changes(path=Path(csl_filename))
             self.review_manager.logger.debug("Downloaded csl file for offline use")
 
-    def __check_new_record_source_tag(
+    def _check_new_record_source_tag(
         self,
     ) -> None:
         with open(self.settings.paper_path, encoding="utf-8") as file:
@@ -195,7 +191,7 @@ class PaperMarkdown(JsonSchemaMixin):
             f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {self.settings.paper_path}"
         )
 
-    def __authorship_heuristic(self) -> str:
+    def _authorship_heuristic(self) -> str:
         git_repo = self.review_manager.dataset.get_repo()
         try:
             commits_list = list(git_repo.iter_commits())
@@ -213,7 +209,7 @@ class PaperMarkdown(JsonSchemaMixin):
             author, _ = self.review_manager.get_committer()
         return author
 
-    def __get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:
+    def _get_data_page_missing(self, *, paper: Path, record_id_list: list) -> list:
         available = []
         with open(paper, encoding="utf-8") as file:
             line = file.read()
@@ -224,7 +220,7 @@ class PaperMarkdown(JsonSchemaMixin):
         return list(set(record_id_list) - set(available))
 
     # pylint: disable=too-many-arguments
-    def __create_new_records_source_section(
+    def _create_new_records_source_section(
         self,
         *,
         writer: typing.IO,
@@ -247,17 +243,17 @@ class PaperMarkdown(JsonSchemaMixin):
         for missing_record in missing_records:
             writer.write(missing_record)
             self.review_manager.report_logger.info(
-                # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                # f" {missing_record}".ljust(self._PAD, " ") + " added"
                 f" {missing_record} added"
             )
             if not silent_mode:
                 self.review_manager.logger.info(
-                    # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                    # f" {missing_record}".ljust(self._PAD, " ") + " added"
                     f" {missing_record} added"
                 )
 
     # pylint: disable=too-many-arguments
-    def __update_new_records_source_section(
+    def _update_new_records_source_section(
         self,
         *,
         writer: typing.IO,
@@ -281,7 +277,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         for paper_id in paper_ids_added:
             self.review_manager.report_logger.info(
-                # f" {missing_record}".ljust(self.__PAD, " ")
+                # f" {missing_record}".ljust(self._PAD, " ")
                 f" {paper_id}"
                 + f" added to {paper_path.name}"
             )
@@ -309,7 +305,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if line != "\n":
             writer.write(line)
 
-    def __add_missing_records_to_paper(
+    def _add_missing_records_to_paper(
         self,
         *,
         missing_records: list,
@@ -317,7 +313,7 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         # pylint: disable=consider-using-with
 
-        temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
+        temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
@@ -328,7 +324,7 @@ class PaperMarkdown(JsonSchemaMixin):
             line = reader.readline()
             while line:
                 if self.NEW_RECORD_SOURCE_TAG in line:
-                    self.__update_new_records_source_section(
+                    self._update_new_records_source_section(
                         writer=writer,
                         missing_records=missing_records,
                         paper_path=paper_path,
@@ -351,7 +347,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 line = reader.readline()
 
             if not appended:
-                self.__create_new_records_source_section(
+                self._create_new_records_source_section(
                     writer=writer,
                     missing_records=missing_records,
                     paper_path=paper_path,
@@ -359,7 +355,7 @@ class PaperMarkdown(JsonSchemaMixin):
                     line=line,
                 )
 
-    def __create_paper(self, silent_mode: bool) -> None:
+    def _create_paper(self, silent_mode: bool) -> None:
         if not silent_mode:
             self.review_manager.report_logger.info("Create paper")
             self.review_manager.logger.info("Create paper")
@@ -371,7 +367,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 title = file.readline()
                 title = title.replace("# ", "").replace("\n", "")
 
-        author = self.__authorship_heuristic()
+        author = self._authorship_heuristic()
 
         review_type = self.review_manager.settings.project.review_type
 
@@ -421,7 +417,7 @@ class PaperMarkdown(JsonSchemaMixin):
             new_string=author,
         )
 
-    def __exclude_marked_records(
+    def _exclude_marked_records(
         self,
         *,
         synthesized_record_status_matrix: dict,
@@ -429,7 +425,7 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         # pylint: disable=consider-using-with
 
-        temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
+        temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
         paper_path.rename(temp.name)
@@ -476,20 +472,20 @@ class PaperMarkdown(JsonSchemaMixin):
                     continue
                 line = reader.readline()
 
-    def __add_missing_records(
+    def _add_missing_records(
         self,
         *,
         synthesized_record_status_matrix: dict,
         silent_mode: bool,
     ) -> None:
-        missing_records = self.__get_data_page_missing(
+        missing_records = self._get_data_page_missing(
             paper=self.settings.paper_path,
             record_id_list=list(synthesized_record_status_matrix.keys()),
         )
         missing_records = sorted(missing_records)
         # review_manager.logger.debug(f"missing_records: {missing_records}")
 
-        self.__check_new_record_source_tag()
+        self._check_new_record_source_tag()
 
         if 0 == len(missing_records):
             if not silent_mode:
@@ -505,12 +501,12 @@ class PaperMarkdown(JsonSchemaMixin):
                 self.review_manager.logger.info(
                     f"Update paper ({self.settings.paper_path.name})"
                 )
-            self.__add_missing_records_to_paper(
+            self._add_missing_records_to_paper(
                 missing_records=missing_records,
                 silent_mode=silent_mode,
             )
 
-    def __append_to_non_sample_references(self, *, filepath: Path) -> None:
+    def _append_to_non_sample_references(self, *, filepath: Path) -> None:
         filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
 
         if filedata:
@@ -554,7 +550,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 path=(Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE)
             )
 
-    def __add_prisma_if_available(self, *, silent_mode: bool) -> None:
+    def _add_prisma_if_available(self, *, silent_mode: bool) -> None:
         prisma_endpoint_l = [
             d
             for d in self.review_manager.settings.data.data_package_endpoints
@@ -564,12 +560,12 @@ class PaperMarkdown(JsonSchemaMixin):
             if "PRISMA.png" not in self.settings.paper_path.read_text(encoding="UTF-8"):
                 if not silent_mode:
                     self.review_manager.logger.info("Add PRISMA diagram to paper")
-                self.__append_to_non_sample_references(
+                self._append_to_non_sample_references(
                     filepath=Path("template/prisma/prisma-refs.bib"),
                 )
 
                 # pylint: disable=consider-using-with
-                temp = tempfile.NamedTemporaryFile(dir=self.__temp_path)
+                temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
                 paper_path = self.settings.paper_path
                 Path(temp.name).unlink(missing_ok=True)
                 paper_path.rename(temp.name)
@@ -606,25 +602,25 @@ class PaperMarkdown(JsonSchemaMixin):
         review_manager = self.review_manager
 
         if not self.settings.paper_path.is_file():
-            self.__create_paper(silent_mode=silent_mode)
+            self._create_paper(silent_mode=silent_mode)
 
-        self.__add_missing_records(
+        self._add_missing_records(
             synthesized_record_status_matrix=synthesized_record_status_matrix,
             silent_mode=silent_mode,
         )
 
-        self.__exclude_marked_records(
+        self._exclude_marked_records(
             synthesized_record_status_matrix=synthesized_record_status_matrix,
             records=records,
         )
 
-        self.__add_prisma_if_available(silent_mode=silent_mode)
+        self._add_prisma_if_available(silent_mode=silent_mode)
 
         review_manager.dataset.add_changes(path=self.settings.paper_path)
 
         return records
 
-    def __create_non_sample_references_bib(self) -> None:
+    def _create_non_sample_references_bib(self) -> None:
         if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
             try:
                 retrieval_path = Path("template/paper_md/non_sample_references.bib")
@@ -636,7 +632,7 @@ class PaperMarkdown(JsonSchemaMixin):
             except AttributeError:
                 pass
 
-    def __copy_references_bib(self) -> None:
+    def _copy_references_bib(self) -> None:
         records = self.review_manager.dataset.load_records_dict()
         for record_id, record_dict in records.items():
             record_dict = {k.replace(".", "_"): v for k, v in record_dict.items()}
@@ -645,7 +641,7 @@ class PaperMarkdown(JsonSchemaMixin):
             records=records, save_path=self.sample_references
         )
 
-    def __call_docker_build_process(self, *, script: str) -> None:
+    def _call_docker_build_process(self, *, script: str) -> None:
         try:
             uid = os.stat(self.review_manager.dataset.records_file).st_uid
             gid = os.stat(self.review_manager.dataset.records_file).st_gid
@@ -688,14 +684,14 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.logger.info("Complete processing and use colrev data")
             return
 
-        self.__retrieve_default_csl()
-        self.__create_non_sample_references_bib()
-        self.__copy_references_bib()
+        self._retrieve_default_csl()
+        self._create_non_sample_references_bib()
+        self._copy_references_bib()
 
         word_template = self.settings.word_template
 
         if not word_template.is_file():
-            self.__retrieve_default_word_template()
+            self._retrieve_default_word_template()
         assert word_template.is_file()
 
         output_relative_path = self.settings.paper_output.relative_to(
@@ -722,7 +718,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         Timer(
             1,
-            lambda: self.__call_docker_build_process(script=script),
+            lambda: self._call_docker_build_process(script=script),
         ).start()
 
     def update_data(
@@ -753,7 +749,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if not self.review_manager.in_ci_environment():
             self.build_paper()
 
-    def __get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:
+    def _get_to_synthesize(self, *, paper: Path, records_for_synthesis: list) -> list:
         if not paper.is_file():
             return records_for_synthesis
 
@@ -772,10 +768,10 @@ class PaperMarkdown(JsonSchemaMixin):
         to_synthesize = [x for x in to_synthesize if x in records_for_synthesis]
         return to_synthesize
 
-    def __get_synthesized_papers(
+    def _get_synthesized_papers(
         self, *, paper: Path, synthesized_record_status_matrix: dict
     ) -> list:
-        to_synthesize = self.__get_to_synthesize(
+        to_synthesize = self._get_to_synthesize(
             paper=paper,
             records_for_synthesis=list(synthesized_record_status_matrix.keys()),
         )
@@ -795,7 +791,7 @@ class PaperMarkdown(JsonSchemaMixin):
     ) -> None:
         """Update the record_status_matrix"""
         # Update status / synthesized_record_status_matrix
-        synthesized = self.__get_synthesized_papers(
+        synthesized = self._get_synthesized_papers(
             paper=self.settings.paper_path,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )

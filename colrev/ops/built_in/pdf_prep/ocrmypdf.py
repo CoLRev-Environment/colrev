@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import docker
 import zope.interface
@@ -17,8 +16,6 @@ import colrev.record
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
 
-if TYPE_CHECKING:
-    import colrev.ops.pdf_prep
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -47,7 +44,7 @@ class OCRMyPDF(JsonSchemaMixin):
                 imagename=self.ocrmypdf_image
             )
 
-    def __apply_ocr(
+    def _apply_ocr(
         self,
         *,
         record: colrev.record.Record,
@@ -101,6 +98,6 @@ class OCRMyPDF(JsonSchemaMixin):
             return record.data
 
         self.review_manager.report_logger.info(f"apply_ocr({record.data[Fields.ID]})")
-        record = self.__apply_ocr(record=record)
+        record = self._apply_ocr(record=record)
 
         return record.data

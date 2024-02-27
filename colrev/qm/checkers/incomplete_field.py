@@ -29,17 +29,17 @@ class IncompleteFieldChecker:
             Fields.ABSTRACT,
         ]:
             if (
-                self.__institutional_author(key=key, record=record)
+                self._institutional_author(key=key, record=record)
                 or record.data.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
                 or record.ignored_defect(field=key, defect=self.msg)
             ):
                 continue
-            if self.__incomplete_field(record=record, key=key):
+            if self._incomplete_field(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def __incomplete_field(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _incomplete_field(self, *, record: colrev.record.Record, key: str) -> bool:
         """check for incomplete field"""
         if record.data[key].endswith("...") or record.data[key].endswith("…"):
             return True
@@ -50,7 +50,7 @@ class IncompleteFieldChecker:
             or "," not in record.data[key]
         )
 
-    def __institutional_author(self, *, key: str, record: colrev.record.Record) -> bool:
+    def _institutional_author(self, *, key: str, record: colrev.record.Record) -> bool:
         if key != Fields.AUTHOR or Fields.AUTHOR not in record.data:
             return False
         if record.data[Fields.AUTHOR].startswith("{") and record.data[

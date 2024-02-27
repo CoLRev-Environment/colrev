@@ -19,7 +19,7 @@ class Data(colrev.operation.Operation):
     """Class supporting structured and unstructured
     data extraction, analysis and synthesis"""
 
-    __pad = 0
+    _pad = 0
 
     def __init__(
         self,
@@ -226,7 +226,7 @@ class Data(colrev.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def __pre_data(self, *, records: dict, silent_mode: bool) -> None:
+    def _pre_data(self, *, records: dict, silent_mode: bool) -> None:
         if not silent_mode:
             self.review_manager.logger.info("Data")
             self.review_manager.logger.info(
@@ -236,9 +236,9 @@ class Data(colrev.operation.Operation):
             self.review_manager.logger.info(
                 "See https://colrev.readthedocs.io/en/latest/manual/data/data.html"
             )
-        self.__pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
+        self._pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 
-    def __get_synthesized_record_status_matrix(self, *, records: dict) -> dict:
+    def _get_synthesized_record_status_matrix(self, *, records: dict) -> dict:
         included = self.get_record_ids_for_synthesis(records)
 
         # TBD: do we assume that records are not changed by the processes?
@@ -259,7 +259,7 @@ class Data(colrev.operation.Operation):
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
         return synthesized_record_status_matrix
 
-    def __update_record_status_matrix(
+    def _update_record_status_matrix(
         self, *, records: dict, synthesized_record_status_matrix: dict
     ) -> bool:
         records_changed = False
@@ -274,11 +274,11 @@ class Data(colrev.operation.Operation):
                 ):
                     if self.review_manager.verbose_mode:
                         self.review_manager.report_logger.info(
-                            f" {record_id}".ljust(self.__pad, " ")
+                            f" {record_id}".ljust(self._pad, " ")
                             + "set colrev_status to synthesized"
                         )
                         self.review_manager.logger.info(
-                            f" {record_id}".ljust(self.__pad, " ")
+                            f" {record_id}".ljust(self._pad, " ")
                             + "set colrev_status to synthesized"
                         )
 
@@ -301,7 +301,7 @@ class Data(colrev.operation.Operation):
                     records_changed = True
         return records_changed
 
-    def __post_data(self, *, silent_mode: bool) -> None:
+    def _post_data(self, *, silent_mode: bool) -> None:
         # if self.review_manager.verbose_mode:
         #     self.review_manager.p_printer.pprint(synthesized_record_status_matrix)
 
@@ -331,9 +331,9 @@ class Data(colrev.operation.Operation):
         if not records:
             records = self.review_manager.dataset.load_records_dict()
 
-        self.__pre_data(records=records, silent_mode=silent_mode)
+        self._pre_data(records=records, silent_mode=silent_mode)
 
-        synthesized_record_status_matrix = self.__get_synthesized_record_status_matrix(
+        synthesized_record_status_matrix = self._get_synthesized_record_status_matrix(
             records=records
         )
 
@@ -380,14 +380,14 @@ class Data(colrev.operation.Operation):
                 msg = f"Updated {endpoint.settings.endpoint}"  # type: ignore
                 self.review_manager.logger.info(msg)
 
-        records_status_changed = self.__update_record_status_matrix(
+        records_status_changed = self._update_record_status_matrix(
             records=records,
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
         if records_status_changed:
             self.review_manager.dataset.save_records_dict(records=records)
 
-        self.__post_data(silent_mode=silent_mode)
+        self._post_data(silent_mode=silent_mode)
 
         no_endpoints_registered = 0 == len(
             self.review_manager.settings.data.data_package_endpoints

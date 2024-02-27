@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 import zope.interface
@@ -17,8 +16,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.ops.dedupe
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-few-public-methods
@@ -43,11 +40,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
         self.review_manager = dedupe_operation.review_manager
         self.dedupe_operation = dedupe_operation
 
-        self.__post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
+        self._post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
             state=colrev.record.RecordState.md_processed
         )
 
-    def __create_dedupe_source_stats(self) -> None:
+    def _create_dedupe_source_stats(self) -> None:
         # Note : reload to generate correct statistics
 
         Path("dedupe").mkdir(exist_ok=True)
@@ -116,11 +113,11 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 records_df.sort_values(by=keys, inplace=True)
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
 
-    def __get_same_toc_recs(
+    def _get_same_toc_recs(
         self, *, record: colrev.record.Record, records: dict
     ) -> list:
         if self.review_manager.force_mode:
-            if record.data[Fields.STATUS] in self.__post_md_prepared_states:
+            if record.data[Fields.STATUS] in self._post_md_prepared_states:
                 return []
         else:
             # only dedupe md_prepared records
@@ -157,7 +154,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             same_toc_recs.append(record_candidate)
         return same_toc_recs
 
-    def __print_same_toc_recs(
+    def _print_same_toc_recs(
         self, *, same_toc_recs: list, record: colrev.record.Record
     ) -> list:
         for same_toc_rec in same_toc_recs:
@@ -185,7 +182,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 print(f"{i + 1} - {author_title_string}")
         return same_toc_recs
 
-    def __get_nr_recs_to_merge(self, *, records: dict) -> int:
+    def _get_nr_recs_to_merge(self, *, records: dict) -> int:
         if self.review_manager.force_mode:
             self.review_manager.logger.info(
                 "Scope: md_prepared, md_needs_manual_preparation, md_imported"
@@ -194,7 +191,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 [
                     x
                     for x in records.values()
-                    if x[Fields.STATUS] not in self.__post_md_prepared_states
+                    if x[Fields.STATUS] not in self._post_md_prepared_states
                 ]
             )
         else:
@@ -208,10 +205,10 @@ class CurationMissingDedupe(JsonSchemaMixin):
             )
         return nr_recs_to_merge
 
-    def __process_missing_duplicates(self) -> dict:
+    def _process_missing_duplicates(self) -> dict:
         records = self.review_manager.dataset.load_records_dict()
 
-        nr_recs_to_merge = self.__get_nr_recs_to_merge(records=records)
+        nr_recs_to_merge = self._get_nr_recs_to_merge(records=records)
 
         nr_recs_checked = 0
         results: typing.Dict[str, list] = {
@@ -223,7 +220,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         for record_dict in records.values():
             record = colrev.record.Record(data=record_dict)
 
-            same_toc_recs = self.__get_same_toc_recs(record=record, records=records)
+            same_toc_recs = self._get_same_toc_recs(record=record, records=records)
 
             if len(same_toc_recs) == 0:
                 print("no same toc records")
@@ -234,7 +231,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             record.print_citation_format()
             print(Colors.END)
 
-            same_toc_recs = self.__print_same_toc_recs(
+            same_toc_recs = self._print_same_toc_recs(
                 same_toc_recs=same_toc_recs, record=record
             )
             i = len(same_toc_recs)
@@ -301,7 +298,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         )
         print("\n\n")
 
-        ret = self.__process_missing_duplicates()
+        ret = self._process_missing_duplicates()
 
         if len(ret["decision_list"]) > 0:
             print("Duplicates identified:")
@@ -354,4 +351,4 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 msg="Add non-duplicate records",
             )
 
-        self.__create_dedupe_source_stats()
+        self._create_dedupe_source_stats()

@@ -25,13 +25,13 @@ class ErroneousTitleFieldChecker:
         ):
             return
 
-        if self.__title_has_errors(title=record.data[Fields.TITLE]):
+        if self._title_has_errors(title=record.data[Fields.TITLE]):
             record.add_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
 
         else:
             record.remove_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
 
-    def __title_has_errors(self, *, title: str) -> bool:
+    def _title_has_errors(self, *, title: str) -> bool:
         # Cover common errors
         if title in {
             "A I S ssociation for nformation ystems",
