@@ -580,7 +580,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
-        # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
         if (
             len(record.data.get(Fields.TITLE, "")) < 35
             and Fields.DOI not in record.data
