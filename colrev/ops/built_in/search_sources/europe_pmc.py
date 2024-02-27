@@ -14,12 +14,11 @@ from urllib.parse import quote
 from urllib.parse import urlparse
 from xml.etree.ElementTree import Element  # nosec
 
-import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from defusedxml.ElementTree import fromstring
+from lxml import etree
 from rapidfuzz import fuzz
 
 import colrev.env.package_manager
@@ -30,9 +29,6 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
-# defuse std xml lib
-defusedxml.defuse_stdlib()
 
 
 # pylint: disable=duplicate-code
@@ -215,7 +211,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         if ret.status_code != 200:
             return []
 
-        root = fromstring(str.encode(ret.text))
+        root = etree.fromstring(str.encode(ret.text))
         result_list = root.findall("resultList")[0]
 
         self.__next_page_url = "END"
@@ -448,7 +444,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     # )
                     return
 
-                root = fromstring(str.encode(ret.text))
+                root = etree.fromstring(str.encode(ret.text))
                 result_list = root.findall("resultList")[0]
 
                 for result_item in result_list.findall("result"):
