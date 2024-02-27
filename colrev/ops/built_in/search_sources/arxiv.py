@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-import defusedxml
 import feedparser
 import requests
 import zope.interface
@@ -22,8 +21,6 @@ import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
-
-defusedxml.defuse_stdlib()
 
 
 # pylint: disable=unused-argument

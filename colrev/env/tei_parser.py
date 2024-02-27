@@ -5,12 +5,10 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Optional
-from xml import etree
-from xml.etree.ElementTree import Element  # nosec
+from typing import TYPE_CHECKING
 
-import defusedxml
 import requests
-from defusedxml.ElementTree import fromstring
+from lxml import etree
 from lxml.etree import XMLSyntaxError  # nosec
 
 import colrev.env.grobid_service
@@ -27,9 +25,8 @@ from colrev.constants import Fields
 # namespaces={"tei": "http://www.tei-c.org/ns/1.0"})
 # etree.tostring(abstract_node[0]).decode("utf-8")
 
-
-# defuse std xml lib
-defusedxml.defuse_stdlib()
+if TYPE_CHECKING:  # pragma: no cover
+    from xml.etree.ElementTree import Element  # nosec
 
 
 class TEIParser:
@@ -88,7 +85,7 @@ class TEIParser:
         if b"[BAD_INPUT_DATA]" in xslt_content[:100]:
             raise colrev_exceptions.TEIException()
 
-        return etree.ElementTree.XML(xslt_content)
+        return etree.XML(xslt_content)
 
     def _create_tei(self) -> None:
         """Create the TEI (based on GROBID)"""
@@ -128,7 +125,7 @@ class TEIParser:
             if b"[TIMEOUT]" in ret.content:
                 raise colrev_exceptions.TEITimeoutException()
 
-            self.root = fromstring(ret.content)
+            self.root = etree.fromstring(ret.content)
 
             if self.tei_path is not None:
                 self.tei_path.parent.mkdir(exist_ok=True, parents=True)
@@ -138,7 +135,7 @@ class TEIParser:
                 # Note : reopen/write to prevent format changes in the enhancement
                 with open(self.tei_path, "rb") as file:
                     xml_fstring = file.read()
-                self.root = fromstring(xml_fstring)
+                self.root = etree.fromstring(xml_fstring)
 
                 tree = etree.ElementTree.ElementTree(self.root)
                 tree.write(str(self.tei_path), encoding="utf-8")
@@ -149,8 +146,8 @@ class TEIParser:
     def get_tei_str(self) -> str:
         """Get the TEI string"""
         try:
-            etree.ElementTree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
-            return etree.ElementTree.tostring(self.root).decode("utf-8")
+            etree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
+            return etree.tostring(self.root).decode("utf-8")
         except XMLSyntaxError as exc:
             raise colrev_exceptions.TEIException from exc
 
@@ -411,7 +408,7 @@ class TEIParser:
             abstract_node = profile_description.find(
                 ".//" + self.ns["tei"] + "abstract"
             )
-            html_str = etree.ElementTree.tostring(abstract_node).decode("utf-8")
+            html_str = etree.tostring(abstract_node).decode("utf-8")
             abstract_text = cleanhtml(html_str)
         abstract_text = abstract_text.lstrip().rstrip()
         return abstract_text
@@ -830,7 +827,7 @@ class TEIParser:
             # if settings file available: dedupe_io match agains records
 
         if self.tei_path:
-            tree = etree.ElementTree.ElementTree(self.root)
+            tree = etree.ElementTree(self.root)
             tree.write(str(self.tei_path))
 
         return self.root

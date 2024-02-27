@@ -13,12 +13,12 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree  # nosec
 from xml.etree.ElementTree import Element  # nosec
 
-import defusedxml
 import requests
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
-from defusedxml.lxml import fromstring
+from lxml import etree
+from lxml import html
 from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
@@ -28,8 +28,6 @@ import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-defusedxml.defuse_stdlib()
 
 
 # pylint: disable=unused-argument
@@ -303,7 +301,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         for article_id in article_id_list[0]:
             id_type = article_id.attrib.get("IdType")
             if article_id.attrib.get("IdType") == "pubmed":
-                retrieved_record_dict[Fields.PUBMED_ID] = article_id.text.upper()
+                retrieved_record_dict["pubmedid"] = article_id.text.upper()
             elif article_id.attrib.get("IdType") == "doi":
                 retrieved_record_dict[Fields.DOI] = article_id.text.upper()
             else:
@@ -320,15 +318,13 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         return retrieved_record_dict
 
-    def _get_pubmed_ids(self, query: str, retstart: int) -> typing.List[str]:
+    def _get_pubmed_ids(self, query: str, retstart: int, page: int) -> typing.List[str]:
         headers = {"user-agent": f"{__name__} (mailto:{self.email})"}
         session = self.review_manager.get_cached_session()
         if not query.startswith("https://pubmed.ncbi.nlm.nih.gov/?term="):
             query = "https://pubmed.ncbi.nlm.nih.gov/?term=" + query
-        ret = session.request(
-            "GET", query + f"&retstart={retstart}", headers=headers, timeout=30
-        )
-
+        url = query + f"&retstart={retstart}&page={page}"
+        ret = session.request("GET", url, headers=headers, timeout=30)
         ret.raise_for_status()
         if ret.status_code != 200:
             # review_manager.logger.debug(
@@ -336,13 +332,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             # )
             return []
 
-        root = fromstring(str.encode(ret.text))
-        return [
-            x.text
-            for x_el in root.findall("IdList")
-            for x in x_el
-            if x.text is not None
-        ]
+        root = html.fromstring(str.encode(ret.text))
+        meta_tags = root.findall(".//meta[@name='log_displayeduids']")
+        displayed_uids = [tag.get("content") for tag in meta_tags][0].split(",")
+        return displayed_uids
 
     def _pubmed_query_id(
         self,
@@ -371,7 +364,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 # )
                 return {"pubmed_id": pubmed_id}
 
-            root = fromstring(str.encode(ret.text))
+            root = etree.fromstring(str.encode(ret.text))
             retrieved_record = self._pubmed_xml_to_record(root=root)
             if not retrieved_record:
                 return {"pubmed_id": pubmed_id}
@@ -387,7 +380,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
             ) from exc
-
         return retrieved_record
 
     def _get_masterdata_record(
@@ -525,15 +517,18 @@ class PubMedSearchSource(JsonSchemaMixin):
     def _get_pubmed_query_return(self) -> typing.Iterator[dict]:
         params = self.search_source.search_parameters
 
-        retstart = 0
+        retstart = 10
+        page = 1
         while True:
-            pubmed_ids = self._get_pubmed_ids(query=params["query"], retstart=retstart)
+            pubmed_ids = self._get_pubmed_ids(
+                query=params["query"], retstart=retstart, page=page
+            )
             if not pubmed_ids:
                 break
             for pubmed_id in pubmed_ids:
                 yield self._pubmed_query_id(pubmed_id=pubmed_id)
 
-            retstart += 20
+            page += 1
 
     def _run_api_search(
         self,
@@ -558,6 +553,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 try:
                     pubmed_feed.set_id(record_dict=record_dict)
                 except colrev_exceptions.NotFeedIdentifiableException:
+                    print("Cannot set id for record")
                     continue
 
                 prev_record_dict_version = {}
