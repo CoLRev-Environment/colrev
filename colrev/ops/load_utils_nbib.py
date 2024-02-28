@@ -11,6 +11,9 @@ Usage::
     import colrev.ops.load_utils_nbib
     from colrev.constants import Fields, ENTRYTYPES
 
+    # If unique_id_field == "":
+    load_operation.ensure_append_only(file=filename)
+
     # The mappings need to be adapted to the SearchSource
     entrytype_map = {
         "Journal Article": ENTRYTYPES.ARTICLE,
@@ -38,9 +41,11 @@ Usage::
     }
 
     nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
-        load_operation=load_operation,
-        source=self.search_source,
+        source_file=self.search_source.filename,
         list_fields={"A": " and "},
+        unique_id_field="doi",
+        force_mode=False,
+        logger=review_manager.logger,
     )
 
     # Note : fixes can be applied before each of the following steps
@@ -67,15 +72,17 @@ Example nbib record::
 """
 from __future__ import annotations
 
+import logging
 import re
 import typing
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from colrev.constants import Colors
 from colrev.constants import Fields
 
 if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.load
+    pass
 
 # pylint: disable=too-few-public-methods
 
@@ -96,22 +103,20 @@ class NBIBLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
+        source_file: Path,
         list_fields: dict,
         unique_id_field: str = "",
+        logger: logging.Logger,
+        force_mode: bool = False,
     ):
-        self.load_operation = load_operation
-        self.source = source
+        self.source_file = source_file
         self.unique_id_field = unique_id_field
+        self.force_mode = force_mode
+        self.logger = logger
 
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
         self.list_fields = list_fields
-
-    def is_tag(self, line: str) -> bool:
-        """Determine if the line has a tag using regex."""
-        return bool(self.pattern.match(line))
 
     def get_tag(self, line: str) -> str:
         """Get the tag from a line in the NBIB file."""
@@ -161,15 +166,12 @@ class NBIBLoader:
     def load_nbib_entries(self) -> dict:
         """Loads nbib entries"""
 
-        if self.unique_id_field == "":
-            self.load_operation.ensure_append_only(file=self.source.filename)
-
         # based on
         # https://github.com/MrTango/rispy/blob/main/rispy/parser.py
         # Note: skip-tags and unknown-tags can be handled
         # between load_nbib_entries and convert_to_records.
 
-        text = self.source.filename.read_text(encoding="utf-8")
+        text = self.source_file.read_text(encoding="utf-8")
         # clean_text?
         lines = text.split("\n")
         records_list = list(r for r in self._parse_lines(lines) if r)
@@ -190,9 +192,9 @@ class NBIBLoader:
 
         if record_dict["PT"] not in entrytype_map:
             msg = f"{Colors.RED}PT={record_dict['PT']} not yet supported{Colors.END}"
-            if not self.load_operation.review_manager.force_mode:
+            if not self.force_mode:
                 raise NotImplementedError(msg)
-            self.load_operation.review_manager.logger.error(msg)
+            self.logger.error(msg)
             return
 
         entrytype = entrytype_map[record_dict["PT"]]
