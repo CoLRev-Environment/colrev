@@ -1405,12 +1405,12 @@ class Record:
             except (
                 TypeError,
                 KeyError,
-                pdfminer.pdfparser.PDFSyntaxError,
+                PDFSyntaxError,
             ):  # pragma: no cover
                 pass
         return "".join(text_list)
 
-    def set_pages_in_pdf(self) -> None:
+    def set_nr_pages_in_pdf(self) -> None:
         """Set the pages_in_file field based on the PDF"""
         pdf_path = Path(self.data[Fields.FILE]).absolute()
         try:
@@ -1418,19 +1418,18 @@ class Record:
                 parser = PDFParser(file)
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-            self.data[Fields.PAGES_IN_FILE] = pages_in_file
-        except pdfminer.pdfparser.PDFSyntaxError:
-            pass
+            self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
+        except PDFSyntaxError:
+            self.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
     def set_text_from_pdf(self) -> None:
         """Set the text_from_pdf field based on the PDF"""
         self.data[Fields.TEXT_FROM_PDF] = ""
         try:
-            self.set_pages_in_pdf()
+            self.set_nr_pages_in_pdf()
             text = self.extract_text_by_page(pages=[0, 1, 2])
-            self.data[Fields.TEXT_FROM_PDF] = text.replace("\n", " ").replace(
-                "\x0c", ""
-            )
+            text_from_pdf = text.replace("\n", " ").replace("\x0c", "")
+            self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
 
         except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
@@ -1545,8 +1544,8 @@ class Record:
         """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""
         if Fields.TEXT_FROM_PDF in self.data:
             del self.data[Fields.TEXT_FROM_PDF]
-        if Fields.PAGES_IN_FILE in self.data:
-            del self.data[Fields.PAGES_IN_FILE]
+        if Fields.NR_PAGES_IN_FILE in self.data:
+            del self.data[Fields.NR_PAGES_IN_FILE]
 
     def run_pdf_quality_model(
         self,

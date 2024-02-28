@@ -838,7 +838,7 @@ def test_cleanup_pdf_processing_fields() -> None:
 
     r1_mod = r1.copy()
     r1_mod.data["text_from_pdf"] = "This is the full text inserted from the PDF...."
-    r1_mod.data["pages_in_file"] = "12"
+    r1_mod.data[Fields.NR_PAGES_IN_FILE] = "12"
 
     expected = {
         Fields.ID: "r1",
@@ -1287,12 +1287,12 @@ def test_extract_text_by_page(  # type: ignore
     assert expected == actual
 
 
-def test_set_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
+def test_set_nr_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
     """Test record.set_pages_in_pdf()"""
 
     expected = 18
-    record_with_pdf.set_pages_in_pdf()
-    actual = record_with_pdf.data["pages_in_file"]
+    record_with_pdf.set_nr_pages_in_pdf()
+    actual = record_with_pdf.data[Fields.NR_PAGES_IN_FILE]
     assert expected == actual
 
 

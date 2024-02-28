@@ -88,7 +88,7 @@ class Fields:
     NR_INTEXT_CITATIONS = "nr_intext_citations"
 
     TEXT_FROM_PDF = "text_from_pdf"
-    PAGES_IN_FILE = "pages_in_file"
+    NR_PAGES_IN_FILE = "nr_pages_in_file"
 
     COLREV_ID = "colrev_id"
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"

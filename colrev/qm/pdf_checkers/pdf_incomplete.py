@@ -12,22 +12,23 @@ from colrev.constants import PDFDefectCodes
 
 # pylint: disable=too-few-public-methods
 
-# Note: replaces author_not_in_first_pages
+FULL_VERSION_PURCHASE_NOTICES = [
+    "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
+]
+ROMAN_PAGES_PATTERN = re.compile(
+    r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
+    + r"M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$",
+    re.IGNORECASE,
+)
+ROMAN_PAGE_PATTERN = re.compile(
+    r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
+)
 
 
 class PDFIncompletenessChecker:
     """The PDFIncompletenessChecker"""
 
     msg = PDFDefectCodes.PDF_INCOMPLETE
-
-    roman_pages_pattern = re.compile(
-        r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
-        + r"M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$",
-        re.IGNORECASE,
-    )
-    roman_page_pattern = re.compile(
-        r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
-    )
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
@@ -48,26 +49,24 @@ class PDFIncompletenessChecker:
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def _longer_with_appendix(
-        self,
-        *,
-        record: colrev.record.Record,
-        nr_pages_metadata: int,
-    ) -> bool:
-        if 10 < nr_pages_metadata < record.data[Fields.PAGES_IN_FILE]:
-            text = record.extract_text_by_page(
-                pages=[
-                    record.data[Fields.PAGES_IN_FILE] - 3,
-                    record.data[Fields.PAGES_IN_FILE] - 2,
-                    record.data[Fields.PAGES_IN_FILE] - 1,
-                ],
-            )
-            if "appendi" in text.lower():
-                return True
-        return False
-
     def _pages_match_pdf(self, *, record: colrev.record.Record) -> bool:
-        def _roman_to_int(*, s: str) -> int:
+
+        def longer_with_appendix(
+            *,
+            record: colrev.record.Record,
+            nr_pages: int,
+        ) -> bool:
+            if 10 < nr_pages < record.data[Fields.NR_PAGES_IN_FILE]:
+                text = record.extract_text_by_page(
+                    pages=list(
+                        range(nr_pages + 1, record.data[Fields.NR_PAGES_IN_FILE] + 1)
+                    )
+                )
+                if "appendi" in text.lower():
+                    return True
+            return False
+
+        def roman_to_int(s: str) -> int:
             s = s.lower()
             roman = {
                 "i": 1,
@@ -95,58 +94,53 @@ class PDFIncompletenessChecker:
                     i += 1
             return num
 
-        def _get_nr_pages_in_metadata(*, pages_metadata: str) -> int:
-            if "--" in pages_metadata:
-                nr_pages_metadata = (
-                    int(pages_metadata.split("--")[1])
-                    - int(pages_metadata.split("--")[0])
-                    + 1
-                )
-            else:
-                nr_pages_metadata = 1
-            return nr_pages_metadata
+        def get_nr_pages(*, pages: str) -> int:
+            pages_str = pages
 
-        full_version_purchase_notice = (
-            "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
-        )
-        if full_version_purchase_notice in record.extract_text_by_page(
-            pages=[0, 1]
-        ).replace(" ", ""):
+            roman_pages_matched = re.match(ROMAN_PAGES_PATTERN, pages)
+            if roman_pages_matched:
+                start_page, end_page = map(
+                    roman_to_int, roman_pages_matched.group().split("--")
+                )
+                pages_str = f"{start_page}--{end_page}"
+
+            roman_page_matched = re.match(ROMAN_PAGE_PATTERN, pages)
+            if roman_page_matched:
+                page = roman_page_matched.group()
+                pages_str = f"{roman_to_int(page)}"
+
+            if "--" in pages_str:
+                start_page, end_page = map(int, pages_str.split("--"))
+                nr_pages = end_page - start_page + 1
+            else:
+                nr_pages = 1
+            return nr_pages
+
+        # Get nr pages from PDF (set in quality_model)
+        if Fields.NR_PAGES_IN_FILE not in record.data:
             return False
 
-        pages_metadata = record.data.get(Fields.PAGES, "NA")
+        # Not complete if there is a FULL_VERSION_PURCHASE_NOTICE
+        if any(
+            FULL_VERSION_PURCHASE_NOTICE
+            in record.data[Fields.TEXT_FROM_PDF].lower().replace(" ", "")
+            for FULL_VERSION_PURCHASE_NOTICE in FULL_VERSION_PURCHASE_NOTICES
+        ):
+            return False
 
-        roman_pages_matched = re.match(self.roman_pages_pattern, pages_metadata)
-        if roman_pages_matched:
-            start_page, end_page = roman_pages_matched.group().split("--")
-            pages_metadata = (
-                f"{_roman_to_int(s=start_page)}--{_roman_to_int(s=end_page)}"
-            )
-        roman_page_matched = re.match(self.roman_page_pattern, pages_metadata)
-        if roman_page_matched:
-            page = roman_page_matched.group()
-            pages_metadata = f"{_roman_to_int(s=page)}"
-
+        # Get nr pages from pages field
         try:
-            nr_pages_metadata = _get_nr_pages_in_metadata(pages_metadata=pages_metadata)
+            nr_pages = get_nr_pages(pages=record.data[Fields.PAGES])
         except ValueError:
             # e.g., S49--S50
             return True
 
-        record.set_pages_in_pdf()
-        if Fields.PAGES_IN_FILE not in record.data:
+        # Special case: if the PDF has more pages than the pages field, it may be complete
+        if longer_with_appendix(record=record, nr_pages=nr_pages):
             return True
 
-        if nr_pages_metadata == record.data[Fields.PAGES_IN_FILE]:
-            return True
-
-        if self._longer_with_appendix(
-            record=record,
-            nr_pages_metadata=nr_pages_metadata,
-        ):
-            return True
-
-        return False
+        # If the PDF has the same number of pages as the pages field, it is complete
+        return nr_pages == record.data[Fields.NR_PAGES_IN_FILE]
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

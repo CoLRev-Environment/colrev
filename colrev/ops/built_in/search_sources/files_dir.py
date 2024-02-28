@@ -340,8 +340,8 @@ class FilesSearchSource(JsonSchemaMixin):
                         del record_dict[Fields.TEXT_FROM_PDF]
                     # else:
                     #     print(f'text extraction error in {record_dict[Fields.ID]}')
-                    if Fields.PAGES_IN_FILE in record_dict:
-                        del record_dict[Fields.PAGES_IN_FILE]
+                    if Fields.NR_PAGES_IN_FILE in record_dict:
+                        del record_dict[Fields.NR_PAGES_IN_FILE]
 
                 record_dict = {k: v for k, v in record_dict.items() if v is not None}
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
