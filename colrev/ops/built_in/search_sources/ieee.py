@@ -13,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.ieee_api
 import colrev.ops.load_utils_ris
+import colrev.ops.load_utils_table
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.record
@@ -371,10 +372,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             },
         }
 
+        load_operation.ensure_append_only(file=self.search_source.filename)
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation,
-            source=self.search_source,
+            source_file=self.search_source.filename,
             list_fields={"AU": " and "},
+            force_mode=False,
+            logger=self.review_manager.logger,
         )
         records = ris_loader.load_ris_records()
 

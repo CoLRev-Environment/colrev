@@ -255,11 +255,12 @@ class UnknownSearchSource(JsonSchemaMixin):
             },
         }
 
-        list_fields = {"AU": " and "}
+        load_operation.ensure_append_only(file=self.search_source.filename)
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields=list_fields,
+            source_file=self.search_source.filename,
+            list_fields={"AU": " and ", "KW": ", "},
+            force_mode=False,
+            logger=self.review_manager.logger,
         )
         records = ris_loader.load_ris_records()
 
@@ -361,11 +362,11 @@ class UnknownSearchSource(JsonSchemaMixin):
             "Inproceedings": ENTRYTYPES.MISC,
         }
 
-        list_fields = {"A": " and "}
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields=list_fields,
+            source_file=self.search_source.filename,
+            list_fields={"A": " and "},
+            force_mode=load_operation.review_manager.force_mode,
+            logger=load_operation.review_manager.logger,
         )
         records = enl_loader.load_enl_entries()
 

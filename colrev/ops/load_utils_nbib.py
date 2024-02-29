@@ -76,15 +76,9 @@ import logging
 import re
 import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    pass
-
-# pylint: disable=too-few-public-methods
 
 
 class NextLine(Exception):

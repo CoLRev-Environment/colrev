@@ -11,6 +11,9 @@ Usage::
     import colrev.ops.load_utils_ris
     from colrev.constants import Fields, ENTRYTYPES
 
+    # if self.unique_id_field == ""
+    self.load_operation.ensure_append_only(file=self.source.filename)
+
     # The mappings need to be adapted to the SearchSource
     entrytype_map = {
         "JOUR": ENTRYTYPES.ARTICLE,
@@ -38,9 +41,11 @@ Usage::
     }
 
     ris_loader = colrev.ops.load_utils_ris.RISLoader(
-        load_operation=load_operation,
-        source=self.search_source,
+        source_file=self.search_source.filename,
         list_fields={"AU": " and "},
+        unique_id_field="ID",
+        force_mode=False,
+        logger=review_manager.logger,
     )
 
     # Note : fixes can be applied before each of the following steps
@@ -75,16 +80,13 @@ Example RIS record::
 """
 from __future__ import annotations
 
+import logging
 import re
 import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from colrev.constants import Colors
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.load
 
 
 class NextLine(Exception):
@@ -103,24 +105,27 @@ class RISLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
+        source_file: Path,
         list_fields: dict,
         unique_id_field: str = "",
+        logger: logging.Logger,
+        force_mode: bool = False,
     ):
-        self.load_operation = load_operation
-        self.source = source
+        self.source_file = source_file
+        self.logger = logger
+        self.force_mode = force_mode
+
         self.unique_id_field = unique_id_field
         self.list_fields = list_fields
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
 
-    def apply_ris_fixes(self, *, filename: Path) -> None:
+    def apply_ris_fixes(self) -> None:
         """Fix common defects in RIS files"""
 
         # Error to fix: for lists of keywords, each line should start with the KW tag
 
-        with open(filename, encoding="UTF-8") as file:
+        with open(self.source_file, encoding="UTF-8") as file:
             lines = [line.rstrip("\n") for line in file]
             for i, line in enumerate(lines):
                 if line.startswith("PMID "):
@@ -140,7 +145,7 @@ class RISLoader:
                 else:
                     lines[i] = f"{processing_tag} {line}"
 
-        with open(filename, "w", encoding="utf-8") as file:
+        with open(self.source_file, "w", encoding="utf-8") as file:
             for line in lines:
                 file.write(f"{line}\n")
 
@@ -214,11 +219,8 @@ class RISLoader:
         # Note : depending on the source, a specific ris_parser implementation may be selected.
         # its DEFAULT_LIST_TAGS can be extended with list fields that should be joined automatically
 
-        if self.unique_id_field == "":
-            self.load_operation.ensure_append_only(file=self.source.filename)
-
         if content == "":
-            content = self.source.filename.read_text(encoding="utf-8")
+            content = self.source_file.read_text(encoding="utf-8")
             content = self._clean_text(content)
 
         lines = content.split("\n")
@@ -242,9 +244,9 @@ class RISLoader:
         """Apply the mapping of RIS TY fields to CoLRev ENTRYTYPES"""
         if record_dict["TY"] not in entrytype_map:
             msg = f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-            if not self.load_operation.review_manager.force_mode:
+            if not self.force_mode:
                 raise NotImplementedError(msg)
-            self.load_operation.review_manager.logger.error(msg)
+            self.logger.error(msg)
             return
 
         entrytype = entrytype_map[record_dict["TY"]]

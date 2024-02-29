@@ -123,11 +123,13 @@ class PsycINFOSearchSource(JsonSchemaMixin):
                 "SN": Fields.ISSN,
             },
         }
-        list_fields = {"A1": " and ", "KW": ", "}
+
+        load_operation.ensure_append_only(file=self.search_source.filename)
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields=list_fields,
+            source_file=self.search_source.filename,
+            list_fields={"A1": " and ", "KW": ", "},
+            force_mode=False,
+            logger=self.review_manager.logger,
         )
         records = ris_loader.load_ris_records()
 

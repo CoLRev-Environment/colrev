@@ -284,9 +284,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         }
         self.search_source.filename.write_text(response.content.decode("utf-8"))
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            load_operation=self.review_manager.get_load_operation(),
-            source=self.search_source,
+            source_file=self.search_source.filename,
             list_fields={"A": " and "},
+            force_mode=self.review_manager.force_mode,
+            logger=self.review_manager.logger,
             unique_id_field="ID",
         )
 
@@ -445,9 +446,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # pylint: disable=colrev-missed-constant-usage
         if self.search_source.filename.suffix in [".txt", ".enl"]:
             enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-                load_operation=load_operation,
-                source=self.search_source,
+                source_file=self.search_source.filename,
                 list_fields={"A": " and "},
+                force_mode=self.review_manager.force_mode,
+                logger=self.review_manager.logger,
                 unique_id_field="ID",
             )
             records = enl_loader.load_enl_entries()

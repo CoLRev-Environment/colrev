@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 """Tests of the enl load utils"""
+import logging
+import os
 from pathlib import Path
+
+import pytest
 
 import colrev.ops.load_utils_enl
 import colrev.review_manager
@@ -10,19 +14,10 @@ from colrev.constants import Fields
 
 
 def test_load(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager, tmp_path, helpers
 ) -> None:
     """Test the enl load utils"""
-
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
-
-    search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
-        filename=Path("data/search/ais.txt"),
-        search_type=colrev.settings.SearchType.OTHER,
-        search_parameters={"scope": {"path": "test"}},
-        comment="",
-    )
+    os.chdir(tmp_path)
 
     enl_mapping = {
         ENTRYTYPES.ARTICLE: {
@@ -65,14 +60,14 @@ def test_load(  # type: ignore
 
     helpers.retrieve_test_file(
         source=Path("load_utils/") / Path("ais.txt"),
-        target=Path("data/search/") / Path("ais.txt"),
+        target=Path("ais.txt"),
     )
-    load_operation = base_repo_review_manager.get_load_operation()
 
     enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-        load_operation=load_operation,
-        source=search_source,
+        source_file=Path("ais.txt"),
         list_fields={"A": " and "},
+        force_mode=False,
+        logger=logging.getLogger(__name__),
     )
     records = enl_loader.load_enl_entries()
 
@@ -96,5 +91,23 @@ def test_load(  # type: ignore
     ).read_text(encoding="utf-8")
 
     actual = base_repo_review_manager.dataset.parse_bibtex_str(recs_dict_in=records)
-    print(actual)
     assert actual == expected
+
+    records = enl_loader.load_enl_entries()
+    records["000001"]["0"] = "unknown"
+
+    with pytest.raises(NotImplementedError):
+        enl_loader.apply_entrytype_mapping(
+            record_dict=records["000001"], entrytype_map=entrytype_map
+        )
+
+    enl_loader.force_mode = True
+    enl_loader.apply_entrytype_mapping(
+        record_dict=records["000001"], entrytype_map=entrytype_map
+    )
+
+    records["000001"]["ENTRYTYPE"] = "article"
+    enl_loader.map_keys(
+        record_dict=records["000001"], key_map={ENTRYTYPES.ARTICLE: {"T": "title"}}
+    )
+    assert records["000001"].keys() == {"ID", "ENTRYTYPE", "title"}
