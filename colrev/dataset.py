@@ -173,18 +173,6 @@ class Dataset:
         )
         return committed_origin_state_dict
 
-    def get_nr_in_bib(self, *, file_path: Path) -> int:
-        """Returns number of records in the bib file"""
-        number_in_bib = 0
-        with open(file_path, encoding="utf8") as file:
-            line = file.readline()
-            while line:
-                if "@" in line[:3]:
-                    if "@comment" not in line[:10].lower():
-                        number_in_bib += 1
-                line = file.readline()
-        return number_in_bib
-
     def load_records_from_history(
         self, *, commit_sha: str = ""
     ) -> typing.Iterator[dict]:

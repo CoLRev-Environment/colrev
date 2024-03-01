@@ -16,6 +16,15 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     """Test the load utils for bib files"""
     os.chdir(tmp_path)
 
+    Path("non-bib-file.bib").write_text("This is not a bib file.")
+    with pytest.raises(colrev_exceptions.UnsupportedImportFormatError):
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=Path("non-bib-file.bib"),
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
+        records = bib_loader.load_bib_file()
+
     # only supports bib
     with pytest.raises(colrev_exceptions.ImportException):
         bib_loader = colrev.ops.load_utils_bib.BIBLoader(
@@ -61,7 +70,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             "language": "German",
             "month": "April",
             "url": "https://www.proquest.com/abc/def",
-            "author": "Articlewriter, Laura",
+            "author": "Articlewriter, Laura, III",
         },
         "articlewriter_firstrandomword_2020a": {
             "ENTRYTYPE": "article",
@@ -81,12 +90,19 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             "volume": "99",
             "year": "2020",
         },
-        "mouse2015": {
-            "ID": "mouse2015",
+        "mouse_2015": {
+            "ID": "mouse_2015",
             "ENTRYTYPE": "inproceedings",
             "title": "Mouse stories",
             "author": "Mouse, M.",
             "booktitle": "Proceedings of the 34th International Cosmic Ray Conference",
             "year": "2015",
+        },
+        "mouse2016": {
+            "ENTRYTYPE": "inproceedings",
+            "ID": "mouse2016",
+            "author": "Mouse, M.",
+            "crossref": "ICRC2016",
+            "title": "Mouse stories two",
         },
     }

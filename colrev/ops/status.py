@@ -16,6 +16,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.ops.load_utils_bib import BIBLoader
 
 
 class Status(colrev.operation.Operation):
@@ -563,7 +564,14 @@ class StatusStats:
                 # Note : skip md-prep sources
                 if str(search_file.name).startswith("md_"):
                     continue
-                number_search += self.status_stats.review_manager.dataset.get_nr_in_bib(
-                    file_path=search_file
+
+                # TODO : incomplete (only covers bib files?!)
+                bib_loader = BIBLoader(
+                    source_file=search_file,
+                    logger=self.status_stats.review_manager.logger,
+                    force_mode=self.status_stats.review_manager.force_mode,
                 )
+
+                number_search += bib_loader.get_nr_in_bib()
+
             return number_search

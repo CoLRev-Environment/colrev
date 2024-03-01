@@ -276,7 +276,10 @@ class BIBLoader:
             Fields.D_PROV,
         ], f"error loading dict_field: {field}"
 
-        return_dict = {}
+        return_dict: typing.Dict[str, typing.Any] = {}
+        if value == "":  # pragma: no cover
+            return return_dict
+
         if field == Fields.MD_PROV:
             if value[:7] == FieldValues.CURATED:
                 source = value[value.find(":") + 1 : value[:-1].rfind(";")]
@@ -285,10 +288,10 @@ class BIBLoader:
                     "note": "",
                 }
 
-            elif value != "":
+            else:
                 # Pybtex automatically replaces \n in fields.
                 # For consistency, we also do that for header_only mode:
-                if "\n" in value:
+                if "\n" in value:  # pragma: no cover
                     value = value.replace("\n", " ")
                 items = [x.lstrip() + ";" for x in (value + " ").split("; ") if x != ""]
 
@@ -306,24 +309,34 @@ class BIBLoader:
                     }
 
         elif field == Fields.D_PROV:
-            if value != "":
-                # Note : pybtex replaces \n upon load
-                for item in (value + " ").split("; "):
-                    if item == "":
-                        continue
-                    item += ";"  # removed by split
-                    key_source = item[: item[:-1].rfind(";")]
-                    note = item[item[:-1].rfind(";") + 1 : -1]
-                    assert (
-                        ":" in key_source
-                    ), f"problem with data_provenance_item {item}"
-                    key, source = key_source.split(":", 1)
-                    return_dict[key] = {
-                        "source": source,
-                        "note": note,
-                    }
+            # Note : pybtex replaces \n upon load
+            for item in (value + " ").split("; "):
+                if item == "":
+                    continue
+                item += ";"  # removed by split
+                key_source = item[: item[:-1].rfind(";")]
+                note = item[item[:-1].rfind(";") + 1 : -1]
+                assert ":" in key_source, f"problem with data_provenance_item {item}"
+                key, source = key_source.split(":", 1)
+                return_dict[key] = {
+                    "source": source,
+                    "note": note,
+                }
 
         return return_dict
+
+    def get_nr_in_bib(self) -> int:
+
+        nr_in_bib = 0
+        with open(self.source_file, encoding="utf8") as file:
+            line = file.readline()
+            while line:
+                if "@" in line[:3]:
+                    if "@comment" not in line[:10].lower():
+                        nr_in_bib += 1
+                line = file.readline()
+
+        return nr_in_bib
 
     def load_bib_file(
         self,
@@ -340,31 +353,7 @@ class BIBLoader:
                     k: v for k, v in records[record_id].items() if v != "nan"
                 }
 
-        # def check_nr_in_bib(*, records: dict) -> None:
-        #     self.logger.debug(
-        #         f"Loaded {self.source_file.name} with {len(records)} records"
-        #     )
-        #     nr_in_bib = self.review_manager.dataset.get_nr_in_bib(
-        #         file_path=self.source_file
-        #     )
-        #     if len(records) < nr_in_bib:
-        #         self.logger.error("broken bib file (not imported all records)")
-        #         with open(self.source_file, encoding="utf8") as file:
-        #             line = file.readline()
-        #             while line:
-        #                 if "@" in line[:3]:
-        #                     record_id = line[line.find("{") + 1 : line.rfind(",")]
-        #                     if record_id not in [
-        #                         x[Fields.ID] for x in records.values()
-        #                     ]:
-        #                         self.review_manager.logger.error(
-        #                             f"{record_id} not imported"
-        #                         )
-        #                 line = file.readline()
-
-        def _load_records() -> dict:
-            if not self.source_file.is_file():
-                return {}
+        def load_records() -> dict:
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(self.source_file))
             records = self.parse_records_dict(records_dict=bib_data.entries)
@@ -388,7 +377,7 @@ class BIBLoader:
                 if "crossref" not in record_dict:
                     continue
 
-                crossref_record = records[record_dict["crossref"]]
+                crossref_record = records.get(record_dict["crossref"], None)
 
                 if not crossref_record:
                     print(
@@ -405,17 +394,33 @@ class BIBLoader:
             for crossref_id in crossref_ids:
                 del records[crossref_id]
 
+        def check_nr_in_bib(*, records: dict) -> None:
+            self.logger.debug(
+                f"Loaded {self.source_file.name} with {len(records)} records"
+            )
+            nr_in_bib = self.get_nr_in_bib()
+            if len(records) < nr_in_bib:
+                self.logger.error("broken bib file (not imported all records)")
+                with open(self.source_file, encoding="utf8") as file:
+                    line = file.readline()
+                    while line:
+                        if "@" in line[:3]:
+                            record_id = line[line.find("{") + 1 : line.rfind(",")]
+                            if record_id not in [
+                                x[Fields.ID] for x in records.values()
+                            ]:
+                                self.logger.error(f"{record_id} not imported")
+                        line = file.readline()
+
         if not check_bib_file:
-            records = _load_records()
+            records = load_records()
             return records
 
         self._apply_file_fixes()
-        records = _load_records()
+        records = load_records()
         lower_case_keys(records=records)
         drop_empty_fields(records=records)
         resolve_crossref(records=records)
         records = dict(sorted(records.items()))
-        # TODO : temporarily deactivated
-        # check_nr_in_bib(records=records)
-
+        check_nr_in_bib(records=records)
         return records
