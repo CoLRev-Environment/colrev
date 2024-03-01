@@ -4,14 +4,10 @@ from __future__ import annotations
 
 import html
 import re
-from typing import TYPE_CHECKING
 
 import colrev.env.language_service
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.load
 
 
 # pylint: disable=too-few-public-methods
@@ -20,6 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover
 class LoadFormatter:
     """Load formatter class"""
 
+    # Based on
+    # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
     _LATEX_SPECIAL_CHAR_MAPPING = {
         '\\"u': "ü",
         "\\&": "&",
@@ -32,7 +30,23 @@ class LoadFormatter:
         "\\textemdash": "—",
         "\\~a": "ã",
         "\\'o": "ó",
+        "\\emph": "",
+        "\\textit": "",
     }
+
+    _FIELDS_TO_PROCESS = [
+        Fields.AUTHOR,
+        Fields.YEAR,
+        Fields.TITLE,
+        Fields.JOURNAL,
+        Fields.BOOKTITLE,
+        Fields.SERIES,
+        Fields.VOLUME,
+        Fields.NUMBER,
+        Fields.PAGES,
+        Fields.DOI,
+        Fields.ABSTRACT,
+    ]
 
     def __init__(self) -> None:
         self.language_service = colrev.env.language_service.LanguageService()
@@ -55,15 +69,8 @@ class LoadFormatter:
                 record.data[n_key] = record.data.pop(key)
 
     def _unescape_latex(self, *, input_str: str) -> str:
-        # Based on
-        # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
-
         for latex_char, repl_char in self._LATEX_SPECIAL_CHAR_MAPPING.items():
             input_str = input_str.replace(latex_char, repl_char)
-
-        input_str = input_str.replace("\\emph", "")
-        input_str = input_str.replace("\\textit", "")
-
         return input_str
 
     def _unescape_html(self, *, input_str: str) -> str:
@@ -73,22 +80,8 @@ class LoadFormatter:
         return input_str
 
     def _unescape_field_values(self, *, record: colrev.record.Record) -> None:
-        fields_to_process = [
-            Fields.AUTHOR,
-            Fields.YEAR,
-            Fields.TITLE,
-            Fields.JOURNAL,
-            Fields.BOOKTITLE,
-            Fields.SERIES,
-            Fields.VOLUME,
-            Fields.NUMBER,
-            Fields.PAGES,
-            Fields.DOI,
-            Fields.ABSTRACT,
-        ]
-
         for field in record.data:
-            if field not in fields_to_process:
+            if field not in self._FIELDS_TO_PROCESS:
                 continue
             if "\\" in record.data[field]:
                 record.data[field] = self._unescape_latex(input_str=record.data[field])
@@ -109,6 +102,7 @@ class LoadFormatter:
                 r"\s+", " ", record.data[Fields.TITLE]
             ).rstrip(".")
 
+        # Fix floating point years
         if Fields.YEAR in record.data and str(record.data[Fields.YEAR]).endswith(".0"):
             record.data[Fields.YEAR] = str(record.data[Fields.YEAR])[:-2]
 
