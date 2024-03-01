@@ -77,6 +77,7 @@ import re
 import typing
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import Fields
 
@@ -103,6 +104,15 @@ class NBIBLoader:
         logger: logging.Logger,
         force_mode: bool = False,
     ):
+
+        if not source_file.name.endswith(".nbib"):
+            raise colrev_exceptions.ImportException(
+                f"File not supported by NBIBLoader: {source_file.name}"
+            )
+        if not source_file.exists():
+            raise colrev_exceptions.ImportException(
+                f"File not found: {source_file.name}"
+            )
         self.source_file = source_file
         self.unique_id_field = unique_id_field
         self.force_mode = force_mode

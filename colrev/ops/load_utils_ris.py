@@ -85,6 +85,7 @@ import re
 import typing
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import Fields
 
@@ -111,6 +112,15 @@ class RISLoader:
         logger: logging.Logger,
         force_mode: bool = False,
     ):
+        if not source_file.name.endswith(".ris"):
+            raise colrev_exceptions.ImportException(
+                f"File not supported by RISLoader: {source_file.name}"
+            )
+        if not source_file.exists():
+            raise colrev_exceptions.ImportException(
+                f"File not found: {source_file.name}"
+            )
+
         self.source_file = source_file
         self.logger = logger
         self.force_mode = force_mode

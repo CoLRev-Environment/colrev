@@ -109,12 +109,12 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
-                load_operation=load_operation,
-                source=self.search_source,
+                source_file=self.search_source.filename,
+                logger=load_operation.review_manager.logger,
+                force_mode=load_operation.review_manager.force_mode,
                 unique_id_field="item_doi",
             )
-            table_entries = table_loader.load_table_entries()
-            records = table_loader.convert_to_records(entries=table_entries)
+            records = table_loader.load_table_entries()
             self._load_fixes(records=records)
             return records
 
@@ -129,6 +129,13 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-branches
 
         for record_dict in records.values():
+
+            if "authors" in record_dict and Fields.AUTHOR not in record_dict:
+                record_dict[Fields.AUTHOR] = record_dict.pop("authors")
+
+            if "publication_year" in record_dict and Fields.YEAR not in record_dict:
+                record_dict[Fields.YEAR] = record_dict.pop("publication_year")
+
             if "item_title" in record_dict:
                 record_dict[Fields.TITLE] = record_dict["item_title"]
                 del record_dict["item_title"]

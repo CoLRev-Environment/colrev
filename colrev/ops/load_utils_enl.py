@@ -82,6 +82,7 @@ import re
 import typing
 from pathlib import Path
 
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import Fields
 
@@ -108,6 +109,15 @@ class ENLLoader:
         logger: logging.Logger,
         force_mode: bool = False,
     ):
+        if not source_file.name.endswith((".enl", ".txt")):
+            raise colrev_exceptions.ImportException(
+                f"File not supported by ENLLoader: {source_file.name}"
+            )
+        if not source_file.exists():
+            raise colrev_exceptions.ImportException(
+                f"File not found: {source_file.name}"
+            )
+
         self.source_file = source_file
         self.unique_id_field = unique_id_field
         self.logger = logger

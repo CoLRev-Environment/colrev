@@ -1,51 +1,77 @@
 #!/usr/bin/env python
 """Tests of the load utils for bib files"""
+import logging
+import os
 from pathlib import Path
 
-import colrev.ops.load_utils_bib
-import colrev.review_manager
-import colrev.settings
+import pytest
+
+import colrev.exceptions as colrev_exceptions
+from colrev.ops.load_utils_table import TableLoader
 
 
-def test_load(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
-) -> None:
+def test_load(tmp_path, helpers) -> None:  # type: ignore
     """Test the load utils for bib files"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    os.chdir(tmp_path)
 
-    search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
-        filename=Path("data/search/table_tests.csv"),
-        search_type=colrev.settings.SearchType.OTHER,
-        search_parameters={"scope": {"path": "test"}},
-        comment="",
-    )
+    # only supports csv/xlsx
+    with pytest.raises(colrev_exceptions.ImportException):
+        table_loader = TableLoader(
+            source_file=Path("table.ptvc"),
+            unique_id_field="pmid",
+            force_mode=False,
+            logger=logging.getLogger(__name__),
+        )
 
+    # file must exist
+    with pytest.raises(colrev_exceptions.ImportException):
+        table_loader = TableLoader(
+            source_file=Path("non-existent.xlsx"),
+            force_mode=False,
+            logger=logging.getLogger(__name__),
+        )
+
+    # Test csv
     helpers.retrieve_test_file(
-        source=Path("load_utils/") / Path("table_tests.csv"),
-        target=Path("data/search/") / Path("table_tests.csv"),
+        source=Path("load_utils/table.csv"),
+        target=Path("table.csv"),
     )
-    load_operation = base_repo_review_manager.get_load_operation()
 
-    table_loader = colrev.ops.load_utils_table.TableLoader(
-        load_operation=load_operation, source=search_source
+    table_loader = TableLoader(
+        source_file=Path("table.csv"),
+        unique_id_field="pmid",
+        force_mode=False,
+        logger=logging.getLogger(__name__),
     )
-    table_entries = table_loader.load_table_entries()
-    records = table_loader.convert_to_records(entries=table_entries)
 
-    expected = (
-        helpers.test_data_path / Path("load_utils/") / Path("table_tests_expected.bib")
-    ).read_text(encoding="utf-8")
+    entries = table_loader.load_table_entries()
 
-    actual = base_repo_review_manager.dataset.parse_bibtex_str(recs_dict_in=records)
-    if expected != actual:
-        with open(
-            helpers.test_data_path
-            / Path("load_utils/")
-            / Path("table_tests_expected.bib"),
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write(actual)
-    assert actual == expected
+    assert len(entries) == 1
+    print(entries)
+    assert entries["11223344"]["pmid"] == "11223344"
+    assert entries["11223344"]["title"] == "Paper title"
+    assert (
+        entries["11223344"]["citation"]
+        == "Nature. 2021 Dec 21;1(2):10-11. doi: 10.1111/nature1111."
+    )
+    assert entries["11223344"]["first_author"] == "Smith A"
+    assert entries["11223344"]["create_date"] == "2021/12/21"
+    assert entries["11223344"]["pmcid"] == "PMC1122334"
+    assert entries["11223344"]["doi"] == "10.1111/nature1111"
+    assert entries["11223344"]["ID"] == "11223344"
+    assert entries["11223344"]["authors"] == "Smith A, Walter B"
+    assert entries["11223344"]["publication_year"] == "2021"
+    assert entries["11223344"]["journal/book"] == "Nature"
+
+    # Test xlsx
+    helpers.retrieve_test_file(
+        source=Path("load_utils/table.xlsx"),
+        target=Path("table.xlsx"),
+    )
+    table_loader = TableLoader(
+        source_file=Path("table.xlsx"),
+        force_mode=False,
+        logger=logging.getLogger(__name__),
+    )
+    table_loader.load_table_entries()

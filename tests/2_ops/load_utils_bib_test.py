@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Tests of the load utils for bib files"""
+import logging
+import os
 from pathlib import Path
 
 import colrev.ops.load_utils_bib
@@ -8,34 +10,66 @@ import colrev.settings
 
 
 def test_load(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+    base_repo_review_manager: colrev.review_manager.ReviewManager, tmp_path, helpers
 ) -> None:
     """Test the load utils for bib files"""
-
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
-
-    search_source = colrev.settings.SearchSource(
-        endpoint="colrev.unknown_source",
-        filename=Path("data/search/bib_tests.bib"),
-        search_type=colrev.settings.SearchType.OTHER,
-        search_parameters={"scope": {"path": "test"}},
-        comment="",
-    )
+    os.chdir(tmp_path)
 
     helpers.retrieve_test_file(
         source=Path("load_utils/") / Path("bib_tests.bib"),
         target=Path("data/search/") / Path("bib_tests.bib"),
     )
-    load_operation = base_repo_review_manager.get_load_operation()
 
     bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-        load_operation=load_operation, source=search_source
+        source_file=Path("data/search/bib_tests.bib"),
+        logger=logging.getLogger(__name__),
+        force_mode=False,
     )
-    records = bib_loader.load_bib_file(check_bib_file=False)
+    records = bib_loader.load_bib_file()
 
-    expected = (
-        helpers.test_data_path / Path("load_utils/") / Path("bib_tests_expected.bib")
-    ).read_text(encoding="utf-8")
-
-    actual = base_repo_review_manager.dataset.parse_bibtex_str(recs_dict_in=records)
-    assert actual == expected
+    assert records == {
+        "articlewriter_firstrandomword_2020": {
+            "ID": "articlewriter_firstrandomword_2020",
+            "ENTRYTYPE": "article",
+            "doi": "10.3333/XYZ.V4444.04",
+            "journal": "Dummy Relations",
+            "title": "This is a dummy title",
+            "year": "2020",
+            "volume": "99",
+            "number": "299",
+            "pages": "99--123",
+            "abstract": "This is a nice abstract.",
+            "issn": "07654321",
+            "keywords": "Dummy, Template, Void, Example",
+            "language": "German",
+            "month": "April",
+            "url": "https://www.proquest.com/abc/def",
+            "author": "Articlewriter, Laura",
+        },
+        "articlewriter_firstrandomword_2020a": {
+            "ENTRYTYPE": "article",
+            "ID": "articlewriter_firstrandomword_2020a",
+            "abstract": "This is a nice abstract.",
+            "author": "Articlewriter, Laura",
+            "doi": "10.3333/XYZ.V4444.04",
+            "issn": "07654321",
+            "journal": "Dummy Relations",
+            "key_words": "Dummy, Template, Void, Example",
+            "language": "German",
+            "month": "April",
+            "number": "299",
+            "pages": "99--123",
+            "title": "This is a dummy title",
+            "url": "https://www.proquest.com/abc/def",
+            "volume": "99",
+            "year": "2020",
+        },
+        "mouse2015": {
+            "ID": "mouse2015",
+            "ENTRYTYPE": "inproceedings",
+            "title": "Mouse stories",
+            "author": "Mouse, M.",
+            "booktitle": "Proceedings of the 34th International Cosmic Ray Conference",
+            "year": "2015",
+        },
+    }

@@ -30,21 +30,86 @@ def test_load_md(  # type: ignore
     load_operation = base_repo_review_manager.get_load_operation()
 
     md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-        load_operation=load_operation, source=search_source
+        source_file=search_source.filename,
+        logger=load_operation.review_manager.logger,
+        force_mode=False,
     )
     records = md_loader.load()
 
-    actual_records_text = base_repo_review_manager.dataset.parse_bibtex_str(
-        recs_dict_in=records
-    )
-    expected_file_path = (
-        helpers.test_data_path / Path("load_utils/") / Path("references_expected.bib")
-    )
-    expected_records_text = expected_file_path.read_text(encoding="utf-8")
-
-    if expected_records_text != actual_records_text:
-        expected_file_path.write_text(actual_records_text, encoding="utf-8")
-
+    assert records["1"]["ID"] == "1"
+    assert records["1"]["ENTRYTYPE"] == "article"
     assert (
-        expected_records_text == actual_records_text
-    ), "The loaded records from the MD file do not match the expected records."
+        records["1"]["title"]
+        == "Systematic reviews: work that needs to be done and not to be done"
+    )
+    assert records["1"]["journal"] == "Journal of Evidence-Based Medicine"
+    assert records["1"]["year"] == "2013"
+    assert records["1"]["pages"] == "232--235"
+    assert records["1"]["volume"] == "6"
+    assert records["1"]["number"] == "4"
+    assert records["1"]["author"] == "Adams, C and Polzmacher, S and Wolff, A"
+
+    assert records["2"]["ID"] == "2"
+    assert records["2"]["ENTRYTYPE"] == "article"
+    assert (
+        records["2"]["title"]
+        == "Architecture of Sysperanto: a model-based ontology of the is field"
+    )
+    assert (
+        records["2"]["journal"]
+        == "Communications of the Association for Information Systems"
+    )
+    assert records["2"]["year"] == "2005"
+    assert records["2"]["pages"] == "1--40"
+    assert records["2"]["volume"] == "15"
+    assert records["2"]["number"] == "1"
+    assert records["2"]["author"] == "Alter, S"
+
+    assert records["3"]["ID"] == "3"
+    assert records["3"]["ENTRYTYPE"] == "article"
+    assert (
+        records["3"]["title"]
+        == "Generating research questions through problematization"
+    )
+    assert records["3"]["journal"] == "Academy of Management Review"
+    assert records["3"]["year"] == "2011"
+    assert records["3"]["pages"] == "247--271"
+    assert records["3"]["volume"] == "36"
+    assert records["3"]["number"] == "2"
+    assert records["3"]["author"] == "Alvesson, M and Sandberg, J"
+
+    assert records["4"]["ID"] == "4"
+    assert records["4"]["ENTRYTYPE"] == "article"
+    assert (
+        records["4"]["title"]
+        == "Vision for SLR tooling infrastructure: prioritizing value-added requirements"
+    )
+    assert records["4"]["journal"] == "Information and Software Technology"
+    assert records["4"]["year"] == "2017"
+    assert records["4"]["pages"] == "72--81"
+    assert records["4"]["volume"] == "91"
+    assert records["4"]["author"] == "Al-Zubidy, A and Carver, J and Hale, D"
+
+    assert records["5"]["ID"] == "5"
+    assert records["5"]["ENTRYTYPE"] == "inproceedings"
+    assert records["5"]["title"] == "Brainwash: a data system for feature engineering"
+    assert (
+        records["5"]["booktitle"]
+        == "Proceedings of the biennial conference on innovative data systems research"
+    )
+    assert records["5"]["year"] == "2013"
+    assert records["5"]["address"] == "Asilomar, CA"
+    assert records["5"]["author"] == "Anderson, M and Antenucci, D and Bittorf, V"
+
+    assert records["6"]["ID"] == "6"
+    assert records["6"]["ENTRYTYPE"] == "article"
+    assert (
+        records["6"]["title"]
+        == "Big data, big insights? Advancing service innovation and design with machine learning"
+    )
+    assert records["6"]["journal"] == "Journal of Service Research"
+    assert records["6"]["year"] == "2017"
+    assert records["6"]["pages"] == "17--39"
+    assert records["6"]["volume"] == "21"
+    assert records["6"]["number"] == "1"
+    assert records["6"]["author"] == "Antons, D and Breidbach, C"

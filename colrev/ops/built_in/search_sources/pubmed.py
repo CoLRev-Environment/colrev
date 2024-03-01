@@ -26,8 +26,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import FieldValues
 
 
 # pylint: disable=unused-argument
@@ -677,23 +677,45 @@ class PubMedSearchSource(JsonSchemaMixin):
         else:
             raise NotImplementedError
 
+    def _table_fields_update(self, *, record_dict: dict) -> None:
+
+        record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+
+        if "authors" in record_dict and Fields.AUTHOR not in record_dict:
+            record_dict[Fields.AUTHOR] = record_dict.pop("authors")
+        record_dict[Fields.AUTHOR] = record_dict[Fields.AUTHOR].replace(", ", " and ")
+
+        if (
+            "journal/book" in record_dict
+            and Fields.JOURNAL not in record_dict
+            and Fields.DOI in record_dict
+        ):
+            record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
+
+        if "publication_year" in record_dict and Fields.YEAR not in record_dict:
+            record_dict[Fields.YEAR] = record_dict.pop("publication_year")
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
-                load_operation=load_operation,
-                source=self.search_source,
+                source_file=self.search_source.filename,
+                logger=load_operation.review_manager.logger,
+                force_mode=load_operation.review_manager.force_mode,
                 unique_id_field="pmid",
             )
-            table_entries = table_loader.load_table_entries()
-            records = table_loader.convert_to_records(entries=table_entries)
+            records = table_loader.load_table_entries()
             self._load_fixes(records=records)
+            for record_dict in records.values():
+                self._table_fields_update(record_dict=record_dict)
             return records
 
         if self.search_source.filename.suffix == ".bib":
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+                source_file=self.search_source.filename,
+                logger=load_operation.review_manager.logger,
+                force_mode=load_operation.review_manager.force_mode,
             )
             records = bib_loader.load_bib_file()
             return records
@@ -751,26 +773,10 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         if "colrev.pubmed.first_author" in record.data:
             record.remove_field(key="colrev.pubmed.first_author")
-        if (
-            record.data.get(Fields.AUTHOR) == FieldValues.UNKNOWN
-            and "authors" in record.data
-        ):
-            record.remove_field(key=Fields.AUTHOR)
-            record.rename_field(key="authors", new_key=Fields.AUTHOR)
-
-        if record.data.get(Fields.YEAR) == FieldValues.UNKNOWN:
-            record.remove_field(key=Fields.YEAR)
-            if "colrev.pubmed.publication_year" in record.data:
-                record.rename_field(
-                    key="colrev.pubmed.publication_year", new_key=Fields.YEAR
-                )
 
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
                 input_string=record.data[Fields.AUTHOR]
             )
-
-        # TBD: how to distinguish other types?
-        record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
         return record

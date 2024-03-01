@@ -298,31 +298,124 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     def _load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
         bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            load_operation=load_operation, source=self.search_source
+            source_file=self.search_source.filename,
+            logger=load_operation.review_manager.logger,
+            force_mode=load_operation.review_manager.force_mode,
         )
         records = bib_loader.load_bib_file()
 
         return records
 
+    # pylint: disable=colrev-missed-constant-usage
+    def _table_set_entrytype(self, *, record_dict: dict) -> None:
+        if "type" in record_dict:
+            record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
+
+        if Fields.ENTRYTYPE not in record_dict:
+            if record_dict.get(Fields.JOURNAL, "") != "":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict.get(Fields.BOOKTITLE, "") != "":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            if Fields.JOURNAL in record_dict and Fields.BOOKTITLE not in record_dict:
+                record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL)
+        elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            if Fields.BOOKTITLE in record_dict and Fields.JOURNAL not in record_dict:
+                record_dict[Fields.JOURNAL] = record_dict.pop(Fields.BOOKTITLE)
+
+    # pylint: disable=colrev-missed-constant-usage
+    def _table_rename_fields(self, *, record_dict: dict) -> None:
+        if "issue" in record_dict and Fields.NUMBER not in record_dict:
+            record_dict[Fields.NUMBER] = record_dict.pop("issue")
+            if record_dict[Fields.NUMBER] == "no issue":
+                del record_dict[Fields.NUMBER]
+
+        if "authors" in record_dict and Fields.AUTHOR not in record_dict:
+            record_dict[Fields.AUTHOR] = record_dict.pop("authors")
+
+        if "publication_year" in record_dict and Fields.YEAR not in record_dict:
+            record_dict[Fields.YEAR] = record_dict.pop("publication_year")
+
+        # Note: this is a simple heuristic:
+        if (
+            "journal/book" in record_dict
+            and Fields.JOURNAL not in record_dict
+            and Fields.DOI in record_dict
+        ):
+            record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
+
+    # pylint: disable=colrev-missed-constant-usage
+    def _table_drop_fields(self, *, records_dict: dict) -> None:
+        for r_dict in records_dict.values():
+            for key in list(r_dict.keys()):
+                if r_dict[key] in [f"no {key}", "", "nan"]:
+                    del r_dict[key]
+            if (
+                r_dict.get("number_of_cited_references", "NA")
+                == "no Number-of-Cited-References"
+            ):
+                del r_dict["number_of_cited_references"]
+            if "no file" in r_dict.get("file_name", "NA"):
+                del r_dict["file_name"]
+
+            if r_dict.get("cited_by", "NA") in [
+                "no Times-Cited",
+            ]:
+                del r_dict["cited_by"]
+
+            if "author_count" in r_dict:
+                del r_dict["author_count"]
+            if "citation_key" in r_dict:
+                del r_dict["citation_key"]
+
+    # pylint: disable=colrev-missed-constant-usage
+    def _table_fix_authors(self, *, records_dict: dict) -> None:
+        for record in records_dict.values():
+            if "author" in record and ";" in record["author"]:
+                record["author"] = record["author"].replace("; ", " and ")
+
     def _load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
+
+        load_operation.ensure_append_only(file=self.search_source.filename)
         table_loader = colrev.ops.load_utils_table.TableLoader(
-            load_operation=load_operation, source=self.search_source
+            source_file=self.search_source.filename,
+            logger=load_operation.review_manager.logger,
+            force_mode=load_operation.review_manager.force_mode,
         )
-        table_entries = table_loader.load_table_entries()
-        records = table_loader.convert_to_records(entries=table_entries)
+        records = table_loader.load_table_entries()
+        for record_dict in records.values():
+            self._table_set_entrytype(record_dict=record_dict)
+            self._table_rename_fields(record_dict=record_dict)
+            self._table_drop_fields(records_dict=records)
+            self._table_fix_authors(records_dict=records)
+
         return records
 
     def _load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        load_operation.ensure_append_only(file=self.search_source.filename)
         excel_loader = colrev.ops.load_utils_table.TableLoader(
-            load_operation=load_operation, source=self.search_source
+            source_file=self.search_source.filename,
+            logger=load_operation.review_manager.logger,
+            force_mode=load_operation.review_manager.force_mode,
         )
-        table_entries = excel_loader.load_table_entries()
-        records = excel_loader.convert_to_records(entries=table_entries)
+        records = excel_loader.load_table_entries()
+        for record_dict in records.values():
+            self._table_set_entrytype(record_dict=record_dict)
+            self._table_rename_fields(record_dict=record_dict)
+            self._table_drop_fields(records_dict=records)
+            self._table_fix_authors(records_dict=records)
         return records
 
     def _load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        load_operation.ensure_append_only(file=self.search_source.filename)
+
         md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-            load_operation=load_operation, source=self.search_source
+            source_file=self.search_source.filename,
+            logger=load_operation.review_manager.logger,
+            force_mode=load_operation.review_manager.force_mode,
         )
         records = md_loader.load()
         return records

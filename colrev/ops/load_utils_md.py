@@ -6,9 +6,12 @@ Usage::
     import colrev.ops.load_utils_md
     from colrev.constants import Fields
 
+    load_operation.ensure_append_only(file=self.source.filename)
+
     md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-        load_operation=load_operation,
-        source=self.search_source,
+        source_file=self.search_source.filename,
+        force_mode=False,
+        logger=review_manager.logger,
     )
 
     # Note : fixes can be applied before each of the following steps
@@ -25,9 +28,16 @@ Example markdown reference section::
 """
 from __future__ import annotations
 
+import logging
+import os
+import tempfile
+from pathlib import Path
+
 import requests
 
-import colrev.env.package_manager
+import colrev.exceptions as colrev_exceptions
+import colrev.ops.load_utils_bib
+import colrev.review_manager
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -40,24 +50,32 @@ class MarkdownLoader:
     def __init__(
         self,
         *,
-        load_operation: colrev.ops.load.Load,
-        source: colrev.settings.SearchSource,
+        source_file: Path,
+        logger: logging.Logger,
+        force_mode: bool = False,
     ):
-        self.source = source
-        self.load_operation = load_operation
+
+        if not source_file.name.endswith(".md"):
+            raise colrev_exceptions.ImportException(
+                f"File not supported by MarkdownLoader: {source_file.name}"
+            )
+        if not source_file.exists():
+            raise colrev_exceptions.ImportException(
+                f"File not found: {source_file.name}"
+            )
+        self.source_file = source_file
+        self.logger = logger
+        self.force_mode = force_mode
 
     def load(self) -> dict:
         """Load records from the source"""
-        self.load_operation.ensure_append_only(file=self.source.filename)
 
-        self.load_operation.review_manager.logger.info(
-            "Running GROBID to parse structured reference data"
-        )
+        self.logger.info("Running GROBID to parse structured reference data")
 
-        grobid_service = self.load_operation.review_manager.get_grobid_service()
+        grobid_service = colrev.review_manager.ReviewManager.get_grobid_service()
 
         grobid_service.check_grobid_availability()
-        with open(self.source.filename, encoding="utf8") as file:
+        with open(self.source_file, encoding="utf8") as file:
             references = [line.rstrip() for line in file if "#" not in line[:2]]
 
         data = ""
@@ -75,11 +93,24 @@ class MarkdownLoader:
             ind += 1
             data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")
 
-        records = self.load_operation.review_manager.dataset.load_records_dict(
-            load_str=data
-        )
-        for record in records.values():
-            if record.get(Fields.YEAR, "a") == record.get("date", "b"):
-                del record["date"]
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".bib"
+        ) as temp_file:
+            temp_file.write(data)
+            temp_file_path = temp_file.name
+            temp_file.flush()
+            temp_file.seek(0)
 
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=Path(temp_file_path),
+                logger=self.logger,
+                force_mode=self.force_mode,
+            )
+            records = bib_loader.load_bib_file(check_bib_file=True)
+
+            for record in records.values():
+                if record.get(Fields.YEAR, "a") == record.get("date", "b"):
+                    del record["date"]
+
+        os.remove(temp_file_path)
         return records

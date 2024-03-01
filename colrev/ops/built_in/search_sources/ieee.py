@@ -397,6 +397,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
     def _fix_csv_records(self, *, records: dict) -> None:
         for record in records.values():
+            record["accession_number"] = record["pdf_link"].split("=")[-1]
             record[Fields.FULLTEXT] = record.pop("pdf_link")
             if "article_citation_count" in record:
                 record[Fields.CITED_BY] = record.pop("article_citation_count")
@@ -427,16 +428,12 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
-                load_operation=load_operation,
-                source=self.search_source,
+                source_file=self.search_source.filename,
+                logger=load_operation.review_manager.logger,
+                force_mode=load_operation.review_manager.force_mode,
                 unique_id_field="accession_number",
             )
-            table_entries = table_loader.load_table_entries()
-            for entry_id, entry in table_entries.items():
-                table_entries[entry_id]["accession_number"] = entry["pdf_link"].split(
-                    "="
-                )[-1]
-            records = table_loader.convert_to_records(entries=table_entries)
+            records = table_loader.load_table_entries()
             self._fix_csv_records(records=records)
             return records
 
