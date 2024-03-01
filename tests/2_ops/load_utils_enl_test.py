@@ -6,11 +6,12 @@ from pathlib import Path
 
 import pytest
 
-import colrev.ops.load_utils_enl
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.ops.load_utils_enl import ENLLoader
 
 
 def test_load(  # type: ignore
@@ -18,6 +19,24 @@ def test_load(  # type: ignore
 ) -> None:
     """Test the enl load utils"""
     os.chdir(tmp_path)
+
+    # only supports enl
+    with pytest.raises(colrev_exceptions.ImportException):
+        enl_loader = ENLLoader(
+            source_file=Path("table.ptvc"),
+            list_fields={"A": " and ", "O": ", ", "P": ", "},
+            force_mode=False,
+            logger=logging.getLogger(__name__),
+        )
+
+    # file must exist
+    with pytest.raises(colrev_exceptions.ImportException):
+        enl_loader = ENLLoader(
+            source_file=Path("non-existent.enl"),
+            list_fields={"A": " and ", "O": ", ", "P": ", "},
+            force_mode=False,
+            logger=logging.getLogger(__name__),
+        )
 
     enl_mapping = {
         ENTRYTYPES.ARTICLE: {
@@ -63,7 +82,7 @@ def test_load(  # type: ignore
         target=Path("ais.txt"),
     )
 
-    enl_loader = colrev.ops.load_utils_enl.ENLLoader(
+    enl_loader = ENLLoader(
         source_file=Path("ais.txt"),
         list_fields={"A": " and "},
         force_mode=False,

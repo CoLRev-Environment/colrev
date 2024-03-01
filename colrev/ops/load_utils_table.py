@@ -67,7 +67,6 @@ class TableLoader:
         self.logger = logger
         self.force_mode = force_mode
 
-
     def _get_records_dict(self, *, records: list) -> dict:
         next_id = 1
         for record_dict in records:

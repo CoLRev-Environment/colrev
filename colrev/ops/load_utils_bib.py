@@ -118,10 +118,6 @@ class BIBLoader:
             file.seek(seekpos)
             return seekpos
 
-        if not self.source_file.is_file():
-            self.logger.debug(f"Did not find bib file {self.source_file} ")
-            return
-
         with open(self.source_file, encoding="utf8") as bibtex_file:
             contents = bibtex_file.read()
             bib_r = re.compile(r"@.*{.*,", re.M)
@@ -192,19 +188,6 @@ class BIBLoader:
 
                 seekpos = file.tell()
                 line = file.readline()
-
-    def _check_bib_file(self, *, records: dict) -> None:
-        if len(records.items()) <= 3:
-            return
-        if not any(Fields.AUTHOR in r for r in records.values()):
-            raise colrev_exceptions.ImportException(
-                f"Import failed (no record with author field): {self.source_file.name}"
-            )
-
-        if not any(Fields.TITLE in r for ID, r in records.items()):
-            raise colrev_exceptions.ImportException(
-                f"Import failed (no record with title field): {self.source_file.name}"
-            )
 
     def parse_records_dict(self, *, records_dict: dict) -> dict:
         """Parse a records_dict from pybtex to colrev standard"""
@@ -427,17 +410,12 @@ class BIBLoader:
             return records
 
         self._apply_file_fixes()
-
         records = _load_records()
-        if len(records) == 0:
-            return records
-
         lower_case_keys(records=records)
         drop_empty_fields(records=records)
         resolve_crossref(records=records)
         records = dict(sorted(records.items()))
         # TODO : temporarily deactivated
         # check_nr_in_bib(records=records)
-        if check_bib_file:
-            self._check_bib_file(records=records)
+
         return records

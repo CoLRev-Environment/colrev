@@ -6,11 +6,32 @@ from pathlib import Path
 
 import pytest
 
+import colrev.exceptions as colrev_exceptions
 from colrev.ops.load_utils_nbib import NBIBLoader
 
 
 def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
     os.chdir(tmp_path)
+
+    # only supports nbib
+    with pytest.raises(colrev_exceptions.ImportException):
+        nbib_loader = NBIBLoader(
+            source_file=Path("table.ptvc"),
+            list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
+            unique_id_field="doi",
+            force_mode=False,
+            logger=logging.getLogger(__name__),
+        )
+
+    # file must exist
+    with pytest.raises(colrev_exceptions.ImportException):
+        nbib_loader = NBIBLoader(
+            source_file=Path("non-existent.nbib"),
+            list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
+            unique_id_field="doi",
+            force_mode=False,
+            logger=logging.getLogger(__name__),
+        )
 
     helpers.retrieve_test_file(
         source=Path("load_utils/nbib_test.nbib"),

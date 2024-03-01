@@ -1,8 +1,12 @@
+import logging
 from pathlib import Path
 
-import colrev.ops.load_utils_md
+import pytest
+
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.ops.load_utils_md import MarkdownLoader
 
 
 def test_load_md(  # type: ignore
@@ -10,7 +14,23 @@ def test_load_md(  # type: ignore
 ) -> None:
     """Test the load utils for md files"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    # only supports md
+    with pytest.raises(colrev_exceptions.ImportException):
+        md_loader = MarkdownLoader(
+            source_file=Path("table.ptvc"),
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
+
+    # file must exist
+    with pytest.raises(colrev_exceptions.ImportException):
+        md_loader = MarkdownLoader(
+            source_file=Path("non-existent.md"),
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
+
+    # helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
 
     if base_repo_review_manager.in_ci_environment():
         return
@@ -27,11 +47,10 @@ def test_load_md(  # type: ignore
         source=Path("load_utils/") / Path("references.md"),
         target=Path("data/search/") / Path("references.md"),
     )
-    load_operation = base_repo_review_manager.get_load_operation()
 
-    md_loader = colrev.ops.load_utils_md.MarkdownLoader(
+    md_loader = MarkdownLoader(
         source_file=search_source.filename,
-        logger=load_operation.review_manager.logger,
+        logger=logging.getLogger(__name__),
         force_mode=False,
     )
     records = md_loader.load()

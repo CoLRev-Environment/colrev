@@ -4,16 +4,33 @@ import logging
 import os
 from pathlib import Path
 
+import pytest
+
+import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.review_manager
 import colrev.settings
 
 
-def test_load(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager, tmp_path, helpers
-) -> None:
+def test_load(tmp_path, helpers) -> None:  # type: ignore
     """Test the load utils for bib files"""
     os.chdir(tmp_path)
+
+    # only supports bib
+    with pytest.raises(colrev_exceptions.ImportException):
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=Path("table.ptvc"),
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
+
+    # file must exist
+    with pytest.raises(colrev_exceptions.ImportException):
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=Path("non-existent.bib"),
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
 
     helpers.retrieve_test_file(
         source=Path("load_utils/") / Path("bib_tests.bib"),
