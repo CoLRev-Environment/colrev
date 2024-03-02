@@ -40,6 +40,7 @@ from colrev.constants import Fields
 
 
 # pylint: disable=duplicate-code
+# pylint: disable=too-few-public-methods
 
 
 class TableLoader:

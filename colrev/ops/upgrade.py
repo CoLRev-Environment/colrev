@@ -10,7 +10,6 @@ from importlib.metadata import version
 from pathlib import Path
 
 import git
-from pybtex.database.input import bibtex
 from tqdm import tqdm
 
 import colrev.env.utils
@@ -70,11 +69,12 @@ class Upgrade(colrev.operation.Operation):
         Returns:
             dict: The loaded records dictionary.
         """
-        parser = bibtex.Parser()
-        bib_data = parser.parse_file("data/records.bib")
-        records = colrev.dataset.Dataset.parse_records_dict(
-            records_dict=bib_data.entries
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=Path("data/records.bib"),
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
         )
+        records = bib_loader.load_bib_file(check_bib_file=False)
         return records
 
     def save_records_dict(self, *, records: dict) -> None:

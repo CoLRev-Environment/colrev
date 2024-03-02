@@ -5,6 +5,7 @@ from __future__ import annotations
 import collections
 import hashlib
 import json
+import logging
 import os
 import sqlite3
 import typing
@@ -18,7 +19,6 @@ import git
 import pandas as pd
 import requests_cache
 from git.exc import GitCommandError
-from pybtex.database.input import bibtex
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
@@ -417,10 +417,14 @@ class LocalIndex:
             self.sqlite_connection.commit()
 
     def _get_record_from_row(self, *, row: dict) -> dict:
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(row["bibtex"])
-        ret = colrev.dataset.Dataset.parse_records_dict(records_dict=bib_data.entries)
-        retrieved_record = list(ret.values())[0]
+
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            load_string=row["bibtex"],
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
+        records_dict = bib_loader.load_bib_file(check_bib_file=False)
+        retrieved_record = list(records_dict.values())[0]
 
         # append layered fields
         if row["layered_fields"]:
@@ -473,11 +477,13 @@ class LocalIndex:
             with open(target_path / Path("data/records.bib"), encoding="utf-8") as file:
                 content = file.read()
 
-            parser = bibtex.Parser()
-            bib_data = parser.parse_string(content)
-            ret = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=content,
+                logger=logging.getLogger(__name__),
+                force_mode=False,
             )
+            ret = bib_loader.load_bib_file(check_bib_file=False)
+
         except GitCommandError:
             pass
 

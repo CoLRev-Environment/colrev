@@ -29,6 +29,7 @@ Usage::
 """
 from __future__ import annotations
 
+import io
 import itertools
 import logging
 import os
@@ -37,6 +38,7 @@ import string
 import typing
 from pathlib import Path
 
+import pybtex.errors
 from pybtex.database import Person
 from pybtex.database.input import bibtex
 
@@ -52,28 +54,38 @@ from colrev.constants import FieldValues
 class BIBLoader:
     """Loads BibTeX files"""
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
-        source_file: Path,
+        source_file: typing.Optional[Path] = None,
+        load_string: str = "",
         unique_id_field: str = "",
         logger: logging.Logger,
         force_mode: bool = False,
     ):
 
-        if not source_file.name.endswith(".bib"):
-            raise colrev_exceptions.ImportException(
-                f"File not supported by BIBLoader: {source_file.name}"
-            )
-        if not source_file.exists():
-            raise colrev_exceptions.ImportException(
-                f"File not found: {source_file.name}"
-            )
-
         self.unique_id_field = unique_id_field
         self.logger = logger
         self.force_mode = force_mode
-        self.source_file = source_file
+
+        if source_file is not None:
+            assert load_string == "", "source_file and load_string are exclusive"
+            if not source_file.name.endswith(".bib"):
+                raise colrev_exceptions.ImportException(
+                    f"File not supported by BIBLoader: {source_file.name}"
+                )
+            if not source_file.exists():
+                raise colrev_exceptions.ImportException(
+                    f"File not found: {source_file.name}"
+                )
+
+            self.source_file = source_file
+
+        if load_string != "":
+            assert source_file is None, "source_file and load_string are exclusive"
+            self.source_file = None
+            self.load_string = load_string
 
     def generate_next_unique_id(
         self,
@@ -189,7 +201,7 @@ class BIBLoader:
                 seekpos = file.tell()
                 line = file.readline()
 
-    def parse_records_dict(self, *, records_dict: dict) -> dict:
+    def _parse_records_dict(self, *, records_dict: dict) -> dict:
         """Parse a records_dict from pybtex to colrev standard"""
 
         def format_name(person: Person) -> str:
@@ -326,15 +338,21 @@ class BIBLoader:
         return return_dict
 
     def get_nr_in_bib(self) -> int:
+        """Get the number of records in the file"""
 
         nr_in_bib = 0
-        with open(self.source_file, encoding="utf8") as file:
-            line = file.readline()
-            while line:
-                if "@" in line[:3]:
-                    if "@comment" not in line[:10].lower():
-                        nr_in_bib += 1
+        if self.source_file is not None:
+            with open(self.source_file, encoding="utf8") as file:
                 line = file.readline()
+                while line:
+                    if "@" in line[:3]:
+                        if "@comment" not in line[:10].lower():
+                            nr_in_bib += 1
+                    line = file.readline()
+        else:
+            nr_in_bib = len(
+                [x for x in self.load_string.split("@") if x[:7].lower() == "comment"]
+            )
 
         return nr_in_bib
 
@@ -347,27 +365,27 @@ class BIBLoader:
         def drop_empty_fields(*, records: dict) -> None:
             for record_id in records:
                 records[record_id] = {
-                    k: v for k, v in records[record_id].items() if v is not None
-                }
-                records[record_id] = {
-                    k: v for k, v in records[record_id].items() if v != "nan"
+                    k: v
+                    for k, v in records[record_id].items()
+                    if v is not None and v != "nan"
                 }
 
         def load_records() -> dict:
+            temp_f = io.StringIO()
+            pybtex.io.stderr = temp_f
+            pybtex.errors.set_strict_mode(False)
             parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(self.source_file))
-            records = self.parse_records_dict(records_dict=bib_data.entries)
-
-            if len(records) == 0:
-                self.logger.debug("No records loaded")
+            if self.source_file:
+                bib_data = parser.parse_file(str(self.source_file))
+            else:
+                bib_data = parser.parse_string(self.load_string)
+            records = self._parse_records_dict(records_dict=bib_data.entries)
             return records
 
         def lower_case_keys(*, records: dict) -> None:
             for record in records.values():
                 for key in list(record.keys()):
-                    if key in [Fields.ID, Fields.ENTRYTYPE]:
-                        continue
-                    if not key.islower():
+                    if not key.islower() and key not in [Fields.ID, Fields.ENTRYTYPE]:
                         record[key.lower()] = record.pop(key)
 
         def resolve_crossref(*, records: dict) -> None:
@@ -380,9 +398,8 @@ class BIBLoader:
                 crossref_record = records.get(record_dict["crossref"], None)
 
                 if not crossref_record:
-                    print(
-                        f"crossref record (ID={record_dict['crossref']}) "
-                        f"not found in {self.source_file.name}"
+                    self.logger.error(
+                        f"crossref record (ID={record_dict['crossref']}) not found"
                     )
                     continue
                 crossref_ids.append(crossref_record["ID"])
@@ -395,6 +412,8 @@ class BIBLoader:
                 del records[crossref_id]
 
         def check_nr_in_bib(*, records: dict) -> None:
+            if self.source_file is None:
+                return
             self.logger.debug(
                 f"Loaded {self.source_file.name} with {len(records)} records"
             )

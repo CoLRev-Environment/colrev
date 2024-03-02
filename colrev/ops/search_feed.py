@@ -7,8 +7,6 @@ import time
 from copy import deepcopy
 from random import randint
 
-from pybtex.database.input import bibtex
-
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.settings
@@ -60,10 +58,12 @@ class GeneralOriginFeed:
         if not self.feed_file.is_file():
             self.feed_records = {}
         else:
-            with open(self.feed_file, encoding="utf8") as bibtex_file:
-                self.feed_records = self.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
-                )
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=self.feed_file.read_text(encoding="utf8"),
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            self.feed_records = bib_loader.load_bib_file(check_bib_file=False)
 
             self._available_ids = {
                 x[self.source_identifier]: x[Fields.ID]
@@ -183,24 +183,22 @@ class GeneralOriginFeed:
         bibtex_str = self.review_manager.dataset.parse_bibtex_str(
             recs_dict_in={record_a[Fields.ID]: record_a}
         )
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(bibtex_str)
-        record_a = list(
-            self.review_manager.dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            ).values()
-        )[0]
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            load_string=bibtex_str,
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
+        )
+        record_a = list(bib_loader.load_bib_file(check_bib_file=False).values())[0]
 
         bibtex_str = self.review_manager.dataset.parse_bibtex_str(
             recs_dict_in={record_b[Fields.ID]: record_b}
         )
-        parser = bibtex.Parser()
-        bib_data = parser.parse_string(bibtex_str)
-        record_b = list(
-            self.review_manager.dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            ).values()
-        )[0]
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            load_string=bibtex_str,
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
+        )
+        record_b = list(bib_loader.load_bib_file(check_bib_file=False).values())[0]
 
         # Note : record_a can have more keys (that's ok)
         changed = False

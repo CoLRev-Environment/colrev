@@ -21,7 +21,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 
-
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
 
@@ -243,6 +242,7 @@ class SearchSource(JsonSchemaMixin):
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
+        # pylint: disable=redefined-outer-name
         import colrev.ops.search_feed
 
         return colrev.ops.search_feed.GeneralOriginFeed(

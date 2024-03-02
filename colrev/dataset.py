@@ -15,17 +15,14 @@ from random import randint
 from typing import Optional
 
 import git
-import pybtex.errors
 from git import InvalidGitRepositoryError
 from git.exc import GitCommandError
-from pybtex.database import Person
-from pybtex.database.input import bibtex
 from tqdm import tqdm
 
-import colrev.env.language_service
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+import colrev.ops.load_utils_bib
 import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
@@ -115,10 +112,6 @@ class Dataset:
             msg = "Not a CoLRev/git repository. Run\n    colrev init"
             raise colrev_exceptions.RepoSetupError(msg) from exc
 
-        if not self.review_manager.verbose_mode:
-            temp_f = io.StringIO()
-            pybtex.io.stderr = temp_f
-
         self.update_gitignore(
             add=self.DEFAULT_GIT_IGNORE_ITEMS, remove=self.DEPRECATED_GIT_IGNORE_ITEMS
         )
@@ -202,13 +195,16 @@ class Dataset:
                 reached_target_commit = True
 
             # Read and parse the records file from the current commit
-            parser = bibtex.Parser()
             filecontents = (
                 current_commit.tree / self.RECORDS_FILE_RELATIVE_GIT
             ).data_stream.read()
-            # Note : reinitialize parser (otherwise, bib_data does not change)
-            bib_data = parser.parse_string(filecontents.decode("utf-8"))
-            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=filecontents.decode("utf-8"),
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_dict = bib_loader.load_bib_file(check_bib_file=False)
 
             if records_dict:
                 yield records_dict
@@ -312,86 +308,6 @@ class Dataset:
                     }
 
         return return_dict
-
-    @classmethod
-    def parse_records_dict(cls, *, records_dict: dict) -> dict:
-        """Parse a records_dict from pybtex to colrev standard"""
-
-        def format_name(person: Person) -> str:
-            def join(name_list: list) -> str:
-                return " ".join([name for name in name_list if name])
-
-            first = person.get_part_as_text("first")
-            middle = person.get_part_as_text("middle")
-            prelast = person.get_part_as_text("prelast")
-            last = person.get_part_as_text("last")
-            lineage = person.get_part_as_text("lineage")
-            name_string = ""
-            if last:
-                name_string += join([prelast, last])
-            if lineage:
-                name_string += f", {lineage}"
-            if first or middle:
-                name_string += ", "
-                name_string += join([first, middle])
-            return name_string
-
-        # Need to concatenate fields and persons dicts
-        # but pybtex is still the most efficient solution.
-        records_dict = {
-            k: {
-                **{Fields.ID: k},
-                **{Fields.ENTRYTYPE: v.type},
-                **dict(
-                    {
-                        # Cast status to Enum
-                        k: (
-                            colrev.record.RecordState[v]
-                            if (Fields.STATUS == k)
-                            # DOIs are case insensitive -> use upper case.
-                            else (
-                                v.upper()
-                                if (Fields.DOI == k)
-                                # Note : the following two lines are a temporary fix
-                                # to converg colrev_origins to list items
-                                else (
-                                    [
-                                        el.rstrip().lstrip()
-                                        for el in v.split(";")
-                                        if "" != el
-                                    ]
-                                    if k == Fields.ORIGIN
-                                    else (
-                                        [
-                                            el.rstrip()
-                                            for el in (v + " ").split("; ")
-                                            if "" != el
-                                        ]
-                                        if k in colrev.record.Record.list_fields_keys
-                                        else (
-                                            Dataset._load_field_dict(value=v, field=k)
-                                            if k
-                                            in colrev.record.Record.dict_fields_keys
-                                            else v
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                        for k, v in v.fields.items()
-                    }
-                ),
-                **dict(
-                    {
-                        k: " and ".join(format_name(person) for person in persons)
-                        for k, persons in v.persons.items()
-                    }
-                ),
-            }
-            for k, v in records_dict.items()
-        }
-
-        return records_dict
 
     def _parse_k_v(self, item_string: str) -> tuple:
         if " = " in item_string:
@@ -506,7 +422,6 @@ class Dataset:
         if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNotifiedError()
 
-        pybtex.errors.set_strict_mode(False)
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
@@ -516,16 +431,24 @@ class Dataset:
             record_header_dict = {r[Fields.ID]: r for r in record_header_list}
             return record_header_dict
 
-        parser = bibtex.Parser()
         if load_str:
             # Fix missing comma after fields
             load_str = re.sub(r"(.)}\n", r"\g<1>},\n", load_str)
-            bib_data = parser.parse_string(load_str)
-            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=load_str,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_dict = bib_loader.load_bib_file(check_bib_file=False)
 
         elif self.records_file.is_file():
-            bib_data = parser.parse_file(str(self.records_file))
-            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.records_file,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_dict = bib_loader.load_bib_file(check_bib_file=False)
+
         else:
             records_dict = {}
 
@@ -547,7 +470,6 @@ class Dataset:
             return f",\n   {field} {padd} = {{{value}}}"
 
         bibtex_str = ""
-        language_service = colrev.env.language_service.LanguageService()
         first = True
         for record_id, record_dict in sorted(recs_dict.items()):
             if not first:
@@ -555,13 +477,6 @@ class Dataset:
             first = False
 
             bibtex_str += f"@{record_dict[Fields.ENTRYTYPE]}{{{record_id}"
-
-            try:
-                language_service.unify_to_iso_639_3_language_codes(
-                    record=colrev.record.Record(data=record_dict)
-                )
-            except colrev_exceptions.InvalidLanguageCodeException:
-                del record_dict[Fields.LANGUAGE]
 
             record = colrev.record.Record(data=record_dict)
             record_dict = record.get_data(stringify=True)
@@ -809,7 +724,7 @@ class Dataset:
 
         return temp_id
 
-    def generate_next_unique_id(
+    def _generate_next_unique_id(
         self,
         *,
         temp_id: str,
@@ -865,7 +780,7 @@ class Dataset:
         )
 
         if existing_ids:
-            temp_id = self.generate_next_unique_id(
+            temp_id = self._generate_next_unique_id(
                 temp_id=temp_id,
                 existing_ids=existing_ids,
             )
@@ -1057,7 +972,7 @@ class Dataset:
     ) -> bool:
         """Create a commit (including a commit report)"""
         # pylint: disable=import-outside-toplevel
-
+        # pylint: disable=redefined-outer-name
         import colrev.ops.commit
 
         if self.review_manager.exact_call and script_call == "":

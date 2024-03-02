@@ -103,6 +103,7 @@ class RISLoader:
 
     PATTERN = r"^[A-Z0-9]{2,4} "
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,

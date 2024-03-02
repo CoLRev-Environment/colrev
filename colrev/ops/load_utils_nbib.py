@@ -95,6 +95,7 @@ class NBIBLoader:
 
     PATTERN = r"^[A-Z]{2,4}( ){1,2}- "
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,

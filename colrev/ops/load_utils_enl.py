@@ -100,6 +100,7 @@ class ENLLoader:
 
     PATTERN = r"^%[A-Z]{1,3} "
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,

@@ -6,6 +6,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
+import colrev.env.language_service
 
 # pylint: disable=too-few-public-methods
 

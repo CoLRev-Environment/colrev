@@ -2,6 +2,7 @@
 """Conftest file containing fixtures to set up tests efficiently"""
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import typing
@@ -9,7 +10,6 @@ from pathlib import Path
 
 import git
 import pytest
-from pybtex.database.input import bibtex
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
@@ -151,12 +151,14 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
             test_records_dict[Path(file_path.name)] = {}
 
         for path in test_records_dict:
-            with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
-                parser = bibtex.Parser()
-                bib_data = parser.parse_string(file.read())
-                test_records_dict[path] = colrev.dataset.Dataset.parse_records_dict(
-                    records_dict=bib_data.entries
-                )
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=bib_files_to_index.joinpath(path),
+                logger=review_manager.logger,
+                force_mode=review_manager.force_mode,
+            )
+            test_records_dict[path] = bib_loader.load_bib_file(check_bib_file=False)
+
         return test_records_dict
 
     temp_sqlite = review_manager.path.parent / Path("sqlite_index_test.db")
@@ -199,8 +201,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
-        # {"endpoint": "colrev.exclude_non_latin_alphabets"},
-        # {"endpoint": "colrev.exclude_collections"},
     ]
     review_manager.settings.dedupe.dedupe_package_endpoints = [
         {"endpoint": "colrev.dedupe"}
@@ -343,25 +343,27 @@ def get_local_index_test_records_dict(  # type: ignore
         local_index_test_records_dict[Path(file_path.name)] = {}
 
     for path in local_index_test_records_dict:
-        with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
-            parser = bibtex.Parser()
-            bib_data = parser.parse_string(file.read())
-            loaded_records = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            )
-            # Note : we only select one example for the TEI-indexing
-            for loaded_record in loaded_records.values():
-                if Fields.FILE not in loaded_record:
-                    continue
 
-                if loaded_record[Fields.ID] != "WagnerLukyanenkoParEtAl2022":
-                    del loaded_record[Fields.FILE]
-                else:
-                    loaded_record[Fields.FILE] = str(
-                        test_local_index_dir / Path(loaded_record[Fields.FILE])
-                    )
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=bib_files_to_index.joinpath(path),
+            logger=logging.getLogger(__name__),
+            force_mode=False,
+        )
+        loaded_records = bib_loader.load_bib_file(check_bib_file=False)
 
-            local_index_test_records_dict[path] = loaded_records
+        # Note : we only select one example for the TEI-indexing
+        for loaded_record in loaded_records.values():
+            if Fields.FILE not in loaded_record:
+                continue
+
+            if loaded_record[Fields.ID] != "WagnerLukyanenkoParEtAl2022":
+                del loaded_record[Fields.FILE]
+            else:
+                loaded_record[Fields.FILE] = str(
+                    test_local_index_dir / Path(loaded_record[Fields.FILE])
+                )
+
+        local_index_test_records_dict[path] = loaded_records
 
     return local_index_test_records_dict
 

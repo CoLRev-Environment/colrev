@@ -6,7 +6,6 @@ import typing
 from pathlib import Path
 
 import pybtex.errors
-from pybtex.database.input import bibtex
 
 import colrev.constants as c
 import colrev.dataset
@@ -134,11 +133,13 @@ class Sync:
         self.logger.info("References in bib: %s", len(ids_in_bib))
 
         if src.suffix == ".bib":
-            parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(src))
-            refs_in_src = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=src,
+                logger=self.logger,
+                force_mode=True,
             )
+            refs_in_src = bib_loader.load_bib_file(check_bib_file=False)
+
         else:
             print("Format not supported")
             return
@@ -192,11 +193,13 @@ class Sync:
         pybtex.errors.set_strict_mode(False)
 
         if Path("references.bib").is_file():
-            parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(Path("references.bib")))
-            records = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=Path("references.bib"),
+                logger=self.logger,
+                force_mode=True,
             )
+            records = bib_loader.load_bib_file(check_bib_file=False)
 
         else:
             records = {}
@@ -333,13 +336,12 @@ class Sync:
         if not references_file.is_file():
             records = []
         else:
-            parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(references_file))
-            records = list(
-                colrev.dataset.Dataset.parse_records_dict(
-                    records_dict=bib_data.entries
-                ).values()
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=references_file,
+                logger=self.logger,
+                force_mode=True,
             )
+            records = list(bib_loader.load_bib_file(check_bib_file=False).values())
 
         available_ids = [r[Fields.ID] for r in records]
         added = []
