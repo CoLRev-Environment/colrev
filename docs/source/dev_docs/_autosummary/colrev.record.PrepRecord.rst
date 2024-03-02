@@ -44,6 +44,7 @@ colrev.record.PrepRecord
       ~PrepRecord.get_diff
       ~PrepRecord.get_field_provenance
       ~PrepRecord.get_masterdata_provenance_notes
+      ~PrepRecord.get_pdf_hash
       ~PrepRecord.get_record_change_score
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity

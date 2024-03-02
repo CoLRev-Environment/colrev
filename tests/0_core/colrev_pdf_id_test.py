@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import fitz
-import imagehash
 import pytest
 from PIL import Image
 

@@ -57,9 +57,13 @@ class Validate(colrev.operation.Operation):
                 found_target_commit = True
                 continue
             # pylint: disable=colrev-records-variable-naming-convention
-            prior_records_dict = self.review_manager.dataset.load_records_dict(
-                load_str=filecontents.decode("utf-8")
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=filecontents.decode("utf-8"),
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            prior_records_dict = bib_loader.load_bib_file(check_bib_file=False)
             return prior_records_dict
         return {}
 
@@ -270,6 +274,60 @@ class Validate(colrev.operation.Operation):
 
         report["dedupe"] = change_diff
 
+    def _get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
+        """Get the records that changed in a selected commit"""
+
+        dataset = self.review_manager.dataset
+        git_repo = dataset.get_repo()
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / dataset.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(
+                paths=str(dataset.RECORDS_FILE_RELATIVE)
+            )
+        )
+        found = False
+        records: typing.Dict[str, typing.Any] = {}
+        prior_records = {}
+        for commit, filecontents in list(revlist):
+            if found:  # load the records_file_relative in the following commit
+                # pylint: disable=colrev-records-variable-naming-convention
+                bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                    load_string=filecontents.decode("utf-8"),
+                    logger=self.review_manager.logger,
+                    force_mode=self.review_manager.force_mode,
+                )
+                prior_records = bib_loader.load_bib_file(check_bib_file=False)
+
+                break
+            if commit == target_commit:
+
+                bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                    load_string=filecontents.decode("utf-8"),
+                    logger=self.review_manager.logger,
+                    force_mode=self.review_manager.force_mode,
+                )
+                records = bib_loader.load_bib_file(check_bib_file=False)
+                found = True
+
+        # determine which records have been changed (prepared or merged)
+        # in the target_commit
+        for record in records.values():
+            prior_record_l = [
+                rec
+                for rec in prior_records.values()
+                if any(x in record[Fields.ORIGIN] for x in rec[Fields.ORIGIN])
+            ]
+            if prior_record_l:
+                prior_record = prior_record_l[0]
+                # Note: the following is an exact comparison of all fields
+                if record != prior_record:
+                    record.update(changed_in_target_commit="True")
+
+        return list(records.values())
+
     def _load_changed_records(self, *, commit_sha: Optional[str] = None) -> list[dict]:
         """Load the records that were changed in the target commit"""
         if commit_sha is None:
@@ -280,8 +338,7 @@ class Validate(colrev.operation.Operation):
             return list(records.values())
 
         self.review_manager.logger.info("Loading data from history...")
-        dataset = self.review_manager.dataset
-        changed_records = dataset.get_changed_records(target_commit=commit_sha)
+        changed_records = self._get_changed_records(target_commit=commit_sha)
 
         return changed_records
 

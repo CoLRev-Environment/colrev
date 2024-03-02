@@ -123,19 +123,25 @@ class Merge(colrev.operation.Operation):
                 # stage == 2: own branch
                 # stage == 3: other branch
                 if 2 == stage:
-                    # pylint: disable=colrev-records-variable-naming-convention
-                    current_branch_records = (
-                        self.review_manager.dataset.load_records_dict(
-                            load_str=blob.data_stream.read().decode("utf-8")
-                        )
+                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                        load_string=blob.data_stream.read().decode("utf-8"),
+                        logger=self.review_manager.logger,
+                        force_mode=self.review_manager.force_mode,
                     )
+                    current_branch_records = bib_loader.load_bib_file(
+                        check_bib_file=False
+                    )
+
                 elif 3 == stage:
-                    # pylint: disable=colrev-records-variable-naming-convention
-                    other_branch_records = (
-                        self.review_manager.dataset.load_records_dict(
-                            load_str=blob.data_stream.read().decode("utf-8")
-                        )
+                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                        load_string=blob.data_stream.read().decode("utf-8"),
+                        logger=self.review_manager.logger,
+                        force_mode=self.review_manager.force_mode,
                     )
+                    other_branch_records = bib_loader.load_bib_file(
+                        check_bib_file=False
+                    )
+
         else:
             self.review_manager.logger.info(
                 "No conflicts to reconcile in data/records.bib."

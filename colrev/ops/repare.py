@@ -407,9 +407,13 @@ class Repare(colrev.operation.Operation):
 
                 while line:
                     if line == "\n":
-                        records = self.review_manager.dataset.load_records_dict(
-                            load_str=record_str
+                        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                            load_string=record_str,
+                            logger=self.review_manager.logger,
+                            force_mode=self.review_manager.force_mode,
                         )
+                        records = bib_loader.load_bib_file(check_bib_file=False)
+
                         if len(records) != 1:
                             print(record_str)
                         else:

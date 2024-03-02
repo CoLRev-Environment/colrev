@@ -40,6 +40,7 @@ colrev.record.Record
       ~Record.get_diff
       ~Record.get_field_provenance
       ~Record.get_masterdata_provenance_notes
+      ~Record.get_pdf_hash
       ~Record.get_record_change_score
       ~Record.get_record_similarity
       ~Record.get_similarity

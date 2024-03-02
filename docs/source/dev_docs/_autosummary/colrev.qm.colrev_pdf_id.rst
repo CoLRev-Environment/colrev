@@ -16,4 +16,3 @@ colrev.qm.colrev\_pdf\_id
       :nosignatures:
 
       create_colrev_pdf_id
-      get_pdf_hash

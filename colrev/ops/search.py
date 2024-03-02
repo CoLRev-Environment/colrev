@@ -208,23 +208,24 @@ class Search(colrev.operation.Operation):
             print(f"{source.filename.suffix} not yet supported")
             return
 
-        with open(source.filename, encoding="utf8") as bibtex_file:
-            records = self.review_manager.dataset.load_records_dict(
-                load_str=bibtex_file.read()
-            )
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=source.filename,
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
+        )
+        records = bib_loader.load_bib_file(check_bib_file=False)
+        record_list = list(records.values())
+        before = len(record_list)
+        record_list = [
+            r for r in record_list if "forthcoming" != r.get(Fields.YEAR, "")
+        ]
+        removed = before - len(record_list)
+        self.review_manager.logger.info(
+            f"{Colors.GREEN}Removed {removed} forthcoming{Colors.END}"
+        )
+        records = {r[Fields.ID]: r for r in record_list}
 
-            record_list = list(records.values())
-            before = len(record_list)
-            record_list = [
-                r for r in record_list if "forthcoming" != r.get(Fields.YEAR, "")
-            ]
-            removed = before - len(record_list)
-            self.review_manager.logger.info(
-                f"{Colors.GREEN}Removed {removed} forthcoming{Colors.END}"
-            )
-            records = {r[Fields.ID]: r for r in record_list}
-
-            write_file(records_dict=records, filename=source.filename)
+        write_file(records_dict=records, filename=source.filename)
 
     # pylint: disable=no-self-argument
     def check_source_selection_exists(var_name: str) -> Callable:  # type: ignore

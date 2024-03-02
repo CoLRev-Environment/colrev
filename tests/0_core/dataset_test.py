@@ -105,68 +105,6 @@ def test_get_committed_origin_state_dict(
     ), "The committed origin state dictionary does not match the expected output."
 
 
-def test_get_changed_records(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test the retrieval of changed records based on a selected commit."""
-
-    # Simulate changes in records and commit those changes
-    changed_record_dict = {
-        "SrivastavaShainesh2015": {
-            "colrev_origin": ["test_records.bib/Srivastava2015"],
-            "colrev_status": colrev.record.RecordState.pdf_prepared,
-            "ID": "SrivastavaShainesh2015",
-            "ENTRYTYPE": "article",
-            "author": "Srivastava, Shirish C. and Shainesh, G.",
-            "journal": "Nature",
-            "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
-            "year": "2015",
-            "volume": "39",
-            "number": "1",
-            "pages": "245--267",
-            "language": "eng",
-        }
-    }
-    base_repo_review_manager.dataset.save_records_dict(records=changed_record_dict)
-    base_repo_review_manager.dataset._add_record_changes()
-    commit_message = "Test commit for changed records"
-    base_repo_review_manager.dataset.create_commit(
-        msg=commit_message, manual_author=True
-    )
-    # Retrieve the last commit SHA
-    last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
-
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
-
-    # Retrieve changed records based on the last commit
-    changed_records = base_repo_review_manager.dataset.get_changed_records(
-        target_commit=last_commit_sha
-    )
-    expected_changes = [
-        {
-            "ID": "SrivastavaShainesh2015",
-            "ENTRYTYPE": "article",
-            "colrev_origin": ["test_records.bib/Srivastava2015"],
-            "colrev_status": colrev.record.RecordState.pdf_prepared,
-            "journal": "Nature",
-            "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
-            "year": "2015",
-            "volume": "39",
-            "number": "1",
-            "pages": "245--267",
-            "language": "eng",
-            "author": "Srivastava, Shirish C. and Shainesh, G.",
-            "changed_in_target_commit": "True",
-        }
-    ]
-    # Check if the changed records match the expected changes
-    assert (
-        changed_records == expected_changes
-    ), "The retrieved changed records do not match the expected changes."
-
-
 def test_load_records_dict_not_notified_exception(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:

@@ -133,8 +133,17 @@ class Dataset:
 
     def get_committed_origin_state_dict(self) -> dict:
         """Get the committed origin_state_dict"""
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
+            )
+            for commit in self._git_repo.iter_commits(
+                paths=str(self.RECORDS_FILE_RELATIVE_GIT)
+            )
+        )
+        filecontents = list(revlist)[0][1]
 
-        filecontents = self._get_last_records_filecontents()
         committed_origin_state_dict = self.get_origin_state_dict(
             records_string=filecontents.decode("utf-8")
         )
@@ -183,53 +192,9 @@ class Dataset:
             if records_dict:
                 yield records_dict
 
-    def get_changed_records(self, *, target_commit: str) -> typing.List[dict]:
-        """Get the records that changed in a selected commit"""
-
-        revlist = (
-            (
-                commit.hexsha,
-                (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
-            )
-            for commit in self._git_repo.iter_commits(
-                paths=str(self.RECORDS_FILE_RELATIVE)
-            )
-        )
-        found = False
-        records, prior_records = {}, {}
-        for commit, filecontents in list(revlist):
-            if found:  # load the records_file_relative in the following commit
-                # pylint: disable=colrev-records-variable-naming-convention
-                prior_records = self.review_manager.dataset.load_records_dict(
-                    load_str=filecontents.decode("utf-8")
-                )
-                break
-            if commit == target_commit:
-                records = self.review_manager.dataset.load_records_dict(
-                    load_str=filecontents.decode("utf-8")
-                )
-                found = True
-
-        # determine which records have been changed (prepared or merged)
-        # in the target_commit
-        for record in records.values():
-            prior_record_l = [
-                rec
-                for rec in prior_records.values()
-                if any(x in record[Fields.ORIGIN] for x in rec[Fields.ORIGIN])
-            ]
-            if prior_record_l:
-                prior_record = prior_record_l[0]
-                # Note: the following is an exact comparison of all fields
-                if record != prior_record:
-                    record.update(changed_in_target_commit="True")
-
-        return list(records.values())
-
     def load_records_dict(
         self,
         *,
-        load_str: Optional[str] = None,
         header_only: bool = False,
     ) -> dict:
         """Load the records
@@ -260,15 +225,7 @@ class Dataset:
             )
             return bib_loader.get_record_header_items()
 
-        if load_str:
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_string=load_str,
-                logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-            )
-            records_dict = bib_loader.load_bib_file(check_bib_file=False)
-
-        elif self.records_file.is_file():
+        if self.records_file.is_file():
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 source_file=self.records_file,
                 logger=self.review_manager.logger,
@@ -713,21 +670,6 @@ class Dataset:
         """Get the files that are untracked by git"""
 
         return [Path(x) for x in self._git_repo.untracked_files]
-
-    def _get_last_records_filecontents(self) -> bytes:
-        # Ensure the path uses forward slashes, which is compatible with Git's path handling
-
-        revlist = (
-            (
-                commit.hexsha,
-                (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
-            )
-            for commit in self._git_repo.iter_commits(
-                paths=str(self.RECORDS_FILE_RELATIVE_GIT)
-            )
-        )
-        filecontents = list(revlist)[0][1]
-        return filecontents
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
