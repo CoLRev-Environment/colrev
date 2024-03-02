@@ -50,6 +50,7 @@ class ConditionalPrescreen(JsonSchemaMixin):
                 f" {record[Fields.ID]}".ljust(pad, " ")
                 + "Included in prescreen (automatically)"
             )
+            # pylint: disable=colrev-direct-status-assign
             record.update(
                 colrev_status=colrev.record.RecordState.rev_prescreen_included
             )

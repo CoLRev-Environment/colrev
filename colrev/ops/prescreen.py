@@ -228,16 +228,18 @@ class Prescreen(colrev.operation.Operation):
         )
 
     def _print_stats(self, *, selected_record_ids: list) -> None:
-        records = self.review_manager.dataset.load_records_dict(header_only=True)
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
         prescreen_excluded = [
             r[Fields.ID]
-            for r in records.values()
+            for r in records_headers.values()
             if colrev.record.RecordState.rev_prescreen_excluded == r[Fields.STATUS]
             and r[Fields.ID] in selected_record_ids
         ]
         prescreen_included = [
             r[Fields.ID]
-            for r in records.values()
+            for r in records_headers.values()
             if colrev.record.RecordState.rev_prescreen_included == r[Fields.STATUS]
             and r[Fields.ID] in selected_record_ids
         ]
@@ -247,7 +249,7 @@ class Prescreen(colrev.operation.Operation):
 
         print()
         self.review_manager.logger.info("Statistics")
-        for record_dict in records.values():
+        for record_dict in records_headers.values():
             if record_dict[Fields.ID] in prescreen_excluded:
                 self.review_manager.logger.info(
                     f" {record_dict['ID']}".ljust(41)

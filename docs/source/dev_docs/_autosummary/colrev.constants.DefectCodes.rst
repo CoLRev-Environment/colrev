@@ -36,7 +36,6 @@ colrev.constants.DefectCodes
       ~DefectCodes.INCONSISTENT_CONTENT
       ~DefectCodes.INCONSISTENT_WITH_DOI_METADATA
       ~DefectCodes.INCONSISTENT_WITH_ENTRYTYPE
-      ~DefectCodes.INCONSISTENT_WITH_URL_METADATA
       ~DefectCodes.ISBN_NOT_MATCHING_PATTERN
       ~DefectCodes.LANGUAGE_FORMAT_ERROR
       ~DefectCodes.LANGUAGE_UNKNOWN

@@ -36,8 +36,10 @@ colrev.record.Record
       ~Record.get_colrev_pdf_id
       ~Record.get_container_title
       ~Record.get_data
+      ~Record.get_data_provenance_notes
       ~Record.get_diff
       ~Record.get_field_provenance
+      ~Record.get_masterdata_provenance_notes
       ~Record.get_record_change_score
       ~Record.get_record_similarity
       ~Record.get_similarity
@@ -66,7 +68,7 @@ colrev.record.Record
       ~Record.run_quality_model
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
-      ~Record.set_pages_in_pdf
+      ~Record.set_nr_pages_in_pdf
       ~Record.set_status
       ~Record.set_text_from_pdf
       ~Record.shares_origins
@@ -82,7 +84,6 @@ colrev.record.Record
 
    .. autosummary::
 
-      ~Record.dict_fields_keys
       ~Record.list_fields_keys
       ~Record.pp
       ~Record.data

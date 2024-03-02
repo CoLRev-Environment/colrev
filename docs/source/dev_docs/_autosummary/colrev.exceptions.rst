@@ -36,6 +36,7 @@ colrev.exceptions
       DuplicateIDsError
       FieldValueError
       GitConflictError
+      GitNotAvailableError
       ImportException
       InvalidLanguageCodeException
       InvalidMerge

@@ -67,7 +67,7 @@ class MissedConstantUsageChecker(checkers.BaseChecker):
             self.add_message(self.name, node=node)  # , confidence=HIGH)
 
 
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pragma: no cover
     """required method to auto register this checker"""
 
     linter.register_checker(MissedConstantUsageChecker(linter))

@@ -2,14 +2,12 @@
 """Functionality for data/records.bib and git repository."""
 from __future__ import annotations
 
-import io
 import itertools
 import os
 import re
 import string
 import time
 import typing
-from copy import deepcopy
 from pathlib import Path
 from random import randint
 from typing import Optional
@@ -27,11 +25,9 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
-from colrev.constants import FieldValues
-
+from colrev.ops.write_utils_bib import to_string
 
 # pylint: disable=too-many-public-methods
-# pylint: disable=too-many-lines
 
 
 class Dataset:
@@ -40,33 +36,6 @@ class Dataset:
     RECORDS_FILE_RELATIVE = Path("data/records.bib")
     # Ensure the path uses forward slashes, which is compatible with Git's path handling
     RECORDS_FILE_RELATIVE_GIT = str(RECORDS_FILE_RELATIVE).replace("\\", "/")
-    RECORDS_FIELD_ORDER = [
-        Fields.ORIGIN,  # must be in second line
-        Fields.STATUS,
-        Fields.MD_PROV,
-        Fields.D_PROV,
-        Fields.PDF_ID,
-        Fields.SCREENING_CRITERIA,
-        Fields.FILE,  # Note : do not change this order (parsers rely on it)
-        Fields.PRESCREEN_EXCLUSION,
-        Fields.DOI,
-        Fields.GROBID_VERSION,
-        Fields.DBLP_KEY,
-        Fields.SEMANTIC_SCHOLAR_ID,
-        Fields.WEB_OF_SCIENCE_ID,
-        Fields.AUTHOR,
-        Fields.BOOKTITLE,
-        Fields.JOURNAL,
-        Fields.TITLE,
-        Fields.YEAR,
-        Fields.VOLUME,
-        Fields.NUMBER,
-        Fields.PAGES,
-        Fields.EDITOR,
-        Fields.PUBLISHER,
-        Fields.URL,
-        Fields.ABSTRACT,
-    ]
 
     GIT_IGNORE_FILE_RELATIVE = Path(".gitignore")
     DEFAULT_GIT_IGNORE_ITEMS = [
@@ -138,23 +107,28 @@ class Dataset:
             file.write("\n".join(ignored_items) + "\n")
         self.add_changes(path=self.git_ignore_file)
 
-    def get_origin_state_dict(
-        self, *, file_object: Optional[io.StringIO] = None
-    ) -> dict:
+    def get_origin_state_dict(self, *, records_string: str = "") -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
 
         {'30_example_records.bib/Staehr2010': <RecordState.pdf_not_available: 10>,}
         """
 
         current_origin_states_dict = {}
-        if self.records_file.is_file():
-            for record_header_item in self._read_record_header_items(
-                file_object=file_object
-            ):
-                for origin in record_header_item[Fields.ORIGIN]:
-                    current_origin_states_dict[origin] = record_header_item[
-                        Fields.STATUS
-                    ]
+        if records_string != "":
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=records_string,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+        else:
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.records_file,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+        for record_header_item in bib_loader.get_record_header_items().values():
+            for origin in record_header_item[Fields.ORIGIN]:
+                current_origin_states_dict[origin] = record_header_item[Fields.STATUS]
         return current_origin_states_dict
 
     def get_committed_origin_state_dict(self) -> dict:
@@ -162,7 +136,7 @@ class Dataset:
 
         filecontents = self._get_last_records_filecontents()
         committed_origin_state_dict = self.get_origin_state_dict(
-            file_object=io.StringIO(filecontents.decode("utf-8"))
+            records_string=filecontents.decode("utf-8")
         )
         return committed_origin_state_dict
 
@@ -222,25 +196,26 @@ class Dataset:
             )
         )
         found = False
-        records_dict, prior_records_dict = {}, {}
+        records, prior_records = {}, {}
         for commit, filecontents in list(revlist):
             if found:  # load the records_file_relative in the following commit
-                prior_records_dict = self.review_manager.dataset.load_records_dict(
+                # pylint: disable=colrev-records-variable-naming-convention
+                prior_records = self.review_manager.dataset.load_records_dict(
                     load_str=filecontents.decode("utf-8")
                 )
                 break
             if commit == target_commit:
-                records_dict = self.review_manager.dataset.load_records_dict(
+                records = self.review_manager.dataset.load_records_dict(
                     load_str=filecontents.decode("utf-8")
                 )
                 found = True
 
         # determine which records have been changed (prepared or merged)
         # in the target_commit
-        for record in records_dict.values():
+        for record in records.values():
             prior_record_l = [
                 rec
-                for rec in prior_records_dict.values()
+                for rec in prior_records.values()
                 if any(x in record[Fields.ORIGIN] for x in rec[Fields.ORIGIN])
             ]
             if prior_record_l:
@@ -249,154 +224,7 @@ class Dataset:
                 if record != prior_record:
                     record.update(changed_in_target_commit="True")
 
-        return list(records_dict.values())
-
-    @classmethod
-    def _load_field_dict(cls, *, value: str, field: str) -> dict:
-        # pylint: disable=too-many-branches
-
-        assert field in [
-            Fields.MD_PROV,
-            Fields.D_PROV,
-        ], f"error loading dict_field: {field}"
-
-        return_dict = {}
-        if field == Fields.MD_PROV:
-            if value[:7] == FieldValues.CURATED:
-                source = value[value.find(":") + 1 : value[:-1].rfind(";")]
-                return_dict[FieldValues.CURATED] = {
-                    "source": source,
-                    "note": "",
-                }
-
-            elif value != "":
-                # Pybtex automatically replaces \n in fields.
-                # For consistency, we also do that for header_only mode:
-                if "\n" in value:
-                    value = value.replace("\n", " ")
-                items = [x.lstrip() + ";" for x in (value + " ").split("; ") if x != ""]
-
-                for item in items:
-                    key_source = item[: item[:-1].rfind(";")]
-                    assert (
-                        ":" in key_source
-                    ), f"problem with masterdata_provenance_item {item}"
-                    note = item[item[:-1].rfind(";") + 1 : -1]
-                    key, source = key_source.split(":", 1)
-                    # key = key.rstrip().lstrip()
-                    return_dict[key] = {
-                        "source": source,
-                        "note": note,
-                    }
-
-        elif field == Fields.D_PROV:
-            if value != "":
-                # Note : pybtex replaces \n upon load
-                for item in (value + " ").split("; "):
-                    if item == "":
-                        continue
-                    item += ";"  # removed by split
-                    key_source = item[: item[:-1].rfind(";")]
-                    note = item[item[:-1].rfind(";") + 1 : -1]
-                    assert (
-                        ":" in key_source
-                    ), f"problem with data_provenance_item {item}"
-                    key, source = key_source.split(":", 1)
-                    return_dict[key] = {
-                        "source": source,
-                        "note": note,
-                    }
-
-        return return_dict
-
-    def _parse_k_v(self, item_string: str) -> tuple:
-        if " = " in item_string:
-            key, value = item_string.split(" = ", 1)
-        else:
-            key = Fields.ID
-            value = item_string.split("{")[1]
-
-        key = key.lstrip().rstrip()
-        value = value.lstrip().rstrip().lstrip("{").rstrip("},")
-        if key == Fields.ORIGIN:
-            value_list = value.replace("\n", "").split(";")
-            value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
-            return key, value_list
-        if key == Fields.STATUS:
-            return key, colrev.record.RecordState[value]
-        if key == Fields.MD_PROV:
-            return key, self._load_field_dict(value=value, field=key)
-        if key == Fields.FILE:
-            return key, Path(value)
-
-        return key, value
-
-    def _read_record_header_items(
-        self, *, file_object: Optional[typing.TextIO] = None
-    ) -> list:
-        # Note : more than 10x faster than the pybtex part of load_records_dict()
-
-        # pylint: disable=consider-using-with
-        if file_object is None:
-            file_object = open(self.records_file, encoding="utf-8")
-
-        # Fields required
-        default = {
-            Fields.ID: "NA",
-            Fields.ORIGIN: "NA",
-            Fields.STATUS: "NA",
-            Fields.FILE: "NA",
-            Fields.SCREENING_CRITERIA: "NA",
-            Fields.MD_PROV: "NA",
-        }
-        number_required_header_items = len(default)
-
-        record_header_item = default.copy()
-        item_count, item_string, record_header_items = (
-            0,
-            "",
-            [],
-        )
-        while True:
-            line = file_object.readline()
-            if not line:
-                break
-
-            if line[:1] == "%" or line == "\n":
-                continue
-
-            if item_count > number_required_header_items or "}" == line:
-                record_header_items.append(record_header_item)
-                record_header_item = default.copy()
-                item_count = 0
-                continue
-
-            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
-                record_header_items.append(record_header_item)
-                record_header_item = default.copy()
-                item_count = 0
-
-            item_string += line
-            if "}," in line or "@" in line[:2]:
-                key, value = self._parse_k_v(item_string)
-                if key == Fields.MD_PROV:
-                    if value == "NA":
-                        value = {}
-                if value == "NA":
-                    item_string = ""
-                    continue
-                item_string = ""
-                if key in record_header_item:
-                    item_count += 1
-                    record_header_item[key] = value
-
-        if record_header_item[Fields.ORIGIN] != "NA":
-            record_header_items.append(record_header_item)
-
-        return [
-            {k: v for k, v in record_header_item.items() if "NA" != v}
-            for record_header_item in record_header_items
-        ]
+        return list(records.values())
 
     def load_records_dict(
         self,
@@ -425,15 +253,14 @@ class Dataset:
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
-            record_header_list = (
-                self._read_record_header_items() if self.records_file.is_file() else []
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.records_file,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            record_header_dict = {r[Fields.ID]: r for r in record_header_list}
-            return record_header_dict
+            return bib_loader.get_record_header_items()
 
         if load_str:
-            # Fix missing comma after fields
-            load_str = re.sub(r"(.)}\n", r"\g<1>},\n", load_str)
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_string=load_str,
                 logger=self.review_manager.logger,
@@ -454,76 +281,28 @@ class Dataset:
 
         return records_dict
 
-    @classmethod
-    def parse_bibtex_str(
-        cls,
-        *,
-        recs_dict_in: dict,
-    ) -> str:
-        """Parse a records_dict to a BiBTex string"""
-
-        # Note: we need a deepcopy because the parsing modifies dicts
-        recs_dict = deepcopy(recs_dict_in)
-
-        def format_field(field: str, value: str) -> str:
-            padd = " " * max(0, 28 - len(field))
-            return f",\n   {field} {padd} = {{{value}}}"
-
-        bibtex_str = ""
-        first = True
-        for record_id, record_dict in sorted(recs_dict.items()):
-            if not first:
-                bibtex_str += "\n"
-            first = False
-
-            bibtex_str += f"@{record_dict[Fields.ENTRYTYPE]}{{{record_id}"
-
-            record = colrev.record.Record(data=record_dict)
-            record_dict = record.get_data(stringify=True)
-
-            for ordered_field in cls.RECORDS_FIELD_ORDER:
-                if ordered_field in record_dict:
-                    if record_dict[ordered_field] == "":
-                        continue
-                    bibtex_str += format_field(
-                        ordered_field, record_dict[ordered_field]
-                    )
-
-            for key in sorted(record_dict.keys()):
-                if key in cls.RECORDS_FIELD_ORDER + [Fields.ID, Fields.ENTRYTYPE]:
-                    continue
-
-                bibtex_str += format_field(key, record_dict[key])
-
-            bibtex_str += ",\n}\n"
-
-        return bibtex_str
-
     def save_records_dict_to_file(
-        self, *, records: dict, save_path: Path, add_changes: bool = True
+        self, *, records: dict, add_changes: bool = True
     ) -> None:
-        """Save the records dict to specified file"""
+        """Save the records dict"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
-        bibtex_str = self.parse_bibtex_str(recs_dict_in=records)
+        bibtex_str = to_string(records_dict=records)
 
-        with open(save_path, "w", encoding="utf-8") as out:
+        with open(self.records_file, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
 
         if not add_changes:
             return
-        if save_path == self.records_file:
-            self._add_record_changes()
-        else:
-            self.add_changes(path=save_path)
+        self._add_record_changes()
 
     def _save_record_list_by_id(
         self, *, records: dict, append_new: bool = False
     ) -> None:
         # Note : currently no use case for append_new=True??
 
-        parsed = self.parse_bibtex_str(recs_dict_in=records)
+        parsed = to_string(records_dict=records)
         record_list = [
             {
                 Fields.ID: item[item.find("{") + 1 : item.find(",")],
@@ -591,9 +370,7 @@ class Dataset:
         if partial:
             self._save_record_list_by_id(records=records)
             return
-        self.save_records_dict_to_file(
-            records=records, save_path=self.records_file, add_changes=add_changes
-        )
+        self.save_records_dict_to_file(records=records, add_changes=add_changes)
 
     def read_next_record(
         self, *, conditions: Optional[list] = None
@@ -601,18 +378,18 @@ class Dataset:
         """Read records (Iterator) based on condition"""
 
         # Note : matches conditions connected with 'OR'
-        record_dict = self.load_records_dict()
+        records = self.load_records_dict()
 
-        records = []
-        for _, record in record_dict.items():
+        records_list = []
+        for _, record in records.items():
             if conditions is not None:
                 for condition in conditions:
                     for key, value in condition.items():
                         if str(value) == str(record[key]):
-                            records.append(record)
+                            records_list.append(record)
             else:
-                records.append(record)
-        yield from records
+                records_list.append(record)
+        yield from records_list
 
     def get_format_report(self) -> dict:
         """Get format report"""

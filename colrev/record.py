@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import pprint
 import re
 import textwrap
@@ -15,6 +16,8 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import dictdiffer
+import fitz
+import imagehash
 import pandas as pd
 import pdfminer
 from nameparser import HumanName
@@ -27,6 +30,7 @@ from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
+from PIL import Image
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from rapidfuzz import fuzz
@@ -61,7 +65,6 @@ class Record:
         # "colrev_pdf_id",
         # Fields.SCREENING_CRITERIA,
     ]
-    dict_fields_keys = [Fields.MD_PROV, Fields.D_PROV]
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -159,60 +162,12 @@ class Record:
         )
         return bib_formatted
 
-    def _save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
-        list_to_return = []
-        assert input_key in [Fields.MD_PROV, Fields.D_PROV]
-        if input_key == Fields.MD_PROV:
-            for key, value in input_dict.items():
-                if isinstance(value, dict):
-                    formated_node = ",".join(
-                        sorted(e for e in value["note"].split(",") if "" != e)
-                    )
-                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
-
-        elif input_key == Fields.D_PROV:
-            for key, value in input_dict.items():
-                if isinstance(value, dict):
-                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
-
-        return list_to_return
-
-    def get_data(self, *, stringify: bool = False) -> dict:
-        """Get the record data (optionally: in stringified version, i.e., without lists/dicts)"""
-
-        def _get_stringified_record() -> dict:
-            data_copy = deepcopy(self.data)
-
-            def list_to_str(*, val: list) -> str:
-                return ("\n" + " " * 36).join([f.rstrip() for f in val])
-
-            for key in self.list_fields_keys:
-                if key in data_copy:
-                    if key in [Fields.ORIGIN]:
-                        data_copy[key] = sorted(list(set(data_copy[key])))
-                    for ind, val in enumerate(data_copy[key]):
-                        if len(val) > 0:
-                            if val[-1] != ";":
-                                data_copy[key][ind] = val + ";"
-                    data_copy[key] = list_to_str(val=data_copy[key])
-
-            for key in self.dict_fields_keys:
-                if key in data_copy:
-                    if isinstance(data_copy[key], dict):
-                        data_copy[key] = self._save_field_dict(
-                            input_dict=data_copy[key], input_key=key
-                        )
-                    if isinstance(data_copy[key], list):
-                        data_copy[key] = list_to_str(val=data_copy[key])
-
-            return data_copy
+    def get_data(self) -> dict:
+        """Get the record data"""
 
         if not isinstance(self.data.get(Fields.ORIGIN, []), list):
             self.data[Fields.ORIGIN] = self.data[Fields.ORIGIN].rstrip(";").split(";")
         assert isinstance(self.data.get(Fields.ORIGIN, []), list)
-
-        if stringify:
-            return _get_stringified_record()
 
         return self.data
 
@@ -1433,9 +1388,11 @@ class Record:
 
         except PDFSyntaxError:  # pragma: no cover
             self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
+            # pylint: disable=colrev-direct-status-assign
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         except PDFTextExtractionNotAllowed:  # pragma: no cover
             self.add_data_provenance_note(key=Fields.FILE, note="pdf_protected")
+            # pylint: disable=colrev-direct-status-assign
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
@@ -1708,6 +1665,45 @@ class Record:
         ):
             return True
         return False
+
+    def get_pdf_hash(self, *, page_nr: int, hash_size: int = 32) -> str:
+        """Get the PDF image hash"""
+        assert page_nr > 0
+        assert hash_size in [16, 32]
+
+        if Fields.FILE not in self.data or not self.data[Fields.FILE].is_file():
+            raise colrev_exceptions.InvalidPDFException(path=self.data[Fields.ID])
+
+        pdf_path = self.data[Fields.FILE].resolve()
+        if 0 == os.path.getsize(pdf_path):
+            logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+
+        try:
+            doc: fitz.Document = fitz.open(pdf_path)
+        except fitz.fitz.FileDataError as exc:
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+
+        img = None
+        file_name = f".{pdf_path.stem}-{page_nr}.png"
+        page_no = 0
+        try:
+            for page in doc:
+                pix = page.get_pixmap(dpi=200)
+                pix.save(file_name)  # store image as a PNG
+                page_no += 1
+                if page_no == page_nr:
+                    img = Image.open(file_name)
+                    break
+        except RuntimeError as exc:
+            raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
+        average_hash = imagehash.average_hash(img, hash_size=int(hash_size))
+        Path(file_name).unlink()
+        average_hash_str = str(average_hash).replace("\n", "")
+        if len(average_hash_str) * "0" == average_hash_str:
+            raise colrev_exceptions.PDFHashError(path=pdf_path)
+
+        return average_hash_str
 
 
 class PrepRecord(Record):

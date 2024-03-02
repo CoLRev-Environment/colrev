@@ -27,6 +27,8 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
+
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -144,10 +146,12 @@ class FilesSearchSource(JsonSchemaMixin):
         if not self.search_source.filename.is_file():
             return
 
-        with open(self.search_source.filename, encoding="utf8") as target_db:
-            search_rd = self.review_manager.dataset.load_records_dict(
-                load_str=target_db.read()
-            )
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=self.search_source.filename,
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
+        )
+        search_rd = bib_loader.load_bib_file(check_bib_file=False)
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -176,9 +180,8 @@ class FilesSearchSource(JsonSchemaMixin):
         }
 
         if len(search_rd.values()) != 0:
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=search_rd, save_path=self.search_source.filename
-            )
+
+            write_file(records_dict=search_rd, filename=self.search_source.filename)
 
         if records:
             for record_dict in records.values():
@@ -501,13 +504,12 @@ class FilesSearchSource(JsonSchemaMixin):
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
-                colrev_pdf_id = colrev.qm.colrev_pdf_id.get_pdf_hash(
-                    pdf_path=Path(file_path),
-                    page_nr=1,
-                    hash_size=32,
+
+                colrev_pdf_id = colrev.qm.colrev_pdf_id.create_colrev_pdf_id(
+                    pdf_path=Path(file_path)
                 )
                 new_record = local_index.retrieve_based_on_colrev_pdf_id(
-                    colrev_pdf_id="cpid1:" + colrev_pdf_id
+                    colrev_pdf_id=colrev_pdf_id
                 )
                 new_record[Fields.FILE] = str(file_path)
                 # Note : an alternative to replacing all data with the curated version

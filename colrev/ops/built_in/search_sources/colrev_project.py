@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -121,9 +122,54 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info(
             f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
         )
-        records_to_import = project_review_manager.dataset.load_records_dict()
+        records = project_review_manager.dataset.load_records_dict()
         shutil.rmtree(temp_path)
-        return records_to_import
+        return records
+
+    def _save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
+        list_to_return = []
+        assert input_key in [Fields.MD_PROV, Fields.D_PROV]
+        if input_key == Fields.MD_PROV:
+            for key, value in input_dict.items():
+                if isinstance(value, dict):
+                    formated_node = ",".join(
+                        sorted(e for e in value["note"].split(",") if "" != e)
+                    )
+                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
+
+        elif input_key == Fields.D_PROV:
+            for key, value in input_dict.items():
+                if isinstance(value, dict):
+                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
+
+        return list_to_return
+
+    def _get_stringified_record(self, *, record: dict) -> dict:
+        data_copy = deepcopy(record)
+
+        def list_to_str(*, val: list) -> str:
+            return ("\n" + " " * 36).join([f.rstrip() for f in val])
+
+        for key in [Fields.ORIGIN]:
+            if key in data_copy:
+                if key in [Fields.ORIGIN]:
+                    data_copy[key] = sorted(list(set(data_copy[key])))
+                for ind, val in enumerate(data_copy[key]):
+                    if len(val) > 0:
+                        if val[-1] != ";":
+                            data_copy[key][ind] = val + ";"
+                data_copy[key] = list_to_str(val=data_copy[key])
+
+        for key in [Fields.MD_PROV, Fields.D_PROV]:
+            if key in data_copy:
+                if isinstance(data_copy[key], dict):
+                    data_copy[key] = self._save_field_dict(
+                        input_dict=data_copy[key], input_key=key
+                    )
+                if isinstance(data_copy[key], list):
+                    data_copy[key] = list_to_str(val=data_copy[key])
+
+        return data_copy
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of a CoLRev project"""
@@ -162,9 +208,9 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
                 try:
-                    stringified_copy = colrev.record.Record(
-                        data=record_to_import
-                    ).get_data(stringify=True)
+                    stringified_copy = self._get_stringified_record(
+                        record=record_to_import
+                    )
                     stringified_copy = {k: str(v) for k, v in stringified_copy.items()}
                     # pylint: disable=possibly-unused-variable
                     rec_df = pd.DataFrame.from_records([stringified_copy])

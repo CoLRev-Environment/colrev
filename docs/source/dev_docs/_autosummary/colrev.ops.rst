@@ -65,3 +65,4 @@ colrev.ops
    colrev.ops.trace
    colrev.ops.upgrade
    colrev.ops.validate
+   colrev.ops.write_utils_bib

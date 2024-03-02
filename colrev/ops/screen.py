@@ -85,7 +85,7 @@ class Screen(colrev.operation.Operation):
                 record.update(
                     screening_criteria=";".join([e + "=in" for e in screening_criteria])
                 )
-            record.update(colrev_status=colrev.record.RecordState.rev_included)
+            record.set_status(target_state=colrev.record.RecordState.rev_included)
 
         self.review_manager.dataset.save_records_dict(records=records)
         self._print_stats(selected_record_ids=selected_record_ids)
@@ -277,17 +277,19 @@ class Screen(colrev.operation.Operation):
         )
 
     def _print_stats(self, *, selected_record_ids: list) -> None:
-        records = self.review_manager.dataset.load_records_dict(header_only=True)
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
         screen_excluded = [
             r[Fields.ID]
-            for r in records.values()
+            for r in records_headers.values()
             if colrev.record.RecordState.rev_excluded == r[Fields.STATUS]
             and not colrev.record.Record(data=r).to_screen()
             and r[Fields.ID] in selected_record_ids
         ]
         screen_included = [
             r[Fields.ID]
-            for r in records.values()
+            for r in records_headers.values()
             if colrev.record.RecordState.rev_included == r[Fields.STATUS]
             and not colrev.record.Record(data=r).to_screen()
             and r[Fields.ID] in selected_record_ids
@@ -298,7 +300,7 @@ class Screen(colrev.operation.Operation):
 
         print()
         self.review_manager.logger.info("Statistics")
-        for record_dict in records.values():
+        for record_dict in records_headers.values():
             if colrev.record.Record(data=record_dict).to_screen():
                 continue
             if record_dict[Fields.ID] in screen_excluded:

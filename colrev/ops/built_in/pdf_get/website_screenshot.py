@@ -131,6 +131,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
                 value=str(pdf_filepath),
                 source="chrome (browserless) screenshot",
             )
+            # pylint: disable=colrev-direct-status-assign
             record.data.update(
                 colrev_status=colrev.record.RecordState.rev_prescreen_included
             )

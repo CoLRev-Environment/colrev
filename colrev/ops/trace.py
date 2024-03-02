@@ -115,9 +115,12 @@ class Trace(colrev.operation.Operation):
                     + f" {commit_message_first_line} (by {commit.author.name})"
                 )
 
-            records_dict = self.review_manager.dataset.load_records_dict(
-                load_str=filecontents.decode("utf-8")
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=filecontents.decode("utf-8"),
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            records_dict = bib_loader.load_bib_file(check_bib_file=False)
 
             if record_id not in records_dict:
                 if self.review_manager.verbose_mode:

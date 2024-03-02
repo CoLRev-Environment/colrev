@@ -34,4 +34,3 @@ colrev.env
    colrev.env.resources
    colrev.env.tei_parser
    colrev.env.utils
-   colrev.env.zotero_translation_service

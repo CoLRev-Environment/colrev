@@ -1205,31 +1205,6 @@ def test_prescreen_exclude() -> None:
     assert expected == actual
 
 
-def test_parse_bib() -> None:
-    """Test parse_bib"""
-
-    r1_mod = r1.copy()
-    r1_mod.data[Fields.ORIGIN] = "import.bib/id_0001;md_crossref.bib/01;"
-    expected = {
-        Fields.ID: "r1",
-        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.MD_PROV: "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:import.bib/id_0001;;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
-        Fields.D_PROV: "",
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
-        Fields.ORIGIN: "import.bib/id_0001;\n                                    md_crossref.bib/01;",
-        Fields.YEAR: "2020",
-        Fields.TITLE: "EDITORIAL",
-        Fields.AUTHOR: "Rai, Arun",
-        Fields.JOURNAL: "MIS Quarterly",
-        Fields.VOLUME: "45",
-        Fields.NUMBER: "1",
-        Fields.PAGES: "1--3",
-    }
-    print(type(r1_mod.data[Fields.ORIGIN]))
-    actual = r1_mod.get_data(stringify=True)
-    assert expected == actual
-
-
 def test_print_prescreen_record(capfd) -> None:  # type: ignore
     """Test record.print_prescreen_record()"""
 

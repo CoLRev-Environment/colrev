@@ -20,6 +20,7 @@ from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.ops.write_utils_bib import write_file
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -141,9 +142,8 @@ class ExportManPrep(JsonSchemaMixin):
                     del fields[key]
             filtered_man_prep_recs.update({citation: fields})
 
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=filtered_man_prep_recs, save_path=self.prep_man_bib_path
-        )
+        write_file(records_dict=filtered_man_prep_recs, filename=self.prep_man_bib_path)
+
         if any(Fields.FILE in r for r in man_prep_recs.values()):
             self._copy_files_for_man_prep(records=man_prep_recs)
 
@@ -322,10 +322,12 @@ class ExportManPrep(JsonSchemaMixin):
             f"{self.prep_man_bib_path.relative_to(self.review_manager.path)}"
         )
 
-        with open(self.prep_man_bib_path, encoding="utf8") as target_bib:
-            man_prep_recs = self.review_manager.dataset.load_records_dict(
-                load_str=target_bib.read()
-            )
+        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            source_file=self.prep_man_bib_path,
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
+        )
+        man_prep_recs = bib_loader.load_bib_file(check_bib_file=False)
 
         imported_records: typing.List[dict] = []
         records = self.review_manager.dataset.load_records_dict()

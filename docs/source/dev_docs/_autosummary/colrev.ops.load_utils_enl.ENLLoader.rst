@@ -19,7 +19,6 @@ colrev.ops.load\_utils\_enl.ENLLoader
       ~ENLLoader.apply_entrytype_mapping
       ~ENLLoader.get_content
       ~ENLLoader.get_tag
-      ~ENLLoader.is_tag
       ~ENLLoader.load_enl_entries
       ~ENLLoader.map_keys
 

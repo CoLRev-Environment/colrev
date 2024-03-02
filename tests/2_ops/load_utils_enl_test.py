@@ -12,6 +12,7 @@ import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.ops.load_utils_enl import ENLLoader
+from colrev.ops.write_utils_bib import to_string
 
 
 def test_load(  # type: ignore
@@ -109,7 +110,7 @@ def test_load(  # type: ignore
         helpers.test_data_path / Path("load_utils/") / Path("ais_expected.bib")
     ).read_text(encoding="utf-8")
 
-    actual = base_repo_review_manager.dataset.parse_bibtex_str(recs_dict_in=records)
+    actual = to_string(records_dict=records)
     assert actual == expected
 
     records = enl_loader.load_enl_entries()

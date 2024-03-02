@@ -62,10 +62,8 @@ class PDFLastPage(JsonSchemaMixin):
 
             last_page_nr = len(pdf_reader.pages) - 1
 
-            last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-                pdf_path=Path(pdf),
-                page_nr=last_page_nr + 1,
-                hash_size=16,
+            last_page_average_hash_16 = record.get_pdf_hash(
+                page_nr=last_page_nr + 1, hash_size=16
             )
 
             if last_page_nr == 1:

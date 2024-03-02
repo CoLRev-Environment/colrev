@@ -20,6 +20,7 @@ colrev.ops.distribute.Distribute
       ~Distribute.conclude
       ~Distribute.decorate
       ~Distribute.get_environment_registry
+      ~Distribute.get_next_id
       ~Distribute.main
 
 

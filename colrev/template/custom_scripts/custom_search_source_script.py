@@ -10,6 +10,7 @@ from dacite import from_dict
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 @zope.interface.implementer(
@@ -69,9 +70,7 @@ class CustomSearch:
         }
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        search_operation.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=feed_file
-        )
+        write_file(records_dict=records, filename=feed_file)
 
     @classmethod
     def validate_search_params(cls, query: str) -> None:

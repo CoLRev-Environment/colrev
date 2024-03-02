@@ -40,8 +40,10 @@ colrev.record.PrepRecord
       ~PrepRecord.get_colrev_pdf_id
       ~PrepRecord.get_container_title
       ~PrepRecord.get_data
+      ~PrepRecord.get_data_provenance_notes
       ~PrepRecord.get_diff
       ~PrepRecord.get_field_provenance
+      ~PrepRecord.get_masterdata_provenance_notes
       ~PrepRecord.get_record_change_score
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
@@ -74,7 +76,7 @@ colrev.record.PrepRecord
       ~PrepRecord.run_quality_model
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
-      ~PrepRecord.set_pages_in_pdf
+      ~PrepRecord.set_nr_pages_in_pdf
       ~PrepRecord.set_status
       ~PrepRecord.set_text_from_pdf
       ~PrepRecord.shares_origins
@@ -92,7 +94,6 @@ colrev.record.PrepRecord
 
    .. autosummary::
 
-      ~PrepRecord.dict_fields_keys
       ~PrepRecord.list_fields_keys
       ~PrepRecord.pp
       ~PrepRecord.data

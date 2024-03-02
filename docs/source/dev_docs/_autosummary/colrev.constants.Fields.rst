@@ -56,10 +56,10 @@ colrev.constants.Fields
       ~Fields.METADATA_SOURCE_REPOSITORY_PATHS
       ~Fields.MONTH
       ~Fields.NR_INTEXT_CITATIONS
+      ~Fields.NR_PAGES_IN_FILE
       ~Fields.NUMBER
       ~Fields.ORIGIN
       ~Fields.PAGES
-      ~Fields.PAGES_IN_FILE
       ~Fields.PDF_ID
       ~Fields.PMCID
       ~Fields.PRESCREEN_EXCLUSION

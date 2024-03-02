@@ -113,7 +113,7 @@ ignore_missing_imports = true
 
 [tool.pylint.MAIN]
 extension-pkg-whitelist = "lxml.etree"
-load-plugins = ["colrev.linter.colrev_direct_status_assign", "colrev.linter.colrev_missed_constant_usage"]
+load-plugins = ["colrev.linter.colrev_direct_status_assign", "colrev.linter.colrev_missed_constant_usage", "colrev.linter.colrev_records_variable_naming_convention"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["R0801"]

@@ -123,12 +123,14 @@ class Merge(colrev.operation.Operation):
                 # stage == 2: own branch
                 # stage == 3: other branch
                 if 2 == stage:
+                    # pylint: disable=colrev-records-variable-naming-convention
                     current_branch_records = (
                         self.review_manager.dataset.load_records_dict(
                             load_str=blob.data_stream.read().decode("utf-8")
                         )
                     )
                 elif 3 == stage:
+                    # pylint: disable=colrev-records-variable-naming-convention
                     other_branch_records = (
                         self.review_manager.dataset.load_records_dict(
                             load_str=blob.data_stream.read().decode("utf-8")

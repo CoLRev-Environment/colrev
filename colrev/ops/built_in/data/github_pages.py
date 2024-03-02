@@ -14,6 +14,7 @@ import colrev.env.utils
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -149,9 +150,8 @@ class GithubPages(JsonSchemaMixin):
             )
 
         data_file = Path("data.bib")
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=included_records, save_path=data_file
-        )
+        write_file(records_dict=included_records, filename=data_file)
+
         self.review_manager.dataset.add_changes(path=data_file)
 
         self.review_manager.dataset.create_commit(

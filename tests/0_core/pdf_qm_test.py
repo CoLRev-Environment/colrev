@@ -10,54 +10,6 @@ import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
 
-# @pytest.mark.parametrize(
-#     "changes, defects",
-#     [
-#         (
-#             {Fields.TEXT_FROM_PDF: ""},
-#             {PDFDefectCodes.NO_TEXT_IN_PDF},
-#         ),
-#         (
-#             {Fields.TEXT_FROM_PDF: "This paper focuses on a different topic"},
-#             {PDFDefectCodes.AUTHOR_NOT_IN_PDF, PDFDefectCodes.TITLE_NOT_IN_PDF},
-#         ),
-#         ({Fields.TEXT_FROM_PDF: Path("WagnerLukyanenkoParEtAl2022_content.txt")}, {}),
-#         (
-#             {
-#                 Fields.TEXT_FROM_PDF: Path("WagnerLukyanenkoParEtAl2022_content.txt"),
-#                 Fields.PAGES: "209--211",
-#             },
-#             {PDFDefectCodes.PDF_INCOMPLETE},
-#         ),
-#     ],
-# )
-# def test_get_quality_defects_author(  # type: ignore
-#     changes: dict,
-#     defects: set,
-#     v_t_record: colrev.record.Record,
-#     pdf_quality_model: colrev.qm.quality_model.QualityModel,
-#     helpers,
-# ) -> None:
-#     """Test record.get_quality_defects() - author field"""
-
-#     # Activate PDF file or text_from_pdf
-#     for key, value in changes.items():
-#         if isinstance(value, Path):
-#             v_t_record.data[key] = (helpers.test_data_path / value).read_text(
-#                 encoding="utf-8"
-#             )
-#         else:
-#             v_t_record.data[key] = value
-
-#     v_t_record.run_pdf_quality_model(pdf_qm=pdf_quality_model)
-
-#     if not defects:
-#         assert not v_t_record.has_pdf_defects()
-#     else:
-#         assert v_t_record.has_pdf_defects()
-#         actual = set(v_t_record.data[Fields.D_PROV][Fields.FILE]["note"].split(","))
-#         assert defects == actual
-
 
 def test_pdf_qm(  # type: ignore
     v_t_record: colrev.record.Record,
@@ -75,6 +27,11 @@ def test_pdf_qm(  # type: ignore
     v_t_record.data[Fields.TITLE] = original_title
 
     v_t_record.run_pdf_quality_model(pdf_qm=pdf_quality_model)
+
+    original_filepath = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
+    v_t_record.data.pop(Fields.FILE, None)
+    v_t_record.run_pdf_quality_model(pdf_qm=pdf_quality_model)
+    v_t_record.data[Fields.FILE] = original_filepath
 
 
 def test_author_not_in_pdf(

@@ -41,8 +41,8 @@ class CustomPDFPrep:
             record.add_data_provenance_note(
                 key=Fields.FILE, note="custom_issue_detected"
             )
-            record.data.update(
-                colrev_status=colrev.record.RecordState.pdf_needs_manual_preparation
+            record.set_status(
+                target_state=colrev.record.RecordState.pdf_needs_manual_preparation
             )
 
         return record

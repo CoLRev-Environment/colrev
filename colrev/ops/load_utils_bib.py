@@ -37,6 +37,7 @@ import re
 import string
 import typing
 from pathlib import Path
+from typing import Optional
 
 import pybtex.errors
 from pybtex.database import Person
@@ -80,12 +81,11 @@ class BIBLoader:
                     f"File not found: {source_file.name}"
                 )
 
-            self.source_file = source_file
-
         if load_string != "":
             assert source_file is None, "source_file and load_string are exclusive"
-            self.source_file = None
-            self.load_string = load_string
+
+        self.source_file = source_file
+        self.load_string = load_string
 
     def generate_next_unique_id(
         self,
@@ -108,7 +108,6 @@ class BIBLoader:
         return temp_id
 
     def _apply_file_fixes(self) -> None:
-        # pylint: disable=duplicate-code
         # pylint: disable=too-many-statements
 
         def fix_key(
@@ -130,76 +129,80 @@ class BIBLoader:
             file.seek(seekpos)
             return seekpos
 
-        with open(self.source_file, encoding="utf8") as bibtex_file:
-            contents = bibtex_file.read()
-            bib_r = re.compile(r"@.*{.*,", re.M)
-            if len(re.findall(bib_r, contents)) == 0:
-                self.logger.error(f"Not a bib file? {self.source_file.name}")
-                raise colrev_exceptions.UnsupportedImportFormatError(self.source_file)
+        if self.source_file is not None:
 
-        # Errors to fix before pybtex loading:
-        # - set_incremental_ids (otherwise, not all records will be loaded)
-        # - fix_keys (keys containing white spaces)
-        record_ids: typing.List[str] = []
-        with open(self.source_file, "r+b") as file:
-            seekpos = file.tell()
-            line = file.readline()
-            while line:
-                if b"@" in line[:3]:
-                    current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
-                    current_id_str = current_id.decode("utf-8").lstrip().rstrip()
+            with open(self.source_file, encoding="utf8") as bibtex_file:
+                contents = bibtex_file.read()
+                bib_r = re.compile(r"@.*{.*,", re.M)
+                if len(re.findall(bib_r, contents)) == 0:
+                    self.logger.error(f"Not a bib file? {self.source_file.name}")
+                    raise colrev_exceptions.UnsupportedImportFormatError(
+                        self.source_file
+                    )
 
-                    if any(x in current_id_str for x in [";"]):
+            # Errors to fix before pybtex loading:
+            # - set_incremental_ids (otherwise, not all records will be loaded)
+            # - fix_keys (keys containing white spaces)
+            record_ids: typing.List[str] = []
+            with open(self.source_file, "r+b") as file:
+                seekpos = file.tell()
+                line = file.readline()
+                while line:
+                    if b"@" in line[:3]:
+                        current_id = line[line.find(b"{") + 1 : line.rfind(b",")]
+                        current_id_str = current_id.decode("utf-8").lstrip().rstrip()
+
+                        if any(x in current_id_str for x in [";"]):
+                            replacement_line = re.sub(
+                                r";",
+                                r"_",
+                                line.decode("utf-8"),
+                            ).encode("utf-8")
+                            seekpos = fix_key(file, line, replacement_line, seekpos)
+
+                        if current_id_str in record_ids:
+                            next_id = self.generate_next_unique_id(
+                                temp_id=current_id_str, existing_ids=record_ids
+                            )
+                            self.logger.info(
+                                f"Fix duplicate ID: {current_id_str} >> {next_id}"
+                            )
+
+                            replacement_line = (
+                                line.decode("utf-8")
+                                .replace(current_id.decode("utf-8"), next_id)
+                                .encode("utf-8")
+                            )
+
+                            line = file.readline()
+                            remaining = line + file.read()
+                            file.seek(seekpos)
+                            file.write(replacement_line)
+                            seekpos = file.tell()
+                            file.flush()
+                            os.fsync(file)
+                            file.write(remaining)
+                            file.truncate()  # if the replacement is shorter...
+                            file.seek(seekpos)
+
+                            record_ids.append(next_id)
+
+                        else:
+                            record_ids.append(current_id_str)
+
+                    # Fix keys
+                    if re.match(
+                        r"^\s*[a-zA-Z0-9]+\s+[a-zA-Z0-9]+\s*\=", line.decode("utf-8")
+                    ):
                         replacement_line = re.sub(
-                            r";",
-                            r"_",
+                            r"(^\s*)([a-zA-Z0-9]+)\s+([a-zA-Z0-9]+)(\s*\=)",
+                            r"\1\2_\3\4",
                             line.decode("utf-8"),
                         ).encode("utf-8")
                         seekpos = fix_key(file, line, replacement_line, seekpos)
 
-                    if current_id_str in record_ids:
-                        next_id = self.generate_next_unique_id(
-                            temp_id=current_id_str, existing_ids=record_ids
-                        )
-                        self.logger.info(
-                            f"Fix duplicate ID: {current_id_str} >> {next_id}"
-                        )
-
-                        replacement_line = (
-                            line.decode("utf-8")
-                            .replace(current_id.decode("utf-8"), next_id)
-                            .encode("utf-8")
-                        )
-
-                        line = file.readline()
-                        remaining = line + file.read()
-                        file.seek(seekpos)
-                        file.write(replacement_line)
-                        seekpos = file.tell()
-                        file.flush()
-                        os.fsync(file)
-                        file.write(remaining)
-                        file.truncate()  # if the replacement is shorter...
-                        file.seek(seekpos)
-
-                        record_ids.append(next_id)
-
-                    else:
-                        record_ids.append(current_id_str)
-
-                # Fix keys
-                if re.match(
-                    r"^\s*[a-zA-Z0-9]+\s+[a-zA-Z0-9]+\s*\=", line.decode("utf-8")
-                ):
-                    replacement_line = re.sub(
-                        r"(^\s*)([a-zA-Z0-9]+)\s+([a-zA-Z0-9]+)(\s*\=)",
-                        r"\1\2_\3\4",
-                        line.decode("utf-8"),
-                    ).encode("utf-8")
-                    seekpos = fix_key(file, line, replacement_line, seekpos)
-
-                seekpos = file.tell()
-                line = file.readline()
+                    seekpos = file.tell()
+                    line = file.readline()
 
     def _parse_records_dict(self, *, records_dict: dict) -> dict:
         """Parse a records_dict from pybtex to colrev standard"""
@@ -257,8 +260,7 @@ class BIBLoader:
                                         if k in colrev.record.Record.list_fields_keys
                                         else (
                                             self._load_field_dict(value=v, field=k)
-                                            if k
-                                            in colrev.record.Record.dict_fields_keys
+                                            if k in [Fields.MD_PROV, Fields.D_PROV]
                                             else v
                                         )
                                     )
@@ -443,3 +445,109 @@ class BIBLoader:
         records = dict(sorted(records.items()))
         check_nr_in_bib(records=records)
         return records
+
+    def _parse_k_v(self, item_string: str) -> tuple:
+        if " = " in item_string:
+            key, value = item_string.split(" = ", 1)
+        else:
+            key = Fields.ID
+            value = item_string.split("{")[1]
+
+        key = key.lstrip().rstrip()
+        value = value.lstrip().rstrip().lstrip("{").rstrip("},")
+        if key == Fields.ORIGIN:
+            value_list = value.replace("\n", "").split(";")
+            value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
+            return key, value_list
+        if key == Fields.STATUS:
+            return key, colrev.record.RecordState[value]
+        if key == Fields.MD_PROV:
+            return key, self._load_field_dict(value=value, field=key)
+        if key == Fields.FILE:
+            return key, Path(value)
+
+        return key, value
+
+    # pylint: disable=too-many-branches
+    def _read_record_header_items(
+        self, *, file_object: Optional[typing.TextIO] = None
+    ) -> list:
+        # Note : more than 10x faster than the pybtex part of load_records_dict()
+
+        if file_object is None:
+            if self.source_file is None:
+                return []
+            # pylint: disable=consider-using-with
+            file_object = open(self.source_file, encoding="utf-8")
+
+        # Fields required
+        default = {
+            Fields.ID: "NA",
+            Fields.ORIGIN: "NA",
+            Fields.STATUS: "NA",
+            Fields.FILE: "NA",
+            Fields.SCREENING_CRITERIA: "NA",
+            Fields.MD_PROV: "NA",
+        }
+        number_required_header_items = len(default)
+
+        record_header_item = default.copy()
+        item_count, item_string, record_header_items = (
+            0,
+            "",
+            [],
+        )
+        while True:
+            line = file_object.readline()
+            if not line:
+                break
+
+            if line[:1] == "%" or line == "\n":
+                continue
+
+            if item_count > number_required_header_items or "}" == line:
+                record_header_items.append(record_header_item)
+                record_header_item = default.copy()
+                item_count = 0
+                continue
+
+            if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
+                record_header_items.append(record_header_item)
+                record_header_item = default.copy()
+                item_count = 0
+
+            item_string += line
+            if "}," in line or "@" in line[:2]:
+                key, value = self._parse_k_v(item_string)
+                if key == Fields.MD_PROV:
+                    if value == "NA":
+                        value = {}
+                if value == "NA":
+                    item_string = ""
+                    continue
+                item_string = ""
+                if key in record_header_item:
+                    item_count += 1
+                    record_header_item[key] = value
+
+        if record_header_item[Fields.ORIGIN] != "NA":
+            record_header_items.append(record_header_item)
+
+        return [
+            {k: v for k, v in record_header_item.items() if "NA" != v}
+            for record_header_item in record_header_items
+        ]
+
+    def get_record_header_items(self) -> dict:
+        """Get the record header items"""
+        if self.load_string != "":
+            record_header_list = self._read_record_header_items(
+                file_object=io.StringIO(self.load_string)
+            )
+        elif self.source_file is not None and self.source_file.is_file():
+            record_header_list = self._read_record_header_items()
+        else:
+            record_header_list = []
+
+        record_header_dict = {r[Fields.ID]: r for r in record_header_list}
+        return record_header_dict

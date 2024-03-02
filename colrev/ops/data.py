@@ -286,6 +286,7 @@ class Data(colrev.operation.Operation):
                     colrev.record.RecordState.rev_synthesized
                     != records[record_id][Fields.STATUS]
                 ):
+                    # pylint: disable=colrev-direct-status-assign
                     records[record_id].update(
                         colrev_status=colrev.record.RecordState.rev_synthesized
                     )
@@ -295,6 +296,7 @@ class Data(colrev.operation.Operation):
                     colrev.record.RecordState.rev_included
                     != records[record_id][Fields.STATUS]
                 ):
+                    # pylint: disable=colrev-direct-status-assign
                     records[record_id].update(
                         colrev_status=colrev.record.RecordState.rev_included
                     )

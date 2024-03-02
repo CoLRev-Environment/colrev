@@ -22,6 +22,8 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import to_string
+from colrev.ops.write_utils_bib import write_file
 
 
 @dataclass
@@ -106,9 +108,8 @@ class BibliographyExport(JsonSchemaMixin):
         elif self.settings.bib_format is BibFormats.citavi:
             export_filepath = self.endpoint_path / Path("citavi.bib")
 
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=selected_records, save_path=export_filepath
-        )
+        write_file(records_dict=selected_records, filename=export_filepath)
+
         self.review_manager.dataset.add_changes(path=export_filepath)
         self.review_manager.dataset.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
@@ -137,9 +138,7 @@ class BibliographyExport(JsonSchemaMixin):
             )
             return
 
-        content = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in=selected_records
-        )
+        content = to_string(records_dict=selected_records)
 
         self.start_zotero()
 

@@ -27,5 +27,3 @@ colrev.qm.pdf\_checkers.pdf\_incomplete.PDFIncompletenessChecker
    .. autosummary::
 
       ~PDFIncompletenessChecker.msg
-      ~PDFIncompletenessChecker.roman_page_pattern
-      ~PDFIncompletenessChecker.roman_pages_pattern

@@ -56,6 +56,7 @@ class Validate(colrev.operation.Operation):
                 # To skip the same commit
                 found_target_commit = True
                 continue
+            # pylint: disable=colrev-records-variable-naming-convention
             prior_records_dict = self.review_manager.dataset.load_records_dict(
                 load_str=filecontents.decode("utf-8")
             )
@@ -470,21 +471,40 @@ class Validate(colrev.operation.Operation):
             if not any(x in commit.message for x in ["prescreen", "screen"]):
                 continue
 
-            records_branch_1 = self.review_manager.dataset.load_records_dict(
-                load_str=(commit.parents[0].tree / records_file_path)
+            load_str = (
+                (commit.parents[0].tree / records_file_path)
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_branch_2 = self.review_manager.dataset.load_records_dict(
-                load_str=(commit.parents[1].tree / records_file_path)
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=load_str,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_branch_1 = bib_loader.load_bib_file(check_bib_file=False)
+
+            load_str = (
+                (commit.parents[1].tree / records_file_path)
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_reconciled = self.review_manager.dataset.load_records_dict(
-                load_str=(commit.tree / records_file_path)
-                .data_stream.read()
-                .decode("utf-8")
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=load_str,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            records_branch_2 = bib_loader.load_bib_file(check_bib_file=False)
+
+            load_str = (
+                (commit.tree / records_file_path).data_stream.read().decode("utf-8")
+            )
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=load_str,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_reconciled = bib_loader.load_bib_file(check_bib_file=False)
+
             if "screen" in commit.message or "prescreen" in commit.message:
                 prescreen_validation = self.validate_merge_prescreen_screen(
                     commit_sha=commit.hexsha,
@@ -520,7 +540,7 @@ class Validate(colrev.operation.Operation):
             try:
                 commit_object = git_repo.commit(scope)
                 commit = commit_object.hexsha
-            except ValueError:
+            except ValueError as exc:
                 for commit_candidate in git_repo.iter_commits():
                     if str(commit_candidate.tree) == scope:
                         commit = commit_candidate.hexsha
@@ -531,7 +551,7 @@ class Validate(colrev.operation.Operation):
                     # pylint: disable=raise-missing-from
                     raise colrev_exceptions.ParameterError(
                         parameter="validate.scope", value=scope, options=valid_options
-                    )
+                    ) from exc
 
         if not re.match(r"[0-9a-f]{5,40}", commit):
             raise colrev_exceptions.ParameterError(

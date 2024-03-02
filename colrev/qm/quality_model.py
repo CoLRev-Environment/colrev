@@ -66,7 +66,10 @@ class QualityModel:
         """Run the checkers"""
 
         if self.pdf_mode:
-            if "file" not in record.data or not Path(record.data["file"]).is_file():
+            if (
+                Fields.FILE not in record.data
+                or not Path(record.data[Fields.FILE]).is_file()
+            ):
                 return
             # text_from_pdf is already set in tests
             if (
@@ -81,7 +84,5 @@ class QualityModel:
             checker.run(record=record)
 
         if self.pdf_mode:
-            if Fields.TEXT_FROM_PDF in record.data:
-                del record.data[Fields.TEXT_FROM_PDF]
-            if Fields.NR_PAGES_IN_FILE in record.data:
-                del record.data[Fields.NR_PAGES_IN_FILE]
+            record.data.pop(Fields.TEXT_FROM_PDF, None)
+            record.data.pop(Fields.NR_PAGES_IN_FILE, None)

@@ -113,7 +113,7 @@ def test_get_changed_records(
     # Simulate changes in records and commit those changes
     changed_record_dict = {
         "SrivastavaShainesh2015": {
-            "colrev_origin": "test_records.bib/Srivastava2015",
+            "colrev_origin": ["test_records.bib/Srivastava2015"],
             "colrev_status": colrev.record.RecordState.pdf_prepared,
             "ID": "SrivastavaShainesh2015",
             "ENTRYTYPE": "article",

@@ -14,6 +14,7 @@ import colrev.operation
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 class Search(colrev.operation.Operation):
@@ -222,9 +223,8 @@ class Search(colrev.operation.Operation):
                 f"{Colors.GREEN}Removed {removed} forthcoming{Colors.END}"
             )
             records = {r[Fields.ID]: r for r in record_list}
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=source.filename
-            )
+
+            write_file(records_dict=records, filename=source.filename)
 
     # pylint: disable=no-self-argument
     def check_source_selection_exists(var_name: str) -> Callable:  # type: ignore

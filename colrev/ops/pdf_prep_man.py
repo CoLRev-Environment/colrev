@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 class PDFPrepMan(colrev.operation.Operation):
@@ -173,9 +174,8 @@ class PDFPrepMan(colrev.operation.Operation):
             if colrev.record.RecordState.pdf_needs_manual_preparation
             == record[Fields.STATUS]
         }
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=prep_bib_path
-        )
+
+        write_file(records_dict=records, filename=prep_bib_path)
 
         bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
@@ -211,12 +211,12 @@ class PDFPrepMan(colrev.operation.Operation):
 
         if Path("data/pdf-prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
-
-            with open("data/pdf-prep-records.bib", encoding="utf8") as target_db:
-                records_changed_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=target_db.read()
-                )
-                records_changed = list(records_changed_dict.values())
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=Path("data/pdf-prep-records.bib"),
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_changed = bib_loader.load_bib_file(check_bib_file=False)
 
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():

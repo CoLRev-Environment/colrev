@@ -28,6 +28,9 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.ops.write_utils_bib import to_string
+from colrev.ops.write_utils_bib import write_file
+
 
 # pylint: disable=too-many-lines
 
@@ -435,9 +438,7 @@ class Prep(colrev.operation.Operation):
             )
 
     def _save_to_temp(self, *, record: colrev.record.Record) -> None:
-        rec_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record.data[Fields.ID]: record.get_data()}
-        )
+        rec_str = to_string(records_dict={record.data[Fields.ID]: record.get_data()})
         self.temp_prep_lock.acquire(timeout=120)
         self.current_temp_records.parent.mkdir(exist_ok=True)
         with open(self.current_temp_records, "a", encoding="utf-8") as cur_temp_rec:
@@ -449,9 +450,13 @@ class Prep(colrev.operation.Operation):
 
     def _complete_resumed_operation(self, *, prepared_records: list) -> None:
         if self.temp_records.is_file():
-            temp_recs = self.review_manager.dataset.load_records_dict(
-                load_str=self.temp_records.read_text(encoding="utf-8")
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.temp_records,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            temp_recs = bib_loader.load_bib_file(check_bib_file=False)
+
             prepared_records_ids = [x[Fields.ID] for x in prepared_records]
             for record in temp_recs.values():
                 if record[Fields.ID] not in prepared_records_ids:
@@ -673,25 +678,40 @@ class Prep(colrev.operation.Operation):
 
         if self.current_temp_records.is_file():
             # combine and remove redundant records
-            cur_temp_recs = self.review_manager.dataset.load_records_dict(
-                load_str=self.current_temp_records.read_text(encoding="utf-8")
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.current_temp_records,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            cur_temp_recs = bib_loader.load_bib_file(check_bib_file=False)
+
             temp_recs = {}
             if self.temp_records.is_file():
-                temp_recs = self.review_manager.dataset.load_records_dict(
-                    load_str=self.temp_records.read_text(encoding="utf-8")
+
+                bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                    source_file=self.temp_records,
+                    logger=self.review_manager.logger,
+                    force_mode=self.review_manager.force_mode,
                 )
+                temp_recs = bib_loader.load_bib_file(check_bib_file=False)
+
             combined_recs = {**temp_recs, **cur_temp_recs}
             self.temp_records.parent.mkdir(exist_ok=True)
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=combined_recs, save_path=self.temp_records, add_changes=False
-            )
+
+            write_file(records_dict=combined_recs, filename=self.temp_records)
+
             self.current_temp_records.unlink()
 
         if self.temp_records.is_file():
-            temp_recs = self.review_manager.dataset.load_records_dict(
-                load_str=self.temp_records.read_text(encoding="utf-8")
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.temp_records,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            temp_recs = bib_loader.load_bib_file(check_bib_file=False)
+
             self.review_manager.logger.info("Continue with existing records")
             skipped_items = 0
             list_to_skip = []
@@ -773,9 +793,13 @@ class Prep(colrev.operation.Operation):
         self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
         if debug_file:
-            records_dict = self.review_manager.dataset.load_records_dict(
-                load_str=debug_file.read_text(encoding="utf-8")
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=debug_file,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            records_dict = bib_loader.load_bib_file(check_bib_file=False)
 
             for record_dict in records_dict.values():
                 if colrev.record.RecordState.md_imported != record_dict.get(

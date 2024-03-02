@@ -18,6 +18,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -124,9 +125,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 self.review_manager.logger.info(f" remove duplicate {rid}")
                 del records[rid]
 
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=self.search_source.filename
-            )
+            write_file(records_dict=records, filename=self.search_source.filename)
 
     def get_masterdata(
         self,

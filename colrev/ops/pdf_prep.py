@@ -51,6 +51,7 @@ class PDFPrep(colrev.operation.Operation):
     def _complete_successful_pdf_prep(
         self, *, record: colrev.record.Record, original_filename: str
     ) -> None:
+        # pylint: disable=colrev-direct-status-assign
         record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
         pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         if pdf_path.suffix == ".pdf":
@@ -270,6 +271,7 @@ class PDFPrep(colrev.operation.Operation):
                 continue
 
             record = colrev.record.Record(data=record_dict)
+            # pylint: disable=colrev-direct-status-assign
             record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
             record.reset_pdf_provenance_notes()
 

@@ -19,7 +19,6 @@ colrev.ops.load\_utils\_nbib.NBIBLoader
       ~NBIBLoader.apply_entrytype_mapping
       ~NBIBLoader.get_content
       ~NBIBLoader.get_tag
-      ~NBIBLoader.is_tag
       ~NBIBLoader.load_nbib_entries
       ~NBIBLoader.map_keys
 

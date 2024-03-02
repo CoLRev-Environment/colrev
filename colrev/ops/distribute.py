@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.operation
 import colrev.settings
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 class Distribute(colrev.operation.Operation):
@@ -92,13 +93,16 @@ class Distribute(colrev.operation.Operation):
                 target_bib_file = target / Path("data/search/local_import.bib")
                 self.review_manager.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
-                    with open(target_bib_file, encoding="utf8") as target_bib:
-                        import_records_dict = (
-                            self.review_manager.dataset.load_records_dict(
-                                load_str=target_bib.read()
-                            )
-                        )
-                        import_records = list(import_records_dict.values())
+
+                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                        source_file=target_bib_file,
+                        logger=self.review_manager.logger,
+                        force_mode=self.review_manager.force_mode,
+                    )
+                    import_records = list(
+                        bib_loader.load_bib_file(check_bib_file=False).values()
+                    )
+
                 else:
                     import_records = []
 
@@ -121,8 +125,7 @@ class Distribute(colrev.operation.Operation):
                 import_records.append(record)
 
                 import_records_dict = {r[Fields.ID]: r for r in import_records}
-                self.review_manager.dataset.save_records_dict_to_file(
-                    records=import_records_dict, save_path=target_bib_file
-                )
+
+                write_file(records_dict=import_records_dict, filename=target_bib_file)
 
                 self.review_manager.dataset.add_changes(path=target_bib_file)

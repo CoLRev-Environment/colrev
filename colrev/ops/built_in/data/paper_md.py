@@ -23,6 +23,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 # pylint: disable=too-many-instance-attributes
@@ -510,15 +511,19 @@ class PaperMarkdown(JsonSchemaMixin):
         filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
 
         if filedata:
-            non_sample_records = {}
-            with open(self.non_sample_references, encoding="utf8") as file:
-                non_sample_records = self.review_manager.dataset.load_records_dict(
-                    load_str=file.read()
-                )
-
-            records_to_add = self.review_manager.dataset.load_records_dict(
-                load_str=filedata.decode("utf-8")
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=self.non_sample_references,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            non_sample_records = bib_loader.load_bib_file(check_bib_file=False)
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                load_string=filedata.decode("utf-8"),
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            records_to_add = bib_loader.load_bib_file(check_bib_file=False)
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
             duplicated_keys = [
@@ -542,10 +547,11 @@ class PaperMarkdown(JsonSchemaMixin):
                     print(colrev.record.Record(data=duplicated_record))
 
             non_sample_records = {**non_sample_records, **records_to_add}
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=non_sample_records,
-                save_path=self.non_sample_references,
+
+            write_file(
+                records_dict=non_sample_records, filename=self.non_sample_references
             )
+
             self.review_manager.dataset.add_changes(
                 path=(Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE)
             )
@@ -637,9 +643,8 @@ class PaperMarkdown(JsonSchemaMixin):
         for record_id, record_dict in records.items():
             record_dict = {k.replace(".", "_"): v for k, v in record_dict.items()}
             records[record_id] = record_dict
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=self.sample_references
-        )
+
+        write_file(records_dict=records, filename=self.sample_references)
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:

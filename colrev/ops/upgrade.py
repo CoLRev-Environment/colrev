@@ -18,7 +18,7 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
+from colrev.ops.write_utils_bib import to_string
 
 # pylint: disable=too-few-public-methods
 
@@ -84,7 +84,7 @@ class Upgrade(colrev.operation.Operation):
         Args:
             records (dict): The records dictionary to save.
         """
-        bibtex_str = colrev.dataset.Dataset.parse_bibtex_str(recs_dict_in=records)
+        bibtex_str = to_string(records_dict=records)
         with open("data/records.bib", "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
         self.repo.index.add(["data/records.bib"])
@@ -104,8 +104,7 @@ class Upgrade(colrev.operation.Operation):
 
         settings_version = CoLRevVersion(settings_version_str)
         # Start with the first step if the version is older:
-        if settings_version < CoLRevVersion("0.7.0"):
-            settings_version = CoLRevVersion("0.7.0")
+        settings_version = max(settings_version, CoLRevVersion("0.7.0"))
         installed_colrev_version = CoLRevVersion(version("colrev"))
 
         # version: indicates from which version on the migration should be applied

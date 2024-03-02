@@ -173,7 +173,9 @@ class Load(colrev.operation.Operation):
             if source_settings.endpoint == "colrev.local_index":
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                record.update(colrev_status=colrev.record.RecordState.md_prepared)
+                colrev.record.Record(data=record).set_status(
+                    target_state=colrev.record.RecordState.md_prepared
+                )
                 if "curation_ID" in record:
                     record[Fields.MD_PROV] = {
                         FieldValues.CURATED: {
@@ -182,7 +184,9 @@ class Load(colrev.operation.Operation):
                         }
                     }
             else:
-                record.update(colrev_status=colrev.record.RecordState.md_retrieved)
+                colrev.record.Record(data=record).set_status(
+                    target_state=colrev.record.RecordState.md_retrieved
+                )
 
             if Fields.DOI in record:
                 formatted_doi = (

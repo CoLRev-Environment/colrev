@@ -37,7 +37,6 @@ colrev.qm.checkers
    colrev.qm.checkers.inconsistent_content
    colrev.qm.checkers.inconsistent_with_doi_metadata
    colrev.qm.checkers.inconsistent_with_entrytype
-   colrev.qm.checkers.inconsistent_with_url_metadata
    colrev.qm.checkers.isbn_not_matching_pattern
    colrev.qm.checkers.language_format_error
    colrev.qm.checkers.language_unknown

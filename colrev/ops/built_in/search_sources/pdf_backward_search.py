@@ -537,10 +537,10 @@ class BackwardSearchSource(JsonSchemaMixin):
         # Assuming there's a function to create an overview, it would be called here.
         # For example: cls.create_min_intext_citations_overview(params)
 
-        all_records = review_manager.dataset.load_records_dict()
+        records = review_manager.dataset.load_records_dict()
         selected_records = {
             record_id: record
-            for record_id, record in all_records.items()
+            for record_id, record in records.items()
             if record[Fields.STATUS]
             in [
                 colrev.record.RecordState.rev_included,

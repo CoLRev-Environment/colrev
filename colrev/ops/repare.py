@@ -12,9 +12,7 @@ import colrev.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
-
-# pylint: disable=too-few-public-methods
+from colrev.ops.write_utils_bib import write_file
 
 
 class Repare(colrev.operation.Operation):
@@ -325,9 +323,14 @@ class Repare(colrev.operation.Operation):
         for search_source in self.review_manager.settings.sources:
             if search_source.endpoint != "colrev.local_index":
                 continue
-            curation_recs = self.review_manager.dataset.load_records_dict(
-                load_str=Path(search_source.filename).read_text(encoding="utf-8")
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
+            curation_recs = bib_loader.load_bib_file(check_bib_file=False)
+
             for record_id in list(curation_recs.keys()):
                 if "curation_ID" not in curation_recs[record_id]:
                     try:
@@ -356,9 +359,7 @@ class Repare(colrev.operation.Operation):
                             )
                         del curation_recs[record_id]
 
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=curation_recs, save_path=search_source.filename
-            )
+            write_file(records_dict=curation_recs, filename=search_source.filename)
             self.review_manager.dataset.add_changes(path=search_source.filename)
 
     def _update_field_names(self, *, records: dict) -> None:
@@ -416,9 +417,9 @@ class Repare(colrev.operation.Operation):
                         record_str = ""
                     record_str += line
                     line = file.readline()
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=separated_records, save_path=Path("extracted.bib")
-            )
+
+            write_file(records_dict=separated_records, filename=Path("extracted.bib"))
+
             try:
                 records = self.review_manager.dataset.load_records_dict()
             except AttributeError:

@@ -34,10 +34,7 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
         Detect direct assignment of colrev_status.
         """
 
-        if len(node.targets) != 1:
-            return
-
-        if not hasattr(node.targets[0], "slice"):
+        if len(node.targets) != 1 or not hasattr(node.targets[0], "slice"):
             return
 
         if hasattr(node.targets[0].slice, "value"):
@@ -45,13 +42,18 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
                 self.add_message(self.name, node=node)  # , confidence=HIGH)
             return
 
-        if hasattr(node.targets[0].slice, "attrname"):
-            if "STATUS" == node.targets[0].slice.attrname:
-                # Note : may also check whether it is Fields.STATUS.
-                self.add_message(self.name, node=node)  # , confidence=HIGH)
+    @only_required_for_messages("colrev-direct-status-assign")
+    def visit_call(self, node: nodes.Assign) -> None:
+        """
+        Detect direct assignment of colrev_status.
+        """
+        if isinstance(node.func, nodes.Attribute) and node.func.attrname == "update":
+            for keyword in node.keywords:
+                if keyword.arg == "colrev_status":
+                    self.add_message("colrev-direct-status-assign", node=node)
 
 
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pragma: no cover
     """required method to auto register this checker"""
 
     linter.register_checker(DirectStatusAssignmentChecker(linter))

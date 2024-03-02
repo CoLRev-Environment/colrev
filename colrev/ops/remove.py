@@ -7,9 +7,7 @@ from pathlib import Path
 import colrev.env.utils
 import colrev.operation
 from colrev.constants import Fields
-
-
-# pylint: disable=too-few-public-methods
+from colrev.ops.write_utils_bib import write_file
 
 
 class Remove(colrev.operation.Operation):
@@ -44,15 +42,18 @@ class Remove(colrev.operation.Operation):
 
                     filepath = self.review_manager.search_dir / Path(file)
 
-                    origin_file_content = filepath.read_text()
-                    origin_records = self.review_manager.dataset.load_records_dict(
-                        load_str=origin_file_content
+                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                        source_file=filepath,
+                        logger=self.review_manager.logger,
+                        force_mode=self.review_manager.force_mode,
                     )
+                    origin_records = bib_loader.load_bib_file(check_bib_file=False)
+
                     if origin_id in origin_records:
                         del origin_records[origin_id]
-                    self.review_manager.dataset.save_records_dict_to_file(
-                        records=origin_records, save_path=filepath
-                    )
+
+                    write_file(records_dict=origin_records, filename=filepath)
+
                     self.review_manager.dataset.add_changes(path=filepath)
 
         self.review_manager.dataset.save_records_dict(records=records)

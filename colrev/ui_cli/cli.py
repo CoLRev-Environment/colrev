@@ -1666,32 +1666,16 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
         return
 
     assert Path(pdf_path).suffix == ".pdf"
-
-    first_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=1,
-        hash_size=16,
-    )
+    record = colrev.record.Record(data={"file": pdf_path})
+    first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
     print(f"first page: {first_page_average_hash_16}")
-    first_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=1,
-        hash_size=32,
-    )
+    first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)
     print(f"first page: {first_page_average_hash_32}")
 
     last_page_nr = len(pdf_reader.pages)
-    last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=last_page_nr,
-        hash_size=16,
-    )
+    last_page_average_hash_16 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=16)
     print(f"last page: {last_page_average_hash_16}")
-    last_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=last_page_nr,
-        hash_size=32,
-    )
+    last_page_average_hash_32 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=32)
     print(f"last page: {last_page_average_hash_32}")
 
 

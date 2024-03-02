@@ -13,6 +13,7 @@ import colrev.env.local_index
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 class Sync:
@@ -213,71 +214,6 @@ class Sync:
         ]:
             self.records_to_import.append(record)
 
-    def _save_to_bib(self, *, records: dict, save_path: Path) -> None:
-        # pylint: disable=duplicate-code
-
-        def parse_bibtex_str(*, recs_dict_in: dict) -> str:
-            def format_field(field: str, value: str) -> str:
-                padd = " " * max(0, 28 - len(field))
-                return f",\n   {field} {padd} = {{{value}}}"
-
-            bibtex_str = ""
-
-            first = True
-            for record_id, record_dict in recs_dict_in.items():
-                # Note : temporarily
-                # (to prevent pandoc fails, which does not support "." in fiel names)
-                record_dict = {k: v for k, v in record_dict.items() if "." not in k}
-
-                if not first:
-                    bibtex_str += "\n"
-                first = False
-
-                bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
-
-                field_order = [
-                    Fields.DOI,
-                    Fields.DBLP_KEY,
-                    Fields.SEMANTIC_SCHOLAR_ID,
-                    Fields.WEB_OF_SCIENCE_ID,
-                    Fields.AUTHOR,
-                    Fields.BOOKTITLE,
-                    Fields.JOURNAL,
-                    Fields.TITLE,
-                    Fields.YEAR,
-                    Fields.VOLUME,
-                    Fields.NUMBER,
-                    Fields.PAGES,
-                    Fields.EDITOR,
-                ]
-
-                for ordered_field in field_order:
-                    if ordered_field in record_dict:
-                        if record_dict[ordered_field] == "":
-                            continue
-                        if isinstance(record_dict[ordered_field], (list, dict)):
-                            continue
-                        bibtex_str += format_field(
-                            ordered_field, record_dict[ordered_field]
-                        )
-
-                for key, value in record_dict.items():
-                    if key in field_order + [Fields.ID, Fields.ENTRYTYPE]:
-                        continue
-                    if isinstance(key, (list, dict)):
-                        continue
-
-                    bibtex_str += format_field(key, value)
-
-                bibtex_str += ",\n}\n"
-
-            return bibtex_str
-
-        bibtex_str = parse_bibtex_str(recs_dict_in=records)
-
-        with open(save_path, "w", encoding="utf-8") as out:
-            out.write(bibtex_str)
-
     def add_paper(self, add: str) -> None:
         """Add a paper to the bibliography"""
 
@@ -375,4 +311,4 @@ class Sync:
 
         records_dict = {r[Fields.ID]: r for r in records}
 
-        self._save_to_bib(records=records_dict, save_path=references_file)
+        write_file(records_dict=records_dict, filename=references_file)

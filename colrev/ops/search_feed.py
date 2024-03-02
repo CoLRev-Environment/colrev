@@ -15,6 +15,8 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.ops.write_utils_bib import to_string
+from colrev.ops.write_utils_bib import write_file
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -150,9 +152,8 @@ class GeneralOriginFeed:
         search_operation = self.review_manager.get_search_operation()
         if len(self.feed_records) > 0:
             self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=self.feed_records, save_path=self.feed_file
-            )
+
+            write_file(records_dict=self.feed_records, filename=self.feed_file)
 
             while True:
                 try:
@@ -180,9 +181,7 @@ class GeneralOriginFeed:
         record_a = deepcopy(record_a_orig)
         record_b = deepcopy(record_b_orig)
 
-        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_a[Fields.ID]: record_a}
-        )
+        bibtex_str = to_string(records_dict={record_a[Fields.ID]: record_a})
         bib_loader = colrev.ops.load_utils_bib.BIBLoader(
             load_string=bibtex_str,
             logger=self.review_manager.logger,
@@ -190,9 +189,7 @@ class GeneralOriginFeed:
         )
         record_a = list(bib_loader.load_bib_file(check_bib_file=False).values())[0]
 
-        bibtex_str = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in={record_b[Fields.ID]: record_b}
-        )
+        bibtex_str = to_string(records_dict={record_b[Fields.ID]: record_b})
         bib_loader = colrev.ops.load_utils_bib.BIBLoader(
             load_string=bibtex_str,
             logger=self.review_manager.logger,

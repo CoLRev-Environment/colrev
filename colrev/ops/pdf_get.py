@@ -14,6 +14,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.ops.write_utils_bib import write_file
 
 
 class PDFGet(colrev.operation.Operation):
@@ -218,8 +219,8 @@ class PDFGet(colrev.operation.Operation):
         if Fields.FILE in record.data:
             record.run_pdf_quality_model(pdf_qm=self.pdf_qm, set_prepared=True)
         else:
-            record.data.update(
-                colrev_status=colrev.record.RecordState.pdf_needs_manual_retrieval
+            record.set_status(
+                target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
             )
 
         self._log_infos(record=record)
@@ -244,11 +245,15 @@ class PDFGet(colrev.operation.Operation):
                 continue
 
             corresponding_origin = str(source.filename)
-            with open(source.filename, encoding="utf8") as target_db:
-                source_records_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=target_db.read()
-                )
-            source_records = list(source_records_dict.values())
+
+            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                source_file=source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            )
+            source_records = list(
+                bib_loader.load_bib_file(check_bib_file=False).values()
+            )
 
             self.review_manager.logger.info("Calculate colrev_pdf_ids")
             pdf_candidates = {
@@ -306,9 +311,8 @@ class PDFGet(colrev.operation.Operation):
 
             if len(source_records) > 0:
                 source_records_dict = {r[Fields.ID]: r for r in source_records}
-                self.review_manager.dataset.save_records_dict_to_file(
-                    records=source_records_dict, save_path=source.filename
-                )
+
+                write_file(records_dict=source_records_dict, filename=source.filename)
 
             self.review_manager.dataset.add_changes(path=source.filename)
 
