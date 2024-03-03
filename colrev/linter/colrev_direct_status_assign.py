@@ -34,12 +34,14 @@ class DirectStatusAssignmentChecker(checkers.BaseChecker):
         Detect direct assignment of colrev_status.
         """
 
-        if len(node.targets) != 1 or not hasattr(node.targets[0], "slice"):
+        if len(node.targets) != 1 or not hasattr(
+            node.targets[0], "slice"
+        ):  # pragma: no cover
             return
 
         if hasattr(node.targets[0].slice, "value"):
             if Fields.STATUS == node.targets[0].slice.value:
-                self.add_message(self.name, node=node)  # , confidence=HIGH)
+                self.add_message(self.name, node=node)
             return
 
     @only_required_for_messages("colrev-direct-status-assign")

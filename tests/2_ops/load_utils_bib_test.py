@@ -18,7 +18,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     Path("non-bib-file.bib").write_text("This is not a bib file.")
     with pytest.raises(colrev_exceptions.UnsupportedImportFormatError):
-        records = colrev.ops.load_utils.load(
+        records = colrev.ops.load_utils_bib.load_bib(
             filename=Path("non-bib-file.bib"),
             logger=logging.getLogger(__name__),
             force_mode=False,
@@ -26,7 +26,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # only supports bib
     with pytest.raises(colrev_exceptions.ImportException):
-        records = colrev.ops.load_utils.load(
+        records = colrev.ops.load_utils_bib.load_bib(
             filename=Path("table.ptvc"),
             logger=logging.getLogger(__name__),
             force_mode=False,
@@ -34,7 +34,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        records = colrev.ops.load_utils.load(
+        records = colrev.ops.load_utils_bib.load_bib(
             filename=Path("non-existent.bib"),
             logger=logging.getLogger(__name__),
             force_mode=False,
@@ -45,7 +45,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/") / Path("bib_tests.bib"),
     )
 
-    records = colrev.ops.load_utils.load(
+    records = colrev.ops.load_utils_bib.load_bib(
         filename=Path("data/search/bib_tests.bib"),
         logger=logging.getLogger(__name__),
         force_mode=False,

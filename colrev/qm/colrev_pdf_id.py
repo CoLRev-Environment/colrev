@@ -31,7 +31,7 @@ def _create_colrev_pdf_id_cpid2(*, pdf_path: Path) -> str:
                 if len(average_hash_str) * "0" == average_hash_str:
                     raise colrev_exceptions.PDFHashError(path=pdf_path)
                 return "cpid2:" + average_hash_str
-        except StopIteration as exc:
+        except StopIteration as exc:  # pragma: no cover
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
         except fitz.fitz.FileDataError as exc:
             raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc

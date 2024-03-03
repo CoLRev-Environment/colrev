@@ -7,6 +7,8 @@ import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
+# pylint: disable=line-too-long
+
 VALID = True
 INVALID = False
 
@@ -93,6 +95,10 @@ def test_compute_language_confidence_values(
             "“Escaping the rat race”: Justifications in digital nomadism",
             "eng",
         ),
+        (
+            "Maxillary Implant Prosthodontic Treatment Using Digital Laboratory Protocol for a Patient with Epidermolysis Bullosa: A Case History Report",
+            "",
+        ),
         ("ελληνικά", "ell"),
         (
             "공유경제 참여자의 비즈니스 등록정책에 대한 인식과 심적기재: 온라인 발화에 대한 텍스트마이닝",
@@ -168,3 +174,12 @@ def test_unify_to_iso_639_3_language_codes(
     actual = R1.data[Fields.LANGUAGE]
 
     assert expected == actual
+
+
+def test_unify_to_iso_639_3_language_codes_missing(
+    language_service: colrev.env.language_service.LanguageService,
+) -> None:
+    """Test the unify_to_iso_639_3_language_codes"""
+    R1.data.pop(Fields.LANGUAGE, None)
+    language_service.unify_to_iso_639_3_language_codes(record=R1)
+    # No exception should be raised
