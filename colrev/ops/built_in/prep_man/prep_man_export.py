@@ -322,12 +322,12 @@ class ExportManPrep(JsonSchemaMixin):
             f"{self.prep_man_bib_path.relative_to(self.review_manager.path)}"
         )
 
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            source_file=self.prep_man_bib_path,
+        man_prep_recs = colrev.ops.load_utils.load(
+            filename=self.prep_man_bib_path,
             logger=self.review_manager.logger,
             force_mode=self.review_manager.force_mode,
+            check_bib_file=False,
         )
-        man_prep_recs = bib_loader.load_bib_file(check_bib_file=False)
 
         imported_records: typing.List[dict] = []
         records = self.review_manager.dataset.load_records_dict()

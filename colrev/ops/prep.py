@@ -450,13 +450,12 @@ class Prep(colrev.operation.Operation):
 
     def _complete_resumed_operation(self, *, prepared_records: list) -> None:
         if self.temp_records.is_file():
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.temp_records,
+            temp_recs = colrev.ops.load_utils.load(
+                filename=self.temp_records,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            temp_recs = bib_loader.load_bib_file(check_bib_file=False)
-
             prepared_records_ids = [x[Fields.ID] for x in prepared_records]
             for record in temp_recs.values():
                 if record[Fields.ID] not in prepared_records_ids:
@@ -679,22 +678,21 @@ class Prep(colrev.operation.Operation):
         if self.current_temp_records.is_file():
             # combine and remove redundant records
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.current_temp_records,
+            cur_temp_recs = colrev.ops.load_utils.load(
+                filename=self.current_temp_records,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            cur_temp_recs = bib_loader.load_bib_file(check_bib_file=False)
 
             temp_recs = {}
             if self.temp_records.is_file():
-
-                bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                    source_file=self.temp_records,
+                temp_recs = colrev.ops.load_utils.load(
+                    filename=self.temp_records,
                     logger=self.review_manager.logger,
                     force_mode=self.review_manager.force_mode,
+                    check_bib_file=False,
                 )
-                temp_recs = bib_loader.load_bib_file(check_bib_file=False)
 
             combined_recs = {**temp_recs, **cur_temp_recs}
             self.temp_records.parent.mkdir(exist_ok=True)
@@ -705,12 +703,12 @@ class Prep(colrev.operation.Operation):
 
         if self.temp_records.is_file():
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.temp_records,
+            temp_recs = colrev.ops.load_utils.load(
+                filename=self.temp_records,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            temp_recs = bib_loader.load_bib_file(check_bib_file=False)
 
             self.review_manager.logger.info("Continue with existing records")
             skipped_items = 0
@@ -793,13 +791,12 @@ class Prep(colrev.operation.Operation):
         self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
         if debug_file:
-
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=debug_file,
+            records_dict = colrev.ops.load_utils.load(
+                filename=debug_file,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_dict = bib_loader.load_bib_file(check_bib_file=False)
 
             for record_dict in records_dict.values():
                 if colrev.record.RecordState.md_imported != record_dict.get(

@@ -42,12 +42,12 @@ class Remove(colrev.operation.Operation):
 
                     filepath = self.review_manager.search_dir / Path(file)
 
-                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                        source_file=filepath,
+                    origin_records = colrev.ops.load_utils.load(
+                        filename=filepath,
                         logger=self.review_manager.logger,
                         force_mode=self.review_manager.force_mode,
+                        check_bib_file=False,
                     )
-                    origin_records = bib_loader.load_bib_file(check_bib_file=False)
 
                     if origin_id in origin_records:
                         del origin_records[origin_id]

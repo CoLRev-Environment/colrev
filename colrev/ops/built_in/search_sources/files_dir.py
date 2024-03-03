@@ -146,12 +146,11 @@ class FilesSearchSource(JsonSchemaMixin):
         if not self.search_source.filename.is_file():
             return
 
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            source_file=self.search_source.filename,
+        search_rd = colrev.ops.load_utils.load(
+            filename=self.search_source.filename,
             logger=self.review_manager.logger,
             force_mode=self.review_manager.force_mode,
         )
-        search_rd = bib_loader.load_bib_file(check_bib_file=False)
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -750,12 +749,11 @@ class FilesSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
+            records = colrev.ops.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            records = bib_loader.load_bib_file()
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:

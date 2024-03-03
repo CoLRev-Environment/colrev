@@ -134,12 +134,12 @@ class Sync:
         self.logger.info("References in bib: %s", len(ids_in_bib))
 
         if src.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=src,
+            refs_in_src = colrev.ops.load_utils.load(
+                filename=src,
                 logger=self.logger,
                 force_mode=True,
+                check_bib_file=False,
             )
-            refs_in_src = bib_loader.load_bib_file(check_bib_file=False)
 
         else:
             print("Format not supported")
@@ -195,12 +195,12 @@ class Sync:
 
         if Path("references.bib").is_file():
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=Path("references.bib"),
+            records = colrev.ops.load_utils.load(
+                filename=Path("references.bib"),
                 logger=self.logger,
                 force_mode=True,
+                check_bib_file=False,
             )
-            records = bib_loader.load_bib_file(check_bib_file=False)
 
         else:
             records = {}
@@ -272,12 +272,14 @@ class Sync:
         if not references_file.is_file():
             records = []
         else:
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=references_file,
+
+            records_dict = colrev.ops.load_utils.load(
+                filename=references_file,
                 logger=self.logger,
                 force_mode=True,
+                check_bib_file=False,
             )
-            records = list(bib_loader.load_bib_file(check_bib_file=False).values())
+            records = list(records_dict.values())
 
         available_ids = [r[Fields.ID] for r in records]
         added = []

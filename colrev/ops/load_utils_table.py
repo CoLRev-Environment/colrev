@@ -14,8 +14,10 @@ Usage::
     load_operation.ensure_append_only(file=filename)
 
     table_loader = colrev.ops.load_utils_table.TableLoader(
-        load_operation=load_operation,
-        source=self.search_source,
+        filename=self.search_source.filename,
+        unique_id_field="ID",
+        force_mode=False,
+        logger=review_manager.logger,
     )
 
     # Note : fixes can be applied before each of the following steps
@@ -49,21 +51,19 @@ class TableLoader:
     def __init__(
         self,
         *,
-        source_file: Path,
+        filename: Path,
         unique_id_field: str = "",
         logger: logging.Logger,
         force_mode: bool = False,
     ):
-        if not source_file.name.endswith((".csv", ".xls", ".xlsx")):
+        if not filename.name.endswith((".csv", ".xls", ".xlsx")):
             raise colrev_exceptions.ImportException(
-                f"File not supported by TableLoader: {source_file.name}"
+                f"File not supported by TableLoader: {filename.name}"
             )
-        if not source_file.exists():
-            raise colrev_exceptions.ImportException(
-                f"File not found: {source_file.name}"
-            )
+        if not filename.exists():
+            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
 
-        self.source_file = source_file
+        self.filename = filename
         self.unique_id_field = unique_id_field
         self.logger = logger
         self.force_mode = force_mode
@@ -86,16 +86,16 @@ class TableLoader:
         """Load table entries from the source"""
 
         try:
-            if self.source_file.name.endswith(".csv"):
-                data = pd.read_csv(self.source_file)
-            elif self.source_file.name.endswith((".xls", ".xlsx")):
+            if self.filename.name.endswith(".csv"):
+                data = pd.read_csv(self.filename)
+            elif self.filename.name.endswith((".xls", ".xlsx")):
                 data = pd.read_excel(
-                    self.source_file, dtype=str
+                    self.filename, dtype=str
                 )  # dtype=str to avoid type casting
 
         except pd.errors.ParserError as exc:  # pragma: no cover
             raise colrev_exceptions.ImportException(
-                f"Error: Not a valid file? {self.source_file.name}"
+                f"Error: Not a valid file? {self.filename.name}"
             ) from exc
 
         data.columns = data.columns.str.replace(" ", "_")

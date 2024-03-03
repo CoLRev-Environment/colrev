@@ -126,7 +126,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
 
         load_operation.ensure_append_only(file=self.search_source.filename)
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             list_fields={"A1": " and ", "KW": ", "},
             force_mode=False,
             logger=self.review_manager.logger,

@@ -211,12 +211,13 @@ class PDFPrepMan(colrev.operation.Operation):
 
         if Path("data/pdf-prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=Path("data/pdf-prep-records.bib"),
+
+            records_changed = colrev.ops.load_utils.load(
+                filename=Path("data/pdf-prep-records.bib"),
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_changed = bib_loader.load_bib_file(check_bib_file=False)
 
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():

@@ -208,12 +208,13 @@ class Search(colrev.operation.Operation):
             print(f"{source.filename.suffix} not yet supported")
             return
 
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            source_file=source.filename,
+        records = colrev.ops.load_utils.load(
+            filename=source.filename,
             logger=self.review_manager.logger,
             force_mode=self.review_manager.force_mode,
+            check_bib_file=False,
         )
-        records = bib_loader.load_bib_file(check_bib_file=False)
+
         record_list = list(records.values())
         before = len(record_list)
         record_list = [

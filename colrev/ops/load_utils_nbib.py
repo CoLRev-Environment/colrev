@@ -41,7 +41,7 @@ Usage::
     }
 
     nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
-        source_file=self.search_source.filename,
+        filename=self.search_source.filename,
         list_fields={"A": " and "},
         unique_id_field="doi",
         force_mode=False,
@@ -99,22 +99,20 @@ class NBIBLoader:
     def __init__(
         self,
         *,
-        source_file: Path,
+        filename: Path,
         list_fields: dict,
         unique_id_field: str = "",
         logger: logging.Logger,
         force_mode: bool = False,
     ):
 
-        if not source_file.name.endswith(".nbib"):
+        if not filename.name.endswith(".nbib"):
             raise colrev_exceptions.ImportException(
-                f"File not supported by NBIBLoader: {source_file.name}"
+                f"File not supported by NBIBLoader: {filename.name}"
             )
-        if not source_file.exists():
-            raise colrev_exceptions.ImportException(
-                f"File not found: {source_file.name}"
-            )
-        self.source_file = source_file
+        if not filename.exists():
+            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
+        self.filename = filename
         self.unique_id_field = unique_id_field
         self.force_mode = force_mode
         self.logger = logger
@@ -176,7 +174,7 @@ class NBIBLoader:
         # Note: skip-tags and unknown-tags can be handled
         # between load_nbib_entries and convert_to_records.
 
-        text = self.source_file.read_text(encoding="utf-8")
+        text = self.filename.read_text(encoding="utf-8")
         # clean_text?
         lines = text.split("\n")
         records_list = list(r for r in self._parse_lines(lines) if r)

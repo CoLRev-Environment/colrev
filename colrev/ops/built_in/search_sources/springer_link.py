@@ -109,7 +109,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
-                source_file=self.search_source.filename,
+                filename=self.search_source.filename,
                 logger=load_operation.review_manager.logger,
                 force_mode=load_operation.review_manager.force_mode,
                 unique_id_field="item_doi",

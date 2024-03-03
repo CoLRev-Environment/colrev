@@ -24,7 +24,7 @@ def test_load(  # type: ignore
     # only supports enl
     with pytest.raises(colrev_exceptions.ImportException):
         enl_loader = ENLLoader(
-            source_file=Path("table.ptvc"),
+            filename=Path("table.ptvc"),
             list_fields={"A": " and ", "O": ", ", "P": ", "},
             force_mode=False,
             logger=logging.getLogger(__name__),
@@ -33,7 +33,7 @@ def test_load(  # type: ignore
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
         enl_loader = ENLLoader(
-            source_file=Path("non-existent.enl"),
+            filename=Path("non-existent.enl"),
             list_fields={"A": " and ", "O": ", ", "P": ", "},
             force_mode=False,
             logger=logging.getLogger(__name__),
@@ -84,7 +84,7 @@ def test_load(  # type: ignore
     )
 
     enl_loader = ENLLoader(
-        source_file=Path("ais.txt"),
+        filename=Path("ais.txt"),
         list_fields={"A": " and "},
         force_mode=False,
         logger=logging.getLogger(__name__),

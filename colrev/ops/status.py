@@ -567,7 +567,7 @@ class StatusStats:
 
                 # TODO : incomplete (only covers bib files?!)
                 bib_loader = BIBLoader(
-                    source_file=search_file,
+                    filename=search_file,
                     logger=self.status_stats.review_manager.logger,
                     force_mode=self.status_stats.review_manager.force_mode,
                 )

@@ -6,7 +6,7 @@ Usage::
     import colrev.ops.load_utils_bib
 
     bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-        source_file=self.search_source.filename,
+        filename=self.search_source.filename,
         logger=load_operation.review_manager.logger,
         force_mode=load_operation.review_manager.force_mode,
     )
@@ -59,32 +59,33 @@ class BIBLoader:
     def __init__(
         self,
         *,
-        source_file: typing.Optional[Path] = None,
+        filename: typing.Optional[Path] = None,
         load_string: str = "",
         unique_id_field: str = "",
         logger: logging.Logger,
         force_mode: bool = False,
+        check_bib_file: bool = True,
     ):
-
         self.unique_id_field = unique_id_field
         self.logger = logger
         self.force_mode = force_mode
+        self.check_bib_file = check_bib_file
 
-        if source_file is not None:
-            assert load_string == "", "source_file and load_string are exclusive"
-            if not source_file.name.endswith(".bib"):
+        if filename is not None:
+            assert load_string == "", "filename and load_string are exclusive"
+            if not filename.name.endswith(".bib"):
                 raise colrev_exceptions.ImportException(
-                    f"File not supported by BIBLoader: {source_file.name}"
+                    f"File not supported by BIBLoader: {filename.name}"
                 )
-            if not source_file.exists():
+            if not filename.exists():
                 raise colrev_exceptions.ImportException(
-                    f"File not found: {source_file.name}"
+                    f"File not found: {filename.name}"
                 )
 
         if load_string != "":
-            assert source_file is None, "source_file and load_string are exclusive"
+            assert filename is None, "filename and load_string are exclusive"
 
-        self.source_file = source_file
+        self.filename = filename
         self.load_string = load_string
 
     def generate_next_unique_id(
@@ -129,22 +130,22 @@ class BIBLoader:
             file.seek(seekpos)
             return seekpos
 
-        if self.source_file is not None:
+        if self.filename is not None:
 
-            with open(self.source_file, encoding="utf8") as bibtex_file:
+            with open(self.filename, encoding="utf8") as bibtex_file:
                 contents = bibtex_file.read()
+                if len(contents) < 10:
+                    return
                 bib_r = re.compile(r"@.*{.*,", re.M)
                 if len(re.findall(bib_r, contents)) == 0:
-                    self.logger.error(f"Not a bib file? {self.source_file.name}")
-                    raise colrev_exceptions.UnsupportedImportFormatError(
-                        self.source_file
-                    )
+                    self.logger.error(f"Not a bib file? {self.filename.name}")
+                    raise colrev_exceptions.UnsupportedImportFormatError(self.filename)
 
             # Errors to fix before pybtex loading:
             # - set_incremental_ids (otherwise, not all records will be loaded)
             # - fix_keys (keys containing white spaces)
             record_ids: typing.List[str] = []
-            with open(self.source_file, "r+b") as file:
+            with open(self.filename, "r+b") as file:
                 seekpos = file.tell()
                 line = file.readline()
                 while line:
@@ -343,8 +344,8 @@ class BIBLoader:
         """Get the number of records in the file"""
 
         nr_in_bib = 0
-        if self.source_file is not None:
-            with open(self.source_file, encoding="utf8") as file:
+        if self.filename is not None:
+            with open(self.filename, encoding="utf8") as file:
                 line = file.readline()
                 while line:
                     if "@" in line[:3]:
@@ -360,7 +361,6 @@ class BIBLoader:
 
     def load_bib_file(
         self,
-        check_bib_file: bool = True,
     ) -> dict:
         """Load a bib file and return records dict"""
 
@@ -377,8 +377,8 @@ class BIBLoader:
             pybtex.io.stderr = temp_f
             pybtex.errors.set_strict_mode(False)
             parser = bibtex.Parser()
-            if self.source_file:
-                bib_data = parser.parse_file(str(self.source_file))
+            if self.filename:
+                bib_data = parser.parse_file(str(self.filename))
             else:
                 bib_data = parser.parse_string(self.load_string)
             records = self._parse_records_dict(records_dict=bib_data.entries)
@@ -414,15 +414,15 @@ class BIBLoader:
                 del records[crossref_id]
 
         def check_nr_in_bib(*, records: dict) -> None:
-            if self.source_file is None:
+            if self.filename is None:
                 return
             self.logger.debug(
-                f"Loaded {self.source_file.name} with {len(records)} records"
+                f"Loaded {self.filename.name} with {len(records)} records"
             )
             nr_in_bib = self.get_nr_in_bib()
             if len(records) < nr_in_bib:
                 self.logger.error("broken bib file (not imported all records)")
-                with open(self.source_file, encoding="utf8") as file:
+                with open(self.filename, encoding="utf8") as file:
                     line = file.readline()
                     while line:
                         if "@" in line[:3]:
@@ -433,7 +433,7 @@ class BIBLoader:
                                 self.logger.error(f"{record_id} not imported")
                         line = file.readline()
 
-        if not check_bib_file:
+        if not self.check_bib_file:
             records = load_records()
             return records
 
@@ -475,10 +475,10 @@ class BIBLoader:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
 
         if file_object is None:
-            if self.source_file is None:
+            if self.filename is None:
                 return []
             # pylint: disable=consider-using-with
-            file_object = open(self.source_file, encoding="utf-8")
+            file_object = open(self.filename, encoding="utf-8")
 
         # Fields required
         default = {
@@ -544,10 +544,15 @@ class BIBLoader:
             record_header_list = self._read_record_header_items(
                 file_object=io.StringIO(self.load_string)
             )
-        elif self.source_file is not None and self.source_file.is_file():
+        elif self.filename is not None and self.filename.is_file():
             record_header_list = self._read_record_header_items()
         else:
             record_header_list = []
 
         record_header_dict = {r[Fields.ID]: r for r in record_header_list}
         return record_header_dict
+
+
+def load_bib(**kw) -> dict:  # type: ignore
+    """Load a BibTeX file"""
+    return BIBLoader(**kw).load_bib_file()

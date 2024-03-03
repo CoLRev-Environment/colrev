@@ -15,12 +15,12 @@ NO_CUSTOM_SOURCE = None
 
 
 # To create new test datasets, it is sufficient to extend the pytest.mark.parametrize
-# and create the source_filepath in tests/data/built_in_search_sources.
+# and create the filenamepath in tests/data/built_in_search_sources.
 # The first test run will create the expected_file and fail on the first run.
 # To test an individual case, run:
 # pytest tests/3_built_in/source_specific_load_prep_test.py -vv -k crossref
 @pytest.mark.parametrize(
-    "source_filepath, expected_source_identifier, custom_source, expected_file",
+    "filenamepath, expected_source_identifier, custom_source, expected_file",
     [
         (Path("eric.nbib"), "colrev.eric", NO_CUSTOM_SOURCE, Path("eric_result.bib")),
         (
@@ -138,7 +138,7 @@ NO_CUSTOM_SOURCE = None
     ],
 )
 def test_source(  # type: ignore
-    source_filepath: Path,
+    filenamepath: Path,
     expected_source_identifier: str,
     custom_source: colrev.settings.SearchSource,
     expected_file: Path,
@@ -154,8 +154,8 @@ def test_source(  # type: ignore
     print(Path.cwd())  # To facilitate debugging
 
     helpers.retrieve_test_file(
-        source=Path("built_in_search_sources/") / source_filepath,
-        target=Path("data/search/") / source_filepath,
+        source=Path("built_in_search_sources/") / filenamepath,
+        target=Path("data/search/") / filenamepath,
     )
 
     base_repo_review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [

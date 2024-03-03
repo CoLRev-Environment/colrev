@@ -41,7 +41,7 @@ Usage::
     }
 
     ris_loader = colrev.ops.load_utils_ris.RISLoader(
-        source_file=self.search_source.filename,
+        filename=self.search_source.filename,
         list_fields={"AU": " and "},
         unique_id_field="ID",
         force_mode=False,
@@ -107,22 +107,20 @@ class RISLoader:
     def __init__(
         self,
         *,
-        source_file: Path,
+        filename: Path,
         list_fields: dict,
         unique_id_field: str = "",
         logger: logging.Logger,
         force_mode: bool = False,
     ):
-        if not source_file.name.endswith(".ris"):
+        if not filename.name.endswith(".ris"):
             raise colrev_exceptions.ImportException(
-                f"File not supported by RISLoader: {source_file.name}"
+                f"File not supported by RISLoader: {filename.name}"
             )
-        if not source_file.exists():
-            raise colrev_exceptions.ImportException(
-                f"File not found: {source_file.name}"
-            )
+        if not filename.exists():
+            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
 
-        self.source_file = source_file
+        self.filename = filename
         self.logger = logger
         self.force_mode = force_mode
 
@@ -136,7 +134,7 @@ class RISLoader:
 
         # Error to fix: for lists of keywords, each line should start with the KW tag
 
-        with open(self.source_file, encoding="UTF-8") as file:
+        with open(self.filename, encoding="UTF-8") as file:
             lines = [line.rstrip("\n") for line in file]
             for i, line in enumerate(lines):
                 if line.startswith("PMID "):
@@ -156,7 +154,7 @@ class RISLoader:
                 else:
                     lines[i] = f"{processing_tag} {line}"
 
-        with open(self.source_file, "w", encoding="utf-8") as file:
+        with open(self.filename, "w", encoding="utf-8") as file:
             for line in lines:
                 file.write(f"{line}\n")
 
@@ -231,7 +229,7 @@ class RISLoader:
         # its DEFAULT_LIST_TAGS can be extended with list fields that should be joined automatically
 
         if content == "":
-            content = self.source_file.read_text(encoding="utf-8")
+            content = self.filename.read_text(encoding="utf-8")
             content = self._clean_text(content)
 
         lines = content.split("\n")

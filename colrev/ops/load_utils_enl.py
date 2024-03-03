@@ -41,7 +41,7 @@ Usage::
     }
 
     enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-        source_file=self.search_source.filename,
+        filename=self.search_source.filename,
         list_fields={"A": " and "},
         unique_id_field="doi",
         force_mode=False,
@@ -104,22 +104,20 @@ class ENLLoader:
     def __init__(
         self,
         *,
-        source_file: Path,
+        filename: Path,
         list_fields: dict,
         unique_id_field: str = "",
         logger: logging.Logger,
         force_mode: bool = False,
     ):
-        if not source_file.name.endswith((".enl", ".txt")):
+        if not filename.name.endswith((".enl", ".txt")):
             raise colrev_exceptions.ImportException(
-                f"File not supported by ENLLoader: {source_file.name}"
+                f"File not supported by ENLLoader: {filename.name}"
             )
-        if not source_file.exists():
-            raise colrev_exceptions.ImportException(
-                f"File not found: {source_file.name}"
-            )
+        if not filename.exists():
+            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
 
-        self.source_file = source_file
+        self.filename = filename
         self.unique_id_field = unique_id_field
         self.logger = logger
         self.force_mode = force_mode
@@ -180,7 +178,7 @@ class ENLLoader:
         # Note: skip-tags and unknown-tags can be handled
         # between load_enl_entries and convert_to_records.
 
-        text = self.source_file.read_text(encoding="utf-8")
+        text = self.filename.read_text(encoding="utf-8")
         # clean_text?
         lines = text.split("\n")
         records_list = list(r for r in self._parse_lines(lines) if r)

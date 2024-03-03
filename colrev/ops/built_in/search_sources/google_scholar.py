@@ -47,6 +47,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -104,12 +105,11 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
+            records = colrev.ops.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError

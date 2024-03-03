@@ -60,12 +60,13 @@ class GeneralOriginFeed:
         if not self.feed_file.is_file():
             self.feed_records = {}
         else:
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            self.feed_records = colrev.ops.load_utils.loads(
                 load_string=self.feed_file.read_text(encoding="utf8"),
+                implementation="bib",
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            self.feed_records = bib_loader.load_bib_file(check_bib_file=False)
 
             self._available_ids = {
                 x[self.source_identifier]: x[Fields.ID]
@@ -182,20 +183,24 @@ class GeneralOriginFeed:
         record_b = deepcopy(record_b_orig)
 
         bibtex_str = to_string(records_dict={record_a[Fields.ID]: record_a})
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            load_string=bibtex_str,
-            logger=self.review_manager.logger,
-            force_mode=self.review_manager.force_mode,
-        )
-        record_a = list(bib_loader.load_bib_file(check_bib_file=False).values())[0]
+        record_a = list(
+            colrev.ops.load_utils.loads(
+                load_string=bibtex_str,
+                implementation="bib",
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            ).values()
+        )[0]
 
         bibtex_str = to_string(records_dict={record_b[Fields.ID]: record_b})
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            load_string=bibtex_str,
-            logger=self.review_manager.logger,
-            force_mode=self.review_manager.force_mode,
-        )
-        record_b = list(bib_loader.load_bib_file(check_bib_file=False).values())[0]
+        record_b = list(
+            colrev.ops.load_utils.loads(
+                load_string=bibtex_str,
+                implementation="bib",
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+            ).values()
+        )[0]
 
         # Note : record_a can have more keys (that's ok)
         changed = False

@@ -56,14 +56,14 @@ class Validate(colrev.operation.Operation):
                 # To skip the same commit
                 found_target_commit = True
                 continue
-            # pylint: disable=colrev-records-variable-naming-convention
-
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            prior_records_dict = colrev.ops.load_utils.loads(
                 load_string=filecontents.decode("utf-8"),
+                implementation="bib",
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            prior_records_dict = bib_loader.load_bib_file(check_bib_file=False)
+
             return prior_records_dict
         return {}
 
@@ -293,23 +293,22 @@ class Validate(colrev.operation.Operation):
         prior_records = {}
         for commit, filecontents in list(revlist):
             if found:  # load the records_file_relative in the following commit
-                # pylint: disable=colrev-records-variable-naming-convention
-                bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                prior_records = colrev.ops.load_utils.loads(
                     load_string=filecontents.decode("utf-8"),
+                    implementation="bib",
                     logger=self.review_manager.logger,
                     force_mode=self.review_manager.force_mode,
+                    check_bib_file=False,
                 )
-                prior_records = bib_loader.load_bib_file(check_bib_file=False)
-
                 break
             if commit == target_commit:
-
-                bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                records = colrev.ops.load_utils.loads(
                     load_string=filecontents.decode("utf-8"),
+                    implementation="bib",
                     logger=self.review_manager.logger,
                     force_mode=self.review_manager.force_mode,
+                    check_bib_file=False,
                 )
-                records = bib_loader.load_bib_file(check_bib_file=False)
                 found = True
 
         # determine which records have been changed (prepared or merged)
@@ -533,34 +532,37 @@ class Validate(colrev.operation.Operation):
                 .data_stream.read()
                 .decode("utf-8")
             )
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            records_branch_1 = colrev.ops.load_utils.loads(
                 load_string=load_str,
+                implementation="bib",
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_branch_1 = bib_loader.load_bib_file(check_bib_file=False)
 
             load_str = (
                 (commit.parents[1].tree / records_file_path)
                 .data_stream.read()
                 .decode("utf-8")
             )
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            records_branch_2 = colrev.ops.load_utils.loads(
                 load_string=load_str,
+                implementation="bib",
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_branch_2 = bib_loader.load_bib_file(check_bib_file=False)
 
             load_str = (
                 (commit.tree / records_file_path).data_stream.read().decode("utf-8")
             )
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            records_reconciled = colrev.ops.load_utils.loads(
                 load_string=load_str,
+                implementation="bib",
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_reconciled = bib_loader.load_bib_file(check_bib_file=False)
 
             if "screen" in commit.message or "prescreen" in commit.message:
                 prescreen_validation = self.validate_merge_prescreen_screen(

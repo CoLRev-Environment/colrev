@@ -324,12 +324,12 @@ class Repare(colrev.operation.Operation):
             if search_source.endpoint != "colrev.local_index":
                 continue
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=search_source.filename,
+            curation_recs = colrev.ops.load_utils.load(
+                filename=search_source.filename,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            curation_recs = bib_loader.load_bib_file(check_bib_file=False)
 
             for record_id in list(curation_recs.keys()):
                 if "curation_ID" not in curation_recs[record_id]:
@@ -407,12 +407,13 @@ class Repare(colrev.operation.Operation):
 
                 while line:
                     if line == "\n":
-                        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                        records = colrev.ops.load_utils.loads(
                             load_string=record_str,
+                            implementation="bib",
                             logger=self.review_manager.logger,
                             force_mode=self.review_manager.force_mode,
+                            check_bib_file=False,
                         )
-                        records = bib_loader.load_bib_file(check_bib_file=False)
 
                         if len(records) != 1:
                             print(record_str)

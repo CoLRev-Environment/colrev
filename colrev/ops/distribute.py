@@ -94,14 +94,12 @@ class Distribute(colrev.operation.Operation):
                 self.review_manager.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
 
-                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                        source_file=target_bib_file,
+                    import_records_dict = colrev.ops.load_utils.load(
+                        filename=target_bib_file,
                         logger=self.review_manager.logger,
                         force_mode=self.review_manager.force_mode,
                     )
-                    import_records = list(
-                        bib_loader.load_bib_file(check_bib_file=False).values()
-                    )
+                    import_records = list(import_records_dict.values())
 
                 else:
                     import_records = []

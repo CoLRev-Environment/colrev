@@ -284,7 +284,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         }
         self.search_source.filename.write_text(response.content.decode("utf-8"))
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             list_fields={"A": " and "},
             force_mode=self.review_manager.force_mode,
             logger=self.review_manager.logger,
@@ -446,7 +446,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         # pylint: disable=colrev-missed-constant-usage
         if self.search_source.filename.suffix in [".txt", ".enl"]:
             enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-                source_file=self.search_source.filename,
+                filename=self.search_source.filename,
                 list_fields={"A": " and "},
                 force_mode=self.review_manager.force_mode,
                 logger=self.review_manager.logger,
@@ -468,12 +468,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         # for API-based searches
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
+            records = colrev.ops.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            records = bib_loader.load_bib_file()
+
             for record_dict in records.values():
                 record_dict.pop("type")
 

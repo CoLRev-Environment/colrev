@@ -18,7 +18,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     # only supports csv/xlsx
     with pytest.raises(colrev_exceptions.ImportException):
         table_loader = TableLoader(
-            source_file=Path("table.ptvc"),
+            filename=Path("table.ptvc"),
             unique_id_field="pmid",
             force_mode=False,
             logger=logging.getLogger(__name__),
@@ -27,7 +27,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
         table_loader = TableLoader(
-            source_file=Path("non-existent.xlsx"),
+            filename=Path("non-existent.xlsx"),
             force_mode=False,
             logger=logging.getLogger(__name__),
         )
@@ -39,7 +39,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     )
 
     table_loader = TableLoader(
-        source_file=Path("table.csv"),
+        filename=Path("table.csv"),
         unique_id_field="pmid",
         force_mode=False,
         logger=logging.getLogger(__name__),
@@ -70,7 +70,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("table.xlsx"),
     )
     table_loader = TableLoader(
-        source_file=Path("table.xlsx"),
+        filename=Path("table.xlsx"),
         force_mode=False,
         logger=logging.getLogger(__name__),
     )

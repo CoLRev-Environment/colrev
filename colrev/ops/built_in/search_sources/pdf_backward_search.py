@@ -603,12 +603,11 @@ class BackwardSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
+            records = colrev.ops.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            records = bib_loader.load_bib_file()
             for record_dict in records.values():
                 record_dict.pop("bw_search_origins")
             return records

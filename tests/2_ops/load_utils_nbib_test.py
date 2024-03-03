@@ -16,7 +16,7 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
     # only supports nbib
     with pytest.raises(colrev_exceptions.ImportException):
         nbib_loader = NBIBLoader(
-            source_file=Path("table.ptvc"),
+            filename=Path("table.ptvc"),
             list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
             unique_id_field="doi",
             force_mode=False,
@@ -26,7 +26,7 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
         nbib_loader = NBIBLoader(
-            source_file=Path("non-existent.nbib"),
+            filename=Path("non-existent.nbib"),
             list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
             unique_id_field="doi",
             force_mode=False,
@@ -39,7 +39,7 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
     )
 
     nbib_loader = NBIBLoader(
-        source_file=Path("test.nbib"),
+        filename=Path("test.nbib"),
         list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
         unique_id_field="doi",
         force_mode=False,

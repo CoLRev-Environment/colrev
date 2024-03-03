@@ -9,7 +9,7 @@ Usage::
     load_operation.ensure_append_only(file=self.source.filename)
 
     md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-        source_file=self.search_source.filename,
+        filename=self.search_source.filename,
         force_mode=False,
         logger=review_manager.logger,
     )
@@ -29,8 +29,6 @@ Example markdown reference section::
 from __future__ import annotations
 
 import logging
-import os
-import tempfile
 from pathlib import Path
 
 import requests
@@ -50,20 +48,18 @@ class MarkdownLoader:
     def __init__(
         self,
         *,
-        source_file: Path,
+        filename: Path,
         logger: logging.Logger,
         force_mode: bool = False,
     ):
 
-        if not source_file.name.endswith(".md"):
+        if not filename.name.endswith(".md"):
             raise colrev_exceptions.ImportException(
-                f"File not supported by MarkdownLoader: {source_file.name}"
+                f"File not supported by MarkdownLoader: {filename.name}"
             )
-        if not source_file.exists():
-            raise colrev_exceptions.ImportException(
-                f"File not found: {source_file.name}"
-            )
-        self.source_file = source_file
+        if not filename.exists():
+            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
+        self.filename = filename
         self.logger = logger
         self.force_mode = force_mode
 
@@ -75,7 +71,7 @@ class MarkdownLoader:
         grobid_service = colrev.review_manager.ReviewManager.get_grobid_service()
 
         grobid_service.check_grobid_availability()
-        with open(self.source_file, encoding="utf8") as file:
+        with open(self.filename, encoding="utf8") as file:
             references = [line.rstrip() for line in file if "#" not in line[:2]]
 
         data = ""
@@ -93,24 +89,15 @@ class MarkdownLoader:
             ind += 1
             data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".bib"
-        ) as temp_file:
-            temp_file.write(data)
-            temp_file_path = temp_file.name
-            temp_file.flush()
-            temp_file.seek(0)
+        records_dict = colrev.ops.load_utils.loads(
+            load_string=data,
+            implementation="bib",
+            logger=self.logger,
+            force_mode=self.force_mode,
+        )
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=Path(temp_file_path),
-                logger=self.logger,
-                force_mode=self.force_mode,
-            )
-            records = bib_loader.load_bib_file(check_bib_file=True)
+        for record in records_dict.values():
+            if record.get(Fields.YEAR, "a") == record.get("date", "b"):
+                del record["date"]
 
-            for record in records.values():
-                if record.get(Fields.YEAR, "a") == record.get("date", "b"):
-                    del record["date"]
-
-        os.remove(temp_file_path)
-        return records
+        return records_dict

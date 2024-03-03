@@ -374,7 +374,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         load_operation.ensure_append_only(file=self.search_source.filename)
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             list_fields={"AU": " and "},
             force_mode=False,
             logger=self.review_manager.logger,
@@ -428,7 +428,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
-                source_file=self.search_source.filename,
+                filename=self.search_source.filename,
                 logger=load_operation.review_manager.logger,
                 force_mode=load_operation.review_manager.force_mode,
                 unique_id_field="accession_number",

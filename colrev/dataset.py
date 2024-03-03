@@ -20,6 +20,7 @@ from tqdm import tqdm
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
+import colrev.ops.load_utils
 import colrev.ops.load_utils_bib
 import colrev.record
 import colrev.settings
@@ -122,7 +123,7 @@ class Dataset:
             )
         else:
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.records_file,
+                filename=self.records_file,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
             )
@@ -182,13 +183,13 @@ class Dataset:
                 current_commit.tree / self.RECORDS_FILE_RELATIVE_GIT
             ).data_stream.read()
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_string=filecontents.decode("utf-8"),
+            records_dict = colrev.ops.load_utils.loads(
+                load_string=filecontents.decode("utf-8", "replace"),
+                implementation="bib",
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_dict = bib_loader.load_bib_file(check_bib_file=False)
-
             if records_dict:
                 yield records_dict
 
@@ -219,19 +220,19 @@ class Dataset:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.records_file,
+                filename=self.records_file,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
             )
             return bib_loader.get_record_header_items()
 
         if self.records_file.is_file():
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.records_file,
+
+            records_dict = colrev.ops.load_utils.load(
+                filename=self.records_file,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
             )
-            records_dict = bib_loader.load_bib_file(check_bib_file=False)
 
         else:
             records_dict = {}

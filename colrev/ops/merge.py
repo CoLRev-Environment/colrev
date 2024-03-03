@@ -123,23 +123,22 @@ class Merge(colrev.operation.Operation):
                 # stage == 2: own branch
                 # stage == 3: other branch
                 if 2 == stage:
-                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+
+                    current_branch_records = colrev.ops.load_utils.loads(
                         load_string=blob.data_stream.read().decode("utf-8"),
+                        implementation="bib",
                         logger=self.review_manager.logger,
                         force_mode=self.review_manager.force_mode,
-                    )
-                    current_branch_records = bib_loader.load_bib_file(
-                        check_bib_file=False
+                        check_bib_file=False,
                     )
 
                 elif 3 == stage:
-                    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+                    other_branch_records = colrev.ops.load_utils.loads(
                         load_string=blob.data_stream.read().decode("utf-8"),
+                        implementation="bib",
                         logger=self.review_manager.logger,
                         force_mode=self.review_manager.force_mode,
-                    )
-                    other_branch_records = bib_loader.load_bib_file(
-                        check_bib_file=False
+                        check_bib_file=False,
                     )
 
         else:

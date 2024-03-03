@@ -17,7 +17,7 @@ def test_load_md(  # type: ignore
     # only supports md
     with pytest.raises(colrev_exceptions.ImportException):
         md_loader = MarkdownLoader(
-            source_file=Path("table.ptvc"),
+            filename=Path("table.ptvc"),
             logger=logging.getLogger(__name__),
             force_mode=False,
         )
@@ -25,7 +25,7 @@ def test_load_md(  # type: ignore
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
         md_loader = MarkdownLoader(
-            source_file=Path("non-existent.md"),
+            filename=Path("non-existent.md"),
             logger=logging.getLogger(__name__),
             force_mode=False,
         )
@@ -49,7 +49,7 @@ def test_load_md(  # type: ignore
     )
 
     md_loader = MarkdownLoader(
-        source_file=search_source.filename,
+        filename=search_source.filename,
         logger=logging.getLogger(__name__),
         force_mode=False,
     )

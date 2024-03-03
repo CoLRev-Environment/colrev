@@ -511,19 +511,21 @@ class PaperMarkdown(JsonSchemaMixin):
         filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
 
         if filedata:
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.non_sample_references,
-                logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-            )
-            non_sample_records = bib_loader.load_bib_file(check_bib_file=False)
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_string=filedata.decode("utf-8"),
+            non_sample_records = colrev.ops.load_utils.load(
+                filename=self.non_sample_references,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            records_to_add = bib_loader.load_bib_file(check_bib_file=False)
+
+            records_to_add = colrev.ops.load_utils.loads(
+                load_string=filedata.decode("utf-8"),
+                implementation="bib",
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
+            )
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
             duplicated_keys = [

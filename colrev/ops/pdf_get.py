@@ -246,14 +246,13 @@ class PDFGet(colrev.operation.Operation):
 
             corresponding_origin = str(source.filename)
 
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=source.filename,
+            source_records_dict = colrev.ops.load_utils.load(
+                filename=source.filename,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
+                check_bib_file=False,
             )
-            source_records = list(
-                bib_loader.load_bib_file(check_bib_file=False).values()
-            )
+            source_records = list(source_records_dict.values())
 
             self.review_manager.logger.info("Calculate colrev_pdf_ids")
             pdf_candidates = {

@@ -172,7 +172,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         }
 
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             list_fields={"AU": " and ", "KW": ", "},
             unique_id_field="accession_number",
             force_mode=False,
@@ -212,13 +212,11 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
+            records = colrev.ops.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            records = bib_loader.load_bib_file()
-
             self._remove_duplicates(records=records)
             return records
 

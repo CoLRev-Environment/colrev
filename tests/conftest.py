@@ -151,13 +151,12 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
             test_records_dict[Path(file_path.name)] = {}
 
         for path in test_records_dict:
-
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=bib_files_to_index.joinpath(path),
+            test_records_dict[path] = colrev.ops.load_utils.load(
+                filename=bib_files_to_index.joinpath(path),
                 logger=review_manager.logger,
                 force_mode=review_manager.force_mode,
+                check_bib_file=False,
             )
-            test_records_dict[path] = bib_loader.load_bib_file(check_bib_file=False)
 
         return test_records_dict
 
@@ -343,13 +342,12 @@ def get_local_index_test_records_dict(  # type: ignore
         local_index_test_records_dict[Path(file_path.name)] = {}
 
     for path in local_index_test_records_dict:
-
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            source_file=bib_files_to_index.joinpath(path),
+        loaded_records = colrev.ops.load_utils.load(
+            filename=bib_files_to_index.joinpath(path),
             logger=logging.getLogger(__name__),
             force_mode=False,
+            check_bib_file=False,
         )
-        loaded_records = bib_loader.load_bib_file(check_bib_file=False)
 
         # Note : we only select one example for the TEI-indexing
         for loaded_record in loaded_records.values():

@@ -419,12 +419,13 @@ class LocalIndex:
 
     def _get_record_from_row(self, *, row: dict) -> dict:
 
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+        records_dict = colrev.ops.load_utils.loads(
             load_string=row["bibtex"],
+            implementation="bib",
             logger=logging.getLogger(__name__),
             force_mode=False,
         )
-        records_dict = bib_loader.load_bib_file(check_bib_file=False)
+
         retrieved_record = list(records_dict.values())[0]
 
         # append layered fields
@@ -474,16 +475,12 @@ class LocalIndex:
                     depth=1,
                 )
 
-            content = ""
-            with open(target_path / Path("data/records.bib"), encoding="utf-8") as file:
-                content = file.read()
-
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_string=content,
+            ret = colrev.ops.load_utils.load(
+                filename=target_path / Path("data/records.bib"),
                 logger=logging.getLogger(__name__),
                 force_mode=False,
+                check_bib_file=False,
             )
-            ret = bib_loader.load_bib_file(check_bib_file=False)
 
         except GitCommandError:
             pass

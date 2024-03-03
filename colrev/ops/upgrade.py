@@ -69,12 +69,13 @@ class Upgrade(colrev.operation.Operation):
         Returns:
             dict: The loaded records dictionary.
         """
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            source_file=Path("data/records.bib"),
+        records = colrev.ops.load_utils.load(
+            filename=Path("data/records.bib"),
             logger=self.review_manager.logger,
             force_mode=self.review_manager.force_mode,
+            check_bib_file=False,
         )
-        records = bib_loader.load_bib_file(check_bib_file=False)
+
         return records
 
     def save_records_dict(self, *, records: dict) -> None:

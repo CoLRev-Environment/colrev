@@ -16,7 +16,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
     # only supports ris
     with pytest.raises(colrev_exceptions.ImportException):
         ris_loader = RISLoader(
-            source_file=Path("table.ptvc"),
+            filename=Path("table.ptvc"),
             list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
             unique_id_field="doi",
             force_mode=False,
@@ -26,7 +26,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
         ris_loader = RISLoader(
-            source_file=Path("non-existent.ris"),
+            filename=Path("non-existent.ris"),
             list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
             unique_id_field="doi",
             force_mode=False,
@@ -39,7 +39,7 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
     )
 
     ris_loader = RISLoader(
-        source_file=Path("test.ris"),
+        filename=Path("test.ris"),
         list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
         unique_id_field="doi",
         force_mode=False,

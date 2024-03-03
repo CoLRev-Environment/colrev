@@ -257,7 +257,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         load_operation.ensure_append_only(file=self.search_source.filename)
         ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             list_fields={"AU": " and ", "KW": ", "},
             force_mode=False,
             logger=self.review_manager.logger,
@@ -297,13 +297,11 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     def _load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            source_file=self.search_source.filename,
-            logger=load_operation.review_manager.logger,
-            force_mode=load_operation.review_manager.force_mode,
+        records = colrev.ops.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            force_mode=self.review_manager.force_mode,
         )
-        records = bib_loader.load_bib_file()
-
         return records
 
     # pylint: disable=colrev-missed-constant-usage
@@ -381,7 +379,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         load_operation.ensure_append_only(file=self.search_source.filename)
         table_loader = colrev.ops.load_utils_table.TableLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             logger=load_operation.review_manager.logger,
             force_mode=load_operation.review_manager.force_mode,
         )
@@ -397,7 +395,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def _load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
         load_operation.ensure_append_only(file=self.search_source.filename)
         excel_loader = colrev.ops.load_utils_table.TableLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             logger=load_operation.review_manager.logger,
             force_mode=load_operation.review_manager.force_mode,
         )
@@ -413,7 +411,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         load_operation.ensure_append_only(file=self.search_source.filename)
 
         md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             logger=load_operation.review_manager.logger,
             force_mode=load_operation.review_manager.force_mode,
         )
@@ -456,7 +454,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         }
 
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            source_file=self.search_source.filename,
+            filename=self.search_source.filename,
             list_fields={"A": " and "},
             force_mode=load_operation.review_manager.force_mode,
             logger=load_operation.review_manager.logger,

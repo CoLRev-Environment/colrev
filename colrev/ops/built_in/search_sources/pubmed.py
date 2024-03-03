@@ -700,7 +700,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".csv":
             table_loader = colrev.ops.load_utils_table.TableLoader(
-                source_file=self.search_source.filename,
+                filename=self.search_source.filename,
                 logger=load_operation.review_manager.logger,
                 force_mode=load_operation.review_manager.force_mode,
                 unique_id_field="pmid",
@@ -712,12 +712,11 @@ class PubMedSearchSource(JsonSchemaMixin):
             return records
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                source_file=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
+            records = colrev.ops.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                force_mode=self.review_manager.force_mode,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
