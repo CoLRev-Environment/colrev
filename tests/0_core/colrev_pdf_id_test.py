@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import fitz
+import imagehash
 import pytest
 from PIL import Image
 
@@ -83,18 +84,18 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
 
     Image.open = original_image_open
 
-    # original_imagehash_averagehash = imagehash.average_hash
+    original_imagehash_averagehash = imagehash.average_hash
 
-    # # pylint: disable=unused-argument
-    # def imagehash_0000_hash(pdf_path, hash_size):  # type: ignore
-    #     return "000000000000"
+    # pylint: disable=unused-argument
+    def imagehash_0000_hash(pdf_path, hash_size):  # type: ignore
+        return "000000000000"
 
-    # imagehash.average_hash = imagehash_0000_hash
+    imagehash.average_hash = imagehash_0000_hash
 
-    # with pytest.raises(colrev_exceptions.PDFHashError):
-    #     colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
+    with pytest.raises(colrev_exceptions.PDFHashError):
+        colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
 
-    # imagehash.average_hash = original_imagehash_averagehash
+    imagehash.average_hash = original_imagehash_averagehash
 
     with pytest.raises(NotImplementedError):
         colrev.qm.colrev_pdf_id.create_colrev_pdf_id(
