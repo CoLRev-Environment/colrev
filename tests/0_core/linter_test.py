@@ -96,6 +96,36 @@ class TestRecordsVariableNamingConventionChecker(pylint.testutils.CheckerTestCas
 
         assignment_node = astroid.extract_node(
             """
+        records = self.review_manager.dataset.load_records_dict()
+
+        """
+        )
+
+        self.checker.visit_assign(assignment_node)
+        self.assertNoMessages()
+
+        # Header_only
+        assignment_node = astroid.extract_node(
+            """
+        items = dataset.load_records_dict(header_only=True)
+
+        """
+        )
+
+        with self.assertAddsMessages(
+            pylint.testutils.MessageTest(
+                msg_id="colrev-records-variable-naming-convention",
+                node=assignment_node,
+                line=2,
+                col_offset=0,
+                end_line=2,
+                end_col_offset=51,
+            ),
+        ):
+            self.checker.visit_assign(assignment_node)
+
+        assignment_node = astroid.extract_node(
+            """
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )

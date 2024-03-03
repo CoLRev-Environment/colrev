@@ -475,8 +475,7 @@ class BIBLoader:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
 
         if file_object is None:
-            if self.filename is None:
-                return []
+            assert self.filename is not None
             # pylint: disable=consider-using-with
             file_object = open(self.filename, encoding="utf-8")
 
@@ -540,14 +539,13 @@ class BIBLoader:
 
     def get_record_header_items(self) -> dict:
         """Get the record header items"""
+        record_header_list = []
         if self.load_string != "":
             record_header_list = self._read_record_header_items(
                 file_object=io.StringIO(self.load_string)
             )
         elif self.filename is not None and self.filename.is_file():
             record_header_list = self._read_record_header_items()
-        else:
-            record_header_list = []
 
         record_header_dict = {r[Fields.ID]: r for r in record_header_list}
         return record_header_dict

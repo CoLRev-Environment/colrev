@@ -172,7 +172,7 @@ def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> 
     srep = _get_colrev_id_from_record(record=record)
 
     # Safeguard against titles that are rarely distinct
-    if any(x in srep for x in ["|minitrack-introduction|"]):
+    if any(x in srep for x in ["|minitrack-introduction"]):
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="Title typically non-distinct", missing_fields=[Fields.TITLE]
         )

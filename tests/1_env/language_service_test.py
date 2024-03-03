@@ -8,6 +8,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 # pylint: disable=line-too-long
+# noqa: E501
 
 VALID = True
 INVALID = False
