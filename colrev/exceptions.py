@@ -71,19 +71,6 @@ class RepoSetupError(CoLRevException):
         super().__init__(self.message)
 
 
-class BrokenFilesError(CoLRevException):
-    """
-    Project files are broken (e.g., the main records.bib).
-    """
-
-    def __init__(self, msg: str) -> None:
-        self.message = (
-            f"Detected broken files ({msg}). To fix use\n     "
-            f"{Colors.ORANGE}colrev repare{Colors.END}"
-        )
-        super().__init__(self.message)
-
-
 class CoLRevUpgradeError(CoLRevException):
     """
     The version of the local CoLRev package does not match with the CoLRev version
@@ -369,13 +356,6 @@ class RecordNotParsableException(CoLRevException):
         super().__init__(self.message)
 
 
-class NoSearchFeedRegistered(CoLRevException):
-    """No search feed endpoints registered in settings.json"""
-
-    def __init__(self) -> None:
-        super().__init__("No search feed endpoints registered in settings.json")
-
-
 class NotFeedIdentifiableException(CoLRevException):
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
@@ -397,17 +377,6 @@ class SearchSourceException(CoLRevException):
 
 class ImportException(CoLRevException):
     """An error occured in the import functions."""
-
-    def __init__(
-        self,
-        msg: str,
-    ) -> None:
-        self.message = msg
-        super().__init__(self.message)
-
-
-class SourceHeuristicsException(CoLRevException):
-    """An error occured in the SearchSource heuristics."""
 
     def __init__(
         self,
@@ -446,10 +415,6 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
         super().__init__(self.message)
 
 
-class PreparationBreak(CoLRevException):
-    """Event interrupting the preparation."""
-
-
 # Dedupe
 
 
@@ -482,14 +447,6 @@ class DataException(CoLRevException):
     def __init__(self, *, msg: str) -> None:
         self.message = msg
         super().__init__("DataException: " + self.message)
-
-
-class NoPaperEndpointRegistered(CoLRevException):
-    """No paper endpoint registered in settings.json"""
-
-    def __init__(self) -> None:
-        self.message = "No paper endpoint registered in settings.json"
-        super().__init__(self.message)
 
 
 # Push
@@ -635,14 +592,6 @@ class InvalidLanguageCodeException(CoLRevException):
         self.invalid_language_codes = invalid_language_codes
 
         super().__init__(f"Invalid language codes: {', '.join(invalid_language_codes)}")
-
-
-class InvalidRegistryKeyException(CoLRevException):
-    """Invalid registry key provided"""
-
-    def __init__(self, invalid_key: str) -> None:
-        self.invalid_key = invalid_key
-        super().__init__(f"Invalid Registry Key: {invalid_key}")
 
 
 class PackageSettingMustStartWithPackagesException(CoLRevException):

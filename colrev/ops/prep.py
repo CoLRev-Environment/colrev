@@ -40,6 +40,10 @@ logging.getLogger("requests_cache").setLevel(logging.ERROR)
 PREP_COUNTER = Value("i", 0)
 
 
+class PreparationBreak(Exception):
+    """Event interrupting the preparation."""
+
+
 class Prep(colrev.operation.Operation):
     """Prepare records (metadata)"""
 
@@ -273,7 +277,7 @@ class Prep(colrev.operation.Operation):
 
             if preparation_record.preparation_break_condition() and not self.polish:
                 record.update_by_record(update_record=preparation_record)
-                raise colrev_exceptions.PreparationBreak
+                raise PreparationBreak
         except ReadTimeout:
             self._add_stats(
                 start_time=start_time,
@@ -539,7 +543,7 @@ class Prep(colrev.operation.Operation):
                     record=record,
                     prep_round_package_endpoint=prep_round_package_endpoint,
                 )
-            except colrev_exceptions.PreparationBreak:
+            except PreparationBreak:
                 break
 
         self._post_package_prep(
