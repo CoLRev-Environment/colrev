@@ -7,6 +7,7 @@ import logging
 import os
 import pprint
 import re
+import tempfile
 import textwrap
 import typing
 from copy import deepcopy
@@ -1374,7 +1375,7 @@ class Record:
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
             self.data[Fields.NR_PAGES_IN_FILE] = pages_in_file
-        except PDFSyntaxError:
+        except PDFSyntaxError:  # pragma: no cover
             self.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
     def set_text_from_pdf(self) -> None:
@@ -1679,29 +1680,29 @@ class Record:
             logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
             raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
-        try:
-            doc: fitz.Document = fitz.open(pdf_path)
-        except fitz.fitz.FileDataError as exc:
-            raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
-
-        img = None
-        file_name = f".{pdf_path.stem}-{page_nr}.png"
-        page_no = 0
-        try:
-            for page in doc:
-                pix = page.get_pixmap(dpi=200)
-                pix.save(file_name)  # store image as a PNG
-                page_no += 1
-                if page_no == page_nr:
-                    img = Image.open(file_name)
-                    break
-        except RuntimeError as exc:
-            raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
-        average_hash = imagehash.average_hash(img, hash_size=int(hash_size))
-        Path(file_name).unlink()
-        average_hash_str = str(average_hash).replace("\n", "")
-        if len(average_hash_str) * "0" == average_hash_str:
-            raise colrev_exceptions.PDFHashError(path=pdf_path)
+        with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
+            file_name = temp_file.name
+            try:
+                doc: fitz.Document = fitz.open(pdf_path)
+                # Starting with page 1
+                for page_no, page in enumerate(doc, 1):
+                    if page_no == page_nr:
+                        pix = page.get_pixmap(dpi=200)
+                        pix.save(file_name)  # store image as a PNG
+                        with Image.open(file_name) as img:
+                            average_hash = imagehash.average_hash(
+                                img, hash_size=hash_size
+                            )
+                            average_hash_str = str(average_hash).replace("\n", "")
+                            if len(average_hash_str) * "0" == average_hash_str:
+                                raise colrev_exceptions.PDFHashError(path=pdf_path)
+                            return average_hash_str
+                # Page not found
+                raise colrev_exceptions.PDFHashError(path=pdf_path)
+            except fitz.fitz.FileDataError as exc:
+                raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+            except RuntimeError as exc:
+                raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
         return average_hash_str
 
