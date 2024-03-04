@@ -8,7 +8,7 @@ import colrev.record
 import colrev.review_manager
 
 # pylint: disable=line-too-long
-# noqa: E501
+# flake8: noqa
 
 
 @pytest.mark.parametrize(

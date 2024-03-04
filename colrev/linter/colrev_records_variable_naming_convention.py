@@ -32,7 +32,7 @@ class RecordsVariableNamingConventionChecker(checkers.BaseChecker):
         Detect colrev-records-variable-naming-convention.
         """
 
-        if len(node.targets) != 1:
+        if len(node.targets) != 1:  # pragma: no cover
             return
 
         assigned = node.value

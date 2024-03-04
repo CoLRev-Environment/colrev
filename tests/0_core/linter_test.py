@@ -75,35 +75,6 @@ class TestRecordsVariableNamingConventionChecker(pylint.testutils.CheckerTestCas
     def test_finds_records_variable_naming_convention(self) -> None:
         """Test whether the pylint checker finds violations of records variable naming convention"""
 
-        assignment_node = astroid.extract_node(
-            """
-        items = dataset.load_records_dict()
-
-        """
-        )
-
-        with self.assertAddsMessages(
-            pylint.testutils.MessageTest(
-                msg_id="colrev-records-variable-naming-convention",
-                node=assignment_node,
-                line=2,
-                col_offset=0,
-                end_line=2,
-                end_col_offset=35,
-            ),
-        ):
-            self.checker.visit_assign(assignment_node)
-
-        assignment_node = astroid.extract_node(
-            """
-        records = self.review_manager.dataset.load_records_dict()
-
-        """
-        )
-
-        self.checker.visit_assign(assignment_node)
-        self.assertNoMessages()
-
         # Header_only
         assignment_node = astroid.extract_node(
             """
@@ -126,9 +97,97 @@ class TestRecordsVariableNamingConventionChecker(pylint.testutils.CheckerTestCas
 
         assignment_node = astroid.extract_node(
             """
+        items = dataset.load_records_dict(header_only=False)
+
+        """
+        )
+
+        with self.assertAddsMessages(
+            pylint.testutils.MessageTest(
+                msg_id="colrev-records-variable-naming-convention",
+                node=assignment_node,
+                line=2,
+                col_offset=0,
+                end_line=2,
+                end_col_offset=52,
+            ),
+        ):
+            self.checker.visit_assign(assignment_node)
+
+        assignment_node = astroid.extract_node(
+            """
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
+
+        """
+        )
+
+        self.checker.visit_assign(assignment_node)
+        self.assertNoMessages()
+
+        # Records
+        assignment_node = astroid.extract_node(
+            """
+        items = dataset.load_records_dict()
+
+        """
+        )
+
+        with self.assertAddsMessages(
+            pylint.testutils.MessageTest(
+                msg_id="colrev-records-variable-naming-convention",
+                node=assignment_node,
+                line=2,
+                col_offset=0,
+                end_line=2,
+                end_col_offset=35,
+            ),
+        ):
+            self.checker.visit_assign(assignment_node)
+
+        assignment_node = astroid.extract_node(
+            """
+        items = dataset.load_records_dict(verbose=True)
+
+        """
+        )
+
+        with self.assertAddsMessages(
+            pylint.testutils.MessageTest(
+                msg_id="colrev-records-variable-naming-convention",
+                node=assignment_node,
+                line=2,
+                col_offset=0,
+                end_line=2,
+                end_col_offset=47,
+            ),
+        ):
+            self.checker.visit_assign(assignment_node)
+
+        assignment_node = astroid.extract_node(
+            """
+        records = self.review_manager.dataset.load_records_dict()
+
+        """
+        )
+
+        self.checker.visit_assign(assignment_node)
+        self.assertNoMessages()
+
+        assignment_node = astroid.extract_node(
+            """
+        var_1, var_2 = self.review_manager.dataset.load_records_dict()
+
+        """
+        )
+
+        self.checker.visit_assign(assignment_node)
+        self.assertNoMessages()
+
+        assignment_node = astroid.extract_node(
+            """
+        var_1 = self.review_manager.dataset.load_records_dict
 
         """
         )
