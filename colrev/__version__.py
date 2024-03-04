@@ -1,4 +1,8 @@
 # pylint: disable=missing-module-docstring
-import pkg_resources
+try:
+    from importlib.metadata import version
+except ImportError:
+    # For Python < 3.8
+    from importlib_metadata import version  # type: ignore
 
-__version__ = pkg_resources.get_distribution("colrev").version
+__version__ = version("colrev")
