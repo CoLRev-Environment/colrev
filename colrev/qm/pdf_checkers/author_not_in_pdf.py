@@ -46,7 +46,7 @@ class AuthorNotInPDFChecker:
             return True
 
         text = record.data[Fields.TEXT_FROM_PDF].lower()
-        text = colrev.env.utils.remove_accents(input_str=text)
+        text = colrev.env.utils.remove_accents(text)
         text = re.sub("[^a-zA-Z ]+", "", text)
         text = text.replace("ue", "u").replace("ae", "a").replace("oe", "o")
 
@@ -54,7 +54,7 @@ class AuthorNotInPDFChecker:
         authors_str = (
             authors_str.replace("ue", "u").replace("ae", "a").replace("oe", "o")
         )
-        authors_str = colrev.env.utils.remove_accents(input_str=authors_str)
+        authors_str = colrev.env.utils.remove_accents(authors_str)
         authors_str = re.sub("[^a-zA-Z, ]+", "", authors_str)
 
         match_count = 0

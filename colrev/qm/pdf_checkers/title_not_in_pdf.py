@@ -43,7 +43,7 @@ class TitleNotInPDFChecker:
     def _title_in_pdf(self, *, record: colrev.record.Record) -> bool:
         text = record.data[Fields.TEXT_FROM_PDF]
         text = text.replace(" ", "").replace("\n", "").lower()
-        text = colrev.env.utils.remove_accents(input_str=text)
+        text = colrev.env.utils.remove_accents(text)
         text = re.sub("[^a-zA-Z ]+", "", text)
 
         title_words = (

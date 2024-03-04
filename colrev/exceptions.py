@@ -602,3 +602,11 @@ class PackageSettingMustStartWithPackagesException(CoLRevException):
         super().__init__(
             f"Package settings must start with `packages` key. {invalid_key}"
         )
+
+
+class TemplateNotAvailableError(CoLRevException):
+    """The requested template is not available."""
+
+    def __init__(self, template_path: str) -> None:
+        self.message = f"Template not available: {template_path}"
+        super().__init__(self.message)

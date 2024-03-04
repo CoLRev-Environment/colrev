@@ -21,7 +21,6 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.env.utils import dict_keys_exists
 from colrev.env.utils import dict_set_nested
 from colrev.env.utils import get_by_path
 
@@ -355,11 +354,26 @@ class EnvironmentManager:
 
         return curated_outlets
 
+    def _dict_keys_exists(self, element: dict, *keys: str) -> bool:
+        """Check if *keys (nested) exists in `element` (dict)."""
+        if len(keys) == 0:
+            raise AttributeError(
+                "keys_exists() expects at least two arguments, one given."
+            )
+
+        _element = element
+        for key in keys:
+            try:
+                _element = _element[key]
+            except KeyError:
+                return False
+        return True
+
     def get_settings_by_key(self, key: str) -> str | None:
         """Loads setting by the given key"""
         environment_registry = self.load_environment_registry()
         keys = key.split(".")
-        if dict_keys_exists(environment_registry, *keys):
+        if self._dict_keys_exists(environment_registry, *keys):
             return get_by_path(environment_registry, keys)
         return None
 

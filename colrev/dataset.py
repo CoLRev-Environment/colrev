@@ -140,7 +140,7 @@ class Dataset:
                 (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
             )
             for commit in self._git_repo.iter_commits(
-                paths=str(self.RECORDS_FILE_RELATIVE_GIT)
+                paths=self.RECORDS_FILE_RELATIVE_GIT
             )
         )
         filecontents = list(revlist)[0][1]
@@ -453,7 +453,7 @@ class Dataset:
                 temp_id = temp_id.capitalize()
             # Replace special characters
             # (because IDs may be used as file names)
-            temp_id = colrev.env.utils.remove_accents(input_str=temp_id)
+            temp_id = colrev.env.utils.remove_accents(temp_id)
             temp_id = re.sub(r"\(.*\)", "", temp_id)
             temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
 
@@ -674,7 +674,7 @@ class Dataset:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        main_recs_changed = str(self.RECORDS_FILE_RELATIVE_GIT) in [
+        main_recs_changed = self.RECORDS_FILE_RELATIVE_GIT in [
             item.a_path for item in self._git_repo.index.diff(None)
         ] + [x.a_path for x in self._git_repo.head.commit.diff()]
         return main_recs_changed

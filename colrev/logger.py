@@ -64,12 +64,12 @@ def setup_report_logger(
 
         report_logger.addHandler(report_file_handler)
 
-        if logging.DEBUG == level:
+        if logging.DEBUG == level:  # pragma: no cover
             handler = logging.StreamHandler()
             handler.setFormatter(formatter)
             report_logger.addHandler(handler)
         report_logger.propagate = False
-    except FileNotFoundError as exc:
+    except FileNotFoundError as exc:  # pragma: no cover
         raise colrev_exceptions.RepoSetupError("Missing file") from exc
 
     return report_logger

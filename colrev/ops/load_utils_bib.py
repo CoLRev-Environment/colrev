@@ -414,24 +414,23 @@ class BIBLoader:
                 del records[crossref_id]
 
         def check_nr_in_bib(*, records: dict) -> None:
-            if self.filename is None:
-                return
-            self.logger.debug(
-                f"Loaded {self.filename.name} with {len(records)} records"
-            )
-            nr_in_bib = self.get_nr_in_bib()
-            if len(records) < nr_in_bib:
-                self.logger.error("broken bib file (not imported all records)")
-                with open(self.filename, encoding="utf8") as file:
-                    line = file.readline()
-                    while line:
-                        if "@" in line[:3]:
-                            record_id = line[line.find("{") + 1 : line.rfind(",")]
-                            if record_id not in [
-                                x[Fields.ID] for x in records.values()
-                            ]:
-                                self.logger.error(f"{record_id} not imported")
+            if self.filename:
+                self.logger.debug(
+                    f"Loaded {self.filename.name} with {len(records)} records"
+                )
+                nr_in_bib = self.get_nr_in_bib()
+                if len(records) < nr_in_bib:
+                    self.logger.error("broken bib file (not imported all records)")
+                    with open(self.filename, encoding="utf8") as file:
                         line = file.readline()
+                        while line:
+                            if "@" in line[:3]:
+                                record_id = line[line.find("{") + 1 : line.rfind(",")]
+                                if record_id not in [
+                                    x[Fields.ID] for x in records.values()
+                                ]:
+                                    self.logger.error(f"{record_id} not imported")
+                            line = file.readline()
 
         if not self.check_bib_file:
             records = load_records()

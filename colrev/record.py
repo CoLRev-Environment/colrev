@@ -1778,7 +1778,7 @@ class PrepRecord(Record):
         authors = record.data[Fields.AUTHOR]
         authors = str(authors).lower()
         authors_string = ""
-        authors = colrev.env.utils.remove_accents(input_str=authors)
+        authors = colrev.env.utils.remove_accents(authors)
 
         # abbreviate first names
         # "Webster, Jane" -> "Webster, J"

@@ -391,7 +391,7 @@ class PaperMarkdown(JsonSchemaMixin):
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
-        except FileNotFoundError:
+        except colrev_exceptions.TemplateNotAvailableError:
             paper_resource_path = Path("template/paper_md") / Path("paper.md")
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path

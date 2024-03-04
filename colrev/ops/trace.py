@@ -89,19 +89,15 @@ class Trace(colrev.operation.Operation):
         """Trace a record (main entrypoint)"""
 
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
-
-        revlist = self.review_manager.dataset.get_repo().iter_commits()
+        revlist = self.review_manager.dataset.get_repo().iter_commits(
+            paths=records_file_path
+        )
 
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
-            try:
-                # Ensure the path uses forward slashes, which is compatible with Git's path handling
-                filecontents = (commit.tree / records_file_path).data_stream.read()
-
-            except KeyError:
-                continue
-
+            filecontents = (commit.tree / records_file_path).data_stream.read()
             commit_message_first_line = str(commit.message).partition("\n")[0]
 
             if self.review_manager.verbose_mode:

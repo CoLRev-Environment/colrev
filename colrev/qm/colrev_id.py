@@ -75,7 +75,7 @@ def _robust_append(*, input_string: str, to_append: str) -> str:
     to_append = to_append.replace("emph{", "")
     to_append = to_append.replace("&amp;", "and")
     to_append = to_append.replace(" & ", " and ")
-    to_append = colrev.env.utils.remove_accents(input_str=to_append)
+    to_append = colrev.env.utils.remove_accents(to_append)
     to_append = re.sub("[^0-9a-zA-Z -]+", "", to_append)
     to_append = re.sub(r"\s+", "-", to_append)
     to_append = re.sub(r"-+", "-", to_append)
