@@ -40,7 +40,7 @@ class EnvironmentManager:
         self.environment_registry = self.load_environment_registry()
         self._registered_ports: typing.List[str] = []
 
-    def register_ports(self, *, ports: typing.List[str]) -> None:
+    def register_ports(self, ports: typing.List[str]) -> None:
         """Register a localhost port to avoid conflicts"""
         for port_to_register in ports:
             if port_to_register in self._registered_ports:
@@ -82,9 +82,10 @@ class EnvironmentManager:
     def local_repos(self) -> list:
         """gets local repos from local index"""
         self.environment_registry = self.load_environment_registry()
-        if "local_index" not in self.environment_registry:
-            return []
-        if "repos" not in self.environment_registry["local_index"]:
+        if (
+            "local_index" not in self.environment_registry
+            or "repos" not in self.environment_registry["local_index"]
+        ):
             return []
         return self.environment_registry["local_index"]["repos"]
 
@@ -109,6 +110,7 @@ class EnvironmentManager:
 
     def register_repo(self, *, path_to_register: Path) -> None:
         """Register a repository"""
+
         self.environment_registry = self.load_environment_registry()
 
         if "local_index" not in self.environment_registry:
@@ -120,7 +122,7 @@ class EnvironmentManager:
 
         if registered_paths:
             if str(path_to_register) in registered_paths:
-                # print(f"Warning: Path already registered: {path_to_register}")
+                print(f"Warning: Path already registered: {path_to_register}")
                 return
         else:
             print(f"Creating {self.registry}")
@@ -157,7 +159,7 @@ class EnvironmentManager:
 
     @classmethod
     def build_docker_image(
-        cls, *, imagename: str, image_path: Optional[Path] = None
+        cls, *, imagename: str, dockerfile: Optional[Path] = None
     ) -> None:
         """Build a docker image"""
 
@@ -166,38 +168,39 @@ class EnvironmentManager:
             repo_tags = [t for image in client.images.list() for t in image.tags]
 
             if imagename not in repo_tags:
-                if image_path:
+                if dockerfile:
                     assert colrev.review_manager.__file__
-                    colrev_path = Path("")
+                    Path("")
                     if colrev.review_manager.__file__:
-                        colrev_path = Path(colrev.review_manager.__file__).parents[0]
+                        Path(colrev.review_manager.__file__).parents[0]
                     print(f"Building {imagename} Docker image ...")
-                    context_path = colrev_path / image_path
+                    # colrev_path / dockerfile
+                    dockerfile.resolve()
                     client.images.build(
-                        path=str(context_path), tag=f"{imagename}:latest"
+                        path=str(dockerfile.parent).replace("\\", "/"),
+                        tag=f"{imagename}:latest",
                     )
 
                 else:
                     print(f"Pulling {imagename} Docker image...")
                     client.images.pull(imagename)
-        except DockerException as exc:
+        except DockerException as exc:  # pragma: no cover
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="docker",
                 detailed_trace=f"Docker service not available ({exc}). "
                 + "Please install/start Docker.",
             ) from exc
 
-    def check_git_installed(self) -> None:
+    def check_git_installed(self) -> None:  # pragma: no cover
         """Check whether git is installed"""
 
         try:
             git_instance = git.Git()
             _ = git_instance.version()
-        except Exception as exc:  # pylint: disable=broad-except
+        except git.exc.GitCommandNotFound as exc:
             print(exc)
-            # raise colrev_exceptions.MissingDependencyError("git") from exc
 
-    def check_docker_installed(self) -> None:
+    def check_docker_installed(self) -> None:  # pragma: no cover
         """Check whether Docker is installed"""
 
         try:
@@ -226,15 +229,6 @@ class EnvironmentManager:
     def get_environment_details(self) -> dict:
         """Get the environment details"""
 
-        # def get_last_modified() -> str:
-
-        #     list_of_files = local_index.opensearch_index.glob(
-        #         "**/*"
-        #     )  # * means all if need specific format then *.csv
-        #     latest_file = max(list_of_files, key=os.path.getmtime)
-        #     last_mod = datetime.fromtimestamp(latest_file.lstat().st_mtime)
-        #     return last_mod.strftime("%Y-%m-%d %H:%M")
-
         local_index = colrev.env.local_index.LocalIndex(
             index_tei=True, verbose_mode=True
         )
@@ -245,15 +239,6 @@ class EnvironmentManager:
         status = "TODO"
 
         size = 0
-        # try:
-        #     size = local_index.open_search.cat.count(
-        #         index=local_index.RECORD_INDEX, params={"format": "json"}
-        #     )[0]["count"]
-        #     last_modified = get_last_modified()
-        #     status = "up"
-        # except (NotFoundError, IndexError):
-        #     status = "down"
-
         environment_details["index"] = {
             "size": size,
             "last_modified": last_modified,
@@ -261,7 +246,7 @@ class EnvironmentManager:
             "status": status,
         }
 
-        environment_stats = self.get_environment_stats()
+        environment_stats = self._get_environment_stats()
 
         environment_details["local_repos"] = {
             "repos": environment_stats["repos"],
@@ -269,7 +254,7 @@ class EnvironmentManager:
         }
         return environment_details
 
-    def get_environment_stats(self) -> dict:
+    def _get_environment_stats(self) -> dict:
         """Get the environment stats"""
 
         local_repos = self.local_repos()

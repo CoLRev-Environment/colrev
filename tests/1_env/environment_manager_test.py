@@ -5,12 +5,16 @@ import os
 from collections import namedtuple
 from pathlib import Path
 
+import docker
 import git
+import pytest
 
 import colrev.env.environment_manager
 import colrev.env.tei_parser
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.ops.built_in.pdf_get.unpaywall import Unpaywall
+
 
 EnvTestConf = namedtuple(
     "EnvTestConf",
@@ -170,3 +174,71 @@ def test_setting_value_with_missing_field(_patch_registry):  # type: ignore
     )
     cfg_email = env_man.get_settings_by_key("packages.pdf_get.colrev.unpaywall.email")
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
+
+
+def test_register_ports() -> None:
+
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.register_ports(["3000", "3001", "3002"])
+    with pytest.raises(colrev_exceptions.PortAlreadyRegisteredException):
+        env_man.register_ports(["3000", "3001", "3002"])
+
+
+def test_get_environment_details() -> None:
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    ret = env_man.get_environment_details()
+    print(ret)
+    assert "index" in ret
+    assert "local_repos" in ret
+    assert "repos" in ret["local_repos"]
+    assert "broken_links" in ret["local_repos"]
+
+
+def test_get_curated_outlets() -> None:
+
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    ret = env_man.get_curated_outlets()
+    print(ret)
+
+
+def test_repo_registry() -> None:
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    actual = env_man.local_repos()
+    assert actual == []
+
+    # TODO : the following call does not work...
+    # env_man.register_repo()
+
+
+def test_build_docker_image(tmp_path) -> None:  # type: ignore
+    def remove_docker_image(image_name: str) -> None:
+        client = docker.from_env()
+        try:
+            client.images.remove(image_name)
+            print(f"Image '{image_name}' removed successfully.")
+        except docker.errors.ImageNotFound:
+            print(f"Image '{image_name}' not found.")
+
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.build_docker_image(imagename="hello-world")
+    remove_docker_image("hello-world")
+
+    # Docker not available on Windows (GH-Actions)
+    if not continue_test():
+        return
+
+    # Create a simple Dockerfile
+    dockerfile_content = """
+    FROM python:3.9
+    WORKDIR /app
+    COPY . /app
+    """
+
+    # Save the Dockerfile
+    dockerfile_path = tmp_path / Path("Dockerfile")
+    with open(dockerfile_path, "w") as file:
+        file.write(dockerfile_content)
+
+    # Build the Docker image
+    env_man.build_docker_image(imagename="test-image", dockerfile=dockerfile_path)
+    remove_docker_image("test-image")

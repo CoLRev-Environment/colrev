@@ -52,7 +52,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
         if self.screenshot_service_available():
             return
 
-        self.review_manager.environment_manager.register_ports(ports=["3000"])
+        self.review_manager.environment_manager.register_ports(["3000"])
 
         try:
             client = docker.from_env()

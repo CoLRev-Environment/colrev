@@ -23,7 +23,7 @@ class GrobidService:
         environment_manager.build_docker_image(imagename=self.GROBID_IMAGE)
         self.start()
         if not self.check_grobid_availability():
-            environment_manager.register_ports(ports=["8070", "8071"])
+            environment_manager.register_ports(["8070", "8071"])
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
         """Check whether the GROBID service is available"""
