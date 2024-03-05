@@ -40,6 +40,7 @@ class Initializer:
         *,
         review_type: str,
         example: bool = False,
+        force_mode: bool = False,
         light: bool = False,
         local_pdf_collection: bool = False,
         target_path: Optional[Path] = None,
@@ -50,6 +51,7 @@ class Initializer:
             raise colrev_exceptions.RepoInitError(
                 msg="Cannot initialize local_pdf_collection repository with example data."
             )
+        self.force_mode = force_mode
         current_platform = platform.system()
         if current_platform != "Linux":
             light = True
@@ -108,6 +110,8 @@ class Initializer:
         )
 
     def _check_init_precondition(self) -> None:
+        if self.force_mode:
+            return
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]

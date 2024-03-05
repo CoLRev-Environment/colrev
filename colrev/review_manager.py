@@ -733,6 +733,7 @@ class ReviewManager:
 def get_init_operation(
     review_type: str,
     example: bool = False,
+    force_mode: bool = False,
     light: bool = False,
     local_pdf_collection: bool = False,
     target_path: Optional[Path] = None,
@@ -744,6 +745,7 @@ def get_init_operation(
     return colrev.ops.init.Initializer(
         review_type=review_type,
         example=example,
+        force_mode=force_mode,
         light=light,
         local_pdf_collection=local_pdf_collection,
         target_path=target_path,
