@@ -139,7 +139,6 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
             unique_id_field="ID",
         )
         records = ris_loader.load_ris_records()
-        print(records)
 
         for record_dict in records.values():
             # pylint: disable=colrev-missed-constant-usage
@@ -170,6 +169,17 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
                     continue
                 standard_key = key_map[entrytype][ris_key]
                 record_dict[standard_key] = record_dict.pop(ris_key)
+
+            urls = record_dict.get(Fields.URL, "").split(", ")
+            fulltext = [url for url in urls if url.endswith(".pdf")]
+            if fulltext:
+                urls.remove(fulltext[0])
+                record_dict[Fields.FULLTEXT] = fulltext[0]
+            trid_url = [url for url in urls if url.startswith("https://trid.trb.org")]
+            if trid_url:
+                urls.remove(trid_url[0])
+                record_dict["trid_url"] = trid_url[0]
+            record_dict[Fields.URL] = urls[0]
 
         return records
 

@@ -79,7 +79,6 @@ class Load(colrev.operation.Operation):
         )
         prior_file_content = ""
         for commit, filecontents in list(revlist):
-            print(prior_file_content)
             if not filecontents.decode("utf-8").startswith(prior_file_content):
                 raise colrev_exceptions.AppendOnlyViolation(
                     f"{file} was changed (commit: {commit})"

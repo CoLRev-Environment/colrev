@@ -155,13 +155,9 @@ class ReviewManager:
     ) -> None:
         """Update review_manager's state"""
         self.force_mode = force_mode
-        # Force mode variable (bool)
         self.verbose_mode = verbose_mode
-        # Verbose mode variable (bool)
         self.debug_mode = debug_mode
-        # Debug mode variable (bool)
         self.high_level_operation = high_level_operation
-        # A high-level operation was called (bool)
         self.exact_call = exact_call
         report_logger, logger = self.get_loggers_by_debug_mode()
         self.report_logger = report_logger
@@ -227,7 +223,7 @@ class ReviewManager:
         checker = colrev.checker.Checker(review_manager=self)
         return checker.check_repo()
 
-    def in_virtualenv(self) -> bool:
+    def in_virtualenv(self) -> bool:  # pragma: no cover
         """Check whether CoLRev operates in a virtual environment"""
         return colrev.checker.Checker.in_virtualenv()
 
@@ -241,7 +237,7 @@ class ReviewManager:
         checker = colrev.checker.Checker(review_manager=self)
         return checker.get_colrev_versions()
 
-    def report(self, *, msg_file: Path) -> dict:
+    def report(self, *, msg_file: Path) -> None:
         """Append commit-message report if not already available
         (Entrypoint for pre-commit hooks)
         """
@@ -275,8 +271,6 @@ class ReviewManager:
             colrev.operation.CheckOperation(review_manager=self)  # to notify
             corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
             corrections_operation.check_corrections_of_records()
-
-        return {"msg": "TODO", "status": 0}
 
     def sharing(self) -> dict:
         """Check whether sharing requirements are met
@@ -321,59 +315,59 @@ class ReviewManager:
         if add_to_git:
             self.dataset.add_changes(path=self.STATUS_RELATIVE)
 
-    def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:
+    def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:  # pragma: no cover
         """Get an upgrade object"""
 
         import colrev.ops.upgrade
 
         return colrev.ops.upgrade.Upgrade(review_manager=self)
 
-    def get_repare(self) -> colrev.ops.repare.Repare:
+    def get_repare(self) -> colrev.ops.repare.Repare:  # pragma: no cover
         """Get a a repare object"""
 
         import colrev.ops.repare
 
         return colrev.ops.repare.Repare(review_manager=self)
 
-    def get_remove_operation(self) -> colrev.ops.remove.Remove:
+    def get_remove_operation(self) -> colrev.ops.remove.Remove:  # pragma: no cover
         """Get a a remove object"""
 
         import colrev.ops.remove
 
         return colrev.ops.remove.Remove(review_manager=self)
 
-    def get_merge_operation(self) -> colrev.ops.merge.Merge:
+    def get_merge_operation(self) -> colrev.ops.merge.Merge:  # pragma: no cover
         """Get a merge object"""
 
         import colrev.ops.merge
 
         return colrev.ops.merge.Merge(review_manager=self)
 
-    def get_advisor(self) -> colrev.advisor.Advisor:
+    def get_advisor(self) -> colrev.advisor.Advisor:  # pragma: no cover
         """Get an advisor object"""
 
         import colrev.advisor
 
         return colrev.advisor.Advisor(review_manager=self)
 
-    def get_checker(self) -> colrev.checker.Checker:
+    def get_checker(self) -> colrev.checker.Checker:  # pragma: no cover
         """Get a checker object"""
 
         return colrev.checker.Checker(review_manager=self)
 
-    def get_qm(self) -> colrev.qm.quality_model.QualityModel:
+    def get_qm(self) -> colrev.qm.quality_model.QualityModel:  # pragma: no cover
         """Get the quality model"""
 
         return colrev.qm.quality_model.QualityModel(review_manager=self)
 
-    def get_pdf_qm(self) -> colrev.qm.quality_model.QualityModel:
+    def get_pdf_qm(self) -> colrev.qm.quality_model.QualityModel:  # pragma: no cover
         """Get the PDF quality model"""
 
         return colrev.qm.quality_model.QualityModel(review_manager=self, pdf_mode=True)
 
     def get_status_stats(
         self, *, records: Optional[dict] = None
-    ) -> colrev.ops.status.StatusStats:
+    ) -> colrev.ops.status.StatusStats:  # pragma: no cover
         """Get a status stats object"""
 
         import colrev.ops.status
@@ -398,7 +392,7 @@ class ReviewManager:
     @classmethod
     def get_package_manager(
         cls, *, verbose_mode: bool = True
-    ) -> colrev.env.package_manager.PackageManager:
+    ) -> colrev.env.package_manager.PackageManager:  # pragma: no cover
         """Get a package manager object"""
 
         import colrev.env.package_manager
@@ -406,7 +400,9 @@ class ReviewManager:
         return colrev.env.package_manager.PackageManager(verbose=verbose_mode)
 
     @classmethod
-    def get_grobid_service(cls) -> colrev.env.grobid_service.GrobidService:
+    def get_grobid_service(
+        cls,
+    ) -> colrev.env.grobid_service.GrobidService:  # pragma: no cover
         """Get a grobid service object"""
         import colrev.env.grobid_service
 
@@ -417,7 +413,7 @@ class ReviewManager:
 
     def get_tei(
         self, *, pdf_path: Optional[Path] = None, tei_path: Optional[Path] = None
-    ) -> colrev.env.tei_parser.TEIParser:  # type: ignore
+    ) -> colrev.env.tei_parser.TEIParser:  # type: ignore # pragma: no cover
         """Get a tei object"""
 
         import colrev.env.tei_parser
@@ -431,14 +427,14 @@ class ReviewManager:
     @classmethod
     def get_environment_manager(
         cls,
-    ) -> colrev.env.environment_manager.EnvironmentManager:
+    ) -> colrev.env.environment_manager.EnvironmentManager:  # pragma: no cover
         """Get an environment manager"""
         import colrev.env.environment_manager
 
         return colrev.env.environment_manager.EnvironmentManager()
 
     @classmethod
-    def get_cached_session(cls) -> requests_cache.CachedSession:
+    def get_cached_session(cls) -> requests_cache.CachedSession:  # pragma: no cover
         """Get a cached session"""
 
         return requests_cache.CachedSession(
@@ -448,21 +444,23 @@ class ReviewManager:
         )
 
     @classmethod
-    def get_resources(cls) -> colrev.env.resources.Resources:
+    def get_resources(cls) -> colrev.env.resources.Resources:  # pragma: no cover
         """Get a resources object"""
         import colrev.env.resources
 
         return colrev.env.resources.Resources()
 
     @classmethod
-    def get_sync_operation(cls) -> colrev.ops.sync.Sync:
+    def get_sync_operation(cls) -> colrev.ops.sync.Sync:  # pragma: no cover
         """Get a sync operation object"""
         import colrev.ops.sync
 
         return colrev.ops.sync.Sync()
 
     @classmethod
-    def get_clone_operation(cls, *, git_url: str) -> colrev.ops.clone.Clone:
+    def get_clone_operation(
+        cls, *, git_url: str
+    ) -> colrev.ops.clone.Clone:  # pragma: no cover
         """Get a clone operation object"""
         import colrev.ops.clone
 
@@ -470,7 +468,7 @@ class ReviewManager:
 
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.search.Search:
+    ) -> colrev.ops.search.Search:  # pragma: no cover
         """Get a search operation object"""
         import colrev.ops.search
 
@@ -483,7 +481,7 @@ class ReviewManager:
         self,
         notify_state_transition_operation: bool = True,
         hide_load_explanation: bool = False,
-    ) -> colrev.ops.load.Load:
+    ) -> colrev.ops.load.Load:  # pragma: no cover
         """Get a load operation object"""
         import colrev.ops.load
 
@@ -498,7 +496,7 @@ class ReviewManager:
         *,
         notify_state_transition_operation: bool = True,
         retrieval_similarity: float = 1.0,
-    ) -> colrev.ops.prep.Prep:
+    ) -> colrev.ops.prep.Prep:  # pragma: no cover
         """Get a prep operation object"""
         import colrev.ops.prep
 
@@ -510,7 +508,7 @@ class ReviewManager:
 
     def get_prep_man_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.prep_man.PrepMan:
+    ) -> colrev.ops.prep_man.PrepMan:  # pragma: no cover
         """Get a prep-man operation object"""
         import colrev.ops.prep_man
 
@@ -521,7 +519,7 @@ class ReviewManager:
 
     def get_dedupe_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.dedupe.Dedupe:
+    ) -> colrev.ops.dedupe.Dedupe:  # pragma: no cover
         """Get a dedupe operation object"""
         import colrev.ops.dedupe
 
@@ -532,7 +530,7 @@ class ReviewManager:
 
     def get_prescreen_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.prescreen.Prescreen:
+    ) -> colrev.ops.prescreen.Prescreen:  # pragma: no cover
         """Get a prescreen operation object"""
 
         import colrev.ops.prescreen
@@ -544,7 +542,7 @@ class ReviewManager:
 
     def get_pdf_get_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.pdf_get.PDFGet:
+    ) -> colrev.ops.pdf_get.PDFGet:  # pragma: no cover
         """Get a pdf-get operation object"""
         import colrev.ops.pdf_get
 
@@ -555,7 +553,7 @@ class ReviewManager:
 
     def get_pdf_get_man_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.pdf_get_man.PDFGetMan:
+    ) -> colrev.ops.pdf_get_man.PDFGetMan:  # pragma: no cover
         """Get a pdf-get-man operation object"""
         import colrev.ops.pdf_get_man
 
@@ -566,7 +564,7 @@ class ReviewManager:
 
     def get_pdf_prep_operation(
         self, *, reprocess: bool = False, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.pdf_prep.PDFPrep:
+    ) -> colrev.ops.pdf_prep.PDFPrep:  # pragma: no cover
         """Get a pdfprep operation object"""
         import colrev.ops.pdf_prep
 
@@ -578,7 +576,7 @@ class ReviewManager:
 
     def get_pdf_prep_man_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.pdf_prep_man.PDFPrepMan:
+    ) -> colrev.ops.pdf_prep_man.PDFPrepMan:  # pragma: no cover
         """Get a pdf-prep-man operation object"""
         import colrev.ops.pdf_prep_man
 
@@ -589,7 +587,7 @@ class ReviewManager:
 
     def get_screen_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.screen.Screen:
+    ) -> colrev.ops.screen.Screen:  # pragma: no cover
         """Get a screen operation object"""
         import colrev.ops.screen
 
@@ -600,7 +598,7 @@ class ReviewManager:
 
     def get_data_operation(
         self, *, notify_state_transition_operation: bool = True
-    ) -> colrev.ops.data.Data:
+    ) -> colrev.ops.data.Data:  # pragma: no cover
         """Get a data operation object"""
         import colrev.ops.data
 
@@ -609,47 +607,53 @@ class ReviewManager:
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
-    def get_status_operation(self) -> colrev.ops.status.Status:
+    def get_status_operation(self) -> colrev.ops.status.Status:  # pragma: no cover
         """Get a status operation object"""
 
         import colrev.ops.status
 
         return colrev.ops.status.Status(review_manager=self)
 
-    def get_validate_operation(self) -> colrev.ops.validate.Validate:
+    def get_validate_operation(
+        self,
+    ) -> colrev.ops.validate.Validate:  # pragma: no cover
         """Get a validate operation object"""
         import colrev.ops.validate
 
         return colrev.ops.validate.Validate(review_manager=self)
 
-    def get_trace_operation(self) -> colrev.ops.trace.Trace:
+    def get_trace_operation(self) -> colrev.ops.trace.Trace:  # pragma: no cover
         """Get a trace operation object"""
         import colrev.ops.trace
 
         return colrev.ops.trace.Trace(review_manager=self)
 
-    def get_distribute_operation(self) -> colrev.ops.distribute.Distribute:
+    def get_distribute_operation(
+        self,
+    ) -> colrev.ops.distribute.Distribute:  # pragma: no cover
         """Get a distribute operation object"""
 
         import colrev.ops.distribute
 
         return colrev.ops.distribute.Distribute(review_manager=self)
 
-    def get_push_operation(self, **kwargs) -> colrev.ops.push.Push:  # type: ignore
+    def get_push_operation(self, **kwargs) -> colrev.ops.push.Push:  # type: ignore # pragma: no cover
         """Get a push operation object"""
 
         import colrev.ops.push
 
         return colrev.ops.push.Push(review_manager=self, **kwargs)
 
-    def get_pull_operation(self) -> colrev.ops.pull.Pull:
+    def get_pull_operation(self) -> colrev.ops.pull.Pull:  # pragma: no cover
         """Get a pull operation object"""
 
         import colrev.ops.pull
 
         return colrev.ops.pull.Pull(review_manager=self)
 
-    def get_search_sources(self) -> colrev.ops.search_sources.SearchSources:
+    def get_search_sources(
+        self,
+    ) -> colrev.ops.search_sources.SearchSources:  # pragma: no cover
         """Get a SearchSources object"""
 
         import colrev.ops.search_sources
@@ -658,7 +662,7 @@ class ReviewManager:
 
     def get_review_types(
         self, *, review_type: str
-    ) -> colrev.ops.review_types.ReviewTypes:
+    ) -> colrev.ops.review_types.ReviewTypes:  # pragma: no cover
         """Get a ReviewTypes object"""
         import colrev.ops.review_types
 
@@ -672,7 +676,7 @@ class ReviewManager:
         path_str: Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
-    ) -> ReviewManager:
+    ) -> ReviewManager:  # pragma: no cover
         """Get a (connecting) ReviewManager object for another CoLRev repository"""
         return type(self)(
             path_str=path_str, force_mode=force_mode, verbose_mode=verbose_mode
@@ -687,14 +691,10 @@ class ReviewManager:
     @classmethod
     def in_ci_environment(
         cls,
-        *,
-        identifier: Optional[str] = None,
     ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
 
         identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
-        if identifier:
-            identifier_list = [identifier]
         return any("true" == os.getenv(x) for x in identifier_list)
 
 

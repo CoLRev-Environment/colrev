@@ -380,6 +380,7 @@ class Search(colrev.operation.Operation):
 
             self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
+        self.review_manager.dataset.create_commit(msg="Add new search sources")
 
     def get_new_sources_heuristic_list(self) -> dict:
         """Get the heuristic result list of SearchSources candidates

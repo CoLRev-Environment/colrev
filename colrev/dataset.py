@@ -655,14 +655,14 @@ class Dataset:
 
         if path.is_absolute():
             path = path.relative_to(self.review_manager.path)
+        path_str = str(path).replace("\\", "/")
 
         self._sleep_util_git_unlocked()
-
         try:
             if remove:
-                self._git_repo.index.remove([str(path)])
+                self._git_repo.index.remove([path_str])
             else:
-                self._git_repo.index.add([str(path)])
+                self._git_repo.index.add([path_str])
         except FileNotFoundError as exc:
             if not ignore_missing:
                 raise exc

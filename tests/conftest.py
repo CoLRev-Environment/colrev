@@ -135,7 +135,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(test_repo_dir), force_mode=True
+        path_str=str(test_repo_dir),
     )
 
     review_manager.get_load_operation()
@@ -232,7 +232,8 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     search_operation = review_manager.get_search_operation()
-    search_operation.add_most_likely_sources()
+    search_operation.add_most_likely_sources(create_query_files=True)
+
     load_operation = review_manager.get_load_operation()
     load_operation.main(keep_ids=False)
     review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
