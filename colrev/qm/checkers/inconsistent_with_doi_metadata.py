@@ -41,9 +41,8 @@ class InconsistentWithDOIMetadataChecker:
         ):
             return
 
-        if Fields.DOI in record.data.get(Fields.MD_PROV, {}):
-            if "md_curated.bib" in record.data[Fields.MD_PROV][Fields.DOI]["source"]:
-                return
+        if "md_curated.bib" in record.get_masterdata_provenance_source(Fields.DOI):
+            return
 
         if self._doi_metadata_conflicts(record=record):
             record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)

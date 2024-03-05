@@ -2,6 +2,7 @@
 """Tests for the review_manager"""
 import json
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -45,7 +46,7 @@ def test_report(base_repo_review_manager: colrev.review_manager.ReviewManager) -
     with tempfile.NamedTemporaryFile(suffix=".log", delete=False) as temp_file:
         with open(temp_file.name, "w", encoding="utf-8") as file:
             file.write("Test")
-        base_repo_review_manager.report(msg_file=temp_file.name)
+        base_repo_review_manager.report(msg_file=Path(temp_file.name))
 
 
 def test_get_colrev_versions(

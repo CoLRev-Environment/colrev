@@ -320,10 +320,6 @@ class Record:
 
         self.data[Fields.ENTRYTYPE] = new_entrytype
         if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
-            if self.data.get(Fields.VOLUME, "") == FieldValues.UNKNOWN:
-                self.remove_field(key=Fields.VOLUME)
-            if self.data.get(Fields.NUMBER, "") == FieldValues.UNKNOWN:
-                self.remove_field(key=Fields.NUMBER)
             if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
                 self.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
         elif new_entrytype == ENTRYTYPES.ARTICLE:
@@ -1016,6 +1012,14 @@ class Record:
             return []
         notes = self.data[Fields.MD_PROV][key]["note"].split(",")
         return [note for note in notes if note]
+
+    def get_masterdata_provenance_source(self, key: str) -> str:
+        """Get a masterdata provenance source based on a key"""
+        if Fields.MD_PROV not in self.data:
+            return ""
+        if key not in self.data[Fields.MD_PROV]:
+            return ""
+        return self.data[Fields.MD_PROV][key]["source"]
 
     def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Remove a masterdata provenance note"""
@@ -2026,45 +2030,6 @@ class PrepRecord(Record):
 
                 names[ind] = name
         self.data[Fields.AUTHOR] = " and ".join(names)
-
-    def preparation_save_condition(self) -> bool:
-        """Check whether the save condition for the prep operation is given"""
-
-        if self.data.get(Fields.STATUS, "NA") in [
-            RecordState.rev_prescreen_excluded,
-            RecordState.md_prepared,
-        ]:
-            return True
-
-        if any(
-            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
-            for x in self.data.get(Fields.MD_PROV, {}).values()
-        ):
-            return True
-
-        return False
-
-    def preparation_break_condition(self) -> bool:
-        """Check whether the break condition for the prep operation is given"""
-        if any(
-            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
-            for x in self.data.get(Fields.MD_PROV, {}).values()
-        ):
-            return True
-
-        if self.data.get(Fields.STATUS, "NA") in [
-            RecordState.rev_prescreen_excluded,
-        ]:
-            return True
-        return False
-
-    def status_to_prepare(self) -> bool:
-        """Check whether the record needs to be prepared"""
-        return self.data.get(Fields.STATUS, "NA") in [
-            RecordState.md_needs_manual_preparation,
-            RecordState.md_imported,
-            RecordState.md_prepared,
-        ]
 
 
 class RecordState(Enum):

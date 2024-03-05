@@ -82,6 +82,14 @@ def test_copy() -> None:
     assert r1 == r1_cop
 
 
+def test_get_data() -> None:
+    """Test record.get_data()"""
+    expected = v1
+    r1.data[Fields.ORIGIN] = "import.bib/id_0001"
+    actual = r1.get_data()
+    assert expected == actual
+
+
 def test_update_field() -> None:
     """Test record.update_field()"""
     r2_mod = r2.copy()
@@ -130,6 +138,8 @@ def test_rename_field() -> None:
     """Test record.rename_field()"""
 
     r2_mod = r2.copy()
+
+    r2_mod.rename_field(key="xyz", new_key="abc")
 
     # Identifying field
     r2_mod.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
@@ -183,6 +193,8 @@ def test_remove_field() -> None:
     actual = r2_mod.data
     print(actual)
     assert expected == actual
+    r2_mod.data.pop(Fields.MD_PROV, None)
+    r2_mod.remove_field(key=Fields.PAGES, not_missing_note=True, source="test")
 
 
 def test_diff() -> None:
@@ -299,6 +311,8 @@ def test_change_entrytype_inproceedings(
     }
     actual = r1_mod.data
     assert expected == actual
+
+    r1_mod.change_entrytype(new_entrytype=ENTRYTYPES.MASTERSTHESIS, qm=quality_model)
 
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
@@ -1257,6 +1271,11 @@ def test_extract_text_by_page(  # type: ignore
     helpers, record_with_pdf: colrev.record.Record
 ) -> None:
     """Test record.extract_text_by_page()"""
+    helpers.retrieve_test_file(
+        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    )
+
     expected = (
         helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt")
     ).read_text(encoding="utf-8")
@@ -1267,7 +1286,10 @@ def test_extract_text_by_page(  # type: ignore
 
 def test_set_nr_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
     """Test record.set_pages_in_pdf()"""
-
+    helpers.retrieve_test_file(
+        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    )
     expected = 18
     record_with_pdf.set_nr_pages_in_pdf()
     actual = record_with_pdf.data[Fields.NR_PAGES_IN_FILE]
@@ -1276,6 +1298,10 @@ def test_set_nr_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> 
 
 def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
     """Test record.set_text_from_pdf()"""
+    helpers.retrieve_test_file(
+        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    )
 
     expected = (
         (helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt"))
@@ -1383,40 +1409,6 @@ def test_unify_pages_field() -> None:
 
     prep_rec.data[Fields.PAGES] = ["1", "2"]
     prep_rec.unify_pages_field()
-
-
-def test_preparation_save_condition() -> None:
-    """Test record.preparation_save_condition()"""
-
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.STATUS] = colrev.record.RecordState.md_imported
-    prep_rec.data[Fields.MD_PROV][Fields.TITLE]["note"] = DefectCodes.RECORD_NOT_IN_TOC
-    expected = True
-    actual = prep_rec.preparation_save_condition()
-    assert expected == actual
-
-    prep_rec.data[Fields.MD_PROV][Fields.TITLE]["note"] = DefectCodes.RECORD_NOT_IN_TOC
-    expected = True
-    actual = prep_rec.preparation_save_condition()
-    assert expected == actual
-
-
-def test_preparation_break_condition() -> None:
-    """Test record.preparation_break_condition()"""
-
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.MD_PROV][Fields.TITLE][
-        "note"
-    ] = DefectCodes.INCONSISTENT_WITH_DOI_METADATA
-    expected = False
-    actual = prep_rec.preparation_break_condition()
-    assert expected == actual
-
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.STATUS] = colrev.record.RecordState.rev_prescreen_excluded
-    expected = True
-    actual = prep_rec.preparation_break_condition()
-    assert expected == actual
 
 
 def test_to_screen() -> None:
