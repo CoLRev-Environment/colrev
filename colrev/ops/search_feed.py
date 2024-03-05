@@ -114,12 +114,9 @@ class GeneralOriginFeed:
             self._max_id += 1
             self.nr_added += 1
 
-        if Fields.D_PROV in feed_record_dict:
-            del feed_record_dict[Fields.D_PROV]
-        if Fields.MD_PROV in feed_record_dict:
-            del feed_record_dict[Fields.MD_PROV]
-        if Fields.STATUS in feed_record_dict:
-            del feed_record_dict[Fields.STATUS]
+        for provenance_key in FieldSet.PROVENANCE_KEYS:
+            if provenance_key in feed_record_dict:
+                del feed_record_dict[provenance_key]
 
         self._available_ids[feed_record_dict[self.source_identifier]] = (
             feed_record_dict[Fields.ID]
@@ -205,7 +202,7 @@ class GeneralOriginFeed:
         # Note : record_a can have more keys (that's ok)
         changed = False
         for key, value in record_b.items():
-            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, "curation_ID"]:
+            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
                 continue
             if key not in record_a:
                 return True
@@ -249,6 +246,17 @@ class GeneralOriginFeed:
             main_record_dict[Fields.YEAR] = record.data[Fields.YEAR]
             record = colrev.record.PrepRecord(data=main_record_dict)
 
+    def _missing_ignored_field(self, main_record_dict: dict, key: str) -> bool:
+        main_record = colrev.record.Record(data=main_record_dict)
+        source = main_record.get_masterdata_provenance_source(key)
+        notes = main_record.get_masterdata_provenance_notes(key)
+        if (
+            source == "colrev_curation.masterdata_restrictions"
+            and f"IGNORE:{DefectCodes.MISSING}" in notes
+        ):
+            return True
+        return False
+
     # pylint: disable=too-many-arguments
     def _update_existing_record_fields(
         self,
@@ -264,21 +272,13 @@ class GeneralOriginFeed:
             if not update_time_variant_fields and key in FieldSet.TIME_VARIANT_FIELDS:
                 continue
 
-            if key in ["curation_ID"]:
-                continue
-
-            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID]:
+            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
                 continue
 
             if key not in main_record_dict:
-                if key in main_record_dict.get(Fields.MD_PROV, {}):
-                    if (
-                        main_record_dict[Fields.MD_PROV][key]["source"]
-                        == "colrev_curation.masterdata_restrictions"
-                        and f"IGNORE:{DefectCodes.MISSING}"
-                        in main_record_dict[Fields.MD_PROV][key]["note"]
-                    ):
-                        continue
+                if self._missing_ignored_field(main_record_dict, key):
+                    continue
+
                 main_record = colrev.record.Record(data=main_record_dict)
                 main_record.update_field(
                     key=key,
@@ -361,7 +361,7 @@ class GeneralOriginFeed:
         )
 
         if (
-            FieldValues.CURATED in main_record_dict.get(Fields.MD_PROV, {})
+            colrev.record.Record(data=main_record_dict).masterdata_is_curated()
             and "md_curated.bib" != source.get_origin_prefix()
         ):
             return False

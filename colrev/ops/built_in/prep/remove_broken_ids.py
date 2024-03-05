@@ -10,6 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.search_sources
 import colrev.record
+from colrev.constants import DefectCodes
 from colrev.constants import Fields
 
 
@@ -44,18 +45,16 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
         if self.prep_operation.polish and not self.prep_operation.force_mode:
             return record
 
-        if Fields.DOI in record.data:
-            if Fields.DOI in record.data.get(Fields.MD_PROV, {}):
-                if "doi-not-matching-pattern" in record.data[Fields.MD_PROV][
-                    Fields.DOI
-                ]["note"].split(","):
-                    record.remove_field(key=Fields.DOI)
+        if (
+            DefectCodes.DOI_NOT_MATCHING_PATTERN
+            in record.get_masterdata_provenance_notes(Fields.DOI)
+        ):
+            record.remove_field(key=Fields.DOI)
 
-        if Fields.ISBN in record.data:
-            if Fields.ISBN in record.data.get(Fields.MD_PROV, {}):
-                if "isbn-not-matching-pattern" in record.data[Fields.MD_PROV][
-                    Fields.ISBN
-                ]["note"].split(","):
-                    record.remove_field(key=Fields.ISBN)
+        if (
+            DefectCodes.ISBN_NOT_MATCHING_PATTERN
+            in record.get_masterdata_provenance_notes(Fields.ISBN)
+        ):
+            record.remove_field(key=Fields.ISBN)
 
         return record

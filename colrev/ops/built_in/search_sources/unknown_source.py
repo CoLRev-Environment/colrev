@@ -739,14 +739,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def _unify_special_characters(self, *, record: colrev.record.PrepRecord) -> None:
         # Remove html entities
         for field in list(record.data.keys()):
-            # Skip dois (and their provenance), which may contain html entities
-            if field in [
-                Fields.MD_PROV,
-                Fields.D_PROV,
-                Fields.DOI,
-            ]:
-                continue
-            if field in [Fields.AUTHOR, Fields.TITLE, Fields.JOURNAL]:
+            if field in [Fields.TITLE, Fields.AUTHOR, Fields.JOURNAL, Fields.BOOKTITLE]:
                 record.data[field] = re.sub(r"\s+", " ", record.data[field])
                 record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
 

@@ -346,10 +346,6 @@ class ArXivSource:
                     )
 
                 prep_record = colrev.record.PrepRecord(data=record_dict)
-
-                if Fields.D_PROV in prep_record.data:
-                    del prep_record.data[Fields.D_PROV]
-
                 added = arxiv_feed.add_record(record=prep_record)
 
                 if added:

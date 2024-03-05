@@ -159,12 +159,14 @@ class PrepMan(colrev.operation.Operation):
                     source="LanguageDetector/Manual",
                     note="",
                 )
+
                 if "language of title not in [eng]" == record.data.get(
                     Fields.PRESCREEN_EXCLUSION, ""
                 ):
                     record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
-                    if Fields.TITLE in record.data[Fields.MD_PROV]:
-                        record.data[Fields.MD_PROV][Fields.TITLE]["note"] = ""
+                    record.remove_masterdata_provenance_note(
+                        key=Fields.TITLE, note="language-not-found"
+                    )
                     if (
                         record.data[Fields.STATUS]
                         == colrev.record.RecordState.md_needs_manual_preparation

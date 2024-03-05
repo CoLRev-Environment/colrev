@@ -637,6 +637,7 @@ class ReviewManager:
 
         return colrev.ops.distribute.Distribute(review_manager=self)
 
+    # pylint: disable=line-too-long
     def get_push_operation(self, **kwargs) -> colrev.ops.push.Push:  # type: ignore # pragma: no cover
         """Get a push operation object"""
 

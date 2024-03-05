@@ -427,17 +427,6 @@ class PDFGet(colrev.operation.Operation):
         pdfs_search_file: Path,
     ) -> None:
         record_dict[Fields.FILE] = new_filename
-
-        if Fields.MD_PROV in record_dict:
-            for value in record_dict[Fields.MD_PROV].values():
-                if str(file) == value.get("source", ""):
-                    value["source"] = str(new_filename)
-
-        if "data_provenance" in record_dict:
-            for value in record_dict["data_provenance"].values():
-                if str(file) == value.get("source", ""):
-                    value["source"] = str(new_filename)
-
         if pdfs_search_file.is_file():
             colrev.env.utils.inplace_change(
                 filename=pdfs_search_file,

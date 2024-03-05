@@ -15,7 +15,6 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import FieldValues
 from colrev.ops.load_utils_bib import BIBLoader
 
 
@@ -179,13 +178,14 @@ class StatusStats:
         self.overall.rev_prescreen = self.overall.md_processed
         self.currently.pdf_needs_retrieval = self.currently.rev_prescreen_included
 
-        colrev_masterdata_items = [
-            x[Fields.MD_PROV] for x in self.records.values() if Fields.MD_PROV in x
-        ]
-
         self.nr_curated_records = len(
-            [x for x in colrev_masterdata_items if FieldValues.CURATED in x]
+            [
+                r
+                for r in self.records.values()
+                if colrev.record.Record(data=r).masterdata_is_curated()
+            ]
         )
+
         if review_manager.settings.is_curated_masterdata_repo():
             self.nr_curated_records = self.overall.md_processed
 

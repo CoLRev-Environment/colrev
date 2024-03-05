@@ -91,6 +91,7 @@ class Fields:
     NR_PAGES_IN_FILE = "nr_pages_in_file"
 
     COLREV_ID = "colrev_id"
+    CURATION_ID = "curation_ID"
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"
     LOCAL_CURATED_METADATA = "local_curated_metadata"
     GROBID_VERSION = "grobid-version"

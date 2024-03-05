@@ -12,7 +12,6 @@ import git
 import pandas as pd
 import yaml
 from docker.errors import DockerException
-from git.exc import InvalidGitRepositoryError
 from yaml import safe_load
 
 import colrev.exceptions as colrev_exceptions
@@ -169,12 +168,7 @@ class EnvironmentManager:
 
             if imagename not in repo_tags:
                 if dockerfile:
-                    assert colrev.review_manager.__file__
-                    Path("")
-                    if colrev.review_manager.__file__:
-                        Path(colrev.review_manager.__file__).parents[0]
                     print(f"Building {imagename} Docker image ...")
-                    # colrev_path / dockerfile
                     dockerfile.resolve()
                     client.images.build(
                         path=str(dockerfile.parent).replace("\\", "/"),
@@ -197,7 +191,7 @@ class EnvironmentManager:
         try:
             git_instance = git.Git()
             _ = git_instance.version()
-        except git.exc.GitCommandNotFound as exc:
+        except git.GitCommandNotFound as exc:
             print(exc)
 
     def check_docker_installed(self) -> None:  # pragma: no cover
@@ -289,7 +283,7 @@ class EnvironmentManager:
                 repos.append(repo)
             except (
                 colrev_exceptions.CoLRevException,
-                InvalidGitRepositoryError,
+                git.InvalidGitRepositoryError,
             ):
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}

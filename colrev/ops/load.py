@@ -175,10 +175,10 @@ class Load(colrev.operation.Operation):
                 colrev.record.Record(data=record).set_status(
                     target_state=colrev.record.RecordState.md_prepared
                 )
-                if "curation_ID" in record:
+                if Fields.CURATION_ID in record:
                     record[Fields.MD_PROV] = {
                         FieldValues.CURATED: {
-                            "source": record["curation_ID"].split("#")[0],
+                            "source": record[Fields.CURATION_ID].split("#")[0],
                             "note": "",
                         }
                     }

@@ -332,7 +332,7 @@ class Repare(colrev.operation.Operation):
             )
 
             for record_id in list(curation_recs.keys()):
-                if "curation_ID" not in curation_recs[record_id]:
+                if Fields.CURATION_ID not in curation_recs[record_id]:
                     try:
                         retrieved_record_dict = local_index.retrieve(
                             record_dict=curation_recs[record_id], include_file=False

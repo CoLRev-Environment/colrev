@@ -988,23 +988,21 @@ class Record:
         note = default_note
         source = default_source
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if Fields.MD_PROV in self.data:
-                if key in self.data.get(Fields.MD_PROV, {}):
-                    if "source" in self.data[Fields.MD_PROV][key]:
-                        source = self.data[Fields.MD_PROV][key]["source"]
-                    if "note" in self.data[Fields.MD_PROV][key]:
-                        note = self.data[Fields.MD_PROV][key]["note"]
+            if Fields.MD_PROV in self.data and key in self.data[Fields.MD_PROV]:
+                if "source" in self.data[Fields.MD_PROV][key]:
+                    source = self.data[Fields.MD_PROV][key]["source"]
+                if "note" in self.data[Fields.MD_PROV][key]:
+                    note = self.data[Fields.MD_PROV][key]["note"]
         else:
-            if Fields.D_PROV in self.data:
-                if key in self.data[Fields.D_PROV]:
-                    if "source" in self.data[Fields.D_PROV][key]:
-                        source = self.data[Fields.D_PROV][key]["source"]
-                    if "note" in self.data[Fields.D_PROV][key]:
-                        note = self.data[Fields.D_PROV][key]["note"]
+            if Fields.D_PROV in self.data and key in self.data[Fields.D_PROV]:
+                if "source" in self.data[Fields.D_PROV][key]:
+                    source = self.data[Fields.D_PROV][key]["source"]
+                if "note" in self.data[Fields.D_PROV][key]:
+                    note = self.data[Fields.D_PROV][key]["note"]
 
         return {"source": source, "note": note}
 
-    def get_masterdata_provenance_notes(self, *, key: str) -> list:
+    def get_masterdata_provenance_notes(self, key: str) -> list:
         """Get a masterdata provenance note based on a key"""
         if Fields.MD_PROV not in self.data:
             return []
@@ -1020,6 +1018,14 @@ class Record:
         if key not in self.data[Fields.MD_PROV]:
             return ""
         return self.data[Fields.MD_PROV][key]["source"]
+
+    def get_data_provenance_source(self, key: str) -> str:
+        """Get a data provenance source based on a key"""
+        if Fields.D_PROV not in self.data:
+            return ""
+        if key not in self.data[Fields.D_PROV]:
+            return ""
+        return self.data[Fields.D_PROV][key]["source"]
 
     def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Remove a masterdata provenance note"""

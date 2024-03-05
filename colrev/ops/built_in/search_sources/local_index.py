@@ -38,7 +38,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     # pylint: disable=too-many-instance-attributes
     settings_class = colrev.env.package_manager.DefaultSourceSettings
-    source_identifier = "curation_ID"
+    source_identifier = Fields.CURATION_ID
     search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
     endpoint = "colrev.local_index"
 
@@ -191,7 +191,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             local_index_feed.add_record(
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
-            del retrieved_record_dict["curation_ID"]
+            del retrieved_record_dict[Fields.CURATION_ID]
 
             local_index_feed.update_existing_record(
                 records=records,
@@ -228,7 +228,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             added = local_index_feed.add_record(
                 record=colrev.record.Record(data=retrieved_record_dict)
             )
-            del retrieved_record_dict["curation_ID"]
+            del retrieved_record_dict[Fields.CURATION_ID]
             if added:
                 self.review_manager.logger.info(
                     " retrieve " + retrieved_record_dict[Fields.ID]
@@ -276,7 +276,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         """Source heuristic for local-index"""
 
         result = {"confidence": 0.0}
-        if "curation_ID" in data:
+        if Fields.CURATION_ID in data:
             result["confidence"] = 1.0
 
         return result
@@ -425,7 +425,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             local_index_feed.set_id(record_dict=retrieved_record.data)
             local_index_feed.add_record(record=retrieved_record)
 
-            retrieved_record.remove_field(key="curation_ID")
+            retrieved_record.remove_field(key=Fields.CURATION_ID)
             record.merge(
                 merging_record=retrieved_record,
                 default_source=default_source,
@@ -684,7 +684,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 x for x in original_record[Fields.ORIGIN] if "md_curated.bib/" in x
             ][0].replace("md_curated.bib/", "")
             curation_origin_record = local_index_feed.feed_records[md_curated_origin_id]
-            curation_id = curation_origin_record["curation_ID"]
+            curation_id = curation_origin_record[Fields.CURATION_ID]
             curation_id = curation_id[curation_id.find("#") + 1 :]
             return records[curation_id]
         except KeyError:

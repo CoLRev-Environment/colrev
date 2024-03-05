@@ -28,7 +28,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
-from colrev.constants import FieldValues
 from colrev.ops.write_utils_bib import to_string
 from colrev.ops.write_utils_bib import write_file
 
@@ -363,9 +362,13 @@ class Prep(colrev.operation.Operation):
 
     def _preparation_break_condition(self, record: colrev.record.PrepRecord) -> bool:
         """Check whether the break condition for the prep operation is given"""
-        if any(
-            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
-            for x in record.data.get(Fields.MD_PROV, {}).values()
+
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+            Fields.JOURNAL
+        ):
+            return True
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+            Fields.BOOKTITLE
         ):
             return True
 
@@ -378,15 +381,12 @@ class Prep(colrev.operation.Operation):
     def _preparation_save_condition(self, record: colrev.record.PrepRecord) -> bool:
         """Check whether the save condition for the prep operation is given"""
 
-        if record.data.get(Fields.STATUS, "NA") in [
-            colrev.record.RecordState.rev_prescreen_excluded,
-            colrev.record.RecordState.md_prepared,
-        ]:
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+            Fields.JOURNAL
+        ):
             return True
-
-        if any(
-            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
-            for x in record.data.get(Fields.MD_PROV, {}).values()
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+            Fields.BOOKTITLE
         ):
             return True
 
@@ -625,18 +625,6 @@ class Prep(colrev.operation.Operation):
                 print(f"rename error: {record_dict['file']}")
                 continue
             record_dict[Fields.FILE] = str(new_filename)
-            if Fields.D_PROV in record_dict:
-                for value in record_dict[Fields.D_PROV].values():
-                    if value["source"] == old_filename:
-                        value["source"] = value["source"].replace(
-                            old_filename, str(new_filename)
-                        )
-            if Fields.MD_PROV in record_dict:
-                for value in record_dict[Fields.MD_PROV].values():
-                    if value["source"] == old_filename:
-                        value["source"] = value["source"].replace(
-                            old_filename, str(new_filename)
-                        )
 
             # simple heuristic:
             pdfs_origin_file = Path("data/search/pdfs.bib")
@@ -965,17 +953,17 @@ class Prep(colrev.operation.Operation):
                 )
 
     def _log_details(self, *, prepared_records: list) -> None:
-        nr_recs = len(
+        nr_curated_recs = len(
             [
-                record
-                for record in prepared_records
-                if FieldValues.CURATED in record.get(Fields.MD_PROV, "")
+                r
+                for r in prepared_records
+                if colrev.record.Record(data=r).masterdata_is_curated()
             ]
         )
 
         self.review_manager.logger.info(
             "curated (✔)".ljust(29)
-            + f"{Colors.GREEN}{nr_recs}{Colors.END}".rjust(20, " ")
+            + f"{Colors.GREEN}{nr_curated_recs}{Colors.END}".rjust(20, " ")
             + " records"
         )
 

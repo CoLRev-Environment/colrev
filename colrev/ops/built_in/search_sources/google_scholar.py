@@ -118,27 +118,25 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for GoogleScholar"""
-        if "note" in record.data:
-            if (
-                "cites: https://scholar.google.com/scholar?cites="
-                in record.data["note"]
-            ):
-                note = record.data["note"]
-                source = record.data[Fields.D_PROV]["note"]["source"]
-                record.rename_field(key="note", new_key=Fields.CITED_BY)
-                record.update_field(
-                    key=Fields.CITED_BY,
-                    value=record.data[Fields.CITED_BY][
-                        : record.data[Fields.CITED_BY].find(" cites: ")
-                    ],
-                    source="replace_link",
-                )
-                record.update_field(
-                    key="cited_by_link",
-                    value=note[note.find("cites: ") + 7 :],
-                    append_edit=False,
-                    source=source + "|extract-from-note",
-                )
+        if "cites: https://scholar.google.com/scholar?cites=" in record.data.get(
+            "note", ""
+        ):
+            note = record.data["note"]
+            source_field = record.get_data_provenance_source("note")
+            record.rename_field(key="note", new_key=Fields.CITED_BY)
+            record.update_field(
+                key=Fields.CITED_BY,
+                value=record.data[Fields.CITED_BY][
+                    : record.data[Fields.CITED_BY].find(" cites: ")
+                ],
+                source="replace_link",
+            )
+            record.update_field(
+                key="cited_by_link",
+                value=note[note.find("cites: ") + 7 :],
+                append_edit=False,
+                source=source_field + "|extract-from-note",
+            )
         if Fields.ABSTRACT in record.data:
             # Note: abstracts provided by GoogleScholar are very incomplete
             record.remove_field(key=Fields.ABSTRACT)

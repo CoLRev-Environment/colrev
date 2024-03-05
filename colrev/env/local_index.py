@@ -119,7 +119,7 @@ class LocalIndex:
         "colrev_pdf_id",
         "bibtex",
         "layered_fields",
-        # "curation_ID"
+        # Fields.CURATION_ID
     ]
 
     # Note: we need the local_curated_metadata field for is_duplicate()
@@ -463,7 +463,7 @@ class LocalIndex:
     ) -> dict:  # pragma: no cover
         ret = {}
         try:
-            gh_url, record_id = record_dict["curation_ID"].split("#")
+            gh_url, record_id = record_dict[Fields.CURATION_ID].split("#")
 
             temp_path = Path.home().joinpath("colrev").joinpath("test")
             temp_path.mkdir(exist_ok=True, parents=True)
@@ -488,7 +488,7 @@ class LocalIndex:
         if record_id not in ret:
             raise colrev_exceptions.RecordNotInIndexException
 
-        ret[record_id]["curation_ID"] = record_dict["curation_ID"]
+        ret[record_id][Fields.CURATION_ID] = record_dict[Fields.CURATION_ID]
         return ret[record_id]
 
     def _retrieve_from_record_index(self, *, record_dict: dict) -> dict:
@@ -497,7 +497,9 @@ class LocalIndex:
         record = colrev.record.Record(data=record_dict)
 
         if not self._sqlite_available:
-            if record_dict.get("curation_ID", "NA").startswith("https://github.com/"):
+            if record_dict.get(Fields.CURATION_ID, "NA").startswith(
+                "https://github.com/"
+            ):
                 return self._retrieve_from_github_curation(record_dict=record_dict)
             raise colrev_exceptions.RecordNotInIndexException
 
@@ -570,7 +572,7 @@ class LocalIndex:
                 + "#"
                 + record_dict[Fields.ID]
             )
-            record_dict["curation_ID"] = identifier_string
+            record_dict[Fields.CURATION_ID] = identifier_string
 
         return record_dict
 

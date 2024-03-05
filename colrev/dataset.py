@@ -209,7 +209,7 @@ class Dataset:
         'colrev_status': <RecordState.md_imported: 2>,
         'screening_criteria': 'criterion1=in;criterion2=out',
         'file': PosixPath('data/pdfs/Smith2000.pdf'),
-        'Fields.MD_PROV': {Fields.AUTHOR:{"source":"...", "note":"..."}}},
+        'colrev_data_provenance': {Fields.AUTHOR:{"source":"...", "note":"..."}}},
         }
         """
 

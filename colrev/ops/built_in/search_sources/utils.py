@@ -115,7 +115,13 @@ def _format_fields(*, record_dict: dict) -> dict:
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")
         # Note : some dois (and their provenance) contain html entities
-        if key in [Fields.MD_PROV, Fields.D_PROV, Fields.DOI]:
+        if key not in [
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.ABSTRACT,
+        ]:
             continue
         if not isinstance(value, str):
             continue
