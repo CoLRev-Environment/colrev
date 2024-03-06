@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import tempfile
 import typing
 from collections import Counter
@@ -428,7 +429,8 @@ class PaperMarkdown(JsonSchemaMixin):
         temp = tempfile.NamedTemporaryFile(dir=self._temp_path)
         paper_path = self.settings.paper_path
         Path(temp.name).unlink(missing_ok=True)
-        paper_path.rename(temp.name)
+        self._temp_path.mkdir(exist_ok=True, parents=True)
+        shutil.move(str(paper_path), temp.name)
 
         screen_operation = self.review_manager.get_screen_operation(
             notify_state_transition_operation=False
