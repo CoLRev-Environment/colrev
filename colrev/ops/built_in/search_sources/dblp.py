@@ -660,80 +660,74 @@ class DBLPSearchSource(JsonSchemaMixin):
             return record
 
         same_record_type_required = (
-            prep_operation.review_manager.settings.is_curated_masterdata_repo()
+            self.review_manager.settings.is_curated_masterdata_repo()
         )
         self._timeout = timeout
 
         try:
             # Note: queries combining title+author/journal do not seem to work any more
             query = "" + record.data.get(Fields.TITLE, "").replace("-", "_")
-            for retrieved_record in self._retrieve_dblp_records(
-                query=query,
-            ):
-                if Fields.DBLP_KEY in record.data:
-                    if (
-                        retrieved_record.data["dblp_key"]
-                        != record.data[Fields.DBLP_KEY]
-                    ):
-                        continue
+            retrieved_record = self._retrieve_dblp_records(query=query)[0]
 
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=record,
-                    retrieved_record_original=retrieved_record,
-                    same_record_type_required=same_record_type_required,
-                )
-                if similarity < prep_operation.retrieval_similarity:
-                    continue
-
-                try:
-                    self.dblp_lock.acquire(timeout=60)
-
-                    # Note : need to reload file
-                    # because the object is not shared between processes
-                    dblp_feed = self.search_source.get_feed(
-                        review_manager=prep_operation.review_manager,
-                        source_identifier=self.source_identifier,
-                        update_only=False,
-                    )
-
-                    dblp_feed.set_id(record_dict=retrieved_record.data)
-                    dblp_feed.add_record(record=retrieved_record)
-
-                    # TODO : extract as function (apply similarly in other search sources)
-                    # Assign schema
-                    retrieved_record.data[Fields.DBLP_KEY] = retrieved_record.data.pop(
-                        "dblp_key"
-                    )
-
-                    record.merge(
-                        merging_record=retrieved_record,
-                        default_source=retrieved_record.data[Fields.ORIGIN][0],
-                    )
-                    record.set_masterdata_complete(
-                        source=retrieved_record.data[Fields.ORIGIN][0],
-                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                    )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
-                    if "Withdrawn (according to DBLP)" in record.data.get(
-                        "warning", ""
-                    ):
-                        record.prescreen_exclude(reason=FieldValues.RETRACTED)
-                        record.remove_field(key="warning")
-
-                    dblp_feed.save_feed_file()
-                    self.dblp_lock.release()
+            if Fields.DBLP_KEY in record.data:
+                if retrieved_record.data["dblp_key"] != record.data[Fields.DBLP_KEY]:
                     return record
 
-                except (
-                    colrev_exceptions.InvalidMerge,
-                    colrev_exceptions.NotFeedIdentifiableException,
-                ):
-                    self.dblp_lock.release()
-                    continue
+            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                record_original=record,
+                retrieved_record_original=retrieved_record,
+                same_record_type_required=same_record_type_required,
+            )
+            if similarity < prep_operation.retrieval_similarity:
+                return record
+
+            try:
+                self.dblp_lock.acquire(timeout=60)
+
+                # Note : need to reload file
+                # because the object is not shared between processes
+                dblp_feed = self.search_source.get_feed(
+                    review_manager=self.review_manager,
+                    source_identifier=self.source_identifier,
+                    update_only=False,
+                )
+
+                dblp_feed.set_id(record_dict=retrieved_record.data)
+                dblp_feed.add_record(record=retrieved_record)
+
+                # TODO : extract as function (apply similarly in other search sources)
+                # Assign schema
+                retrieved_record.data[Fields.DBLP_KEY] = retrieved_record.data.pop(
+                    "dblp_key"
+                )
+
+                record.merge(
+                    merging_record=retrieved_record,
+                    default_source=retrieved_record.data[Fields.ORIGIN][0],
+                )
+                record.set_masterdata_complete(
+                    source=retrieved_record.data[Fields.ORIGIN][0],
+                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                )
+                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+                if "Withdrawn (according to DBLP)" in record.data.get("warning", ""):
+                    record.prescreen_exclude(reason=FieldValues.RETRACTED)
+                    record.remove_field(key="warning")
+
+                dblp_feed.save_feed_file()
+                self.dblp_lock.release()
+                return record
+
+            except (
+                colrev_exceptions.InvalidMerge,
+                colrev_exceptions.NotFeedIdentifiableException,
+            ):
+                self.dblp_lock.release()
 
         except requests.exceptions.RequestException:
             pass
+        except colrev_exceptions.ServiceNotAvailableException:
+            if self.review_manager.force_mode:
+                self.review_manager.logger.error("Service not available: DBLP")
 
         return record
