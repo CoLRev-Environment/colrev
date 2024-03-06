@@ -119,7 +119,7 @@ class Initializer:
             x for x in cur_content if not x.startswith("venv") and x != ".history"
         ]
 
-        if all(x.startswith((".git", ".devcontainer")) for x in cur_content):
+        if all(x.startswith((".git", ".devcontainer", ".vscode")) for x in cur_content):
             return
 
         if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
