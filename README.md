@@ -43,6 +43,10 @@ The following features stand out:
 
 See the [documentation](https://colrev.readthedocs.io/en/latest/) and [statements of development status](https://colrev.readthedocs.io/en/latest/foundations/dev_status.html) for more details. A brief overview presented at ESMARConf2023 is available on [YouTube](https://www.youtube.com/watch?v=yfGGraQC6vs).
 
+## Demo
+
+A live demonstration is available via GitHub codespaces: [start demo](https://github.com//codespaces/new?hide_repo_select=true&ref=main&repo=767717822).
+
 ## Contributing, changes, and releases
 
 Contributions, code and features are always welcome
