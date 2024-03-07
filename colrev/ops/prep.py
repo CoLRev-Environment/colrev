@@ -381,6 +381,12 @@ class Prep(colrev.operation.Operation):
     def _preparation_save_condition(self, record: colrev.record.PrepRecord) -> bool:
         """Check whether the save condition for the prep operation is given"""
 
+        if record.data[Fields.STATUS] in [
+            colrev.record.RecordState.rev_prescreen_excluded,
+            colrev.record.RecordState.md_prepared,
+        ]:
+            return True
+
         if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
             Fields.JOURNAL
         ):
