@@ -339,7 +339,7 @@ class Load(colrev.operation.Operation):
                     path=Path(obj.b_path), remove=True
                 )
 
-    def load_active_sources(self) -> list:
+    def load_active_sources(self, *, include_md: bool = False) -> list:
         """
         Loads and returns a list of active source endpoints from the settings.
 
@@ -362,7 +362,8 @@ class Load(colrev.operation.Operation):
             # if source.endpoint.lower() not in endpoint_dict:
             #     raise ...
             endpoint = endpoint_dict[source.endpoint.lower()]
-            if endpoint.search_source.search_type == colrev.settings.SearchType.MD:  # type: ignore
+            s_type = endpoint.search_source.search_type
+            if s_type == colrev.settings.SearchType.MD and not include_md:  # type: ignore
                 continue
             sources.append(endpoint)
 
