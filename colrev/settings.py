@@ -664,7 +664,7 @@ class Settings(JsonSchemaMixin):
 
 
 def _add_missing_attributes(loaded_dict: dict) -> None:
-    # TODO : replace dict with defaults if values are missing (to avoid exceptions)
+    # replace dict with defaults if values are missing (to avoid exceptions)
     if "defects_to_ignore" not in loaded_dict["pdf_get"]:
         loaded_dict["pdf_get"]["defects_to_ignore"] = []
 
