@@ -23,6 +23,7 @@ import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 
 # pylint: disable=unused-argument
@@ -320,7 +321,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
-                    if k not in [Fields.STATUS, Fields.MD_PROV]
+                    if k not in FieldSet.PROVENANCE_KEYS
                 }
 
             return records
@@ -491,15 +492,14 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()
-        if FieldValues.CURATED not in retrieved_record.data.get(Fields.MD_PROV, ""):
+        if not retrieved_record.masterdata_is_curated():
             return record
 
-        default_source = "LOCAL_INDEX"
-        if Fields.MD_PROV in retrieved_record.data:
-            if FieldValues.CURATED in retrieved_record.data[Fields.MD_PROV]:
-                default_source = retrieved_record.data[Fields.MD_PROV][
-                    FieldValues.CURATED
-                ]["source"]
+        default_source = retrieved_record.get_masterdata_provenance_source(
+            FieldValues.CURATED
+        )
+        if default_source == "":
+            default_source = "LOCAL_INDEX"
 
         self._store_retrieved_record_in_feed(
             record=record,
@@ -513,10 +513,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _get_local_base_repos(self, *, change_itemsets: list) -> dict:
         base_repos = []
         for item in change_itemsets:
-            if FieldValues.CURATED in item["original_record"].get(Fields.MD_PROV, {}):
-                repo_path = item["original_record"][Fields.MD_PROV][
-                    FieldValues.CURATED
-                ]["source"]
+            repo_path = colrev.record.Record(
+                data=item["original_record"]
+            ).get_masterdata_provenance_source(FieldValues.CURATED)
+            if repo_path != "":
                 assert "#" not in repo_path
                 # otherwise: strip the ID at the end if we add an ID...
                 base_repos.append(repo_path)
@@ -548,13 +548,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         print()
         self.review_manager.logger.info(f"Base repository: {local_base_repo}")
         for item in change_itemsets:
-            repo_path = "NA"
-            if FieldValues.CURATED in item["original_record"].get(Fields.MD_PROV, {}):
-                repo_path = item["original_record"][Fields.MD_PROV][
-                    FieldValues.CURATED
-                ]["source"]
-                assert "#" not in repo_path
-                # otherwise: strip the ID at the end if we add an ID...
+            repo_path = colrev.record.Record(
+                data=item["original_record"]
+            ).get_masterdata_provenance_source(FieldValues.CURATED)
+            assert "#" not in repo_path
 
             if repo_path != local_base_repo:
                 continue
