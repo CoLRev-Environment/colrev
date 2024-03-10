@@ -33,9 +33,17 @@ class ENTRYTYPES:
             cls.INPROCEEDINGS,
             cls.BOOK,
             cls.INBOOK,
-            cls.TECHREPORT,
+            cls.PROCEEDINGS,
+            cls.INCOLLECTION,
             cls.PHDTHESIS,
+            cls.MASTERSTHESIS,
+            cls.BACHELORTHESIS,
+            cls.TECHREPORT,
+            cls.UNPUBLISHED,
             cls.MISC,
+            cls.SOFTWARE,
+            cls.ONLINE,
+            cls.CONFERENCE,
         ]
 
 

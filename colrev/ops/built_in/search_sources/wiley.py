@@ -101,6 +101,7 @@ class WileyOnlineLibrarySearchSource(JsonSchemaMixin):
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
             for record_dict in records.values():
                 if "eprint" not in record_dict:

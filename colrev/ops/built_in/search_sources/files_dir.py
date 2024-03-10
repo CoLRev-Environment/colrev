@@ -148,6 +148,7 @@ class FilesSearchSource(JsonSchemaMixin):
         search_rd = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             logger=self.review_manager.logger,
+            unique_id_field="ID",
         )
 
         records = self.review_manager.dataset.load_records_dict()
@@ -750,6 +751,7 @@ class FilesSearchSource(JsonSchemaMixin):
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
 
             for record_dict in records.values():

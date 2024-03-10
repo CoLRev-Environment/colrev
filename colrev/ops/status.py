@@ -15,7 +15,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.loader.load_utils_bib import BIBLoader
+from colrev.loader.bib import BIBLoader
 
 
 class Status(colrev.operation.Operation):
@@ -569,6 +569,7 @@ class StatusStats:
                 bib_loader = BIBLoader(
                     filename=search_file,
                     logger=self.status_stats.review_manager.logger,
+                    unique_id_field="ID",
                 )
 
                 number_search += bib_loader.get_nr_in_bib()

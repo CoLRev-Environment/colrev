@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.bib
 import colrev.loader.load_utils
-import colrev.loader.load_utils_bib
 import colrev.review_manager
 import colrev.settings
 

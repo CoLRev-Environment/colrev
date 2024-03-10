@@ -1,11 +1,14 @@
 #! /usr/bin/env python
+"""Convenience functions to load files (BiBTeX, RIS, CSV, etc.)"""
 import logging
-import typing
 from pathlib import Path
 from typing import Callable
 
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+
+
+# pylint: disable=too-many-arguments
 
 
 class Loader:
@@ -17,9 +20,9 @@ class Loader:
         filename: Path,
         entrytype_setter: Callable,
         field_mapper: Callable,
-        id_labeler: typing.Optional[Callable] = None,
-        unique_id_field: str = "",
-        logger: typing.Optional[logging.Logger] = None,
+        id_labeler: Callable,
+        unique_id_field: str,
+        logger: logging.Logger,
     ):
         self.filename = filename
         self.unique_id_field = unique_id_field
@@ -28,8 +31,6 @@ class Loader:
         self.entrytype_setter = entrytype_setter
         self.field_mapper = field_mapper
 
-        if logger is None:
-            logger = logging.getLogger(__name__)
         self.logger = logger
 
     def _set_ids(self, records_list: list) -> None:

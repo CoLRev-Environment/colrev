@@ -6,6 +6,7 @@ import itertools
 import os
 import re
 import string
+import tempfile
 import time
 import typing
 from pathlib import Path
@@ -19,8 +20,8 @@ from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.bib
 import colrev.loader.load_utils
-import colrev.loader.load_utils_bib
 import colrev.operation
 import colrev.record
 import colrev.settings
@@ -116,14 +117,21 @@ class Dataset:
 
         current_origin_states_dict = {}
         if records_string != "":
-            bib_loader = colrev.loader.load_utils_bib.BIBLoader(
-                load_string=records_string,
+            with tempfile.NamedTemporaryFile(
+                mode="wb", delete=False, suffix=".bib"
+            ) as temp_file:
+                temp_file.write(records_string.encode("utf-8"))
+                temp_file_path = Path(temp_file.name)
+            bib_loader = colrev.loader.bib.BIBLoader(
+                filename=temp_file_path,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
         else:
-            bib_loader = colrev.loader.load_utils_bib.BIBLoader(
+            bib_loader = colrev.loader.bib.BIBLoader(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
         for record_header_item in bib_loader.get_record_header_items().values():
             for origin in record_header_item[Fields.ORIGIN]:
@@ -216,9 +224,10 @@ class Dataset:
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
-            bib_loader = colrev.loader.load_utils_bib.BIBLoader(
+            bib_loader = colrev.loader.bib.BIBLoader(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
             return bib_loader.get_record_header_items()
 
@@ -227,6 +236,7 @@ class Dataset:
             records_dict = colrev.loader.load_utils.load(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
 
         else:

@@ -13,22 +13,118 @@ Usage::
 
     returns: records (dict)
 
+Most formats require a mapping from the FIELDS to the standard CoLRev Fields (see CEP 002), which
+
+- can involve merging of FIELDS (e.g. AU / author fields)
+- can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
+
+Example BibTeX record::
+
+    @article{Guo2021,
+        title    = {How Trust Leads to Commitment on Microsourcing Platforms},
+        author   = {Guo, Wenbo and Straub, Detmar W. and Zhang, Pengzhu and Cai, Zhao},
+        journal  = {MIS Quarterly},
+        year     = {2021}
+        volume   = {45},
+        number   = {3},
+        pages    = {1309--1348},
+        url      = {https://aisel.aisnet.org/misq/vol45/iss3/13},
+        doi      = {10.25300/MISQ/2021/16100},
+    }
+
+Example ENL record::
+
+    %T How Trust Leads to Commitment on Microsourcing Platforms
+    %0 Journal Article
+    %A Guo, Wenbo
+    %A Straub, Detmar W.
+    %A Zhang, Pengzhu
+    %A Cai, Zhao
+    %B Management Information Systems Quarterly
+    %D 2021
+    %8 September  1, 2021
+    %V 45
+    %N 3
+    %P 1309-1348
+    %U https://aisel.aisnet.org/misq/vol45/iss3/13
+    %X IS research has extensively examined the role of trust in client-vendor relationships...
+
+Example markdown reference section::
+
+    # References
+
+    Guo, W. and Straub, D. W. and Zhang, P. and Cai, Z. (2021). How Trust Leads to Commitment
+          on Microsourcing Platforms. MIS Quarterly, 45(3), 1309--1348.
+
+
+Example nbib record::
+
+    OWN - ERIC
+    TI  - How Trust Leads to Commitment on Microsourcing Platforms
+    AU  - Guo, Wenbo
+    AU  - Straub, Detmar W.
+    AU  - Zhang, Pengzhu
+    AU  - Cai, Zhao
+    JT  - MIS Quarterly
+    DP  - 2021
+    VI  - 45
+    IP  - 3
+    PG  - 1309-1348
+
+Example RIS record::
+
+    TY  - JOUR
+    AU  - Guo, Wenbo
+    AU  - Straub, Detmar W.
+    AU  - Zhang, Pengzhu
+    AU  - Cai, Zhao
+    DA  - 2021/09/01
+    DO  - 10.25300/MISQ/2021/16100
+    ID  - Guo2021
+    T2  - Management Information Systems Quarterly
+    TI  - How Trust Leads to Commitment on Microsourcing Platforms
+    VL  - 45
+    IS  - 3
+    SP  - 1309
+    EP  - 1348
+    UR  - https://aisel.aisnet.org/misq/vol45/iss3/13
+    PB  - Association for Information Systems
+    ER  -
+
+Example csv records::
+
+    title;author;year;
+    How Trust Leads to Commitment;Guo, W. and Straub, D.;2021;
+
 """
 from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
-import colrev.loader.load_utils_bib
-import colrev.loader.load_utils_enl
-import colrev.loader.load_utils_md
-import colrev.loader.load_utils_nbib
-import colrev.loader.load_utils_ris
-import colrev.loader.load_utils_table
+import colrev.loader.bib
+import colrev.loader.enl
+import colrev.loader.md
+import colrev.loader.nbib
+import colrev.loader.ris
+import colrev.loader.table
+
+if TYPE_CHECKING:
+    from typing import Callable
+
+# pylint: disable=too-many-arguments
 
 
-def load(filename: Path, **kw) -> dict:  # type: ignore
+def load(  # type: ignore
+    filename: Path,
+    entrytype_setter: Callable = lambda x: x,
+    field_mapper: Callable = lambda x: x,
+    id_labeler: Callable = lambda x: x,
+    unique_id_field: str = "",
+    **kw,
+) -> dict:
     """Load a file and return records as a dictionary"""
 
     if not filename.exists():
@@ -39,38 +135,63 @@ def load(filename: Path, **kw) -> dict:  # type: ignore
     # also remove if not filename.name.endswith(".bib"): -> covered in load()
 
     if filename.suffix == ".bib":
-        parser = colrev.loader.load_utils_bib.BIBLoader  # type: ignore
+        parser = colrev.loader.bib.BIBLoader  # type: ignore
     elif filename.suffix in [".csv", ".xls", ".xlsx"]:
-        parser = colrev.loader.load_utils_table.TableLoader  # type: ignore
+        parser = colrev.loader.table.TableLoader  # type: ignore
     elif filename.suffix == ".ris":
-        parser = colrev.loader.load_utils_ris.RISLoader  # type: ignore
-    # TODO
+        parser = colrev.loader.ris.RISLoader  # type: ignore
     elif filename.suffix in [".enl", ".txt"]:
-        parser = colrev.loader.load_utils_enl.ENLLoader  # type: ignore
+        parser = colrev.loader.enl.ENLLoader  # type: ignore
     elif filename.suffix == ".md":
-        parser = colrev.loader.load_utils_md.MarkdownLoader  # type: ignore
+        parser = colrev.loader.md.MarkdownLoader  # type: ignore
     elif filename.suffix == ".nbib":
-        parser = colrev.loader.load_utils_nbib.NBIBLoader  # type: ignore
+        parser = colrev.loader.nbib.NBIBLoader  # type: ignore
     else:
         raise NotImplementedError
 
     kw["filename"] = filename
+    kw["entrytype_setter"] = entrytype_setter
+    kw["field_mapper"] = field_mapper
+    kw["id_labeler"] = id_labeler
+    kw["unique_id_field"] = unique_id_field
     return parser(**kw).load()
 
 
-def loads(load_string: str, *, implementation: str, **kw) -> dict:  # type: ignore
+def loads(  # type: ignore
+    load_string: str,
+    *,
+    implementation: str,
+    entrytype_setter: Callable = lambda x: x,
+    field_mapper: Callable = lambda x: x,
+    id_labeler: Callable = lambda x: x,
+    unique_id_field: str = "",
+    **kw,
+) -> dict:
     """Load a string and return records as a dictionary"""
 
-    if implementation == "bib":
-        parser = colrev.loader.load_utils_bib.BIBLoader
-        with tempfile.NamedTemporaryFile(
-            mode="wb", delete=False, suffix=".bib"
-        ) as temp_file:
-            temp_file.write(load_string.encode("utf-8"))
-            temp_file_path = Path(temp_file.name)
-
-        kw["filename"] = temp_file_path
-    else:
+    if implementation not in [
+        "bib",
+        "csv",
+        "xls",
+        "xlsx",
+        "ris",
+        "enl",
+        "md",
+        "nbib",
+    ]:
         raise NotImplementedError
 
-    return parser(**kw).load()
+    with tempfile.NamedTemporaryFile(
+        mode="wb", delete=False, suffix=f".{implementation}"
+    ) as temp_file:
+        temp_file.write(load_string.encode("utf-8"))
+        temp_file_path = Path(temp_file.name)
+
+    kw["filename"] = temp_file_path
+    kw["entrytype_setter"] = entrytype_setter
+    kw["field_mapper"] = field_mapper
+    kw["id_labeler"] = id_labeler
+    kw["unique_id_field"] = unique_id_field
+
+    # return parser(**kw).load()
+    return load(**kw)

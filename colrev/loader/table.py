@@ -1,26 +1,21 @@
 #! /usr/bin/env python
-"""Convenience functions to load tabular files (csv, xlsx)
-
-Example csv records::
-
-    title;author;year;
-    How Trust Leads to Commitment;Guo, W. and Straub, D.;2021;
-
-"""
+"""Convenience functions to load tabular files (csv, xlsx)"""
 from __future__ import annotations
 
 import logging
-import typing
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
 
-# pylint: disable=duplicate-code
+if TYPE_CHECKING:
+    from typing import Callable
+
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-arguments
 
 
 class TableLoader(colrev.loader.loader.Loader):
@@ -32,26 +27,17 @@ class TableLoader(colrev.loader.loader.Loader):
         filename: Path,
         entrytype_setter: Callable,
         field_mapper: Callable,
-        id_labeler: typing.Optional[Callable] = None,
+        id_labeler: Callable,
         unique_id_field: str = "",
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ):
-        self.filename = filename
-        self.unique_id_field = unique_id_field
-        assert id_labeler is not None or unique_id_field != ""
-        self.id_labeler = id_labeler
-        self.entrytype_setter = entrytype_setter
-        self.field_mapper = field_mapper
-
-        if logger is None:
-            logger = logging.getLogger(__name__)
-        self.logger = logger
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
             unique_id_field=unique_id_field,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
+            logger=logger,
         )
 
     def load_records_list(self) -> list:

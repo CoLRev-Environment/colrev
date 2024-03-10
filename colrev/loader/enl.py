@@ -1,34 +1,21 @@
 #! /usr/bin/env python
-"""Convenience functions to load nbib files
-
-NBIB requires a mapping from the NBIB_FIELDS to the standard CoLRev Fields (see CEP 002), which
-
-- can involve merging of NBIB_FIELDS (e.g. AU / author fields)
-- can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
-
-Example nbib record::
-
-    OWN - ERIC
-    TI  - How Trust Leads to Commitment on Microsourcing Platforms
-    AU  - Guo, Wenbo
-    AU  - Straub, Detmar W.
-    AU  - Zhang, Pengzhu
-    AU  - Cai, Zhao
-    JT  - MIS Quarterly
-    DP  - 2021
-    VI  - 45
-    IP  - 3
-    PG  - 1309-1348
-"""
+"""Convenience functions to load ENL files"""
 from __future__ import annotations
 
 import logging
 import re
-import typing
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import colrev.loader.loader
+
+if TYPE_CHECKING:
+    import typing
+    from typing import Callable
+
+# pylint: disable=too-few-public-methods
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-instance-attributes
 
 
 class NextLine(Exception):
@@ -39,10 +26,10 @@ class ParseError(Exception):
     """Parsing error"""
 
 
-class NBIBLoader(colrev.loader.loader.Loader):
-    """Loads nbib files"""
+class ENLLoader(colrev.loader.loader.Loader):
+    """Loads enl files"""
 
-    PATTERN = r"^[A-Z]{2,4}( ){1,2}- "
+    PATTERN = r"^%[A-Z]{1,3} "
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -51,42 +38,33 @@ class NBIBLoader(colrev.loader.loader.Loader):
         filename: Path,
         entrytype_setter: Callable,
         field_mapper: Callable,
-        id_labeler: typing.Optional[Callable] = None,
+        id_labeler: Callable,
         unique_id_field: str = "",
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ):
-        self.filename = filename
 
-        self.unique_id_field = unique_id_field
-        assert id_labeler is not None or unique_id_field != ""
-        self.id_labeler = id_labeler
-        self.entrytype_setter = entrytype_setter
-        self.field_mapper = field_mapper
-
-        self.current: dict = {}
-        self.pattern = re.compile(self.PATTERN)
-
-        if logger is None:
-            logger = logging.getLogger(__name__)
-        self.logger = logger
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
             unique_id_field=unique_id_field,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
+            logger=logger,
         )
 
-    def get_tag(self, line: str) -> str:
-        """Get the tag from a line in the NBIB file."""
-        return line[: line.find(" - ")].rstrip()
+        self.current: dict = {}
+        self.pattern = re.compile(self.PATTERN)
 
-    def get_content(self, line: str) -> str:
+    def _get_tag(self, line: str) -> str:
+        """Get the tag from a line in the ENL file."""
+        return line[1:3].rstrip()
+
+    def _get_content(self, line: str) -> str:
         """Get the content from a line"""
-        return line[line.find(" - ") + 2 :].strip()
+        return line[2:].strip()
 
     def _add_tag(self, tag: str, line: str) -> None:
-        new_value = self.get_content(line)
+        new_value = self._get_content(line)
 
         if tag not in self.current:
             self.current[tag] = new_value
@@ -96,7 +74,7 @@ class NBIBLoader(colrev.loader.loader.Loader):
             self.current[tag].append(new_value)
 
     def _parse_tag(self, line: str) -> dict:
-        tag = self.get_tag(line)
+        tag = self._get_tag(line)
 
         if tag.strip() == "":
             return self.current
@@ -113,12 +91,12 @@ class NBIBLoader(colrev.loader.loader.Loader):
                 continue
 
     def load_records_list(self) -> list:
-        """Loads nbib entries"""
+        """Loads enl entries"""
 
         # based on
         # https://github.com/MrTango/rispy/blob/main/rispy/parser.py
         # Note: skip-tags and unknown-tags can be handled
-        # between load_nbib_entries and convert_to_records.
+        # between load_enl_entries and convert_to_records.
 
         text = self.filename.read_text(encoding="utf-8")
         # clean_text?

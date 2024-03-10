@@ -421,6 +421,7 @@ class LocalIndex:
         records_dict = colrev.loader.load_utils.loads(
             load_string=row["bibtex"],
             implementation="bib",
+            unique_id_field="ID",
         )
 
         retrieved_record = list(records_dict.values())[0]

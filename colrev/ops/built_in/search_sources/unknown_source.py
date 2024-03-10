@@ -314,6 +314,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             logger=self.review_manager.logger,
+            unique_id_field="ID",
         )
         return records
 

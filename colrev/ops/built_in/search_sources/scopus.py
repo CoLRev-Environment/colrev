@@ -98,15 +98,19 @@ class ScopusSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def _load_bib(self) -> dict:
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+        )
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
-            )
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
 

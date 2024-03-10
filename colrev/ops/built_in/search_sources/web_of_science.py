@@ -111,15 +111,25 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def _load_bib(self) -> dict:
+        def field_mapper(record_dict: dict) -> None:
+            for key in list(record_dict.keys()):
+                if key not in ["ID", "ENTRYTYPE"]:
+                    record_dict[key.lower()] = record_dict.pop(key)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+            field_mapper=field_mapper,
+        )
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.loader.load_utils.load(
-                filename=self.search_source.filename,
-                logger=self.review_manager.logger,
-            )
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
 

@@ -1,41 +1,21 @@
 #! /usr/bin/env python
-"""Convenience functions to load RIS files
-
-RIS requires a mapping from the RIS_FIELDS to the standard CoLRev Fields (see CEP 002), which
-
-- can involve merging of RIS_FIELDS (e.g. AU / author fields)
-- can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
-
-Example RIS record::
-
-    TY  - JOUR
-    AU  - Guo, Wenbo
-    AU  - Straub, Detmar W.
-    AU  - Zhang, Pengzhu
-    AU  - Cai, Zhao
-    DA  - 2021/09/01
-    DO  - 10.25300/MISQ/2021/16100
-    ID  - Guo2021
-    T2  - Management Information Systems Quarterly
-    TI  - How Trust Leads to Commitment on Microsourcing Platforms
-    VL  - 45
-    IS  - 3
-    SP  - 1309
-    EP  - 1348
-    UR  - https://aisel.aisnet.org/misq/vol45/iss3/13
-    PB  - Association for Information Systems
-    ER  -
-
-"""
+"""Convenience functions to load RIS files"""
 from __future__ import annotations
 
 import logging
 import re
-import typing
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import colrev.loader.loader
+
+if TYPE_CHECKING:
+    import typing
+    from typing import Callable
+
+# pylint: disable=too-few-public-methods
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-instance-attributes
 
 
 class NextLine(Exception):
@@ -58,61 +38,21 @@ class RISLoader(colrev.loader.loader.Loader):
         filename: Path,
         entrytype_setter: Callable,
         field_mapper: Callable,
-        id_labeler: typing.Optional[Callable] = None,
+        id_labeler: Callable,
         unique_id_field: str = "",
-        logger: typing.Optional[logging.Logger] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ):
-        self.filename = filename
-
-        self.unique_id_field = unique_id_field
-        assert id_labeler is not None or unique_id_field != ""
-        self.id_labeler = id_labeler
-        self.entrytype_setter = entrytype_setter
-        self.field_mapper = field_mapper
-
-        self.current: dict = {}
-        self.pattern = re.compile(self.PATTERN)
-
-        if logger is None:
-            logger = logging.getLogger(__name__)
-        self.logger = logger
-
         super().__init__(
             filename=filename,
             id_labeler=id_labeler,
             unique_id_field=unique_id_field,
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
+            logger=logger,
         )
 
-    def apply_ris_fixes(self) -> None:
-        """Fix common defects in RIS files"""
-
-        # Error to fix: for lists of keywords, each line should start with the KW tag
-
-        with open(self.filename, encoding="UTF-8") as file:
-            lines = [line.rstrip("\n") for line in file]
-            for i, line in enumerate(lines):
-                if line.startswith("PMID "):
-                    lines[i] = line.replace("PMID ", "PM ")
-
-            # add missing start tags in lists (like KW)
-            processing_tag = ""
-            for i, line in enumerate(lines):
-                tag_match = re.match(r"^[A-Z][A-Z0-9]+(\s+)-", line)  # |^ER\s?|^EF\s?
-                if tag_match:
-                    processing_tag = tag_match.group()
-                elif line == "":
-                    processing_tag = ""
-                    continue
-                elif processing_tag == "":
-                    continue
-                else:
-                    lines[i] = f"{processing_tag} {line}"
-
-        with open(self.filename, "w", encoding="utf-8") as file:
-            for line in lines:
-                file.write(f"{line}\n")
+        self.current: dict = {}
+        self.pattern = re.compile(self.PATTERN)
 
     def _get_tag(self, line: str) -> str:
         """Get the tag from a line in the RIS file."""
@@ -164,9 +104,7 @@ class RISLoader(colrev.loader.loader.Loader):
         lines.append("")
         return "\n".join(lines)
 
-    def load_records_list(
-        self, *, content: str = "", combine_sp_ep: bool = True
-    ) -> list:
+    def load_records_list(self, *, content: str = "") -> list:
         """Load ris entries
 
         The resulting keys should coincide with those in the KEY_MAP

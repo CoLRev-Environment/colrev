@@ -1,22 +1,5 @@
 #! /usr/bin/env python
-"""Convenience functions to load bib files
-
-
-    Example BibTeX record::
-
-    @article{Guo2021,
-        title    = {How Trust Leads to Commitment on Microsourcing Platforms},
-        author   = {Guo, Wenbo and Straub, Detmar W. and Zhang, Pengzhu and Cai, Zhao},
-        journal  = {MIS Quarterly},
-        year     = {2021}
-        volume   = {45},
-        number   = {3},
-        pages    = {1309--1348},
-        url      = {https://aisel.aisnet.org/misq/vol45/iss3/13},
-        doi      = {10.25300/MISQ/2021/16100},
-    }
-
-"""
+"""Convenience functions to load bib files"""
 from __future__ import annotations
 
 import io
@@ -25,58 +8,57 @@ import logging
 import os
 import re
 import string
-import typing
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import pybtex.errors
 from pybtex.database import Person
 from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.loader
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
+if TYPE_CHECKING:
+    import typing
+    from typing import Optional
+    from typing import Callable
 
-class BIBLoader:
+# TODO : pass the list fields/dict fields??
+
+# pylint: disable=too-few-public-methods
+# pylint: disable=too-many-arguments
+
+
+class BIBLoader(colrev.loader.loader.Loader):
     """Loads BibTeX files"""
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
-        filename: typing.Optional[Path] = None,
-        load_string: str = "",
-        unique_id_field: str = "",
-        logger: typing.Optional[logging.Logger] = None,
+        filename: Path,
+        unique_id_field: str = "ID",
+        entrytype_setter: Callable = lambda x: x,
+        field_mapper: Callable = lambda x: x,
+        id_labeler: Callable = lambda x: x,
+        logger: logging.Logger = logging.getLogger(__name__),
         check_bib_file: bool = True,
     ):
-        self.unique_id_field = unique_id_field
+        super().__init__(
+            filename=filename,
+            id_labeler=id_labeler,
+            unique_id_field=unique_id_field,
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=logger,
+        )
+
         self.check_bib_file = check_bib_file
 
-        if filename is not None:
-            assert load_string == "", "filename and load_string are exclusive"
-            if not filename.name.endswith(".bib"):
-                raise colrev_exceptions.ImportException(
-                    f"File not supported by BIBLoader: {filename.name}"
-                )
-            if not filename.exists():
-                raise colrev_exceptions.ImportException(
-                    f"File not found: {filename.name}"
-                )
-
-        if load_string != "":
-            assert filename is None, "filename and load_string are exclusive"
-
-        self.filename = filename
-        self.load_string = load_string
-
-        if logger is None:
-            logger = logging.getLogger(__name__)
-        self.logger = logger
-
-    def generate_next_unique_id(
+    def _generate_next_unique_id(
         self,
         *,
         temp_id: str,
@@ -150,7 +132,7 @@ class BIBLoader:
                             seekpos = fix_key(file, line, replacement_line, seekpos)
 
                         if current_id_str in record_ids:
-                            next_id = self.generate_next_unique_id(
+                            next_id = self._generate_next_unique_id(
                                 temp_id=current_id_str, existing_ids=record_ids
                             )
                             self.logger.info(
@@ -332,106 +314,15 @@ class BIBLoader:
         """Get the number of records in the file"""
 
         nr_in_bib = 0
-        if self.filename is not None:
-            with open(self.filename, encoding="utf8") as file:
+        with open(self.filename, encoding="utf8") as file:
+            line = file.readline()
+            while line:
+                if "@" in line[:3]:
+                    if "@comment" not in line[:10].lower():
+                        nr_in_bib += 1
                 line = file.readline()
-                while line:
-                    if "@" in line[:3]:
-                        if "@comment" not in line[:10].lower():
-                            nr_in_bib += 1
-                    line = file.readline()
-        else:
-            nr_in_bib = len(
-                [x for x in self.load_string.split("@") if x[:7].lower() == "comment"]
-            )
 
         return nr_in_bib
-
-    def load(
-        self,
-    ) -> dict:
-        """Load a bib file and return records dict"""
-
-        def drop_empty_fields(*, records: dict) -> None:
-            for record_id in records:
-                records[record_id] = {
-                    k: v
-                    for k, v in records[record_id].items()
-                    if v is not None and v != "nan"
-                }
-
-        def load_records() -> dict:
-            temp_f = io.StringIO()
-            pybtex.io.stderr = temp_f
-            pybtex.errors.set_strict_mode(False)
-            parser = bibtex.Parser()
-            if self.filename:
-                bib_data = parser.parse_file(str(self.filename))
-            else:
-                bib_data = parser.parse_string(self.load_string)
-            records = self._parse_records_dict(records_dict=bib_data.entries)
-            return records
-
-        def lower_case_keys(*, records: dict) -> None:
-            for record in records.values():
-                for key in list(record.keys()):
-                    if not key.islower() and key not in [Fields.ID, Fields.ENTRYTYPE]:
-                        record[key.lower()] = record.pop(key)
-
-        def resolve_crossref(*, records: dict) -> None:
-            # https://bibtex.eu/fields/crossref/
-            crossref_ids = []
-            for record_dict in records.values():
-                if "crossref" not in record_dict:
-                    continue
-
-                crossref_record = records.get(record_dict["crossref"], None)
-
-                if not crossref_record:
-                    self.logger.error(
-                        f"crossref record (ID={record_dict['crossref']}) not found"
-                    )
-                    continue
-                crossref_ids.append(crossref_record["ID"])
-                for key, value in crossref_record.items():
-                    if key not in record_dict:
-                        record_dict[key] = value
-                del record_dict["crossref"]
-
-            for crossref_id in crossref_ids:
-                del records[crossref_id]
-
-        def check_nr_in_bib(*, records: dict) -> None:
-            if self.filename:
-                self.logger.debug(
-                    f"Loaded {self.filename.name} with {len(records)} records"
-                )
-                nr_in_bib = self.get_nr_in_bib()
-                if len(records) < nr_in_bib:
-                    self.logger.error("broken bib file (not imported all records)")
-                    with open(self.filename, encoding="utf8") as file:
-                        line = file.readline()
-                        while line:
-                            if "@" in line[:3]:
-                                record_id = line[line.find("{") + 1 : line.rfind(",")]
-                                if record_id not in [
-                                    x[Fields.ID] for x in records.values()
-                                ]:
-                                    self.logger.error(f"{record_id} not imported")
-                            line = file.readline()
-
-        if not self.check_bib_file:
-            records = load_records()
-            return records
-
-        self._apply_file_fixes()
-        records = load_records()
-        lower_case_keys(records=records)
-        drop_empty_fields(records=records)
-        resolve_crossref(records=records)
-        records = dict(sorted(records.items()))
-        check_nr_in_bib(records=records)
-        return records
 
     def _parse_k_v(self, item_string: str) -> tuple:
         if " = " in item_string:
@@ -527,12 +418,55 @@ class BIBLoader:
     def get_record_header_items(self) -> dict:
         """Get the record header items"""
         record_header_list = []
-        if self.load_string != "":
-            record_header_list = self._read_record_header_items(
-                file_object=io.StringIO(self.load_string)
-            )
-        elif self.filename is not None and self.filename.is_file():
-            record_header_list = self._read_record_header_items()
+        record_header_list = self._read_record_header_items()
 
         record_header_dict = {r[Fields.ID]: r for r in record_header_list}
         return record_header_dict
+
+    def load_records_list(self) -> list:
+
+        def drop_empty_fields(*, records: dict) -> None:
+            for record_id in records:
+                records[record_id] = {
+                    k: v
+                    for k, v in records[record_id].items()
+                    if v is not None and v != "nan"
+                }
+
+        def resolve_crossref(*, records: dict) -> None:
+            # https://bibtex.eu/fields/crossref/
+            crossref_ids = []
+            for record_dict in records.values():
+                if "crossref" not in record_dict:
+                    continue
+
+                crossref_record = records.get(record_dict["crossref"], None)
+
+                if not crossref_record:
+                    self.logger.error(
+                        f"crossref record (ID={record_dict['crossref']}) not found"
+                    )
+                    continue
+                crossref_ids.append(crossref_record["ID"])
+                for key, value in crossref_record.items():
+                    if key not in record_dict:
+                        record_dict[key] = value
+                del record_dict["crossref"]
+
+            for crossref_id in crossref_ids:
+                del records[crossref_id]
+
+        self._apply_file_fixes()
+
+        temp_f = io.StringIO()
+        pybtex.io.stderr = temp_f
+        pybtex.errors.set_strict_mode(False)
+        parser = bibtex.Parser()
+        bib_data = parser.parse_file(str(self.filename))
+        records = self._parse_records_dict(records_dict=bib_data.entries)
+
+        drop_empty_fields(records=records)
+        resolve_crossref(records=records)
+        records = dict(sorted(records.items()))
+
+        return list(records.values())

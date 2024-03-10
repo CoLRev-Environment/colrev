@@ -260,6 +260,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
             self._remove_duplicates(records=records)
             return records
