@@ -16,7 +16,6 @@ from git import Repo
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors

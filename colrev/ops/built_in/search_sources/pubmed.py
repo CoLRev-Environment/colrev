@@ -24,7 +24,6 @@ from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_table
 import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES

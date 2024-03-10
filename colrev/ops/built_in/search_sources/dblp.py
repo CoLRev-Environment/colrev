@@ -19,7 +19,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 import colrev.settings

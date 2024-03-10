@@ -15,7 +15,6 @@ from pyalex import Works
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues

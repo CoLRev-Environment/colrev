@@ -14,7 +14,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
 import colrev.record
 from colrev.constants import Fields
 

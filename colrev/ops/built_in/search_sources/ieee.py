@@ -13,8 +13,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.ieee_api
-import colrev.ops.load_utils_ris
-import colrev.ops.load_utils_table
 import colrev.ops.prep
 import colrev.ops.search
 import colrev.record

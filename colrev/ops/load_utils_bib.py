@@ -1,15 +1,6 @@
 #! /usr/bin/env python
 """Convenience functions to load bib files
 
-Usage::
-
-    import colrev.ops.load_utils_bib
-
-    bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-        filename=self.search_source.filename,
-        logger=load_operation.review_manager.logger,
-    )
-    records = bib_loader.load()
 
     Example BibTeX record::
 

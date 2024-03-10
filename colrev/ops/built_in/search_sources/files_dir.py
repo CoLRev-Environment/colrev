@@ -19,7 +19,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
-import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id

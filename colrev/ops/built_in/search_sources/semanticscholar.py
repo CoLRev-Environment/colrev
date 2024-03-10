@@ -25,7 +25,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.built_in.search_sources.semanticscholar_utils as connector_utils
 import colrev.ops.load
-import colrev.ops.load_utils_bib
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors

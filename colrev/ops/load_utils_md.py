@@ -1,22 +1,6 @@
 #! /usr/bin/env python
 """Load conversion of reference sections (bibliographies) in md-documents based on GROBID
 
-Usage::
-
-    import colrev.ops.load_utils_md
-    from colrev.constants import Fields
-
-    load_operation.ensure_append_only(file=self.source.filename)
-
-    md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-        filename=self.search_source.filename,
-        logger=review_manager.logger,
-    )
-
-    # Note : fixes can be applied before each of the following steps
-
-    records = md_loader.load()
-
 Example markdown reference section::
 
     # References

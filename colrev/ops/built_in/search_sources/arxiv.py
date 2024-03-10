@@ -17,7 +17,6 @@ from dacite import from_dict
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields

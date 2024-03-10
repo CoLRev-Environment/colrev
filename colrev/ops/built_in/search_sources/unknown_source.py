@@ -17,9 +17,7 @@ from rapidfuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.load_utils_md
-import colrev.ops.load_utils_ris
+import colrev.ops.load_utils
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
@@ -424,11 +422,10 @@ class UnknownSearchSource(JsonSchemaMixin):
     def _load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
         load_operation.ensure_append_only(file=self.search_source.filename)
 
-        md_loader = colrev.ops.load_utils_md.MarkdownLoader(
+        records = colrev.ops.load_utils.load(
             filename=self.search_source.filename,
             logger=load_operation.review_manager.logger,
         )
-        records = md_loader.load()
         return records
 
     def _load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
