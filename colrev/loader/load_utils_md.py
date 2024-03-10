@@ -17,7 +17,7 @@ from pathlib import Path
 
 import requests
 
-import colrev.ops.load_utils_bib
+import colrev.loader.load_utils_bib
 import colrev.review_manager
 from colrev.constants import Fields
 
@@ -67,7 +67,7 @@ class MarkdownLoader:
             ind += 1
             data = data + "\n" + ret.text.replace("{-1,", "{" + str(ind) + ",")
 
-        records_dict = colrev.ops.load_utils.loads(
+        records_dict = colrev.loader.load_utils.loads(
             load_string=data,
             implementation="bib",
             logger=self.logger,

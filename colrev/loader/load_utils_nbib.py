@@ -28,7 +28,7 @@ import typing
 from pathlib import Path
 from typing import Callable
 
-import colrev.ops.loader
+import colrev.loader.loader
 
 
 class NextLine(Exception):
@@ -39,7 +39,7 @@ class ParseError(Exception):
     """Parsing error"""
 
 
-class NBIBLoader(colrev.ops.loader.Loader):
+class NBIBLoader(colrev.loader.loader.Loader):
     """Loads nbib files"""
 
     PATTERN = r"^[A-Z]{2,4}( ){1,2}- "

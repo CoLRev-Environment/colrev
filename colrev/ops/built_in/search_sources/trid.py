@@ -186,7 +186,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="AN",
             entrytype_setter=entrytype_setter,

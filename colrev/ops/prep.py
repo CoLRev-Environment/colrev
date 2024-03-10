@@ -503,7 +503,7 @@ class Prep(colrev.operation.Operation):
 
     def _complete_resumed_operation(self, *, prepared_records: list) -> None:
         if self.temp_records.is_file():
-            temp_recs = colrev.ops.load_utils.load(
+            temp_recs = colrev.loader.load_utils.load(
                 filename=self.temp_records,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
@@ -719,7 +719,7 @@ class Prep(colrev.operation.Operation):
         if self.current_temp_records.is_file():
             # combine and remove redundant records
 
-            cur_temp_recs = colrev.ops.load_utils.load(
+            cur_temp_recs = colrev.loader.load_utils.load(
                 filename=self.current_temp_records,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
@@ -728,7 +728,7 @@ class Prep(colrev.operation.Operation):
 
             temp_recs = {}
             if self.temp_records.is_file():
-                temp_recs = colrev.ops.load_utils.load(
+                temp_recs = colrev.loader.load_utils.load(
                     filename=self.temp_records,
                     logger=self.review_manager.logger,
                     force_mode=self.review_manager.force_mode,
@@ -744,7 +744,7 @@ class Prep(colrev.operation.Operation):
 
         if self.temp_records.is_file():
 
-            temp_recs = colrev.ops.load_utils.load(
+            temp_recs = colrev.loader.load_utils.load(
                 filename=self.temp_records,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
@@ -832,7 +832,7 @@ class Prep(colrev.operation.Operation):
         self, *, debug_ids: str, debug_file: Optional[Path] = None
     ) -> dict:
         if debug_file:
-            records_dict = colrev.ops.load_utils.load(
+            records_dict = colrev.loader.load_utils.load(
                 filename=debug_file,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,

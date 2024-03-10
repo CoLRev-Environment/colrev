@@ -15,7 +15,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.ops.load_utils_bib import BIBLoader
+from colrev.loader.load_utils_bib import BIBLoader
 
 
 class Status(colrev.operation.Operation):

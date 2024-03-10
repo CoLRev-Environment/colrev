@@ -134,7 +134,7 @@ class Sync:
         self.logger.info("References in bib: %s", len(ids_in_bib))
 
         if src.suffix == ".bib":
-            refs_in_src = colrev.ops.load_utils.load(
+            refs_in_src = colrev.loader.load_utils.load(
                 filename=src,
                 logger=self.logger,
                 force_mode=True,
@@ -195,7 +195,7 @@ class Sync:
 
         if Path("references.bib").is_file():
 
-            records = colrev.ops.load_utils.load(
+            records = colrev.loader.load_utils.load(
                 filename=Path("references.bib"),
                 logger=self.logger,
                 force_mode=True,
@@ -273,7 +273,7 @@ class Sync:
             records = []
         else:
 
-            records_dict = colrev.ops.load_utils.load(
+            records_dict = colrev.loader.load_utils.load(
                 filename=references_file,
                 logger=self.logger,
                 force_mode=True,

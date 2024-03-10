@@ -723,7 +723,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="PMID",
             entrytype_setter=entrytype_setter,
@@ -739,7 +739,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             return self._load_csv()
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils.load(
+            records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
             )

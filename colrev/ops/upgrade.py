@@ -69,7 +69,7 @@ class Upgrade(colrev.operation.Operation):
         Returns:
             dict: The loaded records dictionary.
         """
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=Path("data/records.bib"),
             logger=self.review_manager.logger,
             force_mode=self.review_manager.force_mode,

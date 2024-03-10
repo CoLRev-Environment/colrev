@@ -111,7 +111,7 @@ class Trace(colrev.operation.Operation):
                     + f" {commit_message_first_line} (by {commit.author.name})"
                 )
 
-            records_dict = colrev.ops.load_utils.loads(
+            records_dict = colrev.loader.load_utils.loads(
                 load_string=filecontents.decode("utf-8"),
                 implementation="bib",
                 logger=self.review_manager.logger,

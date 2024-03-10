@@ -19,13 +19,13 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # only supports enl
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("table.ptvc"),
         )
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("non-existent.enl"),
         )
 
@@ -104,7 +104,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("ais.txt"),
     )
 
-    records = colrev.ops.load_utils.load(
+    records = colrev.loader.load_utils.load(
         filename=Path("ais.txt"),
         unique_id_field="INCREMENTAL",
         entrytype_setter=entrytype_setter,

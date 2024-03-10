@@ -19,9 +19,9 @@ from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils
+import colrev.loader.load_utils_bib
 import colrev.operation
-import colrev.ops.load_utils
-import colrev.ops.load_utils_bib
 import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
@@ -116,12 +116,12 @@ class Dataset:
 
         current_origin_states_dict = {}
         if records_string != "":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            bib_loader = colrev.loader.load_utils_bib.BIBLoader(
                 load_string=records_string,
                 logger=self.review_manager.logger,
             )
         else:
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            bib_loader = colrev.loader.load_utils_bib.BIBLoader(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
             )
@@ -181,7 +181,7 @@ class Dataset:
                 current_commit.tree / self.RECORDS_FILE_RELATIVE_GIT
             ).data_stream.read()
 
-            records_dict = colrev.ops.load_utils.loads(
+            records_dict = colrev.loader.load_utils.loads(
                 load_string=filecontents.decode("utf-8", "replace"),
                 implementation="bib",
                 logger=self.review_manager.logger,
@@ -216,7 +216,7 @@ class Dataset:
         if header_only:
             # Note : currently not parsing screening_criteria to settings.ScreeningCriterion
             # to optimize performance
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
+            bib_loader = colrev.loader.load_utils_bib.BIBLoader(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
             )
@@ -224,7 +224,7 @@ class Dataset:
 
         if self.records_file.is_file():
 
-            records_dict = colrev.ops.load_utils.load(
+            records_dict = colrev.loader.load_utils.load(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
             )

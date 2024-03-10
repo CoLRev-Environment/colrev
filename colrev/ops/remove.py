@@ -42,7 +42,7 @@ class Remove(colrev.operation.Operation):
 
                     filepath = self.review_manager.search_dir / Path(file)
 
-                    origin_records = colrev.ops.load_utils.load(
+                    origin_records = colrev.loader.load_utils.load(
                         filename=filepath,
                         logger=self.review_manager.logger,
                         force_mode=self.review_manager.force_mode,

@@ -56,7 +56,7 @@ class Validate(colrev.operation.Operation):
                 # To skip the same commit
                 found_target_commit = True
                 continue
-            prior_records_dict = colrev.ops.load_utils.loads(
+            prior_records_dict = colrev.loader.load_utils.loads(
                 load_string=filecontents.decode("utf-8"),
                 implementation="bib",
                 logger=self.review_manager.logger,
@@ -289,7 +289,7 @@ class Validate(colrev.operation.Operation):
         prior_records = {}
         for commit, filecontents in list(revlist):
             if found:  # load the records_file_relative in the following commit
-                prior_records = colrev.ops.load_utils.loads(
+                prior_records = colrev.loader.load_utils.loads(
                     load_string=filecontents.decode("utf-8"),
                     implementation="bib",
                     logger=self.review_manager.logger,
@@ -297,7 +297,7 @@ class Validate(colrev.operation.Operation):
                 )
                 break
             if commit == target_commit:
-                records = colrev.ops.load_utils.loads(
+                records = colrev.loader.load_utils.loads(
                     load_string=filecontents.decode("utf-8"),
                     implementation="bib",
                     logger=self.review_manager.logger,
@@ -526,7 +526,7 @@ class Validate(colrev.operation.Operation):
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_branch_1 = colrev.ops.load_utils.loads(
+            records_branch_1 = colrev.loader.load_utils.loads(
                 load_string=load_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
@@ -538,7 +538,7 @@ class Validate(colrev.operation.Operation):
                 .data_stream.read()
                 .decode("utf-8")
             )
-            records_branch_2 = colrev.ops.load_utils.loads(
+            records_branch_2 = colrev.loader.load_utils.loads(
                 load_string=load_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
@@ -548,7 +548,7 @@ class Validate(colrev.operation.Operation):
             load_str = (
                 (commit.tree / records_file_path).data_stream.read().decode("utf-8")
             )
-            records_reconciled = colrev.ops.load_utils.loads(
+            records_reconciled = colrev.loader.load_utils.loads(
                 load_string=load_str,
                 implementation="bib",
                 logger=self.review_manager.logger,

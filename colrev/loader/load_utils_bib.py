@@ -39,9 +39,6 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 
 
-# pylint: disable=too-few-public-methods
-
-
 class BIBLoader:
     """Loads BibTeX files"""
 

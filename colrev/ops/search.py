@@ -208,7 +208,7 @@ class Search(colrev.operation.Operation):
             print(f"{source.filename.suffix} not yet supported")
             return
 
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=source.filename,
             logger=self.review_manager.logger,
             force_mode=self.review_manager.force_mode,

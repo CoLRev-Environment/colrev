@@ -353,7 +353,7 @@ class ERICSearchSource(JsonSchemaMixin):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="OID",
             entrytype_setter=entrytype_setter,
@@ -370,7 +370,7 @@ class ERICSearchSource(JsonSchemaMixin):
             return self._load_nbib()
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils.load(
+            records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
             )

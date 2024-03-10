@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils
-import colrev.ops.load_utils_bib
+import colrev.loader.load_utils
+import colrev.loader.load_utils_bib
 import colrev.review_manager
 import colrev.settings
 
@@ -18,19 +18,19 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     Path("non-bib-file.bib").write_text("This is not a bib file.")
     with pytest.raises(colrev_exceptions.UnsupportedImportFormatError):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("non-bib-file.bib"),
         )
 
     # only supports bib
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("table.ptvc"),
         )
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("non-existent.bib"),
         )
 
@@ -39,7 +39,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/") / Path("bib_tests.bib"),
     )
 
-    records = colrev.ops.load_utils.load(
+    records = colrev.loader.load_utils.load(
         filename=Path("data/search/bib_tests.bib"),
     )
 

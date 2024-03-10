@@ -150,7 +150,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
             test_records_dict[Path(file_path.name)] = {}
 
         for path in test_records_dict:
-            test_records_dict[path] = colrev.ops.load_utils.load(
+            test_records_dict[path] = colrev.loader.load_utils.load(
                 filename=bib_files_to_index.joinpath(path),
                 logger=review_manager.logger,
                 check_bib_file=False,
@@ -341,7 +341,7 @@ def get_local_index_test_records_dict(  # type: ignore
         local_index_test_records_dict[Path(file_path.name)] = {}
 
     for path in local_index_test_records_dict:
-        loaded_records = colrev.ops.load_utils.load(
+        loaded_records = colrev.loader.load_utils.load(
             filename=bib_files_to_index.joinpath(path),
             check_bib_file=False,
         )

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils
+import colrev.loader.load_utils
 from colrev.constants import Fields
 
 
@@ -37,7 +37,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # only supports csv/xlsx
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("table.ptvc"),
             unique_id_field="pmid",
             entrytype_setter=entrytype_setter,
@@ -46,7 +46,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("non-existent.xlsx"),
             unique_id_field="INCREMENTAL",
             entrytype_setter=entrytype_setter,
@@ -59,7 +59,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("table.csv"),
     )
 
-    entries = colrev.ops.load_utils.load(
+    entries = colrev.loader.load_utils.load(
         filename=Path("table.csv"),
         unique_id_field="PMID",
         entrytype_setter=entrytype_setter,
@@ -86,7 +86,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         source=Path("load_utils/table.xlsx"),
         target=Path("table.xlsx"),
     )
-    colrev.ops.load_utils.load(
+    colrev.loader.load_utils.load(
         filename=Path("table.xlsx"),
         unique_id_field="INCREMENTAL",
         entrytype_setter=entrytype_setter,

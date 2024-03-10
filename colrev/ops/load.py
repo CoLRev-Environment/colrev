@@ -8,8 +8,8 @@ from pathlib import Path
 
 import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils_formatter
 import colrev.operation
-import colrev.ops.load_utils_formatter
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors
@@ -36,7 +36,7 @@ class Load(colrev.operation.Operation):
         self.quality_model = review_manager.get_qm()
         self.package_manager = self.review_manager.get_package_manager()
 
-        self.load_formatter = colrev.ops.load_utils_formatter.LoadFormatter()
+        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")

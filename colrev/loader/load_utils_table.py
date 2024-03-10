@@ -17,13 +17,13 @@ from typing import Callable
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.loader
+import colrev.loader.loader
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
 
-class TableLoader(colrev.ops.loader.Loader):
+class TableLoader(colrev.loader.loader.Loader):
     """Loads csv and Excel files (based on pandas)"""
 
     def __init__(

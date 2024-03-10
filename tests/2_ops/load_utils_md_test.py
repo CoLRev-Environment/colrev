@@ -15,14 +15,14 @@ def test_load_md(  # type: ignore
 
     # only supports md
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("table.ptvc"),
             logger=logging.getLogger(__name__),
         )
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("non-existent.md"),
             logger=logging.getLogger(__name__),
         )
@@ -43,7 +43,7 @@ def test_load_md(  # type: ignore
         target=Path("data/search/") / Path("references.md"),
     )
 
-    records = colrev.ops.load_utils.load(
+    records = colrev.loader.load_utils.load(
         filename=search_source.filename,
         logger=logging.getLogger(__name__),
     )

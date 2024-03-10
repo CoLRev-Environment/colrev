@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils
+import colrev.loader.load_utils
 import colrev.review_manager
 import colrev.settings
 
@@ -17,7 +17,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
     os.chdir(tmp_path)
 
     with pytest.raises(colrev_exceptions.ImportException):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("data/search/bib_tests.bib"),
             logger=logging.getLogger(__name__),
         )
@@ -26,7 +26,7 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/") / Path("bib_tests.xy"),
     )
     with pytest.raises(NotImplementedError):
-        colrev.ops.load_utils.load(
+        colrev.loader.load_utils.load(
             filename=Path("data/search/bib_tests.xy"),
             logger=logging.getLogger(__name__),
         )
@@ -36,9 +36,9 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         target=Path("data/search/") / Path("bib_tests.bib"),
     )
 
-    colrev.ops.load_utils.load(
+    colrev.loader.load_utils.load(
         filename=Path("data/search/bib_tests.bib"), logger=logging.getLogger(__name__)
     )
 
     with pytest.raises(NotImplementedError):
-        colrev.ops.load_utils.loads(load_string="content...", implementation="xy")
+        colrev.loader.load_utils.loads(load_string="content...", implementation="xy")

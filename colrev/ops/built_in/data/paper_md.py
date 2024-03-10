@@ -512,14 +512,14 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if filedata:
 
-            non_sample_records = colrev.ops.load_utils.load(
+            non_sample_records = colrev.loader.load_utils.load(
                 filename=self.non_sample_references,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
                 check_bib_file=False,
             )
 
-            records_to_add = colrev.ops.load_utils.loads(
+            records_to_add = colrev.loader.load_utils.loads(
                 load_string=filedata.decode("utf-8"),
                 implementation="bib",
                 logger=self.review_manager.logger,

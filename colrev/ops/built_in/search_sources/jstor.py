@@ -184,7 +184,7 @@ class JSTORSearchSource(JsonSchemaMixin):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             id_labeler=id_labeler,
             entrytype_setter=entrytype_setter,

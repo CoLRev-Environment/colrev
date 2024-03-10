@@ -148,7 +148,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        records = colrev.ops.load_utils.load(
+        records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="Item DOI",
             entrytype_setter=entrytype_setter,

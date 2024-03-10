@@ -60,7 +60,7 @@ class GeneralOriginFeed:
         if not self.feed_file.is_file():
             self.feed_records = {}
         else:
-            self.feed_records = colrev.ops.load_utils.loads(
+            self.feed_records = colrev.loader.load_utils.loads(
                 load_string=self.feed_file.read_text(encoding="utf8"),
                 implementation="bib",
                 logger=self.review_manager.logger,
@@ -181,7 +181,7 @@ class GeneralOriginFeed:
 
         bibtex_str = to_string(records_dict={record_a[Fields.ID]: record_a})
         record_a = list(
-            colrev.ops.load_utils.loads(
+            colrev.loader.load_utils.loads(
                 load_string=bibtex_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
@@ -191,7 +191,7 @@ class GeneralOriginFeed:
 
         bibtex_str = to_string(records_dict={record_b[Fields.ID]: record_b})
         record_b = list(
-            colrev.ops.load_utils.loads(
+            colrev.loader.load_utils.loads(
                 load_string=bibtex_str,
                 implementation="bib",
                 logger=self.review_manager.logger,

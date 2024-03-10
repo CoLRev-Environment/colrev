@@ -3,13 +3,13 @@
 
 Usage::
 
-    import colrev.ops.load_utils
+    import colrev.loader.load_utils
 
     # Files
-    records = colrev.ops.load_utils.load(filename=filename, logger=logger)
+    records = colrev.loader.load_utils.load(filename=filename, logger=logger)
 
     # Strings
-    records = colrev.ops.load_utils.loads(load_str=load_str, logger=logger)
+    records = colrev.loader.load_utils.loads(load_str=load_str, logger=logger)
 
     returns: records (dict)
 
@@ -20,12 +20,12 @@ import tempfile
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.load_utils_enl
-import colrev.ops.load_utils_md
-import colrev.ops.load_utils_nbib
-import colrev.ops.load_utils_ris
-import colrev.ops.load_utils_table
+import colrev.loader.load_utils_bib
+import colrev.loader.load_utils_enl
+import colrev.loader.load_utils_md
+import colrev.loader.load_utils_nbib
+import colrev.loader.load_utils_ris
+import colrev.loader.load_utils_table
 
 
 def load(filename: Path, **kw) -> dict:  # type: ignore
@@ -39,18 +39,18 @@ def load(filename: Path, **kw) -> dict:  # type: ignore
     # also remove if not filename.name.endswith(".bib"): -> covered in load()
 
     if filename.suffix == ".bib":
-        parser = colrev.ops.load_utils_bib.BIBLoader  # type: ignore
+        parser = colrev.loader.load_utils_bib.BIBLoader  # type: ignore
     elif filename.suffix in [".csv", ".xls", ".xlsx"]:
-        parser = colrev.ops.load_utils_table.TableLoader  # type: ignore
+        parser = colrev.loader.load_utils_table.TableLoader  # type: ignore
     elif filename.suffix == ".ris":
-        parser = colrev.ops.load_utils_ris.RISLoader  # type: ignore
+        parser = colrev.loader.load_utils_ris.RISLoader  # type: ignore
     # TODO
     elif filename.suffix in [".enl", ".txt"]:
-        parser = colrev.ops.load_utils_enl.ENLLoader  # type: ignore
+        parser = colrev.loader.load_utils_enl.ENLLoader  # type: ignore
     elif filename.suffix == ".md":
-        parser = colrev.ops.load_utils_md.MarkdownLoader  # type: ignore
+        parser = colrev.loader.load_utils_md.MarkdownLoader  # type: ignore
     elif filename.suffix == ".nbib":
-        parser = colrev.ops.load_utils_nbib.NBIBLoader  # type: ignore
+        parser = colrev.loader.load_utils_nbib.NBIBLoader  # type: ignore
     else:
         raise NotImplementedError
 
@@ -62,7 +62,7 @@ def loads(load_string: str, *, implementation: str, **kw) -> dict:  # type: igno
     """Load a string and return records as a dictionary"""
 
     if implementation == "bib":
-        parser = colrev.ops.load_utils_bib.BIBLoader
+        parser = colrev.loader.load_utils_bib.BIBLoader
         with tempfile.NamedTemporaryFile(
             mode="wb", delete=False, suffix=".bib"
         ) as temp_file:

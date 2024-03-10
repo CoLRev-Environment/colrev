@@ -212,7 +212,7 @@ class PDFPrepMan(colrev.operation.Operation):
         if Path("data/pdf-prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
 
-            records_changed = colrev.ops.load_utils.load(
+            records_changed = colrev.loader.load_utils.load(
                 filename=Path("data/pdf-prep-records.bib"),
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,

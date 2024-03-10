@@ -324,7 +324,7 @@ class Repare(colrev.operation.Operation):
             if search_source.endpoint != "colrev.local_index":
                 continue
 
-            curation_recs = colrev.ops.load_utils.load(
+            curation_recs = colrev.loader.load_utils.load(
                 filename=search_source.filename,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,
@@ -407,7 +407,7 @@ class Repare(colrev.operation.Operation):
 
                 while line:
                     if line == "\n":
-                        records = colrev.ops.load_utils.loads(
+                        records = colrev.loader.load_utils.loads(
                             load_string=record_str,
                             implementation="bib",
                             logger=self.review_manager.logger,

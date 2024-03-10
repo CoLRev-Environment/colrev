@@ -145,7 +145,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if not self.search_source.filename.is_file():
             return
 
-        search_rd = colrev.ops.load_utils.load(
+        search_rd = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             logger=self.review_manager.logger,
         )
@@ -747,7 +747,7 @@ class FilesSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            records = colrev.ops.load_utils.load(
+            records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
             )

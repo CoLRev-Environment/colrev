@@ -418,7 +418,7 @@ class LocalIndex:
 
     def _get_record_from_row(self, *, row: dict) -> dict:
 
-        records_dict = colrev.ops.load_utils.loads(
+        records_dict = colrev.loader.load_utils.loads(
             load_string=row["bibtex"],
             implementation="bib",
         )
@@ -472,7 +472,7 @@ class LocalIndex:
                     depth=1,
                 )
 
-            ret = colrev.ops.load_utils.load(
+            ret = colrev.loader.load_utils.load(
                 filename=target_path / Path("data/records.bib"),
                 check_bib_file=False,
             )

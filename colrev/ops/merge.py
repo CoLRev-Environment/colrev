@@ -124,7 +124,7 @@ class Merge(colrev.operation.Operation):
                 # stage == 3: other branch
                 if 2 == stage:
 
-                    current_branch_records = colrev.ops.load_utils.loads(
+                    current_branch_records = colrev.loader.load_utils.loads(
                         load_string=blob.data_stream.read().decode("utf-8"),
                         implementation="bib",
                         logger=self.review_manager.logger,
@@ -133,7 +133,7 @@ class Merge(colrev.operation.Operation):
                     )
 
                 elif 3 == stage:
-                    other_branch_records = colrev.ops.load_utils.loads(
+                    other_branch_records = colrev.loader.load_utils.loads(
                         load_string=blob.data_stream.read().decode("utf-8"),
                         implementation="bib",
                         logger=self.review_manager.logger,

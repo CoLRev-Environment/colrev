@@ -246,7 +246,7 @@ class PDFGet(colrev.operation.Operation):
 
             corresponding_origin = str(source.filename)
 
-            source_records_dict = colrev.ops.load_utils.load(
+            source_records_dict = colrev.loader.load_utils.load(
                 filename=source.filename,
                 logger=self.review_manager.logger,
                 force_mode=self.review_manager.force_mode,

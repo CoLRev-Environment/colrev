@@ -32,7 +32,7 @@ import typing
 from pathlib import Path
 from typing import Callable
 
-import colrev.ops.loader
+import colrev.loader.loader
 
 
 class NextLine(Exception):
@@ -43,7 +43,7 @@ class ParseError(Exception):
     """Parsing error"""
 
 
-class ENLLoader(colrev.ops.loader.Loader):
+class ENLLoader(colrev.loader.loader.Loader):
     """Loads enl files"""
 
     PATTERN = r"^%[A-Z]{1,3} "

@@ -1,6 +1,6 @@
 import unittest
 
-from colrev.ops.load_utils_formatter import LoadFormatter
+from colrev.loader.load_utils_formatter import LoadFormatter
 from colrev.record import Fields
 from colrev.record import Record
 from colrev.record import RecordState
