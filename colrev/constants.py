@@ -25,6 +25,19 @@ class ENTRYTYPES:
     ONLINE = "online"
     CONFERENCE = "conference"
 
+    @classmethod
+    def get_all(cls) -> list:
+        """Get all ENTRYTYPES"""
+        return [
+            cls.ARTICLE,
+            cls.INPROCEEDINGS,
+            cls.BOOK,
+            cls.INBOOK,
+            cls.TECHREPORT,
+            cls.PHDTHESIS,
+            cls.MISC,
+        ]
+
 
 class Fields:
     """Constant field names"""
@@ -151,6 +164,8 @@ class FieldSet:
             Fields.SERIES,
             Fields.LANGUAGE,
             Fields.DATE,
+            Fields.SCHOOL,
+            Fields.ADDRESS,
         ]
     )
     """Standardized field keys"""

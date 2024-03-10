@@ -1,29 +1,6 @@
 #! /usr/bin/env python
 """Convenience functions to load tabular files (csv, xlsx)
 
-This module provides utility functions to load data from tabular files (e.g., CSV and Excel).
-The data is loaded using pandas and then converted into a dictionary of records.
-The records are then preprocessed to ensure they are in the correct format for the CoLRev system.
-
-Usage::
-
-    import colrev.ops.load_utils_table
-    from colrev.constants import Fields
-
-    # If unique_id_field == "":
-    load_operation.ensure_append_only(file=filename)
-
-    table_loader = colrev.ops.load_utils_table.TableLoader(
-        filename=self.search_source.filename,
-        unique_id_field="ID",
-        force_mode=False,
-        logger=review_manager.logger,
-    )
-
-    # Note : fixes can be applied before each of the following steps
-
-    records = table_loader.load_table_entries()
-
 Example csv records::
 
     title;author;year;
@@ -33,58 +10,51 @@ Example csv records::
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
-from colrev.constants import Fields
-
+import colrev.ops.loader
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
 
 
-class TableLoader:
+class TableLoader(colrev.ops.loader.Loader):
     """Loads csv and Excel files (based on pandas)"""
 
     def __init__(
         self,
         *,
         filename: Path,
+        entrytype_setter: Callable,
+        field_mapper: Callable,
+        id_labeler: typing.Optional[Callable] = None,
         unique_id_field: str = "",
-        logger: logging.Logger,
-        force_mode: bool = False,
+        logger: typing.Optional[logging.Logger] = None,
     ):
-        if not filename.name.endswith((".csv", ".xls", ".xlsx")):
-            raise colrev_exceptions.ImportException(
-                f"File not supported by TableLoader: {filename.name}"
-            )
-        if not filename.exists():
-            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
-
         self.filename = filename
         self.unique_id_field = unique_id_field
+        assert id_labeler is not None or unique_id_field != ""
+        self.id_labeler = id_labeler
+        self.entrytype_setter = entrytype_setter
+        self.field_mapper = field_mapper
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
         self.logger = logger
-        self.force_mode = force_mode
+        super().__init__(
+            filename=filename,
+            id_labeler=id_labeler,
+            unique_id_field=unique_id_field,
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+        )
 
-    def _get_records_dict(self, *, records: list) -> dict:
-        next_id = 1
-        for record_dict in records:
-            if self.unique_id_field != "" and self.unique_id_field in record_dict:
-                record_dict[Fields.ID] = record_dict[self.unique_id_field]
-            else:
-                record_dict[Fields.ID] = str(next_id + 1).zfill(6)
-                next_id += 1
-            for key, value in record_dict.items():
-                record_dict[key] = str(value)
-
-        records_dict = {r[Fields.ID]: r for r in records}
-        return records_dict
-
-    def load_table_entries(self) -> dict:
-        """Load table entries from the source"""
-
+    def load_records_list(self) -> list:
         try:
             if self.filename.name.endswith(".csv"):
                 data = pd.read_csv(self.filename)
@@ -98,14 +68,5 @@ class TableLoader:
                 f"Error: Not a valid file? {self.filename.name}"
             ) from exc
 
-        data.columns = data.columns.str.replace(" ", "_")
-        data.columns = data.columns.str.replace("-", "_")
-        data.columns = data.columns.str.replace(";", "_")
-        data.columns = [
-            col.lower() if col not in ["ID", "ENTRYTYPE"] else col
-            for col in data.columns
-        ]
-        records_value_list = data.to_dict("records")
-        records_dict = self._get_records_dict(records=records_value_list)
-
-        return records_dict
+        records_list = data.to_dict("records")
+        return records_list

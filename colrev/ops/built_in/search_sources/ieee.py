@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+import pandas as pd
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -344,81 +345,127 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return record
 
     def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
-        entrytype_map = {
-            "JOUR": ENTRYTYPES.ARTICLE,
-            "CONF": ENTRYTYPES.INPROCEEDINGS,
-        }
-        key_map = {
-            ENTRYTYPES.ARTICLE: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "T2": Fields.JOURNAL,
-                "AB": Fields.ABSTRACT,
-                "VL": Fields.VOLUME,
-                "IS": Fields.NUMBER,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "UR": Fields.URL,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.INPROCEEDINGS: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "T2": Fields.BOOKTITLE,
-                "DO": Fields.DOI,
-                "SP": Fields.PAGES,
-            },
-        }
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["TY"] == "JOUR":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["TY"] == "CONF":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "T2": Fields.JOURNAL,
+                    "AB": Fields.ABSTRACT,
+                    "VL": Fields.VOLUME,
+                    "IS": Fields.NUMBER,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "UR": Fields.URL,
+                    "SN": Fields.ISSN,
+                },
+                ENTRYTYPES.INPROCEEDINGS: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "T2": Fields.BOOKTITLE,
+                    "DO": Fields.DOI,
+                    "SN": Fields.ISSN,
+                },
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if "SP" in record_dict and "EP" in record_dict:
+                record_dict[Fields.PAGES] = (
+                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+                )
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("TY", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("DB", None)
+            record_dict.pop("C1", None)
+            record_dict.pop("T3", None)
+            record_dict.pop("AD", None)
+            record_dict.pop("CY", None)
+            record_dict.pop("M3", None)
+            record_dict.pop("EP", None)
+            record_dict.pop("Y1", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("JA", None)
+            record_dict.pop("JO", None)
+            record_dict.pop("VO", None)
+            record_dict.pop("ER", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
 
         load_operation.ensure_append_only(file=self.search_source.filename)
-        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+        records = colrev.ops.load_utils.load(
             filename=self.search_source.filename,
-            list_fields={"AU": " and "},
-            force_mode=False,
+            unique_id_field="INCREMENTAL",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
             logger=self.review_manager.logger,
         )
-        records = ris_loader.load_ris_records()
-
-        for record_dict in records.values():
-            ris_loader.apply_entrytype_mapping(
-                record_dict=record_dict, entrytype_map=entrytype_map
-            )
-
-            # fixes
-            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                if "T1" in record_dict and "TI" not in record_dict:
-                    record_dict["TI"] = record_dict.pop("T1")
-
-            ris_loader.map_keys(record_dict=record_dict, key_map=key_map)
 
         return records
 
-    def _fix_csv_records(self, *, records: dict) -> None:
-        for record in records.values():
-            record["accession_number"] = record["pdf_link"].split("=")[-1]
-            record[Fields.FULLTEXT] = record.pop("pdf_link")
-            if "article_citation_count" in record:
-                record[Fields.CITED_BY] = record.pop("article_citation_count")
-            if "author_keywords" in record:
-                record[Fields.KEYWORDS] = record.pop("author_keywords")
-            record[Fields.TITLE] = record.pop("document_title")
-            if "start_page" in record and "end_page" in record:
-                record[Fields.PAGES] = record["start_page"] + "--" + record["end_page"]
-                del record["start_page"]
-                del record["end_page"]
-            if "isbns" in record:
-                record[Fields.ISBN] = record.pop("isbns")
-            if record["document_identifier"] == "IEEE Conferences":
-                record[Fields.ENTRYTYPE] = "inproceedings"
-                record[Fields.BOOKTITLE] = record.pop("publication_title")
-            elif record["document_identifier"] == "IEEE Journals":
-                record[Fields.ENTRYTYPE] = "article"
-                record[Fields.JOURNAL] = record.pop("publication_title")
-            elif record["document_identifier"] == "IEEE Standards":
-                record[Fields.ENTRYTYPE] = "techreport"
-                record["key"] = record.pop("publication_title")
+    def _load_csv(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["Category"] == "Magazine":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["Category"] == "Conference Publication":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+            record_dict[Fields.TITLE] = record_dict.pop("Title", "")
+            record_dict[Fields.AUTHOR] = record_dict.pop("Authors", "")
+            record_dict[Fields.ABSTRACT] = record_dict.pop("Abstract", "")
+            record_dict[Fields.JOURNAL] = record_dict.pop("Publication", "")
+            record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+
+            record_dict.pop("Category", None)
+            record_dict.pop("Affiliations", None)
+
+            for key in list(record_dict.keys()):
+                value = record_dict[key]
+                record_dict[key] = str(value)
+                if value == "" or pd.isna(value):
+                    del record_dict[key]
+
+        records = colrev.ops.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="DOI",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+        return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -427,15 +474,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             return self._load_ris(load_operation)
 
         if self.search_source.filename.suffix == ".csv":
-            table_loader = colrev.ops.load_utils_table.TableLoader(
-                filename=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
-                unique_id_field="accession_number",
-            )
-            records = table_loader.load_table_entries()
-            self._fix_csv_records(records=records)
-            return records
+            return self._load_csv()
 
         raise NotImplementedError
 

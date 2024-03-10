@@ -79,6 +79,12 @@ NO_CUSTOM_SOURCE = None
             Path("abi_inform_proquest_result.bib"),
         ),
         (
+            Path("abi_inform_proquest_ris.ris"),
+            "colrev.abi_inform_proquest",
+            NO_CUSTOM_SOURCE,
+            Path("abi_inform_proquest_ris_result.bib"),
+        ),
+        (
             Path("scopus.bib"),
             "colrev.scopus",
             NO_CUSTOM_SOURCE,
@@ -120,6 +126,18 @@ NO_CUSTOM_SOURCE = None
                 comment="",
             ),
             Path("ieee_result.bib"),
+        ),
+        (
+            Path("ieee_csv.csv"),
+            "colrev.ieee",
+            colrev.settings.SearchSource(
+                endpoint="colrev.ieee",
+                filename=Path("data/search/ieee_csv.csv"),
+                search_type=colrev.settings.SearchType.DB,
+                search_parameters={"scope": {"path": "test"}},
+                comment="",
+            ),
+            Path("ieee_csv_result.bib"),
         ),
         (Path("jstor.ris"), "colrev.jstor", NO_CUSTOM_SOURCE, Path("jstor_result.bib")),
         (Path("trid.ris"), "colrev.trid", NO_CUSTOM_SOURCE, Path("trid_result.bib")),

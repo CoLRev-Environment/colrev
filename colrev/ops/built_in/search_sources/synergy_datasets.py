@@ -333,7 +333,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             records = colrev.ops.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
             for record in records.values():
                 if "pmid" in record:

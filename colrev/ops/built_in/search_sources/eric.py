@@ -299,54 +299,81 @@ class ERICSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def _load_nbib(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if "Journal Articles" in record_dict["PT"]:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "TI": Fields.TITLE,
+                    "AU": Fields.AUTHOR,
+                    "DP": Fields.YEAR,
+                    "JT": Fields.JOURNAL,
+                    "VI": Fields.VOLUME,
+                    "IP": Fields.NUMBER,
+                    "PG": Fields.PAGES,
+                    "AB": Fields.ABSTRACT,
+                    "AID": Fields.DOI,
+                    "ISSN": Fields.ISSN,
+                    "OID": "eric_id",
+                    "OT": Fields.KEYWORDS,
+                    "LA": Fields.LANGUAGE,
+                    "PT": "type",
+                    "LID": "eric_url",
+                }
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("type", None)
+            record_dict.pop("OWN", None)
+            record_dict.pop("SO", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.ops.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="OID",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        nbib_mapping = {
-            ENTRYTYPES.ARTICLE: {
-                "TI": Fields.TITLE,
-                "AU": Fields.AUTHOR,
-                "DP": Fields.YEAR,
-                "JT": Fields.JOURNAL,
-                "VI": Fields.VOLUME,
-                "IP": Fields.NUMBER,
-                "PG": Fields.PAGES,
-                "AB": Fields.ABSTRACT,
-                "AID": Fields.DOI,
-                "ISSN": Fields.ISSN,
-                "OID": "eric_id",
-                "OT": Fields.KEYWORDS,
-                "LA": Fields.LANGUAGE,
-                "PT": "type",
-            }
-        }
-
-        entrytype_map = {
-            "Journal Articles, Reports - Research": ENTRYTYPES.ARTICLE,
-        }
 
         if self.search_source.filename.suffix == ".nbib":
-            nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
-                filename=self.search_source.filename,
-                list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
-                unique_id_field="eric_id",
-                force_mode=load_operation.review_manager.force_mode,
-                logger=load_operation.review_manager.logger,
-            )
-            records = nbib_loader.load_nbib_entries()
-
-            for record_dict in records.values():
-                nbib_loader.apply_entrytype_mapping(
-                    record_dict=record_dict, entrytype_map=entrytype_map
-                )
-                nbib_loader.map_keys(record_dict=record_dict, key_map=nbib_mapping)
-
-            return records
+            return self._load_nbib()
 
         if self.search_source.filename.suffix == ".bib":
             records = colrev.ops.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
             return records
 

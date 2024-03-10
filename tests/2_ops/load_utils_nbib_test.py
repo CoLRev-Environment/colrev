@@ -1,36 +1,89 @@
 #!/usr/bin/env python
 """Tests of the load utils for nbib files"""
-import logging
 import os
 from pathlib import Path
 
 import pytest
 
 import colrev.exceptions as colrev_exceptions
-from colrev.ops.load_utils_nbib import NBIBLoader
+import colrev.ops.load_utils
+from colrev.constants import ENTRYTYPES
+from colrev.constants import Fields
 
 
 def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
     os.chdir(tmp_path)
 
+    def entrytype_setter(record_dict: dict) -> None:
+        if "Journal Articles" in record_dict["PT"]:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+        else:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+    def field_mapper(record_dict: dict) -> None:
+
+        key_maps = {
+            ENTRYTYPES.ARTICLE: {
+                "TI": Fields.TITLE,
+                "AU": Fields.AUTHOR,
+                "DP": Fields.YEAR,
+                "JT": Fields.JOURNAL,
+                "VI": Fields.VOLUME,
+                "IP": Fields.NUMBER,
+                "PG": Fields.PAGES,
+                "AB": Fields.ABSTRACT,
+                "AID": Fields.DOI,
+                "ISSN": Fields.ISSN,
+                "OID": "eric_id",
+                "OT": Fields.KEYWORDS,
+                "LA": Fields.LANGUAGE,
+                "PT": "type",
+                "LID": "eric_url",
+            }
+        }
+
+        key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+        for ris_key in list(record_dict.keys()):
+            if ris_key in key_map:
+                standard_key = key_map[ris_key]
+                record_dict[standard_key] = record_dict.pop(ris_key)
+
+        if Fields.AUTHOR in record_dict and isinstance(
+            record_dict[Fields.AUTHOR], list
+        ):
+            record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+        if Fields.EDITOR in record_dict and isinstance(
+            record_dict[Fields.EDITOR], list
+        ):
+            record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+        if Fields.KEYWORDS in record_dict and isinstance(
+            record_dict[Fields.KEYWORDS], list
+        ):
+            record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+        record_dict.pop("type", None)
+        record_dict.pop("OWN", None)
+        record_dict.pop("SO", None)
+
+        for key, value in record_dict.items():
+            record_dict[key] = str(value)
+
     # only supports nbib
     with pytest.raises(colrev_exceptions.ImportException):
-        nbib_loader = NBIBLoader(
+        colrev.ops.load_utils.load(
             filename=Path("table.ptvc"),
-            list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
             unique_id_field="doi",
-            force_mode=False,
-            logger=logging.getLogger(__name__),
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
         )
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        nbib_loader = NBIBLoader(
+        colrev.ops.load_utils.load(
             filename=Path("non-existent.nbib"),
-            list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
             unique_id_field="doi",
-            force_mode=False,
-            logger=logging.getLogger(__name__),
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
         )
 
     helpers.retrieve_test_file(
@@ -38,52 +91,26 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
         target=Path("test.nbib"),
     )
 
-    nbib_loader = NBIBLoader(
+    entries = colrev.ops.load_utils.load(
         filename=Path("test.nbib"),
-        list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
-        unique_id_field="doi",
-        force_mode=False,
-        logger=logging.getLogger(__name__),
+        unique_id_field="INCREMENTAL",
+        entrytype_setter=entrytype_setter,
+        field_mapper=field_mapper,
     )
-
-    entries = nbib_loader.load_nbib_entries()
 
     assert len(entries) == 1
-    assert entries["000001"]["TI"] == "Paper title"
-    assert entries["000001"]["AU"] == "Smith, Tom and Hunter, Shawn"
-    assert entries["000001"]["OT"] == "Keyword 1, Keyword 2"
-    assert entries["000001"]["JT"] == "Journal Name"
-    assert entries["000001"]["SO"] == "v10 n1 p1-10 2000"
-    assert entries["000001"]["AID"] == "http://dx.doi.org/10.1000/123456789"
-    assert entries["000001"]["OID"] == "EJ1131633"
-    assert entries["000001"]["VI"] == "10"
-    assert entries["000001"]["IP"] == "1"
-    assert entries["000001"]["PG"] == "1-9"
-    assert entries["000001"]["DP"] == "2000"
-    assert entries["000001"]["LID"] == "http://eric.ed.gov/?id=EJ1131633"
-    assert entries["000001"]["AB"] == "Abstract ..."
-    assert entries["000001"]["ISSN"] == "ISSN-1234-4567"
-    assert entries["000001"]["LA"] == "English"
-    assert entries["000001"]["PT"] == "Journal Articles, Reports - Research"
-
-    entrymap = {"Journal Articles, Reports - Research": "article"}
-
-    nbib_loader.apply_entrytype_mapping(
-        record_dict=entries["000001"], entrytype_map=entrymap
-    )
-    key_map = {"article": {"TI": "title", "OID": "doi"}}
-    nbib_loader.map_keys(record_dict=entries["000001"], key_map=key_map)
-    assert entries["000001"]["title"] == "Paper title"
-
-    entries["000001"]["PT"] = "unknown"
-
-    with pytest.raises(NotImplementedError):
-        nbib_loader.apply_entrytype_mapping(
-            record_dict=entries["000001"], entrytype_map=entrymap
-        )
-
-    nbib_loader.force_mode = True
-    nbib_loader.apply_entrytype_mapping(
-        record_dict=entries["000001"], entrytype_map=entrymap
-    )
-    # No error is raised
+    print(entries)
+    assert entries["000001"][Fields.TITLE] == "Paper title"
+    assert entries["000001"][Fields.AUTHOR] == "Smith, Tom and Hunter, Shawn"
+    assert entries["000001"][Fields.KEYWORDS] == "Keyword 1, Keyword 2"
+    assert entries["000001"][Fields.JOURNAL] == "Journal Name"
+    assert entries["000001"][Fields.DOI] == "http://dx.doi.org/10.1000/123456789"
+    assert entries["000001"]["eric_id"] == "EJ1131633"
+    assert entries["000001"][Fields.VOLUME] == "10"
+    assert entries["000001"][Fields.NUMBER] == "1"
+    assert entries["000001"][Fields.PAGES] == "1-9"
+    assert entries["000001"][Fields.YEAR] == "2000"
+    assert entries["000001"]["eric_url"] == "http://eric.ed.gov/?id=EJ1131633"
+    assert entries["000001"][Fields.ABSTRACT] == "Abstract ..."
+    assert entries["000001"][Fields.ISSN] == "ISSN-1234-4567"
+    assert entries["000001"][Fields.LANGUAGE] == "English"

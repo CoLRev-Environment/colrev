@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree  # nosec
 from xml.etree.ElementTree import Element  # nosec
 
+import pandas as pd
 import requests
 import zope.interface
 from dacite import from_dict
@@ -677,93 +678,75 @@ class PubMedSearchSource(JsonSchemaMixin):
         else:
             raise NotImplementedError
 
-    def _table_fields_update(self, *, record_dict: dict) -> None:
+    def _load_csv(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
 
-        record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+        def field_mapper(record_dict: dict) -> None:
+            record_dict[Fields.TITLE] = record_dict.pop("Title", "")
+            record_dict[Fields.JOURNAL] = record_dict.pop("Journal/Book", "")
+            record_dict[Fields.YEAR] = record_dict.pop("Publication Year", "")
+            record_dict[Fields.URL] = record_dict.pop("URL", "")
+            record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+            record_dict["NIHMS_ID"] = record_dict.pop("NIHMS ID", "")
+            record_dict["create_date"] = record_dict.pop("Create Date", "")
 
-        if "authors" in record_dict and Fields.AUTHOR not in record_dict:
-            record_dict[Fields.AUTHOR] = record_dict.pop("authors")
-        record_dict[Fields.AUTHOR] = record_dict[Fields.AUTHOR].replace(", ", " and ")
+            author_list = record_dict.pop("Authors", "").split(", ")
+            for i, author_part in enumerate(author_list):
+                author_field_parts = author_part.split(" ")
+                author_list[i] = (
+                    author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
+                )
+            record_dict[Fields.AUTHOR] = " and ".join(author_list)
 
-        if (
-            "journal/book" in record_dict
-            and Fields.JOURNAL not in record_dict
-            and Fields.DOI in record_dict
-        ):
-            record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
+            if "Citation" in record_dict:
+                details_part = record_dict["Citation"]
+                details_part = details_part[details_part.find(";") + 1 :]
+                details_part = details_part[: details_part.find(".")]
+                if ":" in details_part:
+                    record_dict[Fields.PAGES] = details_part[
+                        details_part.find(":") + 1 :
+                    ]
+                    details_part = details_part[: details_part.find(":")]
+                if "(" in details_part:
+                    record_dict[Fields.NUMBER] = details_part[
+                        details_part.find("(") + 1 : -1
+                    ]
+                    details_part = details_part[: details_part.find("(")]
+                record_dict[Fields.VOLUME] = details_part
 
-        if "publication_year" in record_dict and Fields.YEAR not in record_dict:
-            record_dict[Fields.YEAR] = record_dict.pop("publication_year")
+            record_dict.pop("First Author", None)
+            record_dict.pop("Citation", None)
+
+            for key in list(record_dict.keys()):
+                value = record_dict[key]
+                record_dict[key] = str(value)
+                if value == "" or pd.isna(value):
+                    del record_dict[key]
+
+        records = colrev.ops.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="PMID",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+        return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".csv":
-            table_loader = colrev.ops.load_utils_table.TableLoader(
-                filename=self.search_source.filename,
-                logger=load_operation.review_manager.logger,
-                force_mode=load_operation.review_manager.force_mode,
-                unique_id_field="pmid",
-            )
-            records = table_loader.load_table_entries()
-            self._load_fixes(records=records)
-            for record_dict in records.values():
-                self._table_fields_update(record_dict=record_dict)
-            return records
+            return self._load_csv()
 
         if self.search_source.filename.suffix == ".bib":
             records = colrev.ops.load_utils.load(
                 filename=self.search_source.filename,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
             return records
 
         raise NotImplementedError
-
-    def _load_fixes(
-        self,
-        records: typing.Dict,
-    ) -> None:
-        """Load fixes for Pubmed"""
-
-        for record in records.values():
-            if Fields.AUTHOR in record and record[Fields.AUTHOR].count(",") >= 1:
-                author_list = record[Fields.AUTHOR].split(", ")
-                for i, author_part in enumerate(author_list):
-                    author_field_parts = author_part.split(" ")
-                    author_list[i] = (
-                        author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
-                    )
-
-                record[Fields.AUTHOR] = " and ".join(author_list)
-            if "first_author" in record:
-                del record["first_author"]
-            if record.get(Fields.JOURNAL, "") != "":
-                record[Fields.ENTRYTYPE] = "article"
-            if (
-                record.get("pii", "pii").lower()
-                == record.get(Fields.DOI, Fields.DOI).lower()
-            ):
-                del record["pii"]
-            if record.get("nihms_id", "") == "nan":
-                del record["nihms_id"]
-            if "citation" in record:
-                details_part = record["citation"]
-                details_part = details_part[details_part.find(";") + 1 :]
-                details_part = details_part[: details_part.find(".")]
-                if ":" in details_part:
-                    record[Fields.PAGES] = details_part[details_part.find(":") + 1 :]
-                    details_part = details_part[: details_part.find(":")]
-                if "(" in details_part:
-                    record[Fields.NUMBER] = details_part[
-                        details_part.find("(") + 1 : -1
-                    ]
-                    details_part = details_part[: details_part.find("(")]
-                record[Fields.VOLUME] = details_part
-                del record["citation"]
-            if "journal/book" in record:
-                record[Fields.JOURNAL] = record.pop("journal/book")
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource

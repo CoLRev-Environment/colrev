@@ -19,4 +19,4 @@ colrev.ops.load\_utils\_bib.BIBLoader
       ~BIBLoader.generate_next_unique_id
       ~BIBLoader.get_nr_in_bib
       ~BIBLoader.get_record_header_items
-      ~BIBLoader.load_bib_file
+      ~BIBLoader.load

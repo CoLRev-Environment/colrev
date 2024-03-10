@@ -2,7 +2,6 @@
 """Conftest file containing fixtures to set up tests efficiently"""
 from __future__ import annotations
 
-import logging
 import os
 import shutil
 import typing
@@ -154,7 +153,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
             test_records_dict[path] = colrev.ops.load_utils.load(
                 filename=bib_files_to_index.joinpath(path),
                 logger=review_manager.logger,
-                force_mode=review_manager.force_mode,
                 check_bib_file=False,
             )
 
@@ -345,8 +343,6 @@ def get_local_index_test_records_dict(  # type: ignore
     for path in local_index_test_records_dict:
         loaded_records = colrev.ops.load_utils.load(
             filename=bib_files_to_index.joinpath(path),
-            logger=logging.getLogger(__name__),
-            force_mode=False,
             check_bib_file=False,
         )
 

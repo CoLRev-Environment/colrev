@@ -10,7 +10,6 @@ Usage::
 
     md_loader = colrev.ops.load_utils_md.MarkdownLoader(
         filename=self.search_source.filename,
-        force_mode=False,
         logger=review_manager.logger,
     )
 
@@ -29,11 +28,11 @@ Example markdown reference section::
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
 
 import requests
 
-import colrev.exceptions as colrev_exceptions
 import colrev.ops.load_utils_bib
 import colrev.review_manager
 from colrev.constants import Fields
@@ -49,19 +48,14 @@ class MarkdownLoader:
         self,
         *,
         filename: Path,
-        logger: logging.Logger,
-        force_mode: bool = False,
+        logger: typing.Optional[logging.Logger] = None,
     ):
 
-        if not filename.name.endswith(".md"):
-            raise colrev_exceptions.ImportException(
-                f"File not supported by MarkdownLoader: {filename.name}"
-            )
-        if not filename.exists():
-            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
         self.filename = filename
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
         self.logger = logger
-        self.force_mode = force_mode
 
     def load(self) -> dict:
         """Load records from the source"""
@@ -93,7 +87,6 @@ class MarkdownLoader:
             load_string=data,
             implementation="bib",
             logger=self.logger,
-            force_mode=self.force_mode,
         )
 
         for record in records_dict.values():

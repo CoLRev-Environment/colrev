@@ -5,7 +5,6 @@ from __future__ import annotations
 import collections
 import hashlib
 import json
-import logging
 import os
 import sqlite3
 import typing
@@ -422,8 +421,6 @@ class LocalIndex:
         records_dict = colrev.ops.load_utils.loads(
             load_string=row["bibtex"],
             implementation="bib",
-            logger=logging.getLogger(__name__),
-            force_mode=False,
         )
 
         retrieved_record = list(records_dict.values())[0]
@@ -477,8 +474,6 @@ class LocalIndex:
 
             ret = colrev.ops.load_utils.load(
                 filename=target_path / Path("data/records.bib"),
-                logger=logging.getLogger(__name__),
-                force_mode=False,
                 check_bib_file=False,
             )
 

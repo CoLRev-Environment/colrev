@@ -569,7 +569,6 @@ class StatusStats:
                 bib_loader = BIBLoader(
                     filename=search_file,
                     logger=self.status_stats.review_manager.logger,
-                    force_mode=self.status_stats.review_manager.force_mode,
                 )
 
                 number_search += bib_loader.get_nr_in_bib()

@@ -8,9 +8,8 @@ Usage::
     bib_loader = colrev.ops.load_utils_bib.BIBLoader(
         filename=self.search_source.filename,
         logger=load_operation.review_manager.logger,
-        force_mode=load_operation.review_manager.force_mode,
     )
-    records = bib_loader.load_bib_file()
+    records = bib_loader.load()
 
     Example BibTeX record::
 
@@ -62,13 +61,10 @@ class BIBLoader:
         filename: typing.Optional[Path] = None,
         load_string: str = "",
         unique_id_field: str = "",
-        logger: logging.Logger,
-        force_mode: bool = False,
+        logger: typing.Optional[logging.Logger] = None,
         check_bib_file: bool = True,
     ):
         self.unique_id_field = unique_id_field
-        self.logger = logger
-        self.force_mode = force_mode
         self.check_bib_file = check_bib_file
 
         if filename is not None:
@@ -87,6 +83,10 @@ class BIBLoader:
 
         self.filename = filename
         self.load_string = load_string
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
+        self.logger = logger
 
     def generate_next_unique_id(
         self,
@@ -359,7 +359,7 @@ class BIBLoader:
 
         return nr_in_bib
 
-    def load_bib_file(
+    def load(
         self,
     ) -> dict:
         """Load a bib file and return records dict"""
@@ -548,8 +548,3 @@ class BIBLoader:
 
         record_header_dict = {r[Fields.ID]: r for r in record_header_list}
         return record_header_dict
-
-
-def load_bib(**kw) -> dict:  # type: ignore
-    """Load a BibTeX file"""
-    return BIBLoader(**kw).load_bib_file()

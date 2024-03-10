@@ -6,57 +6,6 @@ RIS requires a mapping from the RIS_FIELDS to the standard CoLRev Fields (see CE
 - can involve merging of RIS_FIELDS (e.g. AU / author fields)
 - can be conditional upon the ENTRYTYPE (e.g., publication_name: journal or booktitle)
 
-Usage::
-
-    import colrev.ops.load_utils_ris
-    from colrev.constants import Fields, ENTRYTYPES
-
-    # if self.unique_id_field == ""
-    self.load_operation.ensure_append_only(file=self.source.filename)
-
-    # The mappings need to be adapted to the SearchSource
-    entrytype_map = {
-        "JOUR": ENTRYTYPES.ARTICLE,
-        "CONF": ENTRYTYPES.INPROCEEDINGS,
-    }
-    key_map = {
-        ENTRYTYPES.ARTICLE: {
-            "PY": Fields.YEAR,
-            "AU": Fields.AUTHOR,
-            "TI": Fields.TITLE,
-            "T2": Fields.JOURNAL,
-            "VL": Fields.VOLUME,
-            "IS": Fields.NUMBER,
-            "SP": Fields.PAGES,
-            "DO": Fields.DOI,
-        },
-        ENTRYTYPES.INPROCEEDINGS: {
-            "PY": Fields.YEAR,
-            "AU": Fields.AUTHOR,
-            "TI": Fields.TITLE,
-            "T2": Fields.BOOKTITLE,
-            "DO": Fields.DOI,
-            "SP": Fields.PAGES,
-        },
-    }
-
-    ris_loader = colrev.ops.load_utils_ris.RISLoader(
-        filename=self.search_source.filename,
-        list_fields={"AU": " and "},
-        unique_id_field="ID",
-        force_mode=False,
-        logger=review_manager.logger,
-    )
-
-    # Note : fixes can be applied before each of the following steps
-
-    records = ris_loader.load_ris_records()
-
-    for record_dict in records.values():
-        ris_loader.apply_entrytype_mapping(record_dict=record_dict, entrytype_map=entrytype_map)
-        ris_loader.map_keys(record_dict=record_dict, key_map=key_map)
-
-
 Example RIS record::
 
     TY  - JOUR
@@ -84,10 +33,9 @@ import logging
 import re
 import typing
 from pathlib import Path
+from typing import Callable
 
-import colrev.exceptions as colrev_exceptions
-from colrev.constants import Colors
-from colrev.constants import Fields
+import colrev.ops.loader
 
 
 class NextLine(Exception):
@@ -98,7 +46,7 @@ class ParseError(Exception):
     """Parsing error"""
 
 
-class RISLoader:
+class RISLoader(colrev.ops.loader.Loader):
     """Loads ris files"""
 
     PATTERN = r"^[A-Z0-9]{2,4} "
@@ -108,26 +56,34 @@ class RISLoader:
         self,
         *,
         filename: Path,
-        list_fields: dict,
+        entrytype_setter: Callable,
+        field_mapper: Callable,
+        id_labeler: typing.Optional[Callable] = None,
         unique_id_field: str = "",
-        logger: logging.Logger,
-        force_mode: bool = False,
+        logger: typing.Optional[logging.Logger] = None,
     ):
-        if not filename.name.endswith(".ris"):
-            raise colrev_exceptions.ImportException(
-                f"File not supported by RISLoader: {filename.name}"
-            )
-        if not filename.exists():
-            raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
-
         self.filename = filename
-        self.logger = logger
-        self.force_mode = force_mode
 
         self.unique_id_field = unique_id_field
-        self.list_fields = list_fields
+        assert id_labeler is not None or unique_id_field != ""
+        self.id_labeler = id_labeler
+        self.entrytype_setter = entrytype_setter
+        self.field_mapper = field_mapper
+
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
+        self.logger = logger
+
+        super().__init__(
+            filename=filename,
+            id_labeler=id_labeler,
+            unique_id_field=unique_id_field,
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+        )
 
     def apply_ris_fixes(self) -> None:
         """Fix common defects in RIS files"""
@@ -166,24 +122,15 @@ class RISLoader:
         """Get the content from a line"""
         return line[line.find(" - ") + 3 :].strip()
 
-    def _add_single_value(self, name: str, value: str) -> None:
-        """Process a single line."""
-        self.current[name] = value
-
-    def _add_list_value(self, name: str, value: str) -> None:
-        """Process tags with multiple values."""
-        try:
-            self.current[name].append(value)
-        except KeyError:
-            self.current[name] = [value]
-
     def _add_tag(self, tag: str, line: str) -> None:
         new_value = self._get_content(line)
 
-        if tag in self.list_fields:
-            self._add_list_value(tag, new_value)
-        else:
-            self._add_single_value(tag, new_value)
+        if tag not in self.current:
+            self.current[tag] = new_value
+        elif isinstance(self.current[tag], str):
+            self.current[tag] = [self.current[tag], new_value]
+        elif isinstance(self.current[tag], list):
+            self.current[tag].append(new_value)
 
     def _parse_tag(self, line: str) -> dict:
         tag = self._get_tag(line)
@@ -217,9 +164,9 @@ class RISLoader:
         lines.append("")
         return "\n".join(lines)
 
-    def load_ris_records(
+    def load_records_list(
         self, *, content: str = "", combine_sp_ep: bool = True
-    ) -> dict:
+    ) -> list:
         """Load ris entries
 
         The resulting keys should coincide with those in the KEY_MAP
@@ -234,44 +181,5 @@ class RISLoader:
 
         lines = content.split("\n")
         records_list = list(r for r in self._parse_lines(lines) if r)
-        for counter, entry in enumerate(records_list):
-            _id = str(counter + 1).zfill(5)
 
-            entry[Fields.ID] = _id
-            for list_field, connective in self.list_fields.items():
-                if list_field in entry:
-                    entry[list_field] = connective.join(entry[list_field])
-            if combine_sp_ep:
-                if "SP" in entry and "EP" in entry:
-                    entry["SP"] = f"{entry.pop('SP')}--{entry.pop('EP')}"
-
-        return {r["ID"]: r for r in records_list}
-
-    def apply_entrytype_mapping(
-        self, *, record_dict: dict, entrytype_map: dict
-    ) -> None:
-        """Apply the mapping of RIS TY fields to CoLRev ENTRYTYPES"""
-        if record_dict["TY"] not in entrytype_map:
-            msg = f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-            if not self.force_mode:
-                raise NotImplementedError(msg)
-            self.logger.error(msg)
-            return
-
-        entrytype = entrytype_map[record_dict["TY"]]
-        record_dict[Fields.ENTRYTYPE] = entrytype
-
-    def map_keys(self, *, record_dict: dict, key_map: dict) -> None:
-        """Apply the mapping of RIS fields to CoLRev Fields"""
-        entrytype = record_dict[Fields.ENTRYTYPE]
-
-        # RIS-keys > standard keys
-        for ris_key in list(record_dict.keys()):
-            if ris_key in [Fields.ENTRYTYPE, Fields.ID]:
-                continue
-            if ris_key not in key_map[entrytype]:
-                del record_dict[ris_key]
-                # print/notify: ris_key
-                continue
-            standard_key = key_map[entrytype][ris_key]
-            record_dict[standard_key] = record_dict.pop(ris_key)
+        return records_list

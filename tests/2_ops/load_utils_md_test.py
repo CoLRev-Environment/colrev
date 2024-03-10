@@ -6,7 +6,6 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
-from colrev.ops.load_utils_md import MarkdownLoader
 
 
 def test_load_md(  # type: ignore
@@ -16,21 +15,17 @@ def test_load_md(  # type: ignore
 
     # only supports md
     with pytest.raises(colrev_exceptions.ImportException):
-        md_loader = MarkdownLoader(
+        colrev.ops.load_utils.load(
             filename=Path("table.ptvc"),
             logger=logging.getLogger(__name__),
-            force_mode=False,
         )
 
     # file must exist
     with pytest.raises(colrev_exceptions.ImportException):
-        md_loader = MarkdownLoader(
+        colrev.ops.load_utils.load(
             filename=Path("non-existent.md"),
             logger=logging.getLogger(__name__),
-            force_mode=False,
         )
-
-    # helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
 
     if base_repo_review_manager.in_ci_environment():
         return
@@ -48,12 +43,10 @@ def test_load_md(  # type: ignore
         target=Path("data/search/") / Path("references.md"),
     )
 
-    md_loader = MarkdownLoader(
+    records = colrev.ops.load_utils.load(
         filename=search_source.filename,
         logger=logging.getLogger(__name__),
-        force_mode=False,
     )
-    records = md_loader.load()
 
     assert records["1"]["ID"] == "1"
     assert records["1"]["ENTRYTYPE"] == "article"

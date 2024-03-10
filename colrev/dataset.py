@@ -119,13 +119,11 @@ class Dataset:
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 load_string=records_string,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
         else:
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
         for record_header_item in bib_loader.get_record_header_items().values():
             for origin in record_header_item[Fields.ORIGIN]:
@@ -187,7 +185,6 @@ class Dataset:
                 load_string=filecontents.decode("utf-8", "replace"),
                 implementation="bib",
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
                 check_bib_file=False,
             )
             if records_dict:
@@ -222,7 +219,6 @@ class Dataset:
             bib_loader = colrev.ops.load_utils_bib.BIBLoader(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
             return bib_loader.get_record_header_items()
 
@@ -231,7 +227,6 @@ class Dataset:
             records_dict = colrev.ops.load_utils.load(
                 filename=self.records_file,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             )
 
         else:

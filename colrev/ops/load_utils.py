@@ -20,7 +20,12 @@ import tempfile
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.ops.load_utils_bib
+import colrev.ops.load_utils_enl
+import colrev.ops.load_utils_md
+import colrev.ops.load_utils_nbib
+import colrev.ops.load_utils_ris
+import colrev.ops.load_utils_table
 
 
 def load(filename: Path, **kw) -> dict:  # type: ignore
@@ -34,19 +39,30 @@ def load(filename: Path, **kw) -> dict:  # type: ignore
     # also remove if not filename.name.endswith(".bib"): -> covered in load()
 
     if filename.suffix == ".bib":
-        parser = colrev.ops.load_utils_bib.load_bib
+        parser = colrev.ops.load_utils_bib.BIBLoader  # type: ignore
+    elif filename.suffix in [".csv", ".xls", ".xlsx"]:
+        parser = colrev.ops.load_utils_table.TableLoader  # type: ignore
+    elif filename.suffix == ".ris":
+        parser = colrev.ops.load_utils_ris.RISLoader  # type: ignore
+    # TODO
+    elif filename.suffix in [".enl", ".txt"]:
+        parser = colrev.ops.load_utils_enl.ENLLoader  # type: ignore
+    elif filename.suffix == ".md":
+        parser = colrev.ops.load_utils_md.MarkdownLoader  # type: ignore
+    elif filename.suffix == ".nbib":
+        parser = colrev.ops.load_utils_nbib.NBIBLoader  # type: ignore
     else:
         raise NotImplementedError
 
     kw["filename"] = filename
-    return parser(**kw)
+    return parser(**kw).load()
 
 
 def loads(load_string: str, *, implementation: str, **kw) -> dict:  # type: ignore
     """Load a string and return records as a dictionary"""
 
     if implementation == "bib":
-        parser = colrev.ops.load_utils_bib.load_bib
+        parser = colrev.ops.load_utils_bib.BIBLoader
         with tempfile.NamedTemporaryFile(
             mode="wb", delete=False, suffix=".bib"
         ) as temp_file:
@@ -57,4 +73,4 @@ def loads(load_string: str, *, implementation: str, **kw) -> dict:  # type: igno
     else:
         raise NotImplementedError
 
-    return parser(**kw)
+    return parser(**kw).load()

@@ -13,7 +13,6 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
-from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
@@ -99,83 +98,100 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
-        references_types = {
-            "JOUR": ENTRYTYPES.ARTICLE,
-            "RPRT": ENTRYTYPES.TECHREPORT,
-            "CHAP": ENTRYTYPES.INBOOK,
-        }
-        key_map = {
-            ENTRYTYPES.ARTICLE: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "T2": Fields.JOURNAL,
-                "AB": Fields.ABSTRACT,
-                "VL": Fields.VOLUME,
-                "IS": Fields.NUMBER,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "UR": Fields.URL,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.INBOOK: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.CHAPTER,
-                "T2": Fields.TITLE,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "UR": Fields.URL,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.TECHREPORT: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "UR": Fields.URL,
-                "PB": Fields.PUBLISHER,
-                "SP": Fields.PAGES,
-            },
-        }
+    def _load_ris(self) -> dict:
 
-        ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            filename=self.search_source.filename,
-            list_fields={"AU": " and "},
-            unique_id_field="ID",
-            force_mode=False,
-            logger=self.review_manager.logger,
-        )
-        records = ris_loader.load_ris_records()
+        def id_labeler(records: list) -> None:
+            for record_dict in records:
+                record_dict[Fields.ID] = record_dict["UR"].split("/")[-1]
 
-        for record_dict in records.values():
-            record_dict["ID"] = record_dict["UR"].split("/")[-1]
-            if record_dict["TY"] not in references_types:
-                msg = (
-                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-                )
-                if not self.review_manager.force_mode:
-                    raise NotImplementedError(msg)
-                self.review_manager.logger.error(msg)
-                continue
-            entrytype = references_types[record_dict["TY"]]
-            record_dict[Fields.ENTRYTYPE] = entrytype
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["TY"] == "JOUR":
+                record_dict[Fields.ENTRYTYPE] = "article"
+            elif record_dict["TY"] == "RPRT":
+                record_dict[Fields.ENTRYTYPE] = "techreport"
+            elif record_dict["TY"] == "CHAP":
+                record_dict[Fields.ENTRYTYPE] = "inbook"
+            else:
+                record_dict[Fields.ENTRYTYPE] = "misc"
 
-            # fixes
-            if entrytype == ENTRYTYPES.ARTICLE:
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "T2": Fields.JOURNAL,
+                    "AB": Fields.ABSTRACT,
+                    "VL": Fields.VOLUME,
+                    "IS": Fields.NUMBER,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "UR": Fields.URL,
+                    "SN": Fields.ISSN,
+                },
+                ENTRYTYPES.INBOOK: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.CHAPTER,
+                    "T2": Fields.TITLE,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "UR": Fields.URL,
+                    "AB": Fields.ABSTRACT,
+                    "SN": Fields.ISBN,
+                    "A2": Fields.EDITOR,
+                },
+                ENTRYTYPES.TECHREPORT: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "UR": Fields.URL,
+                    "PB": Fields.PUBLISHER,
+                },
+            }
+
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
                 if "T1" in record_dict and "TI" not in record_dict:
                     record_dict["TI"] = record_dict.pop("T1")
 
-            # RIS-keys > standard keys
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
             for ris_key in list(record_dict.keys()):
-                if ris_key in ["jstor_id", "ENTRYTYPE", "ID"]:
-                    continue
-                if ris_key not in key_map[entrytype]:
-                    del record_dict[ris_key]
-                    # print/notify: ris_key
-                    continue
-                standard_key = key_map[entrytype][ris_key]
-                record_dict[standard_key] = record_dict.pop(ris_key)
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if "SP" in record_dict and "EP" in record_dict:
+                record_dict[Fields.PAGES] = (
+                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+                )
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+
+            record_dict.pop("TY", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("DB", None)
+            record_dict.pop("C1", None)
+            record_dict.pop("T3", None)
+            record_dict.pop("ER", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.ops.load_utils.load(
+            filename=self.search_source.filename,
+            id_labeler=id_labeler,
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
 
         return records
 
@@ -183,7 +199,7 @@ class JSTORSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            return self._load_ris(load_operation)
+            return self._load_ris()
 
         raise NotImplementedError
 

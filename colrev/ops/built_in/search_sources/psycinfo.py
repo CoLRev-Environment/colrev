@@ -13,7 +13,6 @@ import colrev.env.package_manager
 import colrev.ops.load_utils_ris
 import colrev.ops.search
 import colrev.record
-from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
@@ -100,64 +99,81 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
-    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
-        references_types = {
-            "JOUR": ENTRYTYPES.ARTICLE,
-            "RPRT": ENTRYTYPES.TECHREPORT,
-            "CHAP": ENTRYTYPES.INBOOK,
-        }
-        key_map = {
-            ENTRYTYPES.ARTICLE: {
-                "Y1": Fields.YEAR,
-                "A1": Fields.AUTHOR,
-                "T1": Fields.TITLE,
-                "JF": Fields.JOURNAL,
-                "N2": Fields.ABSTRACT,
-                "VL": Fields.VOLUME,
-                "IS": Fields.NUMBER,
-                "KW": Fields.KEYWORDS,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "SP": Fields.PAGES,
-                "PMID": Fields.PUBMED_ID,
-                "SN": Fields.ISSN,
-            },
-        }
+    def _load_ris(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["TY"] == "JOUR":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["TY"] == "RPRT":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.TECHREPORT
+            elif record_dict["TY"] == "CHAP":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INBOOK
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-        load_operation.ensure_append_only(file=self.search_source.filename)
-        ris_loader = colrev.ops.load_utils_ris.RISLoader(
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "Y1": Fields.YEAR,
+                    "A1": Fields.AUTHOR,
+                    "T1": Fields.TITLE,
+                    "JF": Fields.JOURNAL,
+                    "N2": Fields.ABSTRACT,
+                    "VL": Fields.VOLUME,
+                    "IS": Fields.NUMBER,
+                    "KW": Fields.KEYWORDS,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "PMID": Fields.PUBMED_ID,
+                    "SN": Fields.ISSN,
+                },
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if "SP" in record_dict and "EP" in record_dict:
+                record_dict[Fields.PAGES] = (
+                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+                )
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("TY", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("DB", None)
+            record_dict.pop("C1", None)
+            record_dict.pop("T3", None)
+            record_dict.pop("AD", None)
+            record_dict.pop("CY", None)
+            record_dict.pop("M3", None)
+            record_dict.pop("EP", None)
+            record_dict.pop("ER", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.ops.load_utils.load(
             filename=self.search_source.filename,
-            list_fields={"A1": " and ", "KW": ", "},
-            force_mode=False,
+            unique_id_field="ID",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
             logger=self.review_manager.logger,
         )
-        records = ris_loader.load_ris_records()
-
-        for counter, record_dict in enumerate(records.values()):
-            _id = str(counter + 1).zfill(5)
-            record_dict[Fields.ID] = _id
-
-            if record_dict["TY"] not in references_types:
-                msg = (
-                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-                )
-                if not self.review_manager.force_mode:
-                    raise NotImplementedError(msg)
-                self.review_manager.logger.error(msg)
-                continue
-            entrytype = references_types[record_dict["TY"]]
-            record_dict[Fields.ENTRYTYPE] = entrytype
-
-            # RIS-keys > standard keys
-            for ris_key in list(record_dict.keys()):
-                if ris_key in ["ENTRYTYPE", "ID"]:
-                    continue
-                if ris_key not in key_map[entrytype]:
-                    del record_dict[ris_key]
-                    # print/notify: ris_key
-                    continue
-                standard_key = key_map[entrytype][ris_key]
-                record_dict[standard_key] = record_dict.pop(ris_key)
 
         return records
 
@@ -165,7 +181,7 @@ class PsycINFOSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".ris":
-            return self._load_ris(load_operation)
+            return self._load_ris()
 
         raise NotImplementedError
 
