@@ -14,7 +14,7 @@ import colrev.operation
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import write_file
 
 
 class Search(colrev.operation.Operation):

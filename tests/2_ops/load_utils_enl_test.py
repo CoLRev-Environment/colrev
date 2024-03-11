@@ -10,7 +10,7 @@ import colrev.review_manager
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import to_string
+from colrev.writer.write_utils import to_string
 
 
 def test_load(tmp_path, helpers) -> None:  # type: ignore
@@ -115,5 +115,5 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         helpers.test_data_path / Path("load_utils/") / Path("ais_expected.bib")
     ).read_text(encoding="utf-8")
 
-    actual = to_string(records_dict=records)
+    actual = to_string(records_dict=records, implementation="bib")
     assert actual == expected

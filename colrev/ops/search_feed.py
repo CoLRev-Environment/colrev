@@ -15,8 +15,8 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
-from colrev.ops.write_utils_bib import to_string
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import to_string
+from colrev.writer.write_utils import write_file
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
@@ -179,7 +179,9 @@ class GeneralOriginFeed:
         record_a = deepcopy(record_a_orig)
         record_b = deepcopy(record_b_orig)
 
-        bibtex_str = to_string(records_dict={record_a[Fields.ID]: record_a})
+        bibtex_str = to_string(
+            records_dict={record_a[Fields.ID]: record_a}, implementation="bib"
+        )
         record_a = list(
             colrev.loader.load_utils.loads(
                 load_string=bibtex_str,
@@ -189,7 +191,9 @@ class GeneralOriginFeed:
             ).values()
         )[0]
 
-        bibtex_str = to_string(records_dict={record_b[Fields.ID]: record_b})
+        bibtex_str = to_string(
+            records_dict={record_b[Fields.ID]: record_b}, implementation="bib"
+        )
         record_b = list(
             colrev.loader.load_utils.loads(
                 load_string=bibtex_str,

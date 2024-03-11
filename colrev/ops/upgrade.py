@@ -18,7 +18,7 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.ops.write_utils_bib import to_string
+from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-few-public-methods
 
@@ -85,7 +85,7 @@ class Upgrade(colrev.operation.Operation):
         Args:
             records (dict): The records dictionary to save.
         """
-        bibtex_str = to_string(records_dict=records)
+        bibtex_str = to_string(records_dict=records, implementation="bib")
         with open("data/records.bib", "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
         self.repo.index.add(["data/records.bib"])

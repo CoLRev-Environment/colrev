@@ -14,8 +14,8 @@ from random import randint
 from typing import Optional
 
 import git
+from git import GitCommandError
 from git import InvalidGitRepositoryError
-from git.exc import GitCommandError
 from tqdm import tqdm
 
 import colrev.env.utils
@@ -27,7 +27,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import to_string
+from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-many-public-methods
 
@@ -251,7 +251,7 @@ class Dataset:
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
-        bibtex_str = to_string(records_dict=records)
+        bibtex_str = to_string(records_dict=records, implementation="bib")
 
         with open(self.records_file, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
@@ -265,7 +265,7 @@ class Dataset:
     ) -> None:
         # Note : currently no use case for append_new=True??
 
-        parsed = to_string(records_dict=records)
+        parsed = to_string(records_dict=records, implementation="bib")
         record_list = [
             {
                 Fields.ID: item[item.find("{") + 1 : item.find(",")],

@@ -9,7 +9,7 @@ from pathlib import Path
 import colrev.operation
 import colrev.settings
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import write_file
 
 
 class Distribute(colrev.operation.Operation):

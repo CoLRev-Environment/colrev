@@ -13,7 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import write_file
 
 
 class PDFPrepMan(colrev.operation.Operation):

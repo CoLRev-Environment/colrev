@@ -33,7 +33,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.ops.write_utils_bib import to_string
+from colrev.writer.write_utils import to_string
 
 # import binascii
 
@@ -833,7 +833,8 @@ class LocalIndex:
                         file=repo_source_path / Path(record_dict[Fields.FILE])
                     )
                 record_dict["bibtex"] = to_string(
-                    records_dict={record_dict[Fields.ID]: record_dict}
+                    records_dict={record_dict[Fields.ID]: record_dict},
+                    implementation="bib",
                 )
                 record_dict = self._get_index_record(record_dict=record_dict)
                 recs_to_index.append(record_dict)

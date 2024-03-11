@@ -28,8 +28,8 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import to_string
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import to_string
+from colrev.writer.write_utils import write_file
 
 
 # pylint: disable=too-many-lines
@@ -491,7 +491,10 @@ class Prep(colrev.operation.Operation):
             )
 
     def _save_to_temp(self, *, record: colrev.record.Record) -> None:
-        rec_str = to_string(records_dict={record.data[Fields.ID]: record.get_data()})
+        rec_str = to_string(
+            records_dict={record.data[Fields.ID]: record.get_data()},
+            implementation="bib",
+        )
         self.temp_prep_lock.acquire(timeout=120)
         self.current_temp_records.parent.mkdir(exist_ok=True)
         with open(self.current_temp_records, "a", encoding="utf-8") as cur_temp_rec:

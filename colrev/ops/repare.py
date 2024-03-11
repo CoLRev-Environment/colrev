@@ -12,7 +12,7 @@ import colrev.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import write_file
 
 
 class Repare(colrev.operation.Operation):

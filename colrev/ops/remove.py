@@ -7,7 +7,7 @@ from pathlib import Path
 import colrev.env.utils
 import colrev.operation
 from colrev.constants import Fields
-from colrev.ops.write_utils_bib import write_file
+from colrev.writer.write_utils import write_file
 
 
 class Remove(colrev.operation.Operation):
