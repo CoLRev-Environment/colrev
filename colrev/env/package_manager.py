@@ -830,6 +830,8 @@ class PackageManager:
 
         file_path = Path(f"{identifier}.rst")
         target = packages_index_path / file_path
+        if not target.is_file():
+            return ""
         with open(target, "w", encoding="utf-8") as file:
             # NOTE: at this point, we may add metadata
             # (such as package status, authors, url etc.)
@@ -971,6 +973,8 @@ class PackageManager:
                 package_index_path = self._import_package_docs(
                     docs_link, endpoint_item["package_endpoint_identifier"]
                 )
+                if package_index_path == "":
+                    continue
 
                 item = {
                     "path": package_index_path,
