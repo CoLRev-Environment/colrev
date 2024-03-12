@@ -17,13 +17,13 @@ import colrev.review_manager
     "pdf_path, expected_result",
     [
         (
-            Path("WagnerLukyanenkoParEtAl2022.pdf"),
+            Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
             "cpid2:87ffff1fffffff1ff47fff7fe0000307e000071fffffff07f1603f0ffd67fffff7ffffff"
             "e0000007e0000007e0000007fc6d59b7e3ffffffe03fffffffffffffe1ff0007e0000007"
             "e0000007e00080ffe0008007e0000007e0000007e0000007e0008007e000fdffe0008fff"
             "e000000ff00087ffffffffffffffffffffffffff",
         ),
-        (Path("zero-size-pdf.pdf"), "InvalidPDFException"),
+        (Path("data/zero-size-pdf.pdf"), "InvalidPDFException"),
     ],
 )
 def test_pdf_hash(  # type: ignore
@@ -54,7 +54,7 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
     """Test the open pdf with invalid path"""
     os.chdir(tmp_path)
 
-    pdf_path = Path("WagnerLukyanenkoParEtAl2022.pdf")
+    pdf_path = Path("data/WagnerLukyanenkoParEtAl2022.pdf")
     helpers.retrieve_test_file(
         source=pdf_path,
         target=pdf_path,

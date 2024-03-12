@@ -1272,12 +1272,12 @@ def test_extract_text_by_page(  # type: ignore
 ) -> None:
     """Test record.extract_text_by_page()"""
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
         target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
 
     expected = (
-        helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt")
+        helpers.test_data_path / Path("data/WagnerLukyanenkoParEtAl2022_content.txt")
     ).read_text(encoding="utf-8")
     actual = record_with_pdf.extract_text_by_page(pages=[0])
     actual = actual.rstrip()
@@ -1287,7 +1287,7 @@ def test_extract_text_by_page(  # type: ignore
 def test_set_nr_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
     """Test record.set_pages_in_pdf()"""
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
         target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
     expected = 18
@@ -1299,12 +1299,12 @@ def test_set_nr_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> 
 def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
     """Test record.set_text_from_pdf()"""
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
         target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
 
     expected = (
-        (helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt"))
+        (helpers.test_data_path / Path("data/WagnerLukyanenkoParEtAl2022_content.txt"))
         .read_text(encoding="utf-8")
         .replace("\n", " ")
     )
@@ -1448,9 +1448,8 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
             data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
         ).get_pdf_hash(page_nr=1)
 
-    pdf_path = Path("WagnerLukyanenkoParEtAl2022.pdf")
     helpers.retrieve_test_file(
-        source=pdf_path,
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
         target=pdf_path,
     )
     pdf_hash = colrev.record.PrepRecord(

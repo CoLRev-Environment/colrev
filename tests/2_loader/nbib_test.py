@@ -87,22 +87,22 @@ def test_load_nbib_entries(tmp_path, helpers):  # type: ignore
         )
 
     helpers.retrieve_test_file(
-        source=Path("load_utils/nbib_test.nbib"),
-        target=Path("test.nbib"),
+        source=Path("2_loader/data/nbib_data.nbib"),
+        target=Path("bib_data.nbib"),
     )
 
     entries = colrev.loader.load_utils.load(
-        filename=Path("test.nbib"),
+        filename=Path("bib_data.nbib"),
         unique_id_field="INCREMENTAL",
         entrytype_setter=entrytype_setter,
         field_mapper=field_mapper,
     )
 
     assert len(entries) == 1
-    print(entries)
+
     assert entries["000001"][Fields.TITLE] == "Paper title"
     assert entries["000001"][Fields.AUTHOR] == "Smith, Tom and Hunter, Shawn"
-    assert entries["000001"][Fields.KEYWORDS] == "Keyword 1, Keyword 2"
+    assert entries["000001"][Fields.KEYWORDS] == "Keyword 1, Keyword 2, Keyword 3"
     assert entries["000001"][Fields.JOURNAL] == "Journal Name"
     assert entries["000001"][Fields.DOI] == "http://dx.doi.org/10.1000/123456789"
     assert entries["000001"]["eric_id"] == "EJ1131633"

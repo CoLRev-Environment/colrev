@@ -16,7 +16,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
         path_str=str(tmp_path), force_mode=True, navigate_to_home_dir=False
     )
     review_manager.settings = colrev.settings.load_settings(
-        settings_path=helpers.test_data_path.parents[1]
+        settings_path=helpers.test_data_path.parents[0]
         / Path("colrev/template/init/settings.json")
     )
 
@@ -67,7 +67,7 @@ def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
         path_str=str(test_repo_dir), force_mode=True
     )
     review_manager.settings = colrev.settings.load_settings(
-        settings_path=helpers.test_data_path.parents[1]
+        settings_path=helpers.test_data_path.parents[0]
         / Path("colrev/template/init/settings.json")
     )
 

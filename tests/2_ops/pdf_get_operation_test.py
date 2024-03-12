@@ -34,7 +34,7 @@ def test_pdf_get_import_file(  # type: ignore
     )
 
     helpers.retrieve_test_file(
-        source=Path("SrivastavaShainesh2015.pdf"),
+        source=Path("data/SrivastavaShainesh2015.pdf"),
         target=Path("data/pdfs/SrivastavaShainesh2015.pdf"),
     )
     pdf_get_operation.import_pdf(
@@ -174,7 +174,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 #   pdf_get_operation.relink_pdfs()
 
 #   helpers.retrieve_test_file(
-#       source=Path("SrivastavaShainesh2015.pdf"),
+#       source=Path("data/SrivastavaShainesh2015.pdf"),
 #       target=Path("data/pdfs/Srivastava2015.pdf"),
 #   )
 #   pdf_get_operation.import_pdf(

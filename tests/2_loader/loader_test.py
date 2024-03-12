@@ -18,12 +18,12 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     with pytest.raises(colrev_exceptions.ImportException):
         colrev.loader.load_utils.load(
-            filename=Path("data/search/bib_tests.bib"),
+            filename=Path("data/search/bib_data.bib"),
             logger=logging.getLogger(__name__),
         )
     helpers.retrieve_test_file(
-        source=Path("load_utils/") / Path("bib_tests.bib"),
-        target=Path("data/search/") / Path("bib_tests.xy"),
+        source=Path("2_loader/data/bib_data.bib"),
+        target=Path("data/search/bib_tests.xy"),
     )
     with pytest.raises(NotImplementedError):
         colrev.loader.load_utils.load(
@@ -32,12 +32,12 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         )
 
     helpers.retrieve_test_file(
-        source=Path("load_utils/") / Path("bib_tests.bib"),
-        target=Path("data/search/") / Path("bib_tests.bib"),
+        source=Path("2_loader/data/bib_data.bib"),
+        target=Path("data/search/bib_data.bib"),
     )
 
     colrev.loader.load_utils.load(
-        filename=Path("data/search/bib_tests.bib"), logger=logging.getLogger(__name__)
+        filename=Path("data/search/bib_data.bib"), logger=logging.getLogger(__name__)
     )
 
     with pytest.raises(NotImplementedError):

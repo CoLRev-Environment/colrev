@@ -55,12 +55,12 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # Test csv
     helpers.retrieve_test_file(
-        source=Path("load_utils/table.csv"),
-        target=Path("table.csv"),
+        source=Path("2_loader/data/csv_data.csv"),
+        target=Path("csv_data.csv"),
     )
 
     entries = colrev.loader.load_utils.load(
-        filename=Path("table.csv"),
+        filename=Path("csv_data.csv"),
         unique_id_field="PMID",
         entrytype_setter=entrytype_setter,
         field_mapper=field_mapper,
@@ -83,11 +83,11 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
 
     # Test xlsx
     helpers.retrieve_test_file(
-        source=Path("load_utils/table.xlsx"),
-        target=Path("table.xlsx"),
+        source=Path("2_loader/data/xlsx_data.xlsx"),
+        target=Path("xlsx_data.xlsx"),
     )
     colrev.loader.load_utils.load(
-        filename=Path("table.xlsx"),
+        filename=Path("xlsx_data.xlsx"),
         unique_id_field="INCREMENTAL",
         entrytype_setter=entrytype_setter,
         field_mapper=field_mapper,

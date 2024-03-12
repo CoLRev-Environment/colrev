@@ -37,7 +37,7 @@ def test_eric(  # type: ignore
     """Test eric"""
 
     json_str = helpers.retrieve_test_file_content(
-        source=Path("api_output/eric/blockchain.json")
+        source=Path("data/api_output/eric/blockchain.json")
     )
     expected_record = colrev.record.Record(
         data={

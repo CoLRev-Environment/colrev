@@ -11,7 +11,7 @@ import pandas as pd
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Callable
 
 # pylint: disable=too-few-public-methods

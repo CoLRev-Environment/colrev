@@ -35,12 +35,12 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         )
 
     helpers.retrieve_test_file(
-        source=Path("load_utils/") / Path("bib_tests.bib"),
-        target=Path("data/search/") / Path("bib_tests.bib"),
+        source=Path("2_loader/data/bib_data.bib"),
+        target=Path("data/search/bib_data.bib"),
     )
 
     records = colrev.loader.load_utils.load(
-        filename=Path("data/search/bib_tests.bib"),
+        filename=Path("data/search/bib_data.bib"),
     )
 
     assert records == {

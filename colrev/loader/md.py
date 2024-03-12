@@ -13,7 +13,7 @@ import colrev.loader.loader
 import colrev.review_manager
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Callable
 
 # pylint: disable=too-few-public-methods

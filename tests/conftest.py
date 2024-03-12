@@ -26,7 +26,7 @@ from colrev.constants import Fields
 class Helpers:
     """Helpers class providing utility functions (e.g., for test-file retrieval)"""
 
-    test_data_path = Path(__file__).parent / Path("data")
+    test_data_path = Path(__file__).parent
 
     @staticmethod
     def retrieve_test_file(*, source: Path, target: Path) -> None:
@@ -145,7 +145,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     def load_test_records(test_data_path) -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = test_data_path / Path("local_index")
+        bib_files_to_index = test_data_path / Path("data/local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
@@ -221,7 +221,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     helpers.retrieve_test_file(
-        source=Path("search_files/test_records.bib"),
+        source=Path("data/search_files/test_records.bib"),
         target=Path("data/search/test_records.bib"),
     )
     review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
@@ -288,7 +288,7 @@ def fixture_pdf_quality_model(  # type: ignore
     """Fixture returning the pdf quality model"""
 
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
         target=base_repo_review_manager.path
         / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
@@ -337,7 +337,7 @@ def get_local_index_test_records_dict(  # type: ignore
 ) -> dict:
     """Test records dict for local_index"""
     local_index_test_records_dict: typing.Dict[Path, dict] = {}
-    bib_files_to_index = helpers.test_data_path / Path("local_index")
+    bib_files_to_index = helpers.test_data_path / Path("data/local_index")
     for file_path in bib_files_to_index.glob("**/*"):
         local_index_test_records_dict[Path(file_path.name)] = {}
 
@@ -371,11 +371,11 @@ def get_local_index(  # type: ignore
 ):
     """Test the local_index"""
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
         target=test_local_index_dir / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
     )
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.tei.xml"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.tei.xml"),
         target=test_local_index_dir
         / Path("data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"),
     )

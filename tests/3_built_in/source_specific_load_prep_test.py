@@ -172,7 +172,7 @@ def test_source(  # type: ignore
     print(Path.cwd())  # To facilitate debugging
 
     helpers.retrieve_test_file(
-        source=Path("built_in_search_sources/") / filenamepath,
+        source=Path("data/built_in_search_sources/") / filenamepath,
         target=Path("data/search/") / filenamepath,
     )
 
@@ -209,14 +209,18 @@ def test_source(  # type: ignore
     actual = Path("data/records.bib").read_text(encoding="utf-8")
     try:
         expected = (
-            helpers.test_data_path / Path("built_in_search_sources/") / expected_file
+            helpers.test_data_path
+            / Path("data/built_in_search_sources/")
+            / expected_file
         ).read_text(encoding="utf-8")
 
     except FileNotFoundError as exc:
         # If mismatch: copy the actual file to replace the expected file (facilitating updates)
         shutil.copy(
             Path("data/records.bib"),
-            helpers.test_data_path / Path("built_in_search_sources/") / expected_file,
+            helpers.test_data_path
+            / Path("data/built_in_search_sources/")
+            / expected_file,
         )
         raise Exception(
             f"The expected_file ({expected_file.name}) was not (yet) available. "
@@ -227,6 +231,8 @@ def test_source(  # type: ignore
     if expected != actual:
         shutil.copy(
             Path("data/records.bib"),
-            helpers.test_data_path / Path("built_in_search_sources/") / expected_file,
+            helpers.test_data_path
+            / Path("data/built_in_search_sources/")
+            / expected_file,
         )
     assert expected == actual

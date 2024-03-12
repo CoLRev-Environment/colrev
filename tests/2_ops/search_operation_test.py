@@ -96,7 +96,7 @@ def test_search_get_unique_filename(
 #     print(Path.cwd())  # To facilitate debugging
 
 #     helpers.retrieve_test_file(
-#         source=Path("search_files/crossref_feed.bib"),
+#         source=Path("data/search_files/crossref_feed.bib"),
 #         target=Path("data/search/crossref_issn=1234-5678.bib"),
 #     )
 

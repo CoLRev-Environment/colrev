@@ -111,7 +111,7 @@ import colrev.loader.nbib
 import colrev.loader.ris
 import colrev.loader.table
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Callable
 
 # pylint: disable=too-many-arguments
@@ -149,12 +149,14 @@ def load(  # type: ignore
     else:
         raise NotImplementedError
 
-    kw["filename"] = filename
-    kw["entrytype_setter"] = entrytype_setter
-    kw["field_mapper"] = field_mapper
-    kw["id_labeler"] = id_labeler
-    kw["unique_id_field"] = unique_id_field
-    return parser(**kw).load()
+    return parser(
+        filename=filename,
+        entrytype_setter=entrytype_setter,
+        field_mapper=field_mapper,
+        id_labeler=id_labeler,
+        unique_id_field=unique_id_field,
+        **kw,
+    ).load()
 
 
 def loads(  # type: ignore
@@ -187,11 +189,11 @@ def loads(  # type: ignore
         temp_file.write(load_string.encode("utf-8"))
         temp_file_path = Path(temp_file.name)
 
-    kw["filename"] = temp_file_path
-    kw["entrytype_setter"] = entrytype_setter
-    kw["field_mapper"] = field_mapper
-    kw["id_labeler"] = id_labeler
-    kw["unique_id_field"] = unique_id_field
-
-    # return parser(**kw).load()
-    return load(**kw)
+    return load(
+        filename=temp_file_path,
+        entrytype_setter=entrytype_setter,
+        field_mapper=field_mapper,
+        id_labeler=id_labeler,
+        unique_id_field=unique_id_field,
+        **kw,
+    )

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import colrev.loader.loader
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import typing
     from typing import Callable
 

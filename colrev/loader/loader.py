@@ -90,7 +90,7 @@ class Loader:
     def load_records_list(self) -> list:
         """The load_records_list must be implemented by the inheriting class
         (e.g., for ris/bib/...)"""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def load(self) -> dict:
         """Load table entries from the source"""

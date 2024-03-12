@@ -18,7 +18,7 @@ def fixture_dedupe_test_setup(  # type: ignore
     helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
 
     helpers.retrieve_test_file(
-        source=Path("dedupe/records.bib"),
+        source=Path("data/dedupe/records.bib"),
         target=Path("data/records.bib"),
     )
     base_repo_review_manager.dataset.add_changes(path=Path("data/records.bib"))
@@ -66,7 +66,7 @@ def test_dedupe_utilities(  # type: ignore
     with pytest.raises(AssertionError):
         dedupe_operation.merge_records(merge=[["RandomID1", "RandomID2"]])
 
-    expected_file = Path("dedupe/records_expected.bib")
+    expected_file = Path("data/dedupe/records_expected.bib")
     actual = Path("data/records.bib").read_text(encoding="utf-8")
     if (helpers.test_data_path / expected_file).is_file():
         expected = (helpers.test_data_path / expected_file).read_text(encoding="utf-8")

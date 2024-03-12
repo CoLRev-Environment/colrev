@@ -32,15 +32,15 @@ def test_load_md(  # type: ignore
 
     search_source = colrev.settings.SearchSource(
         endpoint="colrev.unknown_source",
-        filename=Path("data/search/references.md"),
+        filename=Path("data/search/md_data.md"),
         search_type=colrev.settings.SearchType.OTHER,
         search_parameters={},
         comment="",
     )
 
     helpers.retrieve_test_file(
-        source=Path("load_utils/") / Path("references.md"),
-        target=Path("data/search/") / Path("references.md"),
+        source=Path("2_loader/data/md_data.md"),
+        target=Path("data/search/md_data.md"),
     )
 
     records = colrev.loader.load_utils.load(

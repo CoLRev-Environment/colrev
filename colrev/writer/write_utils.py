@@ -14,6 +14,7 @@ import colrev.writer.bib
 
 
 def write_file(records_dict: dict, filename: Path, **kw) -> dict:  # type: ignore
+    """Write a file (BiBTex, RIS, or other) from a dictionary of records."""
     if filename.suffix == ".bib":
         writer = colrev.writer.bib.write_file  # type: ignore
 
@@ -24,6 +25,7 @@ def write_file(records_dict: dict, filename: Path, **kw) -> dict:  # type: ignor
 
 
 def to_string(*, records_dict: dict, implementation: str, **kw) -> str:  # type: ignore
+    """Write a string (BiBTex, RIS, or other) from a dictionary of records."""
     if implementation == "bib":
         writer = colrev.writer.bib.to_string  # type: ignore
 

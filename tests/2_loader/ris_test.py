@@ -51,17 +51,17 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
         )
 
     helpers.retrieve_test_file(
-        source=Path("load_utils/ris_test.ris"),
-        target=Path("test.ris"),
+        source=Path("2_loader/data/ris_data.ris"),
+        target=Path("ris_data.ris"),
     )
 
     entries = colrev.loader.load_utils.load(
-        filename=Path("test.ris"),
+        filename=Path("ris_data.ris"),
         unique_id_field="DO",
         entrytype_setter=entrytype_setter,
         field_mapper=field_mapper,
     )
-    print(entries)
+
     assert len(entries) == 2
     assert (
         entries["10.1234/Random-name55555.2020.00050"][Fields.TITLE]
@@ -104,28 +104,3 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
     assert entries["10.1111/MC.2017.66"][Fields.NUMBER] == "3"
     assert entries["10.1111/MC.2017.66"][Fields.VOLUME] == "50"
     assert entries["10.1111/MC.2017.66"][Fields.ISSN] == "1111-2222"
-
-    # entrymap = {"JOUR": "article", "CONF": "inproceedings"}
-
-    # ris_loader.apply_entrytype_mapping(
-    #     record_dict=entries["10.1234/Random-name55555.2020.00050"], entrytype_map=entrymap
-    # )
-    # key_map = {
-    #     "article": {"TI": "title", "OID": "doi"},
-    #     "inproceedings": {"TI": "title", "OID": "doi"},
-    # }
-    # ris_loader.map_keys(record_dict=entries["10.1234/Random-name55555.2020.00050"], key_map=key_map)
-    # assert entries["10.1234/Random-name55555.2020.00050"]["title"] == "Title of a conference paper"
-
-    # entries["10.1234/Random-name55555.2020.00050"]["TY"] = "unknown"
-
-    # with pytest.raises(NotImplementedError):
-    #     ris_loader.apply_entrytype_mapping(
-    #         record_dict=entries["10.1234/Random-name55555.2020.00050"], entrytype_map=entrymap
-    #     )
-
-    # ris_loader.force_mode = True
-    # ris_loader.apply_entrytype_mapping(
-    #     record_dict=entries["10.1234/Random-name55555.2020.00050"], entrytype_map=entrymap
-    # )
-    # No error is raised

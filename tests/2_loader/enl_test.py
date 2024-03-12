@@ -100,19 +100,19 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             record_dict[key] = str(value)
 
     helpers.retrieve_test_file(
-        source=Path("load_utils/") / Path("ais.txt"),
-        target=Path("ais.txt"),
+        source=Path("2_loader/data/enl_data.enl"),
+        target=Path("enl_data.enl"),
     )
 
     records = colrev.loader.load_utils.load(
-        filename=Path("ais.txt"),
+        filename=Path("enl_data.enl"),
         unique_id_field="INCREMENTAL",
         entrytype_setter=entrytype_setter,
         field_mapper=field_mapper,
     )
 
     expected = (
-        helpers.test_data_path / Path("load_utils/") / Path("ais_expected.bib")
+        helpers.test_data_path / Path("2_loader/data/enl_data_expected.bib")
     ).read_text(encoding="utf-8")
 
     actual = to_string(records_dict=records, implementation="bib")
