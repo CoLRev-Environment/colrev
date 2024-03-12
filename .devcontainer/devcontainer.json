@@ -8,6 +8,7 @@
     "-v",
     "/var/run/docker.sock:/var/run/docker.sock"
   ],
+  "postCreateCommand": "pip install -e .[dev] && pre-commit run --all-files",
   "customizations": {
     "codespaces": {
       "openFiles": [
