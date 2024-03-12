@@ -18,16 +18,16 @@ RUN groupadd -g $DOCKER_GROUP_GID docker || true # Ignore if group already exist
 RUN useradd -m vscode -G docker || usermod -aG docker vscode # Add vscode user or append to docker group
 
 # Copy and adjust permissions for the startup script
-COPY adjust-docker-group.sh /usr/local/bin/adjust-docker-group.sh
-RUN chmod +x /usr/local/bin/adjust-docker-group.sh
+COPY dockerfile_entrypoint.sh /usr/local/bin/dockerfile_entrypoint.sh
+RUN chmod +x /usr/local/bin/dockerfile_entrypoint.sh
 
 # Install colrev from the Git repository
 # RUN pip install "colrev[dev] @ git+https://github.com/CoLRev-Environment/colrev"
-RUN pip install -e .[dev,docs]
+# RUN pip install -e .[dev,docs]
 # RUN pre-commit run --all
 
-# Use the adjust-docker-group.sh script as an entry point to adjust the docker group ID at runtime
-ENTRYPOINT ["/usr/local/bin/adjust-docker-group.sh"]
+# Use the dockerfile_entrypoint.sh script as an entry point to adjust the docker group ID at runtime
+ENTRYPOINT ["/usr/local/bin/dockerfile_entrypoint.sh"]
 
 # Specify the default command, if any, or override with your own command
 CMD ["bash"]
