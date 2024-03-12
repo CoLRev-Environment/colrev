@@ -16,7 +16,7 @@ Changes/commits/tests/git graph (local?)
 
 
 
-TODO : 
+TODO :
 - TBD: pip install -e .?
 - add notes on CoLRev development
 - add bash alias (e.g., pcr)
