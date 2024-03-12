@@ -36,12 +36,12 @@ pcr
 # Add selected changes to the Git staging area
 git add -p *
 # Review the changes to make sure that the next commit will be atomic (Git button on the left)
-# Commit 
+# Commit
 git commit -m 'message'
 
 ```
 
-Note: the pre-commit hooks have a long runtime, but useful messages are displayed early. 
+Note: the pre-commit hooks have a long runtime, but useful messages are displayed early.
 
 TODO :
 - add notes on CoLRev development
