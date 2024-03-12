@@ -243,6 +243,7 @@ class SearchSource(JsonSchemaMixin):
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
+        # pylint: disable=redefined-outer-name
         import colrev.ops.search_feed
 
         return colrev.ops.search_feed.GeneralOriginFeed(

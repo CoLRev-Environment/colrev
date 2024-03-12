@@ -247,11 +247,11 @@ class BackwardSearchSource(JsonSchemaMixin):
                 df_all_references["meets_criteria"] = df_all_references[
                     Fields.NR_INTEXT_CITATIONS
                 ].apply(
-                    lambda x, in_text_citation_threshold=in_text_citation_threshold: len(
+                    lambda x, threshold=in_text_citation_threshold: len(
                         [
                             citation
                             for citation in x.split(",")
-                            if int(citation) >= in_text_citation_threshold
+                            if int(citation) >= threshold
                         ]
                     )
                     >= ref_freq_threshold

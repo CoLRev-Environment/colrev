@@ -117,14 +117,14 @@ def _assign_article_fields(*, record_dict: dict) -> None:
             try:
                 pages = re.sub(r"\s+|[a-zA-Z]+", "", pages)
                 pages_list = pages.split("-")
-                a = int(pages_list[0])
-                b = int(pages_list[1])
-                if a > b:
-                    pages = str(b) + "--" + str(a)
-                elif a == b:
-                    pages = str(a)
+                page_a = int(pages_list[0])
+                page_b = int(pages_list[1])
+                if page_a > page_b:
+                    pages = str(page_b) + "--" + str(page_a)
+                elif page_a == page_b:
+                    pages = str(page_a)
                 else:
-                    pages = str(a) + "--" + str(b)
+                    pages = str(page_a) + "--" + str(page_b)
             except ValueError:
                 pass
 

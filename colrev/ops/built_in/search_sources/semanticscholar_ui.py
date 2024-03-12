@@ -286,9 +286,9 @@ class SemanticScholarUI:
                 ask_again = True
             elif re.match(r"^\d{4}-\d{4}$", year_span):
                 years = year_span.split("-")
-                a = int(years[0])
-                b = int(years[1])
-                if a >= b or (b > int(datetime.date.today().year)):
+                year_a = int(years[0])
+                year_b = int(years[1])
+                if year_a >= year_b or (year_b > int(datetime.date.today().year)):
                     print("Error: Invalid year span.\n" + examples + "\n")
                     year_span = self.enter_text(
                         msg="Please enter a year span."

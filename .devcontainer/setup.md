@@ -28,10 +28,23 @@ Note: you can check the setup by running `pip list` and `pip show colrev`.
 
 ## Development best practices
 
-Changes/commits/tests/git graph (local?)
+```
+# Select modules from the EXPLORER, edit them, and test the changes
+# Run pre-commit hooks (including tests) and address messages to improve code quality
+pcr
+# short form for "pre-commit run --all-files" (automatically available in the .bash_aliases file)
+# Add selected changes to the Git staging area
+git add -p *
+# Review the changes to make sure that the next commit will be atomic (Git button on the left)
+# Commit
+git commit -m 'message'
+
+```
+
+Note: the pre-commit hooks have a long runtime, but useful messages are displayed early.
 
 TODO :
-- TBD: pip install -e .?
 - add notes on CoLRev development
-- add bash alias (e.g., pcr)
 - running individual tests
+- check whether committed changes need to be pushed
+- Link to html version, include a screenshot and highlight the buttons that we refer to
