@@ -282,7 +282,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             "Journal Article": ENTRYTYPES.ARTICLE,
             "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
         }
-        self.search_source.filename.write_text(response.content.decode("utf-8"))
+        self.search_source.filename.write_text(
+            response.content.decode(encoding="utf-8")
+        )
         enl_loader = colrev.ops.load_utils_enl.ENLLoader(
             load_operation=self.review_manager.get_load_operation(),
             source=self.search_source,
