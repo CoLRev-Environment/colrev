@@ -27,6 +27,7 @@ import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
@@ -1622,8 +1623,8 @@ def pdf_get_man(
             for r in records.values()
             if r[Fields.STATUS]
             in [
-                colrev.record.RecordState.pdf_needs_manual_retrieval,
-                colrev.record.RecordState.rev_prescreen_included,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.rev_prescreen_included,
             ]
         ]
         pdf_get_man_records_df = pd.DataFrame.from_records(pdf_get_man_records)

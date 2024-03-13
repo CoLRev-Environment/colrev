@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -59,17 +60,17 @@ class TablePrescreen(JsonSchemaMixin):
         tbl = []
         for record in records.values():
             if record[Fields.STATUS] not in [
-                colrev.record.RecordState.md_processed,
-                colrev.record.RecordState.rev_prescreen_excluded,
-                colrev.record.RecordState.rev_prescreen_included,
-                colrev.record.RecordState.pdf_needs_manual_retrieval,
-                colrev.record.RecordState.pdf_imported,
-                colrev.record.RecordState.pdf_not_available,
-                colrev.record.RecordState.pdf_needs_manual_preparation,
-                colrev.record.RecordState.pdf_prepared,
-                colrev.record.RecordState.rev_excluded,
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.md_processed,
+                RecordState.rev_prescreen_excluded,
+                RecordState.rev_prescreen_included,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 continue
 
@@ -77,14 +78,11 @@ class TablePrescreen(JsonSchemaMixin):
                 if record[Fields.ID] not in split:
                     continue
 
-            if colrev.record.RecordState.md_processed == record[Fields.STATUS]:
+            if RecordState.md_processed == record[Fields.STATUS]:
                 inclusion_1 = "TODO"
             elif self.export_todos_only:
                 continue
-            elif (
-                colrev.record.RecordState.rev_prescreen_excluded
-                == record[Fields.STATUS]
-            ):
+            elif RecordState.rev_prescreen_excluded == record[Fields.STATUS]:
                 inclusion_1 = "out"
             else:
                 inclusion_1 = "in"
@@ -166,37 +164,25 @@ class TablePrescreen(JsonSchemaMixin):
                 record = colrev.record.Record(
                     data=records[prescreened_record.get(Fields.ID, "")]
                 )
-                if record.data[
-                    Fields.STATUS
-                ] in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.rev_prescreen_included
+                if record.data[Fields.STATUS] in RecordState.get_post_x_states(
+                    state=RecordState.rev_prescreen_included
                 ):
                     if (
                         "in" == prescreened_record.data.get("presceen_inclusion", "")
-                        and colrev.record.RecordState.rev_prescreen_excluded
+                        and RecordState.rev_prescreen_excluded
                         != record.data[Fields.STATUS]
                     ):
                         continue
 
                 if prescreened_record.get("presceen_inclusion", "") == "out":
-                    if (
-                        record.data[Fields.STATUS]
-                        != colrev.record.RecordState.rev_prescreen_excluded
-                    ):
+                    if record.data[Fields.STATUS] != RecordState.rev_prescreen_excluded:
                         prescreen_excluded += 1
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_prescreen_excluded
-                    )
+                    record.set_status(target_state=RecordState.rev_prescreen_excluded)
 
                 elif prescreened_record.get("presceen_inclusion", "") == "in":
-                    if (
-                        record.data[Fields.STATUS]
-                        != colrev.record.RecordState.rev_prescreen_included
-                    ):
+                    if record.data[Fields.STATUS] != RecordState.rev_prescreen_included:
                         prescreen_included += 1
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_prescreen_included
-                    )
+                    record.set_status(target_state=RecordState.rev_prescreen_included)
                 elif prescreened_record.get("presceen_inclusion", "") == "TODO":
                     nr_todo += 1
                 else:

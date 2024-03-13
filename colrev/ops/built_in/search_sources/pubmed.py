@@ -27,6 +27,7 @@ import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=unused-argument
@@ -447,7 +448,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     source=retrieved_record.data[Fields.ORIGIN][0],
                     masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
-                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+                record.set_status(target_state=RecordState.md_prepared)
                 if save_feed:
                     pubmed_feed.save_feed_file()
                 try:

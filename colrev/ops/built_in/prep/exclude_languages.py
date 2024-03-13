@@ -15,6 +15,7 @@ import colrev.ops.search_sources
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -141,9 +142,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 source="LanguageDetector",
                 note="language-not-found",
             )
-            record.set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
-            )
+            record.set_status(target_state=RecordState.md_needs_manual_preparation)
             return record
 
         if record.data.get(Fields.LANGUAGE, "") not in self.languages_to_include:

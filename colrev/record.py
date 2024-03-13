@@ -10,7 +10,6 @@ import re
 import tempfile
 import typing
 from copy import deepcopy
-from enum import Enum
 from pathlib import Path
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -47,6 +46,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import Operations
+from colrev.constants import RecordState
 
 if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -1575,7 +1575,7 @@ class Record:
         This method checks if the record is ready to be screened.
         It returns True if the status of the record is 'pdf_prepared', otherwise it returns False.
         """
-        if colrev.record.RecordState.pdf_prepared == self.data[Fields.STATUS]:
+        if RecordState.pdf_prepared == self.data[Fields.STATUS]:
             return True
         if (
             "screening_criteria" in self.data
@@ -1945,131 +1945,6 @@ class PrepRecord(Record):
         self.data[Fields.AUTHOR] = " and ".join(names)
 
 
-class RecordState(Enum):
-    """The possible RecordStates stored in the colrev_status field
-    (corresponding to the RecordStateModel)"""
-
-    # pylint: disable=invalid-name
-
-    # without the md_retrieved state, we could not display the load transition
-    md_retrieved = 1
-    """Record is retrieved and stored in the ./search directory"""
-    md_imported = 2
-    """Record is imported into the RECORDS_FILE"""
-    md_needs_manual_preparation = 3
-    """Record requires manual preparation
-    (colrev_masterdata_provenance provides hints)"""
-    md_prepared = 4
-    """Record is prepared (no missing or incomplete fields, inconsistencies checked)"""
-    md_processed = 5
-    """Record has been checked for duplicate associations
-    with any record in RecordState md_processed or later"""
-    rev_prescreen_excluded = 6
-    """Record was excluded in the prescreen (based on titles/abstracts)"""
-    rev_prescreen_included = 7
-    """Record was included in the prescreen (based on titles/abstracts)"""
-    pdf_needs_manual_retrieval = 8
-    """Record marked for manual PDF retrieval"""
-    pdf_imported = 9
-    """PDF imported and marked for preparation"""
-    pdf_not_available = 10
-    """PDF is not available"""
-    pdf_needs_manual_preparation = 11
-    """PDF marked for manual preparation"""
-    pdf_prepared = 12
-    """PDF prepared"""
-    rev_excluded = 13
-    """Record excluded in screen (full-text)"""
-    rev_included = 14
-    """Record included in screen (full-text)"""
-    rev_synthesized = 15
-    """Record synthesized"""
-    # Note : TBD: rev_coded
-
-    def __str__(self) -> str:
-        return f"{self.name}"
-
-    def __lt__(self, other) -> bool:  # type: ignore
-        if self.__class__ == RecordState and other.__class__ == RecordState:
-            return self.value < other.value
-        raise NotImplementedError
-
-    @classmethod
-    def get_non_processed_states(cls) -> list:
-        """Get the states that correspond to not-yet-processed"""
-        return [
-            colrev.record.RecordState.md_retrieved,
-            colrev.record.RecordState.md_imported,
-            colrev.record.RecordState.md_prepared,
-            colrev.record.RecordState.md_needs_manual_preparation,
-        ]
-
-    @classmethod
-    def get_post_x_states(cls, *, state: RecordState) -> typing.Set[RecordState]:
-        """Get the states after state x (passed as a parameter)"""
-        if state == RecordState.md_prepared:
-            return {
-                RecordState.md_prepared,
-                RecordState.md_processed,
-                RecordState.rev_prescreen_included,
-                RecordState.rev_prescreen_excluded,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-        if state == RecordState.md_processed:
-            return {
-                RecordState.md_processed,
-                RecordState.rev_prescreen_included,
-                RecordState.rev_prescreen_excluded,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-        if state == RecordState.rev_prescreen_included:
-            return {
-                RecordState.rev_prescreen_included,
-                RecordState.rev_prescreen_excluded,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-        if state == RecordState.pdf_prepared:
-            return {
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-
-        if state == RecordState.rev_included:
-            return {
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-
-        # pylint: disable=no-member
-        raise colrev_exceptions.ParameterError(
-            parameter="state", value="state", options=cls._member_names_
-        )
-
-
 non_processing_transitions = [
     [
         {
@@ -2246,10 +2121,10 @@ class RecordStateModel:
         if operation.review_manager.settings.project.delay_automated_processing:
             start_states: list[str] = [
                 str(x["source"])
-                for x in colrev.record.RecordStateModel.transitions
+                for x in RecordStateModel.transitions
                 if str(operation.type) == x["trigger"]
             ]
-            state = colrev.record.RecordState[start_states[0]]
+            state = RecordState[start_states[0]]
 
             cur_state_list = get_states_set()
             # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")

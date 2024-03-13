@@ -12,6 +12,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
 keys = [
@@ -176,7 +177,7 @@ def _validate_prep_prescreen_exclusions(
 
         for error in prescreen_errors:
             colrev.record.Record(data=error).set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
+                target_state=RecordState.md_needs_manual_preparation
             )
             validate_operation.review_manager.dataset.save_records_dict(
                 records={error[Fields.ID]: error},

@@ -18,6 +18,7 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-few-public-methods
@@ -415,10 +416,10 @@ class Upgrade(colrev.operation.Operation):
             record = colrev.record.Record(data=record_dict)
             prior_state = record.data[Fields.STATUS]
             record.run_quality_model(qm=quality_model)
-            if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
+            if prior_state == RecordState.rev_prescreen_excluded:
                 record.data[  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS
-                ] = colrev.record.RecordState.rev_prescreen_excluded
+                ] = RecordState.rev_prescreen_excluded
         self.review_manager.dataset.save_records_dict(records=records)
         return self.repo.is_dirty()
 

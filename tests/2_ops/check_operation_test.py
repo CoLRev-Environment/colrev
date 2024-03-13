@@ -4,6 +4,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.record import RecordStateModel
 
 
 def test_check_operation_precondition(  # type: ignore
@@ -16,7 +17,5 @@ def test_check_operation_precondition(  # type: ignore
     dedupe_operation = base_repo_review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
     with pytest.raises(colrev_exceptions.ProcessOrderViolation):
-        colrev.record.RecordStateModel.check_operation_precondition(
-            operation=dedupe_operation
-        )
+        RecordStateModel.check_operation_precondition(operation=dedupe_operation)
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False

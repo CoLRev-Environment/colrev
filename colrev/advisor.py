@@ -15,6 +15,7 @@ from git.exc import NoSuchPathError
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 class Advisor:
@@ -465,12 +466,12 @@ class Advisor:
     ) -> list:
         # excluding pdf_not_available
         file_required_status = [
-            colrev.record.RecordState.pdf_imported,
-            colrev.record.RecordState.pdf_needs_manual_preparation,
-            colrev.record.RecordState.pdf_prepared,
-            colrev.record.RecordState.rev_excluded,
-            colrev.record.RecordState.rev_included,
-            colrev.record.RecordState.rev_synthesized,
+            RecordState.pdf_imported,
+            RecordState.pdf_needs_manual_preparation,
+            RecordState.pdf_prepared,
+            RecordState.rev_excluded,
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
         ]
         missing_files = []
         for record_dict in status_stats.records.values():

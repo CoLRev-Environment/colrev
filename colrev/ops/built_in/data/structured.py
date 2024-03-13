@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # an option: https://pypi.org/project/csv-schema/
@@ -125,8 +126,8 @@ Example 2:
                     msg=f"{data_id} in {self.settings.data_path_relative} not in records"
                 )
             if records[data_id][Fields.STATUS] not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 raise colrev_exceptions.DataException(
                     msg=f"{data_id} in {self.settings.data_path_relative} "

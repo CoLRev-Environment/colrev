@@ -22,6 +22,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 
@@ -149,20 +150,20 @@ class Dedupe(colrev.operation.Operation):
                 dupe_record = rec_1
 
         # 2. If a record is md_prepared, use it as the dupe record
-        elif rec_1[Fields.STATUS] == colrev.record.RecordState.md_prepared:
+        elif rec_1[Fields.STATUS] == RecordState.md_prepared:
             main_record = rec_2
             dupe_record = rec_1
-        elif rec_2[Fields.STATUS] == colrev.record.RecordState.md_prepared:
+        elif rec_2[Fields.STATUS] == RecordState.md_prepared:
             main_record = rec_1
             dupe_record = rec_2
 
         # 3. If a record is md_processed, use the other record as the dupe record
         # -> during the fix_errors procedure, records are in md_processed
         # and beyond.
-        elif rec_1[Fields.STATUS] == colrev.record.RecordState.md_processed:
+        elif rec_1[Fields.STATUS] == RecordState.md_processed:
             main_record = rec_1
             dupe_record = rec_2
-        elif rec_2[Fields.STATUS] == colrev.record.RecordState.md_processed:
+        elif rec_2[Fields.STATUS] == RecordState.md_processed:
             main_record = rec_2
             dupe_record = rec_1
 
@@ -267,10 +268,7 @@ class Dedupe(colrev.operation.Operation):
             duplicate_ids = [x.replace(record_id, "-") for x in duplicate_ids]
             if record_id not in records:
                 continue
-            if (
-                colrev.record.RecordState.md_prepared
-                == records[record_id][Fields.STATUS]
-            ):
+            if RecordState.md_prepared == records[record_id][Fields.STATUS]:
                 if complete_dedupe:
                     self.review_manager.logger.info(
                         f" {Colors.GREEN}{record_id} ({'|'.join(duplicate_ids)}) ".ljust(
@@ -311,11 +309,9 @@ class Dedupe(colrev.operation.Operation):
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
             for record_dict in records.values():
-                if record_dict[Fields.STATUS] == colrev.record.RecordState.md_prepared:
+                if record_dict[Fields.STATUS] == RecordState.md_prepared:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_processed
-                    )
+                    record.set_status(target_state=RecordState.md_processed)
                     set_to_md_processed.append(record.data[Fields.ID])
 
         self.review_manager.dataset.save_records_dict(records=records)
@@ -528,9 +524,7 @@ class Dedupe(colrev.operation.Operation):
                     if any(orig in origins for orig in hist_rec.get(Fields.ORIGIN, [])):
                         # TODO Avoid ID conflicts
                         assert hist_rec[Fields.ID] not in unmerged_records
-                        hist_rec.update(
-                            {Fields.STATUS: colrev.record.RecordState.md_processed}
-                        )
+                        hist_rec.update({Fields.STATUS: RecordState.md_processed})
                         print(f"add historical record: {hist_rec[Fields.ID]}")
                         unmerged_records[hist_rec[Fields.ID]] = hist_rec
                         unmerged_rids.append(rid)
@@ -727,10 +721,8 @@ class Dedupe(colrev.operation.Operation):
             records = self.review_manager.dataset.load_records_dict()
             for record_dict in records.values():
                 record = colrev.record.Record(data=record_dict)
-                if colrev.record.RecordState.md_processed == record.data[Fields.STATUS]:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_prescreen_included
-                    )
+                if RecordState.md_processed == record.data[Fields.STATUS]:
+                    record.set_status(target_state=RecordState.rev_prescreen_included)
 
             self.review_manager.dataset.save_records_dict(records=records)
             self.review_manager.dataset.create_commit(msg="Skip prescreen/include all")

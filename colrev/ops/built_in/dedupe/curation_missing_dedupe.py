@@ -15,6 +15,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-many-arguments
@@ -40,8 +41,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
         self.review_manager = dedupe_operation.review_manager
         self.dedupe_operation = dedupe_operation
 
-        self._post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
-            state=colrev.record.RecordState.md_processed
+        self._post_md_prepared_states = RecordState.get_post_x_states(
+            state=RecordState.md_processed
         )
 
     def _create_dedupe_source_stats(self) -> None:
@@ -62,9 +63,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 if any(source_origin in co for co in r[Fields.ORIGIN])
                 and r[Fields.STATUS]
                 in [
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_imported,
+                    RecordState.md_prepared,
+                    RecordState.md_needs_manual_preparation,
+                    RecordState.md_imported,
                 ]
             ]
             records_df = pd.DataFrame.from_records(list(selected_records))
@@ -121,9 +122,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 return []
         else:
             # only dedupe md_prepared records
-            if record.data[Fields.STATUS] not in [
-                colrev.record.RecordState.md_prepared
-            ]:
+            if record.data[Fields.STATUS] not in [RecordState.md_prepared]:
                 return []
         if record.data.get(Fields.TITLE, "") == "":
             return []
@@ -146,9 +145,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
             if record_candidate[Fields.ID] == record.data[Fields.ID]:
                 continue
             if record_candidate[Fields.STATUS] in [
-                colrev.record.RecordState.md_prepared,
-                colrev.record.RecordState.md_needs_manual_preparation,
-                colrev.record.RecordState.md_imported,
+                RecordState.md_prepared,
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_imported,
             ]:
                 continue
             same_toc_recs.append(record_candidate)
@@ -200,7 +199,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 [
                     x
                     for x in records.values()
-                    if x[Fields.STATUS] in [colrev.record.RecordState.md_prepared]
+                    if x[Fields.STATUS] in [RecordState.md_prepared]
                 ]
             )
         return nr_recs_to_merge
@@ -320,7 +319,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 if record_id in ret["records_to_prepare"]:
                     record = colrev.record.Record(data=record_dict)
                     record.set_status(
-                        target_state=colrev.record.RecordState.md_needs_manual_preparation
+                        target_state=RecordState.md_needs_manual_preparation
                     )
 
             self.review_manager.dataset.save_records_dict(records=records)
@@ -335,14 +334,12 @@ class CurationMissingDedupe(JsonSchemaMixin):
             for record_id, record_dict in records.items():
                 if record_id in ret["add_records_to_md_processed_list"]:
                     if record_dict[Fields.STATUS] in [
-                        colrev.record.RecordState.md_prepared,
-                        colrev.record.RecordState.md_needs_manual_preparation,
-                        colrev.record.RecordState.md_imported,
+                        RecordState.md_prepared,
+                        RecordState.md_needs_manual_preparation,
+                        RecordState.md_imported,
                     ]:
                         record = colrev.record.Record(data=record_dict)
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_processed
-                        )
+                        record.set_status(target_state=RecordState.md_processed)
 
             self.review_manager.dataset.save_records_dict(records=records)
             input("Edit records (if any), add to git, and press Enter")

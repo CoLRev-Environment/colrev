@@ -14,6 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 class Validate(colrev.operation.Operation):
@@ -78,9 +79,9 @@ class Validate(colrev.operation.Operation):
                 ):
                     if (
                         prior_record_dict[Fields.STATUS]
-                        != colrev.record.RecordState.rev_prescreen_excluded
+                        != RecordState.rev_prescreen_excluded
                         and record_dict[Fields.STATUS]
-                        == colrev.record.RecordState.rev_prescreen_excluded
+                        == RecordState.rev_prescreen_excluded
                     ):
                         prep_prescreen_exclusions.append(record_dict)
 

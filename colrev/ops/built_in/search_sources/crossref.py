@@ -31,6 +31,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -346,7 +347,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 source=crossref_source,
                 masterdata_repository=self.review_manager.settings.is_curated_repo(),
             )
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            record.set_status(target_state=RecordState.md_prepared)
 
     def _get_crossref_query_items(
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool, timeout: int

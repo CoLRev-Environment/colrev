@@ -9,6 +9,7 @@ import colrev.env.tei_parser
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=line-too-long
 
@@ -81,7 +82,7 @@ def test_search(local_index) -> None:  # type: ignore
                     Fields.URL: {"note": "", "source": "DBLP.bib/001187"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
-                Fields.STATUS: colrev.record.RecordState.md_prepared,
+                Fields.STATUS: RecordState.md_prepared,
                 "curation_ID": "gh...#AbbasZhouDengEtAl2018",
                 Fields.DOI: "10.25300/MISQ/2018/13239",
                 Fields.JOURNAL: "MIS Quarterly",
@@ -109,7 +110,7 @@ def test_search(local_index) -> None:  # type: ignore
                     Fields.URL: {"note": "", "source": "DBLP.bib/000528"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
-                Fields.STATUS: colrev.record.RecordState.md_prepared,
+                Fields.STATUS: RecordState.md_prepared,
                 "curation_ID": "gh...#AlaviLeidner2001",
                 Fields.DOI: "10.2307/3250961",
                 Fields.JOURNAL: "MIS Quarterly",
@@ -174,7 +175,7 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
     expected = {
         Fields.ID: "AbbasZhouDengEtAl2018",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.MD_PROV: {"CURATED": {"source": "gh...", "note": ""}},
         Fields.D_PROV: {
             Fields.DOI: {"source": "pdfs.bib/0000000089", "note": ""},
@@ -205,7 +206,7 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
     expected = {
         Fields.ID: "AbbasiAlbrechtVanceEtAl2012",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.MD_PROV: {"CURATED": {"source": "gh...", "note": ""}},
         Fields.D_PROV: {
             Fields.PDF_ID: {"source": "file|pdf_hash", "note": ""},

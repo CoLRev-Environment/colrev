@@ -14,6 +14,7 @@ import colrev.ops.pdf_get
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -217,10 +218,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         # to print only the essential information
         self.print_record(record_dict=record.get_data())
 
-        if (
-            colrev.record.RecordState.pdf_needs_manual_retrieval
-            != record.data[Fields.STATUS]
-        ):
+        if RecordState.pdf_needs_manual_retrieval != record.data[Fields.STATUS]:
             return
 
         retrieval_scripts = {

@@ -11,6 +11,7 @@ from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 def test_container_title_abbreviated(
@@ -1404,7 +1405,7 @@ def test_retracted(
     r1_mod.run_quality_model(qm=quality_model)
     expected = v_t_record.copy_prep_rec()
     expected.data[Fields.PRESCREEN_EXCLUSION] = "retracted"
-    expected.data[Fields.STATUS] = colrev.record.RecordState.rev_prescreen_excluded
+    expected.data[Fields.STATUS] = RecordState.rev_prescreen_excluded
     expected.data[Fields.MD_PROV] = {}
     # expected = {
     #     "ID": "r1",
@@ -1419,7 +1420,7 @@ def test_retracted(
     #         "pages": {"source": "import.bib/id_0001", "note": ""},
     #     },
     #     "colrev_data_provenance": {},
-    #     "colrev_status": colrev.record.RecordState.rev_prescreen_excluded,
+    #     "colrev_status": RecordState.rev_prescreen_excluded,
     #     "colrev_origin": ["import.bib/id_0001"],
     #     "year": "2020",
     #     Fields.TITLE: "EDITORIAL",
@@ -1443,5 +1444,5 @@ def test_defect_ignore(
     v_t_record.run_quality_model(qm=quality_model)
     v_t_record.ignore_defect(field="journal", defect=DefectCodes.MOSTLY_ALL_CAPS)
     v_t_record.run_quality_model(qm=quality_model, set_prepared=True)
-    assert v_t_record.data[Fields.STATUS] == colrev.record.RecordState.md_prepared
+    assert v_t_record.data[Fields.STATUS] == RecordState.md_prepared
     assert not v_t_record.has_quality_defects()

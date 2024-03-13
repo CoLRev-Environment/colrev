@@ -8,6 +8,7 @@ import re
 import colrev.env.language_service
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -128,7 +129,7 @@ class LoadFormatter:
 
         self._apply_strict_requirements(record=record)
 
-        if record.data[Fields.STATUS] != colrev.record.RecordState.md_retrieved:
+        if record.data[Fields.STATUS] != RecordState.md_retrieved:
             return
 
         self._lower_case_keys(record=record)

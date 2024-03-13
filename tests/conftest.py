@@ -15,6 +15,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.record import RecordStateModel
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -191,9 +192,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     dedupe_operation = review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
     with pytest.raises(colrev_exceptions.NoRecordsError):
-        colrev.record.RecordStateModel.check_operation_precondition(
-            operation=dedupe_operation
-        )
+        RecordStateModel.check_operation_precondition(operation=dedupe_operation)
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [

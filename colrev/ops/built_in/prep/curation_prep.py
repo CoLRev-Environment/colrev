@@ -12,6 +12,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -139,10 +140,7 @@ class CurationPrep(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Prepare records in a CoLRev curation"""
 
-        if (
-            record.data[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             return record
 
         self.apply_curation_restrictions(record=record)

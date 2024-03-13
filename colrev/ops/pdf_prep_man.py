@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
@@ -38,14 +39,9 @@ class PDFPrepMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            if (
-                record_dict[Fields.STATUS]
-                == colrev.record.RecordState.pdf_needs_manual_preparation
-            ):
+            if record_dict[Fields.STATUS] == RecordState.pdf_needs_manual_preparation:
                 record = colrev.record.Record(data=record_dict)
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_not_available
-                )
+                record.set_status(target_state=RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.create_commit(
             msg="Discard man-prep PDFs", manual_author=True
@@ -63,8 +59,7 @@ class PDFPrepMan(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.pdf_needs_manual_preparation
-                == x[Fields.STATUS]
+                if RecordState.pdf_needs_manual_preparation == x[Fields.STATUS]
             ]
         )
         pad = 0
@@ -72,9 +67,7 @@ class PDFPrepMan(colrev.operation.Operation):
             pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 40)
 
         items = self.review_manager.dataset.read_next_record(
-            conditions=[
-                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_preparation}
-            ]
+            conditions=[{Fields.STATUS: RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
         self.review_manager.logger.debug(
@@ -101,10 +94,7 @@ class PDFPrepMan(colrev.operation.Operation):
         prep_man_hints = []
         crosstab = []
         for record_dict in records.values():
-            if (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                != record_dict[Fields.STATUS]
-            ):
+            if RecordState.pdf_needs_manual_preparation != record_dict[Fields.STATUS]:
                 continue
 
             if record_dict[Fields.ENTRYTYPE] in stats[Fields.ENTRYTYPE]:
@@ -171,8 +161,7 @@ class PDFPrepMan(colrev.operation.Operation):
         records = {
             record[Fields.ID]: record
             for record in records.values()
-            if colrev.record.RecordState.pdf_needs_manual_preparation
-            == record[Fields.STATUS]
+            if RecordState.pdf_needs_manual_preparation == record[Fields.STATUS]
         }
 
         write_file(records_dict=records, filename=prep_bib_path)
@@ -303,7 +292,7 @@ class PDFPrepMan(colrev.operation.Operation):
     def set_pdf_man_prepared(self, *, record: colrev.record.Record) -> None:
         """Set the PDF to manually prepared"""
 
-        record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
+        record.set_status(target_state=RecordState.pdf_prepared)
         record.reset_pdf_provenance_notes()
 
         pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))

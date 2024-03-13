@@ -15,6 +15,7 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-many-arguments
@@ -195,7 +196,7 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
                 for co in r[Fields.ORIGIN]
@@ -213,10 +214,10 @@ class CurationDedupe(JsonSchemaMixin):
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
                 and r[Fields.STATUS]
                 not in [
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.rev_prescreen_excluded,
+                    RecordState.md_prepared,
+                    RecordState.md_needs_manual_preparation,
+                    RecordState.md_imported,
+                    RecordState.rev_prescreen_excluded,
                 ]
                 and any(
                     self.settings.selected_source.replace("data/search/", "") in co
@@ -255,7 +256,7 @@ class CurationDedupe(JsonSchemaMixin):
                                 data=source_record_dict
                             )
                             source_record.set_status(
-                                target_state=colrev.record.RecordState.md_processed
+                                target_state=RecordState.md_processed
                             )
             else:
                 print(toc_item)
@@ -312,7 +313,7 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
                 for co in r[Fields.ORIGIN]
@@ -332,10 +333,10 @@ class CurationDedupe(JsonSchemaMixin):
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
                 and r[Fields.STATUS]
                 not in [
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.rev_prescreen_excluded,
+                    RecordState.md_imported,
+                    RecordState.md_needs_manual_preparation,
+                    RecordState.md_prepared,
+                    RecordState.rev_prescreen_excluded,
                 ]
                 and not any(
                     self.settings.selected_source.replace("data/search/", "") in co
@@ -426,10 +427,10 @@ class CurationDedupe(JsonSchemaMixin):
             if all(r.get(k, "NA") == v for k, v in toc_item.items())
             and r[Fields.STATUS]
             not in [
-                colrev.record.RecordState.md_imported,
-                colrev.record.RecordState.md_needs_manual_preparation,
-                colrev.record.RecordState.md_prepared,
-                colrev.record.RecordState.rev_prescreen_excluded,
+                RecordState.md_imported,
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_prepared,
+                RecordState.rev_prescreen_excluded,
             ]
             and not any(
                 self.settings.selected_source.replace("data/search/", "") in co
@@ -476,7 +477,7 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
                 for co in r[Fields.ORIGIN]

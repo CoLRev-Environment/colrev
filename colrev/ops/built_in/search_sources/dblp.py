@@ -25,6 +25,7 @@ import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -133,7 +134,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 Fields.JOURNAL: "Communications of the Association for Information Systems",
                 Fields.VOLUME: "46",
                 Fields.YEAR: "2020",
-                Fields.STATUS: colrev.record.RecordState.md_prepared,  # type: ignore
+                Fields.STATUS: RecordState.md_prepared,  # type: ignore
             }
 
             query = "" + str(test_rec.get(Fields.TITLE, "")).replace("-", "_")
@@ -707,9 +708,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                         source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
+                    record.set_status(target_state=RecordState.md_prepared)
                     if "Withdrawn (according to DBLP)" in record.data.get(
                         "warning", ""
                     ):

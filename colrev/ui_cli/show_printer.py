@@ -6,6 +6,7 @@ from pathlib import Path
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -18,8 +19,8 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
         for r in records.values()
         if r[Fields.STATUS]
         in [
-            colrev.record.RecordState.rev_synthesized,
-            colrev.record.RecordState.rev_included,
+            RecordState.rev_synthesized,
+            RecordState.rev_included,
         ]
     ]
     if 0 == len(sample):

@@ -11,6 +11,7 @@ import colrev.record  # pylint: disable=cyclic-import
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 def _format_author_field_for_cid(input_string: str) -> str:
@@ -94,8 +95,8 @@ def _check_colrev_id_preconditions(
     if assume_complete:
         return
     if record.data.get(Fields.STATUS, "NA") in [
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
+        RecordState.md_imported,
+        RecordState.md_needs_manual_preparation,
     ]:
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="cannot determine field requirements "

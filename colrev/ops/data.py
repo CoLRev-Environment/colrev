@@ -13,6 +13,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 class Data(colrev.operation.Operation):
@@ -42,8 +43,8 @@ class Data(colrev.operation.Operation):
             for ID, record in records.items()
             if record[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         ]
 
@@ -133,8 +134,8 @@ class Data(colrev.operation.Operation):
                 for ID, record in records.items()
                 if record[Fields.STATUS]
                 in [
-                    colrev.record.RecordState.rev_synthesized,
-                    colrev.record.RecordState.rev_included,
+                    RecordState.rev_synthesized,
+                    RecordState.rev_included,
                 ]
                 and record.get(Fields.YEAR, FieldValues.UNKNOWN).isdigit()
             ]
@@ -268,10 +269,7 @@ class Data(colrev.operation.Operation):
             individual_status_dict,
         ) in synthesized_record_status_matrix.items():
             if all(x for x in individual_status_dict.values()):
-                if (
-                    records[record_id][Fields.STATUS]
-                    != colrev.record.RecordState.rev_synthesized
-                ):
+                if records[record_id][Fields.STATUS] != RecordState.rev_synthesized:
                     if self.review_manager.verbose_mode:
                         self.review_manager.report_logger.info(
                             f" {record_id}".ljust(self._pad, " ")
@@ -282,24 +280,14 @@ class Data(colrev.operation.Operation):
                             + "set colrev_status to synthesized"
                         )
 
-                if (
-                    colrev.record.RecordState.rev_synthesized
-                    != records[record_id][Fields.STATUS]
-                ):
+                if RecordState.rev_synthesized != records[record_id][Fields.STATUS]:
                     # pylint: disable=colrev-direct-status-assign
-                    records[record_id].update(
-                        colrev_status=colrev.record.RecordState.rev_synthesized
-                    )
+                    records[record_id].update(colrev_status=RecordState.rev_synthesized)
                     records_changed = True
             else:
-                if (
-                    colrev.record.RecordState.rev_included
-                    != records[record_id][Fields.STATUS]
-                ):
+                if RecordState.rev_included != records[record_id][Fields.STATUS]:
                     # pylint: disable=colrev-direct-status-assign
-                    records[record_id].update(
-                        colrev_status=colrev.record.RecordState.rev_included
-                    )
+                    records[record_id].update(colrev_status=RecordState.rev_included)
                     records_changed = True
         return records_changed
 

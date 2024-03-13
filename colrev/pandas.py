@@ -15,6 +15,7 @@ from bib_dedupe.bib_dedupe import prep
 
 import colrev.review_manager
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 def load_df(
@@ -229,8 +230,8 @@ def extract_pdfs_for_data_extraction(
     directory_path.mkdir(parents=True, exist_ok=True)
     for _, record in records_df.iterrows():
         if record[Fields.STATUS] not in [
-            colrev.record.RecordState.rev_included,
-            colrev.record.RecordState.rev_synthesized,
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
         ]:
             continue
         if Fields.FILE in record and not pd.isnull(record[Fields.FILE]):

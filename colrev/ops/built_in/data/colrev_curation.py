@@ -17,6 +17,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -98,20 +99,16 @@ class ColrevCuration(JsonSchemaMixin):
             r_status = str(record_dict[Fields.STATUS])
             if r_status == "rev_prescreen_excluded":
                 continue
-            if record_dict[
-                Fields.STATUS
-            ] in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_processed
+            if record_dict[Fields.STATUS] in RecordState.get_post_x_states(
+                state=RecordState.md_processed
             ):
-                r_status = str(colrev.record.RecordState.md_processed)
-            elif record_dict[
-                Fields.STATUS
-            ] in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.pdf_prepared
+                r_status = str(RecordState.md_processed)
+            elif record_dict[Fields.STATUS] in RecordState.get_post_x_states(
+                state=RecordState.pdf_prepared
             ):
-                r_status = str(colrev.record.RecordState.pdf_prepared)
+                r_status = str(RecordState.pdf_prepared)
             else:
-                r_status = str(colrev.record.RecordState.md_imported)
+                r_status = str(RecordState.md_imported)
 
             if Fields.JOURNAL in record_dict:
                 key = (
@@ -357,16 +354,11 @@ class ColrevCuration(JsonSchemaMixin):
         non_identifiable_records = []
         for record_dict in records.values():
             try:
-                if record_dict[
-                    Fields.STATUS
-                ] not in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_prepared
+                if record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
+                    state=RecordState.md_prepared
                 ):
                     continue
-                if (
-                    record_dict[Fields.STATUS]
-                    == colrev.record.RecordState.rev_prescreen_excluded
-                ):
+                if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
                     continue
                 cid = colrev.record.Record(data=record_dict).create_colrev_id(
                     assume_complete=True

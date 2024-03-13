@@ -6,6 +6,7 @@ import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=line-too-long
 # flake8: noqa
@@ -26,7 +27,7 @@ v1 = {
         Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
     },
     Fields.D_PROV: {},
-    Fields.STATUS: colrev.record.RecordState.md_prepared,
+    Fields.STATUS: RecordState.md_prepared,
     Fields.ORIGIN: ["import.bib/id_0001"],
     Fields.YEAR: "2020",
     Fields.TITLE: "EDITORIAL",

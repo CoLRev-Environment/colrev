@@ -20,6 +20,7 @@ from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=duplicate-code
@@ -131,7 +132,7 @@ class ExportManPrep(JsonSchemaMixin):
         man_prep_recs = {
             k: v
             for k, v in records.items()
-            if colrev.record.RecordState.md_needs_manual_preparation == v[Fields.STATUS]
+            if RecordState.md_needs_manual_preparation == v[Fields.STATUS]
         }
 
         # Filter out fields that are not needed for manual preparation
@@ -155,7 +156,7 @@ class ExportManPrep(JsonSchemaMixin):
         man_prep_recs = [
             v
             for _, v in records.items()
-            if colrev.record.RecordState.md_needs_manual_preparation == v[Fields.STATUS]
+            if RecordState.md_needs_manual_preparation == v[Fields.STATUS]
         ]
 
         man_prep_info = []
@@ -249,18 +250,13 @@ class ExportManPrep(JsonSchemaMixin):
             )
 
     def _print_stats(self, *, original_record: colrev.record.Record) -> None:
-        if (
-            original_record.data[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        if original_record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             self.review_manager.logger.info(
                 f" {Colors.RED}{original_record.data['ID']}".ljust(46)
                 + "md_needs_manual_preparation →  rev_prescreen_excluded"
                 + f"{Colors.END}"
             )
-        elif (
-            original_record.data[Fields.STATUS] == colrev.record.RecordState.md_prepared
-        ):
+        elif original_record.data[Fields.STATUS] == RecordState.md_prepared:
             self.review_manager.logger.info(
                 f" {Colors.GREEN}{original_record.data['ID']}".ljust(46)
                 + "md_needs_manual_preparation →  md_prepared"
@@ -286,10 +282,7 @@ class ExportManPrep(JsonSchemaMixin):
         imported_records: list,
     ) -> None:
         imported_records.append(original_record.data[Fields.ID])
-        override = (
-            man_prepped_record_dict[Fields.STATUS]
-            == colrev.record.RecordState.md_prepared
-        )
+        override = man_prepped_record_dict[Fields.STATUS] == RecordState.md_prepared
 
         self._update_original_record_based_on_man_prepped(
             original_record=original_record,
@@ -297,12 +290,9 @@ class ExportManPrep(JsonSchemaMixin):
         )
 
         self._drop_unnecessary_provenance_fiels(record=original_record)
-        if (
-            man_prepped_record_dict[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        if man_prepped_record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             original_record.set_status(
-                target_state=colrev.record.RecordState.rev_prescreen_excluded,
+                target_state=RecordState.rev_prescreen_excluded,
                 force=True,
             )
 
@@ -310,9 +300,7 @@ class ExportManPrep(JsonSchemaMixin):
             original_record.run_quality_model(qm=self.quality_model, set_prepared=True)
 
         if override:
-            original_record.set_status(
-                target_state=colrev.record.RecordState.md_prepared, force=True
-            )
+            original_record.set_status(target_state=RecordState.md_prepared, force=True)
 
         self._print_stats(original_record=original_record)
 
@@ -332,12 +320,12 @@ class ExportManPrep(JsonSchemaMixin):
         for record_id, record_dict in records.items():
             if (
                 record_dict[Fields.STATUS]
-                == colrev.record.RecordState.rev_prescreen_excluded
+                == RecordState.rev_prescreen_excluded
                 # or record_id not in man_prep_recs
             ):
                 records[record_id][  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS
-                ] = colrev.record.RecordState.rev_prescreen_excluded
+                ] = RecordState.rev_prescreen_excluded
                 self.review_manager.logger.info(
                     f" {Colors.RED}{record_id}".ljust(46)
                     + "md_needs_manual_preparation →  rev_prescreen_excluded"

@@ -19,7 +19,7 @@ class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
 
         assignment_node = astroid.extract_node(
             """
-        record_dict["colrev_status"] = colrev.record.RecordState.md_imported
+        record_dict["colrev_status"] = RecordState.md_imported
 
         """
         )
@@ -31,14 +31,14 @@ class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
                 line=2,
                 col_offset=0,
                 end_line=2,
-                end_col_offset=68,
+                end_col_offset=54,
             ),
         ):
             self.checker.visit_assign(assignment_node)
 
         call_node = astroid.extract_node(
             """
-        record_dict.update(colrev_status= colrev.record.RecordState.md_imported)
+        record_dict.update(colrev_status= RecordState.md_imported)
         """
         )
 
@@ -49,7 +49,7 @@ class TestDirectStatusAssignmentChecker(pylint.testutils.CheckerTestCase):
                 line=2,
                 col_offset=0,
                 end_line=2,
-                end_col_offset=72,
+                end_col_offset=58,
             ),
         ):
             self.checker.visit_call(call_node)

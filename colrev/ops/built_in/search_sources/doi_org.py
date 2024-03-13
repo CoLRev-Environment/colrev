@@ -15,6 +15,7 @@ import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 # Note: not (yet) implemented as a full search_source
@@ -78,7 +79,7 @@ class DOIConnector:
                 source=url,
                 masterdata_repository=review_manager.settings.is_curated_repo(),
             )
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            record.set_status(target_state=RecordState.md_prepared)
             if FieldValues.RETRACTED in record.data.get("warning", ""):
                 record.prescreen_exclude(reason=FieldValues.RETRACTED)
                 record.remove_field(key="warning")

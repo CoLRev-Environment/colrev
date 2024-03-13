@@ -8,6 +8,7 @@ import colrev.env.environment_manager
 import colrev.env.tei_parser
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-lines
@@ -1583,7 +1584,7 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
             "TEST_ID": {
                 Fields.ID: "TEST_ID",
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-                Fields.STATUS: colrev.record.RecordState.rev_included,
+                Fields.STATUS: RecordState.rev_included,
                 Fields.TITLE: "What constitutes a theoretical contribution?",
                 Fields.JOURNAL: "Academy of Management Review",
                 Fields.AUTHOR: "Whetten, D. A",
@@ -1594,7 +1595,7 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
             "NO_TITLE": {
                 Fields.ID: "NO_TITLE",
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-                Fields.STATUS: colrev.record.RecordState.rev_included,
+                Fields.STATUS: RecordState.rev_included,
                 Fields.JOURNAL: "Academy of Management Review",
                 Fields.AUTHOR: "Whetten, D. A",
                 Fields.YEAR: "1989",
@@ -1604,7 +1605,7 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
             "NOT_INCLUDED": {
                 Fields.ID: "NOT_INCLUDED",
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-                Fields.STATUS: colrev.record.RecordState.rev_prescreen_excluded,
+                Fields.STATUS: RecordState.rev_prescreen_excluded,
                 Fields.JOURNAL: "Academy of Management Review",
                 Fields.AUTHOR: "Whetten, D. A",
                 Fields.YEAR: "1989",

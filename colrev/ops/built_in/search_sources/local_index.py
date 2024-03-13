@@ -24,6 +24,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -440,7 +441,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             ):
                 del record.data[Fields.VOLUME]
 
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            record.set_status(target_state=RecordState.md_prepared)
             if (
                 record.data.get(Fields.PRESCREEN_EXCLUSION, "NA")
                 == FieldValues.RETRACTED

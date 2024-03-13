@@ -27,6 +27,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-many-public-methods
@@ -377,11 +378,11 @@ class Dataset:
 
                 record = colrev.record.PrepRecord(data=record_dict)
                 if record_dict[Fields.STATUS] in [
-                    colrev.record.RecordState.md_needs_manual_preparation,
+                    RecordState.md_needs_manual_preparation,
                 ]:
                     record.run_quality_model(qm=quality_model)
 
-                if record_dict[Fields.STATUS] == colrev.record.RecordState.pdf_prepared:
+                if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
                     record.reset_pdf_provenance_notes()
 
             self.save_records_dict(records=records)
@@ -488,8 +489,8 @@ class Dataset:
 
         for record in self.load_records_dict(header_only=True).values():
             if record[Fields.ID] == record_id:
-                if record[Fields.STATUS] in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_processed
+                if record[Fields.STATUS] in RecordState.get_post_x_states(
+                    state=RecordState.md_processed
                 ):
                     return True
 
@@ -505,8 +506,8 @@ class Dataset:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
         # Only change IDs that are before md_processed
-        if record_dict[Fields.STATUS] in colrev.record.RecordState.get_post_x_states(
-            state=colrev.record.RecordState.md_processed
+        if record_dict[Fields.STATUS] in RecordState.get_post_x_states(
+            state=RecordState.md_processed
         ):
             raise colrev_exceptions.PropagatedIDChange([record_dict[Fields.ID]])
         # Alternatively, we could change IDs except for those
@@ -552,8 +553,8 @@ class Dataset:
                 if (
                     record_dict[Fields.STATUS]
                     not in [
-                        colrev.record.RecordState.md_imported,
-                        colrev.record.RecordState.md_prepared,
+                        RecordState.md_imported,
+                        RecordState.md_prepared,
                     ]
                     and not self.review_manager.force_mode
                 ):
@@ -563,9 +564,7 @@ class Dataset:
                 temp_stat = record_dict[Fields.STATUS]
                 if selected_ids:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
+                    record.set_status(target_state=RecordState.md_prepared)
                 new_id = self._generate_id(
                     local_index=local_index,
                     record_dict=record_dict,

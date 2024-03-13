@@ -18,6 +18,7 @@ import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -107,8 +108,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         ):
             return False

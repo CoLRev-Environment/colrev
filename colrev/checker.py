@@ -16,6 +16,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
+from colrev.constants import RecordState
+from colrev.record import RecordStateModel
 
 
 class Checker:
@@ -235,7 +237,7 @@ class Checker:
         """Check field values"""
 
         # Check status fields
-        status_schema = colrev.record.RecordState
+        status_schema = RecordState
         stat_diff = set(status_data["status_fields"]).difference(status_schema)
         if stat_diff:
             raise colrev_exceptions.FieldValueError(
@@ -268,7 +270,7 @@ class Checker:
         self,
         *,
         record_id: str,
-        status: colrev.record.RecordState,
+        status: RecordState,
         screen_crit: str,
         field_errors: typing.List[str],
         pattern: str,
@@ -277,11 +279,8 @@ class Checker:
     ) -> None:
         # No screening criteria allowed before screen
         if (
-            status
-            not in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.rev_included
-            )
-            and status != colrev.record.RecordState.md_needs_manual_preparation
+            status not in RecordState.get_post_x_states(state=RecordState.rev_included)
+            and status != RecordState.md_needs_manual_preparation
         ):
             if "NA" != screen_crit:
                 raise colrev_exceptions.FieldValueError(
@@ -301,8 +300,8 @@ class Checker:
 
         # Included papers must match inclusion pattern
         if status in [
-            colrev.record.RecordState.rev_included,
-            colrev.record.RecordState.rev_synthesized,
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
         ]:
             if not re.match(pattern_inclusion, screen_crit):
                 field_errors.append(
@@ -312,7 +311,7 @@ class Checker:
             return
 
         # Excluded papers must match exclusion pattern
-        if status == colrev.record.RecordState.rev_excluded:
+        if status == RecordState.rev_excluded:
             if ["NA"] == criteria:
                 if screen_crit == "NA":
                     return
@@ -491,10 +490,8 @@ class Checker:
         for prior_record in prior_records.values():
             for orig in prior_record[Fields.ORIGIN]:
                 prior[Fields.STATUS].append([orig, prior_record[Fields.STATUS]])
-                if prior_record[
-                    Fields.STATUS
-                ] in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_processed
+                if prior_record[Fields.STATUS] in RecordState.get_post_x_states(
+                    state=RecordState.md_processed
                 ):
                     prior["persisted_IDs"].append([orig, prior_record[Fields.ID]])
         return prior
@@ -506,7 +503,7 @@ class Checker:
         record_id: str,
         origin: list,
         prior: dict,
-        status: colrev.record.RecordState,
+        status: RecordState,
         status_data: dict,
     ) -> dict:
         prior_status = []
@@ -522,16 +519,16 @@ class Checker:
         else:
             proc_transition_list: list = [
                 x["trigger"]
-                for x in colrev.record.RecordStateModel.transitions
+                for x in RecordStateModel.transitions
                 if str(x["source"]) == prior_status[0] and str(x["dest"]) == status
             ]
             if len(proc_transition_list) == 0 and prior_status[0] != status:
                 status_data["start_states"].append(prior_status[0])
-                if prior_status[0] not in colrev.record.RecordState:
+                if prior_status[0] not in RecordState:
                     raise colrev_exceptions.StatusFieldValueError(
                         record_id, Fields.STATUS, prior_status[0]
                     )
-                if status not in colrev.record.RecordState:
+                if status not in RecordState:
                     raise colrev_exceptions.StatusFieldValueError(
                         record_id, Fields.STATUS, str(status)
                     )
@@ -571,8 +568,8 @@ class Checker:
                 else:
                     status_data["origin_ID_list"][org] = [record_dict[Fields.ID]]
 
-            post_md_processed_states = colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_processed
+            post_md_processed_states = RecordState.get_post_x_states(
+                state=RecordState.md_processed
             )
             if record_dict[Fields.STATUS] in post_md_processed_states:
                 for origin_part in record_dict[Fields.ORIGIN]:

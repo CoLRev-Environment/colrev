@@ -26,6 +26,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
@@ -274,9 +275,7 @@ class FilesSearchSource(JsonSchemaMixin):
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
     def _get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
-        if colrev.record.RecordState.md_prepared == record_dict.get(
-            Fields.STATUS, "NA"
-        ):
+        if RecordState.md_prepared == record_dict.get(Fields.STATUS, "NA"):
             return record_dict
 
         pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
@@ -855,16 +854,12 @@ class FilesSearchSource(JsonSchemaMixin):
                 == record.data.get(Fields.JOURNAL, "no_journal").lower()
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
+                record.set_status(target_state=RecordState.md_needs_manual_preparation)
             if record.data.get(Fields.TITLE, "no_title").lower() == record.data.get(
                 Fields.BOOKTITLE, "no_booktitle"
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
+                record.set_status(target_state=RecordState.md_needs_manual_preparation)
             self._fix_title_suffix(record=record)
             self._fix_special_chars(record=record)
             self._fix_special_outlets(record=record)

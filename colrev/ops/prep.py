@@ -28,6 +28,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -306,42 +307,33 @@ class Prep(colrev.operation.Operation):
         self,
         *,
         record: colrev.record.PrepRecord,
-        prior_state: colrev.record.RecordState,
+        prior_state: RecordState,
         progress: str,
     ) -> None:
         # records in post_md_prepared remain in that state (in polish mode)
         if (
             record.data[Fields.STATUS]
-            in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_prepared
-            )
-            and prior_state != colrev.record.RecordState.md_needs_manual_preparation
+            in RecordState.get_post_x_states(state=RecordState.md_prepared)
+            and prior_state != RecordState.md_needs_manual_preparation
         ) or (
-            prior_state == colrev.record.RecordState.md_needs_manual_preparation
-            and record.data[Fields.STATUS]
-            == colrev.record.RecordState.md_needs_manual_preparation
+            prior_state == RecordState.md_needs_manual_preparation
+            and record.data[Fields.STATUS] == RecordState.md_needs_manual_preparation
         ):
             self.review_manager.logger.info(
                 f" {record.data['ID']}".ljust(41) + f"{progress} - "
             )
-        elif (
-            record.data[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        elif record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             self.review_manager.logger.info(
                 f" {Colors.RED}{record.data['ID']}".ljust(46)
                 + f"{progress}{prior_state} →  {record.data['colrev_status']}"
                 + f"{Colors.END}"
             )
-        elif (
-            record.data[Fields.STATUS]
-            == colrev.record.RecordState.md_needs_manual_preparation
-        ):
+        elif record.data[Fields.STATUS] == RecordState.md_needs_manual_preparation:
             self.review_manager.logger.info(
                 f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
                 + f"{progress}{prior_state} →  {record.data['colrev_status']}{Colors.END}"
             )
-        elif record.data[Fields.STATUS] == colrev.record.RecordState.md_prepared:
+        elif record.data[Fields.STATUS] == RecordState.md_prepared:
             curation_addition = "   "
             if record.masterdata_is_curated():
                 curation_addition = " ✔ "
@@ -351,10 +343,7 @@ class Prep(colrev.operation.Operation):
                 f"{record.data['colrev_status']}{Colors.END}{curation_addition}"
             )
 
-        elif (
-            record.data[Fields.STATUS]
-            == colrev.record.RecordState.md_needs_manual_preparation
-        ):
+        elif record.data[Fields.STATUS] == RecordState.md_needs_manual_preparation:
             self.review_manager.logger.info(
                 f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
                 + f"{progress}{prior_state} →  {record.data['colrev_status']}{Colors.END}"
@@ -373,7 +362,7 @@ class Prep(colrev.operation.Operation):
             return True
 
         if record.data.get(Fields.STATUS, "NA") in [
-            colrev.record.RecordState.rev_prescreen_excluded,
+            RecordState.rev_prescreen_excluded,
         ]:
             return True
         return False
@@ -382,8 +371,8 @@ class Prep(colrev.operation.Operation):
         """Check whether the save condition for the prep operation is given"""
 
         if record.data[Fields.STATUS] in [
-            colrev.record.RecordState.rev_prescreen_excluded,
-            colrev.record.RecordState.md_prepared,
+            RecordState.rev_prescreen_excluded,
+            RecordState.md_prepared,
         ]:
             return True
 
@@ -401,16 +390,16 @@ class Prep(colrev.operation.Operation):
     def _status_to_prepare(self, record: colrev.record.Record) -> bool:
         """Check whether the record needs to be prepared"""
         return record.data.get(Fields.STATUS, "NA") in [
-            colrev.record.RecordState.md_needs_manual_preparation,
-            colrev.record.RecordState.md_imported,
-            colrev.record.RecordState.md_prepared,
+            RecordState.md_needs_manual_preparation,
+            RecordState.md_imported,
+            RecordState.md_prepared,
         ]
 
     def _print_post_package_prep_info(
         self,
         record: colrev.record.PrepRecord,
         item: dict,
-        prior_state: colrev.record.RecordState,
+        prior_state: RecordState,
     ) -> None:
         # pylint: disable=redefined-outer-name,invalid-name
         with PREP_COUNTER.get_lock():
@@ -427,24 +416,21 @@ class Prep(colrev.operation.Operation):
             )
         else:
             if self._preparation_break_condition(record):
-                if (
-                    colrev.record.RecordState.rev_prescreen_excluded
-                    == record.data[Fields.STATUS]
-                ):
+                if RecordState.rev_prescreen_excluded == record.data[Fields.STATUS]:
                     if self.review_manager.verbose_mode:
                         self.review_manager.logger.info(
                             f" {Colors.RED}{record.data['ID']}".ljust(46)
                             + f"Detected: {record.data.get('prescreen_exclusion', 'NA')}"
                             + f"{Colors.END}"
                         )
-                    target_state = colrev.record.RecordState.rev_prescreen_excluded
+                    target_state = RecordState.rev_prescreen_excluded
                     self.review_manager.logger.info(
                         f" {Colors.RED}{record.data['ID']}".ljust(46)
                         + f"{progress}{prior_state} →  {target_state}"
                         + f"{Colors.END}"
                     )
                 else:
-                    target_state = colrev.record.RecordState.md_needs_manual_preparation
+                    target_state = RecordState.md_needs_manual_preparation
                     self.review_manager.logger.info(
                         f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
                         + f"{progress}{prior_state} →  {target_state}{Colors.END}"
@@ -454,13 +440,13 @@ class Prep(colrev.operation.Operation):
                 curation_addition = "   "
                 if record.masterdata_is_curated():
                     curation_addition = " ✔ "
-                target_state = colrev.record.RecordState.md_prepared
+                target_state = RecordState.md_prepared
                 self.review_manager.logger.info(
                     f" {Colors.GREEN}{record.data['ID']}".ljust(46)
                     + f"{progress}{prior_state} →  {target_state}{Colors.END}{curation_addition}"
                 )
             else:
-                target_state = colrev.record.RecordState.md_needs_manual_preparation
+                target_state = RecordState.md_needs_manual_preparation
                 self.review_manager.logger.info(
                     f" {Colors.ORANGE}{record.data['ID']}".ljust(46)
                     + f"{progress}{prior_state} →  {target_state}{Colors.END}"
@@ -471,7 +457,7 @@ class Prep(colrev.operation.Operation):
         record: colrev.record.PrepRecord,
         preparation_record: colrev.record.PrepRecord,
         item: dict,
-        prior_state: colrev.record.RecordState,
+        prior_state: RecordState,
     ) -> None:
         if self.last_round and not self.polish:
             if self._status_to_prepare(record):
@@ -528,10 +514,10 @@ class Prep(colrev.operation.Operation):
                 f" after {prep_round_package_endpoint}"
             )
         if not self.polish and record.data[Fields.STATUS] not in [
-            colrev.record.RecordState.md_imported,
-            colrev.record.RecordState.md_prepared,
-            colrev.record.RecordState.md_needs_manual_preparation,
-            colrev.record.RecordState.rev_prescreen_excluded,
+            RecordState.md_imported,
+            RecordState.md_prepared,
+            RecordState.md_needs_manual_preparation,
+            RecordState.rev_prescreen_excluded,
         ]:
             print(record.data)
             raise ValueError(
@@ -677,11 +663,11 @@ class Prep(colrev.operation.Operation):
         )
 
         r_states_to_prepare = [
-            colrev.record.RecordState.md_imported,
-            colrev.record.RecordState.md_needs_manual_preparation,
+            RecordState.md_imported,
+            RecordState.md_needs_manual_preparation,
         ]
         if polish:
-            r_states_to_prepare = list(colrev.record.RecordState)
+            r_states_to_prepare = list(RecordState)
 
         items = list(
             self.review_manager.dataset.read_next_record(
@@ -796,7 +782,7 @@ class Prep(colrev.operation.Operation):
         self,
         *,
         original_records: list[dict],
-        condition_state: colrev.record.RecordState,
+        condition_state: RecordState,
     ) -> list:
         retrieved, prior_records = [], []
         for (
@@ -833,16 +819,12 @@ class Prep(colrev.operation.Operation):
             )
 
             for record_dict in records_dict.values():
-                if colrev.record.RecordState.md_imported != record_dict.get(
-                    "state", ""
-                ):
+                if RecordState.md_imported != record_dict.get("state", ""):
                     self.review_manager.logger.info(
                         f"Setting colrev_status to md_imported {record_dict['ID']}"
                     )
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_imported
-                    )
+                    record.set_status(target_state=RecordState.md_imported)
             debug_ids_list = list(records_dict.keys())
             debug_ids = ",".join(debug_ids_list)
             self.review_manager.logger.info("Imported record (retrieved from file)")
@@ -859,7 +841,7 @@ class Prep(colrev.operation.Operation):
             # self.review_manager.p_printer.pprint(original_records)
             records = self._retrieve_records_from_history(
                 original_records=original_records,
-                condition_state=colrev.record.RecordState.md_imported,
+                condition_state=RecordState.md_imported,
             )
 
         if len(records) == 0:
@@ -970,7 +952,7 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if record[Fields.STATUS] == colrev.record.RecordState.md_prepared
+                if record[Fields.STATUS] == RecordState.md_prepared
             ]
         )
 
@@ -984,8 +966,7 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if record[Fields.STATUS]
-                == colrev.record.RecordState.md_needs_manual_preparation
+                if record[Fields.STATUS] == RecordState.md_needs_manual_preparation
             ]
         )
         if nr_recs > 0:
@@ -999,8 +980,7 @@ class Prep(colrev.operation.Operation):
             [
                 record
                 for record in prepared_records
-                if record[Fields.STATUS]
-                == colrev.record.RecordState.rev_prescreen_excluded
+                if record[Fields.STATUS] == RecordState.rev_prescreen_excluded
             ]
         )
         if nr_recs > 0:
@@ -1016,9 +996,9 @@ class Prep(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         for record_dict in records.values():
-            if colrev.record.RecordState.md_imported == record_dict[Fields.STATUS]:
+            if RecordState.md_imported == record_dict[Fields.STATUS]:
                 record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+                record.set_status(target_state=RecordState.md_prepared)
         self.review_manager.dataset.save_records_dict(records=records)
         self.review_manager.dataset.create_commit(msg="Skip prep")
 

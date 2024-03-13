@@ -15,6 +15,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 class Load(colrev.operation.Operation):
@@ -137,10 +138,10 @@ class Load(colrev.operation.Operation):
         self._import_provenance(record=record)
 
         if record.data[Fields.STATUS] in [
-            colrev.record.RecordState.md_retrieved,
-            colrev.record.RecordState.md_needs_manual_preparation,
+            RecordState.md_retrieved,
+            RecordState.md_needs_manual_preparation,
         ]:
-            record.set_status(target_state=colrev.record.RecordState.md_imported)
+            record.set_status(target_state=RecordState.md_imported)
 
         if record.is_retracted():
             self.review_manager.logger.info(
@@ -173,7 +174,7 @@ class Load(colrev.operation.Operation):
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 colrev.record.Record(data=record).set_status(
-                    target_state=colrev.record.RecordState.md_prepared
+                    target_state=RecordState.md_prepared
                 )
                 if Fields.CURATION_ID in record:
                     record[Fields.MD_PROV] = {
@@ -184,7 +185,7 @@ class Load(colrev.operation.Operation):
                     }
             else:
                 colrev.record.Record(data=record).set_status(
-                    target_state=colrev.record.RecordState.md_retrieved
+                    target_state=RecordState.md_retrieved
                 )
 
             if Fields.DOI in record:

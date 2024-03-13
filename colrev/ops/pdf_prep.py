@@ -16,6 +16,7 @@ import colrev.ops.built_in.pdf_prep.grobid_tei
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 class PDFPrep(colrev.operation.Operation):
@@ -52,7 +53,7 @@ class PDFPrep(colrev.operation.Operation):
         self, *, record: colrev.record.Record, original_filename: str
     ) -> None:
         # pylint: disable=colrev-direct-status-assign
-        record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
+        record.data.update(colrev_status=RecordState.pdf_prepared)
         pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         if pdf_path.suffix == ".pdf":
             try:
@@ -116,7 +117,7 @@ class PDFPrep(colrev.operation.Operation):
         record_dict = item["record"]
 
         if (
-            colrev.record.RecordState.pdf_imported != record_dict[Fields.STATUS]
+            RecordState.pdf_imported != record_dict[Fields.STATUS]
             or Fields.FILE not in record_dict
         ):
             return record_dict
@@ -175,13 +176,10 @@ class PDFPrep(colrev.operation.Operation):
                     f"Error for {record.data[Fields.ID]} "  # type: ignore
                     f"(in {endpoint.settings.endpoint} : {err})"  # type: ignore
                 )
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_needs_manual_preparation
-                )
+                record.set_status(target_state=RecordState.pdf_needs_manual_preparation)
 
             failed = (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                == record.data[Fields.STATUS]
+                RecordState.pdf_needs_manual_preparation == record.data[Fields.STATUS]
             )
 
             if failed:
@@ -204,9 +202,7 @@ class PDFPrep(colrev.operation.Operation):
             f"Completed PDF prep of {record_dict[Fields.ID]}"
         )
 
-        successfully_prepared = (
-            colrev.record.RecordState.pdf_prepared == record.data[Fields.STATUS]
-        )
+        successfully_prepared = RecordState.pdf_prepared == record.data[Fields.STATUS]
 
         if successfully_prepared:
             self.review_manager.logger.info(
@@ -238,12 +234,12 @@ class PDFPrep(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.pdf_imported == x[Fields.STATUS]
+                if RecordState.pdf_imported == x[Fields.STATUS]
             ]
         )
 
         items = self.review_manager.dataset.read_next_record(
-            conditions=[{Fields.STATUS: colrev.record.RecordState.pdf_imported}],
+            conditions=[{Fields.STATUS: RecordState.pdf_imported}],
         )
         self.to_prepare = nr_tasks
 
@@ -264,15 +260,12 @@ class PDFPrep(colrev.operation.Operation):
     def _set_to_reprocess(self) -> None:
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            if (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                != record_dict["colrev_stauts"]
-            ):
+            if RecordState.pdf_needs_manual_preparation != record_dict["colrev_stauts"]:
                 continue
 
             record = colrev.record.Record(data=record_dict)
             # pylint: disable=colrev-direct-status-assign
-            record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
+            record.data.update(colrev_status=RecordState.pdf_imported)
             record.reset_pdf_provenance_notes()
 
         self.review_manager.dataset.save_records_dict(records=records)
@@ -303,7 +296,7 @@ class PDFPrep(colrev.operation.Operation):
             [
                 r
                 for r in pdf_prep_record_list
-                if colrev.record.RecordState.pdf_prepared == r[Fields.STATUS]
+                if RecordState.pdf_prepared == r[Fields.STATUS]
             ]
         )
 
@@ -369,8 +362,8 @@ class PDFPrep(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if record_dict[Fields.STATUS] not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 continue
             self.review_manager.logger.info(record_dict[Fields.ID])

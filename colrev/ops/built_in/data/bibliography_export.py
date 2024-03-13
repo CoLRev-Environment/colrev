@@ -22,6 +22,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
 
@@ -214,8 +215,8 @@ class BibliographyExport(JsonSchemaMixin):
             for ID, r in records.items()
             if r[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         }
         selected_records = copy.deepcopy(selected_records_original)

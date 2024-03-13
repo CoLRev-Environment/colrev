@@ -14,6 +14,7 @@ import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
 
@@ -56,8 +57,8 @@ class YearVolIssPrep(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
             # pylint: disable=duplicate-code
-            if record[Fields.STATUS] not in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_processed
+            if record[Fields.STATUS] not in RecordState.get_post_x_states(
+                state=RecordState.md_processed
             ):
                 continue
             if not record.get(Fields.YEAR, "NA").isdigit():

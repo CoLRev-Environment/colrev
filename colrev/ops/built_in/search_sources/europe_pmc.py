@@ -27,6 +27,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=duplicate-code
@@ -343,9 +344,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
+                    record.set_status(target_state=RecordState.md_prepared)
 
                     europe_pmc_feed.save_feed_file()
                     self.europe_pmc_lock.release()

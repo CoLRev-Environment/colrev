@@ -20,6 +20,7 @@ import colrev.loader.loader
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 if TYPE_CHECKING:  # pragma: no cover
     import typing
@@ -204,7 +205,7 @@ class BIBLoader(colrev.loader.loader.Loader):
                     {
                         # Cast status to Enum
                         k: (
-                            colrev.record.RecordState[v]
+                            RecordState[v]
                             if (Fields.STATUS == k)
                             # DOIs are case insensitive -> use upper case.
                             else (
@@ -335,7 +336,7 @@ class BIBLoader(colrev.loader.loader.Loader):
             value_list = [x.lstrip(" ").rstrip(" ") for x in value_list if x]
             return key, value_list
         if key == Fields.STATUS:
-            return key, colrev.record.RecordState[value]
+            return key, RecordState[value]
         if key == Fields.MD_PROV:
             return key, self._load_field_dict(value=value, field=key)
         if key == Fields.FILE:

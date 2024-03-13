@@ -33,6 +33,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # import binascii
@@ -559,7 +560,7 @@ class LocalIndex:
                 del record_dict[Fields.D_PROV]["colrev_pdf_id"]
 
         record = colrev.record.Record(data=record_dict)
-        record.set_status(target_state=colrev.record.RecordState.md_prepared)
+        record.set_status(target_state=RecordState.md_prepared)
 
         if FieldValues.CURATED in record_dict.get(Fields.MD_PROV, {}):
             identifier_string = (
@@ -625,17 +626,11 @@ class LocalIndex:
 
         # It is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
-        if (
-            record_dict[Fields.STATUS]
-            in colrev.record.RecordState.get_non_processed_states()
-        ):
+        if record_dict[Fields.STATUS] in RecordState.get_non_processed_states():
             raise colrev_exceptions.RecordNotIndexableException()
 
         # Some prescreen_excluded records are not prepared
-        if (
-            record_dict[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             raise colrev_exceptions.RecordNotIndexableException()
 
     def _remove_fields(self, record_dict: dict) -> None:
@@ -649,8 +644,8 @@ class LocalIndex:
             del record_dict[Fields.SCREENING_CRITERIA]
         # Note: if the colrev_pdf_id has not been checked,
         # we cannot use it for retrieval or preparation.
-        post_pdf_prepared_states = colrev.record.RecordState.get_post_x_states(
-            state=colrev.record.RecordState.pdf_prepared
+        post_pdf_prepared_states = RecordState.get_post_x_states(
+            state=RecordState.pdf_prepared
         )
         if record_dict[Fields.STATUS] not in post_pdf_prepared_states:
             if "colrev_pdf_id" in record_dict:
@@ -778,9 +773,7 @@ class LocalIndex:
         # otherwise, record-not-in-toc will be triggered erroneously.
         drop_toc = copy_for_toc_index[
             Fields.STATUS
-        ] not in colrev.record.RecordState.get_post_x_states(
-            state=colrev.record.RecordState.md_processed
-        )
+        ] not in RecordState.get_post_x_states(state=RecordState.md_processed)
         try:
             colrev_id = colrev.record.Record(data=copy_for_toc_index).create_colrev_id(
                 assume_complete=True

@@ -20,6 +20,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -220,9 +221,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             elif user_selection == "No (delete)":
                 record.remove_field(key=Fields.FILE)
                 record.remove_field(key=Fields.PDF_ID)
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
-                )
+                record.set_status(target_state=RecordState.pdf_needs_manual_retrieval)
                 if filepath.is_file():
                     filepath.unlink()
                 return
@@ -308,10 +307,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         self._print_pdf_prep_man(record)
         record_dict = records[item[Fields.ID]]
         record = colrev.record.Record(data=record_dict)
-        if (
-            colrev.record.RecordState.pdf_needs_manual_preparation
-            != record_dict[Fields.STATUS]
-        ):
+        if RecordState.pdf_needs_manual_preparation != record_dict[Fields.STATUS]:
             return record_dict
 
         print(

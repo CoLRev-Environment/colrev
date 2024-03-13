@@ -10,6 +10,7 @@ from dacite import from_dict
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -41,8 +42,6 @@ class CustomPDFPrep:
             record.add_data_provenance_note(
                 key=Fields.FILE, note="custom_issue_detected"
             )
-            record.set_status(
-                target_state=colrev.record.RecordState.pdf_needs_manual_preparation
-            )
+            record.set_status(target_state=RecordState.pdf_needs_manual_preparation)
 
         return record

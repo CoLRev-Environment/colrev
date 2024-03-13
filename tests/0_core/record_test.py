@@ -13,6 +13,7 @@ import colrev.record
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
@@ -31,7 +32,7 @@ v1 = {
         Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
     },
     Fields.D_PROV: {},
-    Fields.STATUS: colrev.record.RecordState.md_prepared,
+    Fields.STATUS: RecordState.md_prepared,
     Fields.ORIGIN: ["import.bib/id_0001"],
     Fields.YEAR: "2020",
     Fields.TITLE: "EDITORIAL",
@@ -54,7 +55,7 @@ v2 = {
         Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
     },
     Fields.D_PROV: {},
-    Fields.STATUS: colrev.record.RecordState.md_prepared,
+    Fields.STATUS: RecordState.md_prepared,
     Fields.ORIGIN: ["import.bib/id_0001"],
     Fields.YEAR: "2020",
     Fields.TITLE: "EDITORIAL",
@@ -180,7 +181,7 @@ def test_remove_field() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -299,7 +300,7 @@ def test_change_entrytype_inproceedings(
             },
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.BOOKTITLE: "MIS Quarterly",
         Fields.YEAR: "2020",
@@ -339,7 +340,7 @@ def test_change_entrytype_article(
             },
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.BOOKTITLE: "MIS Quarterly",
         Fields.YEAR: "2020",
@@ -372,7 +373,7 @@ def test_change_entrytype_article(
             },
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_needs_manual_preparation,
+        Fields.STATUS: RecordState.md_needs_manual_preparation,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "Editorial",
@@ -404,7 +405,7 @@ def test_add_provenance_all() -> None:
             Fields.ID: {"source": "import.bib/id_0001", "note": ""},
             Fields.ORIGIN: {"source": "import.bib/id_0001", "note": ""},
         },
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -606,7 +607,7 @@ def test_set_masterdata_complete() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -638,7 +639,7 @@ def test_set_masterdata_complete() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -668,7 +669,7 @@ def test_set_masterdata_complete() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -710,7 +711,7 @@ def test_set_masterdata_consistent() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -732,7 +733,7 @@ def test_set_masterdata_consistent() -> None:
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.MD_PROV: {},
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -772,7 +773,7 @@ def test_reset_pdf_provenance_notes() -> None:
         Fields.D_PROV: {
             Fields.FILE: {"source": "test", "note": ""},
         },
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -802,7 +803,7 @@ def test_reset_pdf_provenance_notes() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {Fields.FILE: {"source": "ORIGINAL", "note": ""}},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -834,7 +835,7 @@ def test_reset_pdf_provenance_notes() -> None:
         Fields.D_PROV: {
             Fields.FILE: {"source": "NA", "note": ""},
         },
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -870,7 +871,7 @@ def test_cleanup_pdf_processing_fields() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -927,7 +928,7 @@ def test_merge_select_non_all_caps() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001", "import.bib/id_0002"],
         Fields.YEAR: "2020",
         Fields.TITLE: "Editorial",
@@ -997,7 +998,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
             Fields.ID: "r1",
             Fields.D_PROV: {},
             Fields.MD_PROV: {Fields.VOLUME: {"source": "source-1", "note": ""}},
-            Fields.STATUS: colrev.record.RecordState.md_prepared,
+            Fields.STATUS: RecordState.md_prepared,
             Fields.ORIGIN: ["orig1"],
             Fields.TITLE: "EDITORIAL",
             Fields.AUTHOR: "Rai, Arun",
@@ -1014,7 +1015,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
                 Fields.VOLUME: {"source": "source-1", "note": ""},
                 Fields.NUMBER: {"source": "source-1", "note": ""},
             },
-            Fields.STATUS: colrev.record.RecordState.md_prepared,
+            Fields.STATUS: RecordState.md_prepared,
             Fields.ORIGIN: ["orig2"],
             Fields.TITLE: "Editorial",
             Fields.AUTHOR: "ARUN RAI",
@@ -1134,7 +1135,7 @@ def test_complete_provenance() -> None:
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.D_PROV: {Fields.URL: {"source": "test", "note": ""}},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -1191,7 +1192,7 @@ def test_prescreen_exclude() -> None:
     """Test record.prescreen_exclude()"""
 
     r1_mod = r1.copy()
-    r1_mod.data[Fields.STATUS] = colrev.record.RecordState.rev_synthesized
+    r1_mod.data[Fields.STATUS] = RecordState.rev_synthesized
     r1_mod.data[Fields.NUMBER] = "UNKNOWN"
     r1_mod.data[Fields.VOLUME] = "UNKNOWN"
 
@@ -1207,7 +1208,7 @@ def test_prescreen_exclude() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.rev_prescreen_excluded,
+        Fields.STATUS: RecordState.rev_prescreen_excluded,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -1351,7 +1352,7 @@ def test_rename_fields_based_on_mapping() -> None:
             "issue": {"source": "import.bib/id_0001|rename-from:number", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -1386,21 +1387,21 @@ def test_unify_pages_field() -> None:
 def test_to_screen() -> None:
 
     assert colrev.record.PrepRecord(
-        data={Fields.STATUS: colrev.record.RecordState.pdf_prepared}
+        data={Fields.STATUS: RecordState.pdf_prepared}
     ).to_screen()
     assert not colrev.record.PrepRecord(
-        data={Fields.STATUS: colrev.record.RecordState.md_processed}
+        data={Fields.STATUS: RecordState.md_processed}
     ).to_screen()
 
     assert not colrev.record.PrepRecord(
         data={
-            Fields.STATUS: colrev.record.RecordState.rev_synthesized,
+            Fields.STATUS: RecordState.rev_synthesized,
             Fields.SCREENING_CRITERIA: "focus_hr=in",
         }
     ).to_screen()
     assert colrev.record.PrepRecord(
         data={
-            Fields.STATUS: colrev.record.RecordState.rev_synthesized,
+            Fields.STATUS: RecordState.rev_synthesized,
             Fields.SCREENING_CRITERIA: "focus_hr=TODO",
         }
     ).to_screen()

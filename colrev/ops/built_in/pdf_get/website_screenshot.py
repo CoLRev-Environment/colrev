@@ -17,6 +17,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
@@ -132,9 +133,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
                 source="chrome (browserless) screenshot",
             )
             # pylint: disable=colrev-direct-status-assign
-            record.data.update(
-                colrev_status=colrev.record.RecordState.rev_prescreen_included
-            )
+            record.data.update(colrev_status=RecordState.rev_prescreen_included)
             record.update_field(
                 key="urldate", value=urldate, source="chrome (browserless) screenshot"
             )

@@ -28,6 +28,7 @@ import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -127,8 +128,8 @@ class BackwardSearchSource(JsonSchemaMixin):
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         ):
             return False
@@ -537,8 +538,8 @@ class BackwardSearchSource(JsonSchemaMixin):
             for record_id, record in records.items()
             if record[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         }
 

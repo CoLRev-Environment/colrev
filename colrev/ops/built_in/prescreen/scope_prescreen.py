@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -195,16 +196,14 @@ class ScopePrescreen(JsonSchemaMixin):
             return
 
         if record.data["journal_ranking"] == "not included in a ranking":
-            record.set_status(
-                target_state=colrev.record.RecordState.rev_prescreen_excluded
-            )
+            record.set_status(target_state=RecordState.rev_prescreen_excluded)
 
     def _conditional_prescreen(
         self,
         *,
         record_dict: dict,
     ) -> None:
-        if record_dict[Fields.STATUS] != colrev.record.RecordState.md_processed:
+        if record_dict[Fields.STATUS] != RecordState.md_processed:
             return
 
         # Note : LanguageScope is covered in prep
@@ -219,10 +218,7 @@ class ScopePrescreen(JsonSchemaMixin):
         self._conditional_prescreen_complementary_materials(record=record)
         self._conditional_presecreen_not_in_ranking(record=record)
 
-        if (
-            record.data[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             self.review_manager.report_logger.info(
                 f" {record.data[Fields.ID]}".ljust(50, " ")
                 + "Prescreen excluded (automatically)"
@@ -230,9 +226,7 @@ class ScopePrescreen(JsonSchemaMixin):
         elif (
             len(self.review_manager.settings.prescreen.prescreen_package_endpoints) == 1
         ):
-            record.set_status(
-                target_state=colrev.record.RecordState.rev_prescreen_included
-            )
+            record.set_status(target_state=RecordState.rev_prescreen_included)
             self.review_manager.report_logger.info(
                 f" {record.data[Fields.ID]}".ljust(50, " ")
                 + "Prescreen included (automatically)"

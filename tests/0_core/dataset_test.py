@@ -8,6 +8,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import ExitCodes
+from colrev.constants import RecordState
 
 # flake8: noqa: E501
 
@@ -67,7 +68,7 @@ def test_load_records_from_history(  # type: ignore
     assert len(records_from_history) == 3, "Expected three records from history"
     assert (
         records_from_history[0]["SrivastavaShainesh2015"]["colrev_status"]
-        == colrev.record.RecordState.md_processed
+        == RecordState.md_processed
     ), "The record status does not match the expected status."
 
 
@@ -79,7 +80,7 @@ def test_get_origin_state_dict(
     origin_state_dict = base_repo_review_manager.dataset.get_origin_state_dict()
 
     expected_dict = {
-        "test_records.bib/Srivastava2015": colrev.record.RecordState.pdf_needs_manual_retrieval
+        "test_records.bib/Srivastava2015": RecordState.pdf_needs_manual_retrieval
     }
 
     assert (
@@ -97,7 +98,7 @@ def test_get_committed_origin_state_dict(
     )
 
     expected_dict = {
-        "test_records.bib/Srivastava2015": colrev.record.RecordState.pdf_needs_manual_retrieval
+        "test_records.bib/Srivastava2015": RecordState.pdf_needs_manual_retrieval
     }
 
     assert (
@@ -203,15 +204,15 @@ def test_propagated_id(
         return_value={
             "Doe2021": {
                 "ID": "Doe2021",
-                "colrev_status": colrev.record.RecordState.pdf_prepared,
+                "colrev_status": RecordState.pdf_prepared,
             },
             "Smith2022": {
                 "ID": "Smith2022",
-                "colrev_status": colrev.record.RecordState.md_imported,
+                "colrev_status": RecordState.md_imported,
             },
             "Johnson2023": {
                 "ID": "Johnson2023",
-                "colrev_status": colrev.record.RecordState.rev_excluded,
+                "colrev_status": RecordState.rev_excluded,
             },
         }
     )
@@ -246,7 +247,7 @@ def test_get_format_report(
     ), "Format report message did not match expected for None status"
 
     # # Setup for md_needs_manual_preparation status
-    # record_dict[Fields.STATUS] = colrev.record.RecordState.md_needs_manual_preparation
+    # record_dict[Fields.STATUS] = RecordState.md_needs_manual_preparation
     # base_repo_review_manager.dataset.save_records_dict(records={"TestRecord": record_dict})
 
     # # Test for md_needs_manual_preparation status
@@ -257,7 +258,7 @@ def test_get_format_report(
     # assert report["msg"] == "Everything ok.", "Format report message did not match expected for md_needs_manual_preparation status"
 
     # # Setup for pdf_prepared status
-    # record_dict[Fields.STATUS] = colrev.record.RecordState.pdf_prepared
+    # record_dict[Fields.STATUS] = RecordState.pdf_prepared
     # base_repo_review_manager.dataset.save_records_dict(records={"TestRecord": record_dict})
 
     # # Test for pdf_prepared status

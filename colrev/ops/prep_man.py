@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 class PrepMan(colrev.operation.Operation):
@@ -43,7 +44,7 @@ class PrepMan(colrev.operation.Operation):
         overall_types: dict = {Fields.ENTRYTYPE: {}}
         prep_man_hints, origins, crosstab = [], [], []
         for record_dict in records.values():
-            if colrev.record.RecordState.md_imported != record_dict[Fields.STATUS]:
+            if RecordState.md_imported != record_dict[Fields.STATUS]:
                 if record_dict[Fields.ENTRYTYPE] in overall_types[Fields.ENTRYTYPE]:
                     overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = (
                         overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]]
@@ -52,10 +53,7 @@ class PrepMan(colrev.operation.Operation):
                 else:
                     overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
-            if (
-                colrev.record.RecordState.md_needs_manual_preparation
-                != record_dict[Fields.STATUS]
-            ):
+            if RecordState.md_needs_manual_preparation != record_dict[Fields.STATUS]:
                 continue
 
             if record_dict[Fields.ENTRYTYPE] in stats[Fields.ENTRYTYPE]:
@@ -169,13 +167,11 @@ class PrepMan(colrev.operation.Operation):
                     )
                     if (
                         record.data[Fields.STATUS]
-                        == colrev.record.RecordState.md_needs_manual_preparation
+                        == RecordState.md_needs_manual_preparation
                     ):
                         # by resetting to md_imported,
                         # the prescreen-exclusion based on languages will be reapplied.
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_imported
-                        )
+                        record.set_status(target_state=RecordState.md_imported)
 
             self.review_manager.dataset.save_records_dict(records=records)
 
@@ -219,8 +215,7 @@ class PrepMan(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.md_needs_manual_preparation
-                == x[Fields.STATUS]
+                if RecordState.md_needs_manual_preparation == x[Fields.STATUS]
             ]
         )
 
@@ -229,9 +224,7 @@ class PrepMan(colrev.operation.Operation):
         pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 35)
 
         items = self.review_manager.dataset.read_next_record(
-            conditions=[
-                {Fields.STATUS: colrev.record.RecordState.md_needs_manual_preparation}
-            ]
+            conditions=[{Fields.STATUS: RecordState.md_needs_manual_preparation}]
         )
 
         md_prep_man_data = {
@@ -255,7 +248,7 @@ class PrepMan(colrev.operation.Operation):
         )
         record.set_masterdata_consistent()
         # record.set_fields_complete()
-        record.set_status(target_state=colrev.record.RecordState.md_prepared)
+        record.set_status(target_state=RecordState.md_prepared)
         record_dict = record.get_data()
 
         self.review_manager.dataset.save_records_dict(

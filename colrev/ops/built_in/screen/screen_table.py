@@ -16,6 +16,7 @@ import colrev.ops.built_in.screen.utils as util_cli_screen
 import colrev.record
 import colrev.settings
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -50,7 +51,7 @@ class TableScreen(JsonSchemaMixin):
         tbl = []
         for record in records.values():
             if record[Fields.STATUS] not in [
-                colrev.record.RecordState.pdf_prepared,
+                RecordState.pdf_prepared,
             ]:
                 continue
 
@@ -60,15 +61,15 @@ class TableScreen(JsonSchemaMixin):
 
             inclusion_2 = "NA"
 
-            if colrev.record.RecordState.pdf_prepared == record[Fields.STATUS]:
+            if RecordState.pdf_prepared == record[Fields.STATUS]:
                 inclusion_2 = "TODO"
             elif self.export_todos_only:
                 continue
-            if colrev.record.RecordState.rev_excluded == record[Fields.STATUS]:
+            if RecordState.rev_excluded == record[Fields.STATUS]:
                 inclusion_2 = "out"
             if record[Fields.STATUS] in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 inclusion_2 = "in"
 
@@ -174,13 +175,9 @@ class TableScreen(JsonSchemaMixin):
                 record = colrev.record.Record(data=record_dict)
                 if "screen_inclusion" in screened_record:
                     if screened_record["screen_inclusion"] == "in":
-                        record.set_status(
-                            target_state=colrev.record.RecordState.rev_included
-                        )
+                        record.set_status(target_state=RecordState.rev_included)
                     elif screened_record["screen_inclusion"] == "out":
-                        record.set_status(
-                            target_state=colrev.record.RecordState.rev_excluded
-                        )
+                        record.set_status(target_state=RecordState.rev_excluded)
                     else:
                         print(
                             f"Invalid choice: {screened_record['screen_inclusion']} "
@@ -199,13 +196,9 @@ class TableScreen(JsonSchemaMixin):
                 screening_criteria_field = screening_criteria_field.rstrip(";")
                 record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
                 if "=out" in screening_criteria_field:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_excluded
-                    )
+                    record.set_status(target_state=RecordState.rev_excluded)
                 else:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_included
-                    )
+                    record.set_status(target_state=RecordState.rev_included)
 
         self.review_manager.dataset.save_records_dict(records=records)
 

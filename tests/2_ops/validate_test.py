@@ -1,4 +1,5 @@
 import colrev.review_manager
+from colrev.constants import RecordState
 
 # flake8: noqa: E501
 
@@ -20,7 +21,7 @@ def test_prep_validation(
                     "ID": "SrivastavaShainesh2015",
                     "ENTRYTYPE": "article",
                     "colrev_origin": ["test_records.bib/Srivastava2015"],
-                    "colrev_status": colrev.record.RecordState.pdf_needs_manual_retrieval,
+                    "colrev_status": RecordState.pdf_needs_manual_retrieval,
                     "colrev_masterdata_provenance": {
                         "author": {
                             "source": "test_records.bib/Srivastava2015",
@@ -80,7 +81,7 @@ def test_prep_validation(
                         "language": "eng",
                         "author": "Srivastava, Shirish C. and Shainesh, G.",
                         "colrev_origin": ["test_records.bib/Srivastava2015"],
-                        "colrev_status": colrev.record.RecordState.md_retrieved,
+                        "colrev_status": RecordState.md_retrieved,
                         "change_score": 0.010204081632652962,
                     }
                 ],
@@ -192,7 +193,7 @@ def test_get_changed_records(
     changed_record_dict = {
         "SrivastavaShainesh2015": {
             "colrev_origin": ["test_records.bib/Srivastava2015"],
-            "colrev_status": colrev.record.RecordState.pdf_prepared,
+            "colrev_status": RecordState.pdf_prepared,
             "ID": "SrivastavaShainesh2015",
             "ENTRYTYPE": "article",
             "author": "Srivastava, Shirish C. and Shainesh, G.",
@@ -227,7 +228,7 @@ def test_get_changed_records(
             "ID": "SrivastavaShainesh2015",
             "ENTRYTYPE": "article",
             "colrev_origin": ["test_records.bib/Srivastava2015"],
-            "colrev_status": colrev.record.RecordState.pdf_prepared,
+            "colrev_status": RecordState.pdf_prepared,
             "journal": "Nature",
             "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
             "year": "2015",

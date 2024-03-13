@@ -17,6 +17,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # xpath alternative:
 # tree.xpath("//tei:sourceDesc/tei:biblStruct/tei:monogr/tei:idno",
@@ -798,8 +799,8 @@ class TEIParser:
             max_sim_record = {}
             for local_record_dict in records.values():
                 if local_record_dict[Fields.STATUS] not in [
-                    colrev.record.RecordState.rev_included,
-                    colrev.record.RecordState.rev_synthesized,
+                    RecordState.rev_included,
+                    RecordState.rev_synthesized,
                 ]:
                     continue
                 rec_sim = colrev.record.Record.get_record_similarity(
