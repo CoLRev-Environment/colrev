@@ -15,7 +15,7 @@ repos:
     rev: v4.5.0
     hooks:
     -   id: trailing-whitespace
-        exclude: colrev/template/ops/status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt|^tests/data|docs/source/resources/extensions_index/
+        exclude: colrev/template/ops/status.txt|commit_report_details.txt|commit_report_header.txt|pdf_get_man_mail.txt|^tests/data|^tests/2_loader/data/|docs/source/resources/extensions_index/
     -   id: end-of-file-fixer
         exclude: ^tests/2_loader/data/|^tests/data
     -   id: check-docstring-first
@@ -60,16 +60,6 @@ repos:
   hooks:
     - id: ruff # runs faster than pylint
       args: [--fix, --exit-non-zero-on-fix]
-- repo: local
-  hooks:
-  - id: pytest-check
-    name: pytest-check
-    entry: pytest
-    language: system
-    pass_filenames: false
-    always_run: true
-    args:
-      ["--disable-warnings"]
 - repo: local # pylint should mostly be covered by ruff. Once custom checkers are supported (.pylintrc), we will switch to ruff completely.
   hooks:
     - id: pylint
@@ -83,3 +73,13 @@ repos:
           "-rn", # Only display messages
           "-sn", # Don't display the score
         ]
+- repo: local
+  hooks:
+  - id: pytest-check
+    name: pytest-check
+    entry: pytest
+    language: system
+    pass_filenames: false
+    always_run: true
+    args:
+      ["--disable-warnings"]
