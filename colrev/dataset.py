@@ -27,6 +27,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
@@ -36,11 +37,9 @@ from colrev.writer.write_utils import to_string
 class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
-    RECORDS_FILE_RELATIVE = Path("data/records.bib")
     # Ensure the path uses forward slashes, which is compatible with Git's path handling
-    RECORDS_FILE_RELATIVE_GIT = str(RECORDS_FILE_RELATIVE).replace("\\", "/")
+    RECORDS_FILE_RELATIVE_GIT = str(Filepaths.RECORDS_FILE).replace("\\", "/")
 
-    GIT_IGNORE_FILE_RELATIVE = Path(".gitignore")
     DEFAULT_GIT_IGNORE_ITEMS = [
         ".history",
         ".colrev",
@@ -73,8 +72,8 @@ class Dataset:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
-        self.records_file = review_manager.path / self.RECORDS_FILE_RELATIVE
-        self.git_ignore_file = review_manager.path / self.GIT_IGNORE_FILE_RELATIVE
+        self.records_file = review_manager.get_path(Filepaths.RECORDS_FILE)
+        self.git_ignore_file = review_manager.get_path(Filepaths.GIT_IGNORE_FILE)
 
         try:
             # In most cases, the repo should exist
@@ -386,7 +385,7 @@ class Dataset:
                     record.reset_pdf_provenance_notes()
 
             self.save_records_dict(records=records)
-            changed = self.RECORDS_FILE_RELATIVE in [
+            changed = Filepaths.RECORDS_FILE in [
                 r.a_path for r in self._git_repo.index.diff(None)
             ]
             self.review_manager.update_status_yaml()
@@ -729,18 +728,18 @@ class Dataset:
     def _add_record_changes(self) -> None:
         """Add changes in records to git"""
         self._sleep_util_git_unlocked()
-        self._git_repo.index.add([str(self.RECORDS_FILE_RELATIVE)])
+        self._git_repo.index.add([str(Filepaths.RECORDS_FILE)])
 
     def add_setting_changes(self) -> None:
         """Add changes in settings to git"""
         self._sleep_util_git_unlocked()
 
-        self._git_repo.index.add([str(self.review_manager.SETTINGS_RELATIVE)])
+        self._git_repo.index.add([str(Filepaths.SETTINGS_FILE)])
 
     def has_untracked_search_records(self) -> bool:
         """Check whether there are untracked search records"""
         return any(
-            str(self.review_manager.SEARCHDIR_RELATIVE) in str(untracked_file)
+            str(Filepaths.SEARCH_DIR) in str(untracked_file)
             for untracked_file in self.get_untracked_files()
         )
 

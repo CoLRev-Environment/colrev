@@ -15,6 +15,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.loader.bib import BIBLoader
 from colrev.record import RecordStateModel
@@ -543,9 +544,8 @@ class StatusStats:
             self.rev_screen = 0
             self.rev_prescreen = 0
             super().__init__(status_stats=status_stats)
-            self.md_retrieved = self._get_nr_search(
-                search_dir=self.status_stats.review_manager.search_dir
-            )
+            search_dir = self.status_stats.review_manager.get_path(Filepaths.SEARCH_DIR)
+            self.md_retrieved = self._get_nr_search(search_dir=search_dir)
 
         def _get_nr_search(self, *, search_dir: Path) -> int:
             if not search_dir.is_dir():

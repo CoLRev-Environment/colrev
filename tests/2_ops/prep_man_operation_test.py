@@ -4,6 +4,7 @@ import shutil
 from unittest.mock import patch
 
 import colrev.review_manager
+from colrev.constants import Filepaths
 
 
 def test_prep_man(  # type: ignore
@@ -26,12 +27,15 @@ def test_prep_man_excel_on_windows(  # type: ignore
     """Test the prep-man operation generating excel on windows"""
 
     # clear files
-    shutil.rmtree(base_repo_review_manager.prep_dir)
-    base_repo_review_manager.prep_dir.mkdir(parents=True)
+    shutil.rmtree(base_repo_review_manager.get_path(Filepaths.PREP_DIR))
+    base_repo_review_manager.get_path(Filepaths.PREP_DIR).mkdir(parents=True)
     # On Windows it should create an Excel file
     platform_patcher.return_value = "Windows"
     test_prep_man(base_repo_review_manager, helpers)
-    path = base_repo_review_manager.prep_dir / "records_prep_man_info.xlsx"
+    path = (
+        base_repo_review_manager.get_path(Filepaths.PREP_DIR)
+        / "records_prep_man_info.xlsx"
+    )
     assert path.exists()
 
 
@@ -43,9 +47,12 @@ def test_prep_man_csv_on_linux(  # type: ignore
 ) -> None:
     """Test the prep-man operation generating csv on Linux"""
 
-    shutil.rmtree(base_repo_review_manager.prep_dir)
-    base_repo_review_manager.prep_dir.mkdir(parents=True)
+    shutil.rmtree(base_repo_review_manager.get_path(Filepaths.PREP_DIR))
+    base_repo_review_manager.get_path(Filepaths.PREP_DIR).mkdir(parents=True)
     platform_patcher.return_value = "Linux"
     test_prep_man(base_repo_review_manager, helpers)
-    path = base_repo_review_manager.prep_dir / "records_prep_man_info.csv"
+    path = (
+        base_repo_review_manager.get_path(Filepaths.PREP_DIR)
+        / "records_prep_man_info.csv"
+    )
     assert path.exists()

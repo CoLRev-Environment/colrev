@@ -4,6 +4,29 @@
 # pylint: disable=colrev-missed-constant-usage
 import typing
 from enum import Enum
+from pathlib import Path
+
+
+class Filepaths:
+    """Filepaths for CoLRev"""
+
+    SEARCH_DIR = Path("data/search")
+    PREP_DIR = Path("data/prep")
+    DEDUPE_DIR = Path("data/dedupe")
+    PRESCREEN_DIR = Path("data/prescreen")
+    PDF_DIR = Path("data/pdfs")
+    SCREEN_DIR = Path("data/screen")
+    DATA_DIR = Path("data/data")
+
+    CORRECTIONS_DIR = Path(".corrections")
+    OUTPUT_DIR = Path("output")
+
+    RECORDS_FILE = Path("data/records.bib")
+    SETTINGS_FILE = Path("settings.json")
+    STATUS_FILE = Path("status.yaml")
+    README_FILE = Path("readme.md")
+    REPORT_FILE = Path(".report.log")
+    GIT_IGNORE_FILE = Path(".gitignore")
 
 
 class ENTRYTYPES:

@@ -15,6 +15,7 @@ from git.exc import NoSuchPathError
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -253,7 +254,7 @@ class Advisor:
         return collaboration_instructions
 
     def _append_initial_load_instruction(self, *, review_instructions: list) -> None:
-        if not self.review_manager.dataset.records_file.is_file():
+        if not self.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
@@ -328,7 +329,8 @@ class Advisor:
     def _append_initial_operations(
         self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
     ) -> bool:
-        if not Path(self.review_manager.search_dir).iterdir():
+        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+        if not Path(search_dir).iterdir():
             instruction = {
                 "msg": "Add search results to data/search",
                 "priority": "yes",
@@ -654,7 +656,9 @@ class Advisor:
 
         # pylint: disable=too-many-locals
 
-        with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
+        with open(
+            self.review_manager.get_path(Filepaths.RECORDS_FILE), encoding="utf8"
+        ) as file:
             outlets = []
             for line in file.readlines():
                 if line.lstrip()[:8] == "journal ":
@@ -726,7 +730,8 @@ class Advisor:
 
         environment_instructions += list(filter(None, add_instructions))
 
-        if len(list(self.review_manager.corrections_path.glob("*.json"))) > 0:
+        corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        if len(list(corrections_path.glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
                 "cmd": "colrev push -r",

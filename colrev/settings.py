@@ -20,6 +20,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import Filepaths
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
@@ -201,9 +202,7 @@ class SearchSource(JsonSchemaMixin):
         """Get the corresponding origin prefix"""
         assert not any(x in str(self.filename.name) for x in [";", "/"])
         return (
-            str(self.filename.name)
-            .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")
-            .lstrip("/")
+            str(self.filename.name).replace(str(Filepaths.SEARCH_DIR), "").lstrip("/")
         )
 
     def is_md_source(self) -> bool:

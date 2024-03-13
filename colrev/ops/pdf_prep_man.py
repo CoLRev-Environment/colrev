@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -83,9 +84,7 @@ class PDFPrepMan(colrev.operation.Operation):
         """Determine PDF prep man statistics"""
         # pylint: disable=duplicate-code
 
-        self.review_manager.logger.info(
-            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
-        )
+        self.review_manager.logger.info(f"Load {Filepaths.RECORDS_FILE}")
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.info("Calculate statistics")
@@ -153,9 +152,7 @@ class PDFPrepMan(colrev.operation.Operation):
             print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
             return
 
-        self.review_manager.logger.info(
-            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
-        )
+        self.review_manager.logger.info(f"Load {Filepaths.RECORDS_FILE}")
         records = self.review_manager.dataset.load_records_dict()
 
         records = {
@@ -305,9 +302,7 @@ class PDFPrepMan(colrev.operation.Operation):
         self.review_manager.dataset.save_records_dict(
             records={record_dict[Fields.ID]: record_dict}, partial=True
         )
-        self.review_manager.dataset.add_changes(
-            path=self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        )
+        self.review_manager.dataset.add_changes(path=Filepaths.RECORDS_FILE)
 
     @colrev.operation.Operation.decorate()
     def main(self) -> None:

@@ -17,6 +17,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
@@ -154,7 +155,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
         self._start_screenshot_service()
 
-        pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+        pdf_filepath = self.review_manager.get_path(Filepaths.PDF_DIR) / Path(
             f"{record.data['ID']}.pdf"
         )
         record = self._add_screenshot(record=record, pdf_filepath=pdf_filepath)

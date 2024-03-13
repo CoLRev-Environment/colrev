@@ -24,6 +24,7 @@ import colrev.review_manager  # pylint: disable=cyclic-import
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 
 # pylint: disable=too-few-public-methods
@@ -81,7 +82,7 @@ class Initializer:
                 options=list(res.all_available_packages_names.keys()),
             ) from exc
 
-        self._check_init_precondition()
+        self._check_init_precondition(target_path=self.target_path)
 
         self.title = str(self.target_path.name)
         self.logger = self._setup_init_logger(level=logging.INFO)
@@ -107,16 +108,15 @@ class Initializer:
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
 
-    def _check_init_precondition(self) -> None:
+    def _check_init_precondition(self, *, target_path: Path) -> None:
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]
         cur_content = [
             x for x in cur_content if not x.startswith("venv") and x != ".history"
         ]
-
-        if str(colrev.review_manager.ReviewManager.REPORT_RELATIVE) in cur_content:
-            cur_content.remove(str(colrev.review_manager.ReviewManager.REPORT_RELATIVE))
+        if str(Filepaths.REPORT_FILE) in cur_content:
+            cur_content.remove(str(Filepaths.REPORT_FILE))
         if cur_content:
             raise colrev_exceptions.NonEmptyDirectoryError(
                 filepath=self.target_path, content=cur_content
@@ -187,8 +187,8 @@ class Initializer:
             with open(path / Path("settings.json"), "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
 
-        colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE.mkdir(parents=True)
-        colrev.review_manager.ReviewManager.PDF_DIR_RELATIVE.mkdir(parents=True)
+        (path / Filepaths.SEARCH_DIR).mkdir(parents=True)
+        (path / Filepaths.PDF_DIR).mkdir(parents=True)
 
         colrev_path = Path.home() / Path("colrev")
         colrev_path.mkdir(exist_ok=True, parents=True)

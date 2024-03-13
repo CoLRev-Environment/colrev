@@ -45,6 +45,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.constants import Operations
 from colrev.constants import RecordState
 
@@ -2109,7 +2110,7 @@ class RecordStateModel:
         """Check the preconditions for an operation"""
 
         def get_states_set() -> set:
-            if not operation.review_manager.dataset.records_file.is_file():
+            if not operation.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
                 return set()
             records_headers = operation.review_manager.dataset.load_records_dict(
                 header_only=True

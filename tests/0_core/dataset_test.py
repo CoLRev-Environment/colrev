@@ -8,6 +8,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import ExitCodes
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # flake8: noqa: E501
@@ -321,7 +322,7 @@ def test_has_untracked_search_records(
 ) -> None:
     """Test the has_untracked_search_records method."""
     # Setup: Create a new search record file that is not tracked by git
-    search_dir = base_repo_review_manager.SEARCHDIR_RELATIVE
+    search_dir = Filepaths.SEARCH_DIR
     untracked_search_file_path = (
         base_repo_review_manager.path / search_dir / "untracked_search_record.txt"
     )
@@ -344,7 +345,7 @@ def test_has_untracked_search_records_empty(
 ) -> None:
     """Test the has_untracked_search_records method when there are no untracked search records."""
     # Setup: Ensure there are no untracked search records
-    search_dir = base_repo_review_manager.SEARCHDIR_RELATIVE
+    search_dir = Filepaths.SEARCH_DIR
     search_dir_path = base_repo_review_manager.path / search_dir
     if search_dir_path.exists():
         for file in search_dir_path.iterdir():
@@ -363,7 +364,7 @@ def test_has_untracked_search_records_present(
 ) -> None:
     """Test the has_untracked_search_records method when there are untracked search records."""
     # Setup: Create a new search record file that is not tracked by git
-    search_dir = base_repo_review_manager.SEARCHDIR_RELATIVE
+    search_dir = Filepaths.SEARCH_DIR
     untracked_search_file_path = (
         base_repo_review_manager.path
         / search_dir

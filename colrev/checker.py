@@ -16,6 +16,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.record import RecordStateModel
 
@@ -615,8 +616,8 @@ class Checker:
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
         )
-
-        if self.review_manager.dataset.records_file.is_file():
+        records_file = self.review_manager.get_path(Filepaths.RECORDS_FILE)
+        if records_file.is_file():
             self.records = self.review_manager.dataset.load_records_dict()
 
         check_scripts: list[dict[str, typing.Any]] = []
@@ -673,7 +674,8 @@ class Checker:
         # pylint: disable=not-a-mapping
 
         self.records: typing.Dict[str, typing.Any] = {}
-        if self.review_manager.dataset.records_file.is_file():
+        records_file = self.review_manager.get_path(Filepaths.RECORDS_FILE)
+        if records_file.is_file():
             self.records = self.review_manager.dataset.load_records_dict()
 
         # We work with exceptions because each issue may be raised in different checks.
@@ -690,9 +692,9 @@ class Checker:
             {"script": self._check_software, "params": []},
         ]
 
-        if self.review_manager.dataset.records_file.is_file():
+        if records_file.is_file():
             if self.review_manager.dataset.file_in_history(
-                filepath=self.review_manager.dataset.RECORDS_FILE_RELATIVE
+                filepath=Filepaths.RECORDS_FILE
             ):
                 prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")

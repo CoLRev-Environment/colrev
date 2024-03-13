@@ -33,6 +33,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
@@ -912,7 +913,10 @@ class LocalIndex:
                     f"{Colors.ORANGE}Warning: {repo_source_path} not on main branch{Colors.END}"
                 )
 
-            if not check_operation.review_manager.dataset.records_file.is_file():
+            records_file = check_operation.review_manager.get_path(
+                Filepaths.RECORDS_FILE
+            )
+            if not records_file.is_file():
                 return
             records = check_operation.review_manager.dataset.load_records_dict()
 

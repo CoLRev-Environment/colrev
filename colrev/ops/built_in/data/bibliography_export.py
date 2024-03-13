@@ -22,6 +22,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
@@ -91,7 +92,7 @@ class BibliographyExport(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.endpoint_path = self.review_manager.output_dir
+        self.endpoint_path = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
 
         if not self.review_manager.in_ci_environment():
             environment_manager = self.review_manager.get_environment_manager()

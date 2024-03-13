@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import PDFDefectCodes
 
 
@@ -53,7 +54,9 @@ class OCRMyPDF(JsonSchemaMixin):
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
         pdf_path.rename(non_ocred_filename)
         orig_path = (
-            pdf_path.parents[0] if pdf_path.is_file() else self.review_manager.pdf_dir
+            pdf_path.parents[0]
+            if pdf_path.is_file()
+            else self.review_manager.get_path(Filepaths.PDF_DIR)
         )
 
         # options = ""

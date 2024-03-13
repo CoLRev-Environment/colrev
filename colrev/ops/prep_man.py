@@ -13,6 +13,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -32,6 +33,9 @@ class PrepMan(colrev.operation.Operation):
         )
 
         self.verbose = True
+        self.lang_prep_csv_path = self.review_manager.get_path(
+            Filepaths.PREP_DIR
+        ) / Path("missing_lang_recs_df.csv")
 
     def _get_crosstab_df(self) -> pd.DataFrame:
         # pylint: disable=too-many-branches
@@ -92,88 +96,89 @@ class PrepMan(colrev.operation.Operation):
 
         return pd.DataFrame(crosstab, columns=[Fields.ORIGIN, "hint"])
 
+    def _export_prep_man_langs(self, records: dict) -> None:
+        language_service = colrev.env.language_service.LanguageService()
+
+        missing_lang_recs = []
+        self.review_manager.logger.info(
+            "Calculate most likely languages for records without language field"
+        )
+        for record in tqdm(records.values()):
+            if Fields.TITLE not in record:
+                continue
+            if Fields.LANGUAGE not in record:
+                confidence_values = language_service.compute_language_confidence_values(
+                    text=record[Fields.TITLE]
+                )
+                predicted_language, conf = confidence_values.pop(0)
+
+                lang_rec = {
+                    Fields.ID: record[Fields.ID],
+                    Fields.TITLE: record[Fields.TITLE],
+                    "most_likely_language": predicted_language,
+                    "confidence": conf,
+                }
+                missing_lang_recs.append(lang_rec)
+
+        missing_lang_recs_df = pd.DataFrame(missing_lang_recs)
+        missing_lang_recs_df.to_csv(
+            self.lang_prep_csv_path, index=False, quoting=csv.QUOTE_ALL
+        )
+        self.review_manager.logger.info(f"Exported table to {self.lang_prep_csv_path}")
+        self.review_manager.logger.info(
+            "Update the language column and rerun colrev prep-man -l"
+        )
+
+    def _import_prep_man_langs(self, records: dict) -> None:
+        self.review_manager.logger.info(
+            f"Import language fields from {self.lang_prep_csv_path}"
+        )
+        languages_df = pd.read_csv(self.lang_prep_csv_path)
+        language_records = languages_df.to_dict("records")
+        for language_record in language_records:
+            if language_record["most_likely_language"] == "":
+                continue
+            if language_record[Fields.ID] not in records:
+                # warn
+                continue
+            record_dict = records[language_record[Fields.ID]]
+            record = colrev.record.Record(data=record_dict)
+            record.update_field(
+                key=Fields.LANGUAGE,
+                value=language_record["most_likely_language"],
+                source="LanguageDetector/Manual",
+                note="",
+            )
+
+            if "language of title not in [eng]" == record.data.get(
+                Fields.PRESCREEN_EXCLUSION, ""
+            ):
+                record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
+                record.remove_masterdata_provenance_note(
+                    key=Fields.TITLE, note="language-not-found"
+                )
+                if (
+                    record.data[Fields.STATUS]
+                    == RecordState.md_needs_manual_preparation
+                ):
+                    # by resetting to md_imported,
+                    # the prescreen-exclusion based on languages will be reapplied.
+                    record.set_status(target_state=RecordState.md_imported)
+
+        self.review_manager.dataset.save_records_dict(records=records)
+
     def prep_man_langs(self) -> None:
         """Add missing language fields based on spreadsheets"""
 
-        lang_prep_csv_path = self.review_manager.prep_dir / Path(
-            "missing_lang_recs_df.csv"
-        )
-        lang_prep_csv_path.parent.mkdir(exist_ok=True, parents=True)
+        self.lang_prep_csv_path.parent.mkdir(exist_ok=True, parents=True)
 
         records = self.review_manager.dataset.load_records_dict()
 
-        if not lang_prep_csv_path.is_file():
-            language_service = colrev.env.language_service.LanguageService()
-
-            missing_lang_recs = []
-            self.review_manager.logger.info(
-                "Calculate most likely languages for records without language field"
-            )
-            for record in tqdm(records.values()):
-                if Fields.TITLE not in record:
-                    continue
-                if Fields.LANGUAGE not in record:
-                    confidence_values = (
-                        language_service.compute_language_confidence_values(
-                            text=record[Fields.TITLE]
-                        )
-                    )
-                    predicted_language, conf = confidence_values.pop(0)
-
-                    lang_rec = {
-                        Fields.ID: record[Fields.ID],
-                        Fields.TITLE: record[Fields.TITLE],
-                        "most_likely_language": predicted_language,
-                        "confidence": conf,
-                    }
-                    missing_lang_recs.append(lang_rec)
-
-            missing_lang_recs_df = pd.DataFrame(missing_lang_recs)
-            missing_lang_recs_df.to_csv(
-                lang_prep_csv_path, index=False, quoting=csv.QUOTE_ALL
-            )
-            self.review_manager.logger.info(f"Exported table to {lang_prep_csv_path}")
-            self.review_manager.logger.info(
-                "Update the language column and rerun colrev prep-man -l"
-            )
+        if not self.lang_prep_csv_path.is_file():
+            self._export_prep_man_langs(records)
 
         else:
-            self.review_manager.logger.info(
-                f"Import language fields from {lang_prep_csv_path}"
-            )
-            languages_df = pd.read_csv(lang_prep_csv_path)
-            language_records = languages_df.to_dict("records")
-            for language_record in language_records:
-                if language_record["most_likely_language"] == "":
-                    continue
-                if language_record[Fields.ID] not in records:
-                    # warn
-                    continue
-                record_dict = records[language_record[Fields.ID]]
-                record = colrev.record.Record(data=record_dict)
-                record.update_field(
-                    key=Fields.LANGUAGE,
-                    value=language_record["most_likely_language"],
-                    source="LanguageDetector/Manual",
-                    note="",
-                )
-
-                if "language of title not in [eng]" == record.data.get(
-                    Fields.PRESCREEN_EXCLUSION, ""
-                ):
-                    record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
-                    record.remove_masterdata_provenance_note(
-                        key=Fields.TITLE, note="language-not-found"
-                    )
-                    if (
-                        record.data[Fields.STATUS]
-                        == RecordState.md_needs_manual_preparation
-                    ):
-                        # by resetting to md_imported,
-                        # the prescreen-exclusion based on languages will be reapplied.
-                        record.set_status(target_state=RecordState.md_imported)
-
-            self.review_manager.dataset.save_records_dict(records=records)
+            self._import_prep_man_langs(records)
 
     def prep_man_stats(self) -> None:
         """Print statistics on prep_man"""

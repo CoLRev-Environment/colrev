@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -86,7 +87,8 @@ Example 2:
             settings["data_path_relative"] = Path("data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.data_path = self.review_manager.data_dir / self.settings.data_path_relative
+        data_dir = self.review_manager.get_path(Filepaths.DATA_DIR)
+        self.data_path = data_dir / self.settings.data_path_relative
         self.review_manager = self.review_manager
 
     # pylint: disable=unused-argument

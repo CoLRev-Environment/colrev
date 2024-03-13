@@ -14,6 +14,7 @@ import colrev.operation
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.writer.write_utils import write_file
 
 
@@ -257,9 +258,9 @@ class Search(colrev.operation.Operation):
     def _get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
+        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
         files = [
-            f.relative_to(self.review_manager.path)
-            for f in self.review_manager.search_dir.glob("**/*")
+            f.relative_to(self.review_manager.path) for f in search_dir.glob("**/*")
         ]
 
         # Only files that are not yet registered

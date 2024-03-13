@@ -17,6 +17,7 @@ import gitdb.exc
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 
 class Commit:
@@ -53,7 +54,9 @@ class Commit:
         except ValueError:
             pass
 
-        self.records_committed = review_manager.dataset.records_file.is_file()
+        self.records_committed = review_manager.get_path(
+            Filepaths.RECORDS_FILE
+        ).is_file()
         self.completeness_condition = review_manager.get_completeness_condition()
         self.colrev_version = f'version {version("colrev")}'
         sys_v = sys.version
@@ -133,7 +136,8 @@ class Commit:
 
     def _get_detailed_processing_report(self) -> str:
         processing_report = ""
-        if self.review_manager.report_path.is_file():
+        report_path = self.review_manager.get_path(Filepaths.REPORT_FILE)
+        if report_path.is_file():
             # Reformat
             prefixes = [
                 "[('change', 'author',",
@@ -145,11 +149,11 @@ class Commit:
             with tempfile.NamedTemporaryFile(
                 dir=self._temp_path, mode="r+b", delete=False
             ) as temp:
-                with open(self.review_manager.report_path, "r+b") as file:
+                with open(report_path, "r+b") as file:
                     shutil.copyfileobj(file, temp)  # type: ignore
             # self.report_path.rename(temp.name)
             with open(temp.name, encoding="utf8") as reader, open(
-                self.review_manager.report_path, "w", encoding="utf8"
+                report_path, "w", encoding="utf8"
             ) as writer:
                 line = reader.readline()
                 while line:
@@ -166,7 +170,7 @@ class Commit:
 
                     line = reader.readline()
 
-            with open(self.review_manager.report_path, encoding="utf8") as file:
+            with open(report_path, encoding="utf8") as file:
                 line = file.readline()
                 debug_part = False
                 while line:
@@ -215,10 +219,9 @@ class Commit:
 
         self.review_manager.logger.debug("Prepare commit: checks and updates")
         if not skip_status_yaml:
+            status_yml = self.review_manager.get_path(Filepaths.STATUS_FILE)
             self.review_manager.update_status_yaml()
-            self.review_manager.dataset.add_changes(
-                path=self.review_manager.STATUS_RELATIVE
-            )
+            self.review_manager.dataset.add_changes(path=status_yml)
 
         committer, email = self.review_manager.get_committer()
 

@@ -25,6 +25,7 @@ import colrev.qm.quality_model
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors
+from colrev.constants import Filepaths
 
 
 class ReviewManager:
@@ -39,22 +40,6 @@ class ReviewManager:
     notified_next_operation = None
     """ReviewManager was notified for the upcoming process and
     will provide access to the Dataset"""
-
-    SETTINGS_RELATIVE = Path("settings.json")
-    REPORT_RELATIVE = Path(".report.log")
-    CORRECTIONS_PATH_RELATIVE = Path(".corrections")
-    README_RELATIVE = Path("readme.md")
-    STATUS_RELATIVE = Path("status.yaml")
-
-    SEARCHDIR_RELATIVE = Path("data/search")
-    PREP_RELATIVE = Path("data/prep")
-    DEDUPE_RELATIVE = Path("data/dedupe")
-    PRESCREEN_RELATIVE = Path("data/prescreen")
-    PDF_DIR_RELATIVE = Path("data/pdfs")
-    SCREEN_RELATIVE = Path("data/screen")
-    DATA_DIR_RELATIVE = Path("data/data")
-
-    OUTPUT_DIR_RELATIVE = Path("output")
 
     dataset: colrev.dataset.Dataset
     """The review dataset object"""
@@ -92,30 +77,15 @@ class ReviewManager:
         else:
             self.path = Path.cwd()
 
-        self.settings_path = self.path / self.SETTINGS_RELATIVE
-        self.report_path = self.path / self.REPORT_RELATIVE
-        self.corrections_path = self.path / self.CORRECTIONS_PATH_RELATIVE
-        self.readme = self.path / self.README_RELATIVE
-        self.status = self.path / self.STATUS_RELATIVE
-
-        self.search_dir = self.path / self.SEARCHDIR_RELATIVE
-        self.prep_dir = self.path / self.PREP_RELATIVE
-        self.dedupe_dir = self.path / self.DEDUPE_RELATIVE
-        self.prescreen_dir = self.path / self.PRESCREEN_RELATIVE
-        self.pdf_dir = self.path / self.PDF_DIR_RELATIVE
-        self.screen_dir = self.path / self.SCREEN_RELATIVE
-        self.data_dir = self.path / self.DATA_DIR_RELATIVE
-
-        self.output_dir = self.path / self.OUTPUT_DIR_RELATIVE
-
         self.exact_call = exact_call
 
         try:
-            if self.settings_path.is_file():
-                self.data_dir.mkdir(parents=True, exist_ok=True)
-                self.search_dir.mkdir(parents=True, exist_ok=True)
-                self.pdf_dir.mkdir(parents=True, exist_ok=True)
-                self.output_dir.mkdir(parents=True, exist_ok=True)
+            settings_path = self.get_path(Filepaths.SETTINGS_FILE)
+            if settings_path.is_file():
+                self.get_path(Filepaths.DATA_DIR).mkdir(parents=True, exist_ok=True)
+                self.get_path(Filepaths.SEARCH_DIR).mkdir(parents=True, exist_ok=True)
+                self.get_path(Filepaths.PDF_DIR).mkdir(parents=True, exist_ok=True)
+                self.get_path(Filepaths.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
             report_logger, logger = self.get_loggers_by_debug_mode()
             self.report_logger = report_logger
@@ -131,6 +101,7 @@ class ReviewManager:
             self.dataset = colrev.dataset.Dataset(review_manager=self)
 
         except Exception as exc:  # pylint: disable=broad-except
+
             if (self.path / Path(".git")).is_dir():
                 if git.Repo().active_branch.name == "gh-pages":
                     raise colrev_exceptions.RepoSetupError(
@@ -142,6 +113,10 @@ class ReviewManager:
                 raise exc
             if debug_mode:
                 self.logger.debug(exc)
+
+    def get_path(self, filename: Path) -> Path:
+        """Get the absolute path"""
+        return self.path / filename
 
     # pylint: disable=too-many-arguments
     def update_config(
@@ -207,7 +182,9 @@ class ReviewManager:
 
     def load_settings(self) -> colrev.settings.Settings:
         """Load the settings"""
-        self.settings = colrev.settings.load_settings(settings_path=self.settings_path)
+        self.settings = colrev.settings.load_settings(
+            settings_path=Filepaths.SETTINGS_FILE
+        )
         return self.settings
 
     def save_settings(self) -> None:
@@ -310,10 +287,10 @@ class ReviewManager:
 
         status_stats = self.get_status_stats(records=records)
         exported_dict = asdict(status_stats)
-        with open(self.status, "w", encoding="utf8") as file:
+        with open(Filepaths.STATUS_FILE, "w", encoding="utf8") as file:
             yaml.dump(exported_dict, file, allow_unicode=True)
         if add_to_git:
-            self.dataset.add_changes(path=self.STATUS_RELATIVE)
+            self.dataset.add_changes(path=Filepaths.STATUS_FILE)
 
     def get_upgrade(self) -> colrev.ops.upgrade.Upgrade:  # pragma: no cover
         """Get an upgrade object"""

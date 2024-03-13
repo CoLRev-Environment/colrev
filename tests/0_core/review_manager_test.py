@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Tests for the review_manager"""
-import json
 import tempfile
 from pathlib import Path
 
@@ -32,7 +31,7 @@ def test_invalid_git_repository_error(
 
     settings_path = tmp_path / "settings.json"
     settings_path.touch()
-    with pytest.raises(json.decoder.JSONDecodeError):
+    with pytest.raises(colrev.exceptions.RepoSetupError):
         colrev.review_manager.ReviewManager(path_str=str(tmp_path))
 
 

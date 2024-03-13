@@ -20,6 +20,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.env.utils import dict_set_nested
 from colrev.env.utils import get_by_path
 
@@ -213,7 +214,8 @@ class EnvironmentManager:
         self, *, review_manager: colrev.review_manager.ReviewManager
     ) -> dict:
         status_dict = {}
-        with open(review_manager.status, encoding="utf8") as stream:
+        status_yml = review_manager.get_path(Filepaths.STATUS_FILE)
+        with open(status_yml, encoding="utf8") as stream:
             try:
                 status_dict = yaml.safe_load(stream)
             except yaml.YAMLError as exc:

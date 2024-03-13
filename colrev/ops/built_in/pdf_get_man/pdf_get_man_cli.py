@@ -14,6 +14,7 @@ import colrev.ops.pdf_get
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -42,6 +43,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         self.pdf_get_man_operation = pdf_get_man_operation
 
         self._get_from_downloads_folder = False
+        self.pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
 
     def _get_pdf_from_google(
         self, record: colrev.record.Record
@@ -84,36 +86,32 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
     def _get_filepath(self, *, record: colrev.record.Record) -> Path:
         filepath = (
-            self.review_manager.pdf_dir
-            / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
+            self.pdf_dir / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
         )
         if filepath.is_file():
             return filepath
 
         if Fields.VOLUME in record.data:
-            filepath = (
-                self.review_manager.pdf_dir
-                / f"{record.data['volume']}/{record.data['ID']}.pdf"
-            )
+            filepath = self.pdf_dir / f"{record.data['volume']}/{record.data['ID']}.pdf"
             if filepath.is_file():
                 return filepath
 
         if Fields.VOLUME in record.data and Fields.NUMBER in record.data:
             filepath = (
-                self.review_manager.pdf_dir
+                self.pdf_dir
                 / f"{record.data['volume']}_{record.data['number']}/{record.data['ID']}.pdf"
             )
             if filepath.is_file():
                 return filepath
 
             filepath = (
-                self.review_manager.pdf_dir
+                self.pdf_dir
                 / f"{record.data['volume']}/{record.data['number']}/{record.data['ID']}.pdf"
             )
             if filepath.is_file():
                 return filepath
 
-        filepath = self.review_manager.pdf_dir / f"{record.data['ID']}.pdf"
+        filepath = self.pdf_dir / f"{record.data['ID']}.pdf"
 
         return filepath
 
@@ -143,7 +141,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             pdf_in_downloads_folder = pdfs_in_downloads_folder[0]
 
         # simple heuristics:
-        vol_slash_nr_path = self.review_manager.pdf_dir / Path(
+        vol_slash_nr_path = self.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}/{record.data.get('number', 'NA')}"
         )
         if vol_slash_nr_path.is_dir():
@@ -152,7 +150,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
             return
 
-        vol_underscore_nr_path = self.review_manager.pdf_dir / Path(
+        vol_underscore_nr_path = self.pdf_dir / Path(
             f"{record.data.get('volume', 'NA')}_{record.data.get('number', 'NA')}"
         )
         if vol_underscore_nr_path.is_dir():
@@ -161,23 +159,17 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             )
             return
 
-        vol_path = self.review_manager.pdf_dir / Path(
-            f"{record.data.get('volume', 'NA')}"
-        )
+        vol_path = self.pdf_dir / Path(f"{record.data.get('volume', 'NA')}")
         if vol_path.is_dir():
             pdf_in_downloads_folder.rename(vol_path / Path(f"{record.data['ID']}.pdf"))
             return
 
-        year_path = self.review_manager.pdf_dir / Path(
-            f"{record.data.get('year', 'NA')}"
-        )
+        year_path = self.pdf_dir / Path(f"{record.data.get('year', 'NA')}")
         if year_path.is_dir():
             pdf_in_downloads_folder.rename(year_path / Path(f"{record.data['ID']}.pdf"))
             return
 
-        pdf_in_downloads_folder.rename(
-            self.review_manager.pdf_dir / Path(f"{record.data['ID']}.pdf")
-        )
+        pdf_in_downloads_folder.rename(self.pdf_dir / Path(f"{record.data['ID']}.pdf"))
 
     def print_record(self, *, record_dict: dict) -> None:
         """Print the record for pdf-get-man (cli)"""
@@ -262,7 +254,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         self.review_manager.logger.info("Retrieve PDFs manually")
         pdf_get_operation = self.review_manager.get_pdf_get_operation()
-        pdf_dir = self.review_manager.pdf_dir
+        pdf_dir = self.pdf_dir
 
         records = self.review_manager.dataset.load_records_dict()
         if input("Check existing unlinked PDFs (y/n)?") == "y":

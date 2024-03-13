@@ -9,6 +9,7 @@ from dictdiffer import diff
 
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 
 # pylint: disable=too-few-public-methods
@@ -165,9 +166,8 @@ class Corrections:
             "changes": selected_change_items,
         }
 
-        filepath = self.review_manager.corrections_path / Path(
-            f"{corrected_record['ID']}.json"
-        )
+        corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        filepath = corrections_path / Path(f"{corrected_record['ID']}.json")
         filepath.parent.mkdir(exist_ok=True)
 
         with open(filepath, "w", encoding="utf8") as corrections_file:
@@ -182,9 +182,7 @@ class Corrections:
         # to test run
         # colrev-hooks-report .report.log
 
-        dataset = self.review_manager.dataset
-
-        if not dataset.records_file.is_file():
+        if not self.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
             return
 
         records = self.review_manager.dataset.load_records_dict()

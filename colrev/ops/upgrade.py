@@ -18,6 +18,7 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
@@ -52,9 +53,10 @@ class Upgrade(colrev.operation.Operation):
             self.repo.index.add([str(target)])
 
     def _load_settings_dict(self) -> dict:
-        if not self.review_manager.settings_path.is_file():
+        settings_path = self.review_manager.get_path(Filepaths.SETTINGS_FILE)
+        if not settings_path.is_file():
             raise colrev_exceptions.CoLRevException()
-        with open(self.review_manager.settings_path, encoding="utf-8") as file:
+        with open(settings_path, encoding="utf-8") as file:
             settings = json.load(file)
         return settings
 

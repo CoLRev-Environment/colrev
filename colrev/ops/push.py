@@ -10,6 +10,7 @@ import colrev.ops.correct
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 
 class Push(colrev.operation.Operation):
@@ -53,7 +54,8 @@ class Push(colrev.operation.Operation):
 
         # group by target-repo to bundle changes in a commit
         change_sets = {}  # type: ignore
-        for correction_path in self.review_manager.corrections_path.glob("*.json"):
+        corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        for correction_path in corrections_path.glob("*.json"):
             with open(correction_path, encoding="utf8") as json_file:
                 output = json.load(json_file)
 

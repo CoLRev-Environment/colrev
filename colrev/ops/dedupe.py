@@ -22,6 +22,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
@@ -49,22 +50,16 @@ class Dedupe(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.dedupe,
             notify_state_transition_operation=notify_state_transition_operation,
         )
+        self.dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)
+        self.non_dupe_file_xlsx = self.dedupe_dir / self.NON_DUPLICATE_FILE_XLSX
+        self.non_dupe_file_txt = self.dedupe_dir / self.NON_DUPLICATE_FILE_TXT
+        self.dupe_file = self.dedupe_dir / self.DUPLICATES_TO_VALIDATE
 
-        self.non_dupe_file_xlsx = (
-            self.review_manager.dedupe_dir / self.NON_DUPLICATE_FILE_XLSX
-        )
-        self.non_dupe_file_txt = (
-            self.review_manager.dedupe_dir / self.NON_DUPLICATE_FILE_TXT
-        )
-        self.dupe_file = self.review_manager.dedupe_dir / self.DUPLICATES_TO_VALIDATE
-
-        self.same_source_merge_file = (
-            self.review_manager.dedupe_dir / self.SAME_SOURCE_MERGE_FILE
-        )
+        self.same_source_merge_file = self.dedupe_dir / self.SAME_SOURCE_MERGE_FILE
         self.prevented_same_source_merge_file = (
-            self.review_manager.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
+            self.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
         )
-        self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
+        self.dedupe_dir.mkdir(exist_ok=True, parents=True)
 
     @classmethod
     def _dfs(cls, node: str, graph: dict, visited: dict, component: list) -> None:

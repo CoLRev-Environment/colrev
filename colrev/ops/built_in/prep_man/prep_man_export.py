@@ -20,11 +20,13 @@ from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=duplicate-code
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 
 @zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
@@ -85,29 +87,21 @@ class ExportManPrep(JsonSchemaMixin):
 
         self.review_manager = prep_man_operation.review_manager
         self.quality_model = self.review_manager.get_qm()
-        self.prep_man_bib_path = (
-            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_PATH
-        )
-
-        self.prep_man_csv_path = (
-            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH
-        )
-
-        self.prep_man_xlsx_path = (
-            self.review_manager.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH_XLS
-        )
-
-        self.review_manager.prep_dir.mkdir(exist_ok=True, parents=True)
+        self.prep_dir = self.review_manager.get_path(Filepaths.PREP_DIR)
+        self.prep_dir.mkdir(exist_ok=True, parents=True)
+        self.prep_man_bib_path = self.prep_dir / self.RELATIVE_PREP_MAN_PATH
+        self.prep_man_csv_path = self.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH
+        self.prep_man_xlsx_path = self.prep_dir / self.RELATIVE_PREP_MAN_INFO_PATH_XLS
 
     def _copy_files_for_man_prep(self, *, records: dict) -> None:
-        prep_man_path_pdfs = self.review_manager.prep_dir / Path("pdfs")
+        prep_man_path_pdfs = self.prep_dir / Path("pdfs")
         if prep_man_path_pdfs.is_dir():
             input(f"Remove {prep_man_path_pdfs} and press Enter.")
         prep_man_path_pdfs.mkdir(exist_ok=True, parents=True)
 
         for record in records.values():
             if Fields.FILE in record:
-                target_path = self.review_manager.prep_dir / Path(record[Fields.FILE])
+                target_path = self.prep_dir / Path(record[Fields.FILE])
                 target_path.parents[0].mkdir(exist_ok=True, parents=True)
 
                 if self.settings.pdf_handling_mode == "symlink":

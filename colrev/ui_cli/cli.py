@@ -27,6 +27,7 @@ import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
@@ -378,17 +379,17 @@ def retrieve(
         {"verbose_mode": verbose, "force_mode": force, "high_level_operation": True},
     )
 
-    if not any(review_manager.search_dir.iterdir()) and not any(
-        review_manager.pdf_dir.iterdir()
-    ):
+    pdf_dir = review_manager.get_path(Filepaths.PDF_DIR)
+    search_dir = review_manager.get_path(Filepaths.SEARCH_DIR)
+    if not any(search_dir.iterdir()) and not any(pdf_dir.iterdir()):
         # Note : API-based searches automatically retrieve files
         # when they are added, i.e., the following message should
         # not be shown.
         print(
             "To retrieve search results,\n"
             " - copy files (*.bib, *.ris, *.xlsx, ...) "
-            f"to the directory {review_manager.SEARCHDIR_RELATIVE} or\n"
-            f" - copy PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
+            f"to the directory {Filepaths.SEARCH_DIR} or\n"
+            f" - copy PDF files to the directory {Filepaths.PDF_DIR} or \n"
             " - add an API-based search, as described in the documentation:\n"
             "https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
         )

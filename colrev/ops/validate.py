@@ -14,6 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -32,17 +33,13 @@ class Validate(colrev.operation.Operation):
         """If commit is "": return the last commited version of records"""
         git_repo = self.review_manager.dataset.get_repo()
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(
-            self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        ).replace("\\", "/")
+        records_file_path = str(Filepaths.RECORDS_FILE).replace("\\", "/")
         revlist = (
             (
                 commit_i.hexsha,
                 (commit_i.tree / records_file_path).data_stream.read(),
             )
-            for commit_i in git_repo.iter_commits(
-                paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-            )
+            for commit_i in git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
         )
 
         found_target_commit = False
@@ -280,9 +277,7 @@ class Validate(colrev.operation.Operation):
                 commit.hexsha,
                 (commit.tree / dataset.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(
-                paths=str(dataset.RECORDS_FILE_RELATIVE)
-            )
+            for commit in git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
         )
         found = False
         records: typing.Dict[str, typing.Any] = {}
@@ -506,9 +501,7 @@ class Validate(colrev.operation.Operation):
 
         git_repo = self.review_manager.dataset.get_repo()
 
-        revlist = git_repo.iter_commits(
-            paths=str(self.review_manager.dataset.RECORDS_FILE_RELATIVE)
-        )
+        revlist = git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
         records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
 

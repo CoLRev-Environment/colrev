@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
+from colrev.constants import Filepaths
 
 if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
@@ -59,7 +60,8 @@ def setup_report_logger(
             fmt="%(asctime)s [%(levelname)s] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        report_file_handler = logging.FileHandler(review_manager.report_path, mode="a")
+        report_path = review_manager.get_path(Filepaths.REPORT_FILE)
+        report_file_handler = logging.FileHandler(report_path, mode="a")
         report_file_handler.setFormatter(formatter)
 
         report_logger.addHandler(report_file_handler)
@@ -83,8 +85,9 @@ def stop_logger(*, review_manager: colrev.review_manager.ReviewManager) -> None:
         review_manager.report_logger.removeHandler(report_handler)
         report_handler.close()
 
-    if review_manager.report_path.is_file():
-        with open(review_manager.report_path, "r+", encoding="utf8") as file:
+    report_path = review_manager.get_path(Filepaths.REPORT_FILE)
+    if report_path.is_file():
+        with open(report_path, "r+", encoding="utf8") as file:
             file.truncate(0)
 
 
@@ -93,7 +96,8 @@ def reset_report_logger(*, review_manager: colrev.review_manager.ReviewManager) 
 
     stop_logger(review_manager=review_manager)
 
-    file_handler = logging.FileHandler(review_manager.report_path, mode="a")
+    report_path = review_manager.get_path(Filepaths.REPORT_FILE)
+    file_handler = logging.FileHandler(report_path, mode="a")
     file_handler.setLevel(logging.INFO)
     formatter = logging.Formatter(
         fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"

@@ -18,6 +18,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Filepaths
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -57,10 +58,11 @@ class PRISMA(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.csv_path = self.review_manager.output_dir / Path("PRISMA.csv")
+        output_dir = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
+        self.csv_path = output_dir / Path("PRISMA.csv")
 
         self.settings.diagram_path = [
-            self.review_manager.output_dir / path for path in self.settings.diagram_path
+            output_dir / path for path in self.settings.diagram_path
         ]
 
         if not self.review_manager.in_ci_environment():
@@ -162,8 +164,9 @@ class PRISMA(JsonSchemaMixin):
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
-            uid = os.stat(self.review_manager.settings_path).st_uid
-            gid = os.stat(self.review_manager.settings_path).st_gid
+            settings_path = self.review_manager.get_path(Filepaths.SETTINGS_FILE)
+            uid = os.stat(settings_path).st_uid
+            gid = os.stat(settings_path).st_gid
             user = f"{uid}:{gid}"
 
             client = docker.from_env()

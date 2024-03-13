@@ -92,7 +92,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.README_RELATIVE
       ~ReviewManager.REPORT_RELATIVE
       ~ReviewManager.SCREEN_RELATIVE
-      ~ReviewManager.SEARCHDIR_RELATIVE
+      ~ReviewManager.SEARCH_DIR_RELATIVE
       ~ReviewManager.SETTINGS_RELATIVE
       ~ReviewManager.STATUS_RELATIVE
       ~ReviewManager.notified_next_operation

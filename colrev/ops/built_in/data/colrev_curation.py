@@ -17,6 +17,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
@@ -202,7 +203,7 @@ class ColrevCuration(JsonSchemaMixin):
         markdown_output: str,
     ) -> None:
         table_summary_tag = "<!-- TABLE_SUMMARY -->"
-        readme_path = self.review_manager.readme
+        readme_path = self.review_manager.get_path(Filepaths.README_FILE)
         with open(readme_path, "r+b") as file:
             appended = False
             seekpos = file.tell()
@@ -258,18 +259,14 @@ class ColrevCuration(JsonSchemaMixin):
         stats = self._get_stats(records=records, sources=sources)
         markdown_output = self._get_stats_markdown_table(stats=stats, sources=sources)
         self._update_table_in_readme(markdown_output=markdown_output)
-        self.review_manager.dataset.add_changes(
-            path=self.review_manager.README_RELATIVE
-        )
+        self.review_manager.dataset.add_changes(path=Filepaths.README_FILE)
 
     def _source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
-
-        self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
-        source_comparison_xlsx = self.review_manager.dedupe_dir / Path(
-            "source_comparison.xlsx"
-        )
+        dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)
+        dedupe_dir.mkdir(exist_ok=True, parents=True)
+        source_comparison_xlsx = dedupe_dir / Path("source_comparison.xlsx")
 
         source_filenames = [
             str(x.filename) for x in self.review_manager.settings.sources
