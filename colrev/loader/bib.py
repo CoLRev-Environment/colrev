@@ -27,7 +27,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from typing import Optional
     from typing import Callable
 
-# TODO : pass the list fields/dict fields??
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
