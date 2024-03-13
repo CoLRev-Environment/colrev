@@ -60,7 +60,6 @@ class Validate(colrev.operation.Operation):
                 load_string=filecontents.decode("utf-8"),
                 implementation="bib",
                 logger=self.review_manager.logger,
-                check_bib_file=False,
             )
 
             return prior_records_dict
@@ -293,7 +292,6 @@ class Validate(colrev.operation.Operation):
                     load_string=filecontents.decode("utf-8"),
                     implementation="bib",
                     logger=self.review_manager.logger,
-                    check_bib_file=False,
                 )
                 break
             if commit == target_commit:
@@ -301,7 +299,6 @@ class Validate(colrev.operation.Operation):
                     load_string=filecontents.decode("utf-8"),
                     implementation="bib",
                     logger=self.review_manager.logger,
-                    check_bib_file=False,
                 )
                 found = True
 
@@ -530,7 +527,6 @@ class Validate(colrev.operation.Operation):
                 load_string=load_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
-                check_bib_file=False,
             )
 
             load_str = (
@@ -542,7 +538,6 @@ class Validate(colrev.operation.Operation):
                 load_string=load_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
-                check_bib_file=False,
             )
 
             load_str = (
@@ -552,7 +547,6 @@ class Validate(colrev.operation.Operation):
                 load_string=load_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
-                check_bib_file=False,
             )
 
             if "screen" in commit.message or "prescreen" in commit.message:

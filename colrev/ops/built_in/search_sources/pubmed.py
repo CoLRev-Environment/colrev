@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -431,13 +430,12 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.pubmed_lock.acquire(timeout=60)
 
                 # Note : need to reload file because the object is not shared between processes
-                pubmed_feed = self.search_source.get_feed(
+                pubmed_feed = self.search_source.get_api_feed(
                     review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
                 )
 
-                pubmed_feed.set_id(record_dict=retrieved_record.data)
                 pubmed_feed.add_record(record=retrieved_record)
 
                 record.merge(
@@ -533,7 +531,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -544,49 +542,47 @@ class PubMedSearchSource(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self._get_pubmed_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
-                    Fields.TITLE, ""
-                ):
-                    self.review_manager.logger.warning(f"Skipped record: {record_dict}")
-                    continue
                 try:
-                    pubmed_feed.set_id(record_dict=record_dict)
+                    # Note : discard "empty" records
+                    if "" == record_dict.get(
+                        Fields.AUTHOR, ""
+                    ) and "" == record_dict.get(Fields.TITLE, ""):
+                        self.review_manager.logger.warning(
+                            f"Skipped record: {record_dict}"
+                        )
+                        continue
+                    prep_record = colrev.record.PrepRecord(data=record_dict)
+
+                    prev_record_dict_version = pubmed_feed.get_prev_record_dict_version(
+                        retrieved_record=prep_record
+                    )
+
+                    if Fields.D_PROV in prep_record.data:
+                        del prep_record.data[Fields.D_PROV]
+
+                    added = pubmed_feed.add_record(record=prep_record)
+
+                    if added:
+                        self.review_manager.logger.info(
+                            " retrieve pubmed-id=" + prep_record.data["pubmedid"]
+                        )
+                    else:
+                        pubmed_feed.update_existing_record(
+                            records=records,
+                            record_dict=prep_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
+                        )
+
+                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                    if not added and not rerun:
+                        # problem: some publishers don't necessarily
+                        # deposit papers chronologically
+                        break
                 except colrev_exceptions.NotFeedIdentifiableException:
                     print("Cannot set id for record")
                     continue
-
-                prev_record_dict_version = {}
-                if record_dict[Fields.ID] in pubmed_feed.feed_records:
-                    prev_record_dict_version = deepcopy(
-                        pubmed_feed.feed_records[record_dict[Fields.ID]]
-                    )
-
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-
-                if Fields.D_PROV in prep_record.data:
-                    del prep_record.data[Fields.D_PROV]
-
-                added = pubmed_feed.add_record(record=prep_record)
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve pubmed-id=" + prep_record.data["pubmedid"]
-                    )
-                else:
-                    pubmed_feed.update_existing_record(
-                        records=records,
-                        record_dict=prep_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-
-                # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                if not added and not rerun:
-                    # problem: some publishers don't necessarily
-                    # deposit papers chronologically
-                    break
 
             pubmed_feed.print_post_run_search_infos(records=records)
             pubmed_feed.save_feed_file()
@@ -606,7 +602,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     def _run_md_search(
         self,
         *,
-        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
 
@@ -621,28 +617,26 @@ class PubMedSearchSource(JsonSchemaMixin):
                 if retrieved_record["pubmedid"] != feed_record.data["pubmedid"]:
                     continue
 
-                pubmed_feed.set_id(record_dict=retrieved_record)
+                prev_record_dict_version = pubmed_feed.get_prev_record_dict_version(
+                    retrieved_record=colrev.record.Record(data=retrieved_record)
+                )
+
+                pubmed_feed.add_record(
+                    record=colrev.record.Record(data=retrieved_record)
+                )
+
+                pubmed_feed.update_existing_record(
+                    records=records,
+                    record_dict=retrieved_record,
+                    prev_record_dict_version=prev_record_dict_version,
+                    source=self.search_source,
+                    update_time_variant_fields=True,
+                )
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
-
-            prev_record_dict_version = {}
-            if retrieved_record[Fields.ID] in pubmed_feed.feed_records:
-                prev_record_dict_version = pubmed_feed.feed_records[
-                    retrieved_record[Fields.ID]
-                ]
-
-            pubmed_feed.add_record(record=colrev.record.Record(data=retrieved_record))
-
-            pubmed_feed.update_existing_record(
-                records=records,
-                record_dict=retrieved_record,
-                prev_record_dict_version=prev_record_dict_version,
-                source=self.search_source,
-                update_time_variant_fields=True,
-            )
 
         pubmed_feed.save_feed_file()
         pubmed_feed.print_post_run_search_infos(records=records)
@@ -653,7 +647,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        pubmed_feed = self.search_source.get_feed(
+        pubmed_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

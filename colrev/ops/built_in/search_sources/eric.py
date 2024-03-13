@@ -195,7 +195,7 @@ class ERICSearchSource(JsonSchemaMixin):
             yield record
 
     def _run_api_search(
-        self, *, eric_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+        self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
         for record in self.get_query_return():
@@ -220,7 +220,7 @@ class ERICSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of ERIC"""
 
-        eric_feed = self.search_source.get_feed(
+        eric_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

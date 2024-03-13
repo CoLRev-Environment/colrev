@@ -128,8 +128,6 @@ class Merge(colrev.operation.Operation):
                         load_string=blob.data_stream.read().decode("utf-8"),
                         implementation="bib",
                         logger=self.review_manager.logger,
-                        force_mode=self.review_manager.force_mode,
-                        check_bib_file=False,
                     )
 
                 elif 3 == stage:
@@ -137,8 +135,6 @@ class Merge(colrev.operation.Operation):
                         load_string=blob.data_stream.read().decode("utf-8"),
                         implementation="bib",
                         logger=self.review_manager.logger,
-                        force_mode=self.review_manager.force_mode,
-                        check_bib_file=False,
                     )
 
         else:

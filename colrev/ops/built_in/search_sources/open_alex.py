@@ -188,13 +188,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.open_alex_lock.acquire(timeout=120)
 
             # Note : need to reload file because the object is not shared between processes
-            open_alex_feed = self.search_source.get_feed(
+            open_alex_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
             )
 
-            open_alex_feed.set_id(record_dict=retrieved_record.data)
             open_alex_feed.add_record(record=retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
@@ -248,7 +247,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         # https://docs.openalex.org/api-entities/works
 
-        # crossref_feed = self.search_source.get_feed(
+        # crossref_feed = self.search_source.get_api_feed(
         #     review_manager=search_operation.review_manager,
         #     source_identifier=self.source_identifier,
         #     update_only=(not rerun),

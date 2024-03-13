@@ -154,7 +154,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             print("No records imported. Cannot run forward search yet.")
             return
 
-        forward_search_feed = self.search_source.get_feed(
+        forward_search_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -176,32 +176,29 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 )
                 new_record["cites_IDs"] = record[Fields.ID]
 
-                try:
-                    forward_search_feed.set_id(record_dict=new_record)
-                except colrev_exceptions.NotFeedIdentifiableException:
-                    continue
-
-                prev_record_dict_version = {}
-                if new_record[Fields.ID] in forward_search_feed.feed_records:
-                    prev_record_dict_version = forward_search_feed.feed_records[
-                        new_record[Fields.ID]
-                    ]
-
-                added = forward_search_feed.add_record(
-                    record=colrev.record.Record(data=new_record),
+                prev_record_dict_version = (
+                    forward_search_feed.get_prev_record_dict_version(
+                        retrieved_record=colrev.record.Record(data=new_record)
+                    )
                 )
 
-                if added:
-                    pass
-                elif rerun:
-                    # Note : only re-index/update
-                    forward_search_feed.update_existing_record(
-                        records=records,
-                        record_dict=new_record,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
+                try:
+                    added = forward_search_feed.add_record(
+                        record=colrev.record.Record(data=new_record),
                     )
+                    if added:
+                        pass
+                    elif rerun:
+                        # Note : only re-index/update
+                        forward_search_feed.update_existing_record(
+                            records=records,
+                            record_dict=new_record,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
+                        )
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    continue
 
         forward_search_feed.save_feed_file()
         forward_search_feed.print_post_run_search_infos(records=records)

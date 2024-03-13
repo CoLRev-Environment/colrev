@@ -154,7 +154,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
                 filename=bib_files_to_index.joinpath(path),
                 logger=review_manager.logger,
                 unique_id_field="ID",
-                check_bib_file=False,
             )
 
         return test_records_dict
@@ -345,7 +344,6 @@ def get_local_index_test_records_dict(  # type: ignore
         loaded_records = colrev.loader.load_utils.load(
             filename=bib_files_to_index.joinpath(path),
             unique_id_field="ID",
-            check_bib_file=False,
         )
 
         # Note : we only select one example for the TEI-indexing
@@ -438,33 +436,6 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
         "registry",
         test_json_path,
     )
-
-
-@pytest.fixture(name="search_feed")
-def fixture_search_feed(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> typing.Generator:
-    """General search feed"""
-
-    source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/test.bib"),
-        search_type=colrev.settings.SearchType.DB,
-        search_parameters={"query": "query"},
-        comment="",
-    )
-
-    feed = source.get_feed(
-        review_manager=base_repo_review_manager,
-        source_identifier="doi",
-        update_only=True,
-    )
-
-    prev_sources = base_repo_review_manager.settings.sources
-
-    yield feed
-
-    base_repo_review_manager.settings.sources = prev_sources
 
 
 @pytest.fixture(name="v_t_record")

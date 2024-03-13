@@ -128,7 +128,7 @@ class Repare(colrev.operation.Operation):
         source_feeds = {}
         for source in self.review_manager.settings.sources:
             source_feeds[str(source.filename).replace("data/search/", "")] = (
-                source.get_feed(
+                source.get_api_feed(
                     review_manager=self.review_manager,
                     source_identifier="NA",
                     update_only=False,
@@ -327,8 +327,6 @@ class Repare(colrev.operation.Operation):
             curation_recs = colrev.loader.load_utils.load(
                 filename=search_source.filename,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
 
             for record_id in list(curation_recs.keys()):
@@ -411,8 +409,6 @@ class Repare(colrev.operation.Operation):
                             load_string=record_str,
                             implementation="bib",
                             logger=self.review_manager.logger,
-                            force_mode=self.review_manager.force_mode,
-                            check_bib_file=False,
                         )
 
                         if len(records) != 1:

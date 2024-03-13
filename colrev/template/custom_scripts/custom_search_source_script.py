@@ -33,7 +33,7 @@ class CustomSearch:
     def run_search(self, rerun: bool) -> None:
         """Run the search"""
 
-        feed = self.search_source.get_feed(
+        feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

@@ -233,19 +233,19 @@ class SearchSource(JsonSchemaMixin):
 
         return exported_dict
 
-    def get_feed(
+    def get_api_feed(
         self,
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
-    ) -> colrev.ops.search_feed.GeneralOriginFeed:
+    ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
         # pylint: disable=redefined-outer-name
-        import colrev.ops.search_feed
+        import colrev.ops.search_api_feed
 
-        return colrev.ops.search_feed.GeneralOriginFeed(
+        return colrev.ops.search_api_feed.SearchAPIFeed(
             review_manager=review_manager,
             search_source=self,
             source_identifier=source_identifier,

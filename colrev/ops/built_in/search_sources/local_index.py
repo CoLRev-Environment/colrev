@@ -163,43 +163,44 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _run_md_search(
         self,
         *,
-        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
-            feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
-            feed_record = colrev.record.Record(data=feed_record_dict)
-
             try:
+                feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
+                feed_record = colrev.record.Record(data=feed_record_dict)
+
                 retrieved_record_dict = self.local_index.retrieve(
                     record_dict=feed_record.get_data(), include_file=False
                 )
 
-                local_index_feed.set_id(record_dict=retrieved_record_dict)
+                prev_record_dict_version = (
+                    local_index_feed.get_prev_record_dict_version(
+                        retrieved_record=colrev.record.Record(
+                            data=retrieved_record_dict
+                        )
+                    )
+                )
+
+                local_index_feed.add_record(
+                    record=colrev.record.Record(data=retrieved_record_dict)
+                )
+                del retrieved_record_dict[Fields.CURATION_ID]
+
+                local_index_feed.update_existing_record(
+                    records=records,
+                    record_dict=retrieved_record_dict,
+                    prev_record_dict_version=prev_record_dict_version,
+                    source=self.search_source,
+                    update_time_variant_fields=True,
+                )
             except (
                 colrev_exceptions.RecordNotInIndexException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
-
-            prev_record_dict_version = {}
-            if retrieved_record_dict[Fields.ID] in local_index_feed.feed_records:
-                prev_record_dict_version = local_index_feed.feed_records[
-                    retrieved_record_dict[Fields.ID]
-                ]
-            local_index_feed.add_record(
-                record=colrev.record.Record(data=retrieved_record_dict)
-            )
-            del retrieved_record_dict[Fields.CURATION_ID]
-
-            local_index_feed.update_existing_record(
-                records=records,
-                record_dict=retrieved_record_dict,
-                prev_record_dict_version=prev_record_dict_version,
-                source=self.search_source,
-                update_time_variant_fields=True,
-            )
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
@@ -208,40 +209,39 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        local_index_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        local_index_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
 
         for retrieved_record_dict in self._retrieve_from_index():
             try:
-                local_index_feed.set_id(record_dict=retrieved_record_dict)
+                prev_record_dict_version = (
+                    local_index_feed.get_prev_record_dict_version(
+                        retrieved_record=colrev.record.Record(
+                            data=retrieved_record_dict
+                        )
+                    )
+                )
+                added = local_index_feed.add_record(
+                    record=colrev.record.Record(data=retrieved_record_dict)
+                )
+                del retrieved_record_dict[Fields.CURATION_ID]
+                if added:
+                    self.review_manager.logger.info(
+                        " retrieve " + retrieved_record_dict[Fields.ID]
+                    )
+
+                else:
+                    local_index_feed.update_existing_record(
+                        records=records,
+                        record_dict=retrieved_record_dict,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                        update_time_variant_fields=rerun,
+                    )
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
-
-            prev_record_dict_version = {}
-            if retrieved_record_dict[Fields.ID] in local_index_feed.feed_records:
-                prev_record_dict_version = local_index_feed.feed_records[
-                    retrieved_record_dict[Fields.ID]
-                ]
-
-            added = local_index_feed.add_record(
-                record=colrev.record.Record(data=retrieved_record_dict)
-            )
-            del retrieved_record_dict[Fields.CURATION_ID]
-            if added:
-                self.review_manager.logger.info(
-                    " retrieve " + retrieved_record_dict[Fields.ID]
-                )
-
-            else:
-                local_index_feed.update_existing_record(
-                    records=records,
-                    record_dict=retrieved_record_dict,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=rerun,
-                )
 
         local_index_feed.print_post_run_search_infos(records=records)
         local_index_feed.save_feed_file()
@@ -251,7 +251,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        local_index_feed = self.search_source.get_feed(
+        local_index_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -415,13 +415,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             self.local_index_lock.acquire(timeout=60)
 
             # Note : need to reload file because the object is not shared between processes
-            local_index_feed = self.search_source.get_feed(
+            local_index_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
             )
 
-            local_index_feed.set_id(record_dict=retrieved_record.data)
             local_index_feed.add_record(record=retrieved_record)
 
             retrieved_record.remove_field(key=Fields.CURATION_ID)
@@ -668,7 +667,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> dict:
         original_record = change_item["original_record"]
 
-        local_index_feed = self.search_source.get_feed(
+        local_index_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=True,

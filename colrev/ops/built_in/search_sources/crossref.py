@@ -6,7 +6,6 @@ import json
 import re
 import typing
 import urllib
-from copy import deepcopy
 from dataclasses import dataclass
 from importlib.metadata import version
 from multiprocessing import Lock
@@ -489,13 +488,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.crossref_lock.acquire(timeout=120)
 
                 # Note : need to reload file because the object is not shared between processes
-                crossref_feed = self.search_source.get_feed(
+                crossref_feed = self.search_source.get_api_feed(
                     review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
                 )
 
-                crossref_feed.set_id(record_dict=retrieved_record.data)
                 crossref_feed.add_record(record=retrieved_record)
 
                 record.merge(
@@ -667,7 +665,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         record: colrev.record.Record,
-        feed: colrev.ops.search_feed.GeneralOriginFeed,
+        feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         """Restore the url from the feed if it exists
         (url-resolution is not always available)"""
@@ -681,15 +679,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def _run_md_search(
         self,
         *,
-        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in crossref_feed.feed_records.values():
-            feed_record = colrev.record.Record(data=feed_record_dict)
-
             try:
+                feed_record = colrev.record.Record(data=feed_record_dict)
                 retrieved_record = self.query_doi(
                     doi=feed_record_dict[Fields.DOI], etiquette=self.etiquette
                 )
@@ -697,31 +694,29 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 if retrieved_record.data[Fields.DOI] != feed_record.data[Fields.DOI]:
                     continue
 
-                crossref_feed.set_id(record_dict=retrieved_record.data)
+                self._prep_crossref_record(
+                    record=retrieved_record, prep_main_record=False
+                )
+
+                prev_record_dict_version = crossref_feed.get_prev_record_dict_version(
+                    retrieved_record=retrieved_record
+                )
+
+                self._restore_url(record=retrieved_record, feed=crossref_feed)
+                crossref_feed.add_record(record=retrieved_record)
+
+                crossref_feed.update_existing_record(
+                    records=records,
+                    record_dict=retrieved_record.data,
+                    prev_record_dict_version=prev_record_dict_version,
+                    source=self.search_source,
+                    update_time_variant_fields=rerun,
+                )
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
-
-            self._prep_crossref_record(record=retrieved_record, prep_main_record=False)
-
-            prev_record_dict_version = {}
-            if retrieved_record.data[Fields.ID] in crossref_feed.feed_records:
-                prev_record_dict_version = crossref_feed.feed_records[
-                    retrieved_record.data[Fields.ID]
-                ]
-
-            self._restore_url(record=retrieved_record, feed=crossref_feed)
-            crossref_feed.add_record(record=retrieved_record)
-
-            crossref_feed.update_existing_record(
-                records=records,
-                record_dict=retrieved_record.data,
-                prev_record_dict_version=prev_record_dict_version,
-                source=self.search_source,
-                update_time_variant_fields=rerun,
-            )
 
         crossref_feed.print_post_run_search_infos(records=records)
         crossref_feed.save_feed_file()
@@ -748,7 +743,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
     def _run_keyword_exploration_search(
         self,
-        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         works = Works(etiquette=self.etiquette)
 
@@ -783,7 +778,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     if retrieved_record_dict[Fields.DOI] in available_dois:
                         continue
                     retrieved_record_dict["explored_keyword"] = keyword
-                    crossref_feed.set_id(record_dict=retrieved_record_dict)
                     retrieved_record = colrev.record.Record(data=retrieved_record_dict)
                     self._prep_crossref_record(
                         record=retrieved_record, prep_main_record=False
@@ -833,7 +827,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        crossref_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        crossref_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -856,14 +850,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     ):
                         continue
 
-                    crossref_feed.set_id(record_dict=retrieved_record_dict)
-                    prev_record_dict_version = {}
-                    if retrieved_record_dict[Fields.ID] in crossref_feed.feed_records:
-                        prev_record_dict_version = deepcopy(
-                            crossref_feed.feed_records[retrieved_record_dict[Fields.ID]]
-                        )
-
                     retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                    prev_record_dict_version = (
+                        crossref_feed.get_prev_record_dict_version(
+                            retrieved_record=retrieved_record
+                        )
+                    )
+
                     self._prep_crossref_record(
                         record=retrieved_record, prep_main_record=False
                     )
@@ -913,7 +906,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        crossref_feed = self.search_source.get_feed(
+        crossref_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

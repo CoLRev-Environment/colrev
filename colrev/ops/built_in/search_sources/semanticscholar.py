@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -290,7 +289,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self._s2 = SemanticScholar()
 
         # load file because the object is not shared between processes
-        s2_feed = self.search_source.get_feed(
+        s2_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -328,23 +327,11 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             for item in _search_return:
                 retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
-                s2_feed.set_id(record_dict=retrieved_record_dict)
-                prev_record_dict_version = {}
-
-                if (
-                    retrieved_record_dict[self.source_identifier]
-                    in s2_feed.feed_records
-                ):
-                    prev_record_dict_version = deepcopy(
-                        s2_feed.feed_records[
-                            retrieved_record_dict[self.source_identifier]
-                        ]
-                    )
-
-                retrieved_record_dict[self.source_identifier] = retrieved_record_dict[
-                    self.source_identifier
-                ]
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+
+                prev_record_dict_version = s2_feed.get_prev_record_dict_version(
+                    retrieved_record=retrieved_record
+                )
 
                 added = s2_feed.add_record(record=retrieved_record)
 

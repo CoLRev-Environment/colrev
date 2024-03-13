@@ -115,7 +115,6 @@ class Trace(colrev.operation.Operation):
                 load_string=filecontents.decode("utf-8"),
                 implementation="bib",
                 logger=self.review_manager.logger,
-                check_bib_file=False,
             )
 
             if record_id not in records_dict:

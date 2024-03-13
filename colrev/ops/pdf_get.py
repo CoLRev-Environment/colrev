@@ -249,8 +249,6 @@ class PDFGet(colrev.operation.Operation):
             source_records_dict = colrev.loader.load_utils.load(
                 filename=source.filename,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
             source_records = list(source_records_dict.values())
 

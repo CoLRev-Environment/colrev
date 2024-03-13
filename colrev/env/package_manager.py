@@ -114,7 +114,7 @@ class SearchSourcePackageEndpointInterface(
     source_identifier = zope.interface.Attribute(
         """Source identifier for search and provenance
         Retrieved records are identified through the source_identifier
-        when they are added to/updated in the GeneralOriginFeed"""
+        when they are added to/updated in the SearchAPIFeed"""
     )
     search_types = zope.interface.Attribute(
         """SearchTypes associated with the SearchSource"""

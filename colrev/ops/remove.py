@@ -45,8 +45,6 @@ class Remove(colrev.operation.Operation):
                     origin_records = colrev.loader.load_utils.load(
                         filename=filepath,
                         logger=self.review_manager.logger,
-                        force_mode=self.review_manager.force_mode,
-                        check_bib_file=False,
                     )
 
                     if origin_id in origin_records:

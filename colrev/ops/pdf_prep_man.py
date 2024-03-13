@@ -215,8 +215,6 @@ class PDFPrepMan(colrev.operation.Operation):
             records_changed = colrev.loader.load_utils.load(
                 filename=Path("data/pdf-prep-records.bib"),
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
 
         records = self.review_manager.dataset.load_records_dict()

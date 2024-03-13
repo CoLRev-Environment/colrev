@@ -449,7 +449,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self,
         *,
         file_path: Path,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -473,7 +473,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self,
         *,
         file_path: Path,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -539,18 +539,14 @@ class FilesSearchSource(JsonSchemaMixin):
                 f"{new_record['file']} {Colors.END} "
                 f"({','.join([r['file'] for r in potential_duplicates])})"
             )
-        else:
-            try:
-                files_dir_feed.set_id(record_dict=new_record)
-            except colrev_exceptions.NotFeedIdentifiableException:
-                pass
+
         return new_record
 
     def _index_mp4(
         self,
         *,
         file_path: Path,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -580,7 +576,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self,
         *,
         records: dict,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         local_index: colrev.env.local_index.LocalIndex,
         linked_file_paths: list,
         rerun: bool,
@@ -599,12 +595,14 @@ class FilesSearchSource(JsonSchemaMixin):
                 if new_record == {}:
                     continue
 
-                prev_record_dict_version = files_dir_feed.feed_records.get(
-                    new_record[Fields.ID], {}
+                retrieved_record = colrev.record.Record(data=new_record)
+
+                prev_record_dict_version = files_dir_feed.get_prev_record_dict_version(
+                    retrieved_record=retrieved_record
                 )
 
                 added = files_dir_feed.add_record(
-                    record=colrev.record.Record(data=new_record),
+                    record=retrieved_record,
                 )
                 if added:
                     self._add_doi_from_pdf_if_not_available(record_dict=new_record)
@@ -662,7 +660,7 @@ class FilesSearchSource(JsonSchemaMixin):
         local_index = self.review_manager.get_local_index()
 
         records = self.review_manager.dataset.load_records_dict()
-        files_dir_feed = self.search_source.get_feed(
+        files_dir_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

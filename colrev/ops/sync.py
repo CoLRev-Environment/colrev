@@ -137,8 +137,6 @@ class Sync:
             refs_in_src = colrev.loader.load_utils.load(
                 filename=src,
                 logger=self.logger,
-                force_mode=True,
-                check_bib_file=False,
             )
 
         else:
@@ -198,8 +196,6 @@ class Sync:
             records = colrev.loader.load_utils.load(
                 filename=Path("references.bib"),
                 logger=self.logger,
-                force_mode=True,
-                check_bib_file=False,
             )
 
         else:
@@ -276,8 +272,6 @@ class Sync:
             records_dict = colrev.loader.load_utils.load(
                 filename=references_file,
                 logger=self.logger,
-                force_mode=True,
-                check_bib_file=False,
             )
             records = list(records_dict.values())
 

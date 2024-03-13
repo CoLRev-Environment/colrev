@@ -242,7 +242,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
         dataset_df = self._load_dataset()
 
-        synergy_feed = self.search_source.get_feed(
+        synergy_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=False,
@@ -303,7 +303,6 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             if "openalex_id" in record:
                 existing_keys["openalex_id"].append(record["openalex_id"])
 
-            synergy_feed.set_id(record_dict=record)
             synergy_feed.add_record(record=colrev.record.Record(data=record))
 
             # The linking of doi/... should happen in the prep operation

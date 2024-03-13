@@ -274,7 +274,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     def _complement_with_open_citations_data(
         self,
         *,
-        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        pdf_backward_search_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         records: dict,
     ) -> None:
         self.review_manager.logger.info("Comparing records with open-citations data")
@@ -330,8 +330,8 @@ class BackwardSearchSource(JsonSchemaMixin):
         self,
         *,
         item: dict,
-        pdf_backward_search_feed: colrev.ops.search_feed.GeneralOriginFeed,
-    ) -> dict:
+        pdf_backward_search_feed: colrev.ops.search_api_feed.SearchAPIFeed,
+    ) -> colrev.record.Record:
         item[Fields.ID] = "new"
         # Note: multiple source_identifiers are merged in origin field.
         for feed_record in pdf_backward_search_feed.feed_records.values():
@@ -364,7 +364,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         item = {
             k: v for k, v in item.items() if not pd.isna(v)
         }  # Drop fields where value is NaN
-        return item
+        return colrev.record.Record(data=item)
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
@@ -421,7 +421,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         )
 
         selected_references = df_all_references[df_all_references["meets_criteria"]]
-        pdf_backward_search_feed = self.search_source.get_feed(
+        pdf_backward_search_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -431,15 +431,13 @@ class BackwardSearchSource(JsonSchemaMixin):
             new_record = self._get_new_record(
                 item=item, pdf_backward_search_feed=pdf_backward_search_feed
             )
-
-            prev_record_dict_version = {}
-            if new_record[Fields.ID] in pdf_backward_search_feed.feed_records:
-                prev_record_dict_version = pdf_backward_search_feed.feed_records[
-                    new_record[Fields.ID]
-                ]
-
+            prev_record_dict_version = (
+                pdf_backward_search_feed.get_prev_record_dict_version(
+                    retrieved_record=new_record
+                )
+            )
             added = pdf_backward_search_feed.add_record(
-                record=colrev.record.Record(data=new_record),
+                record=new_record,
             )
 
             if not added and rerun:

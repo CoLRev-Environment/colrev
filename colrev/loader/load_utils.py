@@ -99,6 +99,7 @@ Example csv records::
 """
 from __future__ import annotations
 
+import logging
 import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -123,16 +124,12 @@ def load(  # type: ignore
     field_mapper: Callable = lambda x: x,
     id_labeler: Callable = lambda x: x,
     unique_id_field: str = "",
-    **kw,
+    logger: logging.Logger = logging.getLogger(__name__),
 ) -> dict:
     """Load a file and return records as a dictionary"""
 
     if not filename.exists():
         raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
-
-    # TODO : remove from load_utils_bib BIBLoader constructor (and others):
-    # if not filename.exists(): -> covered in load()
-    # also remove if not filename.name.endswith(".bib"): -> covered in load()
 
     if filename.suffix == ".bib":
         parser = colrev.loader.bib.BIBLoader  # type: ignore
@@ -155,7 +152,7 @@ def load(  # type: ignore
         field_mapper=field_mapper,
         id_labeler=id_labeler,
         unique_id_field=unique_id_field,
-        **kw,
+        logger=logger,
     ).load()
 
 
@@ -167,7 +164,7 @@ def loads(  # type: ignore
     field_mapper: Callable = lambda x: x,
     id_labeler: Callable = lambda x: x,
     unique_id_field: str = "",
-    **kw,
+    logger: logging.Logger = logging.getLogger(__name__),
 ) -> dict:
     """Load a string and return records as a dictionary"""
 
@@ -195,5 +192,5 @@ def loads(  # type: ignore
         field_mapper=field_mapper,
         id_labeler=id_labeler,
         unique_id_field=unique_id_field,
-        **kw,
+        logger=logger,
     )

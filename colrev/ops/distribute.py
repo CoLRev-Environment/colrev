@@ -97,7 +97,6 @@ class Distribute(colrev.operation.Operation):
                     import_records_dict = colrev.loader.load_utils.load(
                         filename=target_bib_file,
                         logger=self.review_manager.logger,
-                        force_mode=self.review_manager.force_mode,
                     )
                     import_records = list(import_records_dict.values())
 

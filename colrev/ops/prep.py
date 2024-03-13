@@ -509,8 +509,6 @@ class Prep(colrev.operation.Operation):
             temp_recs = colrev.loader.load_utils.load(
                 filename=self.temp_records,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
             prepared_records_ids = [x[Fields.ID] for x in prepared_records]
             for record in temp_recs.values():
@@ -725,8 +723,6 @@ class Prep(colrev.operation.Operation):
             cur_temp_recs = colrev.loader.load_utils.load(
                 filename=self.current_temp_records,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
 
             temp_recs = {}
@@ -734,8 +730,6 @@ class Prep(colrev.operation.Operation):
                 temp_recs = colrev.loader.load_utils.load(
                     filename=self.temp_records,
                     logger=self.review_manager.logger,
-                    force_mode=self.review_manager.force_mode,
-                    check_bib_file=False,
                 )
 
             combined_recs = {**temp_recs, **cur_temp_recs}
@@ -750,8 +744,6 @@ class Prep(colrev.operation.Operation):
             temp_recs = colrev.loader.load_utils.load(
                 filename=self.temp_records,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
 
             self.review_manager.logger.info("Continue with existing records")
@@ -838,8 +830,6 @@ class Prep(colrev.operation.Operation):
             records_dict = colrev.loader.load_utils.load(
                 filename=debug_file,
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
 
             for record_dict in records_dict.values():

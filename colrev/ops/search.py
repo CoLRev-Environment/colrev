@@ -211,8 +211,6 @@ class Search(colrev.operation.Operation):
         records = colrev.loader.load_utils.load(
             filename=source.filename,
             logger=self.review_manager.logger,
-            force_mode=self.review_manager.force_mode,
-            check_bib_file=False,
         )
 
         record_list = list(records.values())

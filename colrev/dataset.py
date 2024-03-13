@@ -193,7 +193,6 @@ class Dataset:
                 load_string=filecontents.decode("utf-8", "replace"),
                 implementation="bib",
                 logger=self.review_manager.logger,
-                check_bib_file=False,
             )
             if records_dict:
                 yield records_dict

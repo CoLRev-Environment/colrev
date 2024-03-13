@@ -187,7 +187,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     def run_search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
-        ieee_feed = self.search_source.get_feed(
+        ieee_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -243,7 +243,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return query
 
     def _run_api_search(
-        self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+        self, ieee_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
         query = self._run_api_query()
         query.startRecord = 1

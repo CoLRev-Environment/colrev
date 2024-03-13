@@ -45,7 +45,6 @@ class BIBLoader(colrev.loader.loader.Loader):
         field_mapper: Callable = lambda x: x,
         id_labeler: Callable = lambda x: x,
         logger: logging.Logger = logging.getLogger(__name__),
-        check_bib_file: bool = True,
     ):
         super().__init__(
             filename=filename,
@@ -55,8 +54,6 @@ class BIBLoader(colrev.loader.loader.Loader):
             field_mapper=field_mapper,
             logger=logger,
         )
-
-        self.check_bib_file = check_bib_file
 
     def _generate_next_unique_id(
         self,

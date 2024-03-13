@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -325,18 +324,15 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     self.europe_pmc_lock.acquire(timeout=60)
 
                     # Note : need to reload file because the object is not shared between processes
-                    europe_pmc_feed = self.search_source.get_feed(
+                    europe_pmc_feed = self.search_source.get_api_feed(
                         review_manager=prep_operation.review_manager,
                         source_identifier=self.source_identifier,
                         update_only=False,
                     )
-
                     try:
-                        europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                        europe_pmc_feed.add_record(record=retrieved_record)
                     except colrev_exceptions.NotFeedIdentifiableException:
                         return record
-
-                    europe_pmc_feed.add_record(record=retrieved_record)
 
                     record.merge(
                         merging_record=retrieved_record,
@@ -382,7 +378,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         self._validate_source()
         # https://europepmc.org/RestfulWebService
 
-        europe_pmc_feed = self.search_source.get_feed(
+        europe_pmc_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -412,7 +408,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        europe_pmc_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -449,13 +445,12 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 for result_item in result_list.findall("result"):
                     retrieved_record = self._europe_pmc_xml_to_record(item=result_item)
 
-                    prev_record_dict_version = {}
-                    if retrieved_record.data[Fields.ID] in europe_pmc_feed.feed_records:
-                        prev_record_dict_version = deepcopy(
-                            europe_pmc_feed.feed_records[
-                                retrieved_record.data[Fields.ID]
-                            ]
+                    prev_record_dict_version = (
+                        europe_pmc_feed.get_prev_record_dict_version(
+                            retrieved_record=retrieved_record
                         )
+                    )
+
                     if Fields.TITLE not in retrieved_record.data:
                         self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
@@ -467,8 +462,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         source=source,
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-
-                    europe_pmc_feed.set_id(record_dict=retrieved_record.data)
                     added = europe_pmc_feed.add_record(record=retrieved_record)
 
                     if added:

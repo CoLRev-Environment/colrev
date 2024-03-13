@@ -475,7 +475,6 @@ class LocalIndex:
 
             ret = colrev.loader.load_utils.load(
                 filename=target_path / Path("data/records.bib"),
-                check_bib_file=False,
             )
 
         except GitCommandError:

@@ -20,7 +20,7 @@ from colrev.writer.write_utils import write_file
 
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
-class GeneralOriginFeed:
+class SearchAPIFeed:
     """A general-purpose Origin feed"""
 
     # pylint: disable=too-many-instance-attributes
@@ -64,8 +64,6 @@ class GeneralOriginFeed:
                 load_string=self.feed_file.read_text(encoding="utf8"),
                 implementation="bib",
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
-                check_bib_file=False,
             )
 
             self._available_ids = {
@@ -85,25 +83,38 @@ class GeneralOriginFeed:
                 + 1
             )
 
-    def set_id(self, *, record_dict: dict) -> dict:
+    def get_prev_record_dict_version(
+        self, *, retrieved_record: colrev.record.Record
+    ) -> dict:
+        """Get the previous record dict version"""
+        self._set_id(record=retrieved_record)
+
+        prev_record_dict_version = {}
+        if retrieved_record.data[Fields.ID] in self.feed_records:
+            prev_record_dict_version = deepcopy(
+                self.feed_records[retrieved_record.data[Fields.ID]]
+            )
+        return prev_record_dict_version
+
+    def _set_id(self, *, record: colrev.record.Record) -> None:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
 
-        if self.source_identifier not in record_dict:
+        if self.source_identifier not in record.data:
             raise colrev_exceptions.NotFeedIdentifiableException()
 
-        if record_dict[self.source_identifier] in self._available_ids:
-            record_dict[Fields.ID] = self._available_ids[
-                record_dict[self.source_identifier]
+        if record.data[self.source_identifier] in self._available_ids:
+            record.data[Fields.ID] = self._available_ids[
+                record.data[self.source_identifier]
             ]
         else:
-            record_dict[Fields.ID] = str(self._max_id).rjust(6, "0")
-
-        return record_dict
+            record.data[Fields.ID] = str(self._max_id).rjust(6, "0")
 
     def add_record(self, *, record: colrev.record.Record) -> bool:
         """Add a record to the feed and set its colrev_origin"""
+
+        self._set_id(record=record)
 
         # Feed:
         feed_record_dict = record.data.copy()
@@ -169,7 +180,11 @@ class GeneralOriginFeed:
                         path=self.feed_file
                     )
                     break
-                except (FileExistsError, OSError, json.decoder.JSONDecodeError):
+                except (
+                    FileExistsError,
+                    OSError,
+                    json.decoder.JSONDecodeError,
+                ):  # pragma: no cover
                     search_operation.review_manager.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))  # nosec
 
@@ -187,7 +202,6 @@ class GeneralOriginFeed:
                 load_string=bibtex_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             ).values()
         )[0]
 
@@ -199,7 +213,6 @@ class GeneralOriginFeed:
                 load_string=bibtex_str,
                 implementation="bib",
                 logger=self.review_manager.logger,
-                force_mode=self.review_manager.force_mode,
             ).values()
         )[0]
 

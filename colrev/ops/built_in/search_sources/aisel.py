@@ -254,7 +254,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        ais_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -268,38 +268,30 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         try:
             for record_dict in self._get_ais_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
-                    Fields.TITLE, ""
-                ):
-                    continue
-
                 try:
-                    ais_feed.set_id(record_dict=record_dict)
+                    # Note : discard "empty" records
+                    if "" == record_dict.get(
+                        Fields.AUTHOR, ""
+                    ) and "" == record_dict.get(Fields.TITLE, ""):
+                        continue
+
+                    prep_record = colrev.record.PrepRecord(data=record_dict)
+                    added = ais_feed.add_record(record=prep_record)
+
+                    if added:
+                        self.review_manager.logger.info(
+                            " retrieve " + prep_record.data[Fields.URL]
+                        )
+                    # else:
+                    #     search_operation.update_existing_record(
+                    #         records=records,
+                    #         record_dict=prep_record.data,
+                    #         prev_record_dict_version=prev_record_dict_version,
+                    #         source=self.search_source,
+                    #         update_time_variant_fields=rerun,
+                    #     )
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
-
-                # prev_record_dict_version = {}
-                # if record_dict[Fields.ID] in ais_feed.feed_records:
-                #     prev_record_dict_version = deepcopy(
-                #         ais_feed.feed_records[record_dict[Fields.ID]]
-                #     )
-
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-                added = ais_feed.add_record(record=prep_record)
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + prep_record.data[Fields.URL]
-                    )
-                # else:
-                #     search_operation.update_existing_record(
-                #         records=records,
-                #         record_dict=prep_record.data,
-                #         prev_record_dict_version=prev_record_dict_version,
-                #         source=self.search_source,
-                #         update_time_variant_fields=rerun,
-                #     )
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.HTTPError,
@@ -323,7 +315,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        ais_feed = self.search_source.get_feed(
+        ais_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

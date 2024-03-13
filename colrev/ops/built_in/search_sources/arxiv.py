@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -316,7 +315,7 @@ class ArXivSource:
     def _run_parameter_search(
         self,
         *,
-        arxiv_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        arxiv_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -327,47 +326,46 @@ class ArXivSource:
         records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self._get_arxiv_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
-                    Fields.TITLE, ""
-                ):
-                    self.review_manager.logger.warning(f"Skipped record: {record_dict}")
-                    continue
                 try:
-                    arxiv_feed.set_id(record_dict=record_dict)
+                    # Note : discard "empty" records
+                    if "" == record_dict.get(
+                        Fields.AUTHOR, ""
+                    ) and "" == record_dict.get(Fields.TITLE, ""):
+                        self.review_manager.logger.warning(
+                            f"Skipped record: {record_dict}"
+                        )
+                        continue
+
+                    prep_record = colrev.record.PrepRecord(data=record_dict)
+                    prev_record_dict_version = arxiv_feed.get_prev_record_dict_version(
+                        retrieved_record=prep_record
+                    )
+
+                    added = arxiv_feed.add_record(record=prep_record)
+
+                    if added:
+                        self.review_manager.logger.info(
+                            " retrieve " + prep_record.data["arxivid"]
+                        )
+                        arxiv_feed.nr_added += 1
+                    else:
+                        changed = self.operation.update_existing_record(  # type: ignore
+                            records=records,
+                            record_dict=prep_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
+                        )
+                        if changed:
+                            arxiv_feed.nr_changed += 1
+
+                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                    if not added and not rerun:
+                        # problem: some publishers don't necessarily
+                        # deposit papers chronologically
+                        break
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
-
-                prev_record_dict_version = {}
-                if record_dict[Fields.ID] in arxiv_feed.feed_records:
-                    prev_record_dict_version = deepcopy(
-                        arxiv_feed.feed_records[record_dict[Fields.ID]]
-                    )
-
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-                added = arxiv_feed.add_record(record=prep_record)
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + prep_record.data["arxivid"]
-                    )
-                    arxiv_feed.nr_added += 1
-                else:
-                    changed = self.operation.update_existing_record(  # type: ignore
-                        records=records,
-                        record_dict=prep_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-                    if changed:
-                        arxiv_feed.nr_changed += 1
-
-                # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                if not added and not rerun:
-                    # problem: some publishers don't necessarily
-                    # deposit papers chronologically
-                    break
 
             arxiv_feed.print_post_run_search_infos(records=records)
             arxiv_feed.save_feed_file()
@@ -387,7 +385,7 @@ class ArXivSource:
     # def _run_md_search_update(
     #     self,
     #     *,
-    #     arxiv_feed: colrev.ops.search.GeneralOriginFeed,
+    #     arxiv_feed: colrev.ops.search.SearchAPIFeed,
     # ) -> None:
     #     records = self.review_manager.dataset.load_records_dict()
 
@@ -402,18 +400,11 @@ class ArXivSource:
     #             if retrieved_record["arxivid"] != feed_record.data["arxivid"]:
     #                 continue
 
-    #             arxiv_feed.set_id(record_dict=retrieved_record)
-    #         except (
-    #             colrev_exceptions.RecordNotFoundInPrepSourceException,
-    #             colrev_exceptions.NotFeedIdentifiableException,
-    #         ):
-    #             continue
-
-    #         prev_record_dict_version = {}
-    #         if retrieved_record[Fields.ID] in arxiv_feed.feed_records:
-    #             prev_record_dict_version = arxiv_feed.feed_records[
-    #                 retrieved_record[Fields.ID]
-    #             ]
+    # prev_record_dict_version = (
+    #     dblp_feed.get_prev_record_dict_version(
+    #         retrieved_record=feed_record
+    #     )
+    # )
 
     #         arxiv_feed.add_record(record=colrev.record.Record(data=retrieved_record))
 
@@ -426,6 +417,11 @@ class ArXivSource:
     #         )
     #         if changed:
     #             arxiv_feed.nr_changed += 1
+    #         except (
+    #             colrev_exceptions.RecordNotFoundInPrepSourceException,
+    #             colrev_exceptions.NotFeedIdentifiableException,
+    #         ):
+    #             continue
 
     #     arxiv_feed.save_feed_file()
     #     arxiv_feed.print_post_run_search_infos(records=records)
@@ -434,7 +430,7 @@ class ArXivSource:
     def run_search(self, rerun: bool) -> None:
         """Run a search of ArXiv"""
 
-        arxiv_feed = self.search_source.get_feed(
+        arxiv_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),

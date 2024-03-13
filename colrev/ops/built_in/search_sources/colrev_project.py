@@ -179,7 +179,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        colrev_project_search_feed = self.search_source.get_feed(
+        colrev_project_search_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -246,7 +246,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             }
 
             try:
-                colrev_project_search_feed.set_id(record_dict=record_to_import)
                 colrev_project_search_feed.add_record(
                     record=colrev.record.Record(data=record_to_import),
                 )

@@ -279,13 +279,11 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             )
 
             self.open_library_lock.acquire(timeout=60)
-            open_library_feed = self.search_source.get_feed(
+            open_library_feed = self.search_source.get_api_feed(
                 review_manager=prep_operation.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
             )
-
-            open_library_feed.set_id(record_dict=retrieved_record.data)
 
             open_library_feed.add_record(record=retrieved_record)
 

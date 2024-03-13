@@ -385,7 +385,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     def _run_md_search(
         self,
         *,
-        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
 
@@ -395,30 +395,29 @@ class DBLPSearchSource(JsonSchemaMixin):
             for retrieved_record in self._retrieve_dblp_records(
                 query=query,
             ):
-                if retrieved_record.data["dblp_key"] != feed_record.data["dblp_key"]:
-                    continue
-                if retrieved_record.data.get("type", "") == "Editorship":
-                    continue
-
                 try:
-                    dblp_feed.set_id(record_dict=retrieved_record.data)
+                    if (
+                        retrieved_record.data["dblp_key"]
+                        != feed_record.data["dblp_key"]
+                    ):
+                        continue
+                    if retrieved_record.data.get("type", "") == "Editorship":
+                        continue
+
+                    prev_record_dict_version = dblp_feed.get_prev_record_dict_version(
+                        retrieved_record=retrieved_record
+                    )
+
+                    dblp_feed.add_record(record=retrieved_record)
+                    dblp_feed.update_existing_record(
+                        records=records,
+                        record_dict=retrieved_record.data,
+                        prev_record_dict_version=prev_record_dict_version,
+                        source=self.search_source,
+                        update_time_variant_fields=True,
+                    )
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
-
-                prev_record_dict_version = {}
-                if retrieved_record.data[Fields.ID] in dblp_feed.feed_records:
-                    prev_record_dict_version = dblp_feed.feed_records[
-                        retrieved_record.data[Fields.ID]
-                    ]
-
-                dblp_feed.add_record(record=retrieved_record)
-                dblp_feed.update_existing_record(
-                    records=records,
-                    record_dict=retrieved_record.data,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=True,
-                )
 
         dblp_feed.print_post_run_search_infos(records=records)
         dblp_feed.save_feed_file()
@@ -428,7 +427,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         query: str,
-        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         records: dict,
         rerun: bool,
     ) -> None:
@@ -442,48 +441,44 @@ class DBLPSearchSource(JsonSchemaMixin):
             batch_size_cumulative += batch_size
             retrieved = False
             for retrieved_record in self._retrieve_dblp_records(url=url):
-                retrieved = True
-
-                if (
-                    "scope" in self.search_source.search_parameters
-                    and (
-                        f"{self.search_source.search_parameters['scope']['venue_key']}/"
-                        not in retrieved_record.data["dblp_key"]
-                    )
-                ) or retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
-                    "article",
-                    "inproceedings",
-                ]:
-                    continue
-
                 try:
-                    dblp_feed.set_id(record_dict=retrieved_record.data)
+                    retrieved = True
+
+                    if (
+                        "scope" in self.search_source.search_parameters
+                        and (
+                            f"{self.search_source.search_parameters['scope']['venue_key']}/"
+                            not in retrieved_record.data["dblp_key"]
+                        )
+                    ) or retrieved_record.data.get(Fields.ENTRYTYPE, "") not in [
+                        "article",
+                        "inproceedings",
+                    ]:
+                        continue
+
+                    prev_record_dict_version = dblp_feed.get_prev_record_dict_version(
+                        retrieved_record=retrieved_record
+                    )
+
+                    added = dblp_feed.add_record(
+                        record=retrieved_record,
+                    )
+
+                    if added:
+                        self.review_manager.logger.info(
+                            " retrieve " + retrieved_record.data["dblp_key"]
+                        )
+                    else:
+                        dblp_feed.update_existing_record(
+                            records=records,
+                            record_dict=retrieved_record.data,
+                            prev_record_dict_version=prev_record_dict_version,
+                            source=self.search_source,
+                            update_time_variant_fields=rerun,
+                        )
                 except colrev_exceptions.NotFeedIdentifiableException as exc:
                     print(exc)
                     continue
-
-                prev_record_dict_version = {}
-                if retrieved_record.data[Fields.ID] in dblp_feed.feed_records:
-                    prev_record_dict_version = dblp_feed.feed_records[
-                        retrieved_record.data[Fields.ID]
-                    ]
-
-                added = dblp_feed.add_record(
-                    record=retrieved_record,
-                )
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + retrieved_record.data["dblp_key"]
-                    )
-                else:
-                    dblp_feed.update_existing_record(
-                        records=records,
-                        record_dict=retrieved_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
 
             if not retrieved:
                 break
@@ -508,7 +503,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        dblp_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         records = self.review_manager.dataset.load_records_dict()
@@ -536,7 +531,7 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        dblp_feed = self.search_source.get_feed(
+        dblp_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -690,13 +685,12 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                     # Note : need to reload file
                     # because the object is not shared between processes
-                    dblp_feed = self.search_source.get_feed(
+                    dblp_feed = self.search_source.get_api_feed(
                         review_manager=prep_operation.review_manager,
                         source_identifier=self.source_identifier,
                         update_only=False,
                     )
 
-                    dblp_feed.set_id(record_dict=retrieved_record.data)
                     dblp_feed.add_record(record=retrieved_record)
 
                     # TODO : extract as function (apply similarly in other search sources)

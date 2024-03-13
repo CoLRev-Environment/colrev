@@ -502,7 +502,7 @@ class UnknownSearchSource(JsonSchemaMixin):
 
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
-            unique_id="INCREMENTAL",
+            unique_id_field="INCREMENTAL",
             entrytype_setter=entrytype_setter,
             field_mapper=field_mapper,
             logger=self.review_manager.logger,
