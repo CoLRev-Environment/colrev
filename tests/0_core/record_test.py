@@ -1222,34 +1222,6 @@ def test_prescreen_exclude() -> None:
     assert expected == actual
 
 
-def test_print_prescreen_record(capfd) -> None:  # type: ignore
-    """Test record.print_prescreen_record()"""
-
-    r1_mod = r1.copy()
-    expected = "  ID: r1 (article)\n  \x1b[92mEDITORIAL\x1b[0m\n  Rai, Arun\n  MIS Quarterly (2020) 45(1)\n"
-
-    r1_mod.print_prescreen_record()
-    actual, _ = capfd.readouterr()
-    assert expected == actual
-
-
-def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
-    """Test record.print_pdf_prep_man()"""
-    r2_mod = r2.copy()
-
-    r2_mod.data[Fields.ABSTRACT] = "This paper focuses on ..."
-    r2_mod.data[Fields.URL] = "www.gs.eu"
-    r2_mod.data[Fields.D_PROV][Fields.FILE] = {
-        "note": "nr_pages_not_matching,title_not_in_first_pages,author_not_in_first_pages"
-    }
-
-    expected = """\x1b[91mRai, A\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMISQ (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n\n"""
-
-    r2_mod.print_pdf_prep_man()
-    actual, _ = capfd.readouterr()
-    assert expected == actual
-
-
 @pytest.mark.parametrize(
     "input_string, expected",
     [

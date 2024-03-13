@@ -22,7 +22,7 @@ colrev.record.Record
       ~Record.add_masterdata_provenance_note
       ~Record.add_provenance_all
       ~Record.change_entrytype
-      ~Record.check_potential_retracts
+      ~Record.is_retracted
       ~Record.cleanup_pdf_processing_fields
       ~Record.complete_provenance
       ~Record.copy

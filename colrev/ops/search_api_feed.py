@@ -236,7 +236,7 @@ class SearchAPIFeed:
     def _update_existing_record_retract(
         self, *, record: colrev.record.Record, main_record_dict: dict
     ) -> bool:
-        if record.check_potential_retracts():
+        if record.is_retracted():
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Found paper retract: "
                 f"{main_record_dict['ID']}{Colors.END}"

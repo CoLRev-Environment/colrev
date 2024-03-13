@@ -22,7 +22,7 @@ colrev.record.PrepRecord
       ~PrepRecord.add_masterdata_provenance_note
       ~PrepRecord.add_provenance_all
       ~PrepRecord.change_entrytype
-      ~PrepRecord.check_potential_retracts
+      ~PrepRecord.is_retracted
       ~PrepRecord.cleanup_pdf_processing_fields
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated

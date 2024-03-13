@@ -6,6 +6,7 @@ import os
 import platform
 import re
 import subprocess
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,6 +18,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 
@@ -230,6 +232,61 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             elif user_selection == "Quit":
                 raise QuitPressedException()
 
+    def _print_pdf_prep_man(self, record: colrev.record.Record) -> None:
+        """Print the record for pdf-prep-man operations"""
+        # pylint: disable=too-many-branches
+        ret_str = ""
+        if Fields.FILE in record.data:
+            ret_str += (
+                f"\nfile: {Colors.ORANGE}{record.data[Fields.FILE]}{Colors.END}\n\n"
+            )
+
+        pdf_prep_note = record.get_field_provenance(key=Fields.FILE)
+
+        if "author_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += f"{Colors.RED}{record.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
+        else:
+            ret_str += f"{Colors.GREEN}{record.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
+
+        if "title_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += (
+                f"{Colors.RED}{record.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
+            )
+        else:
+            ret_str += f"{Colors.GREEN}{record.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
+
+        if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            ret_str += (
+                f"{record.data.get(Fields.JOURNAL, 'no-journal')} "
+                f"({record.data.get(Fields.YEAR, 'no-year')}) "
+                f"{record.data.get(Fields.VOLUME, 'no-volume')}"
+                f"({record.data.get(Fields.NUMBER, '')})"
+            )
+            if Fields.PAGES in record.data:
+                if "nr_pages_not_matching" in pdf_prep_note["note"]:
+                    ret_str += (
+                        f", {Colors.RED}pp.{record.data[Fields.PAGES]}{Colors.END}\n"
+                    )
+                else:
+                    ret_str += (
+                        f", pp.{Colors.GREEN}{record.data[Fields.PAGES]}{Colors.END}\n"
+                    )
+            else:
+                ret_str += "\n"
+        elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            ret_str += f"{record.data.get(Fields.BOOKTITLE, 'no-booktitle')}\n"
+        if Fields.ABSTRACT in record.data:
+            lines = textwrap.wrap(
+                record.data[Fields.ABSTRACT], 100, break_long_words=False
+            )
+            ret_str += f"\nAbstract: {lines.pop(0)}\n"
+            ret_str += "\n".join(lines) + "\n"
+
+        if Fields.URL in record.data:
+            ret_str += f"\nurl: {record.data[Fields.URL]}\n"
+
+        print(ret_str)
+
     def _man_pdf_prep_item_init(
         self,
         *,
@@ -248,7 +305,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         record = colrev.record.Record(data=item)
         file_provenance = record.get_field_provenance(key=Fields.FILE)
 
-        record.print_pdf_prep_man()
+        self._print_pdf_prep_man(record)
         record_dict = records[item[Fields.ID]]
         record = colrev.record.Record(data=record_dict)
         if (

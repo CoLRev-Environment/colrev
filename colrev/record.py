@@ -8,7 +8,6 @@ import os
 import pprint
 import re
 import tempfile
-import textwrap
 import typing
 from copy import deepcopy
 from enum import Enum
@@ -1537,7 +1536,7 @@ class Record:
         if Fields.MD_PROV not in self.data:
             self.data[Fields.MD_PROV] = {}
 
-        self.check_potential_retracts()
+        self.is_retracted()
 
         if self.masterdata_is_curated():
             if set_prepared:
@@ -1558,7 +1557,7 @@ class Record:
         elif set_prepared:
             self.set_status(target_state=RecordState.md_prepared)
 
-    def check_potential_retracts(self) -> bool:
+    def is_retracted(self) -> bool:
         """Check for potential retracts"""
         # Note : we retrieved metadata in get_masterdata_from_crossref()
         if self.data.get("crossmark", "") == "True":
@@ -1570,98 +1569,6 @@ class Record:
             self.remove_field(key="warning")
             return True
         return False
-
-    def print_prescreen_record(self) -> None:
-        """Print the record for prescreen operations"""
-
-        ret_str = f"  ID: {self.data['ID']} ({self.data[Fields.ENTRYTYPE]})"
-        ret_str += (
-            f"\n  {Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}"
-            f"\n  {self.data.get(Fields.AUTHOR, 'no-author')}"
-        )
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            ret_str += (
-                f"\n  {self.data.get(Fields.JOURNAL, 'no-journal')} "
-                f"({self.data.get(Fields.YEAR, 'no-year')}) "
-                f"{self.data.get(Fields.VOLUME, 'no-volume')}"
-                f"({self.data.get(Fields.NUMBER, '')})"
-            )
-        elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            ret_str += f"\n  {self.data.get(Fields.BOOKTITLE, 'no-booktitle')}"
-        if Fields.ABSTRACT in self.data:
-            lines = textwrap.wrap(
-                self.data[Fields.ABSTRACT], 100, break_long_words=False
-            )
-            if lines:
-                ret_str += f"\n  Abstract: {lines.pop(0)}\n"
-                ret_str += "\n  ".join(lines) + ""
-
-        if Fields.URL in self.data:
-            ret_str += f"\n  url: {self.data[Fields.URL]}"
-
-        if Fields.FILE in self.data:
-            ret_str += f"\n  file: {self.data[Fields.FILE]}"
-
-        print(ret_str)
-
-    def print_pdf_prep_man(self) -> None:
-        """Print the record for pdf-prep-man operations"""
-        # pylint: disable=too-many-branches
-        ret_str = ""
-        if Fields.FILE in self.data:
-            ret_str += (
-                f"\nfile: {Colors.ORANGE}{self.data[Fields.FILE]}{Colors.END}\n\n"
-            )
-
-        pdf_prep_note = self.get_field_provenance(key=Fields.FILE)
-
-        if "author_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += (
-                f"{Colors.RED}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
-            )
-        else:
-            ret_str += f"{Colors.GREEN}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
-
-        if "title_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += (
-                f"{Colors.RED}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
-            )
-        else:
-            ret_str += (
-                f"{Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
-            )
-
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            ret_str += (
-                f"{self.data.get(Fields.JOURNAL, 'no-journal')} "
-                f"({self.data.get(Fields.YEAR, 'no-year')}) "
-                f"{self.data.get(Fields.VOLUME, 'no-volume')}"
-                f"({self.data.get(Fields.NUMBER, '')})"
-            )
-            if Fields.PAGES in self.data:
-                if "nr_pages_not_matching" in pdf_prep_note["note"]:
-                    ret_str += (
-                        f", {Colors.RED}pp.{self.data[Fields.PAGES]}{Colors.END}\n"
-                    )
-                else:
-                    ret_str += (
-                        f", pp.{Colors.GREEN}{self.data[Fields.PAGES]}{Colors.END}\n"
-                    )
-            else:
-                ret_str += "\n"
-        elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            ret_str += f"{self.data.get(Fields.BOOKTITLE, 'no-booktitle')}\n"
-        if Fields.ABSTRACT in self.data:
-            lines = textwrap.wrap(
-                self.data[Fields.ABSTRACT], 100, break_long_words=False
-            )
-            ret_str += f"\nAbstract: {lines.pop(0)}\n"
-            ret_str += "\n".join(lines) + "\n"
-
-        if Fields.URL in self.data:
-            ret_str += f"\nurl: {self.data[Fields.URL]}\n"
-
-        print(ret_str)
 
     def to_screen(self) -> bool:
         """

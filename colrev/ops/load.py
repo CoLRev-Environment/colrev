@@ -142,7 +142,7 @@ class Load(colrev.operation.Operation):
         ]:
             record.set_status(target_state=colrev.record.RecordState.md_imported)
 
-        if record.check_potential_retracts():
+        if record.is_retracted():
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{Colors.END}"
