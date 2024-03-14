@@ -15,7 +15,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -246,7 +245,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         response.raise_for_status()
 
         # Note: the following writes the enl to the feed file (bib).
-        # This file is replaced by ais_feed.save_feed_file()
+        # This file is replaced by ais_feed.save()
         records = self._load_enl()
 
         return list(records.values())
@@ -264,8 +263,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 "Performing a search of the full history (may take time)"
             )
 
-        records = self.review_manager.dataset.load_records_dict()
-
         try:
             for record_dict in self._get_ais_query_return():
                 try:
@@ -276,20 +273,8 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         continue
 
                     prep_record = colrev.record.PrepRecord(data=record_dict)
-                    added = ais_feed.add_record(record=prep_record)
+                    ais_feed.add_update_record(retrieved_record=prep_record)
 
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve " + prep_record.data[Fields.URL]
-                        )
-                    # else:
-                    #     search_operation.update_existing_record(
-                    #         records=records,
-                    #         record_dict=prep_record.data,
-                    #         prev_record_dict_version=prev_record_dict_version,
-                    #         source=self.search_source,
-                    #         update_time_variant_fields=rerun,
-                    #     )
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
         except (
@@ -306,9 +291,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-        ais_feed.print_post_run_search_infos(records=records)
-        ais_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        ais_feed.save()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of AISeLibrary"""
@@ -319,6 +302,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:

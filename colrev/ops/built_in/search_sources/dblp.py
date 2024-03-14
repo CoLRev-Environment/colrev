@@ -19,7 +19,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 import colrev.settings
 from colrev.constants import ENTRYTYPES
@@ -388,7 +387,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         *,
         dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in dblp_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
@@ -405,32 +403,17 @@ class DBLPSearchSource(JsonSchemaMixin):
                     if retrieved_record.data.get("type", "") == "Editorship":
                         continue
 
-                    prev_record_dict_version = dblp_feed.get_prev_record_dict_version(
-                        retrieved_record=retrieved_record
-                    )
-
-                    dblp_feed.add_record(record=retrieved_record)
-                    dblp_feed.update_existing_record(
-                        records=records,
-                        record_dict=retrieved_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=True,
-                    )
+                    dblp_feed.add_update_record(retrieved_record=retrieved_record)
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
-        dblp_feed.print_post_run_search_infos(records=records)
-        dblp_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        dblp_feed.save()
 
     def _run_param_search_year_batch(
         self,
         *,
         query: str,
         dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
-        records: dict,
-        rerun: bool,
     ) -> None:
         batch_size_cumulative = 0
         batch_size = 250
@@ -457,26 +440,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]:
                         continue
 
-                    prev_record_dict_version = dblp_feed.get_prev_record_dict_version(
-                        retrieved_record=retrieved_record
-                    )
+                    dblp_feed.add_update_record(retrieved_record=retrieved_record)
 
-                    added = dblp_feed.add_record(
-                        record=retrieved_record,
-                    )
-
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve " + retrieved_record.data["dblp_key"]
-                        )
-                    else:
-                        dblp_feed.update_existing_record(
-                            records=records,
-                            record_dict=retrieved_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
                 except colrev_exceptions.NotFeedIdentifiableException as exc:
                     print(exc)
                     continue
@@ -484,8 +449,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             if not retrieved:
                 break
 
-        dblp_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        dblp_feed.save()
 
     def _get_query(self, *, year: int) -> str:
         if "scope" in self.search_source.search_parameters:
@@ -507,7 +471,6 @@ class DBLPSearchSource(JsonSchemaMixin):
         dblp_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
         try:
             start = self._START_YEAR
             if len(dblp_feed.feed_records) > 100 and not rerun:
@@ -518,11 +481,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self._run_param_search_year_batch(
                     query=self._get_query(year=year),
                     dblp_feed=dblp_feed,
-                    records=records,
-                    rerun=rerun,
                 )
-
-            dblp_feed.print_post_run_search_infos(records=records)
 
         except (requests.exceptions.RequestException,):
             pass
@@ -536,6 +495,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.MD:
@@ -690,9 +650,11 @@ class DBLPSearchSource(JsonSchemaMixin):
                         review_manager=prep_operation.review_manager,
                         source_identifier=self.source_identifier,
                         update_only=False,
+                        update_time_variant_fields=False,
+                        prep_mode=True,
                     )
 
-                    dblp_feed.add_record(record=retrieved_record)
+                    dblp_feed.add_update_record(retrieved_record=retrieved_record)
 
                     # TODO : extract as function (apply similarly in other search sources)
                     # Assign schema
@@ -715,7 +677,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                         record.prescreen_exclude(reason=FieldValues.RETRACTED)
                         record.remove_field(key="warning")
 
-                    dblp_feed.save_feed_file()
+                    dblp_feed.save()
                     self.dblp_lock.release()
                     return record
 

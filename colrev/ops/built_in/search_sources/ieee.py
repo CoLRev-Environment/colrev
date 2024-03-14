@@ -14,7 +14,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.ieee_api
 import colrev.ops.prep
-import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -191,6 +190,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:
@@ -249,38 +249,19 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         query.startRecord = 1
         response = query.callAPI()
         while "articles" in response:
-            records = self.review_manager.dataset.load_records_dict()
             articles = response["articles"]
 
             for article in articles:
-                prev_record_dict_version: dict = {}
+
                 record_dict = self._create_record_dict(article)
                 record = colrev.record.Record(data=record_dict)
-                added = ieee_feed.add_record(record=record)
 
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + record.data[Fields.ID]
-                    )
-                else:
-                    changed = ieee_feed.update_existing_record(
-                        records=records,
-                        record_dict=record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-                    if changed:
-                        self.review_manager.logger.info(
-                            " update " + record.data[Fields.ID]
-                        )
+                ieee_feed.add_update_record(retrieved_record=record)
 
             query.startRecord += 200
             response = query.callAPI()
 
-        ieee_feed.print_post_run_search_infos(records=records)
-        ieee_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        ieee_feed.save()
 
     def _update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
         if "start_page" in article:

@@ -16,7 +16,6 @@ from git import Repo
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -246,6 +245,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=False,
+            update_time_variant_fields=rerun,
         )
         existing_keys = {
             Fields.DOI: [
@@ -303,16 +303,17 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             if "openalex_id" in record:
                 existing_keys["openalex_id"].append(record["openalex_id"])
 
-            synergy_feed.add_record(record=colrev.record.Record(data=record))
+            synergy_feed.add_update_record(
+                retrieved_record=colrev.record.Record(data=record)
+            )
 
             # The linking of doi/... should happen in the prep operation
 
         self._check_quality(decisions=decisions)
         self.review_manager.logger.info(f"Dropped {empty_records} empty records")
         self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
-        records = self.review_manager.dataset.load_records_dict()
-        synergy_feed.print_post_run_search_infos(records=records)
-        synergy_feed.save_feed_file()
+        self.review_manager.dataset.load_records_dict()
+        synergy_feed.save()
 
     def get_masterdata(
         self,

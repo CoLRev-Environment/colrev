@@ -27,11 +27,12 @@ def fixture_search_feed(
         search_parameters={"query": "query"},
         comment="",
     )
-
+    base_repo_review_manager.get_search_operation()
     feed = source.get_api_feed(
         review_manager=base_repo_review_manager,
         source_identifier="doi",
         update_only=True,
+        update_time_variant_fields=False,
     )
 
     prev_sources = base_repo_review_manager.settings.sources
@@ -39,26 +40,6 @@ def fixture_search_feed(
     yield feed
 
     base_repo_review_manager.settings.sources = prev_sources
-
-
-def test_get_prev_record_dict_version(
-    search_feed: colrev.ops.search_api_feed.SearchAPIFeed,
-) -> None:
-    record_dict = {
-        Fields.ID: "anyID",
-        Fields.ENTRYTYPE: "article",
-        Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
-        Fields.AUTHOR: "Webster, J. and Watson, R.",
-        Fields.DOI: "10.111/2222",
-    }
-    expected = deepcopy(record_dict)
-    expected[Fields.ID] = "000001"
-
-    search_feed.add_record(record=colrev.record.Record(data=record_dict))
-    actual = search_feed.get_prev_record_dict_version(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
-    assert expected == actual
 
 
 def test_search_feed(  # type: ignore
@@ -75,7 +56,9 @@ def test_search_feed(  # type: ignore
     with pytest.raises(
         colrev.exceptions.NotFeedIdentifiableException,
     ):
-        search_feed.add_record(record=colrev.record.Record(data=record_dict))
+        search_feed.add_update_record(
+            retrieved_record=colrev.record.Record(data=record_dict)
+        )
 
     record_dict = {
         Fields.ID: "0001",
@@ -83,7 +66,9 @@ def test_search_feed(  # type: ignore
         Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
         Fields.DOI: "10.111/2222",
     }
-    search_feed.add_record(record=colrev.record.Record(data=record_dict))
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
 
     record_dict = {
         Fields.ID: "0001",
@@ -93,13 +78,16 @@ def test_search_feed(  # type: ignore
         Fields.CITED_BY: "10",
     }
 
-    search_feed.add_record(record=colrev.record.Record(data=record_dict))
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
     record_dict[Fields.CITED_BY] = "12"
-    search_feed.add_record(record=colrev.record.Record(data=record_dict))
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
     assert len(search_feed.feed_records) == 1
 
-    search_feed.print_post_run_search_infos(records={})
-    search_feed.save_feed_file()
+    search_feed.save()
     base_repo_review_manager.dataset.create_commit(msg="test")
 
     source = colrev.settings.SearchSource(
@@ -114,30 +102,16 @@ def test_search_feed(  # type: ignore
         review_manager=base_repo_review_manager,
         source_identifier="doi",
         update_only=True,
+        update_time_variant_fields=False,
     )
-    prev_record_dict_version = deepcopy(record_dict)
+    deepcopy(record_dict)
     record_dict[Fields.TITLE] = (
         "Analyzing the past to prepare for the future: Writing a literature review"
     )
-    feed.add_record(record=colrev.record.Record(data=record_dict))
+    feed.add_update_record(retrieved_record=colrev.record.Record(data=record_dict))
 
-    # records = base_repo_review_manager.dataset.load_records_dict()
-    records = {prev_record_dict_version[Fields.ID]: prev_record_dict_version}
-
-    feed.update_existing_record(
-        records=records,
-        record_dict=record_dict,
-        prev_record_dict_version=prev_record_dict_version,
-        source=source,
-        update_time_variant_fields=False,
-    )
+    feed.add_update_record(retrieved_record=colrev.record.Record(data=record_dict))
 
     record_dict["crossmark"] = True  # type: ignore
 
-    feed.update_existing_record(
-        records=records,
-        record_dict=record_dict,
-        prev_record_dict_version=prev_record_dict_version,
-        source=source,
-        update_time_variant_fields=False,
-    )
+    feed.add_update_record(retrieved_record=colrev.record.Record(data=record_dict))

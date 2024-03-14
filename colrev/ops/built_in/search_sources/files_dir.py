@@ -19,7 +19,6 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
-import colrev.ops.search
 import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
@@ -574,11 +573,9 @@ class FilesSearchSource(JsonSchemaMixin):
     def _run_dir_search(
         self,
         *,
-        records: dict,
         files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         local_index: colrev.env.local_index.LocalIndex,
         linked_file_paths: list,
-        rerun: bool,
     ) -> None:
         for file_batch in self._get_file_batches():
             for record in files_dir_feed.feed_records.values():
@@ -594,34 +591,16 @@ class FilesSearchSource(JsonSchemaMixin):
                 if new_record == {}:
                     continue
 
+                self._add_doi_from_pdf_if_not_available(record_dict=new_record)
                 retrieved_record = colrev.record.Record(data=new_record)
-
-                prev_record_dict_version = files_dir_feed.get_prev_record_dict_version(
-                    retrieved_record=retrieved_record
+                files_dir_feed.add_update_record(
+                    retrieved_record=retrieved_record,
                 )
-
-                added = files_dir_feed.add_record(
-                    record=retrieved_record,
-                )
-                if added:
-                    self._add_doi_from_pdf_if_not_available(record_dict=new_record)
-
-                elif self.review_manager.force_mode:
-                    # Note : only re-index/update
-                    files_dir_feed.update_existing_record(
-                        records=records,
-                        record_dict=new_record,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
 
             for record in files_dir_feed.feed_records.values():
                 record.pop("md_string")
 
-            files_dir_feed.save_feed_file()
-
-        files_dir_feed.print_post_run_search_infos(records=records)
+            files_dir_feed.save()
 
     def _add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
@@ -663,6 +642,7 @@ class FilesSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         linked_file_paths = [
@@ -670,11 +650,9 @@ class FilesSearchSource(JsonSchemaMixin):
         ]
 
         self._run_dir_search(
-            records=records,
             files_dir_feed=files_dir_feed,
             linked_file_paths=linked_file_paths,
             local_index=local_index,
-            rerun=rerun,
         )
 
     @classmethod

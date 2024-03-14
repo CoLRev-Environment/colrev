@@ -18,7 +18,6 @@ import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES

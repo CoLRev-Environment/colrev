@@ -37,6 +37,7 @@ class CustomSearch:
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
         retrieved_record = {
             Fields.ID: "ID00001",
@@ -47,8 +48,8 @@ class CustomSearch:
             Fields.YEAR: "2020",
         }
 
-        feed.add_record(record=retrieved_record)
-        feed.save_feed_file()
+        feed.add_update_record(retrieved_record=retrieved_record)
+        feed.save()
 
     @classmethod
     def validate_search_params(cls, query: str) -> None:

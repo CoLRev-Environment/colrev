@@ -22,7 +22,6 @@ from rapidfuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 import colrev.settings
 from colrev.constants import ENTRYTYPES
@@ -329,9 +328,13 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         review_manager=prep_operation.review_manager,
                         source_identifier=self.source_identifier,
                         update_only=False,
+                        update_time_variant_fields=False,
+                        prep_mode=True,
                     )
                     try:
-                        europe_pmc_feed.add_record(record=retrieved_record)
+                        europe_pmc_feed.add_update_record(
+                            retrieved_record=retrieved_record
+                        )
                     except colrev_exceptions.NotFeedIdentifiableException:
                         return record
 
@@ -346,7 +349,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                     )
                     record.set_status(target_state=RecordState.md_prepared)
 
-                    europe_pmc_feed.save_feed_file()
+                    europe_pmc_feed.save()
                     self.europe_pmc_lock.release()
                     return record
 
@@ -381,6 +384,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:
@@ -426,8 +430,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             headers = {"user-agent": f"{__name__} (mailto:{email})"}
             session = self.review_manager.get_cached_session()
 
-            records = self.review_manager.dataset.load_records_dict()
-
             while url != "END":
                 self.review_manager.logger.debug(url)
                 ret = session.request("GET", url, headers=headers, timeout=60)
@@ -444,12 +446,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 for result_item in result_list.findall("result"):
                     retrieved_record = self._europe_pmc_xml_to_record(item=result_item)
 
-                    prev_record_dict_version = (
-                        europe_pmc_feed.get_prev_record_dict_version(
-                            retrieved_record=retrieved_record
-                        )
-                    )
-
                     if Fields.TITLE not in retrieved_record.data:
                         self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
@@ -461,29 +457,14 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         source=source,
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-                    added = europe_pmc_feed.add_record(record=retrieved_record)
 
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve europe_pmc_id="
-                            + retrieved_record.data[Fields.EUROPE_PMC_ID]
-                        )
-                    else:
-                        europe_pmc_feed.update_existing_record(
-                            records=records,
-                            record_dict=retrieved_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
+                    europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
 
                 url = "END"
                 next_page_url_node = root.find("nextPageUrl")
                 if next_page_url_node is not None:
                     if next_page_url_node.text is not None:
                         url = next_page_url_node.text
-
-            europe_pmc_feed.print_post_run_search_infos(records=records)
 
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass
@@ -493,7 +474,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 "(possibly caused by concurrent operations)"
             ) from exc
         finally:
-            europe_pmc_feed.save_feed_file()
+            europe_pmc_feed.save()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:

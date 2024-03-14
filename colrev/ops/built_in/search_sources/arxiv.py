@@ -16,7 +16,6 @@ from dacite import from_dict
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 
@@ -231,10 +230,8 @@ class ArXivSource:
         timeout: int = 10,
     ) -> colrev.record.Record:
         """Retrieve masterdata fromArXiv based on similarity with the record provided"""
-
         # https://info.arxiv.org/help/api/user-manual.html#_query_interface
         # id_list
-
         return record
 
     # pylint: disable=too-many-branches
@@ -323,7 +320,6 @@ class ArXivSource:
                 "Performing a search of the full history (may take time)"
             )
 
-        records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self._get_arxiv_query_return():
                 try:
@@ -337,27 +333,8 @@ class ArXivSource:
                         continue
 
                     prep_record = colrev.record.PrepRecord(data=record_dict)
-                    prev_record_dict_version = arxiv_feed.get_prev_record_dict_version(
-                        retrieved_record=prep_record
-                    )
 
-                    added = arxiv_feed.add_record(record=prep_record)
-
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve " + prep_record.data["arxivid"]
-                        )
-                        arxiv_feed.nr_added += 1
-                    else:
-                        changed = self.operation.update_existing_record(  # type: ignore
-                            records=records,
-                            record_dict=prep_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
-                        if changed:
-                            arxiv_feed.nr_changed += 1
+                    added = arxiv_feed.add_update_record(retrieved_record=prep_record)
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
                     if not added and not rerun:
@@ -367,9 +344,7 @@ class ArXivSource:
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
-            arxiv_feed.print_post_run_search_infos(records=records)
-            arxiv_feed.save_feed_file()
-            self.review_manager.dataset.save_records_dict(records=records)
+            arxiv_feed.save()
 
         except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
@@ -405,8 +380,8 @@ class ArXivSource:
     #         retrieved_record=feed_record
     #     )
     # )
-
-    #         arxiv_feed.add_record(record=colrev.record.Record(data=retrieved_record))
+    #         retrieved_record = colrev.record.Record(data=retrieved_record)
+    #         arxiv_feed.add_update_record(retrieved_record=retrieved_record)
 
     #         changed = self.operation.update_existing_record(
     #             records=records,
@@ -423,9 +398,7 @@ class ArXivSource:
     #         ):
     #             continue
 
-    #     arxiv_feed.save_feed_file()
-    #     arxiv_feed.print_post_run_search_infos(records=records)
-    #     self.review_manager.dataset.save_records_dict(records=records)
+    #     arxiv_feed.save()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of ArXiv"""
@@ -434,6 +407,7 @@ class ArXivSource:
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         # if self.search_source.search_type == colrev.settings.SearchType.MD:

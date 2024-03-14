@@ -19,7 +19,6 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 
@@ -183,6 +182,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
         # pylint: disable=colrev-missed-constant-usage
         project_url = self.search_source.search_parameters["scope"]["url"]
@@ -202,7 +202,6 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         ]
 
         self.review_manager.logger.info("Importing selected records")
-        records = self.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
@@ -254,8 +253,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 print("not identifiable")
                 continue
 
-        colrev_project_search_feed.print_post_run_search_infos(records=records)
-        colrev_project_search_feed.save_feed_file()
+        colrev_project_search_feed.save()
 
     def get_masterdata(
         self,

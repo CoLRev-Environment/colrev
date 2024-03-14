@@ -31,7 +31,7 @@ from colrev.constants import Fields
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
 if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.search
+
     import colrev.ops.prep
 
 
@@ -293,13 +293,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
         # rerun not implemented yet
         if rerun:
             self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
-        records = self.review_manager.dataset.load_records_dict()
         try:
             params = self.search_source.search_parameters
             search_subject = params.get("search_subject")
@@ -328,32 +328,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                s2_feed.add_update_record(retrieved_record=retrieved_record)
 
-                prev_record_dict_version = s2_feed.get_prev_record_dict_version(
-                    retrieved_record=retrieved_record
-                )
-
-                added = s2_feed.add_record(record=retrieved_record)
-
-                if added:
-                    if self._s2_UI.search_subject == "author":
-                        self.review_manager.logger.info(
-                            "retrieve "
-                            + retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID]
-                        )
-                    else:
-                        self.review_manager.logger.info(
-                            "retrieve "
-                            + retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID]
-                        )
-                else:
-                    s2_feed.update_existing_record(
-                        records=records,
-                        record_dict=retrieved_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
         except (
             colrev_exceptions.RecordNotParsableException,
             colrev_exceptions.NotFeedIdentifiableException,
@@ -363,9 +339,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
             print(exc)
 
-        s2_feed.print_post_run_search_infos(records=records)
-        s2_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        s2_feed.save()
 
     @classmethod
     def add_endpoint(
@@ -422,7 +396,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     ) -> colrev.record.Record:
         """Retrieve master data from Semantic Scholar"""
         # Not yet implemented
-
         return record
 
     @classmethod

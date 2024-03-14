@@ -23,7 +23,6 @@ from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -435,9 +434,11 @@ class PubMedSearchSource(JsonSchemaMixin):
                     review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
+                    update_time_variant_fields=False,
+                    prep_mode=True,
                 )
 
-                pubmed_feed.add_record(record=retrieved_record)
+                pubmed_feed.add_update_record(retrieved_record=retrieved_record)
 
                 record.merge(
                     merging_record=retrieved_record,
@@ -450,7 +451,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 )
                 record.set_status(target_state=RecordState.md_prepared)
                 if save_feed:
-                    pubmed_feed.save_feed_file()
+                    pubmed_feed.save()
                 try:
                     self.pubmed_lock.release()
                 except ValueError:
@@ -540,7 +541,6 @@ class PubMedSearchSource(JsonSchemaMixin):
                 "Performing a search of the full history (may take time)"
             )
 
-        records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self._get_pubmed_query_return():
                 try:
@@ -554,27 +554,10 @@ class PubMedSearchSource(JsonSchemaMixin):
                         continue
                     prep_record = colrev.record.PrepRecord(data=record_dict)
 
-                    prev_record_dict_version = pubmed_feed.get_prev_record_dict_version(
-                        retrieved_record=prep_record
-                    )
-
                     if Fields.D_PROV in prep_record.data:
                         del prep_record.data[Fields.D_PROV]
 
-                    added = pubmed_feed.add_record(record=prep_record)
-
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve pubmed-id=" + prep_record.data["pubmedid"]
-                        )
-                    else:
-                        pubmed_feed.update_existing_record(
-                            records=records,
-                            record_dict=prep_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
+                    added = pubmed_feed.add_update_record(retrieved_record=prep_record)
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
                     if not added and not rerun:
@@ -585,9 +568,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     print("Cannot set id for record")
                     continue
 
-            pubmed_feed.print_post_run_search_infos(records=records)
-            pubmed_feed.save_feed_file()
-            self.review_manager.dataset.save_records_dict(records=records)
+            pubmed_feed.save()
 
         except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
@@ -605,43 +586,26 @@ class PubMedSearchSource(JsonSchemaMixin):
         *,
         pubmed_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in pubmed_feed.feed_records.values():
             feed_record = colrev.record.Record(data=feed_record_dict)
 
             try:
-                retrieved_record = self._pubmed_query_id(
+                retrieved_record_dict = self._pubmed_query_id(
                     pubmed_id=feed_record_dict["pubmedid"]
                 )
 
-                if retrieved_record["pubmedid"] != feed_record.data["pubmedid"]:
+                if retrieved_record_dict["pubmedid"] != feed_record.data["pubmedid"]:
                     continue
-
-                prev_record_dict_version = pubmed_feed.get_prev_record_dict_version(
-                    retrieved_record=colrev.record.Record(data=retrieved_record)
-                )
-
-                pubmed_feed.add_record(
-                    record=colrev.record.Record(data=retrieved_record)
-                )
-
-                pubmed_feed.update_existing_record(
-                    records=records,
-                    record_dict=retrieved_record,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=True,
-                )
+                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                pubmed_feed.add_update_record(retrieved_record=retrieved_record)
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
 
-        pubmed_feed.save_feed_file()
-        pubmed_feed.print_post_run_search_infos(records=records)
-        self.review_manager.dataset.save_records_dict(records=records)
+        pubmed_feed.save()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
@@ -652,6 +616,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.MD:

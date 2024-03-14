@@ -283,15 +283,17 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 review_manager=prep_operation.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
+                update_time_variant_fields=False,
+                prep_mode=True,
             )
 
-            open_library_feed.add_record(record=retrieved_record)
+            open_library_feed.add_update_record(retrieved_record=retrieved_record)
 
             record.merge(
                 merging_record=retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            open_library_feed.save_feed_file()
+            open_library_feed.save()
             self.open_library_lock.release()
 
         except (

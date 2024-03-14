@@ -237,6 +237,8 @@ class SearchSource(JsonSchemaMixin):
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
+        update_time_variant_fields: bool,
+        prep_mode: bool = False,
     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
@@ -246,9 +248,11 @@ class SearchSource(JsonSchemaMixin):
 
         return colrev.ops.search_api_feed.SearchAPIFeed(
             review_manager=review_manager,
-            search_source=self,
             source_identifier=source_identifier,
+            search_source=self,
             update_only=update_only,
+            update_time_variant_fields=update_time_variant_fields,
+            prep_mode=prep_mode,
         )
 
     def __str__(self) -> str:

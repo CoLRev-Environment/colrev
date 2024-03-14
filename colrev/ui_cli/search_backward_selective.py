@@ -39,6 +39,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         review_manager=search_operation.review_manager,
         source_identifier="bws_id",
         update_only=False,
+        update_time_variant_fields=False,
     )
 
     # print list
@@ -55,6 +56,8 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
             selected_record = tei_recs[int(selection)]
             selected_record["bws_id"] = f"{bws}/#{selection}"
             print(selected_record)
-            feed.add_record(record=colrev.record.Record(data=selected_record))
+            feed.add_update_record(
+                retrieved_record=colrev.record.Record(data=selected_record)
+            )
 
-        feed.save_feed_file()
+        feed.save()

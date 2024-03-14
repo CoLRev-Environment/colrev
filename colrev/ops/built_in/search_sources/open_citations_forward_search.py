@@ -15,7 +15,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -159,6 +158,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         for record in records.values():
@@ -172,37 +172,20 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             new_records = self._get_forward_search_records(record_dict=record)
 
             for new_record in new_records:
-                new_record["fwsearch_ref"] = (
-                    record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
-                )
-                new_record["cites_IDs"] = record[Fields.ID]
-
-                prev_record_dict_version = (
-                    forward_search_feed.get_prev_record_dict_version(
-                        retrieved_record=colrev.record.Record(data=new_record)
-                    )
-                )
-
                 try:
-                    added = forward_search_feed.add_record(
-                        record=colrev.record.Record(data=new_record),
+                    new_record["fwsearch_ref"] = (
+                        record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
                     )
-                    if added:
-                        pass
-                    elif rerun:
-                        # Note : only re-index/update
-                        forward_search_feed.update_existing_record(
-                            records=records,
-                            record_dict=new_record,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
+                    new_record["cites_IDs"] = record[Fields.ID]
+                    retrieved_record = colrev.record.Record(data=new_record)
+
+                    forward_search_feed.add_update_record(
+                        retrieved_record=retrieved_record
+                    )
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
-        forward_search_feed.save_feed_file()
-        forward_search_feed.print_post_run_search_infos(records=records)
+        forward_search_feed.save()
 
         if self.review_manager.dataset.has_record_changes():
             self.review_manager.dataset.create_commit(

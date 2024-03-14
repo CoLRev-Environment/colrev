@@ -15,7 +15,6 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -197,25 +196,10 @@ class ERICSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
         for record in self.get_query_return():
-            prev_record_dict_version: dict = {}
-            added = eric_feed.add_record(record=record)
+            eric_feed.add_update_record(retrieved_record=record)
 
-            if added:
-                self.review_manager.logger.info(" retrieve " + record.data[Fields.ID])
-            else:
-                eric_feed.update_existing_record(
-                    records=records,
-                    record_dict=record.data,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=rerun,
-                )
-
-        eric_feed.print_post_run_search_infos(records=records)
-        eric_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        eric_feed.save()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of ERIC"""
@@ -224,6 +208,7 @@ class ERICSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:

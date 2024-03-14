@@ -24,7 +24,6 @@ from tqdm import tqdm
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
-import colrev.ops.search
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -426,30 +425,17 @@ class BackwardSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         for item in selected_references.to_dict(orient="records"):
             new_record = self._get_new_record(
                 item=item, pdf_backward_search_feed=pdf_backward_search_feed
             )
-            prev_record_dict_version = (
-                pdf_backward_search_feed.get_prev_record_dict_version(
-                    retrieved_record=new_record
-                )
-            )
-            added = pdf_backward_search_feed.add_record(
-                record=new_record,
-            )
 
-            if not added and rerun:
-                # Note : only re-index/update
-                pdf_backward_search_feed.update_existing_record(
-                    records=records,
-                    record_dict=new_record,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=rerun,
-                )
+            pdf_backward_search_feed.add_update_record(
+                retrieved_record=new_record,
+            )
 
         pdf_backward_search_feed.print_post_run_search_infos(
             records=records,
@@ -459,7 +445,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
         )
 
-        pdf_backward_search_feed.save_feed_file()
+        pdf_backward_search_feed.save()
 
         if self.review_manager.dataset.has_record_changes():
             self.review_manager.dataset.create_commit(

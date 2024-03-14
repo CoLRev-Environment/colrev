@@ -192,9 +192,11 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
+                update_time_variant_fields=False,
+                prep_mode=True,
             )
 
-            open_alex_feed.add_record(record=retrieved_record)
+            open_alex_feed.add_update_record(retrieved_record=retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
                 qm=self.review_manager.get_qm(),
@@ -204,7 +206,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 merging_record=retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            open_alex_feed.save_feed_file()
+            open_alex_feed.save()
         except (
             colrev_exceptions.InvalidMerge,
             colrev_exceptions.RecordNotParsableException,

@@ -132,6 +132,7 @@ class Repare(colrev.operation.Operation):
                     review_manager=self.review_manager,
                     source_identifier="NA",
                     update_only=False,
+                    update_time_variant_fields=False,
                 ).feed_records
             )
         return source_feeds

@@ -8,8 +8,7 @@ from copy import deepcopy
 from random import randint
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
-import colrev.settings
+import colrev.loader.load_utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
@@ -24,17 +23,20 @@ class SearchAPIFeed:
     """A general-purpose Origin feed"""
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
 
-    nr_added: int = 0
-    nr_changed: int = 0
+    _nr_added: int = 0
+    _nr_changed: int = 0
 
     def __init__(
         self,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        search_source: colrev.settings.SearchSource,
         source_identifier: str,
+        search_source: colrev.settings.SearchSource,
         update_only: bool,
+        update_time_variant_fields: bool = True,
+        prep_mode: bool = False,
     ):
         self.source = search_source
         self.feed_file = search_source.filename
@@ -52,6 +54,7 @@ class SearchAPIFeed:
 
         # Note: corresponds to rerun (in search.main() and run_search())
         self.update_only = update_only
+        self.update_time_variant_fields = update_time_variant_fields
         self.review_manager = review_manager
         self.origin_prefix = self.source.get_origin_prefix()
 
@@ -82,10 +85,13 @@ class SearchAPIFeed:
                 )
                 + 1
             )
+        self.prep_mode = prep_mode
+        if not prep_mode:
+            self.records = self.review_manager.dataset.load_records_dict()
 
-    def get_prev_record_dict_version(
+    def _get_prev_record_version(
         self, *, retrieved_record: colrev.record.Record
-    ) -> dict:
+    ) -> colrev.record.Record:
         """Get the previous record dict version"""
         self._set_id(record=retrieved_record)
 
@@ -94,7 +100,7 @@ class SearchAPIFeed:
             prev_record_dict_version = deepcopy(
                 self.feed_records[retrieved_record.data[Fields.ID]]
             )
-        return prev_record_dict_version
+        return colrev.record.Record(data=prev_record_dict_version)
 
     def _set_id(self, *, record: colrev.record.Record) -> None:
         """Set incremental record ID
@@ -111,7 +117,34 @@ class SearchAPIFeed:
         else:
             record.data[Fields.ID] = str(self._max_id).rjust(6, "0")
 
-    def add_record(self, *, record: colrev.record.Record) -> bool:
+    def add_update_record(self, *, retrieved_record: colrev.record.Record) -> bool:
+        """Add or update a record in the api_search_feed and records"""
+
+        prev_record_version = self._get_prev_record_version(
+            retrieved_record=retrieved_record
+        )
+        added = self._add_record(record=retrieved_record)
+        if not self.prep_mode:
+            self._update_existing_record(
+                retrieved_record=retrieved_record,
+                prev_record_version=prev_record_version,
+            )
+        return added
+
+    def get_prev_record_version(
+        self, *, record: colrev.record.Record
+    ) -> colrev.record.Record:
+        """Get the previous record dict version"""
+        record = deepcopy(record)
+        self._set_id(record=record)
+        prev_record_dict_version = {}
+        if record.data[Fields.ID] in self.feed_records:
+            prev_record_dict_version = deepcopy(
+                self.feed_records[record.data[Fields.ID]]
+            )
+        return colrev.record.Record(data=prev_record_dict_version)
+
+    def _add_record(self, *, record: colrev.record.Record) -> bool:
         """Add a record to the feed and set its colrev_origin"""
 
         self._set_id(record=record)
@@ -123,7 +156,7 @@ class SearchAPIFeed:
             added_new = False
         else:
             self._max_id += 1
-            self.nr_added += 1
+            self._nr_added += 1
 
         for provenance_key in FieldSet.PROVENANCE_KEYS:
             if provenance_key in feed_record_dict:
@@ -155,9 +188,10 @@ class SearchAPIFeed:
 
         return added_new
 
-    def save_feed_file(self) -> None:
-        """Save the feed file"""
+    def save(self) -> None:
+        """Save the feed file and records, printing post-run search infos."""
 
+        self._print_post_run_search_infos()
         search_operation = self.review_manager.get_search_operation()
         if len(self.feed_records) > 0:
             self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
@@ -187,6 +221,9 @@ class SearchAPIFeed:
                 ):  # pragma: no cover
                     search_operation.review_manager.logger.debug("Wait for git")
                     time.sleep(randint(1, 15))  # nosec
+
+        if not self.prep_mode:
+            self.review_manager.dataset.save_records_dict(records=self.records)
 
     def _have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
         # To ignore changes introduced by saving/loading the feed-records,
@@ -281,12 +318,13 @@ class SearchAPIFeed:
         record_dict: dict,
         main_record_dict: dict,
         prev_record_dict_version: dict,
-        update_time_variant_fields: bool,
         origin: str,
-        source: colrev.settings.SearchSource,
     ) -> None:
         for key, value in record_dict.items():
-            if not update_time_variant_fields and key in FieldSet.TIME_VARIANT_FIELDS:
+            if (
+                not self.update_time_variant_fields
+                and key in FieldSet.TIME_VARIANT_FIELDS
+            ):
                 continue
 
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
@@ -305,7 +343,7 @@ class SearchAPIFeed:
                     append_edit=False,
                 )
             else:
-                if source.get_origin_prefix() != "md_curated.bib":
+                if self.source.get_origin_prefix() != "md_curated.bib":
                     if prev_record_dict_version.get(key, "NA") != main_record_dict.get(
                         key, "OTHER"
                     ):
@@ -346,69 +384,63 @@ class SearchAPIFeed:
         return False
 
     # pylint: disable=too-many-arguments
-    def update_existing_record(
+    def _update_existing_record(
         self,
         *,
-        records: dict,
-        record_dict: dict,
-        prev_record_dict_version: dict,
-        source: colrev.settings.SearchSource,
-        update_time_variant_fields: bool,
+        retrieved_record: colrev.record.Record,
+        prev_record_version: colrev.record.Record,
     ) -> bool:
         """Convenience function to update existing records (main data/records.bib)"""
 
-        origin = f"{source.get_origin_prefix()}/{record_dict['ID']}"
+        origin = f"{self.source.get_origin_prefix()}/{retrieved_record.data['ID']}"
         main_record_dict = self._get_record_based_on_origin(
-            origin=origin, records=records
+            origin=origin, records=self.records
         )
 
         if main_record_dict == {}:
-            self.review_manager.logger.debug(f"Could not update {record_dict['ID']}")
+            self.review_manager.logger.debug(
+                f"Could not update {retrieved_record.data['ID']}"
+            )
             return False
 
         # TBD: in curated masterdata repositories?
 
-        record = colrev.record.Record(data=record_dict)
-        record.prefix_non_standardized_field_keys(prefix=source.endpoint)
+        retrieved_record.prefix_non_standardized_field_keys(prefix=self.source.endpoint)
         changed = self._update_existing_record_retract(
-            record=record, main_record_dict=main_record_dict
+            record=retrieved_record, main_record_dict=main_record_dict
         )
         self._update_existing_record_forthcoming(
-            record=record, main_record_dict=main_record_dict
+            record=retrieved_record, main_record_dict=main_record_dict
         )
 
         if (
             colrev.record.Record(data=main_record_dict).masterdata_is_curated()
-            and "md_curated.bib" != source.get_origin_prefix()
+            and "md_curated.bib" != self.source.get_origin_prefix()
         ):
             return False
 
         similarity_score = colrev.record.Record.get_record_similarity(
-            record_a=colrev.record.Record(data=record_dict),
-            record_b=colrev.record.Record(data=prev_record_dict_version),
+            record_a=retrieved_record,
+            record_b=prev_record_version,
         )
-        dict_diff = colrev.record.Record(data=record_dict).get_diff(
-            other_record=colrev.record.Record(data=prev_record_dict_version)
-        )
+        dict_diff = retrieved_record.get_diff(other_record=prev_record_version)
 
         self._update_existing_record_fields(
-            record_dict=record_dict,
+            record_dict=retrieved_record.data,
             main_record_dict=main_record_dict,
-            prev_record_dict_version=prev_record_dict_version,
-            update_time_variant_fields=update_time_variant_fields,
+            prev_record_dict_version=prev_record_version.data,
             origin=origin,
-            source=source,
         )
 
         if self._have_changed(
-            record_a_orig=main_record_dict, record_b_orig=prev_record_dict_version
+            record_a_orig=main_record_dict, record_b_orig=prev_record_version.data
         ) or self._have_changed(  # Note : not (yet) in the main records but changed
-            record_a_orig=record_dict, record_b_orig=prev_record_dict_version
+            record_a_orig=retrieved_record.data, record_b_orig=prev_record_version.data
         ):
             changed = True
-            self.nr_changed += 1
+            self._nr_changed += 1
             if self._forthcoming_published(
-                record_dict=record_dict, prev_record=prev_record_dict_version
+                record_dict=retrieved_record.data, prev_record=prev_record_version.data
             ):
                 self.review_manager.logger.info(
                     f" {Colors.GREEN}forthcoming paper published: "
@@ -427,23 +459,28 @@ class SearchAPIFeed:
 
         return changed
 
-    def print_post_run_search_infos(self, *, records: dict) -> None:
+    def _print_post_run_search_infos(self) -> None:
         """Print the search infos (after running the search)"""
-        if self.nr_added > 0:
+        if self._nr_added > 0:
             self.review_manager.logger.info(
-                f"{Colors.GREEN}Retrieved {self.nr_added} records{Colors.END}"
+                f"{Colors.GREEN}Retrieved {self._nr_added} records{Colors.END}"
             )
         else:
             self.review_manager.logger.info(
                 f"{Colors.GREEN}No additional records retrieved{Colors.END}"
             )
 
-        if self.nr_changed > 0:
+        if self.prep_mode:
+            # No need to print the following in prep mode
+            # because the main records are not updated/saved
+            return
+
+        if self._nr_changed > 0:
             self.review_manager.logger.info(
-                f"{Colors.GREEN}Updated {self.nr_changed} records{Colors.END}"
+                f"{Colors.GREEN}Updated {self._nr_changed} records{Colors.END}"
             )
         else:
-            if records:
+            if self.records:
                 self.review_manager.logger.info(
                     f"{Colors.GREEN}Records (data/records.bib) up-to-date{Colors.END}"
                 )

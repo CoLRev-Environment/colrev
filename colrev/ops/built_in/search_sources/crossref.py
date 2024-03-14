@@ -493,9 +493,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
+                    update_time_variant_fields=False,
+                    prep_mode=True,
                 )
 
-                crossref_feed.add_record(record=retrieved_record)
+                crossref_feed.add_update_record(retrieved_record=retrieved_record)
 
                 record.merge(
                     merging_record=retrieved_record,
@@ -508,7 +510,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
 
                 if save_feed:
-                    crossref_feed.save_feed_file()
+                    crossref_feed.save()
 
             except (
                 colrev_exceptions.InvalidMerge,
@@ -670,9 +672,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> None:
         """Restore the url from the feed if it exists
         (url-resolution is not always available)"""
-        if record.data[Fields.ID] not in feed.feed_records:
-            return
-        prev_url = feed.feed_records[record.data[Fields.ID]].get(Fields.URL, None)
+        prev_record = feed.get_prev_record_version(record=record)
+        prev_url = prev_record.data.get(Fields.URL, None)
         if prev_url is None:
             return
         record.data[Fields.URL] = prev_url
@@ -681,9 +682,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         crossref_feed: colrev.ops.search_api_feed.SearchAPIFeed,
-        rerun: bool,
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in crossref_feed.feed_records.values():
             try:
@@ -699,29 +698,16 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     record=retrieved_record, prep_main_record=False
                 )
 
-                prev_record_dict_version = crossref_feed.get_prev_record_dict_version(
-                    retrieved_record=retrieved_record
-                )
-
                 self._restore_url(record=retrieved_record, feed=crossref_feed)
-                crossref_feed.add_record(record=retrieved_record)
+                crossref_feed.add_update_record(retrieved_record=retrieved_record)
 
-                crossref_feed.update_existing_record(
-                    records=records,
-                    record_dict=retrieved_record.data,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=rerun,
-                )
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
 
-        crossref_feed.print_post_run_search_infos(records=records)
-        crossref_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        crossref_feed.save()
 
     def _scope_excluded(self, *, retrieved_record_dict: dict) -> bool:
         if (
@@ -786,7 +772,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
                     self._restore_url(record=retrieved_record, feed=crossref_feed)
 
-                    added = crossref_feed.add_record(record=retrieved_record)
+                    added = crossref_feed.add_update_record(
+                        retrieved_record=retrieved_record
+                    )
 
                     if added:
                         nr_added += 1
@@ -809,10 +797,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         f"Only {nr_added} papers found to resample keyword '{keyword}'"
                     )
 
-        crossref_feed.print_post_run_search_infos(records=records)
-
-        crossref_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        crossref_feed.save()
 
         self.review_manager.dataset.add_changes(path=self.search_source.filename)
         self.review_manager.dataset.create_commit(msg="Run search")
@@ -840,8 +825,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self._run_keyword_exploration_search(crossref_feed=crossref_feed)
             return
 
-        # could print statistics (retrieve 4/200) based on the crossref header (nr records)
-        records = self.review_manager.dataset.load_records_dict()
         try:
             for item in self._get_crossref_query_return(rerun=rerun):
                 try:
@@ -852,11 +835,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
                         continue
 
                     retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-                    prev_record_dict_version = (
-                        crossref_feed.get_prev_record_dict_version(
-                            retrieved_record=retrieved_record
-                        )
-                    )
 
                     self._prep_crossref_record(
                         record=retrieved_record, prep_main_record=False
@@ -864,20 +842,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
                     self._restore_url(record=retrieved_record, feed=crossref_feed)
 
-                    added = crossref_feed.add_record(record=retrieved_record)
-
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve " + retrieved_record.data[Fields.DOI]
-                        )
-                    else:
-                        crossref_feed.update_existing_record(
-                            records=records,
-                            record_dict=retrieved_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
+                    added = crossref_feed.add_update_record(
+                        retrieved_record=retrieved_record
+                    )
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
                     if (
@@ -897,10 +864,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         except RuntimeError as exc:
             print(exc)
 
-        crossref_feed.print_post_run_search_infos(records=records)
-
-        crossref_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        crossref_feed.save()
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
@@ -911,6 +875,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
+            update_time_variant_fields=rerun,
         )
 
         try:
@@ -925,7 +890,6 @@ class CrossrefSearchSource(JsonSchemaMixin):
             elif self.search_source.search_type == colrev.settings.SearchType.MD:
                 self._run_md_search(
                     crossref_feed=crossref_feed,
-                    rerun=rerun,
                 )
             else:
                 raise NotImplementedError

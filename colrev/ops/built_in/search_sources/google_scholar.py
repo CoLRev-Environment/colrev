@@ -10,7 +10,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 
