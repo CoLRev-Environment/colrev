@@ -82,7 +82,7 @@ class Initializer:
                 options=list(res.all_available_packages_names.keys()),
             ) from exc
 
-        self._check_init_precondition(target_path=self.target_path)
+        self._check_init_precondition()
 
         self.title = str(self.target_path.name)
         self.logger = self._setup_init_logger(level=logging.INFO)
@@ -108,7 +108,7 @@ class Initializer:
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
 
-    def _check_init_precondition(self, *, target_path: Path) -> None:
+    def _check_init_precondition(self) -> None:
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]
