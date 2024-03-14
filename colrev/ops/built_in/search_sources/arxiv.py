@@ -376,7 +376,7 @@ class ArXivSource:
     #                 continue
 
     # prev_record_dict_version = (
-    #     dblp_feed.get_prev_record_dict_version(
+    #     dblp_feed.get_prev_feed_record(
     #         retrieved_record=feed_record
     #     )
     # )

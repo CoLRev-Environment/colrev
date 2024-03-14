@@ -11,6 +11,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
@@ -20,7 +21,7 @@ from colrev.writer.write_utils import write_file
 
 # Keep in mind the need for lock-mechanisms, e.g., in concurrent prep operations
 class SearchAPIFeed:
-    """A general-purpose Origin feed"""
+    """A feed managing results from API searches"""
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
@@ -92,18 +93,18 @@ class SearchAPIFeed:
             + 1
         )
 
-    def _get_prev_record_version(
+    def _get_prev_feed_record(
         self, retrieved_record: colrev.record.Record
     ) -> colrev.record.Record:
         """Get the previous record dict version"""
         self._set_id(retrieved_record)
 
-        prev_record_dict_version = {}
+        prev_feed_record_dict = {}
         if retrieved_record.data[Fields.ID] in self.feed_records:
-            prev_record_dict_version = deepcopy(
+            prev_feed_record_dict = deepcopy(
                 self.feed_records[retrieved_record.data[Fields.ID]]
             )
-        return colrev.record.Record(data=prev_record_dict_version)
+        return colrev.record.Record(data=prev_feed_record_dict)
 
     def _set_id(self, record: colrev.record.Record) -> None:
         """Set incremental record ID
@@ -120,12 +121,13 @@ class SearchAPIFeed:
         else:
             record.data[Fields.ID] = str(self._max_id).rjust(6, "0")
 
-    def _add_record(self, record: colrev.record.Record) -> bool:
+    def _add_record_to_feed(
+        self, record: colrev.record.Record, prev_feed_record: colrev.record.Record
+    ) -> bool:
         """Add a record to the feed and set its colrev_origin"""
 
         self._set_id(record)
 
-        # Feed:
         feed_record_dict = record.data.copy()
         added_new = True
         if feed_record_dict[self.source_identifier] in self._available_ids:
@@ -137,87 +139,69 @@ class SearchAPIFeed:
         for provenance_key in FieldSet.PROVENANCE_KEYS:
             if provenance_key in feed_record_dict:
                 del feed_record_dict[provenance_key]
+        frid = feed_record_dict[Fields.ID]
+        self._available_ids[feed_record_dict[self.source_identifier]] = frid
 
-        self._available_ids[feed_record_dict[self.source_identifier]] = (
-            feed_record_dict[Fields.ID]
+        self._update_record_forthcoming(
+            record=record, prev_feed_record=prev_feed_record
         )
 
         if self.update_only:
             # ignore time_variant_fields
             # (otherwise, fields in recent records would be more up-to-date)
             for key in FieldSet.TIME_VARIANT_FIELDS:
-                if feed_record_dict[Fields.ID] in self.feed_records:
-                    if key in self.feed_records[feed_record_dict[Fields.ID]]:
-                        feed_record_dict[key] = self.feed_records[
-                            feed_record_dict[Fields.ID]
-                        ][key]
+                if frid in self.feed_records:
+                    if key in self.feed_records[frid]:
+                        feed_record_dict[key] = self.feed_records[frid][key]
                     else:
                         if key in feed_record_dict:
                             del feed_record_dict[key]
 
-        self.feed_records[feed_record_dict[Fields.ID]] = feed_record_dict
-
-        # Original record
-        colrev_origin = f"{self.origin_prefix}/{record.data['ID']}"
-        record.data[Fields.ORIGIN] = [colrev_origin]
-        record.add_provenance_all(source=colrev_origin)
-
+        self.feed_records[frid] = feed_record_dict
         return added_new
 
-    def _have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
+    def _have_changed(
+        self, record_a: colrev.record.Record, record_b: colrev.record.Record
+    ) -> bool:
+
+        def tostr_and_load(record: colrev.record.Record) -> dict:
+            record_dict = deepcopy(record.data)
+            bibtex_str = to_string(
+                records_dict={record_dict[Fields.ID]: record_dict}, implementation="bib"
+            )
+            record_dict = list(
+                colrev.loader.load_utils.loads(
+                    load_string=bibtex_str,
+                    implementation="bib",
+                    logger=self.review_manager.logger,
+                ).values()
+            )[0]
+            return record_dict
+
         # To ignore changes introduced by saving/loading the feed-records,
         # we parse and load them in the following.
-        record_a = deepcopy(record_a_orig)
-        record_b = deepcopy(record_b_orig)
-
-        bibtex_str = to_string(
-            records_dict={record_a[Fields.ID]: record_a}, implementation="bib"
-        )
-        record_a = list(
-            colrev.loader.load_utils.loads(
-                load_string=bibtex_str,
-                implementation="bib",
-                logger=self.review_manager.logger,
-            ).values()
-        )[0]
-
-        bibtex_str = to_string(
-            records_dict={record_b[Fields.ID]: record_b}, implementation="bib"
-        )
-        record_b = list(
-            colrev.loader.load_utils.loads(
-                load_string=bibtex_str,
-                implementation="bib",
-                logger=self.review_manager.logger,
-            ).values()
-        )[0]
+        record_a_dict = tostr_and_load(record_a)
+        record_b_dict = tostr_and_load(record_b)
 
         # Note : record_a can have more keys (that's ok)
         changed = False
-        for key, value in record_b.items():
+        for key, value in record_b_dict.items():
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
                 continue
-            if key not in record_a:
+            if key not in record_a_dict:
                 return True
-            if record_a[key] != value:
+            if record_a_dict[key] != value:
                 return True
         return changed
 
-    def _get_record_based_on_origin(self, origin: str, records: dict) -> dict:
-        for main_record_dict in records.values():
-            if origin in main_record_dict[Fields.ORIGIN]:
-                return main_record_dict
-        return {}
-
-    def _update_existing_record_retract(
-        self, *, record: colrev.record.Record, main_record_dict: dict
+    def _update_record_retract(
+        self, *, record: colrev.record.Record, main_record: colrev.record.Record
     ) -> bool:
         if record.is_retracted():
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Found paper retract: "
-                f"{main_record_dict['ID']}{Colors.END}"
+                f"{main_record.data['ID']}{Colors.END}"
             )
-            main_record = colrev.record.Record(data=main_record_dict)
             main_record.prescreen_exclude(
                 reason=FieldValues.RETRACTED, print_warning=True
             )
@@ -225,22 +209,20 @@ class SearchAPIFeed:
             return True
         return False
 
-    def _update_existing_record_forthcoming(
-        self, *, record: colrev.record.Record, main_record_dict: dict
+    def _update_record_forthcoming(
+        self, *, record: colrev.record.Record, prev_feed_record: colrev.record.Record
     ) -> None:
-        if "forthcoming" == main_record_dict.get(
-            Fields.YEAR, ""
-        ) and "forthcoming" != record.data.get(Fields.YEAR, ""):
+
+        if self._forthcoming_published(record=record, prev_record=prev_feed_record):
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Update published forthcoming paper: "
                 f"{record.data['ID']}{Colors.END}"
             )
-            # prepared_record = crossref_prep.prepare(prep_operation, record)
-            main_record_dict[Fields.YEAR] = record.data[Fields.YEAR]
-            record = colrev.record.PrepRecord(data=main_record_dict)
+            prev_feed_record.data[Fields.YEAR] = record.data[Fields.YEAR]
 
-    def _missing_ignored_field(self, main_record_dict: dict, key: str) -> bool:
-        main_record = colrev.record.Record(data=main_record_dict)
+    def _missing_ignored_field(
+        self, main_record: colrev.record.Record, key: str
+    ) -> bool:
         source = main_record.get_masterdata_provenance_source(key)
         notes = main_record.get_masterdata_provenance_notes(key)
         if (
@@ -250,16 +232,15 @@ class SearchAPIFeed:
             return True
         return False
 
-    # pylint: disable=too-many-arguments
-    def _update_existing_record_fields(
+    def _update_record_fields(
         self,
         *,
-        record_dict: dict,
-        main_record_dict: dict,
-        prev_record_dict_version: dict,
+        record: colrev.record.Record,
+        main_record: colrev.record.Record,
+        prev_feed_record: colrev.record.Record,
         origin: str,
     ) -> None:
-        for key, value in record_dict.items():
+        for key, value in record.data.items():
             if (
                 not self.update_time_variant_fields
                 and key in FieldSet.TIME_VARIANT_FIELDS
@@ -269,11 +250,10 @@ class SearchAPIFeed:
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
                 continue
 
-            if key not in main_record_dict:
-                if self._missing_ignored_field(main_record_dict, key):
+            if key not in main_record.data:
+                if self._missing_ignored_field(main_record, key):
                     continue
 
-                main_record = colrev.record.Record(data=main_record_dict)
                 main_record.update_field(
                     key=key,
                     value=value,
@@ -283,11 +263,10 @@ class SearchAPIFeed:
                 )
             else:
                 if self.source.get_origin_prefix() != "md_curated.bib":
-                    if prev_record_dict_version.get(key, "NA") != main_record_dict.get(
+                    if prev_feed_record.data.get(key, "NA") != main_record.data.get(
                         key, "OTHER"
                     ):
                         continue
-                main_record = colrev.record.Record(data=main_record_dict)
                 if value.replace(" - ", ": ") == main_record.data[key].replace(
                     " - ", ": "
                 ):
@@ -306,94 +285,111 @@ class SearchAPIFeed:
                     append_edit=False,
                 )
 
-    def _forthcoming_published(self, *, record_dict: dict, prev_record: dict) -> bool:
-        # Forthcoming paper published if volume and number are assigned
-        # i.e., no longer UNKNOWN
-        if record_dict[Fields.ENTRYTYPE] != "article":
+    def _forthcoming_published(
+        self, *, record: colrev.record.Record, prev_record: colrev.record.Record
+    ) -> bool:
+        if record.data[Fields.ENTRYTYPE] != ENTRYTYPES.ARTICLE:
             return False
+        if Fields.YEAR not in record.data or Fields.YEAR not in prev_record.data:
+            return False
+
+        # Option 1: Forthcoming paper published if year is assigned
         if (
-            record_dict.get(Fields.VOLUME, "") != FieldValues.UNKNOWN
-            and prev_record.get(Fields.VOLUME, FieldValues.UNKNOWN)
+            "forthcoming" == prev_record.data[Fields.YEAR]
+            and "forthcoming" != record.data[Fields.YEAR]
+        ):
+            return True
+
+        # Option 2: Forthcoming paper published if volume and number are assigned
+        # i.e., no longer UNKNOWN
+        if (
+            record.data.get(Fields.VOLUME, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
+            and prev_record.data.get(Fields.VOLUME, FieldValues.UNKNOWN)
             == FieldValues.UNKNOWN
-            and record_dict.get(Fields.NUMBER, "") != FieldValues.UNKNOWN
-            and prev_record.get(Fields.VOLUME, FieldValues.UNKNOWN)
+            and record.data.get(Fields.NUMBER, FieldValues.UNKNOWN)
+            != FieldValues.UNKNOWN
+            and prev_record.data.get(Fields.VOLUME, FieldValues.UNKNOWN)
             == FieldValues.UNKNOWN
         ):
             return True
         return False
 
-    # pylint: disable=too-many-arguments
-    def _update_existing_record(
+    def _get_main_record(
+        self, retrieved_record: colrev.record.Record
+    ) -> colrev.record.Record:
+        main_record_dict: dict = {}
+        for record_dict in self.records.values():
+            if retrieved_record.data[Fields.ORIGIN][0] in record_dict[Fields.ORIGIN]:
+                main_record_dict = record_dict
+                break
+
+        if main_record_dict == {}:
+            raise colrev_exceptions.RecordNotFoundException(
+                f"Could not find/update {retrieved_record.data['ID']}"
+            )
+        return colrev.record.Record(data=main_record_dict)
+
+    def _update_record(
         self,
         *,
         retrieved_record: colrev.record.Record,
-        prev_record_version: colrev.record.Record,
+        prev_feed_record: colrev.record.Record,
     ) -> bool:
         """Convenience function to update existing records (main data/records.bib)"""
 
-        origin = f"{self.source.get_origin_prefix()}/{retrieved_record.data['ID']}"
-        main_record_dict = self._get_record_based_on_origin(
-            origin=origin, records=self.records
-        )
+        # Original record
+        colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
+        retrieved_record.data[Fields.ORIGIN] = [colrev_origin]
+        retrieved_record.add_provenance_all(source=colrev_origin)
 
-        if main_record_dict == {}:
-            self.review_manager.logger.debug(
-                f"Could not update {retrieved_record.data['ID']}"
-            )
-            return False
-
+        main_record = self._get_main_record(retrieved_record)
         # TBD: in curated masterdata repositories?
 
         retrieved_record.prefix_non_standardized_field_keys(prefix=self.source.endpoint)
-        changed = self._update_existing_record_retract(
-            record=retrieved_record, main_record_dict=main_record_dict
-        )
-        self._update_existing_record_forthcoming(
-            record=retrieved_record, main_record_dict=main_record_dict
+        changed = self._update_record_retract(
+            record=retrieved_record, main_record=main_record
         )
 
         if (
-            colrev.record.Record(data=main_record_dict).masterdata_is_curated()
+            main_record.masterdata_is_curated()
             and "md_curated.bib" != self.source.get_origin_prefix()
         ):
             return False
 
         similarity_score = colrev.record.Record.get_record_similarity(
             record_a=retrieved_record,
-            record_b=prev_record_version,
-        )
-        dict_diff = retrieved_record.get_diff(other_record=prev_record_version)
-
-        self._update_existing_record_fields(
-            record_dict=retrieved_record.data,
-            main_record_dict=main_record_dict,
-            prev_record_dict_version=prev_record_version.data,
-            origin=origin,
+            record_b=prev_feed_record,
         )
 
+        dict_diff = retrieved_record.get_diff(other_record=prev_feed_record)
+        self._update_record_fields(
+            record=retrieved_record,
+            main_record=main_record,
+            prev_feed_record=prev_feed_record,
+            origin=colrev_origin,
+        )
         if self._have_changed(
-            record_a_orig=main_record_dict, record_b_orig=prev_record_version.data
+            main_record, prev_feed_record
         ) or self._have_changed(  # Note : not (yet) in the main records but changed
-            record_a_orig=retrieved_record.data, record_b_orig=prev_record_version.data
+            retrieved_record, prev_feed_record
         ):
             changed = True
             self._nr_changed += 1
             if self._forthcoming_published(
-                record_dict=retrieved_record.data, prev_record=prev_record_version.data
+                record=retrieved_record, prev_record=prev_feed_record
             ):
-                self.review_manager.logger.info(
-                    f" {Colors.GREEN}forthcoming paper published: "
-                    f"{main_record_dict['ID']}{Colors.END}"
-                )
+                pass  # (notified when updating feed record)
             elif similarity_score > 0.98:
-                self.review_manager.logger.info(f" check/update {origin}")
+                self.review_manager.logger.info(f" check/update {colrev_origin}")
             else:
                 self.review_manager.logger.info(
-                    f" {Colors.RED} check/update {origin} leads to substantial changes "
-                    f"({similarity_score}) in {main_record_dict['ID']}:{Colors.END}"
+                    f" {Colors.RED} check/update {colrev_origin} leads to substantial changes "
+                    f"({similarity_score}) in {main_record.data['ID']}:{Colors.END}"
                 )
-                self.review_manager.p_printer.pprint(
-                    [x for x in dict_diff if "change" == x[0]]
+                self.review_manager.logger.info(
+                    self.review_manager.p_printer.pformat(
+                        [x for x in dict_diff if "change" == x[0]]
+                    )
                 )
 
         return changed
@@ -424,29 +420,30 @@ class SearchAPIFeed:
                     f"{Colors.GREEN}Records (data/records.bib) up-to-date{Colors.END}"
                 )
 
-    def get_prev_record_version(
+    def get_prev_feed_record(
         self, record: colrev.record.Record
     ) -> colrev.record.Record:
         """Get the previous record dict version"""
         record = deepcopy(record)
         self._set_id(record)
-        prev_record_dict_version = {}
+        prev_feed_record_dict = {}
         if record.data[Fields.ID] in self.feed_records:
-            prev_record_dict_version = deepcopy(
-                self.feed_records[record.data[Fields.ID]]
-            )
-        return colrev.record.Record(data=prev_record_dict_version)
+            prev_feed_record_dict = deepcopy(self.feed_records[record.data[Fields.ID]])
+        return colrev.record.Record(data=prev_feed_record_dict)
 
     def add_update_record(self, retrieved_record: colrev.record.Record) -> bool:
         """Add or update a record in the api_search_feed and records"""
 
-        prev_record_version = self._get_prev_record_version(retrieved_record)
-        added = self._add_record(retrieved_record)
+        prev_feed_record = self._get_prev_feed_record(retrieved_record)
+        added = self._add_record_to_feed(retrieved_record, prev_feed_record)
         if not self.prep_mode:
-            self._update_existing_record(
-                retrieved_record=retrieved_record,
-                prev_record_version=prev_record_version,
-            )
+            try:
+                self._update_record(
+                    retrieved_record=retrieved_record.copy(),
+                    prev_feed_record=prev_feed_record.copy(),
+                )
+            except colrev_exceptions.RecordNotFoundException:
+                pass
         return added
 
     def save(self, *, skip_print: bool = False) -> None:
@@ -480,3 +477,5 @@ class SearchAPIFeed:
 
         if not self.prep_mode:
             self.review_manager.dataset.save_records_dict(records=self.records)
+        self._nr_added = 0
+        self._nr_changed = 0

@@ -549,13 +549,10 @@ class Dataset:
                 if selected_ids is not None:
                     if record_id not in selected_ids:
                         continue
-                if (
-                    record_dict[Fields.STATUS]
-                    not in [
-                        RecordState.md_imported,
-                        RecordState.md_prepared,
-                    ]
-                ):
+                if record_dict[Fields.STATUS] not in [
+                    RecordState.md_imported,
+                    RecordState.md_prepared,
+                ]:
                     continue
                 old_id = record_id
 

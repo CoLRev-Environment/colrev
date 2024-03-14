@@ -372,6 +372,14 @@ class SearchSourceException(CoLRevException):
         super().__init__(self.message)
 
 
+class RecordNotFoundException(CoLRevException):
+    """Record not found in the main records file."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 # Load
 
 

@@ -672,7 +672,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> None:
         """Restore the url from the feed if it exists
         (url-resolution is not always available)"""
-        prev_record = feed.get_prev_record_version(record)
+        prev_record = feed.get_prev_feed_record(record)
         prev_url = prev_record.data.get(Fields.URL, None)
         if prev_url is None:
             return
