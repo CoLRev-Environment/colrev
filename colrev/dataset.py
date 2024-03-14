@@ -555,7 +555,6 @@ class Dataset:
                         RecordState.md_imported,
                         RecordState.md_prepared,
                     ]
-                    and not self.review_manager.force_mode
                 ):
                     continue
                 old_id = record_id
