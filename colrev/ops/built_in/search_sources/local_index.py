@@ -166,25 +166,22 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         local_index_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
 
-        for feed_record_dict_id in list(local_index_feed.feed_records.keys()):
+        for feed_record_dict in list(local_index_feed.feed_records.values()):
             try:
-                feed_record_dict = local_index_feed.feed_records[feed_record_dict_id]
-                feed_record = colrev.record.Record(data=feed_record_dict)
                 retrieved_record_dict = self.local_index.retrieve(
-                    record_dict=feed_record.get_data(), include_file=False
+                    record_dict=feed_record_dict, include_file=False
                 )
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-                local_index_feed.add_update_record(retrieved_record=retrieved_record)
-
+                local_index_feed.add_update_record(retrieved_record)
             except (
                 colrev_exceptions.RecordNotInIndexException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
 
-        for record_dict in local_index_feed.feed_records.values():
-            if "colrev.local_index.curation_ID" in record_dict:
-                del record_dict["colrev.local_index.curation_ID"]
+        for record_dict in local_index_feed.records.values():
+            record = colrev.record.Record(data=record_dict)
+            record.remove_field(key="colrev.local_index.curation_ID")
 
         local_index_feed.save()
 
@@ -197,14 +194,16 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         for retrieved_record_dict in self._retrieve_from_index():
             try:
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-                # del retrieved_record_dict[Fields.CURATION_ID]
-                local_index_feed.add_update_record(retrieved_record=retrieved_record)
+                local_index_feed.add_update_record(retrieved_record)
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
 
         for record_dict in local_index_feed.feed_records.values():
-            if "colrev.local_index.curation_ID" in record_dict:
-                del record_dict["colrev.local_index.curation_ID"]
+            record_dict.pop("colrev.local_index.curation_ID", None)
+            record_dict.pop("curation_ID", None)
+        for record_dict in local_index_feed.records.values():
+            record_dict.pop("colrev.local_index.curation_ID", None)
+            record_dict.pop("curation_ID", None)
 
         local_index_feed.save()
 
@@ -385,7 +384,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 prep_mode=True,
             )
 
-            local_index_feed.add_update_record(retrieved_record=retrieved_record)
+            local_index_feed.add_update_record(retrieved_record)
 
             retrieved_record.remove_field(key=Fields.CURATION_ID)
             record.merge(

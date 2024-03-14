@@ -197,7 +197,7 @@ class ERICSearchSource(JsonSchemaMixin):
         self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
         for record in self.get_query_return():
-            eric_feed.add_update_record(retrieved_record=record)
+            eric_feed.add_update_record(record)
 
         eric_feed.save()
 

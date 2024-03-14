@@ -108,10 +108,10 @@ def test_search_feed(  # type: ignore
     record_dict[Fields.TITLE] = (
         "Analyzing the past to prepare for the future: Writing a literature review"
     )
-    feed.add_update_record(retrieved_record=colrev.record.Record(data=record_dict))
+    feed.add_update_record(colrev.record.Record(data=record_dict))
 
-    feed.add_update_record(retrieved_record=colrev.record.Record(data=record_dict))
+    feed.add_update_record(colrev.record.Record(data=record_dict))
 
     record_dict["crossmark"] = True  # type: ignore
 
-    feed.add_update_record(retrieved_record=colrev.record.Record(data=record_dict))
+    feed.add_update_record(colrev.record.Record(data=record_dict))

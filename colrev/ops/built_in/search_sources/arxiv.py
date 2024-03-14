@@ -334,7 +334,7 @@ class ArXivSource:
 
                     prep_record = colrev.record.PrepRecord(data=record_dict)
 
-                    added = arxiv_feed.add_update_record(retrieved_record=prep_record)
+                    added = arxiv_feed.add_update_record(prep_record)
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
                     if not added and not rerun:
@@ -381,7 +381,7 @@ class ArXivSource:
     #     )
     # )
     #         retrieved_record = colrev.record.Record(data=retrieved_record)
-    #         arxiv_feed.add_update_record(retrieved_record=retrieved_record)
+    #         arxiv_feed.add_update_record(retrieved_record)
 
     #         changed = self.operation.update_existing_record(
     #             records=records,

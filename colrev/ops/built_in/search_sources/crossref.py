@@ -497,7 +497,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     prep_mode=True,
                 )
 
-                crossref_feed.add_update_record(retrieved_record=retrieved_record)
+                crossref_feed.add_update_record(retrieved_record)
 
                 record.merge(
                     merging_record=retrieved_record,
@@ -672,7 +672,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ) -> None:
         """Restore the url from the feed if it exists
         (url-resolution is not always available)"""
-        prev_record = feed.get_prev_record_version(record=record)
+        prev_record = feed.get_prev_record_version(record)
         prev_url = prev_record.data.get(Fields.URL, None)
         if prev_url is None:
             return
@@ -699,7 +699,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
 
                 self._restore_url(record=retrieved_record, feed=crossref_feed)
-                crossref_feed.add_update_record(retrieved_record=retrieved_record)
+                crossref_feed.add_update_record(retrieved_record)
 
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,

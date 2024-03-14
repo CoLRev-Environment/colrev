@@ -287,7 +287,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 prep_mode=True,
             )
 
-            open_library_feed.add_update_record(retrieved_record=retrieved_record)
+            open_library_feed.add_update_record(retrieved_record)
 
             record.merge(
                 merging_record=retrieved_record,

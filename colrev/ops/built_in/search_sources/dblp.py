@@ -403,7 +403,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     if retrieved_record.data.get("type", "") == "Editorship":
                         continue
 
-                    dblp_feed.add_update_record(retrieved_record=retrieved_record)
+                    dblp_feed.add_update_record(retrieved_record)
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
@@ -440,7 +440,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]:
                         continue
 
-                    dblp_feed.add_update_record(retrieved_record=retrieved_record)
+                    dblp_feed.add_update_record(retrieved_record)
 
                 except colrev_exceptions.NotFeedIdentifiableException as exc:
                     print(exc)
@@ -654,7 +654,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                         prep_mode=True,
                     )
 
-                    dblp_feed.add_update_record(retrieved_record=retrieved_record)
+                    dblp_feed.add_update_record(retrieved_record)
 
                     # TODO : extract as function (apply similarly in other search sources)
                     # Assign schema

@@ -273,7 +273,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         continue
 
                     prep_record = colrev.record.PrepRecord(data=record_dict)
-                    ais_feed.add_update_record(retrieved_record=prep_record)
+                    ais_feed.add_update_record(prep_record)
 
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue

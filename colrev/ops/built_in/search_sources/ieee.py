@@ -256,7 +256,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 record_dict = self._create_record_dict(article)
                 record = colrev.record.Record(data=record_dict)
 
-                ieee_feed.add_update_record(retrieved_record=record)
+                ieee_feed.add_update_record(record)
 
             query.startRecord += 200
             response = query.callAPI()

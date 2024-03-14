@@ -339,8 +339,6 @@ class FilesSearchSource(JsonSchemaMixin):
                         del record_dict[Fields.TEXT_FROM_PDF]
                     # else:
                     #     print(f'text extraction error in {record_dict[Fields.ID]}')
-                    if Fields.NR_PAGES_IN_FILE in record_dict:
-                        del record_dict[Fields.NR_PAGES_IN_FILE]
 
                 record_dict = {k: v for k, v in record_dict.items() if v is not None}
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
@@ -414,6 +412,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def _add_md_string(self, *, record_dict: dict) -> dict:
+        # To identify potential duplicates
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return record_dict
 
@@ -577,7 +576,8 @@ class FilesSearchSource(JsonSchemaMixin):
         local_index: colrev.env.local_index.LocalIndex,
         linked_file_paths: list,
     ) -> None:
-        for file_batch in self._get_file_batches():
+        file_batches = self._get_file_batches()
+        for i, file_batch in enumerate(file_batches):
             for record in files_dir_feed.feed_records.values():
                 record = self._add_md_string(record_dict=record)
 
@@ -591,7 +591,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 if new_record == {}:
                     continue
 
-                self._add_doi_from_pdf_if_not_available(record_dict=new_record)
+                self._add_doi_from_pdf_if_not_available(new_record)
                 retrieved_record = colrev.record.Record(data=new_record)
                 files_dir_feed.add_update_record(
                     retrieved_record=retrieved_record,
@@ -600,19 +600,20 @@ class FilesSearchSource(JsonSchemaMixin):
             for record in files_dir_feed.feed_records.values():
                 record.pop("md_string")
 
-            files_dir_feed.save()
+            last_round = i == len(file_batches) - 1
+            files_dir_feed.save(skip_print=not last_round)
 
-    def _add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
+    def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        if Fields.DOI in record_dict:
-            return
         record = colrev.record.Record(data=record_dict)
-        record.set_text_from_pdf()
-        res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
-        if res:
-            record.data[Fields.DOI] = res[0].upper()
-        del record.data[Fields.TEXT_FROM_PDF]
+        if Fields.DOI not in record_dict:
+            record.set_text_from_pdf()
+            res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
+            if res:
+                record.data[Fields.DOI] = res[0].upper()
+        record.data.pop(Fields.TEXT_FROM_PDF, None)
+        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
     def run_search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""

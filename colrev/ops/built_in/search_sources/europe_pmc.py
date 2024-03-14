@@ -458,7 +458,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
 
-                    europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
+                    europe_pmc_feed.add_update_record(retrieved_record)
 
                 url = "END"
                 next_page_url_node = root.find("nextPageUrl")

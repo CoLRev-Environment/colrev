@@ -641,6 +641,10 @@ class LocalIndex:
                 print(f"Removing deprecated field: {deprecated_field}")
                 del record_dict[deprecated_field]
 
+        for field in ["note", "link"]:
+            if field in record_dict:
+                del record_dict[field]
+
         if Fields.SCREENING_CRITERIA in record_dict:
             del record_dict[Fields.SCREENING_CRITERIA]
         # Note: if the colrev_pdf_id has not been checked,

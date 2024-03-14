@@ -48,7 +48,7 @@ class CustomSearch:
             Fields.YEAR: "2020",
         }
 
-        feed.add_update_record(retrieved_record=retrieved_record)
+        feed.add_update_record(retrieved_record)
         feed.save()
 
     @classmethod

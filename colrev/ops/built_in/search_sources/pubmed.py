@@ -438,7 +438,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     prep_mode=True,
                 )
 
-                pubmed_feed.add_update_record(retrieved_record=retrieved_record)
+                pubmed_feed.add_update_record(retrieved_record)
 
                 record.merge(
                     merging_record=retrieved_record,
@@ -557,7 +557,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     if Fields.D_PROV in prep_record.data:
                         del prep_record.data[Fields.D_PROV]
 
-                    added = pubmed_feed.add_update_record(retrieved_record=prep_record)
+                    added = pubmed_feed.add_update_record(prep_record)
 
                     # Note : only retrieve/update the latest deposits (unless in rerun mode)
                     if not added and not rerun:
@@ -598,7 +598,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 if retrieved_record_dict["pubmedid"] != feed_record.data["pubmedid"]:
                     continue
                 retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-                pubmed_feed.add_update_record(retrieved_record=retrieved_record)
+                pubmed_feed.add_update_record(retrieved_record)
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,

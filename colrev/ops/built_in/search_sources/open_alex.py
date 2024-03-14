@@ -196,7 +196,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 prep_mode=True,
             )
 
-            open_alex_feed.add_update_record(retrieved_record=retrieved_record)
+            open_alex_feed.add_update_record(retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
                 qm=self.review_manager.get_qm(),

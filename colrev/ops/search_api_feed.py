@@ -58,42 +58,45 @@ class SearchAPIFeed:
         self.review_manager = review_manager
         self.origin_prefix = self.source.get_origin_prefix()
 
-        self._available_ids = {}
-        self._max_id = 1
-        if not self.feed_file.is_file():
-            self.feed_records = {}
-        else:
-            self.feed_records = colrev.loader.load_utils.loads(
-                load_string=self.feed_file.read_text(encoding="utf8"),
-                implementation="bib",
-                logger=self.review_manager.logger,
-            )
+        self._load_feed()
 
-            self._available_ids = {
-                x[self.source_identifier]: x[Fields.ID]
-                for x in self.feed_records.values()
-                if self.source_identifier in x
-            }
-            self._max_id = (
-                max(
-                    [
-                        int(x[Fields.ID])
-                        for x in self.feed_records.values()
-                        if x[Fields.ID].isdigit()
-                    ]
-                    + [1]
-                )
-                + 1
-            )
         self.prep_mode = prep_mode
         if not prep_mode:
             self.records = self.review_manager.dataset.load_records_dict()
 
+    def _load_feed(self) -> None:
+        if not self.feed_file.is_file():
+            self._available_ids = {}
+            self._max_id = 1
+            self.feed_records = {}
+            return
+        self.feed_records = colrev.loader.load_utils.loads(
+            load_string=self.feed_file.read_text(encoding="utf8"),
+            implementation="bib",
+            logger=self.review_manager.logger,
+        )
+        self._available_ids = {
+            x[self.source_identifier]: x[Fields.ID]
+            for x in self.feed_records.values()
+            if self.source_identifier in x
+        }
+        self._max_id = (
+            max(
+                [
+                    int(x[Fields.ID])
+                    for x in self.feed_records.values()
+                    if x[Fields.ID].isdigit()
+                ]
+                + [1]
+            )
+            + 1
+        )
+
     def _get_prev_record_version(
-        self, *, retrieved_record: colrev.record.Record
+        self, retrieved_record: colrev.record.Record
     ) -> colrev.record.Record:
         """Get the previous record dict version"""
-        self._set_id(record=retrieved_record)
+        self._set_id(retrieved_record)
 
         prev_record_dict_version = {}
         if retrieved_record.data[Fields.ID] in self.feed_records:
@@ -102,7 +105,7 @@ class SearchAPIFeed:
             )
         return colrev.record.Record(data=prev_record_dict_version)
 
-    def _set_id(self, *, record: colrev.record.Record) -> None:
+    def _set_id(self, record: colrev.record.Record) -> None:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
@@ -117,37 +120,10 @@ class SearchAPIFeed:
         else:
             record.data[Fields.ID] = str(self._max_id).rjust(6, "0")
 
-    def add_update_record(self, *, retrieved_record: colrev.record.Record) -> bool:
-        """Add or update a record in the api_search_feed and records"""
-
-        prev_record_version = self._get_prev_record_version(
-            retrieved_record=retrieved_record
-        )
-        added = self._add_record(record=retrieved_record)
-        if not self.prep_mode:
-            self._update_existing_record(
-                retrieved_record=retrieved_record,
-                prev_record_version=prev_record_version,
-            )
-        return added
-
-    def get_prev_record_version(
-        self, *, record: colrev.record.Record
-    ) -> colrev.record.Record:
-        """Get the previous record dict version"""
-        record = deepcopy(record)
-        self._set_id(record=record)
-        prev_record_dict_version = {}
-        if record.data[Fields.ID] in self.feed_records:
-            prev_record_dict_version = deepcopy(
-                self.feed_records[record.data[Fields.ID]]
-            )
-        return colrev.record.Record(data=prev_record_dict_version)
-
-    def _add_record(self, *, record: colrev.record.Record) -> bool:
+    def _add_record(self, record: colrev.record.Record) -> bool:
         """Add a record to the feed and set its colrev_origin"""
 
-        self._set_id(record=record)
+        self._set_id(record)
 
         # Feed:
         feed_record_dict = record.data.copy()
@@ -187,43 +163,6 @@ class SearchAPIFeed:
         record.add_provenance_all(source=colrev_origin)
 
         return added_new
-
-    def save(self) -> None:
-        """Save the feed file and records, printing post-run search infos."""
-
-        self._print_post_run_search_infos()
-        search_operation = self.review_manager.get_search_operation()
-        if len(self.feed_records) > 0:
-            self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-
-            write_file(records_dict=self.feed_records, filename=self.feed_file)
-
-            while True:
-                try:
-                    search_operation.review_manager.load_settings()
-                    if self.source.filename.name not in [
-                        s.filename.name
-                        for s in search_operation.review_manager.settings.sources
-                    ]:
-                        search_operation.review_manager.settings.sources.append(
-                            self.source
-                        )
-                        search_operation.review_manager.save_settings()
-
-                    search_operation.review_manager.dataset.add_changes(
-                        path=self.feed_file
-                    )
-                    break
-                except (
-                    FileExistsError,
-                    OSError,
-                    json.decoder.JSONDecodeError,
-                ):  # pragma: no cover
-                    search_operation.review_manager.logger.debug("Wait for git")
-                    time.sleep(randint(1, 15))  # nosec
-
-        if not self.prep_mode:
-            self.review_manager.dataset.save_records_dict(records=self.records)
 
     def _have_changed(self, *, record_a_orig: dict, record_b_orig: dict) -> bool:
         # To ignore changes introduced by saving/loading the feed-records,
@@ -484,3 +423,60 @@ class SearchAPIFeed:
                 self.review_manager.logger.info(
                     f"{Colors.GREEN}Records (data/records.bib) up-to-date{Colors.END}"
                 )
+
+    def get_prev_record_version(
+        self, record: colrev.record.Record
+    ) -> colrev.record.Record:
+        """Get the previous record dict version"""
+        record = deepcopy(record)
+        self._set_id(record)
+        prev_record_dict_version = {}
+        if record.data[Fields.ID] in self.feed_records:
+            prev_record_dict_version = deepcopy(
+                self.feed_records[record.data[Fields.ID]]
+            )
+        return colrev.record.Record(data=prev_record_dict_version)
+
+    def add_update_record(self, retrieved_record: colrev.record.Record) -> bool:
+        """Add or update a record in the api_search_feed and records"""
+
+        prev_record_version = self._get_prev_record_version(retrieved_record)
+        added = self._add_record(retrieved_record)
+        if not self.prep_mode:
+            self._update_existing_record(
+                retrieved_record=retrieved_record,
+                prev_record_version=prev_record_version,
+            )
+        return added
+
+    def save(self, *, skip_print: bool = False) -> None:
+        """Save the feed file and records, printing post-run search infos."""
+
+        if not skip_print and not self.prep_mode:
+            self._print_post_run_search_infos()
+
+        if len(self.feed_records) > 0:
+            self.feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            write_file(records_dict=self.feed_records, filename=self.feed_file)
+
+            while True:
+                try:
+                    self.review_manager.load_settings()
+                    if self.source.filename.name not in [
+                        s.filename.name for s in self.review_manager.settings.sources
+                    ]:
+                        self.review_manager.settings.sources.append(self.source)
+                        self.review_manager.save_settings()
+
+                    self.review_manager.dataset.add_changes(path=self.feed_file)
+                    break
+                except (
+                    FileExistsError,
+                    OSError,
+                    json.decoder.JSONDecodeError,
+                ):  # pragma: no cover
+                    self.review_manager.logger.debug("Wait for git")
+                    time.sleep(randint(1, 15))  # nosec
+
+        if not self.prep_mode:
+            self.review_manager.dataset.save_records_dict(records=self.records)
