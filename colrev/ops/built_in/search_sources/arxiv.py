@@ -388,7 +388,6 @@ class ArXivSource:
     #             record_dict=retrieved_record,
     #             prev_record_dict_version=prev_record_dict_version,
     #             source=self.search_source,
-    #             update_time_variant_fields=True,
     #         )
     #         if changed:
     #             arxiv_feed.nr_changed += 1
@@ -407,7 +406,6 @@ class ArXivSource:
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            update_time_variant_fields=rerun,
         )
 
         # if self.search_source.search_type == colrev.settings.SearchType.MD:

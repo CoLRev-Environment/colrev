@@ -13,6 +13,7 @@ import colrev.record
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
@@ -1216,6 +1217,7 @@ def test_prescreen_exclude() -> None:
         Fields.JOURNAL: "MIS Quarterly",
         Fields.PAGES: "1--3",
         Fields.PRESCREEN_EXCLUSION: "retracted",
+        Fields.RETRACTED: FieldValues.RETRACTED,
     }
 
     actual = r1_mod.data

@@ -105,9 +105,9 @@ def _flag_retracts(*, record_dict: dict) -> dict:
     if "update-to" in record_dict:
         for update_item in record_dict["update-to"]:
             if update_item["type"] == "retraction":
-                record_dict["warning"] = FieldValues.RETRACTED
+                record_dict[Fields.RETRACTED] = FieldValues.RETRACTED
     if "(retracted)" in record_dict.get(Fields.TITLE, "").lower():
-        record_dict["warning"] = FieldValues.RETRACTED
+        record_dict[Fields.RETRACTED] = FieldValues.RETRACTED
     return record_dict
 
 

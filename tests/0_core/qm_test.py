@@ -1405,6 +1405,7 @@ def test_retracted(
     r1_mod.run_quality_model(qm=quality_model)
     expected = v_t_record.copy_prep_rec()
     expected.data[Fields.PRESCREEN_EXCLUSION] = "retracted"
+    expected.data[Fields.RETRACTED] = FieldValues.RETRACTED
     expected.data[Fields.STATUS] = RecordState.rev_prescreen_excluded
     expected.data[Fields.MD_PROV] = {}
     # expected = {

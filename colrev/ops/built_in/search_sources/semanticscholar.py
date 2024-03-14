@@ -293,7 +293,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            update_time_variant_fields=rerun,
         )
         # rerun not implemented yet
         if rerun:

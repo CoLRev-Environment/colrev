@@ -328,7 +328,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         review_manager=prep_operation.review_manager,
                         source_identifier=self.source_identifier,
                         update_only=False,
-                        update_time_variant_fields=False,
                         prep_mode=True,
                     )
                     try:
@@ -384,7 +383,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            update_time_variant_fields=rerun,
         )
 
         if self.search_source.search_type == colrev.settings.SearchType.API:

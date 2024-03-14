@@ -39,7 +39,6 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         review_manager=search_operation.review_manager,
         source_identifier="bws_id",
         update_only=False,
-        update_time_variant_fields=False,
     )
 
     # print list

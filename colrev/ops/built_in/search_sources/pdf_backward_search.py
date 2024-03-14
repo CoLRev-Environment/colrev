@@ -425,7 +425,6 @@ class BackwardSearchSource(JsonSchemaMixin):
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            update_time_variant_fields=rerun,
         )
 
         for item in selected_references.to_dict(orient="records"):

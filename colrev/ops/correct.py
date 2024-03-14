@@ -90,6 +90,7 @@ class Corrections:
         corrected_record: dict,
     ) -> None:
         # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
 
         self._prep_for_change_item_creation(
             original_record=original_record,

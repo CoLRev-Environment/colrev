@@ -283,7 +283,6 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 review_manager=prep_operation.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
-                update_time_variant_fields=False,
                 prep_mode=True,
             )
 

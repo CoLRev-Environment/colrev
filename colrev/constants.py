@@ -117,6 +117,7 @@ class Fields:
 
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
+    RETRACTED = "retracted"
 
     # References and citations
     # First-level references (backward) and citations (forward) can be stored in the record.
@@ -199,6 +200,7 @@ class FieldSet:
             Fields.DATE,
             Fields.SCHOOL,
             Fields.ADDRESS,
+            Fields.RETRACTED,
         ]
     )
     """Standardized field keys"""

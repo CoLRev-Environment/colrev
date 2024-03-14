@@ -36,7 +36,6 @@ class SearchAPIFeed:
         source_identifier: str,
         search_source: colrev.settings.SearchSource,
         update_only: bool,
-        update_time_variant_fields: bool = True,
         prep_mode: bool = False,
     ):
         self.source = search_source
@@ -55,7 +54,9 @@ class SearchAPIFeed:
 
         # Note: corresponds to rerun (in search.main() and run_search())
         self.update_only = update_only
-        self.update_time_variant_fields = update_time_variant_fields
+        # if update_only, we do not update time_variant_fields
+        # (otherwise, fields in recent records would be more up-to-date)
+
         self.review_manager = review_manager
         self.origin_prefix = self.source.get_origin_prefix()
 
@@ -68,7 +69,7 @@ class SearchAPIFeed:
     def _load_feed(self) -> None:
         if not self.feed_file.is_file():
             self._available_ids = {}
-            self._max_id = 1
+            self._next_incremental_id = 1
             self.feed_records = {}
             return
         self.feed_records = colrev.loader.load_utils.loads(
@@ -81,7 +82,7 @@ class SearchAPIFeed:
             for x in self.feed_records.values()
             if self.source_identifier in x
         }
-        self._max_id = (
+        self._next_incremental_id = (
             max(
                 [
                     int(x[Fields.ID])
@@ -119,7 +120,7 @@ class SearchAPIFeed:
                 record.data[self.source_identifier]
             ]
         else:
-            record.data[Fields.ID] = str(self._max_id).rjust(6, "0")
+            record.data[Fields.ID] = str(self._next_incremental_id).rjust(6, "0")
 
     def _add_record_to_feed(
         self, record: colrev.record.Record, prev_feed_record: colrev.record.Record
@@ -133,12 +134,9 @@ class SearchAPIFeed:
         if feed_record_dict[self.source_identifier] in self._available_ids:
             added_new = False
         else:
-            self._max_id += 1
+            self._next_incremental_id += 1
             self._nr_added += 1
 
-        for provenance_key in FieldSet.PROVENANCE_KEYS:
-            if provenance_key in feed_record_dict:
-                del feed_record_dict[provenance_key]
         frid = feed_record_dict[Fields.ID]
         self._available_ids[feed_record_dict[self.source_identifier]] = frid
 
@@ -147,15 +145,11 @@ class SearchAPIFeed:
         )
 
         if self.update_only:
-            # ignore time_variant_fields
-            # (otherwise, fields in recent records would be more up-to-date)
             for key in FieldSet.TIME_VARIANT_FIELDS:
                 if frid in self.feed_records:
+                    feed_record_dict.pop(key, None)
                     if key in self.feed_records[frid]:
                         feed_record_dict[key] = self.feed_records[frid][key]
-                    else:
-                        if key in feed_record_dict:
-                            del feed_record_dict[key]
 
         self.feed_records[frid] = feed_record_dict
         return added_new
@@ -188,9 +182,7 @@ class SearchAPIFeed:
         for key, value in record_b_dict.items():
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
                 continue
-            if key not in record_a_dict:
-                return True
-            if record_a_dict[key] != value:
+            if key not in record_a_dict or record_a_dict[key] != value:
                 return True
         return changed
 
@@ -199,7 +191,7 @@ class SearchAPIFeed:
     ) -> bool:
         if record.is_retracted():
             self.review_manager.logger.info(
-                f"{Colors.GREEN}Found paper retract: "
+                f"{Colors.RED}Found paper retract: "
                 f"{main_record.data['ID']}{Colors.END}"
             )
             main_record.prescreen_exclude(
@@ -241,10 +233,7 @@ class SearchAPIFeed:
         origin: str,
     ) -> None:
         for key, value in record.data.items():
-            if (
-                not self.update_time_variant_fields
-                and key in FieldSet.TIME_VARIANT_FIELDS
-            ):
+            if self.update_only and key in FieldSet.TIME_VARIANT_FIELDS:
                 continue
 
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.CURATION_ID]:
@@ -271,12 +260,6 @@ class SearchAPIFeed:
                     " - ", ": "
                 ):
                     continue
-                if (
-                    key == Fields.URL
-                    and "dblp.org" in value
-                    and key in main_record.data
-                ):
-                    continue
                 main_record.update_field(
                     key=key,
                     value=value,
@@ -288,9 +271,11 @@ class SearchAPIFeed:
     def _forthcoming_published(
         self, *, record: colrev.record.Record, prev_record: colrev.record.Record
     ) -> bool:
-        if record.data[Fields.ENTRYTYPE] != ENTRYTYPES.ARTICLE:
-            return False
-        if Fields.YEAR not in record.data or Fields.YEAR not in prev_record.data:
+        if (
+            record.data[Fields.ENTRYTYPE] != ENTRYTYPES.ARTICLE
+            or Fields.YEAR not in record.data
+            or Fields.YEAR not in prev_record.data
+        ):
             return False
 
         # Option 1: Forthcoming paper published if year is assigned
@@ -317,6 +302,7 @@ class SearchAPIFeed:
     def _get_main_record(
         self, retrieved_record: colrev.record.Record
     ) -> colrev.record.Record:
+
         main_record_dict: dict = {}
         for record_dict in self.records.values():
             if retrieved_record.data[Fields.ORIGIN][0] in record_dict[Fields.ORIGIN]:
@@ -337,13 +323,11 @@ class SearchAPIFeed:
     ) -> bool:
         """Convenience function to update existing records (main data/records.bib)"""
 
-        # Original record
         colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
         retrieved_record.data[Fields.ORIGIN] = [colrev_origin]
         retrieved_record.add_provenance_all(source=colrev_origin)
 
         main_record = self._get_main_record(retrieved_record)
-        # TBD: in curated masterdata repositories?
 
         retrieved_record.prefix_non_standardized_field_keys(prefix=self.source.endpoint)
         changed = self._update_record_retract(
@@ -431,10 +415,17 @@ class SearchAPIFeed:
             prev_feed_record_dict = deepcopy(self.feed_records[record.data[Fields.ID]])
         return colrev.record.Record(data=prev_feed_record_dict)
 
+    def _prep_retrieved_record(self, retrieved_record: colrev.record.Record) -> None:
+        """Prepare the retrieved record for the search feed"""
+        for provenance_key in FieldSet.PROVENANCE_KEYS:
+            if provenance_key in retrieved_record.data:
+                del retrieved_record.data[provenance_key]
+
     def add_update_record(self, retrieved_record: colrev.record.Record) -> bool:
         """Add or update a record in the api_search_feed and records"""
-
+        self._prep_retrieved_record(retrieved_record)
         prev_feed_record = self._get_prev_feed_record(retrieved_record)
+
         added = self._add_record_to_feed(retrieved_record, prev_feed_record)
         if not self.prep_mode:
             try:

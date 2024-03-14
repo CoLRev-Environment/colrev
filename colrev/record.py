@@ -1322,6 +1322,7 @@ class Record:
                 f"\n{Colors.RED}Paper retracted and prescreen "
                 f"excluded: {self.data['ID']}{Colors.END}\n"
             )
+            self.data[Fields.RETRACTED] = FieldValues.RETRACTED
 
         self.data[Fields.PRESCREEN_EXCLUSION] = reason
 
@@ -1560,10 +1561,19 @@ class Record:
 
     def is_retracted(self) -> bool:
         """Check for potential retracts"""
-        # Note : we retrieved metadata in get_masterdata_from_crossref()
-        if self.data.get("crossmark", "") == "True":
+
+        if Fields.RETRACTED in self.data:
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
+            return True
+
+        # Legacy
+        if (
+            self.data.get("crossmark", "") == "True"
+            or self.data.get("colrev.crossref.crossmark", "") == "True"
+        ):
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="crossmark")
+            self.remove_field(key="colrev.crossref.crossmark")
             return True
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
