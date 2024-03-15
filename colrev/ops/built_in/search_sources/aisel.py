@@ -422,7 +422,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         )
 
         for record_dict in records.values():
-            record_dict.pop("type")
+            record_dict.pop("type", None)
 
         return records
 
