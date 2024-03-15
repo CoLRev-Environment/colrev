@@ -210,6 +210,11 @@ class SearchSource(JsonSchemaMixin):
 
         return str(self.filename.name).startswith("md_")
 
+    def is_curated_source(self) -> bool:
+        """Check whether the source is a curated source (for preparation)"""
+
+        return self.get_origin_prefix() == "md_curated.bib"
+
     def get_query(self) -> str:
         """Get the query filepath"""
         if "query_file" not in self.search_parameters:

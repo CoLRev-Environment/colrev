@@ -14,6 +14,7 @@ import colrev.review_manager
 import colrev.settings
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
+from colrev.constants import FieldValues
 
 # flake8: noqa: E501
 
@@ -61,6 +62,12 @@ def test_search_feed_update(  # type: ignore
     search_feed.add_update_record(
         retrieved_record=colrev.record.Record(data=record_dict)
     )
+
+    # Explitly add to records (usually done by the load operation)
+    main_record = deepcopy(record_dict)
+    main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
+    search_feed.records = {main_record[Fields.ID]: main_record}
+
     search_feed.save()
 
     # Second "iteration"
@@ -114,11 +121,18 @@ def test_search_feed_update_fields(  # type: ignore
     search_feed.add_update_record(
         retrieved_record=colrev.record.Record(data=record_dict)
     )
+
+    # Explitly add to records (usually done by the load operation)
+    main_record = deepcopy(record_dict)
+    main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
+    search_feed.records = {main_record[Fields.ID]: main_record}
+
     record_dict[Fields.CITED_BY] = "13"
     search_feed.add_update_record(
         retrieved_record=colrev.record.Record(data=record_dict)
     )
     assert search_feed.feed_records["000001"][Fields.CITED_BY] == "12"
+    assert search_feed.records["000001"][Fields.CITED_BY] == "12"
 
     # Time-variant fields like cited-by should only change if all records are retrieved (update_only=False)
     search_feed.update_only = False
@@ -126,6 +140,44 @@ def test_search_feed_update_fields(  # type: ignore
         retrieved_record=colrev.record.Record(data=record_dict)
     )
     assert search_feed.feed_records["000001"][Fields.CITED_BY] == "13"
+
+
+def test_search_feed_preventing_updates_of_curated_records_from_non_curated_feeds(  # type: ignore
+    search_feed,
+) -> None:
+    """Test the search feed: it should prevent updating curated records from non-curated sources"""
+    search_feed.update_only = True
+    # Usual setup: repeated retrieval/updating of feed records
+    record_dict = {
+        Fields.ID: "0001",
+        Fields.ENTRYTYPE: "article",
+        Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
+        Fields.DOI: "10.111/2222",
+    }
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
+
+    # Explitly add to records (usually done by the load operation)
+    main_record = deepcopy(record_dict)
+    main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
+    main_record[Fields.MD_PROV] = {FieldValues.CURATED: "https:..."}  # type: ignore
+    search_feed.records = {main_record[Fields.ID]: main_record}
+
+    record_dict[Fields.TITLE] = "Analyzing the past to prepare for the future"
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
+    # The feed record should change
+    assert (
+        search_feed.feed_records["000001"][Fields.TITLE]
+        == "Analyzing the past to prepare for the future"
+    )
+    # The main record should not change
+    assert (
+        search_feed.records["000001"][Fields.TITLE]
+        == "Analyzing the past to prepare for the future: Writing a literature review"
+    )
 
 
 def test_search_feed_update_fields_prov_removal(  # type: ignore
@@ -150,7 +202,7 @@ def test_search_feed_update_fields_prov_removal(  # type: ignore
 
 
 def test_search_feed_save(search_feed, caplog) -> None:  # type: ignore
-    """Test the search feed with info on forthcoming publication"""
+    """Test the search feed save"""
 
     record_dict = {
         Fields.ID: "0001",
@@ -183,6 +235,12 @@ def test_search_feed_published_forthcoming_1(search_feed, caplog) -> None:  # ty
     search_feed.add_update_record(
         retrieved_record=colrev.record.Record(data=record_dict)
     )
+
+    # Explitly add to records (usually done by the load operation)
+    main_record = deepcopy(record_dict)
+    main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
+    search_feed.records = {main_record[Fields.ID]: main_record}
+
     search_feed.save()
 
     record_dict = {
@@ -200,6 +258,9 @@ def test_search_feed_published_forthcoming_1(search_feed, caplog) -> None:  # ty
             retrieved_record=colrev.record.Record(data=record_dict)
         )
         assert "Update published forthcoming paper" in caplog.text
+
+    assert search_feed.records["000001"][Fields.YEAR] == "2002"
+    assert search_feed.feed_records["000001"][Fields.YEAR] == "2002"
 
 
 def test_search_feed_published_forthcoming_2(search_feed, caplog) -> None:  # type: ignore
@@ -234,6 +295,49 @@ def test_search_feed_published_forthcoming_2(search_feed, caplog) -> None:  # ty
             retrieved_record=colrev.record.Record(data=record_dict)
         )
         assert "Update published forthcoming paper" in caplog.text
+
+
+def test_search_feed_minor_change(search_feed, caplog) -> None:  # type: ignore
+    """Test the search feed with a minor change"""
+
+    record_dict = {
+        Fields.ID: "0001",
+        Fields.ENTRYTYPE: "article",
+        Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.AUTHOR: "Webster, J and Watoson, R",
+        Fields.DOI: "10.111/2222",
+        Fields.YEAR: "2002",
+        Fields.VOLUME: "12",
+        Fields.NUMBER: "2",
+    }
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
+    search_feed.save()
+
+    main_record = deepcopy(record_dict)
+    main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
+    search_feed.records = {main_record[Fields.ID]: main_record}
+
+    record_dict = {
+        Fields.ID: "0001",
+        Fields.ENTRYTYPE: "article",
+        Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature reviews",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.AUTHOR: "Webster, J and Watoson, R",
+        Fields.DOI: "10.111/2222",
+        Fields.YEAR: "2002",
+        Fields.VOLUME: "12",
+        Fields.NUMBER: "2",
+    }
+
+    search_feed.review_manager.logger.propagate = True
+    with caplog.at_level(logging.INFO):
+        search_feed.add_update_record(
+            retrieved_record=colrev.record.Record(data=record_dict)
+        )
+        assert "check/update" in caplog.text
 
 
 def test_search_feed_retracted(search_feed, caplog) -> None:  # type: ignore

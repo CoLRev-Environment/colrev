@@ -140,7 +140,7 @@ class SearchAPIFeed:
         frid = feed_record_dict[Fields.ID]
         self._available_ids[feed_record_dict[self.source_identifier]] = frid
 
-        self._update_record_forthcoming(
+        self._notify_record_forthcoming(
             record=record, prev_feed_record=prev_feed_record
         )
 
@@ -201,7 +201,7 @@ class SearchAPIFeed:
             return True
         return False
 
-    def _update_record_forthcoming(
+    def _notify_record_forthcoming(
         self, *, record: colrev.record.Record, prev_feed_record: colrev.record.Record
     ) -> None:
 
@@ -210,7 +210,6 @@ class SearchAPIFeed:
                 f"{Colors.GREEN}Update published forthcoming paper: "
                 f"{record.data['ID']}{Colors.END}"
             )
-            prev_feed_record.data[Fields.YEAR] = record.data[Fields.YEAR]
 
     def _missing_ignored_field(
         self, main_record: colrev.record.Record, key: str
@@ -229,9 +228,14 @@ class SearchAPIFeed:
         *,
         record: colrev.record.Record,
         main_record: colrev.record.Record,
-        prev_feed_record: colrev.record.Record,
         origin: str,
     ) -> None:
+
+        self._update_record_retract(record=record, main_record=main_record)
+
+        if main_record.masterdata_is_curated() and not self.source.is_curated_source():
+            return
+
         for key, value in record.data.items():
             if self.update_only and key in FieldSet.TIME_VARIANT_FIELDS:
                 continue
@@ -251,11 +255,7 @@ class SearchAPIFeed:
                     append_edit=False,
                 )
             else:
-                if self.source.get_origin_prefix() != "md_curated.bib":
-                    if prev_feed_record.data.get(key, "NA") != main_record.data.get(
-                        key, "OTHER"
-                    ):
-                        continue
+                # Ignore minor changes
                 if value.replace(" - ", ": ") == main_record.data[key].replace(
                     " - ", ": "
                 ):
@@ -300,18 +300,18 @@ class SearchAPIFeed:
         return False
 
     def _get_main_record(
-        self, retrieved_record: colrev.record.Record
+        self, colrev_origin: str
     ) -> colrev.record.Record:
 
         main_record_dict: dict = {}
         for record_dict in self.records.values():
-            if retrieved_record.data[Fields.ORIGIN][0] in record_dict[Fields.ORIGIN]:
+            if colrev_origin in record_dict[Fields.ORIGIN]:
                 main_record_dict = record_dict
                 break
 
         if main_record_dict == {}:
             raise colrev_exceptions.RecordNotFoundException(
-                f"Could not find/update {retrieved_record.data['ID']}"
+                f"Could not find/update {colrev_origin}"
             )
         return colrev.record.Record(data=main_record_dict)
 
@@ -320,52 +320,38 @@ class SearchAPIFeed:
         *,
         retrieved_record: colrev.record.Record,
         prev_feed_record: colrev.record.Record,
-    ) -> bool:
+    ) -> None:
         """Convenience function to update existing records (main data/records.bib)"""
 
         colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
-        retrieved_record.data[Fields.ORIGIN] = [colrev_origin]
-        retrieved_record.add_provenance_all(source=colrev_origin)
-
-        main_record = self._get_main_record(retrieved_record)
-
+        # retrieved_record.data[Fields.ORIGIN] = [colrev_origin]
+        # retrieved_record.add_provenance_all(source=colrev_origin)
         retrieved_record.prefix_non_standardized_field_keys(prefix=self.source.endpoint)
-        changed = self._update_record_retract(
-            record=retrieved_record, main_record=main_record
-        )
 
-        if (
-            main_record.masterdata_is_curated()
-            and "md_curated.bib" != self.source.get_origin_prefix()
-        ):
-            return False
+        main_record = self._get_main_record(colrev_origin)
 
-        similarity_score = colrev.record.Record.get_record_similarity(
-            record_a=retrieved_record,
-            record_b=prev_feed_record,
-        )
-
-        dict_diff = retrieved_record.get_diff(other_record=prev_feed_record)
         self._update_record_fields(
             record=retrieved_record,
             main_record=main_record,
-            prev_feed_record=prev_feed_record,
             origin=colrev_origin,
         )
-        if self._have_changed(
-            main_record, prev_feed_record
-        ) or self._have_changed(  # Note : not (yet) in the main records but changed
-            retrieved_record, prev_feed_record
+
+        if self._forthcoming_published(
+            record=retrieved_record, prev_record=prev_feed_record
         ):
-            changed = True
+            # (notified when updating feed record)
+            return
+
+        if self._have_changed(retrieved_record, prev_feed_record):
+            similarity_score = colrev.record.Record.get_record_similarity(
+                record_a=retrieved_record,
+                record_b=prev_feed_record,
+            )
             self._nr_changed += 1
-            if self._forthcoming_published(
-                record=retrieved_record, prev_record=prev_feed_record
-            ):
-                pass  # (notified when updating feed record)
-            elif similarity_score > 0.98:
+            if similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {colrev_origin}")
             else:
+                dict_diff = retrieved_record.get_diff(other_record=prev_feed_record)
                 self.review_manager.logger.info(
                     f" {Colors.RED} check/update {colrev_origin} leads to substantial changes "
                     f"({similarity_score}) in {main_record.data['ID']}:{Colors.END}"
@@ -375,8 +361,6 @@ class SearchAPIFeed:
                         [x for x in dict_diff if "change" == x[0]]
                     )
                 )
-
-        return changed
 
     def _print_post_run_search_infos(self) -> None:
         """Print the search infos (after running the search)"""
@@ -389,12 +373,12 @@ class SearchAPIFeed:
                 f"{Colors.GREEN}No additional records retrieved{Colors.END}"
             )
 
-        if self.prep_mode:
+        if self.prep_mode:  # pragma: no cover
             # No need to print the following in prep mode
             # because the main records are not updated/saved
             return
 
-        if self._nr_changed > 0:
+        if self._nr_changed > 0:  # pragma: no cover
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Updated {self._nr_changed} records{Colors.END}"
             )
@@ -426,7 +410,9 @@ class SearchAPIFeed:
         self._prep_retrieved_record(retrieved_record)
         prev_feed_record = self._get_prev_feed_record(retrieved_record)
 
-        added = self._add_record_to_feed(retrieved_record, prev_feed_record)
+        added = self._add_record_to_feed(
+            retrieved_record, prev_feed_record
+        )
         if not self.prep_mode:
             try:
                 self._update_record(

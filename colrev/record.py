@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING
 import dictdiffer
 import fitz
 import imagehash
-import pandas as pd
 import pdfminer
 from nameparser import HumanName
 from pdfminer.converter import TextConverter
@@ -841,20 +840,10 @@ class Record:
                 + record_b_dict.get(Fields.SERIES, "")
             )
 
-        df_a = pd.DataFrame.from_dict([record_a_dict])  # type: ignore
-        df_b = pd.DataFrame.from_dict([record_b_dict])  # type: ignore
-
-        return Record.get_similarity(df_a=df_a.iloc[0], df_b=df_b.iloc[0])
+        return Record._get_similarity_detailed(record_a_dict, record_b_dict)
 
     @classmethod
-    def get_similarity(cls, *, df_a: dict, df_b: dict) -> float:
-        """Determine the similarity between two records"""
-
-        details = Record.get_similarity_detailed(record_a=df_a, record_b=df_b)
-        return details["score"]
-
-    @classmethod
-    def get_similarity_detailed(cls, *, record_a: dict, record_b: dict) -> dict:
+    def _get_similarity_detailed(cls, record_a: dict, record_b: dict) -> dict:
         """Determine the detailed similarities between records"""
         try:
             author_similarity = (
@@ -894,21 +883,6 @@ class Record:
                     1 if (record_a[Fields.NUMBER] == record_b[Fields.NUMBER]) else 0
                 )
 
-                # page similarity is not considered at the moment.
-                #
-                # sometimes, only the first page is provided.
-                # if str(record_a[Fields.PAGES]) == "nan" or str(record_b[Fields.PAGES]) == "nan":
-                #     pages_similarity = 1
-                # else:
-                #     if record_a[Fields.PAGES] == record_b[Fields.PAGES]:
-                #         pages_similarity = 1
-                #     else:
-                #         if record_a[Fields.PAGES].split("-")[0] ==
-                #               record_b[Fields.PAGES].split("-")[0]:
-                #             pages_similarity = 1
-                #         else:
-                #            pages_similarity = 0
-
                 # Put more weight on other fields if the title is very common
                 # ie., non-distinctive
                 # The list is based on a large export of distinct papers, tabulated
@@ -926,14 +900,14 @@ class Record:
                 else:
                     weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
 
-                sim_names = [
-                    Fields.AUTHOR,
-                    Fields.TITLE,
-                    Fields.YEAR,
-                    "outlet",
-                    Fields.VOLUME,
-                    Fields.NUMBER,
-                ]
+                # sim_names = [
+                #     Fields.AUTHOR,
+                #     Fields.TITLE,
+                #     Fields.YEAR,
+                #     "outlet",
+                #     Fields.VOLUME,
+                #     Fields.NUMBER,
+                # ]
                 similarities = [
                     author_similarity,
                     title_similarity,
@@ -945,12 +919,12 @@ class Record:
 
             else:
                 weights = [0.15, 0.75, 0.05, 0.05]
-                sim_names = [
-                    Fields.AUTHOR,
-                    Fields.TITLE,
-                    Fields.YEAR,
-                    "outlet",
-                ]
+                # sim_names = [
+                #     Fields.AUTHOR,
+                #     Fields.TITLE,
+                #     Fields.YEAR,
+                #     "outlet",
+                # ]
                 similarities = [
                     author_similarity,
                     title_similarity,
@@ -962,23 +936,24 @@ class Record:
                 similarities[g] * weights[g] for g in range(len(similarities))
             )
 
-            details = (
-                "["
-                + ",".join([sim_names[g] for g in range(len(similarities))])
-                + "]"
-                + "*weights_vecor^T = "
-                + "["
-                + ",".join([str(similarities[g]) for g in range(len(similarities))])
-                + "]*"
-                + "["
-                + ",".join([str(weights[g]) for g in range(len(similarities))])
-                + "]^T"
-            )
+            # details = (
+            #     "["
+            #     + ",".join([sim_names[g] for g in range(len(similarities))])
+            #     + "]"
+            #     + "*weights_vecor^T = "
+            #     + "["
+            #     + ",".join([str(similarities[g]) for g in range(len(similarities))])
+            #     + "]*"
+            #     + "["
+            #     + ",".join([str(weights[g]) for g in range(len(similarities))])
+            #     + "]^T"
+            # )
+            # print(details)
             similarity_score = round(weighted_average, 4)
         except AttributeError:
             similarity_score = 0
-            details = ""
-        return {"score": similarity_score, "details": details}
+
+        return similarity_score
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
