@@ -843,7 +843,7 @@ class Record:
         return Record._get_similarity_detailed(record_a_dict, record_b_dict)
 
     @classmethod
-    def _get_similarity_detailed(cls, record_a: dict, record_b: dict) -> dict:
+    def _get_similarity_detailed(cls, record_a: dict, record_b: dict) -> float:
         """Determine the detailed similarities between records"""
         try:
             author_similarity = (

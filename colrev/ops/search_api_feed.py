@@ -299,9 +299,7 @@ class SearchAPIFeed:
             return True
         return False
 
-    def _get_main_record(
-        self, colrev_origin: str
-    ) -> colrev.record.Record:
+    def _get_main_record(self, colrev_origin: str) -> colrev.record.Record:
 
         main_record_dict: dict = {}
         for record_dict in self.records.values():
@@ -410,9 +408,7 @@ class SearchAPIFeed:
         self._prep_retrieved_record(retrieved_record)
         prev_feed_record = self._get_prev_feed_record(retrieved_record)
 
-        added = self._add_record_to_feed(
-            retrieved_record, prev_feed_record
-        )
+        added = self._add_record_to_feed(retrieved_record, prev_feed_record)
         if not self.prep_mode:
             try:
                 self._update_record(
