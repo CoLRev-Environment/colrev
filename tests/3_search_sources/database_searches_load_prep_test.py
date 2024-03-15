@@ -172,7 +172,7 @@ def test_source(  # type: ignore
     print(Path.cwd())  # To facilitate debugging
 
     helpers.retrieve_test_file(
-        source=Path("data/built_in_search_sources/") / filenamepath,
+        source=Path("3_search_sources/data/") / filenamepath,
         target=Path("data/search/") / filenamepath,
     )
 
@@ -210,7 +210,7 @@ def test_source(  # type: ignore
     try:
         expected = (
             helpers.test_data_path
-            / Path("data/built_in_search_sources/")
+            / Path("3_search_sources/data/")
             / expected_file
         ).read_text(encoding="utf-8")
 
@@ -219,7 +219,7 @@ def test_source(  # type: ignore
         shutil.copy(
             Path("data/records.bib"),
             helpers.test_data_path
-            / Path("data/built_in_search_sources/")
+            / Path("3_search_sources/data/")
             / expected_file,
         )
         raise Exception(
@@ -232,7 +232,7 @@ def test_source(  # type: ignore
         shutil.copy(
             Path("data/records.bib"),
             helpers.test_data_path
-            / Path("data/built_in_search_sources/")
+            / Path("3_search_sources/data/")
             / expected_file,
         )
     assert expected == actual
