@@ -149,7 +149,9 @@ def test_crossref_query(  # type: ignore
     )
 
     json_str = helpers.retrieve_test_file_content(
-        source=Path(f"3_search_sources/api_output/crossref/{doi.replace('/', '_')}.json")
+        source=Path(
+            f"3_search_sources/api_output/crossref/{doi.replace('/', '_')}.json"
+        )
     )
     with requests_mock.Mocker() as req_mock:
         req_mock.get(
