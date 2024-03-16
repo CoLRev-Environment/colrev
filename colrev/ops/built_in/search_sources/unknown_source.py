@@ -101,7 +101,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 search_source_cls=self.__class__, source=self.search_source
             )
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

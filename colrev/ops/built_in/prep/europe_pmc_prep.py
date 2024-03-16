@@ -49,7 +49,7 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
         EuropePMCSearchSource = europe_pmc_connector.EuropePMCSearchSource(
             source_operation=self.prep_operation
         )
-        EuropePMCSearchSource.get_masterdata(
+        EuropePMCSearchSource.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

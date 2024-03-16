@@ -71,8 +71,6 @@ class DBLPMetadataPrep(JsonSchemaMixin):
             # Already linked to a dblp record
             return record
 
-        self.dblp_source.get_masterdata(
-            prep_operation=self.prep_operation, record=record
-        )
+        self.dblp_source.prep_link_md(prep_operation=self.prep_operation, record=record)
 
         return record

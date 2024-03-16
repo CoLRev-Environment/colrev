@@ -210,7 +210,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         add_source = cls.get_default_source()
         return add_source
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

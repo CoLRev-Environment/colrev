@@ -145,7 +145,7 @@ class SearchSourcePackageEndpointInterface(
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def get_masterdata(  # type: ignore
+    def prep_link_md(  # type: ignore
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         save_feed: bool = True,

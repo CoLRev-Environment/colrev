@@ -70,7 +70,7 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
             # Already linked to an OpenAlex record
             return record
 
-        self.open_alex_source.get_masterdata(
+        self.open_alex_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

@@ -314,7 +314,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         self.review_manager.dataset.load_records_dict()
         synergy_feed.save()
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

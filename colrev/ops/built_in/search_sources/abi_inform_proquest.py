@@ -123,7 +123,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
             write_file(records_dict=records, filename=self.search_source.filename)
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

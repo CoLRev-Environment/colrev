@@ -254,7 +254,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         colrev_project_search_feed.save()
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

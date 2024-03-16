@@ -71,7 +71,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
             # Already linked to a pubmed record
             return record
 
-        self.pubmed_source.get_masterdata(
+        self.pubmed_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

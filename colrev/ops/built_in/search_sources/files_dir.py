@@ -432,7 +432,7 @@ class FilesSearchSource(JsonSchemaMixin):
         record_dict["md_string"] = str(fsize) + md_string
         return record_dict
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

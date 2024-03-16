@@ -73,7 +73,7 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
             # Already linked to a crossref record
             return record
 
-        self.crossref_source.get_masterdata(
+        self.crossref_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

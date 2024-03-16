@@ -272,7 +272,7 @@ class ERICSearchSource(JsonSchemaMixin):
                 del record.data[Fields.LANGUAGE]
         return record
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

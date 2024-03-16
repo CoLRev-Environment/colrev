@@ -89,7 +89,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,

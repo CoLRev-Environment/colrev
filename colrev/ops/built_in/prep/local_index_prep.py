@@ -68,7 +68,7 @@ class LocalIndexPrep(JsonSchemaMixin):
                         source="local_index",
                     )
 
-        self.local_index_source.get_masterdata(
+        self.local_index_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
 
