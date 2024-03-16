@@ -24,11 +24,20 @@ class Commit:
     """Create commits"""
 
     # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-many-arguments
 
     _temp_path = Path.home().joinpath("colrev") / Path(".colrev_temp")
+    ext_script_name: str
+    ext_script_version: str
+    python_version: str
+    git_version: str
+    docker_version: str
+    last_commit_sha: str
+    tree_hash: str
+    records_committed: bool
+    completeness_condition: bool
+    # Note: last_commit_sha and tree_hash are used in the commit message (external template)
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -40,24 +49,40 @@ class Commit:
         skip_hooks: bool = False,
     ) -> None:
         self.review_manager = review_manager
-        self.manual_author = manual_author
-
         self.msg = msg
+        self.manual_author = manual_author
         self.script_name = self._parse_script_name(script_name=script_name)
         self.saved_args = self._parse_saved_args(saved_args=saved_args)
         self.skip_hooks = skip_hooks
-        self.tree_hash = ""
 
-        self.last_commit_sha = ""
-        try:
-            self.last_commit_sha = review_manager.dataset.get_last_commit_sha()
-        except ValueError:
-            pass
+        self._temp_path.mkdir(exist_ok=True, parents=True)
 
-        self.records_committed = review_manager.get_path(
-            Filepaths.RECORDS_FILE
-        ).is_file()
-        self.completeness_condition = review_manager.get_completeness_condition()
+        self._set_versions()
+        self._set_script_information(script_name)
+
+    def _parse_script_name(self, *, script_name: str) -> str:
+        if script_name == "MANUAL":
+            script_name = "Commit created manually or by external script"
+        elif " " in script_name:
+            script_name = script_name.replace("colrev cli", "colrev").replace(
+                "prescreen_cli", "prescreen"
+            )
+        return script_name
+
+    def _parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
+        saved_args_str = ""
+        if saved_args is not None:
+            for key, value in saved_args.items():
+                if isinstance(value, (bool, float, int, str)):
+                    if value == "":
+                        saved_args_str = saved_args_str + f"     --{key} \\\n"
+                    else:
+                        saved_args_str = saved_args_str + f"     --{key}={value} \\\n"
+            # Replace the last backslash (for argument chaining across linebreaks)
+            saved_args_str = saved_args_str.rstrip(" \\\n")
+        return saved_args_str
+
+    def _set_versions(self) -> None:
         self.colrev_version = f'version {version("colrev")}'
         sys_v = sys.version
         self.python_version = f'version {sys_v[: sys_v.find(" ")]}'
@@ -65,9 +90,10 @@ class Commit:
         self.git_version = stream.read().replace("git ", "").replace("\n", "")
         stream = os.popen("docker --version")
         self.docker_version = stream.read().replace("Docker ", "").replace("\n", "")
-        if self.docker_version == "":
+        if self.docker_version == "":  # pragma: no cover
             self.docker_version = "Not installed"
 
+    def _set_script_information(self, script_name: str) -> None:
         self.ext_script_name = ""
         self.ext_script_version = ""
 
@@ -81,36 +107,11 @@ class Commit:
                     self.ext_script_version = f"version {script_version}"
                 except importlib.metadata.PackageNotFoundError:
                     pass
-                except ValueError:
+                except ValueError:  # pragma: no cover
                     # Note : macos error in importlib.metadata.version
                     # ValueError: A distribution name is required
                     self.ext_script_name = "unknown"
                     self.ext_script_version = "unknown"
-
-        self._temp_path.mkdir(exist_ok=True, parents=True)
-
-    def _parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
-        saved_args_str = ""
-        if saved_args is not None:
-            for key, value in saved_args.items():
-                if isinstance(value, (bool, float, int, str)):
-                    if value == "":
-                        saved_args_str = saved_args_str + f"     --{key} \\\n"
-                    else:
-                        saved_args_str = saved_args_str + f"     --{key}={value} \\\n"
-            # Replace the last backslash (for argument chaining across linebreaks)
-            saved_args_str = saved_args_str.rstrip(" \\\n")
-
-        return saved_args_str
-
-    def _parse_script_name(self, *, script_name: str) -> str:
-        if script_name == "MANUAL":
-            script_name = "Commit created manually or by external script"
-        elif " " in script_name:
-            script_name = script_name.replace("colrev cli", "colrev").replace(
-                "prescreen_cli", "prescreen"
-            )
-        return script_name
 
     def _get_version_flag(self) -> str:
         flag = ""
@@ -118,12 +119,17 @@ class Commit:
             flag = "*"
         return flag
 
+    def _get_commit_report(self, status_operation: colrev.ops.status.Status) -> str:
+        report = self._get_commit_report_header()
+        report += status_operation.get_review_status_report(colors=False)
+        report += self._get_commit_report_details()
+        return report
+
     def _get_commit_report_header(self) -> str:
         template = colrev.env.utils.get_template(
             template_path="template/ops/commit_report_header.txt"
         )
         content = template.render(commit_details=self)
-
         return content
 
     def _get_commit_report_details(self) -> str:
@@ -131,7 +137,6 @@ class Commit:
             template_path="template/ops/commit_report_details.txt"
         )
         content = template.render(commit_details=self)
-
         return content
 
     def _get_detailed_processing_report(self) -> str:
@@ -192,20 +197,11 @@ class Commit:
             processing_report = "\nProcessing report\n" + "".join(processing_report)
         return processing_report
 
-    def _get_commit_report(self) -> str:
-        status_operation = self.review_manager.get_status_operation()
-
-        report = self._get_commit_report_header()
-        report += status_operation.get_review_status_report(colors=False)
-        report += self._get_commit_report_details()
-
-        return report
-
     def create(self, *, skip_status_yaml: bool = False) -> bool:
         """Create a commit (including the commit message and details)"""
 
+        status_operation = self.review_manager.get_status_operation()
         git_repo = self.review_manager.dataset.get_repo()
-
         try:
             if not git_repo.index.diff("HEAD"):
                 self.review_manager.logger.debug(
@@ -233,10 +229,20 @@ class Commit:
         # Note : this should run as the last command before creating the commit
         # to ensure that the git tree_hash is up-to-date.
         self.tree_hash = self.review_manager.dataset.get_tree_hash()
+        try:
+            self.last_commit_sha = self.review_manager.dataset.get_last_commit_sha()
+        except ValueError:
+            pass
+
+        self.records_committed = self.review_manager.get_path(
+            Filepaths.RECORDS_FILE
+        ).is_file()
+        self.completeness_condition = self.review_manager.get_completeness_condition()
+
         self.msg = (
             self.msg
             + self._get_version_flag()
-            + self._get_commit_report()
+            + self._get_commit_report(status_operation)
             + self._get_detailed_processing_report()
         )
         git_repo.index.commit(
@@ -260,6 +266,7 @@ class Commit:
 
     def update_report(self, *, msg_file: Path) -> None:
         """Update the report"""
-        report = self._get_commit_report()
+        status_operation = self.review_manager.get_status_operation()
+        report = self._get_commit_report(status_operation)
         with open(msg_file, "a", encoding="utf8") as file:
             file.write(report)
