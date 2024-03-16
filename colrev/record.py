@@ -1575,10 +1575,10 @@ class Record:
         assert page_nr > 0
         assert hash_size in [16, 32]
 
-        if Fields.FILE not in self.data or not self.data[Fields.FILE].is_file():
+        if Fields.FILE not in self.data or not Path(self.data[Fields.FILE]).is_file():
             raise colrev_exceptions.InvalidPDFException(path=self.data[Fields.ID])
 
-        pdf_path = self.data[Fields.FILE].resolve()
+        pdf_path = Path(self.data[Fields.FILE]).resolve()
         if 0 == os.path.getsize(pdf_path):
             logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
             raise colrev_exceptions.InvalidPDFException(path=pdf_path)
@@ -1606,8 +1606,6 @@ class Record:
                 raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
             except RuntimeError as exc:
                 raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
-
-        return average_hash_str
 
 
 class PrepRecord(Record):
