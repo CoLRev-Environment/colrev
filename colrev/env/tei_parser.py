@@ -138,7 +138,7 @@ class TEIParser:
                     xml_fstring = file.read()
                 self.root = etree.fromstring(xml_fstring)
 
-                tree = etree.ElementTree.ElementTree(self.root)
+                tree = etree.ElementTree(self.root)
                 tree.write(str(self.tei_path), encoding="utf-8")
         except requests.exceptions.ConnectionError as exc:
             print(exc)
