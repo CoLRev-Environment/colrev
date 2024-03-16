@@ -328,7 +328,6 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def _load_enl(self) -> dict:
         def id_labeler(records: list) -> None:
             for record_dict in records:
-                print(record_dict)
                 record_dict["ID"] = record_dict["U"].replace(
                     "https://aisel.aisnet.org/", ""
                 )
