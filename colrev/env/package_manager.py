@@ -141,7 +141,7 @@ class SearchSourcePackageEndpointInterface(
         """
 
     # pylint: disable=no-self-argument
-    def run_search(rerun: bool) -> None:  # type: ignore
+    def search(rerun: bool) -> None:  # type: ignore
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument

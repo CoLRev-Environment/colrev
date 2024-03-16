@@ -74,7 +74,7 @@ class JSTORSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of JSTOR"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:

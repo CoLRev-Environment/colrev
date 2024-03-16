@@ -169,7 +169,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         return data_copy
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals

@@ -30,7 +30,7 @@ class CustomSearch:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run the search"""
 
         feed = self.search_source.get_api_feed(

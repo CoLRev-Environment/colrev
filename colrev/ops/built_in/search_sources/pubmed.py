@@ -606,7 +606,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         pubmed_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
 
         self._validate_source()

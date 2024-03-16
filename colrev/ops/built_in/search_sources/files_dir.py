@@ -615,7 +615,7 @@ class FilesSearchSource(JsonSchemaMixin):
         record.data.pop(Fields.TEXT_FROM_PDF, None)
         record.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
         self._validate_source()

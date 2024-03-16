@@ -234,7 +234,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
         assert source.search_type == colrev.settings.SearchType.API
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets"""
 
         self._validate_source()

@@ -465,7 +465,7 @@ class Search(colrev.operation.Operation):
             )
 
             try:
-                endpoint.run_search(rerun=rerun)  # type: ignore
+                endpoint.search(rerun=rerun)  # type: ignore
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:

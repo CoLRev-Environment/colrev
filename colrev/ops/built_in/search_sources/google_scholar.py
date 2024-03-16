@@ -77,7 +77,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of GoogleScholar"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:

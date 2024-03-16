@@ -293,7 +293,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         ais_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of AISeLibrary"""
 
         self._validate_source()

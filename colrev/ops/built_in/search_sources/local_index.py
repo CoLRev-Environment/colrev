@@ -207,7 +207,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         local_index_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of local-index"""
 
         self._validate_source()

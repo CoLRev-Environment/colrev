@@ -278,7 +278,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         return api_key
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Semantic Scholar"""
 
         # get the api key

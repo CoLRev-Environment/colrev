@@ -366,7 +366,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         }  # Drop fields where value is NaN
         return colrev.record.Record(data=item)
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
 
         self._validate_source()

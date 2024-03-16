@@ -865,7 +865,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         crossref_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
         self._validate_source()

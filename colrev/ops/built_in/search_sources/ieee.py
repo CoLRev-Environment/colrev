@@ -183,7 +183,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
         ieee_feed = self.search_source.get_api_feed(

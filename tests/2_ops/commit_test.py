@@ -1,9 +1,11 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
 from colrev.ops.commit import Commit
 
+
 class TestCommit(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.review_manager = MagicMock()
         self.msg = "Test commit"
         self.manual_author = False
@@ -20,12 +22,12 @@ class TestCommit(unittest.TestCase):
             skip_hooks=self.skip_hooks,
         )
 
-    def test_parse_script_name(self):
+    def test_parse_script_name(self) -> None:
         script_name = "colrev cli"
         parsed_script_name = self.commit._parse_script_name(script_name=script_name)
         self.assertEqual(parsed_script_name, "colrev")
 
-    def test_parse_saved_args(self):
+    def test_parse_saved_args(self) -> None:
         saved_args = {"arg1": "value1", "arg2": ""}
         parsed_saved_args = self.commit._parse_saved_args(saved_args=saved_args)
         expected_result = "     --arg1=value1 \\\n     --arg2"
@@ -81,6 +83,7 @@ class TestCommit(unittest.TestCase):
 
     #     self.commit.create(skip_status_yaml=False)
     #     # Add assertions for the expected behavior of the create method
+
 
 if __name__ == "__main__":
     unittest.main()

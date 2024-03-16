@@ -201,7 +201,7 @@ class ERICSearchSource(JsonSchemaMixin):
 
         eric_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ERIC"""
 
         eric_feed = self.search_source.get_api_feed(

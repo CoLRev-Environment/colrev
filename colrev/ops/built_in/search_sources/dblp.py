@@ -486,7 +486,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         except (requests.exceptions.RequestException,):
             pass
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of DBLP"""
 
         self._validate_source()

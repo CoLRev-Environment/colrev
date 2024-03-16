@@ -141,7 +141,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         return forward_citations
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a forward search based on OpenCitations"""
 
         # pylint: disable=too-many-branches

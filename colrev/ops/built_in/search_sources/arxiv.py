@@ -399,7 +399,7 @@ class ArXivSource:
 
     #     arxiv_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ArXiv"""
 
         arxiv_feed = self.search_source.get_api_feed(
