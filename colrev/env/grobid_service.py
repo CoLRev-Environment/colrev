@@ -15,7 +15,7 @@ class GrobidService:
     """An environment service for machine readability/annotation (PDF to TEI conversion)"""
 
     GROBID_URL = "http://localhost:8070"
-    GROBID_IMAGE = "lfoppiano/grobid:0.7.3"
+    GROBID_IMAGE = "lfoppiano/grobid:0.8.0"
 
     def __init__(
         self, *, environment_manager: colrev.env.environment_manager.EnvironmentManager

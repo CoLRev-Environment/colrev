@@ -62,7 +62,7 @@
 		</fileDesc>
 		<encodingDesc>
 			<appInfo>
-				<application version="0.7.3" ident="GROBID" when="NA">
+				<application version="0.8.0" ident="GROBID" when="NA">
 					<desc>GROBID - A machine learning software for extracting information from scholarly documents</desc>
 					<ref target="https://github.com/kermitt2/grobid"/>
 				</application>
@@ -101,10 +101,8 @@
 		<back>
 
 			<div type="funding">
-<div xmlns="http://www.tei-c.org/ns/1.0"><head>Funding</head><p>The author(s) received no financial support for the research, authorship, and/or publication of this article.</p></div>
-			</div>
-
-			<div type="annex">
+<div><head>Funding</head><p>The author(s) received no financial support for the research, authorship, and/or publication of this article.</p></div>
+			</div>			<div type="annex">
 <div xmlns="http://www.tei-c.org/ns/1.0"><head>Declaration of conflicting interests</head><p>The author(s) declared no potential conflicts of interest with respect to the research, authorship, and/or publication of this article.</p></div>
 <div xmlns="http://www.tei-c.org/ns/1.0"><head>Author Biographies</head><p>Gerit Wagner is a postdoctoral fellow at HEC Montréal. </p></div>			</div>
 			<div type="references">

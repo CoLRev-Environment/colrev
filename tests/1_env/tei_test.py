@@ -65,10 +65,10 @@ def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ig
 
 def test_tei_version(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
-    assert "0.7.3" == tei_doc.get_grobid_version()
+    assert "0.8.0" == tei_doc.get_grobid_version()
 
 
-def test_tei_header_extraction(tei_doc) -> None:  # type: ignore
+def test_tei_get_metadata(tei_doc) -> None:  # type: ignore
     """Test the tei version"""
     assert (
         "Artificial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured (meta)data, and pervade almost every type of paper published in information systems research or related social science disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our field. With this agenda, we would like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research."
@@ -78,7 +78,7 @@ def test_tei_header_extraction(tei_doc) -> None:  # type: ignore
     # Note : Journal extraction not (yet) supported well
     # Did not find a journal paper where the journal was extracted correctly
     assert {
-        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.ENTRYTYPE: ENTRYTYPES.MISC,
         Fields.AUTHOR: "Wagner, Gerit and Lukyanenko, Roman and Par, Guy and Paré, Guy",
         Fields.DOI: "10.1177/02683962211048201",
         Fields.TITLE: "Debates and Perspectives Paper",
@@ -122,6 +122,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "6",
             Fields.NUMBER: "4",
             Fields.PAGES: "232--235",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b1",
@@ -134,6 +135,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "15",
             Fields.NUMBER: "1",
             Fields.PAGES: "1--40",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b2",
@@ -146,6 +148,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "36",
             Fields.NUMBER: "2",
             Fields.PAGES: "247--271",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b3",
@@ -157,6 +160,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Information and Software Technology",
             Fields.VOLUME: "91",
             Fields.PAGES: "72--81",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b4",
@@ -166,6 +170,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Brainwash: a data system for feature engineering",
             Fields.BOOKTITLE: "Proceedings of the biennial conference on innovative data systems research",
             Fields.YEAR: "2013",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b5",
@@ -178,6 +183,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "21",
             Fields.NUMBER: "1",
             Fields.PAGES: "17--39",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b6",
@@ -186,6 +192,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Antons, D. and Breidbach, C. F and Joshi, A. M",
             Fields.TITLE: "Computational literature reviews: method, algorithms, and roadmap",
             Fields.YEAR: "2021",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b7",
@@ -198,6 +205,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "29",
             Fields.NUMBER: "4",
             Fields.PAGES: "327--336",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b8",
@@ -210,6 +218,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "46",
             Fields.NUMBER: "4",
             Fields.PAGES: "557--590",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b9",
@@ -222,6 +231,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "34",
             Fields.NUMBER: "8",
             Fields.PAGES: "154--204",
+            Fields.NR_INTEXT_CITATIONS: 0,
         },
         {
             Fields.ID: "b10",
@@ -234,6 +244,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "26",
             Fields.NUMBER: "1",
             Fields.PAGES: "60--82",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b11",
@@ -246,6 +257,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "7",
             Fields.NUMBER: "1",
             Fields.PAGES: "1--9",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b12",
@@ -258,6 +270,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "7",
             Fields.NUMBER: "1",
             Fields.PAGES: "1--7",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b13",
@@ -270,6 +283,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "30",
             Fields.NUMBER: "1",
             Fields.PAGES: "50--64",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b14",
@@ -280,6 +294,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the Pacific Asia conference on information systems",
             Fields.YEAR: "2019",
             Fields.PAGES: "8--12",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b15",
@@ -292,6 +307,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "45",
             Fields.NUMBER: "2",
             Fields.PAGES: "iii--xviii",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b16",
@@ -301,6 +317,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Identifying barriers to the systematic literature review process",
             Fields.BOOKTITLE: "ternational symposium on empirical software engineering and measurement",
             Fields.YEAR: "2013",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b17",
@@ -310,6 +327,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Improving machine learning performance using conceptual modeling",
             Fields.BOOKTITLE: "AAAI spring symposium: Combining machine learning with knowledge engineering",
             Fields.YEAR: "2021",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b18",
@@ -322,6 +340,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "538",
             Fields.NUMBER: "7623",
             Fields.PAGES: "20--23",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b19",
@@ -330,6 +349,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Choudhury, P. and Endres, Allen R and , M.",
             Fields.TITLE: "Developing theory using machine learning methods",
             Fields.YEAR: "2018",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b20",
@@ -342,6 +362,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "1",
             Fields.NUMBER: "1",
             Fields.PAGES: "104--126",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b21",
@@ -354,6 +375,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "21",
             Fields.NUMBER: "5",
             Fields.PAGES: "1103--1114",
+            Fields.NR_INTEXT_CITATIONS: 4,
         },
         {
             Fields.ID: "b22",
@@ -363,6 +385,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Sharing open deep learning models",
             Fields.BOOKTITLE: "Proceedings of the hawaii international conference on system sciences, Grand",
             Fields.YEAR: "2019",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b23",
@@ -375,6 +398,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "60",
             Fields.NUMBER: "7",
             Fields.PAGES: "1466--1485",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b24",
@@ -385,6 +409,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the federated conference on computer science and information systems",
             Fields.YEAR: "2019",
             Fields.PAGES: "265--272",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b25",
@@ -397,6 +422,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "27",
             Fields.NUMBER: "4",
             Fields.PAGES: "597--636",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b26",
@@ -406,6 +432,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "The Art of Feature Engineering: Essentials for Machine Learning",
             Fields.BOOKTITLE: "The Art of Feature Engineering: Essentials for Machine Learning",
             Fields.YEAR: "2020",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b27",
@@ -414,6 +441,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Eisenstein, J.",
             Fields.TITLE: "Introduction to Natural Language Processing",
             Fields.YEAR: "2019",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b28",
@@ -424,6 +452,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2017",
             Fields.BOOKTITLE: "AIS SIGSAND Symposium",
             Fields.PAGES: "1--7",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b29",
@@ -435,6 +464,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "331",
             Fields.NUMBER: "11",
             Fields.PAGES: "721--725",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b30",
@@ -447,6 +477,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "8",
             Fields.NUMBER: "6",
             Fields.PAGES: "351--367",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b31",
@@ -457,6 +488,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the international conference on design science research in information systems and technology",
             Fields.YEAR: "2014",
             Fields.PAGES: "99--114",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b32",
@@ -465,6 +497,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Goodfellow, I. and Bengio, Y. and Courville, A.",
             Fields.TITLE: "Deep Learning, Adaptive Computation and Machine Learning Series",
             Fields.YEAR: "2016",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b33",
@@ -477,6 +510,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "40",
             Fields.NUMBER: "2",
             Fields.PAGES: "44--58",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b34",
@@ -487,6 +521,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the international conference on design science research in information system and technology",
             Fields.YEAR: "2017",
             Fields.PAGES: "21--38",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b35",
@@ -499,6 +534,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "20",
             Fields.NUMBER: "7",
             Fields.PAGES: "1--12",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b36",
@@ -511,6 +547,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "339",
             Fields.NUMBER: "1",
             Fields.PAGES: "1--6",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b37",
@@ -521,6 +558,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the European conference on information systems",
             Fields.YEAR: "2020",
             Fields.PAGES: "15--17",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b38",
@@ -529,6 +567,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Higgins, Jpt and Green, S.",
             Fields.TITLE: "Cochrane Handbook for Systematic Reviews of Interventions",
             Fields.YEAR: "2008",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b39",
@@ -541,6 +580,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "3",
             Fields.NUMBER: "2",
             Fields.PAGES: "119--131",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b40",
@@ -553,6 +593,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "7",
             Fields.NUMBER: "1",
             Fields.PAGES: "1--23",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b41",
@@ -562,6 +603,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Methods of Meta-Analysis: Correcting Error and Bias in Research Findings. 2nd edition",
             Fields.BOOKTITLE: "Methods of Meta-Analysis: Correcting Error and Bias in Research Findings. 2nd edition",
             Fields.YEAR: "2014",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b42",
@@ -574,6 +616,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "360",
             Fields.NUMBER: "6388",
             Fields.PAGES: "478--479",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b43",
@@ -586,6 +629,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "359",
             Fields.NUMBER: "6377",
             Fields.PAGES: "725--726",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b44",
@@ -596,6 +640,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the ACM-IEEE international symposium on empirical software engineering and measurement",
             Fields.YEAR: "2012",
             Fields.PAGES: "29--38",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b45",
@@ -605,6 +650,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2019",
             Fields.TITLE: "The Automation of Management and Business Science. Academy of Management Perspectives",
             Fields.PAGES: "292--309",
+            Fields.NR_INTEXT_CITATIONS: 4,
         },
         {
             Fields.ID: "b46",
@@ -613,6 +659,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Jones, M.",
             Fields.TITLE: "How do we address the reproducibility crisis in artificial intelligence? Forbes",
             Fields.YEAR: "2018",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b47",
@@ -624,6 +671,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Systematic Reviews",
             Fields.VOLUME: "4",
             Fields.NUMBER: "1",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b48",
@@ -636,6 +684,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "25",
             Fields.NUMBER: "4",
             Fields.PAGES: "817--833",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b49",
@@ -644,6 +693,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Kenett, R. S and Shmueli, G.",
             Fields.TITLE: "Information Quality: The Potential of Data and Analytics to Generate Knowledge",
             Fields.YEAR: "2016",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b50",
@@ -656,6 +706,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "324",
             Fields.NUMBER: "5923",
             Fields.PAGES: "85--89",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b51",
@@ -664,6 +715,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Kitchenham, B. A and Charters, S.",
             Fields.TITLE: "Guidelines for performing systematic literature reviews in software engineering",
             Fields.YEAR: "2007",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b52",
@@ -676,6 +728,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "23",
             Fields.NUMBER: "1",
             Fields.PAGES: "67--94",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b53",
@@ -686,6 +739,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2017",
             Fields.JOURNAL: "MIT Technology Review",
             Fields.VOLUME: "25",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b54",
@@ -698,6 +752,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "21",
             Fields.NUMBER: "3",
             Fields.PAGES: "733--765",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b55",
@@ -710,6 +765,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "7",
             Fields.NUMBER: "8",
             Fields.PAGES: "1--17",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b56",
@@ -720,6 +776,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the International Conference on Design Science Research in Information Systems and Technology",
             Fields.YEAR: "2019",
             Fields.PAGES: "32--45",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b57",
@@ -732,6 +789,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "12",
             Fields.NUMBER: "2",
             Fields.PAGES: "115--127",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b58",
@@ -744,6 +802,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "40",
             Fields.NUMBER: "3",
             Fields.PAGES: "529--551",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b59",
@@ -756,6 +815,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "20",
             Fields.NUMBER: "7",
             Fields.PAGES: "887--928",
+            Fields.NR_INTEXT_CITATIONS: 10,
         },
         {
             Fields.ID: "b60",
@@ -765,6 +825,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Validity in design science research",
             Fields.BOOKTITLE: "Proceedings of the International Conference on Design Science Research in Information Systems and Technology",
             Fields.YEAR: "2020",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b61",
@@ -776,6 +837,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Journal of Business Research",
             Fields.VOLUME: "100",
             Fields.PAGES: "469--474",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b62",
@@ -788,6 +850,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "19",
             Fields.NUMBER: "6",
             Fields.PAGES: "552--567",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b63",
@@ -800,6 +863,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "44",
             Fields.NUMBER: "4",
             Fields.PAGES: "1733--1772",
+            Fields.NR_INTEXT_CITATIONS: 7,
         },
         {
             Fields.ID: "b64",
@@ -812,6 +876,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "21",
             Fields.NUMBER: "1",
             Fields.PAGES: "90--116",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b65",
@@ -820,6 +885,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Lindzey, G. and Gilbert, D. and St, Fiske",
             Fields.YEAR: "1998",
             Fields.TITLE: "The Handbook of Social Psychology",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b66",
@@ -830,6 +896,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Exploring Modeling Methods for Systems Analysis and Development",
             Fields.YEAR: "2020",
             Fields.PAGES: "1--15",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b67",
@@ -842,6 +909,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "21",
             Fields.NUMBER: "5",
             Fields.PAGES: "1343--1369",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b68",
@@ -854,6 +922,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "43",
             Fields.NUMBER: "2",
             Fields.PAGES: "623--648",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b69",
@@ -866,6 +935,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "19",
             Fields.NUMBER: "12",
             Fields.PAGES: "1253--1273",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b70",
@@ -874,6 +944,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Manning, C. D and Schütze, H.",
             Fields.TITLE: "Foundations of Statistical Natural Language Processing",
             Fields.YEAR: "1999",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b71",
@@ -886,6 +957,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "34",
             Fields.NUMBER: "70",
             Fields.PAGES: "1347--1359",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b72",
@@ -897,6 +969,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Systematic Reviews",
             Fields.VOLUME: "8",
             Fields.NUMBER: "1",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b73",
@@ -909,6 +982,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "23",
             Fields.NUMBER: "1",
             Fields.PAGES: "193--201",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b74",
@@ -918,6 +992,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Machine learning",
             Fields.YEAR: "1997",
             Fields.PAGES: "870--877",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b75",
@@ -930,6 +1005,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "36",
             Fields.NUMBER: "6",
             Fields.PAGES: "1248--1259",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b76",
@@ -939,6 +1015,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "A framework for rigorously identifying research gaps in qualitative literature reviews",
             Fields.BOOKTITLE: "Proceedings of the international conference on information systems",
             Fields.YEAR: "2015",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b77",
@@ -951,6 +1028,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "34",
             Fields.NUMBER: "3",
             Fields.PAGES: "224--238",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b78",
@@ -963,6 +1041,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "49",
             Fields.NUMBER: "1",
             Fields.PAGES: "3--42",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b79",
@@ -975,6 +1054,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "7",
             Fields.NUMBER: "3",
             Fields.PAGES: "1--5",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b80",
@@ -985,6 +1065,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2015",
             Fields.JOURNAL: "Systematic Reviews",
             Fields.VOLUME: "4",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b81",
@@ -997,6 +1078,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "27",
             Fields.NUMBER: "2",
             Fields.PAGES: "114--122",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b82",
@@ -1009,6 +1091,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "50",
             Fields.NUMBER: "5",
             Fields.PAGES: "207--217",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b83",
@@ -1021,6 +1104,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "25",
             Fields.NUMBER: "6",
             Fields.PAGES: "493--508",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b84",
@@ -1033,6 +1117,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "10",
             Fields.NUMBER: "2",
             Fields.PAGES: "75--105",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b85",
@@ -1043,6 +1128,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2020",
             Fields.JOURNAL: "Decision Support Systems",
             Fields.VOLUME: "140",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b86",
@@ -1053,6 +1139,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the conference on empirical methods in natural language processing",
             Fields.YEAR: "2017",
             Fields.PAGES: "1156--1167",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b87",
@@ -1065,6 +1152,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "40",
             Fields.NUMBER: "2",
             Fields.PAGES: "iii--ix",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b88",
@@ -1077,6 +1165,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "46",
             Fields.NUMBER: "1",
             Fields.PAGES: "192--210",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b89",
@@ -1089,6 +1178,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "38",
             Fields.NUMBER: "2",
             Fields.PAGES: "iii--xiv",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b90",
@@ -1097,6 +1187,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Russell, S. J and Norvig, P.",
             Fields.TITLE: "Artificial Intelligence: A Modern Approach",
             Fields.YEAR: "2016",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b91",
@@ -1108,6 +1199,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "BMJ Evidence-Based Medicine",
             Fields.VOLUME: "24",
             Fields.NUMBER: "2",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b92",
@@ -1120,6 +1212,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "22",
             Fields.NUMBER: "4",
             Fields.PAGES: "941--968",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b93",
@@ -1131,6 +1224,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Communications of the Association for Information Systems",
             Fields.VOLUME: "46",
             Fields.PAGES: "134--168",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b94",
@@ -1143,6 +1237,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "57",
             Fields.NUMBER: "2",
             Fields.PAGES: "1--22",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b95",
@@ -1155,6 +1250,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "63",
             Fields.NUMBER: "10",
             Fields.PAGES: "1061--1070",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b96",
@@ -1167,6 +1263,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "32",
             Fields.NUMBER: "3",
             Fields.PAGES: "467--482",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b97",
@@ -1179,6 +1276,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "8",
             Fields.NUMBER: "3",
             Fields.PAGES: "327--340",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b98",
@@ -1189,6 +1287,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the Annual Meeting of the Association for Computational Linguistics",
             Fields.YEAR: "2017",
             Fields.PAGES: "352--357",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b99",
@@ -1201,6 +1300,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "61",
             Fields.NUMBER: "1",
             Fields.PAGES: "91--111",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b100",
@@ -1213,6 +1313,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "91",
             Fields.NUMBER: "2",
             Fields.PAGES: "183--203",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b101",
@@ -1225,6 +1326,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "46",
             Fields.NUMBER: "1",
             Fields.PAGES: "19--44",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b102",
@@ -1233,6 +1335,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.AUTHOR: "Taulli, T. and Oni, M.",
             Fields.TITLE: "Artificial Intelligence Basics. 1st edition",
             Fields.YEAR: "2019",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b103",
@@ -1245,6 +1348,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "27",
             Fields.NUMBER: "5",
             Fields.PAGES: "503--550",
+            Fields.NR_INTEXT_CITATIONS: 15,
         },
         {
             Fields.ID: "b104",
@@ -1257,6 +1361,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "52",
             Fields.NUMBER: "6",
             Fields.PAGES: "1--34",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b105",
@@ -1268,6 +1373,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Journal of Clinical Epidemiology",
             Fields.VOLUME: "91",
             Fields.PAGES: "31--37",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b106",
@@ -1277,6 +1383,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.TITLE: "Machine learning vs. Rules and out-of-the-box vs. retrained",
             Fields.BOOKTITLE: "Proceedings of the ACM/IEEE on Joint Conference on Digital Libraries",
             Fields.YEAR: "2018",
+            Fields.NR_INTEXT_CITATIONS: 0,
         },
         {
             Fields.ID: "b107",
@@ -1288,6 +1395,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Communications of the Association for Information Systems",
             Fields.VOLUME: "43",
             Fields.PAGES: "625--661",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b108",
@@ -1299,6 +1407,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Systematic Reviews",
             Fields.VOLUME: "3",
             Fields.PAGES: "1--15",
+            Fields.NR_INTEXT_CITATIONS: 5,
         },
         {
             Fields.ID: "b109",
@@ -1310,6 +1419,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Nature Machine Intelligence",
             Fields.VOLUME: "3",
             Fields.PAGES: "125--133",
+            Fields.NR_INTEXT_CITATIONS: 3,
         },
         {
             Fields.ID: "b110",
@@ -1320,6 +1430,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.YEAR: "2021",
             Fields.JOURNAL: "Information and Software Technology",
             Fields.VOLUME: "136",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b111",
@@ -1332,6 +1443,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "37",
             Fields.NUMBER: "9",
             Fields.PAGES: "205--224",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b112",
@@ -1344,6 +1456,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "20",
             Fields.NUMBER: "3",
             Fields.PAGES: "457--469",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b113",
@@ -1354,6 +1467,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the ACM SIGHIT International Health Informatics Symposium",
             Fields.YEAR: "2012",
             Fields.PAGES: "819--824",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b114",
@@ -1364,6 +1478,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.BOOKTITLE: "Proceedings of the International Conference on Information Systems",
             Fields.YEAR: "1988",
             Fields.PAGES: "213--226",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b115",
@@ -1375,6 +1490,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "PLoS One",
             Fields.VOLUME: "15",
             Fields.NUMBER: "1",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b116",
@@ -1386,6 +1502,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.JOURNAL: "Computers in Human Behavior",
             Fields.VOLUME: "63",
             Fields.PAGES: "132--141",
+            Fields.NR_INTEXT_CITATIONS: 0,
         },
         {
             Fields.ID: "b117",
@@ -1398,6 +1515,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "26",
             Fields.NUMBER: "2",
             Fields.PAGES: "xiii--xxiii",
+            Fields.NR_INTEXT_CITATIONS: 2,
         },
         {
             Fields.ID: "b118",
@@ -1410,6 +1528,7 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "14",
             Fields.NUMBER: "4",
             Fields.PAGES: "490--495",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
         {
             Fields.ID: "b119",
@@ -1422,8 +1541,9 @@ def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
             Fields.VOLUME: "37",
             Fields.NUMBER: "3",
             Fields.PAGES: "777--794",
+            Fields.NR_INTEXT_CITATIONS: 1,
         },
-    ] == tei_doc.get_references()
+    ] == tei_doc.get_references(add_intext_citation_count=True)
 
 
 def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
