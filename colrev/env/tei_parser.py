@@ -485,10 +485,10 @@ class TEIParser:
 
     # (individual) bibliography-reference elements  ----------------------------
 
-    def _get_reference_bibliography_tei_id(self, *, reference: Element) -> str:
+    def _get_reference_bibliography_tei_id(self, reference: Element) -> str:
         return reference.attrib[self.ns["w3"] + "id"]
 
-    def _get_reference_author_string(self, *, reference: Element) -> str:
+    def _get_reference_author_string(self, reference: Element) -> str:
         author_list = []
         if reference.find(self.ns["tei"] + "analytic") is not None:
             authors_node = reference.find(self.ns["tei"] + "analytic")
@@ -525,7 +525,7 @@ class TEIParser:
             author_string = ""
         return author_string
 
-    def _get_reference_title_string(self, *, reference: Element) -> str:
+    def _get_reference_title_string(self, reference: Element) -> str:
         title_string = ""
         if reference.find(self.ns["tei"] + "analytic") is not None:
             analytic_node = reference.find(self.ns["tei"] + "analytic")
@@ -542,7 +542,7 @@ class TEIParser:
 
         return title_string
 
-    def _get_reference_year_string(self, *, reference: Element) -> str:
+    def _get_reference_year_string(self, reference: Element) -> str:
         year_string = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -562,9 +562,12 @@ class TEIParser:
                 year_string = value if (name == "when") else ""
         else:
             year_string = ""
+
+        match = re.match(r"\d{4}", year_string)
+        year_string = match.group(0) if match else year_string
         return year_string
 
-    def _get_reference_page_string(self, *, reference: Element) -> str:
+    def _get_reference_page_string(self, reference: Element) -> str:
         page_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -596,7 +599,7 @@ class TEIParser:
 
         return page_string
 
-    def _get_reference_number_string(self, *, reference: Element) -> str:
+    def _get_reference_number_string(self, reference: Element) -> str:
         number_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -622,7 +625,7 @@ class TEIParser:
 
         return number_string
 
-    def _get_reference_volume_string(self, *, reference: Element) -> str:
+    def _get_reference_volume_string(self, reference: Element) -> str:
         volume_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -648,7 +651,7 @@ class TEIParser:
 
         return volume_string
 
-    def _get_reference_journal_string(self, *, reference: Element) -> str:
+    def _get_reference_monograph_string(self, reference: Element) -> str:
         journal_title = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -660,17 +663,35 @@ class TEIParser:
 
         return journal_title
 
-    def _get_entrytype(self, *, reference: Element) -> str:
+    def _get_entrytype(self, reference: Element) -> str:
         entrytype = ENTRYTYPES.MISC
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
             if monogr_node is not None:
-                title_node = monogr_node.find(self.ns["tei"] + "title")
-                if title_node is not None:
-                    if title_node.get("level", "") != "j":
-                        entrytype = ENTRYTYPES.BOOK
-                    else:
-                        entrytype = ENTRYTYPES.ARTICLE
+                meeting_node = monogr_node.find(self.ns["tei"] + "meeting")
+
+                if meeting_node is not None:
+                    entrytype = ENTRYTYPES.INPROCEEDINGS
+                else:
+                    title_node = monogr_node.find(self.ns["tei"] + "title")
+                    if title_node is not None:
+                        if title_node.text is not None:
+                            if any(
+                                x in title_node.text.lower()
+                                for x in [
+                                    "conference",
+                                    "proceedings",
+                                    "symposium",
+                                    "meeting",
+                                ]
+                            ):
+                                entrytype = ENTRYTYPES.INPROCEEDINGS
+                                return entrytype
+
+                        if title_node.get("level", "") == "j":
+                            entrytype = ENTRYTYPES.ARTICLE
+                        elif title_node.get("level", "") in ["m", "s"]:
+                            entrytype = ENTRYTYPES.BOOK
         return entrytype
 
     def _get_tei_id_count(self, *, tei_id: str) -> int:
@@ -687,15 +708,15 @@ class TEIParser:
         """Get the bibliography (references section) as a list of record dicts"""
         # Note : could also allow top-10 % of most frequent in-text citations
 
+        #  https://epidoc.stoa.org/gl/latest/ref-title.html
+
         bibliographies = self.root.iter(self.ns["tei"] + "listBibl")
         tei_bib_db = []
         for bibliography in bibliographies:
             for reference in bibliography:
                 try:
-                    entrytype = self._get_entrytype(reference=reference)
-                    tei_id = self._get_reference_bibliography_tei_id(
-                        reference=reference
-                    )
+                    entrytype = self._get_entrytype(reference)
+                    tei_id = self._get_reference_bibliography_tei_id(reference)
 
                     in_text_citation_count = self._get_tei_id_count(tei_id=tei_id)
 
@@ -704,63 +725,59 @@ class TEIParser:
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
                             Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(
-                                reference=reference
+                            Fields.AUTHOR: self._get_reference_author_string(reference),
+                            Fields.TITLE: self._get_reference_title_string(reference),
+                            Fields.YEAR: self._get_reference_year_string(reference),
+                            Fields.JOURNAL: self._get_reference_monograph_string(
+                                reference
                             ),
-                            Fields.TITLE: self._get_reference_title_string(
-                                reference=reference
-                            ),
-                            Fields.YEAR: self._get_reference_year_string(
-                                reference=reference
-                            ),
-                            Fields.JOURNAL: self._get_reference_journal_string(
-                                reference=reference
-                            ),
-                            Fields.VOLUME: self._get_reference_volume_string(
-                                reference=reference
-                            ),
-                            Fields.NUMBER: self._get_reference_number_string(
-                                reference=reference
-                            ),
-                            Fields.PAGES: self._get_reference_page_string(
-                                reference=reference
-                            ),
+                            Fields.VOLUME: self._get_reference_volume_string(reference),
+                            Fields.NUMBER: self._get_reference_number_string(reference),
+                            Fields.PAGES: self._get_reference_page_string(reference),
                         }
                     elif entrytype == ENTRYTYPES.BOOK:
                         ref_rec = {
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
                             Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(
-                                reference=reference
+                            Fields.AUTHOR: self._get_reference_author_string(reference),
+                            Fields.TITLE: self._get_reference_monograph_string(
+                                reference
                             ),
-                            Fields.TITLE: self._get_reference_title_string(
-                                reference=reference
+                            Fields.YEAR: self._get_reference_year_string(reference),
+                            Fields.PAGES: self._get_reference_page_string(reference),
+                        }
+                    elif entrytype == ENTRYTYPES.INPROCEEDINGS:
+                        ref_rec = {
+                            Fields.ID: tei_id,
+                            Fields.ENTRYTYPE: entrytype,
+                            Fields.TEI_ID: tei_id,
+                            Fields.AUTHOR: self._get_reference_author_string(reference),
+                            Fields.TITLE: self._get_reference_title_string(reference),
+                            Fields.YEAR: self._get_reference_year_string(reference),
+                            Fields.BOOKTITLE: self._get_reference_monograph_string(
+                                reference
                             ),
-                            Fields.YEAR: self._get_reference_year_string(
-                                reference=reference
-                            ),
+                            Fields.PAGES: self._get_reference_page_string(reference),
                         }
                     elif entrytype == ENTRYTYPES.MISC:
                         ref_rec = {
                             Fields.ID: tei_id,
                             Fields.ENTRYTYPE: entrytype,
                             Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(
-                                reference=reference
-                            ),
-                            Fields.TITLE: self._get_reference_title_string(
-                                reference=reference
-                            ),
+                            Fields.AUTHOR: self._get_reference_author_string(reference),
+                            Fields.TITLE: self._get_reference_title_string(reference),
+                            Fields.YEAR: self._get_reference_year_string(reference),
                         }
 
                     if add_intext_citation_count:
                         ref_rec[Fields.NR_INTEXT_CITATIONS] = in_text_citation_count  # type: ignore
 
-                except etree.ElementTree.ParseError:
+                except etree.ElementTree.ParseError as exc:
+                    print(exc)
                     continue
 
-                ref_rec = {k: v for k, v in ref_rec.items() if v is not None}
+                ref_rec = {k: v for k, v in ref_rec.items() if v != ""}
                 # print(ref_rec)
                 tei_bib_db.append(ref_rec)
 
