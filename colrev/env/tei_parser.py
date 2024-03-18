@@ -140,9 +140,10 @@ class TEIParser:
 
                 tree = etree.ElementTree(self.root)
                 tree.write(str(self.tei_path), encoding="utf-8")
-        except requests.exceptions.ConnectionError as exc:
+        except requests.exceptions.ConnectionError as exc:  # pragma: no cover
             print(exc)
             print(str(self.pdf_path))
+            raise colrev_exceptions.TEITimeoutException() from exc
 
     def get_tei_str(self) -> str:
         """Get the TEI string"""
@@ -433,6 +434,7 @@ class TEIParser:
             if key != Fields.FILE:
                 record[key] = value.replace("}", "").replace("{", "").rstrip("\\")
 
+        record = {k: v for k, v in record.items() if v != ""}
         return record
 
     def get_paper_keywords(self) -> list:
@@ -553,8 +555,6 @@ class TEIParser:
         if year is not None:
             for name, value in sorted(year.items()):
                 year_string = value if (name == "when") else ""
-        else:
-            year_string = ""
 
         match = re.match(r"\d{4}", year_string)
         year_string = match.group(0) if match else year_string
@@ -587,8 +587,6 @@ class TEIParser:
                         page_string += value
                     if name == "to":
                         page_string += "--" + value
-            else:
-                page_string = ""
 
         return page_string
 
@@ -708,71 +706,61 @@ class TEIParser:
         tei_bib_db = []
         for bibliography in bibliographies:
             for reference in bibliography:
-                try:
-                    entrytype = self._get_entrytype(reference)
-                    tei_id = self._get_reference_bibliography_tei_id(reference)
+                entrytype = self._get_entrytype(reference)
+                tei_id = self._get_reference_bibliography_tei_id(reference)
 
-                    in_text_citation_count = self._get_tei_id_count(tei_id=tei_id)
+                in_text_citation_count = self._get_tei_id_count(tei_id=tei_id)
 
-                    if entrytype == ENTRYTYPES.ARTICLE:
-                        ref_rec = {
-                            Fields.ID: tei_id,
-                            Fields.ENTRYTYPE: entrytype,
-                            Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(reference),
-                            Fields.TITLE: self._get_reference_title_string(reference),
-                            Fields.YEAR: self._get_reference_year_string(reference),
-                            Fields.JOURNAL: self._get_reference_monograph_string(
-                                reference
-                            ),
-                            Fields.VOLUME: self._get_reference_volume_string(reference),
-                            Fields.NUMBER: self._get_reference_number_string(reference),
-                            Fields.PAGES: self._get_reference_page_string(reference),
-                        }
-                    elif entrytype == ENTRYTYPES.BOOK:
-                        ref_rec = {
-                            Fields.ID: tei_id,
-                            Fields.ENTRYTYPE: entrytype,
-                            Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(reference),
-                            Fields.TITLE: self._get_reference_monograph_string(
-                                reference
-                            ),
-                            Fields.YEAR: self._get_reference_year_string(reference),
-                            Fields.PAGES: self._get_reference_page_string(reference),
-                        }
-                    elif entrytype == ENTRYTYPES.INPROCEEDINGS:
-                        ref_rec = {
-                            Fields.ID: tei_id,
-                            Fields.ENTRYTYPE: entrytype,
-                            Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(reference),
-                            Fields.TITLE: self._get_reference_title_string(reference),
-                            Fields.YEAR: self._get_reference_year_string(reference),
-                            Fields.BOOKTITLE: self._get_reference_monograph_string(
-                                reference
-                            ),
-                            Fields.PAGES: self._get_reference_page_string(reference),
-                        }
-                    elif entrytype == ENTRYTYPES.MISC:
-                        ref_rec = {
-                            Fields.ID: tei_id,
-                            Fields.ENTRYTYPE: entrytype,
-                            Fields.TEI_ID: tei_id,
-                            Fields.AUTHOR: self._get_reference_author_string(reference),
-                            Fields.TITLE: self._get_reference_title_string(reference),
-                            Fields.YEAR: self._get_reference_year_string(reference),
-                        }
+                if entrytype == ENTRYTYPES.ARTICLE:
+                    ref_rec = {
+                        Fields.ID: tei_id,
+                        Fields.ENTRYTYPE: entrytype,
+                        Fields.TEI_ID: tei_id,
+                        Fields.AUTHOR: self._get_reference_author_string(reference),
+                        Fields.TITLE: self._get_reference_title_string(reference),
+                        Fields.YEAR: self._get_reference_year_string(reference),
+                        Fields.JOURNAL: self._get_reference_monograph_string(reference),
+                        Fields.VOLUME: self._get_reference_volume_string(reference),
+                        Fields.NUMBER: self._get_reference_number_string(reference),
+                        Fields.PAGES: self._get_reference_page_string(reference),
+                    }
+                elif entrytype == ENTRYTYPES.BOOK:
+                    ref_rec = {
+                        Fields.ID: tei_id,
+                        Fields.ENTRYTYPE: entrytype,
+                        Fields.TEI_ID: tei_id,
+                        Fields.AUTHOR: self._get_reference_author_string(reference),
+                        Fields.TITLE: self._get_reference_monograph_string(reference),
+                        Fields.YEAR: self._get_reference_year_string(reference),
+                        Fields.PAGES: self._get_reference_page_string(reference),
+                    }
+                elif entrytype == ENTRYTYPES.INPROCEEDINGS:
+                    ref_rec = {
+                        Fields.ID: tei_id,
+                        Fields.ENTRYTYPE: entrytype,
+                        Fields.TEI_ID: tei_id,
+                        Fields.AUTHOR: self._get_reference_author_string(reference),
+                        Fields.TITLE: self._get_reference_title_string(reference),
+                        Fields.YEAR: self._get_reference_year_string(reference),
+                        Fields.BOOKTITLE: self._get_reference_monograph_string(
+                            reference
+                        ),
+                        Fields.PAGES: self._get_reference_page_string(reference),
+                    }
+                elif entrytype == ENTRYTYPES.MISC:
+                    ref_rec = {
+                        Fields.ID: tei_id,
+                        Fields.ENTRYTYPE: entrytype,
+                        Fields.TEI_ID: tei_id,
+                        Fields.AUTHOR: self._get_reference_author_string(reference),
+                        Fields.TITLE: self._get_reference_title_string(reference),
+                        Fields.YEAR: self._get_reference_year_string(reference),
+                    }
 
-                    if add_intext_citation_count:
-                        ref_rec[Fields.NR_INTEXT_CITATIONS] = in_text_citation_count  # type: ignore
-
-                except etree.ElementTree.ParseError as exc:
-                    print(exc)
-                    continue
+                if add_intext_citation_count:
+                    ref_rec[Fields.NR_INTEXT_CITATIONS] = in_text_citation_count  # type: ignore
 
                 ref_rec = {k: v for k, v in ref_rec.items() if v != ""}
-                # print(ref_rec)
                 tei_bib_db.append(ref_rec)
 
         return tei_bib_db

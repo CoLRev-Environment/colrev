@@ -23,6 +23,20 @@ def script_loc(request) -> Path:  # type: ignore
     return Path(request.fspath).parent
 
 
+@pytest.fixture(scope="module")
+def tei_doc(script_loc) -> colrev.env.tei_parser.TEIParser:  # type: ignore
+    """Return the tei_doc"""
+
+    tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
+
+    environment_manager = colrev.env.environment_manager.EnvironmentManager()
+
+    tei_doc = colrev.env.tei_parser.TEIParser(
+        environment_manager=environment_manager, tei_path=tei_file
+    )
+    return tei_doc
+
+
 def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ignore
     """Test the tei"""
     if base_repo_review_manager.in_ci_environment():
@@ -49,33 +63,25 @@ def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ig
         file.write(tei_content)
 
 
-def test_tei(script_loc, tmp_path) -> None:  # type: ignore
-    """Test the tei"""
-    tei_file = script_loc.parent.joinpath("data/WagnerLukyanenkoParEtAl2022.tei.xml")
-
-    environment_manager = colrev.env.environment_manager.EnvironmentManager()
-
-    tei_doc = colrev.env.tei_parser.TEIParser(
-        environment_manager=environment_manager, tei_path=tei_file
-    )
-
+def test_tei_version(tei_doc) -> None:  # type: ignore
+    """Test the tei version"""
     assert "0.7.3" == tei_doc.get_grobid_version()
 
+
+def test_tei_header_extraction(tei_doc) -> None:  # type: ignore
+    """Test the tei version"""
     assert (
         "Artificial intelligence (AI) is beginning to transform traditional research practices in many areas. In this context, literature reviews stand out because they operate on large and rapidly growing volumes of documents, that is, partially structured (meta)data, and pervade almost every type of paper published in information systems research or related social science disciplines. To familiarize researchers with some of the recent trends in this area, we outline how AI can expedite individual steps of the literature review process. Considering that the use of AI in this context is in an early stage of development, we propose a comprehensive research agenda for AI-based literature reviews (AILRs) in our field. With this agenda, we would like to encourage design science research and a broader constructive discourse on shaping the future of AILRs in research."
         == tei_doc.get_abstract()
     )
 
+    # Note : Journal extraction not (yet) supported well
+    # Did not find a journal paper where the journal was extracted correctly
     assert {
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.AUTHOR: "Wagner, Gerit and Lukyanenko, Roman and Par, Guy and Paré, Guy",
         Fields.DOI: "10.1177/02683962211048201",
-        Fields.JOURNAL: "",
-        Fields.NUMBER: "",
         Fields.TITLE: "Debates and Perspectives Paper",
-        Fields.PAGES: "",
-        Fields.VOLUME: "",
-        Fields.YEAR: "",
     } == tei_doc.get_metadata()
 
     assert [
@@ -99,6 +105,10 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
         },
         {"surname": "Paré", "forename": "Guy"},
     ] == tei_doc.get_author_details()
+
+
+def test_tei_reference_extraction(tei_doc) -> None:  # type: ignore
+    """Test the tei extraction of references"""
 
     assert [
         {
@@ -1415,7 +1425,9 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
         },
     ] == tei_doc.get_references()
 
-    print(tei_doc.get_citations_per_section())
+
+def test_tei_citations_per_section(tei_doc, tmp_path) -> None:  # type: ignore
+    """Test the tei citations per section method."""
 
     assert {
         "introduction": [
@@ -1632,6 +1644,10 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
         ],
         "concluding remarks": ["b62", "b89", "b117"],
     } == tei_doc.get_citations_per_section()
+
+
+def test_tei_mark_references(tei_doc, tmp_path) -> None:  # type: ignore
+    """Test the tei extraction of references"""
 
     # change tei_path to prevent changes to the original tei file
     tei_doc.tei_path = tmp_path / Path("test.tei.xml")
