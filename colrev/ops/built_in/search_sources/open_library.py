@@ -48,6 +48,11 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     )
     _open_library_md_filename = Path("data/search/md_open_library.bib")
 
+    requests_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    }
+
     def __init__(
         self,
         *,
@@ -98,13 +103,9 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         }
         try:
             url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
-            requests_headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
-            }
             ret = requests.get(
                 url,
-                headers=requests_headers,
+                headers=self.requests_headers,
                 timeout=30,
             )
             if ret.status_code != 200:
@@ -163,7 +164,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = session.request(
                 "GET",
                 url,
-                headers=prep_operation.requests_headers,
+                headers=self.requests_headers,
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
@@ -210,7 +211,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = session.request(
                 "GET",
                 url,
-                headers=prep_operation.requests_headers,
+                headers=self.requests_headers,
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()

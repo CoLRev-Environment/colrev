@@ -31,6 +31,11 @@ class CiteAsPrep(JsonSchemaMixin):
     always_apply_changes = False
     ci_supported: bool = True
 
+    requests_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    }
+
     def __init__(
         self,
         *,
@@ -96,7 +101,7 @@ class CiteAsPrep(JsonSchemaMixin):
             ret = self.session.request(
                 "GET",
                 url,
-                headers=self.prep_operation.requests_headers,
+                headers=self.requests_headers,
                 timeout=self.prep_operation.timeout,
             )
             ret.raise_for_status()

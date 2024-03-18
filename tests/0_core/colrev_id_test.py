@@ -67,9 +67,23 @@ import colrev.review_manager
             },
             "NotEnoughDataToIdentifyException",
         ),
+        (
+            {
+                "ENTRYTYPE": "article",
+                "ID": "WebsterWatson2002",
+                "author": "",
+                "journal": "MIS Quarterly",
+                "title": "Analyzing the past to prepare for the future: Writing a literature review",
+                "year": "2002",
+                "volume": "26",
+                "number": "2",
+                "pages": "13--23",
+            },
+            "NotEnoughDataToIdentifyException",
+        ),
     ],
 )
-def test_pdf_hash(  # type: ignore
+def test_colrev_id(  # type: ignore
     record_dict: dict,
     colrev_id: str,
 ) -> None:

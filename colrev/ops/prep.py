@@ -24,10 +24,10 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
@@ -45,82 +45,31 @@ class PreparationBreak(Exception):
     """Event interrupting the preparation."""
 
 
+# pylint: disable=duplicate-code
+FIELDS_TO_KEEP = FieldSet.STANDARDIZED_FIELD_KEYS + [
+    Fields.DBLP_KEY,
+    Fields.SEMANTIC_SCHOLAR_ID,
+    Fields.WEB_OF_SCIENCE_ID,
+    Fields.EDITION,
+]
+
+
+# pylint: disable=too-many-instance-attributes
 class Prep(colrev.operation.Operation):
     """Prepare records (metadata)"""
 
-    # pylint: disable=too-many-instance-attributes
-
     timeout = 30
     max_retries_on_error = 3
-
+    pad: int = 0
     retrieval_similarity: float
 
     first_round: bool
     last_round: bool
 
-    debug_mode: bool
-
-    pad: int
-
-    polish: bool
+    debug_mode: bool = False
+    polish: bool = False
 
     prep_package_endpoints: dict[str, typing.Any]
-
-    requests_headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
-    }
-
-    # pylint: disable=duplicate-code
-    fields_to_keep = [
-        Fields.ID,
-        Fields.ENTRYTYPE,
-        Fields.STATUS,
-        Fields.ORIGIN,
-        Fields.MD_PROV,
-        Fields.D_PROV,
-        "colrev_pid",
-        Fields.AUTHOR,
-        Fields.YEAR,
-        Fields.TITLE,
-        Fields.JOURNAL,
-        Fields.BOOKTITLE,
-        Fields.CHAPTER,
-        Fields.SERIES,
-        Fields.VOLUME,
-        Fields.NUMBER,
-        Fields.PAGES,
-        Fields.DOI,
-        Fields.ABSTRACT,
-        Fields.SCHOOL,
-        Fields.EDITOR,
-        "book-group-author",
-        "book-author",
-        Fields.KEYWORDS,
-        Fields.FILE,
-        Fields.FULLTEXT,
-        Fields.PUBLISHER,
-        Fields.DBLP_KEY,
-        Fields.SEMANTIC_SCHOLAR_ID,
-        Fields.WEB_OF_SCIENCE_ID,
-        Fields.URL,
-        Fields.ISBN,
-        "address",
-        Fields.EDITION,
-        "warning",
-        "crossref",
-        "date",
-        "link",
-        Fields.URL,
-        "crossmark",
-        "warning",
-        "note",
-        Fields.ISSN,
-        Fields.LANGUAGE,
-        "howpublished",
-        Fields.CITED_BY,
-        "cited_by_file",
-    ]
 
     _cpu = 1
     _prep_commit_id = "HEAD"
@@ -139,19 +88,20 @@ class Prep(colrev.operation.Operation):
         )
         self.notify_state_transition_operation = notify_state_transition_operation
 
-        self.fields_to_keep += self.review_manager.settings.prep.fields_to_keep
+        self.fields_to_keep = (
+            FIELDS_TO_KEEP + self.review_manager.settings.prep.fields_to_keep
+        )
 
         self.retrieval_similarity = retrieval_similarity
         self.quality_model = review_manager.get_qm()
 
-        self.polish = False
-        self.debug_mode = False
-        self.pad = 0
         self._stats: typing.Dict[str, typing.List[timedelta]] = {}
 
         self.temp_prep_lock = Lock()
-        self.current_temp_records = Path(".colrev/cur_temp_recs.bib")
-        self.temp_records = Path(".colrev/temp_recs.bib")
+        self.current_temp_records = self.review_manager.get_path(
+            Path(".colrev/cur_temp_recs.bib")
+        )
+        self.temp_records = self.review_manager.get_path(Path(".colrev/temp_recs.bib"))
         self.quality_model = review_manager.get_qm()
 
     def _add_stats(

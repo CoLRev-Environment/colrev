@@ -29,6 +29,11 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
+    requests_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    }
+
     def __init__(
         self,
         *,
@@ -49,7 +54,7 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
                 ret = session.request(
                     "GET",
                     record.data[Fields.URL],
-                    headers=self.prep_operation.requests_headers,
+                    headers=self.requests_headers,
                     timeout=60,
                 )
                 if ret.status_code >= 500:
@@ -61,7 +66,7 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
                 ret = session.request(
                     "GET",
                     record.data[Fields.FULLTEXT],
-                    headers=self.prep_operation.requests_headers,
+                    headers=self.requests_headers,
                     timeout=self.prep_operation.timeout,
                 )
                 if ret.status_code >= 500:

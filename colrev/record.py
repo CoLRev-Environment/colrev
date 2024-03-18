@@ -301,6 +301,7 @@ class Record:
 
         self.remove_field(key=key)
 
+    # pylint: disable=too-many-branches
     def change_entrytype(
         self,
         *,
