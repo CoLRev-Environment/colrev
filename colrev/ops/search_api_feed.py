@@ -417,9 +417,11 @@ class SearchAPIFeed:
                 )
             except colrev_exceptions.RecordNotFoundException:
                 pass
-        
+
         if self.prep_mode:
-            retrieved_record.data[Fields.ORIGIN] = [f"{self.origin_prefix}/{retrieved_record.data['ID']}"]
+            retrieved_record.data[Fields.ORIGIN] = [
+                f"{self.origin_prefix}/{retrieved_record.data['ID']}"
+            ]
         return added
 
     def save(self, *, skip_print: bool = False) -> None:

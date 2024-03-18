@@ -309,9 +309,10 @@ class Record:
     ) -> None:
         """Change the ENTRYTYPE"""
         for value in self.data.get(Fields.MD_PROV, {}).values():
-            if DefectCodes.INCONSISTENT_WITH_ENTRYTYPE in value["note"]:
-                value["note"] = ""
-            if DefectCodes.MISSING in value["note"]:
+            if any(
+                x in value["note"]
+                for x in [DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, DefectCodes.MISSING]
+            ):
                 value["note"] = ""
         missing_fields = [k for k, v in self.data.items() if v == FieldValues.UNKNOWN]
         for missing_field in missing_fields:
@@ -371,7 +372,7 @@ class Record:
             # we should keep that information that a particular masterdata
             # field is not required
             if key not in self.data[Fields.MD_PROV]:
-                self.data[Fields.MD_PROV][key] = {}
+                self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
             self.data[Fields.MD_PROV][key]["note"] = f"IGNORE:{DefectCodes.MISSING}"
             if source != "":
                 self.data[Fields.MD_PROV][key]["source"] = source
