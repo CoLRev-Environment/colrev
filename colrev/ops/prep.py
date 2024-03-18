@@ -152,6 +152,7 @@ class Prep(colrev.operation.Operation):
         self.temp_prep_lock = Lock()
         self.current_temp_records = Path(".colrev/cur_temp_recs.bib")
         self.temp_records = Path(".colrev/temp_recs.bib")
+        self.quality_model = review_manager.get_qm()
 
     def _add_stats(
         self, *, prep_round_package_endpoint: dict, start_time: datetime
@@ -565,6 +566,14 @@ class Prep(colrev.operation.Operation):
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
         prior_state = record.data[Fields.STATUS]
+
+        # Rerun quality model (in case there are manual prep changes)
+        preparation_record.change_entrytype(
+            new_entrytype=record.data[Fields.ENTRYTYPE], qm=self.quality_model
+        )
+        preparation_record.run_quality_model(
+            qm=self.quality_model, set_prepared=not self.polish
+        )
 
         for prep_round_package_endpoint in deepcopy(
             item["prep_round_package_endpoints"]

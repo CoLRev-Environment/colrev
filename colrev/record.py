@@ -317,6 +317,14 @@ class Record:
         for missing_field in missing_fields:
             self.remove_field(key=missing_field)
 
+        for key in list(self.data[Fields.MD_PROV].keys()):
+            if key not in self.data:
+                del self.data[Fields.MD_PROV][key]
+        for key in self.data.keys():
+            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
+                if key not in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
+
         self.data[Fields.ENTRYTYPE] = new_entrytype
         if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
             if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
@@ -337,6 +345,7 @@ class Record:
             ENTRYTYPES.MISC,
             ENTRYTYPES.SOFTWARE,
             ENTRYTYPES.ONLINE,
+            ENTRYTYPES.CONFERENCE,
         ]:
             pass
         else:

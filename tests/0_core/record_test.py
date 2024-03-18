@@ -322,6 +322,54 @@ def test_change_entrytype_inproceedings(
         r1_mod.change_entrytype(new_entrytype="dialoge", qm=quality_model)
 
 
+def test_change_entrytype_inproceedings_2(
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+
+    record_dict = {
+        Fields.ID: "r2",
+        Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+        Fields.MD_PROV: {
+            Fields.AUTHOR: {"source": "files.bib/000025", "note": ""},
+            Fields.TITLE: {"source": "files.bib/000025", "note": ""},
+            Fields.JOURNAL: {"source": "generic_field_requirements", "note": "missing"},
+            Fields.YEAR: {"source": "generic_field_requirements", "note": ""},
+            Fields.VOLUME: {"source": "generic_field_requirements", "note": "missing"},
+            Fields.NUMBER: {"source": "generic_field_requirements", "note": "missing"},
+        },
+        Fields.STATUS: RecordState.md_needs_manual_preparation,
+        Fields.ORIGIN: ["files.bib/000025"],
+        Fields.AUTHOR: "Aydin, Ömer and Karaarslan, Enis",
+        Fields.BOOKTITLE: "Emerging Computer Technologies",
+        Fields.TITLE: "OpenAI ChatGPT Generated Literature Review: Digital Twin in Healthcare",
+        Fields.YEAR: "2022",
+        Fields.PAGES: "22--31",
+    }
+    record = colrev.record.Record(data=record_dict)
+    record.change_entrytype(new_entrytype=ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+
+    expected = {
+        Fields.ID: "r2",
+        Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+        Fields.MD_PROV: {
+            Fields.AUTHOR: {"source": "files.bib/000025", "note": ""},
+            Fields.TITLE: {"source": "files.bib/000025", "note": "language-unknown"},
+            Fields.BOOKTITLE: {"source": "manual", "note": ""},
+            Fields.YEAR: {"source": "generic_field_requirements", "note": ""},
+            Fields.PAGES: {"source": "manual", "note": ""},
+        },
+        Fields.STATUS: RecordState.md_needs_manual_preparation,
+        Fields.ORIGIN: ["files.bib/000025"],
+        Fields.AUTHOR: "Aydin, Ömer and Karaarslan, Enis",
+        Fields.BOOKTITLE: "Emerging Computer Technologies",
+        Fields.TITLE: "OpenAI ChatGPT Generated Literature Review: Digital Twin in Healthcare",
+        Fields.YEAR: "2022",
+        Fields.PAGES: "22--31",
+    }
+
+    assert record.data == expected
+
+
 def test_change_entrytype_article(
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
