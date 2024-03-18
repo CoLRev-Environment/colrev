@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 """Test the tei parser"""
+import re
 from pathlib import Path
 
 import pytest
 
 import colrev.env.environment_manager
 import colrev.env.tei_parser
+import colrev.exceptions as colrev_exceptions
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
-import re
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-lines
@@ -37,14 +38,15 @@ def test_tei_creation(script_loc, base_repo_review_manager) -> None:  # type: ig
         environment_manager=environment_manager, pdf_path=pdf_path, tei_path=tei_file
     )
 
-    with open(tei_file, "r") as file:
+    with open(tei_file) as file:
         tei_content = file.read()
 
-    tei_content = re.sub(r'(ident="GROBID" when=")[^"]+(">)', r'\g<1>NA\g<2>', tei_content)
+    tei_content = re.sub(
+        r'(ident="GROBID" when=")[^"]+(">)', r"\g<1>NA\g<2>", tei_content
+    )
 
     with open(tei_file, "w") as file:
         file.write(tei_content)
-
 
 
 def test_tei(script_loc, tmp_path) -> None:  # type: ignore
@@ -1678,3 +1680,28 @@ def test_tei(script_loc, tmp_path) -> None:  # type: ignore
     assert "NO_TITLE" not in actual
 
     assert "NOT_INCLUDED" not in actual
+
+
+def test_tei_exception(tmp_path) -> None:  # type: ignore
+    tei_path = tmp_path / Path("erroneous_tei.tei.xml")
+
+    with open(tei_path, "wb") as f:
+        f.write(b"[BAD_INPUT_DATA]")
+
+    environment_manager = colrev.env.environment_manager.EnvironmentManager()
+
+    with pytest.raises(colrev_exceptions.TEIException):
+        colrev.env.tei_parser.TEIParser(
+            environment_manager=environment_manager, tei_path=tei_path
+        )
+
+
+def test_tei_pdf_not_exists() -> None:
+    pdf_path = Path("data/non_existent.pdf")
+
+    environment_manager = colrev.env.environment_manager.EnvironmentManager()
+
+    with pytest.raises(FileNotFoundError):
+        colrev.env.tei_parser.TEIParser(
+            environment_manager=environment_manager, pdf_path=pdf_path
+        )

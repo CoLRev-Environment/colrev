@@ -474,3 +474,21 @@ def test_search_feed_NotFeedIdentifiableException(search_feed):  # type: ignore
         search_feed.add_update_record(
             retrieved_record=colrev.record.Record(data=record_dict)
         )
+
+
+def test_search_feed_prep_mode(search_feed, caplog) -> None:  # type: ignore
+    """Test the search feed save"""
+
+    record_dict = {
+        Fields.ID: "0001",
+        Fields.ENTRYTYPE: "article",
+        Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
+        Fields.DOI: "10.111/2222",
+        Fields.YEAR: "2022",
+    }
+    search_feed.prep_mode = True
+    search_feed.add_update_record(
+        retrieved_record=colrev.record.Record(data=record_dict)
+    )
+    assert record_dict[Fields.ORIGIN] == ["test.bib/000001"]
+    search_feed.prep_mode = False

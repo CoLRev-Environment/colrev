@@ -60,7 +60,7 @@ class TEIParser:
         # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
-            if pdf_path.is_symlink():
+            if pdf_path.is_symlink():  # pragma: no cover
                 pdf_path = pdf_path.resolve()
         self.pdf_path = pdf_path
         self.tei_path = tei_path
@@ -120,10 +120,10 @@ class TEIParser:
             #     data=header_data,
             # )
 
-            if ret.status_code != 200:
+            if ret.status_code != 200:  # pragma: no cover
                 raise colrev_exceptions.TEIException()
 
-            if b"[TIMEOUT]" in ret.content:
+            if b"[TIMEOUT]" in ret.content:  # pragma: no cover
                 raise colrev_exceptions.TEITimeoutException()
 
             self.root = etree.fromstring(ret.content)
@@ -149,7 +149,7 @@ class TEIParser:
         try:
             etree.register_namespace("tei", "http://www.tei-c.org/ns/1.0")
             return etree.tostring(self.root).decode("utf-8")
-        except XMLSyntaxError as exc:
+        except XMLSyntaxError as exc:  # pragma: no cover
             raise colrev_exceptions.TEIException from exc
 
     def get_grobid_version(self) -> str:
@@ -432,8 +432,6 @@ class TEIParser:
         for key, value in record.items():
             if key != Fields.FILE:
                 record[key] = value.replace("}", "").replace("{", "").rstrip("\\")
-            else:
-                print(f"problem in filename: {key}")
 
         return record
 
@@ -518,11 +516,6 @@ class TEIParser:
             .replace("®", "")
             .replace("|", "")
         )
-
-        if author_string is None:
-            author_string = ""
-        if author_string.replace(" ", "").replace(",", "").replace(";", "") == "":
-            author_string = ""
         return author_string
 
     def _get_reference_title_string(self, reference: Element) -> str:
@@ -663,6 +656,7 @@ class TEIParser:
 
         return journal_title
 
+    # pylint: disable=too-many-nested-blocks
     def _get_entrytype(self, reference: Element) -> str:
         entrytype = ENTRYTYPES.MISC
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -790,18 +784,17 @@ class TEIParser:
         sections = self.root.iter(f'{self.ns["tei"]}head')
         for section in sections:
             section_name = section.text
-            if section_name is None:
-                continue
-            parent = parent_map[section]
-            citation_nodes = parent.findall(f'.//{self.ns["tei"]}ref')
-            citations = [
-                x.get("target", "").replace("#", "")
-                for x in citation_nodes
-                if x.get("type", "") == "bibr"
-            ]
-            citations = list(filter(lambda a: a != "", citations))
-            if len(citations) > 0:
-                section_citations[section_name.lower()] = citations
+            if section_name is not None:
+                parent = parent_map[section]
+                citation_nodes = parent.findall(f'.//{self.ns["tei"]}ref')
+                citations = [
+                    x.get("target", "").replace("#", "")
+                    for x in citation_nodes
+                    if x.get("type", "") == "bibr"
+                ]
+                citations = list(filter(lambda a: a != "", citations))
+                if len(citations) > 0:
+                    section_citations[section_name.lower()] = citations
         return section_citations
 
     def mark_references(self, *, records: dict):  # type: ignore
