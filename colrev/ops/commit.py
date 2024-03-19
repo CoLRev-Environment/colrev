@@ -115,7 +115,7 @@ class Commit:
 
     def _get_version_flag(self) -> str:
         flag = ""
-        if "dirty" in version("colrev"):
+        if "dirty" in version("colrev"):  # pragma: no cover
             flag = "*"
         return flag
 

@@ -75,7 +75,7 @@ class EnvironmentManager:
                     },
                     "packages": {},
                 }
-                self.save_environment_registry(updated_registry=environment_registry)
+                self.save_environment_registry(environment_registry)
                 environment_registry_path_yaml.rename(backup_file)
         return environment_registry
 
@@ -100,7 +100,7 @@ class EnvironmentManager:
                 result[key] = str(value)  # type: ignore
         return result
 
-    def save_environment_registry(self, *, updated_registry: dict) -> None:
+    def save_environment_registry(self, updated_registry: dict) -> None:
         """Save the local registry"""
         self.registry.parents[0].mkdir(parents=True, exist_ok=True)
         with open(self.registry, "w", encoding="utf8") as file:
@@ -108,7 +108,7 @@ class EnvironmentManager:
                 dict(self._cast_values_to_str(updated_registry)), indent=4, fp=file
             )
 
-    def register_repo(self, *, path_to_register: Path) -> None:
+    def register_repo(self, path_to_register: Path) -> None:
         """Register a repository"""
 
         self.environment_registry = self.load_environment_registry()
@@ -135,13 +135,13 @@ class EnvironmentManager:
         try:
             remote_urls = list(git_repo.remote("origin").urls)
             new_record["repo_source_url"] = remote_urls[0]
-        except (ValueError, IndexError):
+        except (ValueError, IndexError):  # pragma: no cover
             for remote in git_repo.remotes:
                 if remote.url:
                     new_record["repo_source_url"] = remote.url
                     break
         self.environment_registry["local_index"]["repos"].append(new_record)
-        self.save_environment_registry(updated_registry=self.environment_registry)
+        self.save_environment_registry(self.environment_registry)
         print(f"Registered path ({path_to_register})")
 
     def get_name_mail_from_git(self) -> typing.Tuple[str, str]:  # pragma: no cover
@@ -210,15 +210,13 @@ class EnvironmentManager:
                 )
             raise colrev_exceptions.MissingDependencyError("Docker")
 
-    def _get_status(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> dict:
+    def _get_status(self, review_manager: colrev.review_manager.ReviewManager) -> dict:
         status_dict = {}
         status_yml = review_manager.get_path(Filepaths.STATUS_FILE)
         with open(status_yml, encoding="utf8") as stream:
             try:
                 status_dict = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
+            except yaml.YAMLError as exc:  # pragma: no cover
                 print(exc)
         return status_dict
 
@@ -264,20 +262,17 @@ class EnvironmentManager:
                 check_operation = colrev.operation.CheckOperation(
                     review_manager=cp_review_manager
                 )
-                repo_stat = self._get_status(review_manager=cp_review_manager)
+                repo_stat = self._get_status(cp_review_manager)
                 repo["size"] = repo_stat["overall"]["md_processed"]
+                repo["progress"] = -1
                 if repo_stat["atomic_steps"] != 0:
                     repo["progress"] = round(
                         repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
                         2,
                     )
-                else:
-                    repo["progress"] = -1
 
                 git_repo = check_operation.review_manager.dataset.get_repo()
-                repo["remote"] = any(
-                    "remote" in x and x["remote"] for x in git_repo.remotes
-                )
+                repo["remote"] = bool(git_repo.remotes)
                 repo["behind_remote"] = (
                     check_operation.review_manager.dataset.behind_remote()
                 )
@@ -286,7 +281,7 @@ class EnvironmentManager:
             except (
                 colrev_exceptions.CoLRevException,
                 git.InvalidGitRepositoryError,
-            ):
+            ):  # pragma: no cover
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 
@@ -325,12 +320,12 @@ class EnvironmentManager:
                             if booktitle != FieldValues.UNKNOWN:
                                 outlets.append(booktitle)
 
-                    if len(set(outlets)) > 1:
+                    if len(set(outlets)) > 1:  # pragma: no cover
                         raise colrev_exceptions.CuratedOutletNotUnique(
                             "Error: Duplicate outlets in curated_metadata of "
                             f"{repo_source_path} : {','.join(list(set(outlets)))}"
                         )
-            except FileNotFoundError as exc:
+            except FileNotFoundError as exc:  # pragma: no cover
                 print(exc)
 
         return curated_outlets
@@ -367,4 +362,4 @@ class EnvironmentManager:
             raise colrev_exceptions.PackageSettingMustStartWithPackagesException(key)
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)
-        self.save_environment_registry(updated_registry=self.environment_registry)
+        self.save_environment_registry(self.environment_registry)

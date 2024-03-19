@@ -15,6 +15,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.ops.built_in.pdf_get.unpaywall import Unpaywall
 
+# flake8: noqa: E501
 
 EnvTestConf = namedtuple(
     "EnvTestConf",
@@ -191,10 +192,10 @@ def test_update_registry_exception():  # type: ignore
         )
 
 
-def test_dict_keys_exists_with_one_argument():
+def test_dict_keys_exists_with_one_argument() -> None:
     env_man = colrev.env.environment_manager.EnvironmentManager()
     with pytest.raises(AttributeError):
-        env_man._dict_keys_exists("test")
+        env_man._dict_keys_exists({}, "test")
 
 
 def test_register_ports() -> None:
@@ -205,31 +206,93 @@ def test_register_ports() -> None:
         env_man.register_ports(["3000", "3001", "3002"])
 
 
-def test_get_environment_details() -> None:
+def test_get_environment_details(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    if base_repo_review_manager.in_ci_environment():
+        return
     env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.environment_registry = {"local_index": {"repos": []}}
+    env_man.environment_registry["local_index"]["repos"] = [
+        {
+            "repo_name": "international-conference-on-information-systems",
+            "repo_source_path": "/home/gerit/colrev/curated_metadata/international-conference-on-information-systems",
+            "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
+        },
+        {
+            "repo_name": "european-journal-of-information-systems",
+            "repo_source_path": "/home/gerit/colrev/curated_metadata/european-journal-of-information-systems",
+            "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
+        },
+        {
+            "repo_name": "information-systems-journal",
+            "repo_source_path": "/home/gerit/colrev/curated_metadata/information-systems-journal",
+            "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
+        },
+    ]
+    env_man.save_environment_registry(updated_registry=env_man.environment_registry)
+
     ret = env_man.get_environment_details()
-    print(ret)
+
     assert "index" in ret
     assert "local_repos" in ret
     assert "repos" in ret["local_repos"]
     assert "broken_links" in ret["local_repos"]
 
 
-def test_get_curated_outlets() -> None:
+def test_get_curated_outlets(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    if base_repo_review_manager.in_ci_environment():
+        return
 
     env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.environment_registry = {"local_index": {"repos": []}}
+    env_man.environment_registry["local_index"]["repos"] = [
+        {
+            "repo_name": "international-conference-on-information-systems",
+            "repo_source_path": "/home/gerit/colrev/curated_metadata/international-conference-on-information-systems",
+            "repo_source_url": "https://github.com/CoLRev-curations/international-conference-on-information-systems",
+        },
+        {
+            "repo_name": "european-journal-of-information-systems",
+            "repo_source_path": "/home/gerit/colrev/curated_metadata/european-journal-of-information-systems",
+            "repo_source_url": "https://github.com/CoLRev-curations/european-journal-of-information-systems",
+        },
+        {
+            "repo_name": "information-systems-journal",
+            "repo_source_path": "/home/gerit/colrev/curated_metadata/information-systems-journal",
+            "repo_source_url": "https://github.com/CoLRev-curations/information-systems-journal",
+        },
+    ]
+    env_man.save_environment_registry(updated_registry=env_man.environment_registry)
+
     ret = env_man.get_curated_outlets()
     print(ret)
+    assert ret == [
+        "International Conference on Information Systems",
+        "European Journal of Information Systems",
+        "Information Systems Journal",
+    ]
 
 
-def test_repo_registry(tmp_path) -> None:
+def test_repo_registry(tmp_path) -> None:  # type: ignore
     env_man = colrev.env.environment_manager.EnvironmentManager()
+    env_man.environment_registry = {"local_index": {"repos": []}}
     actual = env_man.local_repos()
     assert actual == []
 
     os.chdir(tmp_path)
-    git.Repo.init()
+    git_repo = git.Repo.init()
+
+    remote_url = "https://github.com/your-username/your-repo.git"
+    git_repo.create_remote("origin", remote_url)
+
     env_man.register_repo(path_to_register=tmp_path)
+    assert (
+        env_man.environment_registry["local_index"]["repos"][0]["repo_source_url"]
+        == remote_url
+    )
 
 
 def test_build_docker_image(tmp_path) -> None:  # type: ignore

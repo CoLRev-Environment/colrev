@@ -164,7 +164,7 @@ class Initializer:
         self.review_manager.logger.info("Register CoLRev repository")
 
         environment_manager = self.review_manager.get_environment_manager()
-        environment_manager.register_repo(path_to_register=self.target_path)
+        environment_manager.register_repo(self.target_path)
 
     def _create_commit(self, *, saved_args: dict) -> None:
         del saved_args["local_pdf_collection"]

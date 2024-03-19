@@ -2406,7 +2406,7 @@ def env(
 
     if register:
         environment_manager = review_manager.get_environment_manager()
-        environment_manager.register_repo(path_to_register=Path.cwd())
+        environment_manager.register_repo(Path.cwd())
         return
 
     if unregister is not None:
@@ -2423,7 +2423,7 @@ def env(
                 "repos"
             ] = updated_local_repos
             environment_manager.save_environment_registry(
-                updated_registry=environment_manager.environment_registry
+                environment_manager.environment_registry
             )
             logging.info("Removed from local registry: %s", unregister)
         return

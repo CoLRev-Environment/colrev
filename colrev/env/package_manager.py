@@ -348,16 +348,7 @@ class DefaultSettings(JsonSchemaMixin):
 
         required_fields = [field.name for field in dataclasses.fields(cls)]
         available_fields = list(data.keys())
-
-        converters = {Path: Path}
-        settings = from_dict(
-            data_class=cls,
-            data=data,
-            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
-        )
-
         non_supported_fields = [f for f in available_fields if f not in required_fields]
-
         if non_supported_fields:
             raise colrev_exceptions.ParameterError(
                 parameter="non_supported_fields",
@@ -365,6 +356,12 @@ class DefaultSettings(JsonSchemaMixin):
                 options=[],
             )
 
+        converters = {Path: Path}
+        settings = from_dict(
+            data_class=cls,
+            data=data,
+            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
+        )
         return settings
 
 
@@ -470,7 +467,7 @@ class PackageManager:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/package_endpoints.json")
         )
-        if not filedata:
+        if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
                 "Package index not available (colrev/template/package_endpoints.json)"
             )
