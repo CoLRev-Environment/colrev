@@ -337,7 +337,7 @@ class EnvironmentManager:
 
     def _dict_keys_exists(self, element: dict, *keys: str) -> bool:
         """Check if *keys (nested) exists in `element` (dict)."""
-        if len(keys) == 0:
+        if len(keys) < 2:
             raise AttributeError(
                 "keys_exists() expects at least two arguments, one given."
             )

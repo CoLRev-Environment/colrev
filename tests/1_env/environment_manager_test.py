@@ -176,6 +176,27 @@ def test_setting_value_with_missing_field(_patch_registry):  # type: ignore
     assert (test_user["username"], test_user["email"]) == (cfg_username, cfg_email)
 
 
+def test_update_registry_exception():  # type: ignore
+    """
+    Updating the registry
+    """
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    test_user = {
+        "username": "Tester Name",  # this value is set from mock
+        "email": "test@email.com",
+    }
+    with pytest.raises(colrev_exceptions.PackageSettingMustStartWithPackagesException):
+        env_man.update_registry(
+            "xy.pdf_get.colrev.unpaywall.username", test_user["username"]
+        )
+
+
+def test_dict_keys_exists_with_one_argument():
+    env_man = colrev.env.environment_manager.EnvironmentManager()
+    with pytest.raises(AttributeError):
+        env_man._dict_keys_exists("test")
+
+
 def test_register_ports() -> None:
 
     env_man = colrev.env.environment_manager.EnvironmentManager()
@@ -201,13 +222,14 @@ def test_get_curated_outlets() -> None:
     print(ret)
 
 
-def test_repo_registry() -> None:
+def test_repo_registry(tmp_path) -> None:
     env_man = colrev.env.environment_manager.EnvironmentManager()
     actual = env_man.local_repos()
     assert actual == []
 
-    # TODO : the following call does not work...
-    # env_man.register_repo()
+    os.chdir(tmp_path)
+    git.Repo.init()
+    env_man.register_repo(path_to_register=tmp_path)
 
 
 def test_build_docker_image(tmp_path) -> None:  # type: ignore

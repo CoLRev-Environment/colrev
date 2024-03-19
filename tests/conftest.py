@@ -110,11 +110,6 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         return_value=("Tester Name", "tester@email.de"),
     )
 
-    session_mocker.patch(
-        "colrev.env.environment_manager.EnvironmentManager.register_repo",
-        return_value=(),
-    )
-
     test_repo_dir = tmp_path_factory.mktemp("base_repo")  # type: ignore
 
     session_mocker.patch.object(
