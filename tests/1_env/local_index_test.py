@@ -80,6 +80,8 @@ def test_search(local_index) -> None:  # type: ignore
                 Fields.D_PROV: {
                     Fields.DOI: {"note": "", "source": "pdfs.bib/0000000089"},
                     Fields.URL: {"note": "", "source": "DBLP.bib/001187"},
+                    Fields.LANGUAGE: {"note": "", "source": "manual"},
+                    Fields.CURATION_ID: {"note": "", "source": "manual"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
                 Fields.STATUS: RecordState.md_prepared,
@@ -108,6 +110,8 @@ def test_search(local_index) -> None:  # type: ignore
                 Fields.D_PROV: {
                     Fields.DOI: {"note": "", "source": "CROSSREF.bib/000516"},
                     Fields.URL: {"note": "", "source": "DBLP.bib/000528"},
+                    Fields.CURATION_ID: {"note": "", "source": "manual"},
+                    Fields.LANGUAGE: {"note": "", "source": "manual"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
                 Fields.STATUS: RecordState.md_prepared,
@@ -172,7 +176,8 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         Fields.VOLUME: "42",
         Fields.YEAR: "2018",
     }
-    expected = {
+    record = colrev.record.Record(data=record_dict)
+    expected_dict = {
         Fields.ID: "AbbasZhouDengEtAl2018",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.STATUS: RecordState.md_prepared,
@@ -193,9 +198,8 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
         "curation_ID": "gh...#AbbasZhouDengEtAl2018",
     }
-    actual = local_index.retrieve_from_toc(
-        record_dict=record_dict, similarity_threshold=0.8
-    )
+    actual = local_index.retrieve_from_toc(record, similarity_threshold=0.8)
+    expected = colrev.record.Record(data=expected_dict)
     assert expected == actual
 
 
@@ -203,29 +207,31 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
     """Test retrieve_based_on_colrev_pdf_id()"""
 
     colrev_pdf_id = "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff"
-    expected = {
-        Fields.ID: "AbbasiAlbrechtVanceEtAl2012",
-        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.STATUS: RecordState.md_prepared,
-        Fields.MD_PROV: {"CURATED": {"source": "gh...", "note": ""}},
-        Fields.D_PROV: {
-            Fields.PDF_ID: {"source": "file|pdf_hash", "note": ""},
-            Fields.FILE: {"source": "pdfs.bib/0000001378", "note": ""},
-            Fields.DBLP_KEY: {"source": "DBLP.bib/000869", "note": ""},
-            Fields.URL: {"source": "DBLP.bib/000869", "note": ""},
-        },
-        Fields.PDF_ID: "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
-        Fields.DBLP_KEY: "https://dblp.org/rec/journals/misq/AbbasiAVH12",
-        Fields.JOURNAL: "MIS Quarterly",
-        Fields.TITLE: "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
-        Fields.YEAR: "2012",
-        Fields.VOLUME: "36",
-        Fields.NUMBER: "4",
-        Fields.URL: "http://misq.org/metafraud-a-meta-learning-framework-for-detecting-financial-fraud.html",
-        Fields.LANGUAGE: "eng",
-        Fields.AUTHOR: "Abbasi, Ahmed and Albrecht, Conan and Vance, Anthony and Hansen, James",
-        "curation_ID": "gh...#AbbasiAlbrechtVanceEtAl2012",
-    }
+    expected = colrev.record.Record(
+        data={
+            Fields.ID: "AbbasiAlbrechtVanceEtAl2012",
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+            Fields.STATUS: RecordState.md_prepared,
+            Fields.MD_PROV: {"CURATED": {"source": "gh...", "note": ""}},
+            Fields.D_PROV: {
+                Fields.PDF_ID: {"source": "file|pdf_hash", "note": ""},
+                Fields.FILE: {"source": "pdfs.bib/0000001378", "note": ""},
+                Fields.DBLP_KEY: {"source": "DBLP.bib/000869", "note": ""},
+                Fields.URL: {"source": "DBLP.bib/000869", "note": ""},
+            },
+            Fields.PDF_ID: "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff",
+            Fields.DBLP_KEY: "https://dblp.org/rec/journals/misq/AbbasiAVH12",
+            Fields.JOURNAL: "MIS Quarterly",
+            Fields.TITLE: "MetaFraud - A Meta-Learning Framework for Detecting Financial Fraud",
+            Fields.YEAR: "2012",
+            Fields.VOLUME: "36",
+            Fields.NUMBER: "4",
+            Fields.URL: "http://misq.org/metafraud-a-meta-learning-framework-for-detecting-financial-fraud.html",
+            Fields.LANGUAGE: "eng",
+            Fields.AUTHOR: "Abbasi, Ahmed and Albrecht, Conan and Vance, Anthony and Hansen, James",
+            "curation_ID": "gh...#AbbasiAlbrechtVanceEtAl2012",
+        }
+    )
     actual = local_index.retrieve_based_on_colrev_pdf_id(colrev_pdf_id=colrev_pdf_id)
     assert expected == actual
 

@@ -503,9 +503,10 @@ class FilesSearchSource(JsonSchemaMixin):
                 colrev_pdf_id = colrev.qm.colrev_pdf_id.create_colrev_pdf_id(
                     pdf_path=Path(file_path)
                 )
-                new_record = local_index.retrieve_based_on_colrev_pdf_id(
+                new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
                     colrev_pdf_id=colrev_pdf_id
                 )
+                new_record = new_record_object.data
                 new_record[Fields.FILE] = str(file_path)
                 # Note : an alternative to replacing all data with the curated version
                 # is to just add the curation_ID

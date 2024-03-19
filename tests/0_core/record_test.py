@@ -300,7 +300,7 @@ def test_change_entrytype_inproceedings(
                 "note": "",
             },
         },
-        Fields.D_PROV: {},
+        Fields.D_PROV: {"language": {"note": "", "source": "manual"}},
         Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.BOOKTITLE: "MIS Quarterly",
@@ -351,6 +351,7 @@ def test_change_entrytype_inproceedings_2(
     expected = {
         Fields.ID: "r2",
         Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+        Fields.D_PROV: {},
         Fields.MD_PROV: {
             Fields.AUTHOR: {"source": "files.bib/000025", "note": ""},
             Fields.TITLE: {"source": "files.bib/000025", "note": "language-unknown"},
@@ -421,7 +422,7 @@ def test_change_entrytype_article(
                 "note": DefectCodes.MISSING,
             },
         },
-        Fields.D_PROV: {},
+        Fields.D_PROV: {"language": {"note": "", "source": "manual"}},
         Fields.STATUS: RecordState.md_needs_manual_preparation,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",

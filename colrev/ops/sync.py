@@ -170,9 +170,7 @@ class Sync:
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            returned_records = local_index.search(
-                query=f"citation_key='{citation_key}'"
-            )
+            returned_records = local_index.search(f"citation_key='{citation_key}'")
 
             if 0 == len(returned_records):
                 self.logger.info("Not found: %s", citation_key)
@@ -218,9 +216,9 @@ class Sync:
         def parse_record_str(add: str) -> list:
             # DOI: from crossref
             if add.startswith("10."):
-                returned_records = local_index.search(query=f"doi='{add}'")
+                returned_records = local_index.search(f"doi='{add}'")
             else:
-                returned_records = local_index.search(query=f"title LIKE '{add}'")
+                returned_records = local_index.search(f"title LIKE '{add}'")
 
             return returned_records
 

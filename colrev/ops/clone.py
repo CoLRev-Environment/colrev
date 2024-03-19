@@ -40,4 +40,4 @@ class Clone:
         environment_manager.register_repo(self.local_path)
         local_index = review_manager.get_local_index()
 
-        local_index.index_colrev_project(repo_source_path=self.local_path)
+        local_index.index_colrev_project(self.local_path)

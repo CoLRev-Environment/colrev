@@ -171,6 +171,12 @@ class Record:
 
         return self.data
 
+    def set_masterdata_curated(self, source: str) -> None:
+        """Set record masterdata to curated"""
+        self.data[Fields.MD_PROV] = {
+            FieldValues.CURATED: {"source": source, "note": ""}
+        }
+
     def masterdata_is_curated(self) -> bool:
         """Check whether the record masterdata is curated"""
         return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
@@ -301,6 +307,31 @@ class Record:
 
         self.remove_field(key=key)
 
+    def align_provenance(self) -> None:
+        """Remove unnecessary provenance information and add missing provenance information"""
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
+        for key in list(self.data[Fields.MD_PROV].keys()):
+            if key not in self.data and key != FieldValues.CURATED:
+                del self.data[Fields.MD_PROV][key]
+        for key in list(self.data[Fields.D_PROV].keys()):
+            if key not in self.data:
+                del self.data[Fields.D_PROV][key]
+
+        for key in self.data.keys():
+            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.ENTRYTYPE]:
+                continue
+            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
+                if self.masterdata_is_curated():
+                    continue
+                if key not in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
+            else:
+                if key not in self.data[Fields.D_PROV]:
+                    self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
+
     # pylint: disable=too-many-branches
     def change_entrytype(
         self,
@@ -319,13 +350,7 @@ class Record:
         for missing_field in missing_fields:
             self.remove_field(key=missing_field)
 
-        for key in list(self.data[Fields.MD_PROV].keys()):
-            if key not in self.data:
-                del self.data[Fields.MD_PROV][key]
-        for key in self.data.keys():
-            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-                if key not in self.data[Fields.MD_PROV]:
-                    self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
+        self.align_provenance()
 
         self.data[Fields.ENTRYTYPE] = new_entrytype
         if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:

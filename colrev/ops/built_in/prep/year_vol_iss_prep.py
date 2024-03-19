@@ -93,7 +93,7 @@ class YearVolIssPrep(JsonSchemaMixin):
     def _get_year_from_toc(self, *, record: colrev.record.Record) -> None:
         # TBD: maybe extract the following three lines as a separate script...
         try:
-            year = self.local_index.get_year_from_toc(record_dict=record.get_data())
+            year = self.local_index.get_year_from_toc(record.get_data())
             record.update_field(
                 key=Fields.YEAR,
                 value=year,

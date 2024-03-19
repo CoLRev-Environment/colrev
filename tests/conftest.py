@@ -362,14 +362,21 @@ def get_local_index(  # type: ignore
     session_mocker, helpers, local_index_test_records_dict, test_local_index_dir
 ):
     """Test the local_index"""
+    target_pdf_path = test_local_index_dir / Path(
+        "data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"
+    )
+    target_pdf_path.parent.mkdir(exist_ok=True, parents=True)
     helpers.retrieve_test_file(
         source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
-        target=test_local_index_dir / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+        target=target_pdf_path,
     )
+    target_tei_path = test_local_index_dir / Path(
+        "data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"
+    )
+    target_tei_path.parent.mkdir(exist_ok=True, parents=True)
     helpers.retrieve_test_file(
         source=Path("data/WagnerLukyanenkoParEtAl2022.tei.xml"),
-        target=test_local_index_dir
-        / Path("data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"),
+        target=target_tei_path,
     )
 
     os.chdir(test_local_index_dir)

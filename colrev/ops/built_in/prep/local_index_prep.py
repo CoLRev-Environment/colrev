@@ -58,7 +58,7 @@ class LocalIndexPrep(JsonSchemaMixin):
             # Note : cannot use local_index as an attribute of PrepProcess
             # because it creates problems with multiprocessing
             fields_to_remove = self.local_index_source.local_index.get_fields_to_remove(
-                record_dict=record.get_data()
+                record.get_data()
             )
             for field_to_remove in fields_to_remove:
                 if field_to_remove in record.data:

@@ -46,20 +46,18 @@ class Repare(colrev.operation.Operation):
             full_path.unlink()
 
         try:
-            retrieved_record = self.local_index.retrieve(
-                record_dict=record.data, include_file=True
-            )
+            retrieved_record = self.local_index.retrieve(record.data, include_file=True)
 
-            if Fields.FILE in retrieved_record:
+            if Fields.FILE in retrieved_record.data:
                 record.update_field(
                     key=Fields.FILE,
-                    value=str(retrieved_record[Fields.FILE]),
+                    value=str(retrieved_record.data[Fields.FILE]),
                     source="local_index",
                     append_edit=False,
                 )
                 self.pdf_get_operation.import_pdf(record=record)
-                if Fields.FULLTEXT in retrieved_record:
-                    del retrieved_record[Fields.FULLTEXT]
+                if Fields.FULLTEXT in retrieved_record.data:
+                    del retrieved_record.data[Fields.FULLTEXT]
                 self.review_manager.logger.info(
                     f" fix broken symlink: {record.data['ID']}"
                 )
@@ -332,11 +330,11 @@ class Repare(colrev.operation.Operation):
             for record_id in list(curation_recs.keys()):
                 if Fields.CURATION_ID not in curation_recs[record_id]:
                     try:
-                        retrieved_record_dict = local_index.retrieve(
-                            record_dict=curation_recs[record_id], include_file=False
+                        retrieved_record = local_index.retrieve(
+                            curation_recs[record_id], include_file=False
                         )
-                        del retrieved_record_dict[Fields.STATUS]
-                        curation_recs[record_id] = retrieved_record_dict
+                        del retrieved_record.data[Fields.STATUS]
+                        curation_recs[record_id] = retrieved_record.data
                     except colrev_exceptions.RecordNotInIndexException:
                         main_record_origin = (
                             search_source.get_origin_prefix() + "/" + record_id

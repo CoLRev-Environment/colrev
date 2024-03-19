@@ -1144,7 +1144,7 @@ def test_record_not_in_toc(
     original_retrieve_from_toc = record_not_in_toc_checker.local_index.retrieve_from_toc
 
     def patched_retrieve_from_toc(  # type: ignore
-        *, record_dict: dict, similarity_threshold=0.9, include_file=False
+        record: colrev.record.Record, *, similarity_threshold=0.9, include_file=False
     ):
         """
         Patched method to simulate TOC query responses for testing purposes.
@@ -1161,7 +1161,7 @@ def test_record_not_in_toc(
             },
         }
 
-        doi = record_dict.get(Fields.DOI, "") if record_dict else ""
+        doi = record.data.get(Fields.DOI, "") if record else ""
         if doi == "NOT_IN_TOC":
             raise colrev_exceptions.RecordNotInTOCException(
                 record_id="test-id", toc_key="test_toc_key"

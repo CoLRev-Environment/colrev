@@ -142,7 +142,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         if not any(x in query for x in [Fields.TITLE, Fields.ABSTRACT]):
             query = f'title LIKE "%{query}%"'
 
-        returned_records = self.local_index.search(query=query)
+        returned_records = self.local_index.search(query)
 
         records_to_import = [r.get_data() for r in returned_records]
         records_to_import = [r for r in records_to_import if r]
@@ -168,10 +168,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         for feed_record_dict in list(local_index_feed.feed_records.values()):
             try:
-                retrieved_record_dict = self.local_index.retrieve(
+                retrieved_record = self.local_index.retrieve(
                     record_dict=feed_record_dict, include_file=False
                 )
-                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
                 local_index_feed.add_update_record(retrieved_record)
             except (
                 colrev_exceptions.RecordNotInIndexException,
@@ -318,9 +317,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         # add colrev_pdf_id
         added_colrev_pdf_id = self._add_cpid(record=record)
 
-        retrieved_record_dict = {}
         try:
-            retrieved_record_dict = self.local_index.retrieve(
+            retrieved_record = self.local_index.retrieve(
                 record_dict=record.get_data(), include_file=False
             )
         except (
@@ -329,8 +327,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         ):
             try:
                 # Search within the table-of-content in local_index
-                retrieved_record_dict = self.local_index.retrieve_from_toc(
-                    record_dict=record.data,
+                retrieved_record = self.local_index.retrieve_from_toc(
+                    record,
                     similarity_threshold=retrieval_similarity,
                     include_file=False,
                 )
@@ -340,8 +338,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             except colrev_exceptions.RecordNotInIndexException:
                 try:
                     # Search across table-of-contents in local_index
-                    retrieved_record_dict = self.local_index.retrieve_from_toc(
-                        record_dict=record.data,
+                    retrieved_record = self.local_index.retrieve_from_toc(
+                        record,
                         similarity_threshold=retrieval_similarity,
                         include_file=False,
                         search_across_tocs=True,
@@ -357,10 +355,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             if added_colrev_pdf_id:
                 del record.data["colrev_pdf_id"]
 
-        if Fields.STATUS in retrieved_record_dict:
-            del retrieved_record_dict[Fields.STATUS]
+        if Fields.STATUS in retrieved_record.data:
+            del retrieved_record.data[Fields.STATUS]
 
-        return colrev.record.PrepRecord(data=retrieved_record_dict)
+        return retrieved_record
 
     def _store_retrieved_record_in_feed(
         self,
