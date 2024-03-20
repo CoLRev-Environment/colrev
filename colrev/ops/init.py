@@ -12,7 +12,6 @@ from subprocess import CalledProcessError  # nosec
 from subprocess import check_call  # nosec
 from subprocess import DEVNULL  # nosec
 from subprocess import STDOUT  # nosec
-from typing import Optional
 
 import git
 
@@ -40,30 +39,27 @@ class Initializer:
         self,
         *,
         review_type: str,
+        target_path: Path,
         example: bool = False,
         light: bool = False,
         local_pdf_collection: bool = False,
-        target_path: Optional[Path] = None,
         exact_call: str = "",
     ) -> None:
         saved_args = locals()
         self._validate_arguments(example, local_pdf_collection)
-        self.target_path = self._get_target_path(target_path)
+        self.target_path = target_path
+        os.chdir(target_path)
         self.review_manager = colrev.review_manager.ReviewManager(
             path_str=str(self.target_path), force_mode=True, navigate_to_home_dir=False
         )
         self.review_type = self._format_review_type(review_type)
         self.title = str(self.target_path.name)
-
-        if platform.system() != "Linux":
-            light = True
-        self.light = light
-
         self._setup_repo(
             example=example,
             local_pdf_collection=local_pdf_collection,
             exact_call=exact_call,
             saved_args=saved_args,
+            no_docker=light,
         )
 
     def _setup_repo(
@@ -73,9 +69,14 @@ class Initializer:
         local_pdf_collection: bool,
         exact_call: str,
         saved_args: dict,
+        no_docker: bool,
     ) -> None:
+        self.no_docker = no_docker
+        if platform.system() != "Linux":
+            self.no_docker = True
 
         self._check_init_precondition()
+        self.review_manager.logger.info("Create CoLRev repository")
         self._setup_git()
         self._setup_files()
         self._setup_settings()
@@ -122,10 +123,6 @@ class Initializer:
             ) from exc
         return formatted_review_type
 
-    def _get_target_path(self, target_path: Path = Path.cwd()) -> Path:
-        os.chdir(target_path)
-        return target_path
-
     def _check_init_precondition(self) -> None:
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
@@ -146,7 +143,7 @@ class Initializer:
         try:
             environment_manager.check_docker_installed()
         except colrev_exceptions.MissingDependencyError as exc:  # pragma: no cover
-            if not self.light:
+            if not self.no_docker:
                 raise colrev_exceptions.CoLRevException(
                     "Docker not installed. Docker is optional but recommended.\n"
                     "For more information, see "
@@ -156,8 +153,6 @@ class Initializer:
                 ) from exc
 
     def _setup_git(self) -> None:
-        self.review_manager.logger.info("Create CoLRev repository")
-
         self.review_manager.logger.info("Set up git repository")
 
         git.Repo.init()
@@ -265,7 +260,6 @@ class Initializer:
     def _setup_settings(self) -> None:
 
         self.review_manager = colrev.review_manager.ReviewManager()
-
         settings = self.review_manager.settings
 
         committer, email = self.review_manager.get_committer()
@@ -292,7 +286,6 @@ class Initializer:
             review_type=self.review_type
         )
         settings = review_types.packages[self.review_type].initialize(settings=settings)
-
         self.review_manager.save_settings()
 
         project_title = self.review_manager.settings.project.title
@@ -322,7 +315,7 @@ class Initializer:
                 + f": A {r_type_suffix} protocol",
             )
 
-        if self.light or platform.system() == "Darwin":
+        if self.no_docker:
             settings.data.data_package_endpoints = [
                 x
                 for x in settings.data.data_package_endpoints
@@ -354,7 +347,6 @@ class Initializer:
             notify_state_transition_operation=False
         )
         data_operation.main(silent_mode=True)
-
         self.review_manager.logger.info("Set up %s", self.review_type)
 
         for source in settings.sources:
@@ -377,7 +369,7 @@ class Initializer:
         git_repo.git.add(all=True)
 
     def _create_commit(self, *, saved_args: dict) -> None:
-        del saved_args["local_pdf_collection"]
+        saved_args.pop("local_pdf_collection", None)
         self.review_manager.dataset.create_commit(
             msg="Initial commit",
             manual_author=True,
@@ -392,42 +384,43 @@ class Initializer:
         environment_manager.register_repo(self.target_path)
 
     def _post_commit_edits(self) -> None:
-        if self.review_type == "colrev.curated_masterdata":
-            self.review_manager.logger.info("Post-commit edits")
-            self.review_manager.settings.project.curation_url = "TODO"
-            self.review_manager.settings.project.curated_fields = [
-                Fields.URL,
-                Fields.DOI,
-                "TODO",
-            ]
+        if self.review_type != "colrev.curated_masterdata":
+            return
 
-            pdf_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if "data/search/pdfs.bib" == str(s.filename)
-            ]
-            if pdf_source_l:
-                pdf_source = pdf_source_l[0]
-                pdf_source.search_parameters = {
-                    "scope": {
-                        "path": "pdfs",
-                        Fields.JOURNAL: "TODO",
-                        "subdir_pattern": "TODO:volume_number|year",
-                    }
+        self.review_manager.logger.info("Post-commit edits")
+        self.review_manager.settings.project.curation_url = "TODO"
+        self.review_manager.settings.project.curated_fields = [
+            Fields.URL,
+            Fields.DOI,
+            "TODO",
+        ]
+
+        pdf_source_l = [
+            s
+            for s in self.review_manager.settings.sources
+            if "data/search/pdfs.bib" == str(s.filename)
+        ]
+        if pdf_source_l:
+            pdf_source = pdf_source_l[0]
+            pdf_source.search_parameters = {
+                "scope": {
+                    "path": "pdfs",
+                    Fields.JOURNAL: "TODO",
+                    "subdir_pattern": "TODO:volume_number|year",
                 }
+            }
 
-            crossref_source_l = [
-                s
-                for s in self.review_manager.settings.sources
-                if "data/search/CROSSREF.bib" == str(s.filename)
-            ]
-            if crossref_source_l:
-                crossref_source = crossref_source_l[0]
-                crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
+        crossref_source_l = [
+            s
+            for s in self.review_manager.settings.sources
+            if "data/search/CROSSREF.bib" == str(s.filename)
+        ]
+        if crossref_source_l:
+            crossref_source = crossref_source_l[0]
+            crossref_source.search_parameters = {"scope": {"journal_issn": "TODO"}}
 
-            self.review_manager.save_settings()
-
-            self.review_manager.logger.info("Completed setup.")
+        self.review_manager.save_settings()
+        self.review_manager.logger.info("Completed setup.")
 
     def _create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
@@ -465,17 +458,18 @@ class Initializer:
 
     def _create_local_pdf_collection(self) -> None:
         self.review_manager.report_logger.handlers = []
+
+        if local_pdf_collection_path.is_dir():
+            return
+
         local_pdf_collection_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(
             "local_pdf_collection"
         )
+        local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
+        Initializer(
+            review_type="colrev.literature_review",
+            target_path=local_pdf_collection_path,
+            local_pdf_collection=True,
+        )
+        self.review_manager.logger.info("Created local_pdf_collection repository")
 
-        if not local_pdf_collection_path.is_dir():
-            local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
-            os.chdir(local_pdf_collection_path)
-            Initializer(
-                review_type="colrev.literature_review",
-                local_pdf_collection=True,
-            )
-            self.review_manager.logger.info("Created local_pdf_collection repository")
-
-        os.chdir(self.target_path)

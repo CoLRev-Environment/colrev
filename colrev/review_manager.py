@@ -681,10 +681,10 @@ class ReviewManager:
 # pylint: disable=too-many-arguments
 def get_init_operation(
     review_type: str,
+    target_path: Path = Path.cwd(),
     example: bool = False,
     light: bool = False,
     local_pdf_collection: bool = False,
-    target_path: Optional[Path] = None,
     exact_call: str = "",
 ) -> colrev.ops.init.Initializer:
     """Get an init operation object"""
@@ -692,9 +692,9 @@ def get_init_operation(
 
     return colrev.ops.init.Initializer(
         review_type=review_type,
+        target_path=target_path,
         example=example,
         light=light,
         local_pdf_collection=local_pdf_collection,
-        target_path=target_path,
         exact_call=exact_call,
     )
