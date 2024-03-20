@@ -41,11 +41,13 @@ class Initializer:
         review_type: str,
         target_path: Path,
         example: bool = False,
+        force_mode: bool = False,
         light: bool = False,
         local_pdf_collection: bool = False,
         exact_call: str = "",
     ) -> None:
         saved_args = locals()
+        self.force_mode = force_mode
         self._validate_arguments(example, local_pdf_collection)
         self.target_path = target_path
         os.chdir(target_path)
@@ -124,6 +126,8 @@ class Initializer:
         return formatted_review_type
 
     def _check_init_precondition(self) -> None:
+        if self.force_mode:
+            return
         cur_content = [
             str(x.relative_to(self.target_path)) for x in self.target_path.glob("**/*")
         ]
@@ -458,13 +462,13 @@ class Initializer:
 
     def _create_local_pdf_collection(self) -> None:
         self.review_manager.report_logger.handlers = []
+        local_pdf_collection_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(
+            "local_pdf_collection"
+        )
 
         if local_pdf_collection_path.is_dir():
             return
 
-        local_pdf_collection_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(
-            "local_pdf_collection"
-        )
         local_pdf_collection_path.mkdir(parents=True, exist_ok=True)
         Initializer(
             review_type="colrev.literature_review",
@@ -472,4 +476,3 @@ class Initializer:
             local_pdf_collection=True,
         )
         self.review_manager.logger.info("Created local_pdf_collection repository")
-

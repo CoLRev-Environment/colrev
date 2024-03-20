@@ -56,7 +56,6 @@ bib-dedupe = "^0.7.0"
 daff = "^1.3.46"
 docker = "6.0.0"
 lxml = "^4.9.1"
-# defusedxml = "^0.7.1"
 pandas = "^1.5.0"
 openpyxl = "^3.1.2"   # required by pandas for Excel
 pandasql = "^0.7.3"
@@ -107,12 +106,13 @@ ignore_missing_imports = true
 module = [
     "requests.*",
     "yaml.*",
+    "pkg_resources.*",
 ]
 ignore_missing_imports = true
 
 [tool.pylint.MAIN]
 extension-pkg-whitelist = "lxml.etree"
-load-plugins = ["colrev.linter.colrev_direct_status_assign", "colrev.linter.colrev_missed_constant_usage", "colrev.linter.colrev_records_variable_naming_convention"]
+load-plugins = ["colrev.linter.colrev_direct_status_assign", "colrev.linter.colrev_missed_constant_usage"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["R0801"]
