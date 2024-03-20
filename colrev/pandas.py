@@ -44,8 +44,8 @@ def load_df(
     review_manager = colrev.review_manager.ReviewManager(path_str=project_path)
     colrev.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
-    df = pd.DataFrame.from_dict(records, orient="index")
-    return df
+    loaded_df = pd.DataFrame.from_dict(records, orient="index")
+    return loaded_df
 
 
 def load_resolved_papers(other_project_path: str) -> pd.DataFrame:

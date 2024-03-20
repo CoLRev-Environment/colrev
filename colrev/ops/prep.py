@@ -542,6 +542,8 @@ class Prep(colrev.operation.Operation):
                     record=record,
                     prep_round_package_endpoint=prep_round_package_endpoint,
                 )
+                # Note: ServiceNotAvailableException should be ignored
+                # in the packages if review_manager.force_mode
             except PreparationBreak:
                 break
 

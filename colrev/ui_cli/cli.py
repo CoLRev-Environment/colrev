@@ -244,6 +244,13 @@ def exit(
     help="Review type for the setup.",
 )
 @click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force mode",
+)
+@click.option(
     "--light",
     is_flag=True,
     default=False,
@@ -268,6 +275,7 @@ def init(
     ctx: click.core.Context,
     type: str,
     example: bool,
+    force: bool,
     light: bool,
     local_pdf_collection: bool,
 ) -> None:
@@ -279,6 +287,7 @@ def init(
     colrev.review_manager.get_init_operation(
         review_type=type,
         example=example,
+        force_mode=force,
         light=light,
         local_pdf_collection=local_pdf_collection,
         exact_call=EXACT_CALL,

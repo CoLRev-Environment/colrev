@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 import pycountry
-from lingua import LanguageDetectorBuilder
+from lingua import LanguageDetectorBuilder  # pylint: disable=no-name-in-module
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record

@@ -618,7 +618,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             return record
 
         same_record_type_required = (
-            prep_operation.review_manager.settings.is_curated_masterdata_repo()
+            self.review_manager.settings.is_curated_masterdata_repo()
         )
         self._timeout = timeout
 
@@ -645,7 +645,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 # Note : need to reload file
                 # because the object is not shared between processes
                 dblp_feed = self.search_source.get_api_feed(
-                    review_manager=prep_operation.review_manager,
+                    review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
                     prep_mode=True,
@@ -684,6 +684,9 @@ class DBLPSearchSource(JsonSchemaMixin):
 
         except requests.exceptions.RequestException:
             pass
+        except colrev_exceptions.ServiceNotAvailableException:
+            if self.review_manager.force_mode:
+                self.review_manager.logger.error("Service not available: DBLP")
 
         except colrev_exceptions.ServiceNotAvailableException:
             if self.review_manager.force_mode:
