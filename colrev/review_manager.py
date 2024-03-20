@@ -415,7 +415,7 @@ class ReviewManager:
         """Get a cached session"""
 
         return requests_cache.CachedSession(
-            str(colrev.env.environment_manager.EnvironmentManager.cache_path),
+            str(Filepaths.PREP_REQUESTS_CACHE_FILE),
             backend="sqlite",
             expire_after=timedelta(days=30),
         )

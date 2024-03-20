@@ -10,6 +10,8 @@ from pathlib import Path
 class Filepaths:
     """Filepaths for CoLRev"""
 
+    # Project-specific paths
+    # To get absolute paths, use review_manager.get_path(Filepaths.SEARCH_DIR)
     SEARCH_DIR = Path("data/search")
     PREP_DIR = Path("data/prep")
     DEDUPE_DIR = Path("data/dedupe")
@@ -28,9 +30,14 @@ class Filepaths:
     REPORT_FILE = Path(".report.log")
     GIT_IGNORE_FILE = Path(".gitignore")
 
+    # Environment-specific paths
     LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
     LOCAL_INDEX_SQLITE_FILE = LOCAL_ENVIRONMENT_DIR / Path("sqlite_index.db")
     TEI_INDEX_DIR = LOCAL_ENVIRONMENT_DIR / Path(".tei_index/")
+
+    REGISTRY_FILE = LOCAL_ENVIRONMENT_DIR.joinpath(Path("registry.json"))
+
+    PREP_REQUESTS_CACHE_FILE = LOCAL_ENVIRONMENT_DIR / Path("prep_requests_cache")
 
 
 class ENTRYTYPES:

@@ -113,13 +113,8 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     test_repo_dir = tmp_path_factory.mktemp("base_repo")  # type: ignore
 
     session_mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry_yaml",
-        test_repo_dir / "reg.yaml",
-    )
-    session_mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry",
+        colrev.constants.Filepaths,
+        "REGISTRY_FILE",
         test_repo_dir / "reg.json",
     )
     os.chdir(test_repo_dir)
@@ -425,16 +420,10 @@ def script_loc(request) -> Path:  # type: ignore
 def patch_registry(mocker, tmp_path) -> None:  # type: ignore
     """Patch registry path in environment manager"""
     test_json_path = tmp_path / Path("reg.json")
-    test_yaml_path = tmp_path / Path("reg.yaml")
 
     mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry_yaml",
-        test_yaml_path,
-    )
-    mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry",
+        colrev.constants.Filepaths,
+        "REGISTRY_FILE",
         test_json_path,
     )
 

@@ -9,10 +9,8 @@ from typing import Optional
 
 import docker
 import git
-import pandas as pd
 import yaml
 from docker.errors import DockerException
-from yaml import safe_load
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
@@ -28,12 +26,6 @@ from colrev.env.utils import get_by_path
 class EnvironmentManager:
     """The EnvironmentManager manages environment resources and services"""
 
-    colrev_path = Path.home().joinpath("colrev")
-    cache_path = colrev_path / Path("prep_requests_cache")
-    REGISTRY_RELATIVE = Path("registry.json")
-    registry = colrev_path.joinpath(REGISTRY_RELATIVE)
-    REGISTRY_RELATIVE_YAML = Path("registry.yaml")
-    registry_yaml = colrev_path.joinpath(REGISTRY_RELATIVE_YAML)
     load_yaml = False
 
     def __init__(self) -> None:
@@ -51,32 +43,14 @@ class EnvironmentManager:
 
     def load_environment_registry(self) -> dict:
         """Load the local registry"""
-        environment_registry_path = self.registry
-        environment_registry_path_yaml = self.registry_yaml
         environment_registry = {}
-        if environment_registry_path.is_file():
+        if Filepaths.REGISTRY_FILE.is_file():
             self.load_yaml = False
-            with open(environment_registry_path, encoding="utf8") as file:
+            with open(Filepaths.REGISTRY_FILE, encoding="utf8") as file:
                 environment_registry = json.load(fp=file)
             # assert "local_index" in environment_registry
             # assert "packages" in environment_registry
-        elif environment_registry_path_yaml.is_file():
-            self.load_yaml = True
-            backup_file = Path(str(environment_registry_path_yaml) + ".bk")
-            print(
-                f"Found a yaml file, converting to json, it will be backed up as {backup_file}"
-            )
-            with open(environment_registry_path_yaml, encoding="utf8") as file:
-                environment_registry_df = pd.json_normalize(safe_load(file))
-                repos = environment_registry_df.to_dict("records")
-                environment_registry = {
-                    "local_index": {
-                        "repos": repos,
-                    },
-                    "packages": {},
-                }
-                self.save_environment_registry(environment_registry)
-                environment_registry_path_yaml.rename(backup_file)
+
         return environment_registry
 
     def local_repos(self) -> list:
@@ -102,8 +76,8 @@ class EnvironmentManager:
 
     def save_environment_registry(self, updated_registry: dict) -> None:
         """Save the local registry"""
-        self.registry.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(self.registry, "w", encoding="utf8") as file:
+        Filepaths.REGISTRY_FILE.parents[0].mkdir(parents=True, exist_ok=True)
+        with open(Filepaths.REGISTRY_FILE, "w", encoding="utf8") as file:
             json.dump(
                 dict(self._cast_values_to_str(updated_registry)), indent=4, fp=file
             )
@@ -125,7 +99,7 @@ class EnvironmentManager:
                 print(f"Warning: Path already registered: {path_to_register}")
                 return
         else:
-            print(f"Creating {self.registry}")
+            print(f"Register {path_to_register} in {Filepaths.REGISTRY_FILE}")
 
         new_record = {
             "repo_name": path_to_register.stem,

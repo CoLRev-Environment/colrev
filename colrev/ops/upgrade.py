@@ -10,7 +10,9 @@ from importlib.metadata import version
 from pathlib import Path
 
 import git
+import pandas as pd
 from tqdm import tqdm
+from yaml import safe_load
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -183,6 +185,12 @@ class Upgrade(colrev.operation.Operation):
                 "target_version": CoLRevVersion("0.11.0"),
                 "script": self._migrate_0_11_0,
                 "released": True,
+            },
+            {
+                "version": CoLRevVersion("0.11.0"),
+                "target_version": CoLRevVersion("0.12.0"),
+                "script": self._migrate_0_12_0,
+                "released": False,
             },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
@@ -636,6 +644,45 @@ class Upgrade(colrev.operation.Operation):
                         "not-missing", "IGNORE:missing"
                     )
         self.save_records_dict(records=records)
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_12_0(self) -> bool:
+        registry_yaml = Filepaths.LOCAL_ENVIRONMENT_DIR.joinpath(Path("registry.yaml"))
+
+        def _cast_values_to_str(data) -> dict:  # type: ignore
+            result = {}
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    result[key] = _cast_values_to_str(value)
+                elif isinstance(value, list):
+                    result[key] = [_cast_values_to_str(v) for v in value]  # type: ignore
+                else:
+                    result[key] = str(value)  # type: ignore
+            return result
+
+        if registry_yaml.is_file():
+            backup_file = Path(str(registry_yaml) + ".bk")
+            print(
+                f"Found a yaml file, converting to json, it will be backed up as {backup_file}"
+            )
+            with open(registry_yaml, encoding="utf8") as file:
+                environment_registry_df = pd.json_normalize(safe_load(file))
+                repos = environment_registry_df.to_dict("records")
+                environment_registry = {
+                    "local_index": {
+                        "repos": repos,
+                    },
+                    "packages": {},
+                }
+                Filepaths.REGISTRY_FILE.parents[0].mkdir(parents=True, exist_ok=True)
+                with open(Filepaths.REGISTRY_FILE, "w", encoding="utf8") as file:
+                    json.dump(
+                        dict(_cast_values_to_str(environment_registry)),
+                        indent=4,
+                        fp=file,
+                    )
+                registry_yaml.rename(backup_file)
 
         return self.repo.is_dirty()
 

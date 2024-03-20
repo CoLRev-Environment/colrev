@@ -114,29 +114,6 @@ def test_loading_config_properly(  # type: ignore
     assert not env_man.load_yaml
 
 
-def test_saving_config_file_as_json_from_yaml_correctly(  # type: ignore
-    _patch_registry,
-    tmp_path,
-    script_loc,
-) -> None:
-    """
-    Testing if we are converting a yaml file to json correctly
-    """
-    if not continue_test():
-        return
-    data = prep_test(tmp_path, script_loc)
-    with open(data.yaml_path, "w", encoding="utf-8") as file:
-        file.write(data.expected_yaml)
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    assert env_man.load_yaml
-    assert Path(data.base_path).exists()
-    env_man.register_repo(path_to_register=Path(data.base_path))
-    env_man.register_repo(path_to_register=Path(data.test_repo))
-    with open(data.json_path, encoding="utf-8") as file:
-        actual_json = json.dumps(json.loads(file.read()))
-        assert data.expected_json == actual_json
-
-
 def test_setting_value(_patch_registry):  # type: ignore
     """
     Updating the registry

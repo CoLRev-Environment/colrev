@@ -488,7 +488,7 @@ class LocalIndex:
 
         record = colrev.record.Record(data=record_dict)
 
-        if not self._sqlite_available: # pragma: no cover
+        if not self._sqlite_available:  # pragma: no cover
             if record_dict.get(Fields.CURATION_ID, "NA").startswith(
                 "https://github.com/"
             ):
@@ -584,7 +584,7 @@ class LocalIndex:
                 )
                 retrieved_record.align_provenance()
                 records_to_return.append(retrieved_record)
-        except sqlite3.OperationalError as exc: # pragma: no cover
+        except sqlite3.OperationalError as exc:  # pragma: no cover
             print(exc)
         finally:
             self.thread_lock.release()
@@ -944,7 +944,7 @@ class LocalIndex:
 
         # Note : this task takes long and does not need to run often
         session = requests_cache.CachedSession(
-            str(colrev.env.environment_manager.EnvironmentManager.cache_path),
+            str(Filepaths.PREP_REQUESTS_CACHE_FILE),
             backend="sqlite",
             expire_after=timedelta(days=30),
         )
@@ -1142,7 +1142,7 @@ class LocalIndex:
             self.thread_lock.release()
             return results
 
-        except sqlite3.OperationalError as exc: # pragma: no cover
+        except sqlite3.OperationalError as exc:  # pragma: no cover
             self.thread_lock.release()
             raise colrev_exceptions.RecordNotInIndexException() from exc
         except AttributeError as exc:
@@ -1185,7 +1185,7 @@ class LocalIndex:
                     raise colrev_exceptions.RecordNotInIndexException()
             return retrieved_record
 
-        except sqlite3.OperationalError as exc: # pragma: no cover
+        except sqlite3.OperationalError as exc:  # pragma: no cover
             self.thread_lock.release()
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
