@@ -58,6 +58,7 @@ class SearchAPIFeed:
         # (otherwise, fields in recent records would be more up-to-date)
 
         self.review_manager = review_manager
+        self.logger = review_manager.logger
         self.origin_prefix = self.source.get_origin_prefix()
 
         self._load_feed()
@@ -152,6 +153,8 @@ class SearchAPIFeed:
                         feed_record_dict[key] = self.feed_records[frid][key]
 
         self.feed_records[frid] = feed_record_dict
+        if added_new:
+            self.logger.info(f"  add record: {record.data[self.source_identifier]}")
         return added_new
 
     def _have_changed(

@@ -28,6 +28,10 @@ class Filepaths:
     REPORT_FILE = Path(".report.log")
     GIT_IGNORE_FILE = Path(".gitignore")
 
+    LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
+    LOCAL_INDEX_SQLITE_FILE = LOCAL_ENVIRONMENT_DIR / Path("sqlite_index.db")
+    TEI_INDEX_DIR = LOCAL_ENVIRONMENT_DIR / Path(".tei_index/")
+
 
 class ENTRYTYPES:
     """Constants for record ENTRYTYPEs"""

@@ -184,10 +184,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     msg="Record not found in crossref (based on doi)"
                 )
 
-            retrieved_record_dict = connector_utils.json_to_record(
+            retrieved_record = connector_utils.json_to_record(
                 item=crossref_query_return
             )
-            retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
             return retrieved_record
 
         except (requests.exceptions.RequestException,) as exc:
@@ -401,11 +400,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record=record, jour_vol_iss_list=jour_vol_iss_list, timeout=timeout
         ):
             try:
-                retrieved_record_dict = connector_utils.json_to_record(item=item)
+                retrieved_record = connector_utils.json_to_record(item=item)
                 similarity = self._get_similarity(
-                    record=record, retrieved_record_dict=retrieved_record_dict
+                    record=record, retrieved_record_dict=retrieved_record.data
                 )
-                retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
 
                 # source = (
                 #     f'https://api.crossref.org/works/{retrieved_record.data[Fields.DOI]}'
@@ -752,19 +750,18 @@ class CrossrefSearchSource(JsonSchemaMixin):
             nr_added = 0
             for item in retrieve_exploratory_papers(keyword=keyword):
                 try:
-                    retrieved_record_dict = connector_utils.json_to_record(item=item)
+                    retrieved_record = connector_utils.json_to_record(item=item)
 
                     # Skip papers that do not have the keyword in the title
-                    if keyword not in retrieved_record_dict.get(
+                    if keyword not in retrieved_record.data.get(
                         Fields.TITLE, ""
                     ).lower().replace("-", " "):
                         continue
 
                     # Skip papers that were already retrieved
-                    if retrieved_record_dict[Fields.DOI] in available_dois:
+                    if retrieved_record.data[Fields.DOI] in available_dois:
                         continue
-                    retrieved_record_dict["explored_keyword"] = keyword
-                    retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                    retrieved_record.data["explored_keyword"] = keyword
                     self._prep_crossref_record(
                         record=retrieved_record, prep_main_record=False
                     )
@@ -809,6 +806,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
             return False
         return len(params["scope"][Fields.ISSN]) > 1
 
+    def _get_len(self, query: str) -> int:
+        works = Works(etiquette=self.etiquette)
+        return works.query(**{"bibliographic": query}).count()
+
     def _run_api_search(
         self,
         *,
@@ -824,16 +825,19 @@ class CrossrefSearchSource(JsonSchemaMixin):
             self._run_keyword_exploration_search(crossref_feed=crossref_feed)
             return
 
+        if "query" in self.search_source.search_parameters:
+            # Note: we may warn users when creating large queries and print (1/300) progress
+            print(
+                f"Overall: {self._get_len(self.search_source.search_parameters['query'])} records"
+            )
         try:
             for item in self._get_crossref_query_return(rerun=rerun):
                 try:
-                    retrieved_record_dict = connector_utils.json_to_record(item=item)
+                    retrieved_record = connector_utils.json_to_record(item=item)
                     if self._scope_excluded(
-                        retrieved_record_dict=retrieved_record_dict
+                        retrieved_record_dict=retrieved_record.data
                     ):
                         continue
-
-                    retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
                     self._prep_crossref_record(
                         record=retrieved_record, prep_main_record=False

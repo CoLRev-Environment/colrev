@@ -156,7 +156,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     temp_sqlite = review_manager.path.parent / Path("sqlite_index_test.db")
     with session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     ):
         test_records_dict = load_test_records(helpers.test_data_path)
         local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
@@ -382,7 +382,7 @@ def get_local_index(  # type: ignore
     os.chdir(test_local_index_dir)
     temp_sqlite = test_local_index_dir / Path("sqlite_index_test.db")
     session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     )
     local_index_instance = colrev.env.local_index.LocalIndex(
         index_tei=True, verbose_mode=True

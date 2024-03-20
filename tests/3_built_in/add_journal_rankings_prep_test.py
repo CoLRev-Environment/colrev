@@ -22,7 +22,7 @@ def elp(  # type: ignore
         "sqlite_index_test.db"
     )
     with session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     ):
         local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
     local_index.load_journal_rankings()

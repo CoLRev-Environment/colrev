@@ -223,10 +223,6 @@ class EnvironmentManager:
     def get_environment_details(self) -> dict:
         """Get the environment details"""
 
-        local_index = colrev.env.local_index.LocalIndex(
-            index_tei=True, verbose_mode=True
-        )
-
         environment_details = {}
         size = 0
         last_modified = "NOT_INITIATED"
@@ -236,7 +232,7 @@ class EnvironmentManager:
         environment_details["index"] = {
             "size": size,
             "last_modified": last_modified,
-            "path": str(local_index.local_environment_path),
+            "path": str(Filepaths.LOCAL_ENVIRONMENT_DIR),
             "status": status,
         }
 

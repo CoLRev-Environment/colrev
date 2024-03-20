@@ -70,9 +70,8 @@ class DOIConnector:
 
             retrieved_json = json.loads(ret.text)
             language_service = colrev.env.language_service.LanguageService()
-            retrieved_record_dict = connector_utils.json_to_record(item=retrieved_json)
             language_service.unify_to_iso_639_3_language_codes(record=record)
-            retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+            retrieved_record = connector_utils.json_to_record(item=retrieved_json)
             retrieved_record.add_provenance_all(source=url)
             record.merge(merging_record=retrieved_record, default_source=url)
             record.set_masterdata_complete(

@@ -448,9 +448,7 @@ class Initializer:
 
     def _create_local_pdf_collection(self) -> None:
         self.review_manager.report_logger.handlers = []
-
-        local_index = self.review_manager.get_local_index()
-        local_pdf_collection_path = local_index.local_environment_path / Path(
+        local_pdf_collection_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(
             "local_pdf_collection"
         )
 

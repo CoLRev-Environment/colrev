@@ -45,6 +45,8 @@ class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
     sqlite_connection: sqlite3.Connection
+    request_timeout = 90
+    _sqlite_available = True
 
     global_keys = [
         Fields.DOI,
@@ -53,16 +55,26 @@ class LocalIndex:
         Fields.URL,
         "colrev_id",
     ]
-    max_len_sha256 = 2**256
-    request_timeout = 90
 
-    local_environment_path = Path.home().joinpath("colrev")
-    SQLITE_PATH = str(local_environment_path / Path("sqlite_index.db"))
+    RECORDS_INDEX_KEYS = [
+        "id",
+        "colrev_id",
+        "citation_key",
+        Fields.TITLE,
+        Fields.ABSTRACT,
+        Fields.FILE,
+        "tei",
+        Fields.FULLTEXT,
+        Fields.URL,
+        Fields.DOI,
+        "dblp_key",  # Note : no dots in key names
+        "colrev_pdf_id",
+        "bibtex",
+        "layered_fields",
+        # Fields.CURATION_ID
+    ]
 
-    teiind_path = local_environment_path / Path(".tei_index/")
-    annotators_path = local_environment_path / Path("annotators")
-
-    _sqlite_available = True
+    # Note: we need the local_curated_metadata field for is_duplicate()
 
     # Note : records are indexed by id = hash(colrev_id)
     # to ensure that the indexing-ids do not exceed limits
@@ -72,6 +84,10 @@ class LocalIndex:
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
+    # AUTHOR_INDEX = "author_index"
+    # AUTHOR_RECORD_INDEX = "author_record_index"
+    # CITATIONS_INDEX = "citations_index"
+
     UPDATE_LAYERD_FIELDS_QUERY = """
             UPDATE record_index SET
             layered_fields=?
@@ -100,30 +116,6 @@ class LocalIndex:
         (RECORD_INDEX, Fields.URL): "SELECT * FROM record_index WHERE url=?",
     }
 
-    # AUTHOR_INDEX = "author_index"
-    # AUTHOR_RECORD_INDEX = "author_record_index"
-    # CITATIONS_INDEX = "citations_index"
-
-    RECORDS_INDEX_KEYS = [
-        "id",
-        "colrev_id",
-        "citation_key",
-        Fields.TITLE,
-        Fields.ABSTRACT,
-        Fields.FILE,
-        "tei",
-        Fields.FULLTEXT,
-        Fields.URL,
-        Fields.DOI,
-        "dblp_key",  # Note : no dots in key names
-        "colrev_pdf_id",
-        "bibtex",
-        "layered_fields",
-        # Fields.CURATION_ID
-    ]
-
-    # Note: we need the local_curated_metadata field for is_duplicate()
-
     def __init__(
         self,
         *,
@@ -138,9 +130,11 @@ class LocalIndex:
 
     def _get_sqlite_cursor(self, *, init: bool = False) -> sqlite3.Cursor:
         if init:
-            Path(self.SQLITE_PATH).unlink(missing_ok=True)
+            Filepaths.LOCAL_INDEX_SQLITE_FILE.unlink(missing_ok=True)
 
-        self.sqlite_connection = sqlite3.connect(self.SQLITE_PATH, timeout=90)
+        self.sqlite_connection = sqlite3.connect(
+            str(Filepaths.LOCAL_INDEX_SQLITE_FILE), timeout=90
+        )
         self.sqlite_connection.row_factory = self._dict_factory
         return self.sqlite_connection.cursor()
 
@@ -155,7 +149,7 @@ class LocalIndex:
             / Path("ops")
             / Path("journal_rankings.csv")
         )
-        conn = sqlite3.connect(self.SQLITE_PATH)
+        conn = sqlite3.connect(str(Filepaths.LOCAL_INDEX_SQLITE_FILE))
         data_frame = pd.read_csv(rankings_csv_path, encoding="utf-8")
         data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
         conn.commit()
@@ -190,7 +184,8 @@ class LocalIndex:
 
     #     # recommendation: do not increment by 1
     #     plaintext_number += 10
-    #     plaintext_number = plaintext_number % self.max_len_sha256
+    #     max_len_sha256 = 2**256
+    #     plaintext_number = plaintext_number % max_len_sha256
 
     #     new_plaintext = plaintext_number.to_bytes(plaintext_length, "big")
     #     new_hex = binascii.hexlify(new_plaintext)
@@ -199,7 +194,9 @@ class LocalIndex:
     #     return new_hex.decode("utf-8")
 
     def _get_tei_index_file(self, *, paper_hash: str) -> Path:
-        return self.teiind_path / Path(f"{paper_hash[:2]}/{paper_hash[2:]}.tei.xml")
+        return Filepaths.TEI_INDEX_DIR / Path(
+            f"{paper_hash[:2]}/{paper_hash[2:]}.tei.xml"
+        )
 
     # def _index_author(
     #     self, tei: colrev.env.tei_parser.TEIParser, record_dict: dict
@@ -340,7 +337,7 @@ class LocalIndex:
         cur = self.sqlite_connection.cursor()
         try:
             cur.executemany(f"INSERT INTO {self.TOC_INDEX} VALUES(?, ?)", list_to_add)
-        except sqlite3.IntegrityError as exc: # pragma: no cover
+        except sqlite3.IntegrityError as exc:  # pragma: no cover
             if self.verbose_mode:
                 print(exc)
         finally:
@@ -382,32 +379,36 @@ class LocalIndex:
                             data=stored_record
                         ).create_colrev_id()
 
-                        if stored_colrev_id == item["colrev_id"]:
-                            self._amend_record(
-                                cur=cur, item=item, curated_fields=curated_fields
-                            )
-                            break
+                        if stored_colrev_id != item["colrev_id"]:  # pragma: no cover
+                            print("Collisions (TODO):")
+                            print(stored_colrev_id)
+                            print(item["colrev_id"])
 
-                        print("Collisions (TODO):")
-                        print(stored_colrev_id)
-                        print(item["colrev_id"])
+                            # print(
+                            #     [
+                            #         {k: v for k, v in x.items() if k != "bibtex"}
+                            #         for x in stored_record
+                            #     ]
+                            # )
+                            # print(item)
+                            # to handle the collision:
+                            # print(f"Collision: {paper_hash}")
+                            # print(cid_to_index)
+                            # print(saved_record_cid)
+                            # print(saved_record)
+                            # paper_hash = self._increment_hash(paper_hash=paper_hash)
+                            # item["id"] = paper_hash
+                            # continue in while-loop/try to insert...
+                            # pylint: disable=raise-missing-from
+                            raise NotImplementedError
 
-                        # print(
-                        #     [
-                        #         {k: v for k, v in x.items() if k != "bibtex"}
-                        #         for x in stored_record
-                        #     ]
-                        # )
-                        # print(item)
-                        # to handle the collision:
-                        # print(f"Collision: {paper_hash}")
-                        # print(cid_to_index)
-                        # print(saved_record_cid)
-                        # print(saved_record)
-                        # paper_hash = self._increment_hash(paper_hash=paper_hash)
-                        # item["id"] = paper_hash
-                        # continue in while-loop/try to insert...
-                    except colrev_exceptions.RecordNotInIndexException:
+                        self._amend_record(
+                            cur=cur, item=item, curated_fields=curated_fields
+                        )
+                        break
+                    except (
+                        colrev_exceptions.RecordNotInIndexException
+                    ):  # pragma: no cover
                         break
 
         if self.sqlite_connection:
@@ -487,7 +488,7 @@ class LocalIndex:
 
         record = colrev.record.Record(data=record_dict)
 
-        if not self._sqlite_available:
+        if not self._sqlite_available: # pragma: no cover
             if record_dict.get(Fields.CURATION_ID, "NA").startswith(
                 "https://github.com/"
             ):
@@ -545,12 +546,10 @@ class LocalIndex:
             if fulltext_backup != "NA":
                 record_dict[Fields.FULLTEXT] = fulltext_backup
         else:
-            if Fields.FILE in record_dict:
-                del record_dict[Fields.FILE]
+            record_dict.pop(Fields.FILE, None)
             if Fields.FILE in record_dict.get(Fields.D_PROV, {}):
                 del record_dict[Fields.D_PROV][Fields.FILE]
-            if "colrev_pdf_id" in record_dict:
-                del record_dict["colrev_pdf_id"]
+            record_dict.pop("colrev_pdf_id", None)
             if "colrev_pdf_id" in record_dict.get(Fields.D_PROV, {}):
                 del record_dict[Fields.D_PROV]["colrev_pdf_id"]
 
@@ -585,7 +584,7 @@ class LocalIndex:
                 )
                 retrieved_record.align_provenance()
                 records_to_return.append(retrieved_record)
-        except sqlite3.OperationalError as exc:
+        except sqlite3.OperationalError as exc: # pragma: no cover
             print(exc)
         finally:
             self.thread_lock.release()
@@ -635,8 +634,7 @@ class LocalIndex:
                 del record_dict[deprecated_field]
 
         for field in ["note", "link"]:
-            if field in record_dict:
-                del record_dict[field]
+            record_dict.pop(field, None)
 
         if Fields.SCREENING_CRITERIA in record_dict:
             del record_dict[Fields.SCREENING_CRITERIA]
@@ -646,13 +644,11 @@ class LocalIndex:
             state=RecordState.pdf_prepared
         )
         if record_dict[Fields.STATUS] not in post_pdf_prepared_states:
-            if "colrev_pdf_id" in record_dict:
-                del record_dict["colrev_pdf_id"]
+            record_dict.pop("colrev_pdf_id", None)
 
         # Note : numbers of citations change regularly.
         # They should be retrieved from sources like crossref/doi.org
-        if Fields.CITED_BY in record_dict:
-            del record_dict[Fields.CITED_BY]
+        record_dict.pop(Fields.CITED_BY, None)
         if record_dict.get(Fields.YEAR, "NA").isdigit():
             record_dict[Fields.YEAR] = int(record_dict[Fields.YEAR])
         else:
@@ -715,8 +711,7 @@ class LocalIndex:
             else:
                 del record_dict[Fields.FILE]
 
-        if Fields.ORIGIN in record_dict:
-            del record_dict[Fields.ORIGIN]
+        record_dict.pop(Fields.ORIGIN, None)
 
     def _prepare_record_for_indexing(self, record_dict: dict) -> dict:
         self._apply_status_requirements(record_dict)
@@ -1026,9 +1021,10 @@ class LocalIndex:
             if not selected_row:
                 return False
             return True
-        except sqlite3.OperationalError:
+        except sqlite3.OperationalError:  # pragma: no cover
             self.thread_lock.release()
-        except AttributeError:  # ie. no sqlite database available
+        except AttributeError:  # pragma: no cover
+            # ie. no sqlite database available
             return False
         return False
 
@@ -1146,7 +1142,7 @@ class LocalIndex:
             self.thread_lock.release()
             return results
 
-        except sqlite3.OperationalError as exc:
+        except sqlite3.OperationalError as exc: # pragma: no cover
             self.thread_lock.release()
             raise colrev_exceptions.RecordNotInIndexException() from exc
         except AttributeError as exc:
@@ -1189,7 +1185,7 @@ class LocalIndex:
                     raise colrev_exceptions.RecordNotInIndexException()
             return retrieved_record
 
-        except sqlite3.OperationalError as exc:
+        except sqlite3.OperationalError as exc: # pragma: no cover
             self.thread_lock.release()
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
@@ -1210,8 +1206,7 @@ class LocalIndex:
         record_to_import = self._prepare_record_for_return(
             record_dict, include_file=True
         )
-        if Fields.FILE in record_to_import.data:
-            del record_to_import.data[Fields.FILE]
+        record_to_import.data.pop(Fields.FILE, None)
         return record_to_import
 
     def retrieve(

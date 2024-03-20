@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """Test the local_index"""
-from pathlib import Path
-
 import pytest
 
 import colrev.env.local_index

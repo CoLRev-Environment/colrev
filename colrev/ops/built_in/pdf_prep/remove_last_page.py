@@ -12,9 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 
 import colrev.env.package_manager
-import colrev.env.utils
-import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 # pylint: disable=duplicate-code
 
@@ -49,8 +48,7 @@ class PDFLastPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        local_index = self.review_manager.get_local_index()
-        lp_path = local_index.local_environment_path / Path(".lastpages")
+        lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
         def _get_last_pages(*, pdf: str) -> typing.List[int]:

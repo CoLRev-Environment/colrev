@@ -228,8 +228,7 @@ class PDFPrepMan(colrev.operation.Operation):
     def extract_coverpage(self, *, filepath: Path) -> None:
         """Extract coverpage from PDF"""
 
-        local_index = self.review_manager.get_local_index()
-        cp_path = local_index.local_environment_path / Path(".coverpages")
+        cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         try:
@@ -249,8 +248,7 @@ class PDFPrepMan(colrev.operation.Operation):
     def extract_lastpage(self, *, filepath: Path) -> None:
         """Extract last page from PDF"""
 
-        local_index = self.review_manager.get_local_index()
-        lp_path = local_index.local_environment_path / Path(".lastpages")
+        lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
         try:

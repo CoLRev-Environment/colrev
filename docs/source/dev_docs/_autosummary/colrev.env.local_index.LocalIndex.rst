@@ -43,7 +43,7 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.SELECT_ALL_QUERIES
       ~LocalIndex.SELECT_KEY_QUERIES
       ~LocalIndex.SELECT_LAYERD_FIELDS_QUERY
-      ~LocalIndex.SQLITE_PATH
+      ~LocalIndex.LOCAL_INDEX_SQLITE_FILE
       ~LocalIndex.TOC_INDEX
       ~LocalIndex.UPDATE_LAYERD_FIELDS_QUERY
       ~LocalIndex.annotators_path

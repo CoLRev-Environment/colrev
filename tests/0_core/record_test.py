@@ -1079,6 +1079,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     r1_mod.merge(merging_record=r2_mod, default_source="test")
     print(r1_mod)
 
+
 def test_get_container_title() -> None:
     """Test record.get_container_title()"""
 

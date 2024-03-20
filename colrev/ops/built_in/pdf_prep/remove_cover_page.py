@@ -12,9 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 
 import colrev.env.package_manager
-import colrev.env.utils
-import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 # pylint: disable=duplicate-code
 
@@ -170,8 +169,7 @@ class PDFCoverPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        local_index = self.review_manager.get_local_index()
-        cp_path = local_index.local_environment_path / Path(".coverpages")
+        cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         coverpages = self._get_coverpages(record)
