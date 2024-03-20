@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Tests of the CoLRev corrections"""
+from pathlib import Path
+
 import git
 
 import colrev.review_manager
@@ -7,7 +9,7 @@ import colrev.settings
 
 
 def test_corrections(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the corrections"""
 
@@ -32,15 +34,18 @@ def test_corrections(  # type: ignore
     )
     print(ret)
     base_repo_review_manager.dataset.get_repo().git.log(p=True)
-    print(base_repo_review_manager.corrections_path.is_dir())
+    corrections_path = base_repo_review_manager.get_path(
+        colrev.settings.Filepaths.CORRECTIONS_DIR
+    )
+    print(corrections_path.is_dir())
     print(base_repo_review_manager.dataset.get_repo().head.commit.message)
 
     expected = (
         helpers.test_data_path
-        / Path("corrections")
+        / Path("data/corrections")
         / Path("SrivastavaShainesh2015.json")
     ).read_text(encoding="utf-8")
-    actual = (
-        base_repo_review_manager.corrections_path / Path("SrivastavaShainesh2015.json")
-    ).read_text(encoding="utf-8")
+    actual = (corrections_path / Path("SrivastavaShainesh2015.json")).read_text(
+        encoding="utf-8"
+    )
     assert expected == actual
