@@ -730,7 +730,7 @@ class Prep(colrev.operation.Operation):
         for item in items:
             prep_data.append(
                 {
-                    "record": colrev.record_prep.PrepRecord(data=item),
+                    "record": colrev.record_prep.PrepRecord(item),
                     "nr_items": nr_items,
                     # Note : we cannot load endpoints here
                     # because pathos/multiprocessing
@@ -786,7 +786,7 @@ class Prep(colrev.operation.Operation):
                     self.review_manager.logger.info(
                         f"Setting colrev_status to md_imported {record_dict['ID']}"
                     )
-                    record = colrev.record_prep.PrepRecord(data=record_dict)
+                    record = colrev.record_prep.PrepRecord(record_dict)
                     record.set_status(RecordState.md_imported)
             debug_ids_list = list(records_dict.keys())
             debug_ids = ",".join(debug_ids_list)
@@ -887,7 +887,7 @@ class Prep(colrev.operation.Operation):
             ][0]
 
             change = colrev.record_prep.PrepRecord.get_record_change_score(
-                colrev.record_prep.PrepRecord(data=prepared_record),
+                colrev.record_prep.PrepRecord(prepared_record),
                 previous_record,
             )
             if change > 0.05:
@@ -901,7 +901,7 @@ class Prep(colrev.operation.Operation):
             [
                 r
                 for r in prepared_records
-                if colrev.record_prep.PrepRecord(data=r).masterdata_is_curated()
+                if colrev.record_prep.PrepRecord(r).masterdata_is_curated()
             ]
         )
 
@@ -960,7 +960,7 @@ class Prep(colrev.operation.Operation):
 
         for record_dict in records.values():
             if RecordState.md_imported == record_dict[Fields.STATUS]:
-                record = colrev.record_prep.PrepRecord(data=record_dict)
+                record = colrev.record_prep.PrepRecord(record_dict)
                 record.set_status(RecordState.md_prepared)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="Skip prep")

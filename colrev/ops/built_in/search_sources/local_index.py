@@ -179,7 +179,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 continue
 
         for record_dict in local_index_feed.records.values():
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             record.remove_field(key="colrev.local_index.curation_ID")
 
         local_index_feed.save()
@@ -192,7 +192,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         for retrieved_record_dict in self._retrieve_from_index():
             try:
-                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                retrieved_record = colrev.record.Record(retrieved_record_dict)
                 local_index_feed.add_update_record(retrieved_record)
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
@@ -513,7 +513,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 continue
 
             # self.review_manager.p_printer.pprint(item["original_record"])
-            colrev.record.Record(data=item["original_record"]).print_citation_format()
+            colrev.record.Record(item["original_record"]).print_citation_format()
             for change_item in item["changes"]:
                 if change_item[0] == "change":
                     edit_type, field, values = change_item
@@ -599,7 +599,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _retrieve_by_colrev_id(
         self, *, indexed_record_dict: dict, records: list[dict]
     ) -> dict:
-        indexed_record = colrev.record.Record(data=indexed_record_dict)
+        indexed_record = colrev.record.Record(indexed_record_dict)
 
         if "colrev_id" in indexed_record.data:
             cid_to_retrieve = indexed_record.get_colrev_id()
@@ -610,7 +610,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             x
             for x in records
             if any(
-                cid in colrev.record.Record(data=x).get_colrev_id()
+                cid in colrev.record.Record(x).get_colrev_id()
                 for cid in cid_to_retrieve
             )
         ]

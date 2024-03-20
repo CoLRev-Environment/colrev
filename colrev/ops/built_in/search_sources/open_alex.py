@@ -165,7 +165,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
 
         self._set_author_from_item(record_dict=record_dict, item=item)
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
 
         self._fix_errors(record=record)
         return record

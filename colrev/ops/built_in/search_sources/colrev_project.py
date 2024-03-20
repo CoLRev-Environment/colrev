@@ -233,7 +233,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #     )
 
             #     pdf_get_operation.import_pdf(
-            #         record=colrev.record.Record(data=record_to_import)
+            #         record=colrev.record.Record(record_to_import)
             #     )
 
             record_to_import["colrev_project_identifier"] = (
@@ -245,7 +245,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
             try:
                 colrev_project_search_feed.add_record(
-                    record=colrev.record.Record(data=record_to_import),
+                    record=colrev.record.Record(record_to_import),
                 )
 
             except colrev_exceptions.NotFeedIdentifiableException:

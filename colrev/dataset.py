@@ -342,7 +342,7 @@ class Dataset:
                     )
                     continue
 
-                record = colrev.record_prep.PrepRecord(data=record_dict)
+                record = colrev.record_prep.PrepRecord(record_dict)
                 if record_dict[Fields.STATUS] in [
                     RecordState.md_needs_manual_preparation,
                 ]:

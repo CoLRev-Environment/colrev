@@ -83,7 +83,7 @@ class PDFGetMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)

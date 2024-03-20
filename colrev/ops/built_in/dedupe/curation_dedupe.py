@@ -235,7 +235,7 @@ class CurationDedupe(JsonSchemaMixin):
                         source_record_dict.get(k, "NA") == v
                         for k, v in toc_item.items()
                     ):
-                        # Record(data=sr).print_citation_format()
+                        # Record(sr).print_citation_format()
                         print(
                             f"{source_record_dict.get('author', 'NO_AUTHOR')} : "
                             f"{source_record_dict.get('title', 'NO_TITLE')}"
@@ -354,7 +354,7 @@ class CurationDedupe(JsonSchemaMixin):
                     for rec2 in processed_same_toc_records:
                         overlapping_colrev_ids = colrev.record.Record(
                             data=new_same_toc_record
-                        ).has_overlapping_colrev_id(colrev.record.Record(data=rec2))
+                        ).has_overlapping_colrev_id(colrev.record.Record(rec2))
                         if overlapping_colrev_ids:
                             decision_list.append(
                                 [new_same_toc_record[Fields.ID], rec2[Fields.ID]]
@@ -374,7 +374,7 @@ class CurationDedupe(JsonSchemaMixin):
         else:  # None of the records is curated
             raise FileNotFoundError
 
-        updated_record = colrev.record.Record(data=updated_record_dict)
+        updated_record = colrev.record.Record(updated_record_dict)
         updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
         return updated_record.has_pdf_defects()
 
@@ -407,7 +407,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         overlapping_colrev_ids = colrev.record.Record(
             data=rec1
-        ).has_overlapping_colrev_id(colrev.record.Record(data=rec2))
+        ).has_overlapping_colrev_id(colrev.record.Record(rec2))
         if validated or overlapping_colrev_ids:
             decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 

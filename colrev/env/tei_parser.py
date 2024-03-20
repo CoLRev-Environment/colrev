@@ -616,8 +616,8 @@ class TEIParser:
                 ]:
                     continue
                 rec_sim = colrev.record.Record.get_record_similarity(
-                    colrev.record.Record(data=record_dict),
-                    colrev.record.Record(data=local_record_dict),
+                    colrev.record.Record(record_dict),
+                    colrev.record.Record(local_record_dict),
                 )
                 if rec_sim > max_sim:
                     max_sim_record = local_record_dict

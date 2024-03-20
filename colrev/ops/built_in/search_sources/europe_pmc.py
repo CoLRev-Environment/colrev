@@ -177,7 +177,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             if k not in ["epmc_id", "epmc_source"] and v != ""
         }
 
-        record = colrev.record_prep.PrepRecord(data=retrieved_record_dict)
+        record = colrev.record_prep.PrepRecord(retrieved_record_dict)
         return record
 
     @classmethod
@@ -282,7 +282,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             ) from exc
 
         if most_similar_only:
-            record_list = [colrev.record_prep.PrepRecord(data=most_similar_record)]
+            record_list = [colrev.record_prep.PrepRecord(most_similar_record)]
 
         return record_list
 

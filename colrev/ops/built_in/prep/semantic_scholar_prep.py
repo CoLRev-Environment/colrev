@@ -87,7 +87,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
         for key in keys_to_drop:
             record_in.remove_field(key=key)
 
-        record = colrev.record_prep.PrepRecord(data=retrieved_record)
+        record = colrev.record_prep.PrepRecord(retrieved_record)
         return record
 
     def retrieve_record_from_semantic_scholar(

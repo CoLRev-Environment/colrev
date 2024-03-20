@@ -183,7 +183,7 @@ def add_from_tei(
             return record[Fields.ABSTRACT]
 
         try:
-            tei_filename = colrev.record.Record(data=record).get_tei_filename()
+            tei_filename = colrev.record.Record(record).get_tei_filename()
             tei = review_manager.get_tei(tei_path=tei_filename)
             return tei.get_abstract()
         except FileNotFoundError:
@@ -193,7 +193,7 @@ def add_from_tei(
         if Fields.KEYWORDS in record and not pd.isnull(record[Fields.KEYWORDS]):
             return record[Fields.KEYWORDS]
         try:
-            tei_filename = colrev.record.Record(data=record).get_tei_filename()
+            tei_filename = colrev.record.Record(record).get_tei_filename()
             tei = review_manager.get_tei(tei_path=tei_filename)
             return ", ".join(tei.get_paper_keywords())
         except FileNotFoundError:

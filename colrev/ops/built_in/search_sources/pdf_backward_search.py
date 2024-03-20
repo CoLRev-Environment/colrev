@@ -186,7 +186,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
-            colrev.record_prep.PrepRecord(data=retrieved_record_dict)
+            colrev.record_prep.PrepRecord(retrieved_record_dict)
             .get_container_title()
             .lower(),
             record.get_container_title().lower(),
@@ -302,7 +302,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     def _update_feed_records_with_open_citations_data(
         self, feed_record_dict: dict, backward_references: list
     ) -> None:
-        feed_record = colrev.record.Record(data=feed_record_dict)
+        feed_record = colrev.record.Record(feed_record_dict)
         max_similarity, best_match = self._find_best_match(
             feed_record, backward_references
         )
@@ -365,7 +365,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         item = {
             k: v for k, v in item.items() if not pd.isna(v)
         }  # Drop fields where value is NaN
-        return colrev.record.Record(data=item)
+        return colrev.record.Record(item)
 
     def search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
@@ -482,7 +482,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
                 tei = review_manager.get_tei(
                     pdf_path=pdf_path,
-                    tei_path=colrev.record.Record(data=record).get_tei_filename(),
+                    tei_path=colrev.record.Record(record).get_tei_filename(),
                 )
 
                 references = tei.get_references(add_intext_citation_count=True)

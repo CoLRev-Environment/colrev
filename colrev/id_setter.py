@@ -169,7 +169,7 @@ class IDSetter:
 
                 temp_stat = record_dict[Fields.STATUS]
                 if selected_ids:
-                    record = colrev.record.Record(data=record_dict)
+                    record = colrev.record.Record(record_dict)
                     record.set_status(RecordState.md_prepared)
                 new_id = self._generate_id(
                     local_index=local_index,
@@ -177,7 +177,7 @@ class IDSetter:
                     existing_ids=[x for x in id_list if x != record_id],
                 )
                 if selected_ids:
-                    record = colrev.record.Record(data=record_dict)
+                    record = colrev.record.Record(record_dict)
                     record.set_status(temp_stat)
 
                 id_list.append(new_id)

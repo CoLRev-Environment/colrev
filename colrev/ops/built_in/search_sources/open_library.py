@@ -150,7 +150,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         if Fields.ISBN in item:
             retrieved_record[Fields.ISBN] = str(item["isbn"][0])
 
-        record = colrev.record_prep.PrepRecord(data=retrieved_record)
+        record = colrev.record_prep.PrepRecord(retrieved_record)
         record.add_provenance_all(source=url)
         return record
 

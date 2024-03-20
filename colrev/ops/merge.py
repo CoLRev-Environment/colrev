@@ -199,7 +199,7 @@ class Merge(colrev.operation.Operation):
                 print(f"{i}/{nr_to_reconcile}")
                 copied_rec = current_branch_record_dict.copy()
                 copied_rec.pop(Fields.STATUS)
-                print(colrev.record.Record(data=copied_rec).format_bib_style())
+                print(colrev.record.Record(copied_rec).format_bib_style())
                 print(
                     f"1 - {current_branch_author} coded on {current_branch}".ljust(
                         40, " "

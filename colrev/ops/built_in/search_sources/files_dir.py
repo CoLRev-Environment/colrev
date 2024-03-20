@@ -317,7 +317,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = colrev.record_pdf.PDFRecord(data=record_dict)
+                    record = colrev.record_pdf.PDFRecord(record_dict)
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
@@ -594,7 +594,7 @@ class FilesSearchSource(JsonSchemaMixin):
                     continue
 
                 self._add_doi_from_pdf_if_not_available(new_record)
-                retrieved_record = colrev.record.Record(data=new_record)
+                retrieved_record = colrev.record.Record(new_record)
                 files_dir_feed.add_update_record(
                     retrieved_record=retrieved_record,
                 )
@@ -608,7 +608,7 @@ class FilesSearchSource(JsonSchemaMixin):
     def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        record = colrev.record_pdf.PDFRecord(data=record_dict)
+        record = colrev.record_pdf.PDFRecord(record_dict)
         if Fields.DOI not in record_dict:
             record.set_text_from_pdf()
             res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
@@ -699,7 +699,7 @@ class FilesSearchSource(JsonSchemaMixin):
             )
             if (
                 colrev.record_prep.PrepRecord.get_retrieval_similarity(
-                    record_original=colrev.record.Record(data=record_dict),
+                    record_original=colrev.record.Record(record_dict),
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=True,
                 )

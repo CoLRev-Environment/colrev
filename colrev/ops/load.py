@@ -130,7 +130,7 @@ class Load(colrev.operation.Operation):
     def _import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
 
         # For better readability of the git diff:
         self.load_formatter.run(record=record)
@@ -173,7 +173,7 @@ class Load(colrev.operation.Operation):
             if source_settings.endpoint == "colrev.local_index":
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                colrev.record.Record(data=record).set_status(
+                colrev.record.Record(record).set_status(
                     target_state=RecordState.md_prepared
                 )
                 if Fields.CURATION_ID in record:
@@ -184,7 +184,7 @@ class Load(colrev.operation.Operation):
                         }
                     }
             else:
-                colrev.record.Record(data=record).set_status(
+                colrev.record.Record(record).set_status(
                     target_state=RecordState.md_retrieved
                 )
 
@@ -268,7 +268,7 @@ class Load(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         for source_record in source.search_source.source_records_list:
-            colrev.record.Record(data=source_record).prefix_non_standardized_field_keys(
+            colrev.record.Record(source_record).prefix_non_standardized_field_keys(
                 prefix=source.search_source.endpoint
             )
 

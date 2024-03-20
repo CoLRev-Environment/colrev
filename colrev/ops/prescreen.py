@@ -117,7 +117,7 @@ class Prescreen(colrev.operation.Operation):
             if record_id not in records:
                 self.review_manager.logger.info(f" not found: {record_id}")
                 continue
-            record = colrev.record.Record(data=records[record_id])
+            record = colrev.record.Record(records[record_id])
             if (
                 record.data[Fields.STATUS] != RecordState.md_processed
                 and not self.review_manager.force_mode
@@ -212,7 +212,7 @@ class Prescreen(colrev.operation.Operation):
         self.review_manager.logger.info("Prescreen-including all records")
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.md_processed:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.Record(record_dict)
                 record.set_status(RecordState.rev_prescreen_included)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
@@ -311,7 +311,7 @@ class Prescreen(colrev.operation.Operation):
             if record_dict[Fields.ID] not in selected_auto_include_ids:
                 continue
             self.prescreen(
-                record=colrev.record.Record(data=record_dict),
+                record=colrev.record.Record(record_dict),
                 prescreen_inclusion=True,
             )
         return selected_auto_include_ids

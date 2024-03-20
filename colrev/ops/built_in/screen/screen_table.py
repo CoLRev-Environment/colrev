@@ -172,7 +172,7 @@ class TableScreen(JsonSchemaMixin):
         for screened_record in screened_records:
             if screened_record.get(Fields.ID, "") in records:
                 record_dict = records[screened_record.get(Fields.ID, "")]
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.Record(record_dict)
                 if "screen_inclusion" in screened_record:
                     if screened_record["screen_inclusion"] == "in":
                         record.set_status(RecordState.rev_included)

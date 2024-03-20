@@ -164,7 +164,7 @@ class Dedupe(colrev.operation.Operation):
 
         # 4. Merge into curated record (otherwise)
         else:
-            if colrev.record.Record(data=rec_2).masterdata_is_curated():
+            if colrev.record.Record(rec_2).masterdata_is_curated():
                 main_record = rec_2
                 dupe_record = rec_1
             else:
@@ -305,7 +305,7 @@ class Dedupe(colrev.operation.Operation):
             # have been considered by dedupe
             for record_dict in records.values():
                 if record_dict[Fields.STATUS] == RecordState.md_prepared:
-                    record = colrev.record.Record(data=record_dict)
+                    record = colrev.record.Record(record_dict)
                     record.set_status(RecordState.md_processed)
                     set_to_md_processed.append(record.data[Fields.ID])
 
@@ -463,8 +463,8 @@ class Dedupe(colrev.operation.Operation):
                     rec_1, rec_2
                 )
 
-                main_record = colrev.record.Record(data=main_record_dict)
-                dupe_record = colrev.record.Record(data=dupe_record_dict)
+                main_record = colrev.record.Record(main_record_dict)
+                dupe_record = colrev.record.Record(dupe_record_dict)
 
                 yield (main_record, dupe_record)
 
@@ -715,7 +715,7 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.logger.info("Skipping prescreen/including all records")
             records = self.review_manager.dataset.load_records_dict()
             for record_dict in records.values():
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.Record(record_dict)
                 if RecordState.md_processed == record.data[Fields.STATUS]:
                     record.set_status(RecordState.rev_prescreen_included)
 

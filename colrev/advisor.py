@@ -253,8 +253,10 @@ class Advisor:
 
         return collaboration_instructions
 
-    def _append_initial_load_instruction(self, *, review_instructions: list) -> None:
-        if not self.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
+    def _append_initial_load_instruction(
+        self, *, review_instructions: list, current_origin_states_dict: dict
+    ) -> None:
+        if len(current_origin_states_dict) == 0:
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
@@ -560,7 +562,10 @@ class Advisor:
         review_instructions: typing.List[typing.Dict] = []
         current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
 
-        self._append_initial_load_instruction(review_instructions=review_instructions)
+        self._append_initial_load_instruction(
+            review_instructions=review_instructions,
+            current_origin_states_dict=current_origin_states_dict,
+        )
 
         self._append_operation_in_progress_instructions(
             review_instructions=review_instructions,

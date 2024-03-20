@@ -176,7 +176,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                         record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
                     )
                     new_record["cites_IDs"] = record[Fields.ID]
-                    retrieved_record = colrev.record.Record(data=new_record)
+                    retrieved_record = colrev.record.Record(new_record)
 
                     forward_search_feed.add_update_record(
                         retrieved_record=retrieved_record

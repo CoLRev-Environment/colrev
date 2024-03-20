@@ -174,7 +174,7 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         Fields.VOLUME: "42",
         Fields.YEAR: "2018",
     }
-    record = colrev.record.Record(data=record_dict)
+    record = colrev.record.Record(record_dict)
     expected_dict = {
         Fields.ID: "AbbasZhouDengEtAl2018",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -197,7 +197,7 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         "curation_ID": "gh...#AbbasZhouDengEtAl2018",
     }
     actual = local_index.retrieve_from_toc(record, similarity_threshold=0.8)
-    expected = colrev.record.Record(data=expected_dict)
+    expected = colrev.record.Record(expected_dict)
     assert expected == actual
 
 

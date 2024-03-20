@@ -65,8 +65,8 @@ v2 = {
     Fields.PAGES: "1--3",
 }
 
-r1 = colrev.record.Record(data=v1)
-r2 = colrev.record.Record(data=v2)
+r1 = colrev.record.Record(v1)
+r2 = colrev.record.Record(v2)
 
 
 def test_eq() -> None:
@@ -343,7 +343,7 @@ def test_change_entrytype_inproceedings_2(
         Fields.YEAR: "2022",
         Fields.PAGES: "22--31",
     }
-    record = colrev.record.Record(data=record_dict)
+    record = colrev.record.Record(record_dict)
     record.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
 
     expected = {
@@ -433,7 +433,7 @@ def test_change_entrytype_article(
         Fields.NUMBER: "UNKNOWN",
         Fields.LANGUAGE: "eng",
     }
-    rec = colrev.record.Record(data=input_value)
+    rec = colrev.record.Record(input_value)
     rec.change_entrytype(ENTRYTYPES.ARTICLE, qm=quality_model)
     actual = rec.data
     assert expected == actual
@@ -957,8 +957,8 @@ def test_merge_select_non_all_caps() -> None:
     """Test record.merge() - all-caps cases"""
     # Select title-case (not all-caps title) and full author name
 
-    r1_mod = colrev.record.Record(data=v1).copy()
-    r2_mod = colrev.record.Record(data=v2).copy()
+    r1_mod = colrev.record.Record(v1).copy()
+    r2_mod = colrev.record.Record(v2).copy()
     print(r1_mod)
     print(r2_mod)
     r1_mod.data[Fields.TITLE] = "Editorial"
@@ -1157,7 +1157,7 @@ def test_get_toc_key() -> None:
         Fields.YEAR: "2012",
     }
     expected = "international-conference-on-information-systems|2012"
-    actual = colrev.record.Record(data=input_value).get_toc_key()
+    actual = colrev.record.Record(input_value).get_toc_key()
     assert expected == actual
 
     input_value = {
@@ -1170,7 +1170,7 @@ def test_get_toc_key() -> None:
         colrev_exceptions.NotTOCIdentifiableException,
         match="ENTRYTYPE .* not toc-identifiable",
     ):
-        colrev.record.Record(data=input_value).get_toc_key()
+        colrev.record.Record(input_value).get_toc_key()
 
 
 def test_prescreen_exclude() -> None:
@@ -1267,7 +1267,7 @@ def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> No
     """Test record.format_if_mostly_upper()"""
 
     input_dict = {Fields.TITLE: input_text}
-    input_record = colrev.record_prep.PrepRecord(data=input_dict)
+    input_record = colrev.record_prep.PrepRecord(input_dict)
     input_record.format_if_mostly_upper(key=Fields.TITLE, case=case)
     actual = input_record.data[Fields.TITLE]
     assert expected == actual

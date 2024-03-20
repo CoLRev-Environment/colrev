@@ -104,7 +104,7 @@ class Obsidian(JsonSchemaMixin):
         try:
             tei_file = (
                 self.review_manager.path
-                / colrev.record.Record(data=record_dict).get_tei_filename()
+                / colrev.record.Record(record_dict).get_tei_filename()
             )
 
             if tei_file.is_file():

@@ -81,7 +81,7 @@ class CiteAsPrep(JsonSchemaMixin):
         if "DOI" in data["metadata"]:
             retrieved_record.update(doi=data["metadata"]["DOI"])
 
-        record = colrev.record_prep.PrepRecord(data=retrieved_record)
+        record = colrev.record_prep.PrepRecord(retrieved_record)
         record.add_provenance_all(source=url)
         return record
 

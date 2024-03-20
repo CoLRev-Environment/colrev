@@ -150,7 +150,7 @@ class Sync:
                 print(f"{citation_key} not in {src}")
                 continue
             self.records_to_import.append(
-                colrev.record.Record(data=refs_in_src[citation_key])
+                colrev.record.Record(refs_in_src[citation_key])
             )
 
     def get_cited_papers(self) -> None:

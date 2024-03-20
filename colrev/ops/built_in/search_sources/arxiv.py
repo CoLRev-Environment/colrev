@@ -332,7 +332,7 @@ class ArXivSource:
                         )
                         continue
 
-                    prep_record = colrev.record_prep.PrepRecord(data=record_dict)
+                    prep_record = colrev.record_prep.PrepRecord(record_dict)
 
                     added = arxiv_feed.add_update_record(prep_record)
 
@@ -365,7 +365,7 @@ class ArXivSource:
     #     records = self.review_manager.dataset.load_records_dict()
 
     #     for feed_record_dict in arxiv_feed.feed_records.values():
-    #         feed_record = colrev.record.Record(data=feed_record_dict)
+    #         feed_record = colrev.record.Record(feed_record_dict)
 
     #         try:
     #             retrieved_record = self._arxiv_query_id(
@@ -380,7 +380,7 @@ class ArXivSource:
     #         retrieved_record=feed_record
     #     )
     # )
-    #         retrieved_record = colrev.record.Record(data=retrieved_record)
+    #         retrieved_record = colrev.record.Record(retrieved_record)
     #         arxiv_feed.add_update_record(retrieved_record)
 
     #         changed = self.operation.update_existing_record(

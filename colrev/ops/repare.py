@@ -109,7 +109,7 @@ class Repare(colrev.operation.Operation):
             full_path = self.review_manager.path / Path(record_dict[Fields.FILE])
 
             if not full_path.is_file():
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.Record(record_dict)
                 self._fix_broken_symlink_based_on_local_index(
                     record=record, full_path=full_path
                 )
@@ -119,7 +119,7 @@ class Repare(colrev.operation.Operation):
 
             record_dict["colrev_status_backup"] = record_dict[Fields.STATUS]
             del record_dict[Fields.FILE]
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             record.set_status(RecordState.rev_prescreen_included)
 
     def _get_source_feeds(self) -> dict:
@@ -312,7 +312,7 @@ class Repare(colrev.operation.Operation):
     def _fix_provenance(self, *, records: dict) -> None:
         source_feeds = self._get_source_feeds()
         for record_dict in records.values():
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             self._remove_fields(record=record)
             self._set_provenance(record=record, source_feeds=source_feeds)
 
@@ -361,7 +361,7 @@ class Repare(colrev.operation.Operation):
     def _update_field_names(self, *, records: dict) -> None:
         for record_dict in records.values():
             # TBD: which parts are in upgrade/repare and which parts are in prepare??
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             if Fields.FULLTEXT in record_dict.get("link", ""):
                 record.rename_field(key="link", new_key=Fields.FULLTEXT)
             if (
@@ -429,11 +429,11 @@ class Repare(colrev.operation.Operation):
         # removing specific fields
         # for record_dict in records.values():
         #     if "colrev_status_backup" in record_dict:
-        #         colrev.record.Record(data=record_dict).remove_field(
+        #         colrev.record.Record(record_dict).remove_field(
         #             key="colrev_status_backup"
         #         )
         #     if "colrev_local_index" in record_dict:
-        #         colrev.record.Record(data=record_dict).remove_field(
+        #         colrev.record.Record(record_dict).remove_field(
         #             key="colrev_local_index"
         #         )
 

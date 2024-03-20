@@ -254,7 +254,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             for article in articles:
 
                 record_dict = self._create_record_dict(article)
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.Record(record_dict)
 
                 ieee_feed.add_update_record(record)
 

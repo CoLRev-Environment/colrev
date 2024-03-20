@@ -59,9 +59,7 @@ def test_search_feed_update(  # type: ignore
         Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
         Fields.DOI: "10.111/2222",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     # Explitly add to records (usually done by the load operation)
     main_record = deepcopy(record_dict)
@@ -95,12 +93,10 @@ def test_search_feed_update(  # type: ignore
         Fields.AUTHOR: "Webster, J and Watoson, R",
     }
 
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     actual_return = search_feed.get_prev_feed_record(
-        colrev.record.Record(data={"doi": "10.111/2222"})
+        colrev.record.Record({"doi": "10.111/2222"})
     )
     assert actual_return.data == record_dict
 
@@ -118,9 +114,7 @@ def test_search_feed_update_fields(  # type: ignore
         Fields.DOI: "10.111/2222",
         Fields.CITED_BY: "12",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     # Explitly add to records (usually done by the load operation)
     main_record = deepcopy(record_dict)
@@ -128,17 +122,13 @@ def test_search_feed_update_fields(  # type: ignore
     search_feed.records = {main_record[Fields.ID]: main_record}
 
     record_dict[Fields.CITED_BY] = "13"
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     assert search_feed.feed_records["000001"][Fields.CITED_BY] == "12"
     assert search_feed.records["000001"][Fields.CITED_BY] == "12"
 
     # Time-variant fields like cited-by should only change if all records are retrieved (update_only=False)
     search_feed.update_only = False
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     assert search_feed.feed_records["000001"][Fields.CITED_BY] == "13"
 
 
@@ -154,9 +144,7 @@ def test_search_feed_preventing_updates_of_curated_records_from_non_curated_feed
         Fields.TITLE: "Analyzing the past to prepare for the future: Writing a literature review",
         Fields.DOI: "10.111/2222",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     # Explitly add to records (usually done by the load operation)
     main_record = deepcopy(record_dict)
@@ -165,9 +153,7 @@ def test_search_feed_preventing_updates_of_curated_records_from_non_curated_feed
     search_feed.records = {main_record[Fields.ID]: main_record}
 
     record_dict[Fields.TITLE] = "Analyzing the past to prepare for the future"
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     # The feed record should change
     assert (
         search_feed.feed_records["000001"][Fields.TITLE]
@@ -194,9 +180,7 @@ def test_search_feed_update_fields_prov_removal(  # type: ignore
         Fields.DOI: "10.111/2222",
         Fields.CITED_BY: "12",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     assert Fields.MD_PROV not in search_feed.feed_records["000001"]
 
@@ -211,9 +195,7 @@ def test_search_feed_save(search_feed, caplog) -> None:  # type: ignore
         Fields.DOI: "10.111/2222",
         Fields.YEAR: "2022",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     search_feed.save()
 
     search_feed.review_manager.logger.propagate = True
@@ -232,9 +214,7 @@ def test_search_feed_published_forthcoming_1(search_feed, caplog) -> None:  # ty
         Fields.DOI: "10.111/2222",
         Fields.YEAR: "forthcoming",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     # Explitly add to records (usually done by the load operation)
     main_record = deepcopy(record_dict)
@@ -255,7 +235,7 @@ def test_search_feed_published_forthcoming_1(search_feed, caplog) -> None:  # ty
     search_feed.review_manager.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
         assert "Update published forthcoming paper" in caplog.text
 
@@ -273,9 +253,7 @@ def test_search_feed_published_forthcoming_2(search_feed, caplog) -> None:  # ty
         Fields.DOI: "10.111/2222",
         Fields.YEAR: "2002",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     search_feed.save()
 
     record_dict = {
@@ -292,7 +270,7 @@ def test_search_feed_published_forthcoming_2(search_feed, caplog) -> None:  # ty
     search_feed.review_manager.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
         assert "Update published forthcoming paper" in caplog.text
 
@@ -311,9 +289,7 @@ def test_search_feed_minor_change(search_feed, caplog) -> None:  # type: ignore
         Fields.VOLUME: "12",
         Fields.NUMBER: "2",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     search_feed.save()
 
     main_record = deepcopy(record_dict)
@@ -335,7 +311,7 @@ def test_search_feed_minor_change(search_feed, caplog) -> None:  # type: ignore
     search_feed.review_manager.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
         assert "check/update" in caplog.text
 
@@ -350,9 +326,7 @@ def test_search_feed_retracted(search_feed, caplog) -> None:  # type: ignore
         Fields.DOI: "10.111/2222",
         Fields.YEAR: "2002",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     search_feed.save()
 
     record_dict = {
@@ -372,7 +346,7 @@ def test_search_feed_retracted(search_feed, caplog) -> None:  # type: ignore
     search_feed.review_manager.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
         assert "Found paper retract" in caplog.text
 
@@ -387,9 +361,7 @@ def test_search_feed_substantial_change(search_feed, caplog) -> None:  # type: i
         Fields.DOI: "10.111/2222",
         Fields.YEAR: "2002",
     }
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
 
     main_record = deepcopy(record_dict)
     main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
@@ -409,7 +381,7 @@ def test_search_feed_substantial_change(search_feed, caplog) -> None:  # type: i
     search_feed.review_manager.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
         assert "leads to substantial changes" in caplog.text
         # TODO ( need to capture print statement for the following:)
@@ -438,9 +410,7 @@ def test_search_feed_missing_ignored_fields(search_feed, caplog) -> None:  # typ
     }
     main_record = deepcopy(record_dict)
 
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     main_record[Fields.ORIGIN] = ["test.bib/000001"]  # type: ignore
     search_feed.records = {main_record[Fields.ID]: main_record}
     search_feed.save()
@@ -457,7 +427,7 @@ def test_search_feed_missing_ignored_fields(search_feed, caplog) -> None:  # typ
     search_feed.review_manager.logger.propagate = True
     with caplog.at_level(logging.INFO):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
         assert Fields.VOLUME not in search_feed.records["0001"]
 
@@ -472,7 +442,7 @@ def test_search_feed_NotFeedIdentifiableException(search_feed):  # type: ignore
         colrev.exceptions.NotFeedIdentifiableException,
     ):
         search_feed.add_update_record(
-            retrieved_record=colrev.record.Record(data=record_dict)
+            retrieved_record=colrev.record.Record(record_dict)
         )
 
 
@@ -487,8 +457,6 @@ def test_search_feed_prep_mode(search_feed, caplog) -> None:  # type: ignore
         Fields.YEAR: "2022",
     }
     search_feed.prep_mode = True
-    search_feed.add_update_record(
-        retrieved_record=colrev.record.Record(data=record_dict)
-    )
+    search_feed.add_update_record(retrieved_record=colrev.record.Record(record_dict))
     assert record_dict[Fields.ORIGIN] == ["test.bib/000001"]
     search_feed.prep_mode = False

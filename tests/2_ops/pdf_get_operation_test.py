@@ -126,21 +126,21 @@ def test_pdf_get_get_target_filepath(  # type: ignore
     }
 
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(data=record_dict)
+        record=colrev.record.Record(record_dict)
     )
     expected = Path("data/pdfs/SrivastavaShainesh2015.pdf")
     assert actual == expected
 
     pdf_get_operation.filepath_directory_pattern = "year"
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(data=record_dict)
+        record=colrev.record.Record(record_dict)
     )
     expected = Path("data/pdfs/2015/SrivastavaShainesh2015.pdf")
     assert actual == expected
 
     pdf_get_operation.filepath_directory_pattern = "volume_number"
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(data=record_dict)
+        record=colrev.record.Record(record_dict)
     )
     expected = Path("data/pdfs/43/1/SrivastavaShainesh2015.pdf")
     assert actual == expected
@@ -148,7 +148,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
     del record_dict["number"]
     pdf_get_operation.filepath_directory_pattern = "volume_number"
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(data=record_dict)
+        record=colrev.record.Record(record_dict)
     )
     expected = Path("data/pdfs/43/SrivastavaShainesh2015.pdf")
     assert actual == expected

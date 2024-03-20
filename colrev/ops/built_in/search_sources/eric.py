@@ -263,7 +263,7 @@ class ERICSearchSource(JsonSchemaMixin):
             # pylint: disable=colrev-missed-constant-usage
             record_dict[Fields.YEAR] = str(record_dict["year"])
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
         if Fields.LANGUAGE in record.data:
             try:
                 record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]

@@ -303,7 +303,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 existing_keys["openalex_id"].append(record["openalex_id"])
 
             synergy_feed.add_update_record(
-                retrieved_record=colrev.record.Record(data=record)
+                retrieved_record=colrev.record.Record(record)
             )
 
             # The linking of doi/... should happen in the prep operation

@@ -454,7 +454,7 @@ def fixture_v_t_pdf_record(
     v_t_record: colrev.record.Record,
 ) -> colrev.record_pdf.PDFRecord:
     """Record for testing quality defects"""
-    return colrev.record_pdf.PDFRecord(data=v_t_record.data)
+    return colrev.record_pdf.PDFRecord(v_t_record.data)
 
 
 @pytest.fixture(name="book_record")

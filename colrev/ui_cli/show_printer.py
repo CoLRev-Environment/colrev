@@ -27,7 +27,7 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
         print("No records included in sample (yet)")
 
     for sample_r in sample:
-        colrev.record.Record(data=sample_r).print_citation_format()
+        colrev.record.Record(sample_r).print_citation_format()
 
 
 def print_venv_notes() -> None:

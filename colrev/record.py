@@ -45,7 +45,7 @@ class Record:
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-    def __init__(self, *, data: dict) -> None:
+    def __init__(self, data: dict) -> None:
         self.data = data
         """Dictionary containing the record data"""
         # Note : avoid parsing upon Record instantiation as much as possible
@@ -77,11 +77,11 @@ class Record:
 
     def copy(self) -> Record:
         """Copy the record object"""
-        return Record(data=deepcopy(self.data))
+        return Record(deepcopy(self.data))
 
     def copy_prep_rec(self) -> colrev.record_prep.PrepRecord:
         """Copy the record object (as a PrepRecord)"""
-        return colrev.record_prep.PrepRecord(data=deepcopy(self.data))
+        return colrev.record_prep.PrepRecord(deepcopy(self.data))
 
     def update_by_record(self, update_record: Record) -> None:
         """Update all data of a record object based on another record"""

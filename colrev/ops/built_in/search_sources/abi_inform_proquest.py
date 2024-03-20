@@ -106,8 +106,8 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 # there are variations in spelling and completeness
                 if (
                     colrev.record.Record.get_record_similarity(
-                        record_a=colrev.record.Record(data=record),
-                        record_b=colrev.record.Record(data=original_record),
+                        record_a=colrev.record.Record(record),
+                        record_b=colrev.record.Record(original_record),
                     )
                     < 0.9
                 ):

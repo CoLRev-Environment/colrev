@@ -176,7 +176,7 @@ def _validate_prep_prescreen_exclusions(
             prescreen_errors.append(prescreen_excluded_to_validate[index])
 
         for error in prescreen_errors:
-            colrev.record.Record(data=error).set_status(
+            colrev.record.Record(error).set_status(
                 target_state=RecordState.md_needs_manual_preparation
             )
             validate_operation.review_manager.dataset.save_records_dict(
@@ -206,7 +206,7 @@ def _validate_prep(
         for origin in validation_element["origins"]:
             print()
             print(f"{origin[Fields.ORIGIN][0]} : change {origin['change_score']}")
-            colrev.record.Record(data=origin).print_citation_format()
+            colrev.record.Record(origin).print_citation_format()
             print_diff(
                 origin=origin,
                 record_dict=record_dict,
@@ -215,7 +215,7 @@ def _validate_prep(
 
         print()
         print(f"Current record: {record_dict[Fields.ID]}")
-        colrev.record.Record(data=record_dict).print_citation_format()
+        colrev.record.Record(record_dict).print_citation_format()
         print()
 
         user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")

@@ -41,7 +41,7 @@ class PDFPrepMan(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.pdf_needs_manual_preparation:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.Record(record_dict)
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
@@ -103,7 +103,7 @@ class PDFPrepMan(colrev.operation.Operation):
             else:
                 stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             prov_d = record.data[Fields.D_PROV]
 
             if Fields.FILE in prov_d:

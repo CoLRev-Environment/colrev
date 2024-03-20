@@ -302,12 +302,12 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         # to do : if authors mismatch: color those that do/do not match
         print(stat)
-        record = colrev.record.Record(data=item)
+        record = colrev.record.Record(item)
         file_provenance = record.get_field_provenance(key=Fields.FILE)
 
         self._print_pdf_prep_man(record)
         record_dict = records[item[Fields.ID]]
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
         if RecordState.pdf_needs_manual_preparation != record_dict[Fields.STATUS]:
             return record_dict
 

@@ -68,7 +68,7 @@ class PrepMan(colrev.operation.Operation):
                 stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
             if Fields.MD_PROV in record_dict:
-                record = colrev.record_prep.PrepRecord(data=record_dict)
+                record = colrev.record_prep.PrepRecord(record_dict)
                 prov_d = record.data[Fields.MD_PROV]
                 hints = []
                 for key, value in prov_d.items():
@@ -142,7 +142,7 @@ class PrepMan(colrev.operation.Operation):
                 # warn
                 continue
             record_dict = records[language_record[Fields.ID]]
-            record = colrev.record_prep.PrepRecord(data=record_dict)
+            record = colrev.record_prep.PrepRecord(record_dict)
             record.update_field(
                 key=Fields.LANGUAGE,
                 value=language_record["most_likely_language"],
@@ -246,7 +246,7 @@ class PrepMan(colrev.operation.Operation):
     def set_data(self, *, record_dict: dict) -> None:
         """Set data in the prep_man operation"""
 
-        record = colrev.record_prep.PrepRecord(data=record_dict)
+        record = colrev.record_prep.PrepRecord(record_dict)
         record.set_masterdata_complete(
             source="prep_man",
             masterdata_repository=self.review_manager.settings.is_curated_repo(),

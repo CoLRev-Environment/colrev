@@ -105,7 +105,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 if record_dict[Fields.ID] not in split:
                     continue
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             ret, inclusion_decision_str = "NA", "NA"
             i += 1
 

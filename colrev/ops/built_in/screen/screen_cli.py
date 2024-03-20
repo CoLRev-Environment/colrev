@@ -191,7 +191,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         *,
         record_dict: dict,
     ) -> str:
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
         abstract_from_tei = False
         if (
             Fields.ABSTRACT not in record.data

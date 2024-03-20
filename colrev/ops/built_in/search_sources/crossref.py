@@ -143,7 +143,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 Fields.ENTRYTYPE: "article",
             }
             returned_record = self.crossref_query(
-                record_input=colrev.record_prep.PrepRecord(data=test_rec),
+                record_input=colrev.record_prep.PrepRecord(test_rec),
                 jour_vol_iss_list=False,
                 timeout=20,
             )[0]
@@ -296,7 +296,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
-            colrev.record_prep.PrepRecord(data=retrieved_record_dict)
+            colrev.record_prep.PrepRecord(retrieved_record_dict)
             .get_container_title()
             .lower(),
             record.get_container_title().lower(),
@@ -425,7 +425,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if not jour_vol_iss_list:
             if most_similar_record:
-                record_list = [colrev.record_prep.PrepRecord(data=most_similar_record)]
+                record_list = [colrev.record_prep.PrepRecord(most_similar_record)]
 
         return record_list
 
@@ -686,7 +686,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         for feed_record_dict in crossref_feed.feed_records.values():
             try:
-                feed_record = colrev.record.Record(data=feed_record_dict)
+                feed_record = colrev.record.Record(feed_record_dict)
                 retrieved_record = self.query_doi(
                     doi=feed_record_dict[Fields.DOI], etiquette=self.etiquette
                 )

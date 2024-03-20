@@ -326,7 +326,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             for item in _search_return:
                 retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
-                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                retrieved_record = colrev.record.Record(retrieved_record_dict)
                 s2_feed.add_update_record(retrieved_record)
 
         except (

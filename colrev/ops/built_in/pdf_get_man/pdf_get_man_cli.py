@@ -264,7 +264,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             self._get_from_downloads_folder = True
 
         for record_dict in records.values():
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
             pdf_get_operation.link_pdf(record=record).get_data()
 
         self.pdf_get_man_operation.export_retrieval_table(records=records)
@@ -283,7 +283,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         for i, item in enumerate(pdf_get_man_data["items"]):
             stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
 
-            record = colrev.record.Record(data=records[item[Fields.ID]])
+            record = colrev.record.Record(records[item[Fields.ID]])
 
             print(f"\n\n{stat}")
 

@@ -1018,7 +1018,7 @@ def test_inconsistent_with_doi_metadata(
 
         # Return the simulated response if DOI is in the simulated responses
         if doi in simulated_responses:
-            return colrev.record.Record(data=simulated_responses[doi])
+            return colrev.record.Record(simulated_responses[doi])
         else:
             # Simulate a DOI not found scenario
             return None

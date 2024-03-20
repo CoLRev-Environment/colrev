@@ -95,8 +95,8 @@ class Validate(colrev.operation.Operation):
                 origin_record = origin_records[origin]
 
                 change_score = colrev.record.Record.get_record_change_score(
-                    colrev.record.Record(data=record_dict),
-                    colrev.record.Record(data=origin_record),
+                    colrev.record.Record(record_dict),
+                    colrev.record.Record(origin_record),
                 )
 
                 origin_record["change_score"] = change_score
@@ -152,12 +152,12 @@ class Validate(colrev.operation.Operation):
 
         with open(merge_candidates_file, "w", encoding="utf-8") as file:
             for ref_rec_dict in tqdm(records):
-                ref_rec = colrev.record.Record(data=ref_rec_dict)
+                ref_rec = colrev.record.Record(ref_rec_dict)
                 for comp_rec_dict in reversed(records):
                     # Note : due to symmetry, we only need one part of the matrix
                     if ref_rec_dict[Fields.ID] == comp_rec_dict[Fields.ID]:
                         break
-                    comp_rec = colrev.record.Record(data=comp_rec_dict)
+                    comp_rec = colrev.record.Record(comp_rec_dict)
                     similarity = colrev.record.Record.get_record_similarity(
                         ref_rec, comp_rec
                     )
@@ -239,8 +239,8 @@ class Validate(colrev.operation.Operation):
             # Note : should usually be only one merged_rec (but multiple-merges are possible)
             for merged_rec in merged_records_list:
                 change_score = colrev.record.Record.get_record_change_score(
-                    colrev.record.Record(data=reference_record),
-                    colrev.record.Record(data=merged_rec),
+                    colrev.record.Record(reference_record),
+                    colrev.record.Record(merged_rec),
                 )
                 change_diff.append(
                     {

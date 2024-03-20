@@ -21,7 +21,7 @@ The `colrev_status` should not be assigned directly using the `record_dict` dict
 
 **Correct code**::
 
-   record = colrev.record.Record(data=record_dict)
+   record = colrev.record.Record(record_dict)
    record.set_statue(target_state = colrev.record.Record.md_prepared)
 
 

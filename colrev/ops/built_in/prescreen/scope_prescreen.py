@@ -208,7 +208,7 @@ class ScopePrescreen(JsonSchemaMixin):
 
         # Note : LanguageScope is covered in prep
         # because dedupe cannot handle merges between languages
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
 
         self._predatory_journal_exclusion(record=record)
         self._conditional_prescreen_entrytypes(record=record)

@@ -185,7 +185,7 @@ class StatusStats:
             [
                 r
                 for r in self.records.values()
-                if colrev.record.Record(data=r).masterdata_is_curated()
+                if colrev.record.Record(r).masterdata_is_curated()
             ]
         )
 

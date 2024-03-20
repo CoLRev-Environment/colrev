@@ -357,7 +357,7 @@ class ColrevCuration(JsonSchemaMixin):
                     continue
                 if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
                     continue
-                cid = colrev.record.Record(data=record_dict).create_colrev_id(
+                cid = colrev.record.Record(record_dict).create_colrev_id(
                     assume_complete=True
                 )
                 if cid in identical_colrev_ids:

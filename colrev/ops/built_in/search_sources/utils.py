@@ -197,4 +197,4 @@ def json_to_record(*, item: dict) -> colrev.record_prep.PrepRecord:
             f"RecordNotParsableException: {exc}"
         ) from exc
 
-    return colrev.record_prep.PrepRecord(data=record_dict)
+    return colrev.record_prep.PrepRecord(record_dict)

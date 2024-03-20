@@ -411,7 +411,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     msg="Pubmed: no records retrieved"
                 )
 
-            retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+            retrieved_record = colrev.record.Record(retrieved_record_dict)
 
             similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
@@ -551,7 +551,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                             f"Skipped record: {record_dict}"
                         )
                         continue
-                    prep_record = colrev.record_prep.PrepRecord(data=record_dict)
+                    prep_record = colrev.record_prep.PrepRecord(record_dict)
 
                     if Fields.D_PROV in prep_record.data:
                         del prep_record.data[Fields.D_PROV]
@@ -587,7 +587,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     ) -> None:
 
         for feed_record_dict in pubmed_feed.feed_records.values():
-            feed_record = colrev.record.Record(data=feed_record_dict)
+            feed_record = colrev.record.Record(feed_record_dict)
 
             try:
                 retrieved_record_dict = self._pubmed_query_id(
@@ -596,7 +596,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
                 if retrieved_record_dict["pubmedid"] != feed_record.data["pubmedid"]:
                     continue
-                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+                retrieved_record = colrev.record.Record(retrieved_record_dict)
                 pubmed_feed.add_update_record(retrieved_record)
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,

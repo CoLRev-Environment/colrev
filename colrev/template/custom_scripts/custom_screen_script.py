@@ -47,7 +47,7 @@ class CustomScreen:
                 if record_dict[Fields.ID] not in split:
                     continue
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
 
             if random.random() < 0.5:  # nosec
                 if screening_criteria_available:

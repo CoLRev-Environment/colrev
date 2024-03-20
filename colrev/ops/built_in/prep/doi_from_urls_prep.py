@@ -91,7 +91,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
                 Fields.DOI: doi.upper(),
                 Fields.ID: record.data[Fields.ID],
             }
-            retrieved_record = colrev.record_prep.PrepRecord(data=retrieved_record_dict)
+            retrieved_record = colrev.record_prep.PrepRecord(retrieved_record_dict)
             doi_connector.DOIConnector.retrieve_doi_metadata(
                 review_manager=self.review_manager,
                 record=retrieved_record,

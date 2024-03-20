@@ -132,7 +132,7 @@ class PDFPrep(colrev.operation.Operation):
             )
             return record_dict
 
-        record = colrev.record_pdf.PDFRecord(data=record_dict)
+        record = colrev.record_pdf.PDFRecord(record_dict)
         if record_dict[Fields.FILE].endswith(".pdf"):
             record.set_text_from_pdf()
         original_filename = record_dict[Fields.FILE]
@@ -263,7 +263,7 @@ class PDFPrep(colrev.operation.Operation):
             if RecordState.pdf_needs_manual_preparation != record_dict["colrev_stauts"]:
                 continue
 
-            record = colrev.record_pdf.PDFRecord(data=record_dict)
+            record = colrev.record_pdf.PDFRecord(record_dict)
             # pylint: disable=colrev-direct-status-assign
             record.data.update(colrev_status=RecordState.pdf_imported)
             record.reset_pdf_provenance_notes()
@@ -369,7 +369,7 @@ class PDFPrep(colrev.operation.Operation):
             self.review_manager.logger.info(record_dict[Fields.ID])
             try:
                 endpoint.prep_pdf(
-                    record=colrev.record_pdf.PDFRecord(data=record_dict),
+                    record=colrev.record_pdf.PDFRecord(record_dict),
                     pad=0,
                 )
             except colrev_exceptions.TEIException:

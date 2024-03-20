@@ -106,7 +106,7 @@ class SearchAPIFeed:
             prev_feed_record_dict = deepcopy(
                 self.feed_records[retrieved_record.data[Fields.ID]]
             )
-        return colrev.record.Record(data=prev_feed_record_dict)
+        return colrev.record.Record(prev_feed_record_dict)
 
     def _set_id(self, record: colrev.record.Record) -> None:
         """Set incremental record ID
@@ -314,7 +314,7 @@ class SearchAPIFeed:
             raise colrev_exceptions.RecordNotFoundException(
                 f"Could not find/update {colrev_origin}"
             )
-        return colrev.record.Record(data=main_record_dict)
+        return colrev.record.Record(main_record_dict)
 
     def _update_record(
         self,
@@ -398,7 +398,7 @@ class SearchAPIFeed:
         prev_feed_record_dict = {}
         if record.data[Fields.ID] in self.feed_records:
             prev_feed_record_dict = deepcopy(self.feed_records[record.data[Fields.ID]])
-        return colrev.record.Record(data=prev_feed_record_dict)
+        return colrev.record.Record(prev_feed_record_dict)
 
     def _prep_retrieved_record(self, retrieved_record: colrev.record.Record) -> None:
         """Prepare the retrieved record for the search feed"""

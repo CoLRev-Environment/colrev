@@ -329,8 +329,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 for item in items
             ]
             retrieved_records = [
-                colrev.record_prep.PrepRecord(data=dblp_dict)
-                for dblp_dict in dblp_dicts
+                colrev.record_prep.PrepRecord(dblp_dict) for dblp_dict in dblp_dicts
             ]
             for retrieved_record in retrieved_records:
                 # Note : DBLP provides number-of-pages (instead of pages start-end)
@@ -391,7 +390,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> None:
 
         for feed_record_dict in dblp_feed.feed_records.values():
-            feed_record = colrev.record.Record(data=feed_record_dict)
+            feed_record = colrev.record.Record(feed_record_dict)
             query = "" + feed_record.data.get(Fields.TITLE, "").replace("-", "_")
             for retrieved_record in self._retrieve_dblp_records(
                 query=query,
