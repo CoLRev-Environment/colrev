@@ -60,7 +60,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Crossref API"""
         self.dblp_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
 
         if any(

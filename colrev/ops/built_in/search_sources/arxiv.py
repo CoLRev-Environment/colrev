@@ -17,8 +17,8 @@ from dacite import from_dict
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -332,7 +332,7 @@ class ArXivSource:
                         )
                         continue
 
-                    prep_record = colrev.record.PrepRecord(data=record_dict)
+                    prep_record = colrev.record_prep.PrepRecord(data=record_dict)
 
                     added = arxiv_feed.add_update_record(prep_record)
 
@@ -449,8 +449,10 @@ class ArXivSource:
         """Source-specific preparation for ArXiv"""
 
         if Fields.AUTHOR in record.data:
-            record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
-                input_string=record.data[Fields.AUTHOR]
+            record.data[Fields.AUTHOR] = (
+                colrev.record_prep.PrepRecord.format_author_field(
+                    input_string=record.data[Fields.AUTHOR]
+                )
             )
 
         return record

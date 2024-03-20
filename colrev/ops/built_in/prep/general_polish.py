@@ -58,7 +58,7 @@ class GeneralPolishPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record by applying polishing rules"""
 
         if Fields.TITLE in record.data:

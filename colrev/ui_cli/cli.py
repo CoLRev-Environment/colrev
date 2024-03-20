@@ -1303,11 +1303,14 @@ def screen(
 
 
 def _extract_coverpage(*, cover: Path) -> None:
+    # pylint: disable=import-outside-toplevel
+    import colrev.record_pdf
+
     cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
     cp_path.mkdir(exist_ok=True)
 
     assert Path(cover).suffix == ".pdf"
-    record = colrev.record.Record(data={Fields.FILE: cover})
+    record = colrev.record_pdf.PDFRecord(data={Fields.FILE: cover})
     record.extract_pages(
         pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
     )
@@ -1660,6 +1663,7 @@ def pdf_get_man(
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
     from PyPDF2 import PdfFileReader
     import colrev.qm.colrev_pdf_id
+    import colrev.record_pdf
 
     try:
         pdf_reader = PdfFileReader(str(pdf_path), strict=False)
@@ -1668,7 +1672,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
         return
 
     assert Path(pdf_path).suffix == ".pdf"
-    record = colrev.record.Record(data={"file": pdf_path})
+    record = colrev.record_pdf.PDFRecord(data={"file": pdf_path})
     first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
     print(f"first page: {first_page_average_hash_16}")
     first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)

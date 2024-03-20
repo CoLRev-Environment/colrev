@@ -45,7 +45,7 @@ class LocalIndexPrep(JsonSchemaMixin):
         )
         self.prep_operation = prep_operation
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record metadata based on local-index"""
 
         # don't move to  jour_iss_number_year prep

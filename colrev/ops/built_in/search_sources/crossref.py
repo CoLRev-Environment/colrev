@@ -28,6 +28,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -142,7 +143,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 Fields.ENTRYTYPE: "article",
             }
             returned_record = self.crossref_query(
-                record_input=colrev.record.PrepRecord(data=test_rec),
+                record_input=colrev.record_prep.PrepRecord(data=test_rec),
                 jour_vol_iss_list=False,
                 timeout=20,
             )[0]
@@ -173,7 +174,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
         yield from crossref_query_return
 
     @classmethod
-    def query_doi(cls, *, doi: str, etiquette: Etiquette) -> colrev.record.PrepRecord:
+    def query_doi(
+        cls, *, doi: str, etiquette: Etiquette
+    ) -> colrev.record_prep.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
         try:
@@ -293,7 +296,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
-            colrev.record.PrepRecord(data=retrieved_record_dict)
+            colrev.record_prep.PrepRecord(data=retrieved_record_dict)
             .get_container_title()
             .lower(),
             record.get_container_title().lower(),
@@ -346,7 +349,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 source=crossref_source,
                 masterdata_repository=self.review_manager.settings.is_curated_repo(),
             )
-            record.set_status(target_state=RecordState.md_prepared)
+            record.set_status(RecordState.md_prepared)
 
     def _get_crossref_query_items(
         self, *, record: colrev.record.Record, jour_vol_iss_list: bool, timeout: int
@@ -422,7 +425,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if not jour_vol_iss_list:
             if most_similar_record:
-                record_list = [colrev.record.PrepRecord(data=most_similar_record)]
+                record_list = [colrev.record_prep.PrepRecord(data=most_similar_record)]
 
         return record_list
 
@@ -468,7 +471,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     msg="Record not found in crossref"
                 )
 
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
@@ -497,7 +500,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 crossref_feed.add_update_record(retrieved_record)
 
                 record.merge(
-                    merging_record=retrieved_record,
+                    retrieved_record,
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
@@ -541,7 +544,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             retrieved_record = self.query_doi(
                 doi=record.data[Fields.DOI], etiquette=self.etiquette
             )
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=False,
@@ -1012,8 +1015,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.PrepRecord:
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record_prep.PrepRecord:
         """Source-specific preparation for Crossref"""
         source_item = [
             x

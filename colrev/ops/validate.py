@@ -95,8 +95,8 @@ class Validate(colrev.operation.Operation):
                 origin_record = origin_records[origin]
 
                 change_score = colrev.record.Record.get_record_change_score(
-                    record_a=colrev.record.Record(data=record_dict),
-                    record_b=colrev.record.Record(data=origin_record),
+                    colrev.record.Record(data=record_dict),
+                    colrev.record.Record(data=origin_record),
                 )
 
                 origin_record["change_score"] = change_score
@@ -159,7 +159,7 @@ class Validate(colrev.operation.Operation):
                         break
                     comp_rec = colrev.record.Record(data=comp_rec_dict)
                     similarity = colrev.record.Record.get_record_similarity(
-                        record_a=ref_rec, record_b=comp_rec
+                        ref_rec, comp_rec
                     )
 
                     if similarity > 0.95:
@@ -239,8 +239,8 @@ class Validate(colrev.operation.Operation):
             # Note : should usually be only one merged_rec (but multiple-merges are possible)
             for merged_rec in merged_records_list:
                 change_score = colrev.record.Record.get_record_change_score(
-                    record_a=colrev.record.Record(data=reference_record),
-                    record_b=colrev.record.Record(data=merged_rec),
+                    colrev.record.Record(data=reference_record),
+                    colrev.record.Record(data=merged_rec),
                 )
                 change_diff.append(
                     {

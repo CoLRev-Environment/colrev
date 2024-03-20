@@ -1,4 +1,4 @@
-colrev.record.PrepRecord
+colrev.record_prep.PrepRecord
 ========================
 
 .. currentmodule:: colrev.record

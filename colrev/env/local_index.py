@@ -554,7 +554,7 @@ class LocalIndex:
                 del record_dict[Fields.D_PROV]["colrev_pdf_id"]
 
         record = colrev.record.Record(data=record_dict)
-        record.set_status(target_state=RecordState.md_prepared)
+        record.set_status(RecordState.md_prepared)
 
         if record.masterdata_is_curated():
             identifier_string = (

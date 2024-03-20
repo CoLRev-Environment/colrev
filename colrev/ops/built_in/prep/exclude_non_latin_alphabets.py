@@ -51,7 +51,7 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record.PrepRecord,
+        record: colrev.record_prep.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare the records by excluding records whose metadata is not in Latin alphabet"""
 

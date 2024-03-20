@@ -306,7 +306,7 @@ class Dedupe(colrev.operation.Operation):
             for record_dict in records.values():
                 if record_dict[Fields.STATUS] == RecordState.md_prepared:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(target_state=RecordState.md_processed)
+                    record.set_status(RecordState.md_processed)
                     set_to_md_processed.append(record.data[Fields.ID])
 
         self.review_manager.dataset.save_records_dict(records)
@@ -416,7 +416,7 @@ class Dedupe(colrev.operation.Operation):
                 )
                 dupe_record.data["MOVED_DUPE_ID"] = main_record.data[Fields.ID]
                 main_record.merge(
-                    merging_record=dupe_record,
+                    dupe_record,
                     default_source="merged",
                     preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
                 )
@@ -717,7 +717,7 @@ class Dedupe(colrev.operation.Operation):
             for record_dict in records.values():
                 record = colrev.record.Record(data=record_dict)
                 if RecordState.md_processed == record.data[Fields.STATUS]:
-                    record.set_status(target_state=RecordState.rev_prescreen_included)
+                    record.set_status(RecordState.rev_prescreen_included)
 
             self.review_manager.dataset.save_records_dict(records)
             self.review_manager.dataset.create_commit(msg="Skip prescreen/include all")

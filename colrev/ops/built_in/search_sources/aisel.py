@@ -16,10 +16,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -272,7 +272,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     ) and "" == record_dict.get(Fields.TITLE, ""):
                         continue
 
-                    prep_record = colrev.record.PrepRecord(data=record_dict)
+                    prep_record = colrev.record_prep.PrepRecord(data=record_dict)
                     ais_feed.add_update_record(prep_record)
 
                 except colrev_exceptions.NotFeedIdentifiableException:
@@ -466,7 +466,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.rename_field(key=Fields.CHAPTER, new_key=Fields.TITLE)
                 record.remove_field(key=Fields.PUBLISHER)
 
-            record.change_entrytype(new_entrytype="article", qm=self.quality_model)
+            record.change_entrytype("article", qm=self.quality_model)
         else:
             # Inproceedings
 
@@ -533,7 +533,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     source="prep_ais_source",
                 )
 
-    def _format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record_prep.PrepRecord) -> None:
         if Fields.ABSTRACT in record.data:
             if record.data[Fields.ABSTRACT] == "N/A":
                 record.remove_field(key=Fields.ABSTRACT)
@@ -557,7 +557,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             record.prescreen_exclude(reason="complementary material")
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 

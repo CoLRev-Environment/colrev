@@ -76,6 +76,8 @@ class QualityModel:
                 Fields.TEXT_FROM_PDF not in record.data
                 or Fields.NR_PAGES_IN_FILE not in record.data
             ):
+                # The following should be improved.
+                record = colrev.record_pdf.PDFRecord(data=record.data)
                 record.set_text_from_pdf()
 
         for checker in self.checkers:

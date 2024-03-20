@@ -25,6 +25,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.record
+import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -185,7 +186,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
-            colrev.record.PrepRecord(data=retrieved_record_dict)
+            colrev.record_prep.PrepRecord(data=retrieved_record_dict)
             .get_container_title()
             .lower(),
             record.get_container_title().lower(),
@@ -604,7 +605,9 @@ class BackwardSearchSource(JsonSchemaMixin):
         return record
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 

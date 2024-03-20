@@ -354,9 +354,7 @@ class CurationDedupe(JsonSchemaMixin):
                     for rec2 in processed_same_toc_records:
                         overlapping_colrev_ids = colrev.record.Record(
                             data=new_same_toc_record
-                        ).has_overlapping_colrev_id(
-                            record=colrev.record.Record(data=rec2)
-                        )
+                        ).has_overlapping_colrev_id(colrev.record.Record(data=rec2))
                         if overlapping_colrev_ids:
                             decision_list.append(
                                 [new_same_toc_record[Fields.ID], rec2[Fields.ID]]
@@ -409,7 +407,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         overlapping_colrev_ids = colrev.record.Record(
             data=rec1
-        ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
+        ).has_overlapping_colrev_id(colrev.record.Record(data=rec2))
         if validated or overlapping_colrev_ids:
             decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 

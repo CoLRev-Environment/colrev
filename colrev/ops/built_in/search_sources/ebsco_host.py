@@ -122,7 +122,9 @@ class EbscoHostSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for EBSCOHost"""
 

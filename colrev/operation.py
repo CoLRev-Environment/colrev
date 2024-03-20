@@ -17,7 +17,7 @@ from docker.errors import DockerException
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Filepaths
-from colrev.record import RecordStateModel
+from colrev.record_state_model import RecordStateModel
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -104,7 +104,7 @@ class Operation:
         return decorator_func
 
     def _check_record_state_model_precondition(self) -> None:
-        RecordStateModel.check_operation_precondition(operation=self)
+        RecordStateModel.check_operation_precondition(self)
 
     def _require_clean_repo_general(
         self,

@@ -18,7 +18,7 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.loader.bib import BIBLoader
-from colrev.record import RecordStateModel
+from colrev.record_state_model import RecordStateModel
 
 
 class Status(colrev.operation.Operation):

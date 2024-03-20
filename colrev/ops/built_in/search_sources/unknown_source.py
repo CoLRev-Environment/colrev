@@ -19,6 +19,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -535,7 +536,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         )
 
     def _heuristically_fix_entrytypes(
-        self, *, record: colrev.record.PrepRecord
+        self, *, record: colrev.record_prep.PrepRecord
     ) -> None:
         """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
 
@@ -617,7 +618,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 '("thesis" in abstract)'
             )
 
-    def _format_inproceedings(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_inproceedings(self, *, record: colrev.record_prep.PrepRecord) -> None:
         if (
             record.data.get(Fields.BOOKTITLE, FieldValues.UNKNOWN)
             == FieldValues.UNKNOWN
@@ -648,7 +649,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
-    def _format_article(self, record: colrev.record.PrepRecord) -> None:
+    def _format_article(self, record: colrev.record_prep.PrepRecord) -> None:
         if (
             record.data.get(Fields.JOURNAL, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
             and len(record.data[Fields.JOURNAL]) > 10
@@ -665,7 +666,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
-    def _format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record_prep.PrepRecord) -> None:
         """Format fields"""
 
         if record.data.get(Fields.ENTRYTYPE, "") == "inproceedings":
@@ -680,7 +681,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             ):
                 record.update_field(
                     key=Fields.AUTHOR,
-                    value=colrev.record.PrepRecord.format_author_field(
+                    value=colrev.record_prep.PrepRecord.format_author_field(
                         input_string=record.data[Fields.AUTHOR]
                     ),
                     source="unkown_source_prep",
@@ -728,7 +729,9 @@ class UnknownSearchSource(JsonSchemaMixin):
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data[Fields.LANGUAGE]
 
-    def _remove_redundant_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _remove_redundant_fields(
+        self, *, record: colrev.record_prep.PrepRecord
+    ) -> None:
         if (
             record.data[Fields.ENTRYTYPE] == "article"
             and Fields.JOURNAL in record.data
@@ -756,7 +759,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             if similarity_journal_booktitle / 100 > 0.9:
                 record.remove_field(key=Fields.JOURNAL)
 
-    def _impute_missing_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _impute_missing_fields(self, *, record: colrev.record_prep.PrepRecord) -> None:
         if "date" in record.data and Fields.YEAR not in record.data:
             year = re.search(r"\d{4}", record.data["date"])
             if year:
@@ -767,7 +770,9 @@ class UnknownSearchSource(JsonSchemaMixin):
                     keep_source_if_equal=True,
                 )
 
-    def _unify_special_characters(self, *, record: colrev.record.PrepRecord) -> None:
+    def _unify_special_characters(
+        self, *, record: colrev.record_prep.PrepRecord
+    ) -> None:
         # Remove html entities
         for field in list(record.data.keys()):
             if field in [Fields.TITLE, Fields.AUTHOR, Fields.JOURNAL, Fields.BOOKTITLE]:
@@ -775,7 +780,9 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for unknown sources"""
 

@@ -60,7 +60,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Pubmed API"""
         self.pubmed_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on Pubmed metadata"""
 
         if any(

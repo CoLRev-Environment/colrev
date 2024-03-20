@@ -85,7 +85,7 @@ class PDFGetMan(colrev.operation.Operation):
         for record_dict in records.values():
             record = colrev.record.Record(data=record_dict)
             if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
-                record.set_status(target_state=RecordState.pdf_not_available)
+                record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Discard missing PDFs", manual_author=True
@@ -132,7 +132,7 @@ class PDFGetMan(colrev.operation.Operation):
     ) -> None:
         """Record pdf-get-man decision"""
         if filepath is not None:
-            record.set_status(target_state=RecordState.pdf_imported)
+            record.set_status(RecordState.pdf_imported)
             record.data.update(file=str(filepath.relative_to(self.review_manager.path)))
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
@@ -144,7 +144,7 @@ class PDFGetMan(colrev.operation.Operation):
             if (
                 self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis
             ):
-                record.set_status(target_state=RecordState.pdf_not_available)
+                record.set_status(RecordState.pdf_not_available)
                 self.review_manager.report_logger.info(
                     f" {record.data['ID']}".ljust(PAD, " ")
                     + "recorded as not_available"
@@ -154,7 +154,7 @@ class PDFGetMan(colrev.operation.Operation):
                     + "recorded as not_available"
                 )
             else:
-                record.set_status(target_state=RecordState.pdf_prepared)
+                record.set_status(RecordState.pdf_prepared)
 
                 record.add_data_provenance(
                     key=Fields.FILE, source="pdf-get-man", note="not_available"

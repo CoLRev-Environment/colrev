@@ -138,7 +138,7 @@ class ScopusSearchSource(JsonSchemaMixin):
                 )
 
             elif record.data["colrev.scopus.document_type"] == "Article":
-                record.change_entrytype(new_entrytype="article", qm=self.quality_model)
+                record.change_entrytype("article", qm=self.quality_model)
 
             record.remove_field(key="colrev.scopus.document_type")
 

@@ -15,8 +15,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
-
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -121,13 +121,15 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     @classmethod
     def _open_library_json_to_record(
         cls, *, item: dict, url: str
-    ) -> colrev.record.PrepRecord:
+    ) -> colrev.record_prep.PrepRecord:
         retrieved_record: dict = {}
 
         if "author_name" in item:
             authors_string = " and ".join(
                 [
-                    colrev.record.PrepRecord.format_author_field(input_string=author)
+                    colrev.record_prep.PrepRecord.format_author_field(
+                        input_string=author
+                    )
                     for author in item["author_name"]
                 ]
             )
@@ -148,7 +150,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         if Fields.ISBN in item:
             retrieved_record[Fields.ISBN] = str(item["isbn"][0])
 
-        record = colrev.record.PrepRecord(data=retrieved_record)
+        record = colrev.record_prep.PrepRecord(data=retrieved_record)
         record.add_provenance_all(source=url)
         return record
 
@@ -290,7 +292,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             open_library_feed.add_update_record(retrieved_record)
 
             record.merge(
-                merging_record=retrieved_record,
+                retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
             open_library_feed.save()

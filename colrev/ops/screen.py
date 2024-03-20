@@ -84,7 +84,7 @@ class Screen(colrev.operation.Operation):
                 record.update(
                     screening_criteria=";".join([e + "=in" for e in screening_criteria])
                 )
-            record.set_status(target_state=RecordState.rev_included)
+            record.set_status(RecordState.rev_included)
 
         self.review_manager.dataset.save_records_dict(records)
         self._print_stats(selected_record_ids=selected_record_ids)
@@ -160,7 +160,7 @@ class Screen(colrev.operation.Operation):
                 # Note : we set the status to pdf_prepared because the screening
                 # decisions have to be updated (resulting in inclusion or exclusion)
                 record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=RecordState.pdf_prepared)
+                record.set_status(RecordState.pdf_prepared)
             if record_dict[Fields.STATUS] == RecordState.rev_excluded:
                 record_dict[Fields.SCREENING_CRITERIA] += f";{criterion_name}=TODO"
                 # Note : no change in colrev_status
@@ -216,7 +216,7 @@ class Screen(colrev.operation.Operation):
                     and "=TODO" not in record_dict[Fields.SCREENING_CRITERIA]
                 ):
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(target_state=RecordState.rev_included)
+                    record.set_status(RecordState.rev_included)
 
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
@@ -266,7 +266,7 @@ class Screen(colrev.operation.Operation):
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
                 record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=RecordState.rev_included)
+                record.set_status(RecordState.rev_included)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Screen (include_all)",
@@ -347,14 +347,14 @@ class Screen(colrev.operation.Operation):
                         [e + "=in" for e in screening_criteria_list]
                     )
                 )
-            record.set_status(target_state=RecordState.rev_included)
+            record.set_status(RecordState.rev_included)
 
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Included in screen"
             )
         else:
             record.data[Fields.SCREENING_CRITERIA] = screening_criteria
-            record.set_status(target_state=RecordState.rev_excluded)
+            record.set_status(RecordState.rev_excluded)
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
             )

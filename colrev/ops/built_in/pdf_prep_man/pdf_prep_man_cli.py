@@ -222,7 +222,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             elif user_selection == "No (delete)":
                 record.remove_field(key=Fields.FILE)
                 record.remove_field(key=Fields.PDF_ID)
-                record.set_status(target_state=RecordState.pdf_needs_manual_retrieval)
+                record.set_status(RecordState.pdf_needs_manual_retrieval)
                 if filepath.is_file():
                     filepath.unlink()
                 return
@@ -330,9 +330,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             return records
 
         try:
-            record.data.update(
-                colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath)
-            )
+            record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(filepath))
         except colrev_exceptions.InvalidPDFException:
             pass
 

@@ -264,7 +264,7 @@ class PDFPrepPackageEndpointInterface(
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(  # type: ignore
-        record: colrev.record.PrepRecord,
+        record: colrev.record_pdf.PDFRecord,
         pad: int,
     ) -> dict:
         """Run the prep-pdf operation"""

@@ -20,6 +20,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -254,7 +255,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]
                     authors = [x["text"] for x in authors_nodes if "text" in x]
                     author_string = " and ".join(authors)
-                author_string = colrev.record.PrepRecord.format_author_field(
+                author_string = colrev.record_prep.PrepRecord.format_author_field(
                     input_string=author_string
                 )
                 item[Fields.AUTHOR] = author_string
@@ -328,7 +329,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 for item in items
             ]
             retrieved_records = [
-                colrev.record.PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts
+                colrev.record_prep.PrepRecord(data=dblp_dict)
+                for dblp_dict in dblp_dicts
             ]
             for retrieved_record in retrieved_records:
                 # Note : DBLP provides number-of-pages (instead of pages start-end)
@@ -581,8 +583,10 @@ class DBLPSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.PrepRecord:
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record_prep.PrepRecord:
         """Source-specific preparation for DBLP"""
 
         if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
@@ -632,7 +636,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ):
                         continue
 
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                     record_original=record,
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=same_record_type_required,
@@ -661,14 +665,14 @@ class DBLPSearchSource(JsonSchemaMixin):
                     )
 
                     record.merge(
-                        merging_record=retrieved_record,
+                        retrieved_record,
                         default_source=retrieved_record.data[Fields.ORIGIN][0],
                     )
                     record.set_masterdata_complete(
                         source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-                    record.set_status(target_state=RecordState.md_prepared)
+                    record.set_status(RecordState.md_prepared)
                     if "Withdrawn (according to DBLP)" in record.data.get(
                         "warning", ""
                     ):

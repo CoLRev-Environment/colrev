@@ -2,14 +2,12 @@
 """Tests of the Record class"""
 from pathlib import Path
 
-import fitz
-import imagehash
 import pytest
-from PIL import Image
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -212,7 +210,7 @@ def test_diff() -> None:
     r2_mod.update_field(key="non_identifying_field", value="nfi_value", source="test")
     r2_mod.update_field(key=Fields.BOOKTITLE, value="ICIS", source="test")
     r2_mod.update_field(key=Fields.PUBLISHER, value="Elsevier", source="test")
-    print(r1.get_diff(other_record=r2_mod))
+    print(r1.get_diff(r2_mod))
     expected = [
         (
             "add",
@@ -228,10 +226,10 @@ def test_diff() -> None:
         ("add", "", [(Fields.BOOKTITLE, "ICIS"), (Fields.PUBLISHER, "Elsevier")]),
         ("remove", "", [(Fields.PAGES, "1--3")]),
     ]
-    actual = r1.get_diff(other_record=r2_mod)
+    actual = r1.get_diff(r2_mod)
     assert expected == actual
 
-    print(r1.get_diff(other_record=r2_mod, identifying_fields_only=False))
+    print(r1.get_diff(r2_mod, identifying_fields_only=False))
     expected = [
         (
             "add",
@@ -264,14 +262,14 @@ def test_diff() -> None:
         ),
         ("remove", "", [(Fields.PAGES, "1--3")]),
     ]
-    actual = r1.get_diff(other_record=r2_mod, identifying_fields_only=False)
+    actual = r1.get_diff(r2_mod, identifying_fields_only=False)
     assert expected == actual
 
 
 def test_change_entrytype_inproceedings(
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
-    """Test record.change_entrytype(new_entrytype=ENTRYTYPES.INPROCEEDINGS)"""
+    """Test record.change_entrytype(ENTRYTYPES.INPROCEEDINGS)"""
 
     r1_mod = r1.copy()
     r1_mod.data[Fields.VOLUME] = "UNKNOWN"
@@ -284,7 +282,7 @@ def test_change_entrytype_inproceedings(
         source="import.bib/id_0001",
         note="inconsistent-with-entrytype",
     )
-    r1_mod.change_entrytype(new_entrytype=ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+    r1_mod.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
     print(r1_mod.data)
     expected = {
         Fields.ID: "r1",
@@ -314,12 +312,12 @@ def test_change_entrytype_inproceedings(
     actual = r1_mod.data
     assert expected == actual
 
-    r1_mod.change_entrytype(new_entrytype=ENTRYTYPES.MASTERSTHESIS, qm=quality_model)
+    r1_mod.change_entrytype(ENTRYTYPES.MASTERSTHESIS, qm=quality_model)
 
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
     ):
-        r1_mod.change_entrytype(new_entrytype="dialoge", qm=quality_model)
+        r1_mod.change_entrytype("dialoge", qm=quality_model)
 
 
 def test_change_entrytype_inproceedings_2(
@@ -346,7 +344,7 @@ def test_change_entrytype_inproceedings_2(
         Fields.PAGES: "22--31",
     }
     record = colrev.record.Record(data=record_dict)
-    record.change_entrytype(new_entrytype=ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+    record.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
 
     expected = {
         Fields.ID: "r2",
@@ -374,7 +372,7 @@ def test_change_entrytype_inproceedings_2(
 def test_change_entrytype_article(
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
-    """Test record.change_entrytype(new_entrytype=ENTRYTYPES.ARTICLE)"""
+    """Test record.change_entrytype(ENTRYTYPES.ARTICLE)"""
     input_value = {
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
@@ -436,7 +434,7 @@ def test_change_entrytype_article(
         Fields.LANGUAGE: "eng",
     }
     rec = colrev.record.Record(data=input_value)
-    rec.change_entrytype(new_entrytype=ENTRYTYPES.ARTICLE, qm=quality_model)
+    rec.change_entrytype(ENTRYTYPES.ARTICLE, qm=quality_model)
     actual = rec.data
     assert expected == actual
 
@@ -494,21 +492,21 @@ def test_print_citation_format() -> None:
 
 def test_shares_origins() -> None:
     """Test record.shares_origins()"""
-    assert r1.shares_origins(other_record=r2)
+    assert r1.shares_origins(r2)
 
 
 def test_get_value() -> None:
     """Test record.get_value()"""
     expected = "Rai, Arun"
-    actual = r1.get_value(key=Fields.AUTHOR)
+    actual = r1.get_value(Fields.AUTHOR)
     assert expected == actual
 
     expected = "Rai, Arun"
-    actual = r1.get_value(key=Fields.AUTHOR, default="custom_file")
+    actual = r1.get_value(Fields.AUTHOR, default="custom_file")
     assert expected == actual
 
     expected = "custom_file"
-    actual = r1.get_value(key=Fields.FILE, default="custom_file")
+    actual = r1.get_value(Fields.FILE, default="custom_file")
     assert expected == actual
 
 
@@ -593,10 +591,10 @@ def test_has_overlapping_colrev_id() -> None:
     r2_mod = r1.copy()
     r2_mod.data[Fields.COLREV_ID] = r2_mod.create_colrev_id()
 
-    assert r2_mod.has_overlapping_colrev_id(record=r1_mod)
+    assert r2_mod.has_overlapping_colrev_id(r1_mod)
 
     r2_mod.data[Fields.COLREV_ID] = []
-    assert not r2_mod.has_overlapping_colrev_id(record=r1_mod)
+    assert not r2_mod.has_overlapping_colrev_id(r1_mod)
 
 
 def test_provenance() -> None:
@@ -989,7 +987,7 @@ def test_merge_select_non_all_caps() -> None:
         Fields.PAGES: "1--3",
     }
 
-    r1_mod.merge(merging_record=r2_mod, default_source="test")
+    r1_mod.merge(r2_mod, default_source="test")
     actual = r1_mod.data
     assert expected == actual
 
@@ -1005,7 +1003,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r2_mod.merge(merging_record=r1_mod, default_source="test")
+        r2_mod.merge(r1_mod, default_source="test")
 
     # Mismatching erratum (a-b)
     r1_mod = r1.copy()
@@ -1014,7 +1012,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r1_mod.merge(merging_record=r2_mod, default_source="test")
+        r1_mod.merge(r2_mod, default_source="test")
 
     # Mismatching erratum (b-a)
     r1_mod = r1.copy()
@@ -1023,7 +1021,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r2_mod.merge(merging_record=r1_mod, default_source="test")
+        r2_mod.merge(r1_mod, default_source="test")
 
     # Mismatching commentary
     r1_mod = r1.copy()
@@ -1032,7 +1030,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r2_mod.merge(merging_record=r1_mod, default_source="test")
+        r2_mod.merge(r1_mod, default_source="test")
 
 
 def test_merge_local_index(mocker) -> None:  # type: ignore
@@ -1076,7 +1074,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
         }
     )
 
-    r1_mod.merge(merging_record=r2_mod, default_source="test")
+    r1_mod.merge(r2_mod, default_source="test")
     print(r1_mod)
 
 
@@ -1224,54 +1222,9 @@ def test_prescreen_exclude() -> None:
 def test_format_author_field(input_string: str, expected: str) -> None:
     """Test record.format_author_field()"""
 
-    actual = colrev.record.PrepRecord.format_author_field(input_string=input_string)
-    assert expected == actual
-
-
-def test_extract_text_by_page(  # type: ignore
-    helpers, record_with_pdf: colrev.record.Record
-) -> None:
-    """Test record.extract_text_by_page()"""
-    helpers.retrieve_test_file(
-        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
-        target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    actual = colrev.record_prep.PrepRecord.format_author_field(
+        input_string=input_string
     )
-
-    expected = (
-        helpers.test_data_path / Path("data/WagnerLukyanenkoParEtAl2022_content.txt")
-    ).read_text(encoding="utf-8")
-    actual = record_with_pdf.extract_text_by_page(pages=[0])
-    actual = actual.rstrip()
-    assert expected == actual
-
-
-def test_set_nr_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
-    """Test record.set_pages_in_pdf()"""
-    helpers.retrieve_test_file(
-        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
-        target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
-    )
-    expected = 18
-    record_with_pdf.set_nr_pages_in_pdf()
-    actual = record_with_pdf.data[Fields.NR_PAGES_IN_FILE]
-    assert expected == actual
-
-
-def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
-    """Test record.set_text_from_pdf()"""
-    helpers.retrieve_test_file(
-        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
-        target=Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
-    )
-
-    expected = (
-        (helpers.test_data_path / Path("data/WagnerLukyanenkoParEtAl2022_content.txt"))
-        .read_text(encoding="utf-8")
-        .replace("\n", " ")
-    )
-    record_with_pdf.set_text_from_pdf()
-    actual = record_with_pdf.data["text_from_pdf"]
-    actual = actual[0:4234]
     assert expected == actual
 
 
@@ -1279,7 +1232,7 @@ def test_get_retrieval_similarity() -> None:
     """Test record.get_retrieval_similarity()"""
 
     expected = 0.9333
-    actual = colrev.record.PrepRecord.get_retrieval_similarity(
+    actual = colrev.record_prep.PrepRecord.get_retrieval_similarity(
         record_original=r1, retrieved_record_original=r2
     )
     assert expected == actual
@@ -1314,7 +1267,7 @@ def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> No
     """Test record.format_if_mostly_upper()"""
 
     input_dict = {Fields.TITLE: input_text}
-    input_record = colrev.record.PrepRecord(data=input_dict)
+    input_record = colrev.record_prep.PrepRecord(data=input_dict)
     input_record.format_if_mostly_upper(key=Fields.TITLE, case=case)
     actual = input_record.data[Fields.TITLE]
     assert expected == actual
@@ -1374,98 +1327,22 @@ def test_unify_pages_field() -> None:
 
 def test_to_screen() -> None:
 
-    assert colrev.record.PrepRecord(
+    assert colrev.record_prep.PrepRecord(
         data={Fields.STATUS: RecordState.pdf_prepared}
     ).to_screen()
-    assert not colrev.record.PrepRecord(
+    assert not colrev.record_prep.PrepRecord(
         data={Fields.STATUS: RecordState.md_processed}
     ).to_screen()
 
-    assert not colrev.record.PrepRecord(
+    assert not colrev.record_prep.PrepRecord(
         data={
             Fields.STATUS: RecordState.rev_synthesized,
             Fields.SCREENING_CRITERIA: "focus_hr=in",
         }
     ).to_screen()
-    assert colrev.record.PrepRecord(
+    assert colrev.record_prep.PrepRecord(
         data={
             Fields.STATUS: RecordState.rev_synthesized,
             Fields.SCREENING_CRITERIA: "focus_hr=TODO",
         }
     ).to_screen()
-
-
-def test_get_pdf_hash(helpers) -> None:  # type: ignore
-
-    with pytest.raises(colrev_exceptions.InvalidPDFException):
-        colrev.record.PrepRecord(
-            data={"ID": "WagnerLukyanenkoParEtAl2022.pdf"}
-        ).get_pdf_hash(page_nr=1)
-
-    pdf_path = Path("WagnerLukyanenkoParEtAl2022.pdf")
-    pdf_path.touch()
-    with pytest.raises(colrev_exceptions.InvalidPDFException):
-        colrev.record.PrepRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
-        ).get_pdf_hash(page_nr=1)
-
-    helpers.retrieve_test_file(
-        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
-        target=pdf_path,
-    )
-    pdf_hash = colrev.record.PrepRecord(
-        data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
-    ).get_pdf_hash(page_nr=1)
-    assert (
-        pdf_hash
-        == "87ffff1fffffff1ff47fff7fe0000307e000071fffffff07f1603f0ffd67fffff7ffffffe0000007e0000007e0000007fc6d59b7e3ffffffe03fffffffffffffe1ff0007e0000007e0000007e00080ffe0008007e0000007e0000007e0000007e0008007e000fdffe0008fffe000000ff00087ffffffffffffffffffffffffff"
-    )
-    pdf_hash = colrev.record.PrepRecord(
-        data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
-    ).get_pdf_hash(page_nr=1, hash_size=16)
-    assert (
-        pdf_hash == "fff3c3f3c3b3fff7c27fc001c7ffdfffc001c003c001c001c003c01fffffffff"
-    )
-
-    def fitz_open_file_data_error(pdf_path):  # type: ignore
-        """Raise a file data error"""
-        raise fitz.fitz.FileDataError("Invalid PDF")
-
-    original_fitz_open = fitz.open
-    fitz.open = fitz_open_file_data_error
-
-    with pytest.raises(colrev_exceptions.InvalidPDFException):
-        colrev.record.PrepRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
-        ).get_pdf_hash(page_nr=1)
-
-    fitz.open = original_fitz_open
-
-    def image_open_runtime_error(pdf_path):  # type: ignore
-        """Raise a runtime error"""
-        raise RuntimeError
-
-    original_image_open = Image.open
-    Image.open = image_open_runtime_error
-
-    with pytest.raises(colrev_exceptions.PDFHashError):
-        colrev.record.PrepRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
-        ).get_pdf_hash(page_nr=1)
-
-    Image.open = original_image_open
-
-    original_imagehash_averagehash = imagehash.average_hash
-
-    # pylint: disable=unused-argument
-    def imagehash_0000_hash(pdf_path, hash_size):  # type: ignore
-        return "000000000000"
-
-    imagehash.average_hash = imagehash_0000_hash
-
-    with pytest.raises(colrev_exceptions.PDFHashError):
-        colrev.record.PrepRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
-        ).get_pdf_hash(page_nr=1)
-
-    imagehash.average_hash = original_imagehash_averagehash

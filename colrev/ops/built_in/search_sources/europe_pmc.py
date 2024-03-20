@@ -23,11 +23,11 @@ from rapidfuzz import fuzz
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument
@@ -126,7 +126,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
-    def _europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
+    def _europe_pmc_xml_to_record(
+        cls, *, item: Element
+    ) -> colrev.record_prep.PrepRecord:
         retrieved_record_dict: dict = {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE}
         retrieved_record_dict[Fields.AUTHOR] = cls._get_string_from_item(
             item=item, key="authorString"
@@ -175,7 +177,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             if k not in ["epmc_id", "epmc_source"] and v != ""
         }
 
-        record = colrev.record.PrepRecord(data=retrieved_record_dict)
+        record = colrev.record_prep.PrepRecord(data=retrieved_record_dict)
         return record
 
     @classmethod
@@ -280,7 +282,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             ) from exc
 
         if most_similar_only:
-            record_list = [colrev.record.PrepRecord(data=most_similar_record)]
+            record_list = [colrev.record_prep.PrepRecord(data=most_similar_record)]
 
         return record_list
 
@@ -316,7 +318,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 if 0 == len(retrieved_record.data):
                     return record
 
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+                similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                     record_original=record, retrieved_record_original=retrieved_record
                 )
 
@@ -338,7 +340,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         return record
 
                     record.merge(
-                        merging_record=retrieved_record,
+                        retrieved_record,
                         default_source=retrieved_record.data[Fields.ORIGIN][0],
                     )
 
@@ -346,7 +348,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-                    record.set_status(target_state=RecordState.md_prepared)
+                    record.set_status(RecordState.md_prepared)
 
                     europe_pmc_feed.save()
                     self.europe_pmc_lock.release()

@@ -22,12 +22,13 @@ import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.qm.checkers.missing_field
 import colrev.qm.colrev_pdf_id
 import colrev.record
+import colrev.record_pdf
+import colrev.record_prep
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -124,7 +125,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
                 for potential_pdf in potential_pdfs:
                     cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
-                        pdf_path=potential_pdf,
+                        potential_pdf,
                     )
 
                     if cpid == cpid_potential_pdf:
@@ -316,7 +317,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = colrev.record.Record(data=record_dict)
+                    record = colrev.record_pdf.PDFRecord(data=record_dict)
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
@@ -607,7 +608,7 @@ class FilesSearchSource(JsonSchemaMixin):
     def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record_pdf.PDFRecord(data=record_dict)
         if Fields.DOI not in record_dict:
             record.set_text_from_pdf()
             res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
@@ -697,7 +698,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 doi=record_dict[Fields.DOI], etiquette=self._etiquette
             )
             if (
-                colrev.record.PrepRecord.get_retrieval_similarity(
+                colrev.record_prep.PrepRecord.get_retrieval_similarity(
                     record_original=colrev.record.Record(data=record_dict),
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=True,
@@ -807,7 +808,9 @@ class FilesSearchSource(JsonSchemaMixin):
         # elif ...
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for files"""
 
@@ -833,12 +836,12 @@ class FilesSearchSource(JsonSchemaMixin):
                 == record.data.get(Fields.JOURNAL, "no_journal").lower()
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
-                record.set_status(target_state=RecordState.md_needs_manual_preparation)
+                record.set_status(RecordState.md_needs_manual_preparation)
             if record.data.get(Fields.TITLE, "no_title").lower() == record.data.get(
                 Fields.BOOKTITLE, "no_booktitle"
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
-                record.set_status(target_state=RecordState.md_needs_manual_preparation)
+                record.set_status(RecordState.md_needs_manual_preparation)
             self._fix_title_suffix(record=record)
             self._fix_special_chars(record=record)
             self._fix_special_outlets(record=record)

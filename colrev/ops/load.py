@@ -141,7 +141,7 @@ class Load(colrev.operation.Operation):
             RecordState.md_retrieved,
             RecordState.md_needs_manual_preparation,
         ]:
-            record.set_status(target_state=RecordState.md_imported)
+            record.set_status(RecordState.md_imported)
 
         if record.is_retracted():
             self.review_manager.logger.info(

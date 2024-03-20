@@ -57,7 +57,7 @@ def test_prep_exclude_complementary_materials(
     expected_outcome: bool,
 ) -> None:
     """Test the exclude_complementary_materials"""
-    record = colrev.record.PrepRecord(data=input_value)
+    record = colrev.record_prep.PrepRecord(data=input_value)
     returned_record = elp_ecm.prepare(record=record)
     actual = returned_record.data
     expected = deepcopy(input_value)

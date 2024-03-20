@@ -362,7 +362,7 @@ class Upgrade(colrev.operation.Operation):
                 continue
 
             pdf_path = Path(record_dict["file"])
-            colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
+            colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path)
             # pylint: disable=colrev-missed-constant-usage
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 

@@ -12,10 +12,11 @@ import pytest
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
+import colrev.record_pdf
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.record import RecordStateModel
+from colrev.record_state_model import RecordStateModel
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -52,6 +53,7 @@ class Helpers:
     ) -> None:
         """Reset to the selected commit"""
         assert commit == "" or commit_sha == ""
+        print(f"Resetting to commit {commit} {commit_sha}")
         os.chdir(str(review_manager.path))
         repo = git.Repo(review_manager.path)
         if commit_sha != "":
@@ -182,7 +184,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     dedupe_operation = review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
     with pytest.raises(colrev_exceptions.NoRecordsError):
-        RecordStateModel.check_operation_precondition(operation=dedupe_operation)
+        RecordStateModel.check_operation_precondition(dedupe_operation)
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
@@ -309,7 +311,7 @@ def fixture_pdedupe_operation(
 @pytest.fixture
 def record_with_pdf() -> colrev.record.Record:
     """Fixture returning a record containing a file (PDF)"""
-    return colrev.record.Record(
+    return colrev.record_pdf.PDFRecord(
         data={
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -445,6 +447,14 @@ def fixture_v_t_record() -> colrev.record.Record:
             Fields.LANGUAGE: "eng",
         }
     )
+
+
+@pytest.fixture(name="v_t_pdf_record")
+def fixture_v_t_pdf_record(
+    v_t_record: colrev.record.Record,
+) -> colrev.record_pdf.PDFRecord:
+    """Record for testing quality defects"""
+    return colrev.record_pdf.PDFRecord(data=v_t_record.data)
 
 
 @pytest.fixture(name="book_record")

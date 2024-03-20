@@ -199,7 +199,7 @@ class YearVolIssPrep(JsonSchemaMixin):
         except requests.exceptions.RequestException:
             pass
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on year-volume-issue dependency"""
 
         if (

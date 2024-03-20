@@ -345,14 +345,14 @@ class SearchAPIFeed:
 
         if self._have_changed(retrieved_record, prev_feed_record):
             similarity_score = colrev.record.Record.get_record_similarity(
-                record_a=retrieved_record,
-                record_b=prev_feed_record,
+                retrieved_record,
+                prev_feed_record,
             )
             self._nr_changed += 1
             if similarity_score > 0.98:
                 self.review_manager.logger.info(f" check/update {colrev_origin}")
             else:
-                dict_diff = retrieved_record.get_diff(other_record=prev_feed_record)
+                dict_diff = retrieved_record.get_diff(prev_feed_record)
                 self.review_manager.logger.info(
                     f" {Colors.RED} check/update {colrev_origin} leads to substantial changes "
                     f"({similarity_score}) in {main_record.data['ID']}:{Colors.END}"

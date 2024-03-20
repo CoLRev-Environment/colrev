@@ -3,7 +3,7 @@
 import pytest
 
 from colrev.constants import RecordState
-from colrev.record import RecordStateModel
+from colrev.record_state_model import RecordStateModel
 
 
 def test_record_state_model() -> None:

@@ -42,7 +42,7 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on Europe PMC metadata"""
 
         # pylint: disable=invalid-name

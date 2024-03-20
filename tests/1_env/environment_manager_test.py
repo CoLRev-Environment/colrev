@@ -271,6 +271,10 @@ def test_repo_registry(tmp_path) -> None:  # type: ignore
         == remote_url
     )
 
+    # Test if the repo is already registered
+    env_man.register_repo(path_to_register=tmp_path)
+    assert len(env_man.environment_registry["local_index"]["repos"]) == 1
+
 
 def test_build_docker_image(tmp_path) -> None:  # type: ignore
     def remove_docker_image(image_name: str) -> None:

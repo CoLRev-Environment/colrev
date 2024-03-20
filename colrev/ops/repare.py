@@ -120,7 +120,7 @@ class Repare(colrev.operation.Operation):
             record_dict["colrev_status_backup"] = record_dict[Fields.STATUS]
             del record_dict[Fields.FILE]
             record = colrev.record.Record(data=record_dict)
-            record.set_status(target_state=RecordState.rev_prescreen_included)
+            record.set_status(RecordState.rev_prescreen_included)
 
     def _get_source_feeds(self) -> dict:
         source_feeds = {}

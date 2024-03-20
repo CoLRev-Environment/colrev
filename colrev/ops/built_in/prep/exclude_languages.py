@@ -70,7 +70,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return True
         return False
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
         # Note : other languages are not yet supported
@@ -142,7 +142,7 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
                 source="LanguageDetector",
                 note="language-not-found",
             )
-            record.set_status(target_state=RecordState.md_needs_manual_preparation)
+            record.set_status(RecordState.md_needs_manual_preparation)
             return record
 
         if record.data.get(Fields.LANGUAGE, "") not in self.languages_to_include:

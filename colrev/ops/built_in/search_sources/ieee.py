@@ -15,6 +15,7 @@ import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.ieee_api
 import colrev.ops.prep
 import colrev.record
+import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
@@ -272,8 +273,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             author_list = []
             for author in article["authors"]["authors"]:
                 author_list.append(author["full_name"])
-            record_dict[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
-                input_string=" and ".join(author_list)
+            record_dict[Fields.AUTHOR] = (
+                colrev.record_prep.PrepRecord.format_author_field(
+                    input_string=" and ".join(author_list)
+                )
             )
 
         if (
@@ -464,7 +467,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         if source.filename.suffix == ".csv":
             if Fields.AUTHOR in record.data:
                 record.data[Fields.AUTHOR] = (
-                    colrev.record.PrepRecord.format_author_field(
+                    colrev.record_prep.PrepRecord.format_author_field(
                         input_string=record.data[Fields.AUTHOR]
                     )
                 )

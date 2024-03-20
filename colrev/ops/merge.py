@@ -226,7 +226,7 @@ class Merge(colrev.operation.Operation):
                 current_branch_record = colrev.record.Record(
                     data=current_branch_record_dict
                 )
-                current_branch_record.set_status(target_state=resolution)
+                current_branch_record.set_status(resolution)
                 print("\n\n\n")
 
         self.review_manager.dataset.save_records_dict(current_branch_records)

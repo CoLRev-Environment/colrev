@@ -20,6 +20,7 @@ import colrev.loader.bib
 import colrev.loader.load_utils
 import colrev.operation
 import colrev.record
+import colrev.record_prep
 import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
@@ -341,7 +342,7 @@ class Dataset:
                     )
                     continue
 
-                record = colrev.record.PrepRecord(data=record_dict)
+                record = colrev.record_prep.PrepRecord(data=record_dict)
                 if record_dict[Fields.STATUS] in [
                     RecordState.md_needs_manual_preparation,
                 ]:

@@ -196,7 +196,7 @@ class ScopePrescreen(JsonSchemaMixin):
             return
 
         if record.data["journal_ranking"] == "not included in a ranking":
-            record.set_status(target_state=RecordState.rev_prescreen_excluded)
+            record.set_status(RecordState.rev_prescreen_excluded)
 
     def _conditional_prescreen(
         self,
@@ -226,7 +226,7 @@ class ScopePrescreen(JsonSchemaMixin):
         elif (
             len(self.review_manager.settings.prescreen.prescreen_package_endpoints) == 1
         ):
-            record.set_status(target_state=RecordState.rev_prescreen_included)
+            record.set_status(RecordState.rev_prescreen_included)
             self.review_manager.report_logger.info(
                 f" {record.data[Fields.ID]}".ljust(50, " ")
                 + "Prescreen included (automatically)"

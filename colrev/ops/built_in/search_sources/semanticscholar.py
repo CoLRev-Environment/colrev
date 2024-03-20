@@ -420,8 +420,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.PrepRecord:
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record_prep.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         # Not yet implemented
         return record

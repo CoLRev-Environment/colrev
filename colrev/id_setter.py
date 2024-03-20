@@ -50,7 +50,7 @@ class IDSetter:
                 authors_string = record_dict.get(
                     Fields.AUTHOR, record_dict.get(Fields.EDITOR, "Anonymous")
                 )
-                authors = colrev.record.PrepRecord.format_author_field(
+                authors = colrev.record_prep.PrepRecord.format_author_field(
                     input_string=authors_string
                 ).split(" and ")
             else:
@@ -170,7 +170,7 @@ class IDSetter:
                 temp_stat = record_dict[Fields.STATUS]
                 if selected_ids:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(target_state=RecordState.md_prepared)
+                    record.set_status(RecordState.md_prepared)
                 new_id = self._generate_id(
                     local_index=local_index,
                     record_dict=record_dict,
@@ -178,7 +178,7 @@ class IDSetter:
                 )
                 if selected_ids:
                     record = colrev.record.Record(data=record_dict)
-                    record.set_status(target_state=temp_stat)
+                    record.set_status(temp_stat)
 
                 id_list.append(new_id)
                 if old_id != new_id:

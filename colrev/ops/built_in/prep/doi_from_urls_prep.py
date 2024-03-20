@@ -16,6 +16,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.search_sources
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -56,7 +57,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             ) from exc
         _, self.email = prep_operation.review_manager.get_committer()
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record by retrieving its DOI from the website (url) if available"""
 
         if (Fields.URL not in record.data and Fields.FULLTEXT not in record.data) or (
@@ -90,14 +91,14 @@ class DOIFromURLsPrep(JsonSchemaMixin):
                 Fields.DOI: doi.upper(),
                 Fields.ID: record.data[Fields.ID],
             }
-            retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+            retrieved_record = colrev.record_prep.PrepRecord(data=retrieved_record_dict)
             doi_connector.DOIConnector.retrieve_doi_metadata(
                 review_manager=self.review_manager,
                 record=retrieved_record,
                 timeout=self.prep_operation.timeout,
             )
 
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=self.same_record_type_required,
@@ -105,7 +106,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
             if similarity < self.prep_operation.retrieval_similarity:
                 return record
 
-            record.merge(merging_record=retrieved_record, default_source=url)
+            record.merge(retrieved_record, default_source=url)
 
         except (
             requests.exceptions.RequestException,

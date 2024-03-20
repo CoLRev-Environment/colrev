@@ -8,6 +8,7 @@ from copy import deepcopy
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -182,7 +183,7 @@ def _remove_fields(*, record_dict: dict) -> dict:
     return record_dict
 
 
-def json_to_record(*, item: dict) -> colrev.record.PrepRecord:
+def json_to_record(*, item: dict) -> colrev.record_prep.PrepRecord:
     """Convert a crossref item to a record dict"""
 
     try:
@@ -196,4 +197,4 @@ def json_to_record(*, item: dict) -> colrev.record.PrepRecord:
             f"RecordNotParsableException: {exc}"
         ) from exc
 
-    return colrev.record.PrepRecord(data=record_dict)
+    return colrev.record_prep.PrepRecord(data=record_dict)

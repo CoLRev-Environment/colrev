@@ -11,7 +11,7 @@ from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -92,7 +92,7 @@ class PDFGet(colrev.operation.Operation):
             )
             self.import_pdf(record=record)
             if RecordState.rev_prescreen_included == record.data[Fields.STATUS]:
-                record.set_status(target_state=RecordState.pdf_imported)
+                record.set_status(RecordState.pdf_imported)
 
         return record
 
@@ -176,12 +176,12 @@ class PDFGet(colrev.operation.Operation):
             RecordState.pdf_needs_manual_retrieval,
         ]:
             if Fields.FILE in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record_pdf.PDFRecord(data=record_dict)
                 record.remove_field(key=Fields.FILE)
                 return record.get_data()
             return record_dict
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record_pdf.PDFRecord(data=record_dict)
 
         for (
             pdf_get_package_endpoint
@@ -212,7 +212,7 @@ class PDFGet(colrev.operation.Operation):
         if Fields.FILE in record.data:
             record.run_pdf_quality_model(pdf_qm=self.pdf_qm, set_prepared=True)
         else:
-            record.set_status(target_state=RecordState.pdf_needs_manual_retrieval)
+            record.set_status(RecordState.pdf_needs_manual_retrieval)
 
         self._log_infos(record=record)
 
@@ -249,7 +249,7 @@ class PDFGet(colrev.operation.Operation):
             pdf_candidates = {
                 pdf_candidate.relative_to(
                     self.review_manager.path
-                ): colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_candidate)
+                ): colrev.record_pdf.PDFRecord.get_colrev_pdf_id(pdf_candidate)
                 for pdf_candidate in list(pdf_dir.glob("**/*.pdf"))
             }
 
@@ -360,9 +360,9 @@ class PDFGet(colrev.operation.Operation):
                 max_similarity = 0.0
                 max_sim_record = None
                 for record in records.values():
-                    sim = colrev.record.Record.get_record_similarity(
-                        record_a=colrev.record.Record(data=pdf_record),
-                        record_b=colrev.record.Record(data=record.copy()),
+                    sim = colrev.record_pdf.PDFRecord.get_record_similarity(
+                        colrev.record_pdf.PDFRecord(data=pdf_record),
+                        colrev.record_pdf.PDFRecord(data=record.copy()),
                     )
                     if sim > max_similarity:
                         max_similarity = sim
@@ -372,7 +372,7 @@ class PDFGet(colrev.operation.Operation):
                         if RecordState.pdf_prepared == max_sim_record[Fields.STATUS]:
                             continue
 
-                        record = colrev.record.Record(data=max_sim_record)
+                        record = colrev.record_pdf.PDFRecord(data=max_sim_record)
                         record.update_field(
                             key=Fields.FILE,
                             value=str(file),
@@ -383,7 +383,7 @@ class PDFGet(colrev.operation.Operation):
                             RecordState.rev_prescreen_included
                             == record.data[Fields.STATUS]
                         ):
-                            record.set_status(target_state=RecordState.pdf_imported)
+                            record.set_status(RecordState.pdf_imported)
 
                         self.review_manager.report_logger.info(
                             "linked unlinked pdf:" f" {file.name}"
@@ -398,7 +398,7 @@ class PDFGet(colrev.operation.Operation):
                         #     # revert?
             else:
                 record = records[file.stem]
-                self.link_pdf(record=colrev.record.Record(data=record))
+                self.link_pdf(record=colrev.record_pdf.PDFRecord(data=record))
 
         self.review_manager.dataset.save_records_dict(records)
 
@@ -433,8 +433,8 @@ class PDFGet(colrev.operation.Operation):
         record_dict[Fields.FILE] = str(new_filename)
         self.review_manager.logger.info(f"rename {file.name} > {new_filename}")
         if RecordState.rev_prescreen_included == record_dict[Fields.STATUS]:
-            record = colrev.record.Record(data=record_dict)
-            record.set_status(target_state=RecordState.pdf_imported)
+            record = colrev.record_pdf.PDFRecord(data=record_dict)
+            record.set_status(RecordState.pdf_imported)
 
     def rename_pdfs(self) -> None:
         """Rename the PDFs"""
@@ -552,7 +552,7 @@ class PDFGet(colrev.operation.Operation):
                 RecordState.rev_prescreen_included,
                 RecordState.pdf_needs_manual_retrieval,
             ]:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record_pdf.PDFRecord(data=record_dict)
                 if Fields.FILE in record_dict:
                     if any(
                         Path(fpath).is_file()
@@ -562,7 +562,7 @@ class PDFGet(colrev.operation.Operation):
                             RecordState.rev_prescreen_included
                             == record.data[Fields.STATUS]
                         ):
-                            record.set_status(target_state=RecordState.pdf_imported)
+                            record.set_status(RecordState.pdf_imported)
                     else:
                         self.review_manager.logger.warning(
                             "Remove non-existent file link "

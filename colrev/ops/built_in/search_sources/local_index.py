@@ -300,7 +300,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 try:
                     record.data.update(
                         colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
-                            pdf_path=pdf_path,
+                            pdf_path,
                         )
                     )
                     return True
@@ -384,7 +384,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             retrieved_record.remove_field(key=Fields.CURATION_ID)
             record.merge(
-                merging_record=retrieved_record,
+                retrieved_record,
                 default_source=default_source,
             )
             # If volume/number are no longer in the CURATED record
@@ -399,7 +399,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             ):
                 del record.data[Fields.VOLUME]
 
-            record.set_status(target_state=RecordState.md_prepared)
+            record.set_status(RecordState.md_prepared)
             if (
                 record.data.get(Fields.PRESCREEN_EXCLUSION, "NA")
                 == FieldValues.RETRACTED

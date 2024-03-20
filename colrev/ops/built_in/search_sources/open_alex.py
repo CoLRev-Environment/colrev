@@ -16,6 +16,7 @@ from pyalex import Works
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -96,7 +97,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 continue
             if author["author"].get("display_name", None) is None:
                 continue
-            author_string = colrev.record.PrepRecord.format_author_field(
+            author_string = colrev.record_prep.PrepRecord.format_author_field(
                 input_string=author["author"]["display_name"]
             )
             author_list.append(author_string)
@@ -202,7 +203,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             )
 
             record.merge(
-                merging_record=retrieved_record,
+                retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
             open_alex_feed.save()

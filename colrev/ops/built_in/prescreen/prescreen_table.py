@@ -177,12 +177,12 @@ class TablePrescreen(JsonSchemaMixin):
                 if prescreened_record.get("presceen_inclusion", "") == "out":
                     if record.data[Fields.STATUS] != RecordState.rev_prescreen_excluded:
                         prescreen_excluded += 1
-                    record.set_status(target_state=RecordState.rev_prescreen_excluded)
+                    record.set_status(RecordState.rev_prescreen_excluded)
 
                 elif prescreened_record.get("presceen_inclusion", "") == "in":
                     if record.data[Fields.STATUS] != RecordState.rev_prescreen_included:
                         prescreen_included += 1
-                    record.set_status(target_state=RecordState.rev_prescreen_included)
+                    record.set_status(RecordState.rev_prescreen_included)
                 elif prescreened_record.get("presceen_inclusion", "") == "TODO":
                     nr_todo += 1
                 else:

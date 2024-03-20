@@ -24,10 +24,10 @@ from lxml.etree import XMLSyntaxError
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -413,7 +413,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retrieved_record = colrev.record.Record(data=retrieved_record_dict)
 
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
@@ -440,7 +440,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 pubmed_feed.add_update_record(retrieved_record)
 
                 record.merge(
-                    merging_record=retrieved_record,
+                    retrieved_record,
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
@@ -448,7 +448,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     source=retrieved_record.data[Fields.ORIGIN][0],
                     masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
-                record.set_status(target_state=RecordState.md_prepared)
+                record.set_status(RecordState.md_prepared)
                 if save_feed:
                     pubmed_feed.save()
                 try:
@@ -551,7 +551,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                             f"Skipped record: {record_dict}"
                         )
                         continue
-                    prep_record = colrev.record.PrepRecord(data=record_dict)
+                    prep_record = colrev.record_prep.PrepRecord(data=record_dict)
 
                     if Fields.D_PROV in prep_record.data:
                         del prep_record.data[Fields.D_PROV]
@@ -714,8 +714,10 @@ class PubMedSearchSource(JsonSchemaMixin):
             record.remove_field(key="colrev.pubmed.first_author")
 
         if Fields.AUTHOR in record.data:
-            record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
-                input_string=record.data[Fields.AUTHOR]
+            record.data[Fields.AUTHOR] = (
+                colrev.record_prep.PrepRecord.format_author_field(
+                    input_string=record.data[Fields.AUTHOR]
+                )
             )
 
         return record

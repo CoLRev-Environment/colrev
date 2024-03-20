@@ -294,7 +294,7 @@ class ExportManPrep(JsonSchemaMixin):
             original_record.run_quality_model(qm=self.quality_model, set_prepared=True)
 
         if override:
-            original_record.set_status(target_state=RecordState.md_prepared, force=True)
+            original_record.set_status(RecordState.md_prepared, force=True)
 
         self._print_stats(original_record=original_record)
 

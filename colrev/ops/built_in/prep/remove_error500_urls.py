@@ -44,7 +44,7 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record by removing URLs with 500 errors"""
 
         session = self.review_manager.get_cached_session()

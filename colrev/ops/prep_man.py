@@ -11,7 +11,7 @@ from tqdm import tqdm
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -68,7 +68,7 @@ class PrepMan(colrev.operation.Operation):
                 stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
             if Fields.MD_PROV in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record_prep.PrepRecord(data=record_dict)
                 prov_d = record.data[Fields.MD_PROV]
                 hints = []
                 for key, value in prov_d.items():
@@ -142,7 +142,7 @@ class PrepMan(colrev.operation.Operation):
                 # warn
                 continue
             record_dict = records[language_record[Fields.ID]]
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record_prep.PrepRecord(data=record_dict)
             record.update_field(
                 key=Fields.LANGUAGE,
                 value=language_record["most_likely_language"],
@@ -163,7 +163,7 @@ class PrepMan(colrev.operation.Operation):
                 ):
                     # by resetting to md_imported,
                     # the prescreen-exclusion based on languages will be reapplied.
-                    record.set_status(target_state=RecordState.md_imported)
+                    record.set_status(RecordState.md_imported)
 
         self.review_manager.dataset.save_records_dict(records)
 
@@ -246,14 +246,14 @@ class PrepMan(colrev.operation.Operation):
     def set_data(self, *, record_dict: dict) -> None:
         """Set data in the prep_man operation"""
 
-        record = colrev.record.PrepRecord(data=record_dict)
+        record = colrev.record_prep.PrepRecord(data=record_dict)
         record.set_masterdata_complete(
             source="prep_man",
             masterdata_repository=self.review_manager.settings.is_curated_repo(),
         )
         record.set_masterdata_consistent()
         # record.set_fields_complete()
-        record.set_status(target_state=RecordState.md_prepared)
+        record.set_status(RecordState.md_prepared)
         record_dict = record.get_data()
 
         self.review_manager.dataset.save_records_dict(

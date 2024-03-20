@@ -127,9 +127,9 @@ class Prescreen(colrev.operation.Operation):
                 )
                 continue
             if include:
-                record.set_status(target_state=RecordState.rev_prescreen_included)
+                record.set_status(RecordState.rev_prescreen_included)
             else:
-                record.set_status(target_state=RecordState.rev_prescreen_excluded)
+                record.set_status(RecordState.rev_prescreen_excluded)
 
         self.review_manager.dataset.save_records_dict(records)
 
@@ -213,7 +213,7 @@ class Prescreen(colrev.operation.Operation):
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.md_processed:
                 record = colrev.record.Record(data=record_dict)
-                record.set_status(target_state=RecordState.rev_prescreen_included)
+                record.set_status(RecordState.rev_prescreen_included)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Pre-screen (include_all)",
@@ -281,7 +281,7 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
-            record.set_status(target_state=RecordState.rev_prescreen_included)
+            record.set_status(RecordState.rev_prescreen_included)
             self.review_manager.dataset.save_records_dict(
                 {record.data[Fields.ID]: record.get_data()}, partial=True
             )
@@ -290,7 +290,7 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
-            record.set_status(target_state=RecordState.rev_prescreen_excluded)
+            record.set_status(RecordState.rev_prescreen_excluded)
             self.review_manager.dataset.save_records_dict(
                 {record.data[Fields.ID]: record.get_data()}, partial=True
             )
