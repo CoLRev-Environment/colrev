@@ -5,7 +5,7 @@ from pathlib import Path
 import git
 
 import colrev.review_manager
-import colrev.settings
+from colrev.constants import Filepaths
 
 
 def test_corrections(  # type: ignore
@@ -28,15 +28,13 @@ def test_corrections(  # type: ignore
     records["SrivastavaShainesh2015"]["title"] = "Changed-title"
     base_repo_review_manager.dataset.save_records_dict(records)
 
-    # Note: corrections (hooks) are not created with the create_commit methods
+    # Note: corrections (hooks) are not created with the create_commit methods of GitPython
     ret = git.Git(str(base_repo_review_manager.path)).execute(
         ["git", "commit", "-m", "test"]
     )
     print(ret)
     base_repo_review_manager.dataset.get_repo().git.log(p=True)
-    corrections_path = base_repo_review_manager.get_path(
-        colrev.settings.Filepaths.CORRECTIONS_DIR
-    )
+    corrections_path = base_repo_review_manager.get_path(Filepaths.CORRECTIONS_DIR)
     print(corrections_path.is_dir())
     print(base_repo_review_manager.dataset.get_repo().head.commit.message)
 

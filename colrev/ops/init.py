@@ -33,7 +33,7 @@ from colrev.constants import Filepaths
 class Initializer:
     """Initialize a CoLRev project"""
 
-    share_stat_req_options = ["none", "processed", "screened", "completed"]
+    review_manager: colrev.review_manager.ReviewManager
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -47,58 +47,46 @@ class Initializer:
         exact_call: str = "",
     ) -> None:
         saved_args = locals()
-        if example and local_pdf_collection:
-            raise colrev_exceptions.RepoInitError(
-                msg="Cannot initialize local_pdf_collection repository with example data."
-            )
-        current_platform = platform.system()
-        if current_platform != "Linux":
+        self._validate_arguments(example, local_pdf_collection)
+        self.target_path = self._get_target_path(target_path)
+        self.review_manager = colrev.review_manager.ReviewManager(
+            path_str=str(self.target_path), force_mode=True, navigate_to_home_dir=False
+        )
+        self.review_type = self._format_review_type(review_type)
+        self.title = str(self.target_path.name)
+
+        if platform.system() != "Linux":
             light = True
         self.light = light
 
-        self.review_type = review_type.replace("-", "_").lower().replace(" ", "_")
-        if "." not in self.review_type:
-            self.review_type = "colrev." + self.review_type
-
-        if target_path:
-            os.chdir(target_path)
-            self.target_path = target_path
-        else:
-            self.target_path = Path.cwd()
-
-        review_manager = colrev.review_manager.ReviewManager(
-            path_str=str(target_path), force_mode=True, navigate_to_home_dir=False
+        self._setup_repo(
+            example=example,
+            local_pdf_collection=local_pdf_collection,
+            exact_call=exact_call,
+            saved_args=saved_args,
         )
 
-        try:
-            res = review_manager.get_review_types(review_type=self.review_type)
-        except colrev.exceptions.MissingDependencyError as exc:
-            res = review_manager.get_review_types(
-                review_type="colrev.literature_review"
-            )
-            raise colrev_exceptions.ParameterError(
-                parameter="init.review_type",
-                value=f"'{review_type}'",
-                options=list(res.all_available_packages_names.keys()),
-            ) from exc
+    def _setup_repo(
+        self,
+        *,
+        example: bool,
+        local_pdf_collection: bool,
+        exact_call: str,
+        saved_args: dict,
+    ) -> None:
 
         self._check_init_precondition()
-
-        self.title = str(self.target_path.name)
-        self.logger = self._setup_init_logger(level=logging.INFO)
-
         self._setup_git()
-        self._setup_files(path=self.target_path)
-
+        self._setup_files()
+        self._setup_settings()
+        self._finalize()
         if example:
             self._create_example_repo()
 
         self.review_manager = colrev.review_manager.ReviewManager(exact_call=exact_call)
 
         self._create_commit(saved_args=saved_args)
-        if not example:
-            if "pytest" not in os.getcwd():
-                self._register_repo()
+        self._register_repo(example=example)
         if local_pdf_collection:
             self._create_local_pdf_collection()
 
@@ -107,6 +95,36 @@ class Initializer:
         self.review_manager.logger.info(
             "%sCompleted init operation%s", Colors.GREEN, Colors.END
         )
+
+    def _validate_arguments(self, example: bool, local_pdf_collection: bool) -> None:
+        if example and local_pdf_collection:
+            raise colrev_exceptions.RepoInitError(
+                msg="Cannot initialize local_pdf_collection repository with example data."
+            )
+
+    def _format_review_type(self, review_type: str) -> str:
+        formatted_review_type = review_type.replace("-", "_").lower().replace(" ", "_")
+        if "." not in formatted_review_type:
+            formatted_review_type = "colrev." + formatted_review_type
+
+        try:
+            res = self.review_manager.get_review_types(
+                review_type=formatted_review_type
+            )
+        except colrev.exceptions.MissingDependencyError as exc:
+            res = self.review_manager.get_review_types(
+                review_type="colrev.literature_review"
+            )
+            raise colrev_exceptions.ParameterError(
+                parameter="init.review_type",
+                value=f"'{formatted_review_type}'",
+                options=list(res.all_available_packages_names.keys()),
+            ) from exc
+        return formatted_review_type
+
+    def _get_target_path(self, target_path: Path = Path.cwd()) -> Path:
+        os.chdir(target_path)
+        return target_path
 
     def _check_init_precondition(self) -> None:
         cur_content = [
@@ -137,45 +155,71 @@ class Initializer:
                     f"{Colors.ORANGE}colrev init --light{Colors.END}"
                 ) from exc
 
-    def _setup_init_logger(self, *, level: int = logging.INFO) -> logging.Logger:
-        # pylint: disable=duplicate-code
-        init_logger = logging.getLogger("colrev-init_logger")
+    def _setup_git(self) -> None:
+        self.review_manager.logger.info("Create CoLRev repository")
 
-        init_logger.setLevel(level)
+        self.review_manager.logger.info("Set up git repository")
 
-        if init_logger.handlers:
-            for handler in init_logger.handlers:
-                init_logger.removeHandler(handler)
+        git.Repo.init()
 
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        handler.setLevel(level)
+        # To check if git actors are set
+        environment_manager = colrev.env.environment_manager.EnvironmentManager()
+        environment_manager.get_name_mail_from_git()
 
-        init_logger.addHandler(handler)
-        init_logger.propagate = False
+        logging.info("Install latest pre-commmit hooks")
+        scripts_to_call = [
+            {
+                "description": "Install pre-commit hooks",
+                "command": ["pre-commit", "install"],
+            },
+            {
+                "description": "",
+                "command": [
+                    "pre-commit",
+                    "install",
+                    "--hook-type",
+                    "prepare-commit-msg",
+                ],
+            },
+            {
+                "description": "",
+                "command": ["pre-commit", "install", "--hook-type", "pre-push"],
+            },
+            {"description": "", "command": ["pre-commit", "autoupdate"]},
+            {"description": "", "command": ["daff", "git", "csv"]},
+        ]
+        for script_to_call in scripts_to_call:
+            try:
+                if script_to_call["description"]:
+                    self.review_manager.logger.debug(
+                        "%s...", script_to_call["description"]
+                    )
+                check_call(
+                    script_to_call["command"], stdout=DEVNULL, stderr=STDOUT
+                )  # nosec
+            except CalledProcessError:
+                if " ".join(script_to_call["command"]) == "pre-commit autoupdate":
+                    pass
+                else:
+                    self.review_manager.logger.error(
+                        "%sFailed: %s%s",
+                        Colors.RED,
+                        " ".join(script_to_call),
+                        Colors.END,
+                    )
 
-        return init_logger
+    def _fix_pre_commit_hooks_windows(self) -> None:
+        # https://stackoverflow.com/questions/12410164/github-for-windows-pre-commit-hook
+        if any(platform.win32_ver()):
+            with open(".git/hooks/pre-commit", encoding="utf-8") as f:
+                lines = f.readlines()
 
-    def _register_repo(self) -> None:
-        self.review_manager.logger.info("Register CoLRev repository")
+            lines[0] = """#!C:/Program\\ Files/Git/usr/bin/sh.exe\n"""
 
-        environment_manager = self.review_manager.get_environment_manager()
-        environment_manager.register_repo(self.target_path)
+            with open(".git/hooks/pre-commit", "w", encoding="utf-8") as f:
+                f.writelines(lines)
 
-    def _create_commit(self, *, saved_args: dict) -> None:
-        del saved_args["local_pdf_collection"]
-        self.review_manager.dataset.create_commit(
-            msg="Initial commit",
-            manual_author=True,
-            skip_hooks=True,
-        )
-
-    def _setup_files(self, *, path: Path) -> None:
-        # pylint: disable=too-many-locals
+    def _setup_files(self) -> None:
 
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
@@ -184,11 +228,13 @@ class Initializer:
         if settings_filedata:
             settings = json.loads(settings_filedata.decode("utf-8"))
             settings["project"]["review_type"] = str(self.review_type)
-            with open(path / Path("settings.json"), "w", encoding="utf8") as file:
+            with open(
+                self.target_path / Path("settings.json"), "w", encoding="utf8"
+            ) as file:
                 json.dump(settings, file, indent=4)
 
-        (path / Filepaths.SEARCH_DIR).mkdir(parents=True)
-        (path / Filepaths.PDF_DIR).mkdir(parents=True)
+        (self.target_path / Filepaths.SEARCH_DIR).mkdir(parents=True)
+        (self.target_path / Filepaths.PDF_DIR).mkdir(parents=True)
 
         colrev_path = Path.home() / Path("colrev")
         colrev_path.mkdir(exist_ok=True, parents=True)
@@ -215,6 +261,8 @@ class Initializer:
             colrev.env.utils.retrieve_package_file(
                 template_file=retrieval_path, target=target_path
             )
+
+    def _setup_settings(self) -> None:
 
         self.review_manager = colrev.review_manager.ReviewManager()
 
@@ -298,6 +346,9 @@ class Initializer:
 
         self.review_manager.save_settings()
 
+    def _finalize(self) -> None:
+        settings = self.review_manager.settings
+
         # Note : to avoid file setup at colrev status (calls data_operation.main)
         data_operation = self.review_manager.get_data_operation(
             notify_state_transition_operation=False
@@ -320,18 +371,25 @@ class Initializer:
         with open("data/records.bib", mode="w", encoding="utf-8") as file:
             file.write("\n")
 
-        # https://stackoverflow.com/questions/12410164/github-for-windows-pre-commit-hook
-        if any(platform.win32_ver()):
-            with open(".git/hooks/pre-commit", encoding="utf-8") as f:
-                lines = f.readlines()
-
-            lines[0] = """#!C:/Program\\ Files/Git/usr/bin/sh.exe\n"""
-
-            with open(".git/hooks/pre-commit", "w", encoding="utf-8") as f:
-                f.writelines(lines)
+        self._fix_pre_commit_hooks_windows()
 
         git_repo = self.review_manager.dataset.get_repo()
         git_repo.git.add(all=True)
+
+    def _create_commit(self, *, saved_args: dict) -> None:
+        del saved_args["local_pdf_collection"]
+        self.review_manager.dataset.create_commit(
+            msg="Initial commit",
+            manual_author=True,
+            skip_hooks=True,
+        )
+
+    def _register_repo(self, *, example: bool) -> None:
+        if example or "pytest" in os.getcwd():
+            return
+        self.review_manager.logger.info("Register CoLRev repository")
+        environment_manager = self.review_manager.get_environment_manager()
+        environment_manager.register_repo(self.target_path)
 
     def _post_commit_edits(self) -> None:
         if self.review_type == "colrev.curated_masterdata":
@@ -371,69 +429,18 @@ class Initializer:
 
             self.review_manager.logger.info("Completed setup.")
 
-    def _setup_git(self) -> None:
-        self.logger.info("Create CoLRev repository")
-
-        self.logger.info("Set up git repository")
-
-        git.Repo.init()
-
-        # To check if git actors are set
-        environment_manager = colrev.env.environment_manager.EnvironmentManager()
-        environment_manager.get_name_mail_from_git()
-
-        logging.info("Install latest pre-commmit hooks")
-        scripts_to_call = [
-            {
-                "description": "Install pre-commit hooks",
-                "command": ["pre-commit", "install"],
-            },
-            {
-                "description": "",
-                "command": [
-                    "pre-commit",
-                    "install",
-                    "--hook-type",
-                    "prepare-commit-msg",
-                ],
-            },
-            {
-                "description": "",
-                "command": ["pre-commit", "install", "--hook-type", "pre-push"],
-            },
-            {"description": "", "command": ["pre-commit", "autoupdate"]},
-            {"description": "", "command": ["daff", "git", "csv"]},
-        ]
-        for script_to_call in scripts_to_call:
-            try:
-                if script_to_call["description"]:
-                    self.logger.debug("%s...", script_to_call["description"])
-                check_call(
-                    script_to_call["command"], stdout=DEVNULL, stderr=STDOUT
-                )  # nosec
-            except CalledProcessError:
-                if " ".join(script_to_call["command"]) == "pre-commit autoupdate":
-                    pass
-                else:
-                    self.logger.error(
-                        "%sFailed: %s%s",
-                        Colors.RED,
-                        " ".join(script_to_call),
-                        Colors.END,
-                    )
-
     def _create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
         of CoLRev. It focuses on a quick overview of the process and does
         not cover advanced features or special cases."""
 
-        self.logger.info("Include 30_example_records.bib")
+        self.review_manager.logger.info("Include 30_example_records.bib")
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
             target=Path("data/search/30_example_records.bib"),
         )
 
-        git_repo = git.Repo.init()
+        git_repo = self.review_manager.dataset.get_repo()
         git_repo.index.add(["data/search/30_example_records.bib"])
 
         with open("settings.json", encoding="utf-8") as file:
@@ -469,6 +476,6 @@ class Initializer:
                 review_type="colrev.literature_review",
                 local_pdf_collection=True,
             )
-            self.logger.info("Created local_pdf_collection repository")
+            self.review_manager.logger.info("Created local_pdf_collection repository")
 
         os.chdir(self.target_path)
