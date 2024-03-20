@@ -345,7 +345,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         else:
             print(f"File does not exist ({record.data[Fields.ID]})")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return records
 
@@ -370,7 +370,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             except QuitPressedException:
                 break
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         if self.pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":

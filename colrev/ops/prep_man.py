@@ -165,7 +165,7 @@ class PrepMan(colrev.operation.Operation):
                     # the prescreen-exclusion based on languages will be reapplied.
                     record.set_status(target_state=RecordState.md_imported)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     def prep_man_langs(self) -> None:
         """Add missing language fields based on spreadsheets"""
@@ -257,7 +257,7 @@ class PrepMan(colrev.operation.Operation):
         record_dict = record.get_data()
 
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
     @colrev.operation.Operation.decorate()

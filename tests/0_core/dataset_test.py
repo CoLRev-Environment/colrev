@@ -63,8 +63,6 @@ def test_load_records_from_history(  # type: ignore
             commit_sha=last_commit_sha
         )
     )
-    print(records_from_history)
-
     # Check if the loaded records match the new record added
     assert len(records_from_history) == 3, "Expected three records from history"
     assert (
@@ -105,83 +103,6 @@ def test_get_committed_origin_state_dict(
     assert (
         committed_origin_state_dict == expected_dict
     ), "The committed origin state dictionary does not match the expected output."
-
-
-def test_load_records_dict_not_notified_exception(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test load_records_dict raises not_notified_exception."""
-
-    base_repo_review_manager.notified_next_operation = None
-
-    with pytest.raises(Exception):
-        base_repo_review_manager.dataset.load_records_dict()
-
-
-@pytest.mark.parametrize(
-    "record_dict, expected_id",
-    [
-        ({"author": "Doe, John and Smith, Jane", "year": "2021"}, "Doe2021"),
-        ({}, "AnonymousNoYear"),
-    ],
-)
-def test_id_generation_first_author_year(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-    helpers,
-    record_dict,
-    expected_id,
-) -> None:
-    """Test the id generation process for the first_author_year ID pattern."""
-    local_index = base_repo_review_manager.get_local_index()
-
-    base_repo_review_manager.settings.project.id_pattern = (
-        colrev.settings.IDPattern.first_author_year
-    )
-    temp_id = base_repo_review_manager.dataset._generate_temp_id(
-        local_index=local_index, record_dict=record_dict
-    )
-
-    assert (
-        temp_id == expected_id
-    ), "ID generation with author failed for first_author_year pattern"
-
-
-@pytest.mark.parametrize(
-    "record_dict, expected_id",
-    [
-        (
-            {"author": "Doe, John and Smith, Jane and Doe, Alice", "year": "2021"},
-            "DoeSmithDoe2021",
-        ),
-        (
-            {
-                "author": "Clary, William Grant and Dick, Geoffrey N. and Akbulut, Asli Yagmur and Van Slyke, Craig",
-                "year": "2022",
-            },
-            "ClaryDickAkbulutEtAl2022",
-        ),
-        ({}, "AnonymousNoYear"),
-    ],
-)
-def test_id_generation_three_authors_year(  # type: ignore
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-    helpers,
-    record_dict,
-    expected_id,
-) -> None:
-    """Test the id generation process for the three_authors_year ID pattern."""
-    local_index = base_repo_review_manager.get_local_index()
-
-    base_repo_review_manager.settings.project.id_pattern = (
-        colrev.settings.IDPattern.three_authors_year
-    )
-    temp_id = base_repo_review_manager.dataset._generate_temp_id(
-        local_index=local_index, record_dict=record_dict
-    )
-
-    assert (
-        temp_id == expected_id
-    ), "ID generation with author failed for three_authors_year pattern"
 
 
 @pytest.mark.parametrize(
@@ -235,7 +156,7 @@ def test_get_format_report(
     )
 
     records = base_repo_review_manager.dataset.load_records_dict()
-    base_repo_review_manager.dataset.save_records_dict(records=records)
+    base_repo_review_manager.dataset.save_records_dict(records)
     # Test for None status
     report = base_repo_review_manager.dataset.get_format_report()
 
@@ -249,7 +170,7 @@ def test_get_format_report(
 
     # # Setup for md_needs_manual_preparation status
     # record_dict[Fields.STATUS] = RecordState.md_needs_manual_preparation
-    # base_repo_review_manager.dataset.save_records_dict(records={"TestRecord": record_dict})
+    # base_repo_review_manager.dataset.save_records_dict({"TestRecord": record_dict})
 
     # # Test for md_needs_manual_preparation status
     # report = base_repo_review_manager.dataset.get_format_report()
@@ -260,7 +181,7 @@ def test_get_format_report(
 
     # # Setup for pdf_prepared status
     # record_dict[Fields.STATUS] = RecordState.pdf_prepared
-    # base_repo_review_manager.dataset.save_records_dict(records={"TestRecord": record_dict})
+    # base_repo_review_manager.dataset.save_records_dict({"TestRecord": record_dict})
 
     # # Test for pdf_prepared status
     # report = base_repo_review_manager.dataset.get_format_report()
@@ -279,7 +200,7 @@ def test_get_commit_message(
     trivial_file_path = base_repo_review_manager.path / "trivial_file.txt"
     with open(trivial_file_path, "w") as file:
         file.write("This is a trivial change.")
-    base_repo_review_manager.dataset.add_changes(path=trivial_file_path)
+    base_repo_review_manager.dataset.add_changes(trivial_file_path)
 
     base_repo_review_manager.dataset.create_commit(
         msg=commit_message, manual_author=True
@@ -423,9 +344,7 @@ def test_has_changes_with_changes(
     base_repo_review_manager.dataset._git_repo.git.add("-A")
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_changes(
-        relative_path=Path("new_file.txt")
-    )
+    has_changes = base_repo_review_manager.dataset.has_changes(Path("new_file.txt"))
 
     # Assert
     assert has_changes, "has_changes failed to detect changes."
@@ -443,7 +362,7 @@ def test_has_changes_with_relative_path_new_file(
 
     # Test
     has_changes = base_repo_review_manager.dataset.has_changes(
-        relative_path=Path("new_file_relative.txt")
+        Path("new_file_relative.txt")
     )
 
     # Assert
@@ -464,7 +383,7 @@ def test_has_changes_staged_changes(
 
     # Test
     has_staged_changes = base_repo_review_manager.dataset.has_changes(
-        relative_path=Path("staged_file.txt"), change_type="staged"
+        Path("staged_file.txt"), change_type="staged"
     )
 
     # Assert
@@ -505,7 +424,7 @@ def test_has_changes_unstaged_changes(
 
     # Test
     has_changes = base_repo_review_manager.dataset.has_changes(
-        relative_path=Path("unstaged_file.txt"), change_type="unstaged"
+        Path("unstaged_file.txt"), change_type="unstaged"
     )
 
     # Assert
@@ -539,9 +458,7 @@ def test_has_changes_with_relative_path_settings(
     """Test has_changes method with relative path for settings.json."""
 
     # Test
-    has_changes = base_repo_review_manager.dataset.has_changes(
-        relative_path=Path("settings.json")
-    )
+    has_changes = base_repo_review_manager.dataset.has_changes(Path("settings.json"))
 
     # Assert
     assert (
@@ -559,7 +476,7 @@ def test_add_changes(
     new_file_path.write_text("This file will be added.")
 
     # Test
-    base_repo_review_manager.dataset.add_changes(path=new_file_path)
+    base_repo_review_manager.dataset.add_changes(new_file_path)
 
     # Assert
     assert (
@@ -575,7 +492,7 @@ def test_add_changes_remove(
     # Create a new file and add it to simulate removal
     file_to_remove_path = base_repo_review_manager.path / "file_to_remove.txt"
     file_to_remove_path.write_text("This file will be removed.")
-    base_repo_review_manager.dataset.add_changes(path=file_to_remove_path)
+    base_repo_review_manager.dataset.add_changes(file_to_remove_path)
 
     # Ensure file is added
     assert (
@@ -584,7 +501,7 @@ def test_add_changes_remove(
     ), "Setup failed: file_to_remove.txt was not added to the repository."
 
     # Test removal
-    base_repo_review_manager.dataset.add_changes(path=file_to_remove_path, remove=True)
+    base_repo_review_manager.dataset.add_changes(file_to_remove_path, remove=True)
 
     # Assert
     assert (
@@ -603,9 +520,7 @@ def test_add_changes_ignore_missing(
 
     # Test
     # This should not raise FileNotFoundError because of the ignore_missing flag
-    base_repo_review_manager.dataset.add_changes(
-        path=missing_file_path, ignore_missing=True
-    )
+    base_repo_review_manager.dataset.add_changes(missing_file_path, ignore_missing=True)
 
     # Assert
     # Since the file does not exist, it should not be added, but also should not raise an error

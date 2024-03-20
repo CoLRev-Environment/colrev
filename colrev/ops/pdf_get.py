@@ -304,7 +304,7 @@ class PDFGet(colrev.operation.Operation):
 
                 write_file(records_dict=source_records_dict, filename=source.filename)
 
-            self.review_manager.dataset.add_changes(path=source.filename)
+            self.review_manager.dataset.add_changes(source.filename)
 
         return records
 
@@ -317,7 +317,7 @@ class PDFGet(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         records = self._relink_pdfs(records=records)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="Relink PDFs")
 
     def check_existing_unlinked_pdfs(
@@ -400,7 +400,7 @@ class PDFGet(colrev.operation.Operation):
                 record = records[file.stem]
                 self.link_pdf(record=colrev.record.Record(data=record))
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return records
 
@@ -471,10 +471,10 @@ class PDFGet(colrev.operation.Operation):
                 pdfs_search_file=pdfs_search_file,
             )
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         if pdfs_search_file.is_file():
-            self.review_manager.dataset.add_changes(path=pdfs_search_file)
+            self.review_manager.dataset.add_changes(pdfs_search_file)
 
     def _get_data(self) -> dict:
         # pylint: disable=duplicate-code
@@ -569,7 +569,7 @@ class PDFGet(colrev.operation.Operation):
                             f"({record_dict[Fields.ID]}: {record_dict[Fields.FILE]}"
                         )
                         record.remove_field(key=Fields.FILE)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return records
 
@@ -583,7 +583,7 @@ class PDFGet(colrev.operation.Operation):
             with open("custom_pdf_get_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_pdf_get_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_pdf_get_script.py"))
 
         self.review_manager.settings.pdf_get.pdf_get_man_package_endpoints.append(
             {"endpoint": "custom_pdf_get_script"}
@@ -635,7 +635,7 @@ class PDFGet(colrev.operation.Operation):
             pool.join()
 
             self.review_manager.dataset.save_records_dict(
-                records={r[Fields.ID]: r for r in retrieved_record_list}, partial=True
+                {r[Fields.ID]: r for r in retrieved_record_list}, partial=True
             )
 
             self._print_stats(retrieved_record_list=retrieved_record_list)

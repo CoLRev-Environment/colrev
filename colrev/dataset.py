@@ -2,10 +2,7 @@
 """Functionality for data/records.bib and git repository."""
 from __future__ import annotations
 
-import itertools
 import os
-import re
-import string
 import tempfile
 import time
 import typing
@@ -16,7 +13,6 @@ from typing import Optional
 import git
 from git import GitCommandError
 from git import InvalidGitRepositoryError
-from tqdm import tqdm
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -28,6 +24,7 @@ import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import FileSets
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
@@ -37,43 +34,12 @@ from colrev.writer.write_utils import to_string
 class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
-    # Ensure the path uses forward slashes, which is compatible with Git's path handling
-    RECORDS_FILE_RELATIVE_GIT = str(Filepaths.RECORDS_FILE).replace("\\", "/")
-
-    DEFAULT_GIT_IGNORE_ITEMS = [
-        ".history",
-        ".colrev",
-        ".corrections",
-        ".report.log",
-        "__pycache__",
-        "*.bib.sav",
-        "venv",
-        "output",
-        "data/pdfs",
-        "data/pdf_get_man/missing_pdf_files.csv",
-        "data/.tei/",
-        "data/prep_man/records_prep_man.bib",
-        "data/prep/",
-        "data/dedupe/",
-        "data/data/sample_references.bib",
-    ]
-    DEPRECATED_GIT_IGNORE_ITEMS = [
-        "missing_pdf_files.csv",
-        "manual_cleansing_statistics.csv",
-        ".references_learned_settings",
-        "pdfs",
-        ".tei",
-        "data.csv",
-        "requests_cache.sqlite",
-    ]
-
     records_file: Path
     _git_repo: git.Repo
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
         self.records_file = review_manager.get_path(Filepaths.RECORDS_FILE)
-        self.git_ignore_file = review_manager.get_path(Filepaths.GIT_IGNORE_FILE)
 
         try:
             # In most cases, the repo should exist
@@ -84,7 +50,8 @@ class Dataset:
             raise colrev_exceptions.RepoSetupError(msg) from exc
 
         self.update_gitignore(
-            add=self.DEFAULT_GIT_IGNORE_ITEMS, remove=self.DEPRECATED_GIT_IGNORE_ITEMS
+            add=FileSets.DEFAULT_GIT_IGNORE_ITEMS,
+            remove=FileSets.DEPRECATED_GIT_IGNORE_ITEMS,
         )
 
     def update_gitignore(
@@ -93,8 +60,9 @@ class Dataset:
         """Update the gitignore file by adding or removing particular paths"""
         # The following may print warnings...
 
-        if self.git_ignore_file.is_file():
-            gitignore_content = self.git_ignore_file.read_text(encoding="utf-8")
+        git_ignore_file = self.review_manager.get_path(Filepaths.GIT_IGNORE_FILE)
+        if git_ignore_file.is_file():
+            gitignore_content = git_ignore_file.read_text(encoding="utf-8")
         else:
             gitignore_content = ""
         ignored_items = gitignore_content.splitlines()
@@ -105,11 +73,11 @@ class Dataset:
                 str(a) for a in add if str(a) not in ignored_items
             ]
 
-        with self.git_ignore_file.open("w", encoding="utf-8") as file:
+        with git_ignore_file.open("w", encoding="utf-8") as file:
             file.write("\n".join(ignored_items) + "\n")
-        self.add_changes(path=self.git_ignore_file)
+        self.add_changes(git_ignore_file)
 
-    def get_origin_state_dict(self, *, records_string: str = "") -> dict:
+    def get_origin_state_dict(self, records_string: str = "") -> dict:
         """Get the origin_state_dict (to determine state transitions efficiently)
 
         {'30_example_records.bib/Staehr2010': <RecordState.pdf_not_available: 10>,}
@@ -143,22 +111,18 @@ class Dataset:
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / self.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
+                (commit.tree / Filepaths.RECORDS_FILE_GIT).data_stream.read(),
             )
-            for commit in self._git_repo.iter_commits(
-                paths=self.RECORDS_FILE_RELATIVE_GIT
-            )
+            for commit in self._git_repo.iter_commits(paths=Filepaths.RECORDS_FILE_GIT)
         )
         filecontents = list(revlist)[0][1]
 
         committed_origin_state_dict = self.get_origin_state_dict(
-            records_string=filecontents.decode("utf-8")
+            filecontents.decode("utf-8")
         )
         return committed_origin_state_dict
 
-    def load_records_from_history(
-        self, *, commit_sha: str = ""
-    ) -> typing.Iterator[dict]:
+    def load_records_from_history(self, commit_sha: str = "") -> typing.Iterator[dict]:
         """
         Iterates through Git history, yielding records file contents as dictionaries.
 
@@ -175,7 +139,9 @@ class Dataset:
         """
 
         reached_target_commit = False  # if no commit_sha provided
-        for current_commit in self._git_repo.iter_commits():
+        for current_commit in self._git_repo.iter_commits(
+            paths=Filepaths.RECORDS_FILE_GIT
+        ):
 
             # Skip all commits before the specified commit_sha, if provided
             if commit_sha and not reached_target_commit:
@@ -186,7 +152,7 @@ class Dataset:
 
             # Read and parse the records file from the current commit
             filecontents = (
-                current_commit.tree / self.RECORDS_FILE_RELATIVE_GIT
+                current_commit.tree / Filepaths.RECORDS_FILE_GIT
             ).data_stream.read()
 
             records_dict = colrev.loader.load_utils.loads(
@@ -244,7 +210,7 @@ class Dataset:
         return records_dict
 
     def save_records_dict_to_file(
-        self, *, records: dict, add_changes: bool = True
+        self, records: dict, *, add_changes: bool = True
     ) -> None:
         """Save the records dict"""
         # Note : this classmethod function can be called by CoLRev scripts
@@ -260,7 +226,7 @@ class Dataset:
         self._add_record_changes()
 
     def _save_record_list_by_id(
-        self, *, records: dict, append_new: bool = False
+        self, records: dict, *, append_new: bool = False
     ) -> None:
         # Note : currently no use case for append_new=True??
 
@@ -325,14 +291,14 @@ class Dataset:
         self._add_record_changes()
 
     def save_records_dict(
-        self, *, records: dict, partial: bool = False, add_changes: bool = True
+        self, records: dict, *, partial: bool = False, add_changes: bool = True
     ) -> None:
         """Save the records dict in RECORDS_FILE"""
 
         if partial:
-            self._save_record_list_by_id(records=records)
+            self._save_record_list_by_id(records)
             return
-        self.save_records_dict_to_file(records=records, add_changes=add_changes)
+        self.save_records_dict_to_file(records, add_changes=add_changes)
 
     def read_next_record(
         self, *, conditions: Optional[list] = None
@@ -384,7 +350,7 @@ class Dataset:
                 if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
                     record.reset_pdf_provenance_notes()
 
-            self.save_records_dict(records=records)
+            self.save_records_dict(records)
             changed = Filepaths.RECORDS_FILE in [
                 r.a_path for r in self._git_repo.index.diff(None)
             ]
@@ -404,85 +370,6 @@ class Dataset:
 
     # ID creation, update and lookup ---------------------------------------
 
-    def _generate_temp_id(
-        self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
-    ) -> str:
-        # pylint: disable=too-many-branches
-
-        try:
-            retrieved_record = local_index.retrieve(record_dict)
-            temp_id = retrieved_record.data[Fields.ID]
-
-            # Do not use IDs from local_index for curated_metadata repositories
-            if self.review_manager.settings.is_curated_masterdata_repo():
-                raise colrev_exceptions.RecordNotInIndexException()
-
-        except (
-            colrev_exceptions.RecordNotInIndexException,
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-        ):
-            if record_dict.get(Fields.AUTHOR, record_dict.get(Fields.EDITOR, "")) != "":
-                authors_string = record_dict.get(
-                    Fields.AUTHOR, record_dict.get(Fields.EDITOR, "Anonymous")
-                )
-                authors = colrev.record.PrepRecord.format_author_field(
-                    input_string=authors_string
-                ).split(" and ")
-            else:
-                authors = ["Anonymous"]
-
-            # Use family names
-            for author in authors:
-                if "," in author:
-                    author = author.split(",", maxsplit=1)[0]
-                else:
-                    author = author.split(" ", maxsplit=1)[0]
-
-            id_pattern = self.review_manager.settings.project.id_pattern
-            if colrev.settings.IDPattern.first_author_year == id_pattern:
-                first_author = authors[0].split(",")[0].replace(" ", "")
-                temp_id = f'{first_author}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
-            elif colrev.settings.IDPattern.three_authors_year == id_pattern:
-                temp_id = ""
-                indices = len(authors)
-                if len(authors) > 3:
-                    indices = 3
-                for ind in range(0, indices):
-                    temp_id = temp_id + f'{authors[ind].split(",")[0].replace(" ", "")}'
-                if len(authors) > 3:
-                    temp_id = temp_id + "EtAl"
-                temp_id = temp_id + str(record_dict.get(Fields.YEAR, "NoYear"))
-
-            if temp_id.isupper():
-                temp_id = temp_id.capitalize()
-            # Replace special characters
-            # (because IDs may be used as file names)
-            temp_id = colrev.env.utils.remove_accents(temp_id)
-            temp_id = re.sub(r"\(.*\)", "", temp_id)
-            temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
-
-        return temp_id
-
-    def _generate_next_unique_id(
-        self,
-        *,
-        temp_id: str,
-        existing_ids: list,
-    ) -> str:
-        """Get the next unique ID"""
-
-        order = 0
-        letters = list(string.ascii_lowercase)
-        next_unique_id = temp_id
-        appends: list = []
-        while next_unique_id.lower() in [i.lower() for i in existing_ids]:
-            if len(appends) == 0:
-                order += 1
-                appends = list(itertools.product(letters, repeat=order))
-            next_unique_id = temp_id + "".join(list(appends.pop(0)))
-        temp_id = next_unique_id
-        return temp_id
-
     def propagated_id(self, *, record_id: str) -> bool:
         """Check whether an ID is propagated (i.e., its record's status is beyond md_processed)"""
 
@@ -495,99 +382,22 @@ class Dataset:
 
         return False
 
-    def _generate_id(
-        self,
-        *,
-        local_index: colrev.env.local_index.LocalIndex,
-        record_dict: dict,
-        existing_ids: Optional[list] = None,
-    ) -> str:
-        """Generate a blacklist to avoid setting duplicate IDs"""
-
-        # Only change IDs that are before md_processed
-        if record_dict[Fields.STATUS] in RecordState.get_post_x_states(
-            state=RecordState.md_processed
-        ):
-            raise colrev_exceptions.PropagatedIDChange([record_dict[Fields.ID]])
-        # Alternatively, we could change IDs except for those
-        # that have been propagated to the
-        # screen or data will not be replaced
-        # (this would break the chain of evidence)
-
-        temp_id = self._generate_temp_id(
-            local_index=local_index, record_dict=record_dict
-        )
-
-        if existing_ids:
-            temp_id = self._generate_next_unique_id(
-                temp_id=temp_id,
-                existing_ids=existing_ids,
-            )
-
-        return temp_id
-
     def set_ids(
         self, *, records: Optional[dict] = None, selected_ids: Optional[list] = None
     ) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         # pylint: disable=redefined-outer-name
+        # pylint: disable=import-outside-toplevel
 
-        local_index = self.review_manager.get_local_index()
+        import colrev.id_setter
 
-        if records is None:
-            records = {}
-
-        if len(records) == 0:
-            records = self.load_records_dict()
-
-        id_list = list(records.keys())
-
-        for record_id in tqdm(list(records.keys())):
-            try:
-                record_dict = records[record_id]
-                if selected_ids is not None:
-                    if record_id not in selected_ids:
-                        continue
-                if record_dict[Fields.STATUS] not in [
-                    RecordState.md_imported,
-                    RecordState.md_prepared,
-                ]:
-                    continue
-                old_id = record_id
-
-                temp_stat = record_dict[Fields.STATUS]
-                if selected_ids:
-                    record = colrev.record.Record(data=record_dict)
-                    record.set_status(target_state=RecordState.md_prepared)
-                new_id = self._generate_id(
-                    local_index=local_index,
-                    record_dict=record_dict,
-                    existing_ids=[x for x in id_list if x != record_id],
-                )
-                if selected_ids:
-                    record = colrev.record.Record(data=record_dict)
-                    record.set_status(target_state=temp_stat)
-
-                id_list.append(new_id)
-                if old_id != new_id:
-                    # We need to insert the a new element into records
-                    # to make sure that the IDs are actually saved
-                    record_dict.update(ID=new_id)
-                    records[new_id] = record_dict
-                    del records[old_id]
-                    self.review_manager.report_logger.info(
-                        f"set_ids({old_id}) to {new_id}"
-                    )
-                    if old_id in id_list:
-                        id_list.remove(old_id)
-            except colrev_exceptions.PropagatedIDChange as exc:
-                print(exc)
-
-        self.save_records_dict(records=records)
-        self._add_record_changes()
-
-        return records
+        id_setter = colrev.id_setter.IDSetter(review_manager=self.review_manager)
+        updated_records = id_setter.set_ids(
+            records=records,
+            selected_ids=selected_ids,
+        )
+        return updated_records
 
     # GIT operations -----------------------------------------------
 
@@ -601,10 +411,10 @@ class Dataset:
     def has_record_changes(self, *, change_type: str = "all") -> bool:
         """Check whether the records have changes"""
         return self.has_changes(
-            relative_path=Path(self.RECORDS_FILE_RELATIVE_GIT), change_type=change_type
+            Path(Filepaths.RECORDS_FILE_GIT), change_type=change_type
         )
 
-    def has_changes(self, *, relative_path: Path, change_type: str = "all") -> bool:
+    def has_changes(self, relative_path: Path, *, change_type: str = "all") -> bool:
         """Check whether the relative path (or the git repository) has changes"""
 
         assert change_type in [
@@ -647,7 +457,7 @@ class Dataset:
                 raise colrev_exceptions.GitNotAvailableError()
 
     def add_changes(
-        self, *, path: Path, remove: bool = False, ignore_missing: bool = False
+        self, path: Path, *, remove: bool = False, ignore_missing: bool = False
     ) -> None:
         """Add changed file to git"""
 
@@ -672,7 +482,7 @@ class Dataset:
 
     def records_changed(self) -> bool:
         """Check whether the records were changed"""
-        main_recs_changed = self.RECORDS_FILE_RELATIVE_GIT in [
+        main_recs_changed = Filepaths.RECORDS_FILE_GIT in [
             item.a_path for item in self._git_repo.index.diff(None)
         ] + [x.a_path for x in self._git_repo.head.commit.diff()]
         return main_recs_changed
@@ -707,7 +517,7 @@ class Dataset:
         ret = commit.create(skip_status_yaml=skip_status_yaml)
         return ret
 
-    def file_in_history(self, *, filepath: Path) -> bool:
+    def file_in_history(self, filepath: Path) -> bool:
         """Check whether a file is in the git history"""
         return str(filepath) in [
             o.path for o in self._git_repo.head.commit.tree.traverse()

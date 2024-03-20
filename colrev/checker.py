@@ -693,9 +693,7 @@ class Checker:
         ]
 
         if records_file.is_file():
-            if self.review_manager.dataset.file_in_history(
-                filepath=Filepaths.RECORDS_FILE
-            ):
+            if self.review_manager.dataset.file_in_history(Filepaths.RECORDS_FILE):
                 prior = self._retrieve_prior()
                 self.review_manager.logger.debug("prior")
                 self.review_manager.logger.debug(

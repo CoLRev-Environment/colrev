@@ -73,7 +73,7 @@ class Search(colrev.operation.Operation):
                     f"Created {Colors.ORANGE}{query_filename}{Colors.END}. "
                     "Please store your query in the file and press Enter to continue."
                 )
-            self.review_manager.dataset.add_changes(path=query_filename)
+            self.review_manager.dataset.add_changes(query_filename)
         return query_filename
 
     def add_db_source(  # type: ignore
@@ -101,7 +101,7 @@ class Search(colrev.operation.Operation):
             )
             print(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
             input("Press Enter to complete")
-            self.review_manager.dataset.add_changes(path=filename)
+            self.review_manager.dataset.add_changes(filename)
 
         query_file = self.get_query_filename(filename=filename, instantiate=True)
 
@@ -182,7 +182,7 @@ class Search(colrev.operation.Operation):
             + Colors.END
         )
         input("Press enter to continue")
-        self.review_manager.dataset.add_changes(path=source.filename)
+        self.review_manager.dataset.add_changes(source.filename)
 
     def _get_search_sources(
         self, *, selection_str: Optional[str] = None
@@ -375,7 +375,7 @@ class Search(colrev.operation.Operation):
                     query_path
                 )
                 query_path.write_text("", encoding="utf-8")
-                self.review_manager.dataset.add_changes(path=query_path)
+                self.review_manager.dataset.add_changes(query_path)
 
             self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
@@ -475,7 +475,7 @@ class Search(colrev.operation.Operation):
                 continue
 
             self.remove_forthcoming(source=source)
-            self.review_manager.dataset.add_changes(path=source.filename)
+            self.review_manager.dataset.add_changes(source.filename)
             if not skip_commit:
                 self.review_manager.dataset.create_commit(msg="Run search")
 

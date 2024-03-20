@@ -200,7 +200,7 @@ class TableScreen(JsonSchemaMixin):
                 else:
                     record.set_status(target_state=RecordState.rev_included)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on screening tables"""

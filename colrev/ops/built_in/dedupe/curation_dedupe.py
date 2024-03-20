@@ -265,7 +265,7 @@ class CurationDedupe(JsonSchemaMixin):
 
         for record in records.values():
             record.pop(Fields.CONTAINER_TITLE)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.info(f"{Colors.GREEN}Commit changes{Colors.END}")

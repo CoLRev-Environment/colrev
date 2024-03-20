@@ -43,7 +43,7 @@ class PDFPrepMan(colrev.operation.Operation):
             if record_dict[Fields.STATUS] == RecordState.pdf_needs_manual_preparation:
                 record = colrev.record.Record(data=record_dict)
                 record.set_status(target_state=RecordState.pdf_not_available)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Discard man-prep PDFs", manual_author=True
         )
@@ -222,7 +222,7 @@ class PDFPrepMan(colrev.operation.Operation):
                     if value == "":
                         del record[key]
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.check_repo()
 
     def extract_coverpage(self, *, filepath: Path) -> None:
@@ -298,9 +298,9 @@ class PDFPrepMan(colrev.operation.Operation):
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
-        self.review_manager.dataset.add_changes(path=Filepaths.RECORDS_FILE)
+        self.review_manager.dataset.add_changes(Filepaths.RECORDS_FILE)
 
     @colrev.operation.Operation.decorate()
     def main(self) -> None:

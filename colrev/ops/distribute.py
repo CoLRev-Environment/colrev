@@ -125,4 +125,4 @@ class Distribute(colrev.operation.Operation):
 
                 write_file(records_dict=import_records_dict, filename=target_bib_file)
 
-                self.review_manager.dataset.add_changes(path=target_bib_file)
+                self.review_manager.dataset.add_changes(target_bib_file)

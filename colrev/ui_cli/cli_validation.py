@@ -180,7 +180,7 @@ def _validate_prep_prescreen_exclusions(
                 target_state=RecordState.md_needs_manual_preparation
             )
             validate_operation.review_manager.dataset.save_records_dict(
-                records={error[Fields.ID]: error},
+                {error[Fields.ID]: error},
                 partial=True,
             )
 
@@ -222,7 +222,7 @@ def _validate_prep(
 
         if user_selection == "n":
             validate_operation.review_manager.dataset.save_records_dict(
-                records={
+                {
                     validation_element["prior_record_dict"][
                         Fields.ID
                     ]: validation_element["prior_record_dict"]

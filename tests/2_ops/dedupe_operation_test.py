@@ -21,7 +21,7 @@ def fixture_dedupe_test_setup(  # type: ignore
         source=Path("data/dedupe/records.bib"),
         target=Path("data/records.bib"),
     )
-    base_repo_review_manager.dataset.add_changes(path=Path("data/records.bib"))
+    base_repo_review_manager.dataset.add_changes(Path("data/records.bib"))
     base_repo_review_manager.dataset.create_commit(
         msg="Import dedupe test cases", manual_author=True
     )
@@ -47,12 +47,12 @@ def test_dedupe_utilities(  # type: ignore
     assert "Staehr2010" in records.keys()
     assert "Staehr2010a" in records.keys()
 
-    dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
+    dedupe_test_setup.dataset.add_changes(Path("data/records.bib"))
     dedupe_test_setup.dataset.create_commit(
         msg="Unmerge Staehr2010-Staehr2010a", manual_author=True, skip_hooks=True
     )
     dedupe_operation.merge_records(merge=[["Staehr2010", "Staehr2010a"]])
-    dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
+    dedupe_test_setup.dataset.add_changes(Path("data/records.bib"))
     dedupe_test_setup.dataset.create_commit(
         msg="Merge Staehr2010-Staehr2010a", manual_author=True, skip_hooks=True
     )

@@ -86,7 +86,7 @@ class Screen(colrev.operation.Operation):
                 )
             record.set_status(target_state=RecordState.rev_included)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self._print_stats(selected_record_ids=selected_record_ids)
         self.review_manager.dataset.create_commit(
             msg="Screen (include_all)",
@@ -166,7 +166,7 @@ class Screen(colrev.operation.Operation):
                 # Note : no change in colrev_status
                 # because at least one of the other criteria led to exclusion decision
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg=f"Add screening criterion: {criterion_name}",
         )
@@ -218,7 +218,7 @@ class Screen(colrev.operation.Operation):
                     record = colrev.record.Record(data=record_dict)
                     record.set_status(target_state=RecordState.rev_included)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg=f"Removed screening criterion: {criterion_to_delete}",
         )
@@ -254,7 +254,7 @@ class Screen(colrev.operation.Operation):
             with open("custom_screen_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_screen_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_screen_script.py"))
 
         self.review_manager.settings.screen.screen_package_endpoints.append(
             {"endpoint": "custom_screen_script"}
@@ -267,7 +267,7 @@ class Screen(colrev.operation.Operation):
             if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
                 record = colrev.record.Record(data=record_dict)
                 record.set_status(target_state=RecordState.rev_included)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
@@ -361,7 +361,7 @@ class Screen(colrev.operation.Operation):
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
     def _auto_include(self, *, records: dict) -> list:

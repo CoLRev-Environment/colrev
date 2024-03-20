@@ -20,11 +20,11 @@ def test_corrections(  # type: ignore
     records["SrivastavaShainesh2015"]["colrev_masterdata_provenance"] = {
         "CURATED": {"source": "url...", "note": ""}
     }
-    base_repo_review_manager.dataset.save_records_dict(records=records)
+    base_repo_review_manager.dataset.save_records_dict(records)
     base_repo_review_manager.dataset.create_commit(msg="switch to curated")
 
     records["SrivastavaShainesh2015"]["title"] = "Changed-title"
-    base_repo_review_manager.dataset.save_records_dict(records=records)
+    base_repo_review_manager.dataset.save_records_dict(records)
 
     # Note: corrections (hooks) are not created with the create_commit methods
     git.Git(str(base_repo_review_manager.path)).execute(["git", "commit", "-m", "test"])

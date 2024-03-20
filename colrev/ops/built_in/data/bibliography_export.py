@@ -112,7 +112,7 @@ class BibliographyExport(JsonSchemaMixin):
 
         write_file(records_dict=selected_records, filename=export_filepath)
 
-        self.review_manager.dataset.add_changes(path=export_filepath)
+        self.review_manager.dataset.add_changes(export_filepath)
         self.review_manager.dataset.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
         )
@@ -168,7 +168,7 @@ class BibliographyExport(JsonSchemaMixin):
             # overwrite the file if it exists
             with open(export_filepath, "w", encoding="utf-8") as export_file:
                 export_file.write(export.content.decode("utf-8"))
-            self.review_manager.dataset.add_changes(path=export_filepath)
+            self.review_manager.dataset.add_changes(export_filepath)
 
             self.review_manager.dataset.create_commit(
                 msg=f"Create {self.settings.bib_format.name} bibliography",

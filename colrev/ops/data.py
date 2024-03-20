@@ -218,7 +218,7 @@ class Data(colrev.operation.Operation):
             with open("custom_data_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_data_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_data_script.py"))
 
         new_data_endpoint = {"endpoint": "custom_data_script"}
 
@@ -375,7 +375,7 @@ class Data(colrev.operation.Operation):
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
         if records_status_changed:
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
 
         self._post_data(silent_mode=silent_mode)
 

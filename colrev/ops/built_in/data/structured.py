@@ -247,7 +247,7 @@ Example 2:
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        self.review_manager.dataset.add_changes(path=self.settings.data_path_relative)
+        self.review_manager.dataset.add_changes(self.settings.data_path_relative)
 
     def update_record_status_matrix(
         self,

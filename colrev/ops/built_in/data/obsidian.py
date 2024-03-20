@@ -204,7 +204,7 @@ class Obsidian(JsonSchemaMixin):
         # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
-        # self.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
+        # self.review_manager.dataset.add_changes(self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
     def update_data(
         self,

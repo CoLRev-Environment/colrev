@@ -309,7 +309,7 @@ class Dedupe(colrev.operation.Operation):
                     record.set_status(target_state=RecordState.md_processed)
                     set_to_md_processed.append(record.data[Fields.ID])
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         return set_to_md_processed
 
     def _skip_merge_condition(
@@ -559,7 +559,7 @@ class Dedupe(colrev.operation.Operation):
         records = self._revert_merge_for_records(records, ids_origins)
         print(f"After revert: {records.keys()}")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
         """Fix lists of errors"""
@@ -719,5 +719,5 @@ class Dedupe(colrev.operation.Operation):
                 if RecordState.md_processed == record.data[Fields.STATUS]:
                     record.set_status(target_state=RecordState.rev_prescreen_included)
 
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
             self.review_manager.dataset.create_commit(msg="Skip prescreen/include all")

@@ -59,5 +59,5 @@ colrev.dataset.Dataset
       ~Dataset.DEPRECATED_GIT_IGNORE_ITEMS
       ~Dataset.GIT_IGNORE_FILE_RELATIVE
       ~Dataset.RECORDS_FILE_RELATIVE
-      ~Dataset.RECORDS_FILE_RELATIVE_GIT
+      ~Dataset.RECORDS_FILE_GIT
       ~Dataset.records_file

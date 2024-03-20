@@ -356,7 +356,7 @@ class Repare(colrev.operation.Operation):
                         del curation_recs[record_id]
 
             write_file(records_dict=curation_recs, filename=search_source.filename)
-            self.review_manager.dataset.add_changes(path=search_source.filename)
+            self.review_manager.dataset.add_changes(search_source.filename)
 
     def _update_field_names(self, *, records: dict) -> None:
         for record_dict in records.values():
@@ -443,4 +443,4 @@ class Repare(colrev.operation.Operation):
 
         self._fix_files(records=records)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)

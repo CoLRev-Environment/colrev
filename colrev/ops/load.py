@@ -295,7 +295,7 @@ class Load(colrev.operation.Operation):
                 + f"md_retrieved →  {source_record['colrev_status']}{Colors.END}"
             )
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
 
         if source.search_source.to_import == 0:
@@ -320,7 +320,7 @@ class Load(colrev.operation.Operation):
             "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
         self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(path=source.search_source.filename)
+        self.review_manager.dataset.add_changes(source.search_source.filename)
 
     def _add_source_to_settings(
         self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
@@ -336,9 +336,7 @@ class Load(colrev.operation.Operation):
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
             if source.search_source.filename.stem in obj.b_path:
-                self.review_manager.dataset.add_changes(
-                    path=Path(obj.b_path), remove=True
-                )
+                self.review_manager.dataset.add_changes(Path(obj.b_path), remove=True)
 
     def load_active_sources(self, *, include_md: bool = False) -> list:
         """

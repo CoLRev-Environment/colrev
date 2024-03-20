@@ -19,5 +19,5 @@ Programmatic use of CoLRev in other Python applications is supported. The follow
         ....
 
     # Save the changes, add them to git, and create commit
-    review_manager.dataset.save_records_dict(records=records)
+    review_manager.dataset.save_records_dict(records)
     review_manager.dataset.create_commit(msg="Pre-screening (package/script X")

@@ -217,7 +217,7 @@ class Commit:
         if not skip_status_yaml:
             status_yml = self.review_manager.get_path(Filepaths.STATUS_FILE)
             self.review_manager.update_status_yaml()
-            self.review_manager.dataset.add_changes(path=status_yml)
+            self.review_manager.dataset.add_changes(status_yml)
 
         committer, email = self.review_manager.get_committer()
 

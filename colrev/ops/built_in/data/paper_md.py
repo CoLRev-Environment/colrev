@@ -149,7 +149,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if filedata:
             with open(template_name, "wb") as file:
                 file.write(filedata)
-        self.review_manager.dataset.add_changes(path=template_name)
+        self.review_manager.dataset.add_changes(template_name)
         return template_name
 
     def _retrieve_default_csl(self) -> None:
@@ -170,8 +170,8 @@ class PaperMarkdown(JsonSchemaMixin):
                 old_string=f'csl: "{csl_link}"',
                 new_string=f'csl: "{csl_filename}"',
             )
-            self.review_manager.dataset.add_changes(path=self.settings.paper_path)
-            self.review_manager.dataset.add_changes(path=Path(csl_filename))
+            self.review_manager.dataset.add_changes(self.settings.paper_path)
+            self.review_manager.dataset.add_changes(Path(csl_filename))
             self.review_manager.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(
@@ -544,7 +544,7 @@ class PaperMarkdown(JsonSchemaMixin):
             )
 
             self.review_manager.dataset.add_changes(
-                path=(Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE)
+                Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE
             )
 
     def _add_prisma_if_available(self, *, silent_mode: bool) -> None:
@@ -613,7 +613,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self._add_prisma_if_available(silent_mode=silent_mode)
 
-        review_manager.dataset.add_changes(path=self.settings.paper_path)
+        review_manager.dataset.add_changes(self.settings.paper_path)
 
         return records
 
@@ -625,7 +625,7 @@ class PaperMarkdown(JsonSchemaMixin):
                     template_file=retrieval_path,
                     target=self.non_sample_references,
                 )
-                self.review_manager.dataset.add_changes(path=self.non_sample_references)
+                self.review_manager.dataset.add_changes(self.non_sample_references)
             except AttributeError:
                 pass
 
@@ -695,9 +695,7 @@ class PaperMarkdown(JsonSchemaMixin):
         )
 
         if (
-            not self.review_manager.dataset.has_changes(
-                relative_path=self.paper_relative_path
-            )
+            not self.review_manager.dataset.has_changes(self.paper_relative_path)
             and self.settings.paper_output.is_file()
         ):
             self.review_manager.logger.debug("Skipping paper build (no changes)")
@@ -729,7 +727,7 @@ class PaperMarkdown(JsonSchemaMixin):
             return
 
         if self.review_manager.dataset.has_changes(
-            relative_path=self.paper_relative_path, change_type="unstaged"
+            self.paper_relative_path, change_type="unstaged"
         ):
             self.review_manager.logger.warning(
                 f"{Colors.RED}Skipping updates of "

@@ -267,4 +267,4 @@ def save(records_df: pd.DataFrame) -> None:
             if pd.isnull(record[key]) or record[key] == "":
                 records[rec_id].pop(key)
 
-    review_manager.dataset.save_records_dict(records=records)
+    review_manager.dataset.save_records_dict(records)

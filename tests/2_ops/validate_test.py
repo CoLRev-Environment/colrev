@@ -206,7 +206,7 @@ def test_get_changed_records(
             "language": "eng",
         }
     }
-    base_repo_review_manager.dataset.save_records_dict(records=changed_record_dict)
+    base_repo_review_manager.dataset.save_records_dict(changed_record_dict)
     base_repo_review_manager.dataset._add_record_changes()
     commit_message = "Test commit for changed records"
     base_repo_review_manager.dataset.create_commit(

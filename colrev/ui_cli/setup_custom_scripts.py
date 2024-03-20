@@ -18,7 +18,7 @@ def setup_custom_search_script(
         with open("custom_search_source_script.py", "w", encoding="utf-8") as file:
             file.write(filedata.decode("utf-8"))
 
-    review_manager.dataset.add_changes(path=Path("custom_search_source_script.py"))
+    review_manager.dataset.add_changes(Path("custom_search_source_script.py"))
 
     new_source = colrev.settings.SearchSource(
         endpoint="custom_search_source_script",

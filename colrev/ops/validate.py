@@ -275,7 +275,7 @@ class Validate(colrev.operation.Operation):
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / dataset.RECORDS_FILE_RELATIVE_GIT).data_stream.read(),
+                (commit.tree / Filepaths.RECORDS_FILE_GIT).data_stream.read(),
             )
             for commit in git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
         )
@@ -427,7 +427,7 @@ class Validate(colrev.operation.Operation):
             records: typing.Dict[str, typing.Dict] = {}
             hist_records: typing.Dict[str, typing.Dict] = {}
             for recs in self.review_manager.dataset.load_records_from_history(
-                commit_sha=commit_sha
+                commit_sha
             ):
                 # continue
                 if not records:
@@ -503,7 +503,6 @@ class Validate(colrev.operation.Operation):
 
         revlist = git_repo.iter_commits(paths=str(Filepaths.RECORDS_FILE))
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
 
         for commit in list(revlist):
             if len(commit.parents) <= 1:
@@ -513,7 +512,7 @@ class Validate(colrev.operation.Operation):
                 continue
 
             load_str = (
-                (commit.parents[0].tree / records_file_path)
+                (commit.parents[0].tree / Filepaths.RECORDS_FILE_GIT)
                 .data_stream.read()
                 .decode("utf-8")
             )
@@ -524,7 +523,7 @@ class Validate(colrev.operation.Operation):
             )
 
             load_str = (
-                (commit.parents[1].tree / records_file_path)
+                (commit.parents[1].tree / Filepaths.RECORDS_FILE_GIT)
                 .data_stream.read()
                 .decode("utf-8")
             )
@@ -535,7 +534,9 @@ class Validate(colrev.operation.Operation):
             )
 
             load_str = (
-                (commit.tree / records_file_path).data_stream.read().decode("utf-8")
+                (commit.tree / Filepaths.RECORDS_FILE_GIT)
+                .data_stream.read()
+                .decode("utf-8")
             )
             records_reconciled = colrev.loader.load_utils.loads(
                 load_string=load_str,

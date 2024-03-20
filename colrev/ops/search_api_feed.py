@@ -446,7 +446,7 @@ class SearchAPIFeed:
                         self.review_manager.settings.sources.append(self.source)
                         self.review_manager.save_settings()
 
-                    self.review_manager.dataset.add_changes(path=self.feed_file)
+                    self.review_manager.dataset.add_changes(self.feed_file)
                     break
                 except (
                     FileExistsError,
@@ -457,6 +457,6 @@ class SearchAPIFeed:
                     time.sleep(randint(1, 15))  # nosec
 
         if not self.prep_mode:
-            self.review_manager.dataset.save_records_dict(records=self.records)
+            self.review_manager.dataset.save_records_dict(self.records)
         self._nr_added = 0
         self._nr_changed = 0

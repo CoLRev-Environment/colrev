@@ -71,7 +71,7 @@ class CLISourceAdder:
         )
         self.search_operation.review_manager.settings.sources.append(source)
         self.review_manager.save_settings()
-        self.review_manager.dataset.add_changes(path=filename)
+        self.review_manager.dataset.add_changes(filename)
 
     def add_new_sources(self) -> None:
         """Select the new source from the heuristic_result_list."""

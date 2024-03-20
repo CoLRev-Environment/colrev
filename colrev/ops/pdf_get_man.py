@@ -86,7 +86,7 @@ class PDFGetMan(colrev.operation.Operation):
             record = colrev.record.Record(data=record_dict)
             if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
                 record.set_status(target_state=RecordState.pdf_not_available)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Discard missing PDFs", manual_author=True
         )
@@ -171,7 +171,7 @@ class PDFGetMan(colrev.operation.Operation):
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
     @colrev.operation.Operation.decorate()

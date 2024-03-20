@@ -30,6 +30,9 @@ class Filepaths:
     REPORT_FILE = Path(".report.log")
     GIT_IGNORE_FILE = Path(".gitignore")
 
+    # Ensure the path uses forward slashes, which is compatible with Git's path handling
+    RECORDS_FILE_GIT = str(RECORDS_FILE).replace("\\", "/")
+
     # Environment-specific paths
     LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
     LOCAL_INDEX_SQLITE_FILE = LOCAL_ENVIRONMENT_DIR / Path("sqlite_index.db")
@@ -38,6 +41,37 @@ class Filepaths:
     REGISTRY_FILE = LOCAL_ENVIRONMENT_DIR.joinpath(Path("registry.json"))
 
     PREP_REQUESTS_CACHE_FILE = LOCAL_ENVIRONMENT_DIR / Path("prep_requests_cache")
+
+
+class FileSets:
+    """File sets for CoLRev"""
+
+    DEFAULT_GIT_IGNORE_ITEMS = [
+        ".history",
+        ".colrev",
+        "__pycache__",
+        "*.bib.sav",
+        "venv",
+        str(Filepaths.CORRECTIONS_DIR),
+        str(Filepaths.REPORT_FILE),
+        str(Filepaths.OUTPUT_DIR),
+        str(Filepaths.PDF_DIR),
+        str(Filepaths.DEDUPE_DIR),
+        str(Filepaths.PREP_DIR),
+        "data/pdf_get_man/missing_pdf_files.csv",
+        "data/.tei/",
+        "data/prep_man/records_prep_man.bib",
+        "data/data/sample_references.bib",
+    ]
+    DEPRECATED_GIT_IGNORE_ITEMS = [
+        "missing_pdf_files.csv",
+        "manual_cleansing_statistics.csv",
+        ".references_learned_settings",
+        "pdfs",
+        ".tei",
+        "data.csv",
+        "requests_cache.sqlite",
+    ]
 
 
 class ENTRYTYPES:

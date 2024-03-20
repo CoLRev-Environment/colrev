@@ -81,7 +81,7 @@ class Upgrade(colrev.operation.Operation):
 
         return records
 
-    def save_records_dict(self, *, records: dict) -> None:
+    def save_records_dict(self, records: dict) -> None:
         """
         Save the records dictionary to a file and add it to the repository index.
 
@@ -366,7 +366,7 @@ class Upgrade(colrev.operation.Operation):
             # pylint: disable=colrev-missed-constant-usage
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return self.repo.is_dirty()
 
@@ -430,7 +430,7 @@ class Upgrade(colrev.operation.Operation):
                 record.data[  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS
                 ] = RecordState.rev_prescreen_excluded
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         return self.repo.is_dirty()
 
     def _migrate_0_8_4(self) -> bool:
@@ -443,7 +443,7 @@ class Upgrade(colrev.operation.Operation):
             if FieldValues.CURATED not in record[Fields.MD_PROV]:
                 record[Fields.MD_PROV][Fields.EDITOR] = ed_val
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return self.repo.is_dirty()
 
@@ -514,7 +514,7 @@ class Upgrade(colrev.operation.Operation):
                 record = colrev.record.Record(data=record_dict)
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
-        self.save_records_dict(records=records)
+        self.save_records_dict(records)
 
         return self.repo.is_dirty()
 
@@ -643,7 +643,7 @@ class Upgrade(colrev.operation.Operation):
                     record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
                         "not-missing", "IGNORE:missing"
                     )
-        self.save_records_dict(records=records)
+        self.save_records_dict(records)
 
         return self.repo.is_dirty()
 

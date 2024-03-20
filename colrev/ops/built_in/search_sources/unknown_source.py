@@ -126,10 +126,10 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
             self.search_source.filename.rename(new_filename)
             self.review_manager.dataset.add_changes(
-                path=self.search_source.filename, remove=True
+                self.search_source.filename, remove=True
             )
             self.search_source.filename = new_filename
-            self.review_manager.dataset.add_changes(path=new_filename)
+            self.review_manager.dataset.add_changes(new_filename)
             self.review_manager.dataset.create_commit(
                 msg=f"Rename {self.search_source.filename}"
             )
@@ -145,10 +145,10 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
             self.search_source.filename.rename(new_filename)
             self.review_manager.dataset.add_changes(
-                path=self.search_source.filename, remove=True
+                self.search_source.filename, remove=True
             )
             self.search_source.filename = new_filename
-            self.review_manager.dataset.add_changes(path=new_filename)
+            self.review_manager.dataset.add_changes(new_filename)
             self.review_manager.dataset.create_commit(
                 msg=f"Rename {self.search_source.filename}"
             )

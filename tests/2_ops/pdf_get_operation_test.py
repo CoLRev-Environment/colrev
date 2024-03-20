@@ -93,14 +93,14 @@ def test_pdf_get_copy_pdfs_to_repo(  # type: ignore
     records = pdf_get_operation.review_manager.dataset.load_records_dict()
     for record in records.values():
         record["file"] = record["ID"] + ".pdf"
-    pdf_get_operation.review_manager.dataset.save_records_dict(records=records)
+    pdf_get_operation.review_manager.dataset.save_records_dict(records)
     pdf_get_operation.copy_pdfs_to_repo()
 
     records = pdf_get_operation.review_manager.dataset.load_records_dict()
     for record in records.values():
         if "file" in record:
             del record["file"]
-    pdf_get_operation.review_manager.dataset.save_records_dict(records=records)
+    pdf_get_operation.review_manager.dataset.save_records_dict(records)
     pdf_get_operation.copy_pdfs_to_repo()
 
 

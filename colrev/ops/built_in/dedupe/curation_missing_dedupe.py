@@ -322,7 +322,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         target_state=RecordState.md_needs_manual_preparation
                     )
 
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
             self.review_manager.dataset.create_commit(
@@ -341,7 +341,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         record = colrev.record.Record(data=record_dict)
                         record.set_status(target_state=RecordState.md_processed)
 
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
             input("Edit records (if any), add to git, and press Enter")
 
             self.review_manager.dataset.create_commit(

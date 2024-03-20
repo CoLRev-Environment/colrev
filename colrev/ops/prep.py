@@ -556,7 +556,7 @@ class Prep(colrev.operation.Operation):
         """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed"""
         self.review_manager.logger.info("Set IDs")
         records = self.review_manager.dataset.load_records_dict()
-        self.review_manager.dataset.set_ids(records=records, selected_ids=list(records))
+        self.review_manager.dataset.set_ids(records=records)
         for record_dict in records.values():
             if Fields.FILE not in record_dict:
                 continue
@@ -586,9 +586,9 @@ class Prep(colrev.operation.Operation):
                     old_string=old_filename,
                     new_string=str(new_filename),
                 )
-                self.review_manager.dataset.add_changes(path=pdfs_origin_file)
+                self.review_manager.dataset.add_changes(pdfs_origin_file)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Set IDs",
         )
@@ -603,7 +603,7 @@ class Prep(colrev.operation.Operation):
             with open("custom_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_prep_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_prep_script.py"))
 
         prep_round = self.review_manager.settings.prep.prep_rounds[-1]
         prep_round.prep_package_endpoints.append({"endpoint": "custom_prep_script"})
@@ -958,7 +958,7 @@ class Prep(colrev.operation.Operation):
             if RecordState.md_imported == record_dict[Fields.STATUS]:
                 record = colrev.record.Record(data=record_dict)
                 record.set_status(target_state=RecordState.md_prepared)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="Skip prep")
 
     def _initialize_prep(self, *, polish: bool, debug_ids: str, cpu: int) -> None:
@@ -1036,7 +1036,7 @@ class Prep(colrev.operation.Operation):
 
         if not self.debug_mode:
             self.review_manager.dataset.save_records_dict(
-                records={r[Fields.ID]: r for r in prepared_records}, partial=True
+                {r[Fields.ID]: r for r in prepared_records}, partial=True
             )
 
             self._log_details(prepared_records=prepared_records)

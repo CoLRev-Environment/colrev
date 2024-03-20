@@ -54,7 +54,7 @@ class ConditionalPrescreen(JsonSchemaMixin):
             # pylint: disable=colrev-direct-status-assign
             record.update(colrev_status=RecordState.rev_prescreen_included)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,

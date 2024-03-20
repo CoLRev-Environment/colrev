@@ -1207,7 +1207,7 @@ class PackageManager:
             operation.review_manager.settings.sources.append(add_source)
             operation.review_manager.save_settings()
             operation.review_manager.dataset.add_changes(
-                path=add_source.filename, ignore_missing=True
+                add_source.filename, ignore_missing=True
             )
             add_package = add_source.to_dict()
 

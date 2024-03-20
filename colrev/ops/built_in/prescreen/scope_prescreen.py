@@ -277,7 +277,7 @@ class ScopePrescreen(JsonSchemaMixin):
                 record_dict=record_dict,
             )
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Pre-screen (scope)",
             manual_author=False,

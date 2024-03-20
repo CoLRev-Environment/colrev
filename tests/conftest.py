@@ -212,7 +212,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         source=Path("data/search_files/test_records.bib"),
         target=Path("data/search/test_records.bib"),
     )
-    review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
+    review_manager.dataset.add_changes(Path("data/search/test_records.bib"))
     review_manager.dataset.create_commit(msg="add test_records.bib", manual_author=True)
     review_manager.add_test_records_commit = (
         review_manager.dataset.get_last_commit_sha()

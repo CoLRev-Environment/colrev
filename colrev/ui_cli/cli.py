@@ -2506,7 +2506,7 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
+        review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
         review_manager.dataset.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
@@ -2539,7 +2539,7 @@ def settings(
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(path=Path("settings.json"))
+        review_manager.dataset.add_changes(Path("settings.json"))
         review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor

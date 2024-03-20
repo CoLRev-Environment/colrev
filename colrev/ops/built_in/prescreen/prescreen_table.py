@@ -208,7 +208,7 @@ class TablePrescreen(JsonSchemaMixin):
             f" {Colors.ORANGE}{nr_todo} records to prescreen{Colors.END}"
         )
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.logger.info("Completed import")
 
     def run_prescreen(

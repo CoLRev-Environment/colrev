@@ -795,7 +795,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         crossref_feed.save()
 
-        self.review_manager.dataset.add_changes(path=self.search_source.filename)
+        self.review_manager.dataset.add_changes(self.search_source.filename)
         self.review_manager.dataset.create_commit(msg="Run search")
 
     def _potentially_overlapping_issn_search(self) -> bool:

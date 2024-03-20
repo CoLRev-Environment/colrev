@@ -270,7 +270,7 @@ class PDFPrep(colrev.operation.Operation):
             record.data.update(colrev_status=RecordState.pdf_imported)
             record.reset_pdf_provenance_notes()
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     # Note : no named arguments (multiprocessing)
     def _update_colrev_pdf_ids(self, record_dict: dict) -> dict:
@@ -290,7 +290,7 @@ class PDFPrep(colrev.operation.Operation):
         pool.close()
         pool.join()
         records = {r[Fields.ID]: r for r in records_list}
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
@@ -346,7 +346,7 @@ class PDFPrep(colrev.operation.Operation):
             with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_pdf_prep_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_pdf_prep_script.py"))
 
         self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints.append(
             {"endpoint": "custom_pdf_prep_script"}
@@ -435,7 +435,7 @@ class PDFPrep(colrev.operation.Operation):
                 record = item["record"]
                 record = self.prepare_pdf(item)
                 self.review_manager.dataset.save_records_dict(
-                    records={record[Fields.ID]: record}, partial=True
+                    {record[Fields.ID]: record}, partial=True
                 )
 
         else:
@@ -452,14 +452,14 @@ class PDFPrep(colrev.operation.Operation):
             pool.join()
 
             self.review_manager.dataset.save_records_dict(
-                records={r[Fields.ID]: r for r in pdf_prep_record_list}, partial=True
+                {r[Fields.ID]: r for r in pdf_prep_record_list}, partial=True
             )
 
             self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
         # Note: for formatting...
         records = self.review_manager.dataset.load_records_dict()
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="Prepare PDFs")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-prep operation{Colors.END}"

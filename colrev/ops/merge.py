@@ -11,6 +11,7 @@ import colrev.env.utils
 import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 
 # pylint: disable=too-few-public-methods
@@ -114,11 +115,10 @@ class Merge(colrev.operation.Operation):
         assert all(len(v) == 3 for k, v in unmerged_blobs.items())
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = self.review_manager.dataset.RECORDS_FILE_RELATIVE_GIT
-        if records_file_path in unmerged_blobs:
+        if Filepaths.RECORDS_FILE_GIT in unmerged_blobs:
             current_branch_records = {}
             other_branch_records = {}
-            for stage, blob in unmerged_blobs[records_file_path]:
+            for stage, blob in unmerged_blobs[Filepaths.RECORDS_FILE_GIT]:
                 # stage == 1: common ancestor (often md_processed for prescreen)
                 # stage == 2: own branch
                 # stage == 3: other branch
@@ -229,7 +229,7 @@ class Merge(colrev.operation.Operation):
                 current_branch_record.set_status(target_state=resolution)
                 print("\n\n\n")
 
-        self.review_manager.dataset.save_records_dict(records=current_branch_records)
+        self.review_manager.dataset.save_records_dict(current_branch_records)
 
         self.review_manager.update_status_yaml(add_to_git=False)
 

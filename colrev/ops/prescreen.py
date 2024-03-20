@@ -131,7 +131,7 @@ class Prescreen(colrev.operation.Operation):
             else:
                 record.set_status(target_state=RecordState.rev_prescreen_excluded)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         msg = f"Pre-screen (exclude {ids})"
         if include:
@@ -200,7 +200,7 @@ class Prescreen(colrev.operation.Operation):
             with open("custom_prescreen_script.py", "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_prescreen_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_prescreen_script.py"))
 
         self.review_manager.settings.prescreen.prescreen_package_endpoints.append(
             {"endpoint": "custom_prescreen_script"}
@@ -214,7 +214,7 @@ class Prescreen(colrev.operation.Operation):
             if record_dict[Fields.STATUS] == RecordState.md_processed:
                 record = colrev.record.Record(data=record_dict)
                 record.set_status(target_state=RecordState.rev_prescreen_included)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
@@ -283,7 +283,7 @@ class Prescreen(colrev.operation.Operation):
             )
             record.set_status(target_state=RecordState.rev_prescreen_included)
             self.review_manager.dataset.save_records_dict(
-                records={record.data[Fields.ID]: record.get_data()}, partial=True
+                {record.data[Fields.ID]: record.get_data()}, partial=True
             )
 
         else:
@@ -292,7 +292,7 @@ class Prescreen(colrev.operation.Operation):
             )
             record.set_status(target_state=RecordState.rev_prescreen_excluded)
             self.review_manager.dataset.save_records_dict(
-                records={record.data[Fields.ID]: record.get_data()}, partial=True
+                {record.data[Fields.ID]: record.get_data()}, partial=True
             )
 
     def _auto_include(self, *, records: dict) -> list:
