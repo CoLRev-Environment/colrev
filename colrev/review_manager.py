@@ -245,7 +245,7 @@ class ReviewManager:
             not self.settings.is_curated_masterdata_repo()
             and self.dataset.records_changed()
         ):
-            colrev.operation.CheckOperation(review_manager=self)  # to notify
+            colrev.operation.CheckOperation(self)  # to notify
             corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
             corrections_operation.check_corrections_of_records()
 

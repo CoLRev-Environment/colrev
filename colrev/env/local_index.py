@@ -44,6 +44,8 @@ from colrev.writer.write_utils import to_string
 class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
+    sqlite_connection: sqlite3.Connection
+
     global_keys = [
         Fields.DOI,
         Fields.DBLP_KEY,
@@ -61,8 +63,6 @@ class LocalIndex:
     annotators_path = local_environment_path / Path("annotators")
 
     _sqlite_available = True
-
-    sqlite_connection = None
 
     # Note : records are indexed by id = hash(colrev_id)
     # to ensure that the indexing-ids do not exceed limits
@@ -337,12 +337,10 @@ class LocalIndex:
 
     def _add_index_toc(self, toc_to_index: dict) -> None:
         list_to_add = list((k, v) for k, v in toc_to_index.items() if v != "DROPPED")
-        if not self.sqlite_connection:
-            return
         cur = self.sqlite_connection.cursor()
         try:
             cur.executemany(f"INSERT INTO {self.TOC_INDEX} VALUES(?, ?)", list_to_add)
-        except sqlite3.IntegrityError as exc:
+        except sqlite3.IntegrityError as exc: # pragma: no cover
             if self.verbose_mode:
                 print(exc)
         finally:
@@ -355,8 +353,6 @@ class LocalIndex:
             for el in recs_to_index
         ]
 
-        if not self.sqlite_connection:
-            return
         cur = self.sqlite_connection.cursor()
         for item in list_to_add:
             while True:
@@ -443,8 +439,6 @@ class LocalIndex:
     def _retrieve_based_on_colrev_id(
         self, *, cids_to_retrieve: list
     ) -> colrev.record.Record:
-        # Note : may raise NotEnoughDataToIdentifyException
-
         for cid_to_retrieve in cids_to_retrieve:
             try:
                 retrieved_record = self._get_item_from_index(
@@ -490,7 +484,6 @@ class LocalIndex:
         return colrev.record.Record(data=ret[record_id])
 
     def _retrieve_from_record_index(self, record_dict: dict) -> colrev.record.Record:
-        # Note : may raise NotEnoughDataToIdentifyException
 
         record = colrev.record.Record(data=record_dict)
 
@@ -586,9 +579,7 @@ class LocalIndex:
             cur.execute(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
             for row in cur.fetchall():
                 selected_row = row
-
                 retrieved_record_dict = self._get_record_from_row(selected_row)
-
                 retrieved_record = self._prepare_record_for_return(
                     retrieved_record_dict, include_file=False
                 )
@@ -727,12 +718,11 @@ class LocalIndex:
         if Fields.ORIGIN in record_dict:
             del record_dict[Fields.ORIGIN]
 
-        self._adjust_provenance_for_indexing(record_dict)
-
     def _prepare_record_for_indexing(self, record_dict: dict) -> dict:
         self._apply_status_requirements(record_dict)
         self._remove_fields(record_dict)
         self._prep_fields_for_indexing(record_dict)
+        self._adjust_provenance_for_indexing(record_dict)
 
         return record_dict
 
@@ -899,9 +889,7 @@ class LocalIndex:
                 path_str=str(repo_source_path)
             )
 
-            check_operation = colrev.operation.CheckOperation(
-                review_manager=review_manager
-            )
+            check_operation = colrev.operation.CheckOperation(review_manager)
 
             if review_manager.dataset.get_repo().active_branch.name != "main":
                 print(
@@ -993,14 +981,6 @@ class LocalIndex:
         for repo_source_path in repo_source_paths:
             self.index_colrev_project(repo_source_path)
 
-        # for annotator in self.annotators_path.glob("*/annotate.py"):
-        #     print(f"Load {annotator}")
-
-        #     annotator_module = ....load_source("annotator_module", str(annotator))
-        #     annotate = getattr(annotator_module, "annotate")
-        #     annotate(self)
-        # Note : es.update can use functions applied to each record (for the update)
-
     def get_year_from_toc(self, record_dict: dict) -> str:
         """Determine the year of a paper based on its table-of-content (journal-volume-number)"""
 
@@ -1025,7 +1005,6 @@ class LocalIndex:
             )
 
             year = record_dict.get(Fields.YEAR, "NA")
-
             return year
 
         except (
@@ -1112,24 +1091,17 @@ class LocalIndex:
 
             if search_across_tocs:
                 record_colrev_id = record.create_colrev_id(assume_complete=True)
-
             else:
                 record_colrev_id = record.create_colrev_id()
 
             sim_list = []
-
             for toc_records_colrev_id in toc_items:
                 # Note : using a simpler similarity measure
                 # because the publication outlet parameters are already identical
                 sim_value = fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
                 sim_list.append(sim_value)
 
-            if not sim_list:
-                raise colrev_exceptions.RecordNotInTOCException(
-                    record_id=record.data[Fields.ID], toc_key=toc_key
-                )
-
-            if max(sim_list) < similarity_threshold:
+            if not sim_list or max(sim_list) < similarity_threshold:
                 raise colrev_exceptions.RecordNotInTOCException(
                     record_id=record.data[Fields.ID], toc_key=toc_key
                 )
@@ -1191,7 +1163,6 @@ class LocalIndex:
             # paper_hash = self._increment_hash(paper_hash=paper_hash)
 
             cur.execute(self.SELECT_KEY_QUERIES[(index_name, key)], (value,))
-
             selected_row = cur.fetchone()
             self.thread_lock.release()
 
@@ -1307,97 +1278,97 @@ class LocalIndex:
             include_colrev_ids=include_colrev_ids,
         )
 
-    def is_duplicate(self, *, record1_colrev_id: list, record2_colrev_id: list) -> str:
-        """Convenience function to check whether two records are a duplicate"""
+    # def is_duplicate(self, *, record1_colrev_id: list, record2_colrev_id: list) -> str:
+    #     """Convenience function to check whether two records are a duplicate"""
 
-        try:
-            # Ensure that we receive actual lists
-            # otherwise, __retrieve_based_on_colrev_id iterates over a string and
-            # open_search_thread_instance.search returns random results
-            assert isinstance(record1_colrev_id, list)
-            assert isinstance(record2_colrev_id, list)
+    #     try:
+    #         # Ensure that we receive actual lists
+    #         # otherwise, __retrieve_based_on_colrev_id iterates over a string and
+    #         # open_search_thread_instance.search returns random results
+    #         assert isinstance(record1_colrev_id, list)
+    #         assert isinstance(record2_colrev_id, list)
 
-            # Prevent errors caused by short colrev_ids/empty lists
-            if (
-                any(len(cid) < 20 for cid in record1_colrev_id)
-                or any(len(cid) < 20 for cid in record2_colrev_id)
-                or 0 == len(record1_colrev_id)
-                or 0 == len(record2_colrev_id)
-            ):
-                return "unknown"
+    #         # Prevent errors caused by short colrev_ids/empty lists
+    #         if (
+    #             any(len(cid) < 20 for cid in record1_colrev_id)
+    #             or any(len(cid) < 20 for cid in record2_colrev_id)
+    #             or 0 == len(record1_colrev_id)
+    #             or 0 == len(record2_colrev_id)
+    #         ):
+    #             return "unknown"
 
-            # Easy case: the initial colrev_ids overlap => duplicate
-            initial_colrev_ids_overlap = not set(record1_colrev_id).isdisjoint(
-                list(record2_colrev_id)
-            )
-            if initial_colrev_ids_overlap:
-                return "yes"
+    #         # Easy case: the initial colrev_ids overlap => duplicate
+    #         initial_colrev_ids_overlap = not set(record1_colrev_id).isdisjoint(
+    #             list(record2_colrev_id)
+    #         )
+    #         if initial_colrev_ids_overlap:
+    #             return "yes"
 
-            # Retrieve records from LocalIndex and use that information
-            # to decide whether the records are duplicates
+    #         # Retrieve records from LocalIndex and use that information
+    #         # to decide whether the records are duplicates
 
-            r1_index = self._retrieve_based_on_colrev_id(
-                cids_to_retrieve=record1_colrev_id
-            )
-            r2_index = self._retrieve_based_on_colrev_id(
-                cids_to_retrieve=record2_colrev_id
-            )
-            # Each record may originate from multiple repositories simultaneously
-            # see integration of records in __amend_record(...)
-            # This information is stored in metadata_source_repository_paths (list)
+    #         r1_index = self._retrieve_based_on_colrev_id(
+    #             cids_to_retrieve=record1_colrev_id
+    #         )
+    #         r2_index = self._retrieve_based_on_colrev_id(
+    #             cids_to_retrieve=record2_colrev_id
+    #         )
+    #         # Each record may originate from multiple repositories simultaneously
+    #         # see integration of records in __amend_record(...)
+    #         # This information is stored in metadata_source_repository_paths (list)
 
-            r1_metadata_source_repository_paths = r1_index.data[
-                "metadata_source_repository_paths"
-            ].split("\n")
-            r2_metadata_source_repository_paths = r2_index.data[
-                "metadata_source_repository_paths"
-            ].split("\n")
+    #         r1_metadata_source_repository_paths = r1_index.data[
+    #             "metadata_source_repository_paths"
+    #         ].split("\n")
+    #         r2_metadata_source_repository_paths = r2_index.data[
+    #             "metadata_source_repository_paths"
+    #         ].split("\n")
 
-            # There are no duplicates within repositories
-            # because we only index records that are md_processed or beyond
-            # see conditions of index_record(...)
+    #         # There are no duplicates within repositories
+    #         # because we only index records that are md_processed or beyond
+    #         # see conditions of index_record(...)
 
-            # The condition that two records are in the same repository is True if
-            # their metadata_source_repository_paths overlap.
-            # This does not change if records are also in non-overlapping repositories
+    #         # The condition that two records are in the same repository is True if
+    #         # their metadata_source_repository_paths overlap.
+    #         # This does not change if records are also in non-overlapping repositories
 
-            same_repository = not set(r1_metadata_source_repository_paths).isdisjoint(
-                set(r2_metadata_source_repository_paths)
-            )
+    #         same_repository = not set(r1_metadata_source_repository_paths).isdisjoint(
+    #             set(r2_metadata_source_repository_paths)
+    #         )
 
-            # colrev_ids must be used instead of IDs
-            # because IDs of original repositories
-            # are not available in the integrated record
+    #         # colrev_ids must be used instead of IDs
+    #         # because IDs of original repositories
+    #         # are not available in the integrated record
 
-            colrev_ids_overlap = not set(r1_index.get_colrev_id()).isdisjoint(
-                list(list(r2_index.get_colrev_id()))
-            )
+    #         colrev_ids_overlap = not set(r1_index.get_colrev_id()).isdisjoint(
+    #             list(list(r2_index.get_colrev_id()))
+    #         )
 
-            if same_repository:
-                if colrev_ids_overlap:
-                    return "yes"
-                return "no"
+    #         if same_repository:
+    #             if colrev_ids_overlap:
+    #                 return "yes"
+    #             return "no"
 
-            # Curated metadata repositories do not curate outlets redundantly,
-            # i.e., there are no duplicates between curated repositories.
-            # see __outlets_duplicated(...)
+    #         # Curated metadata repositories do not curate outlets redundantly,
+    #         # i.e., there are no duplicates between curated repositories.
+    #         # see __outlets_duplicated(...)
 
-            different_curated_repositories = (
-                r1_index.masterdata_is_curated()
-                and r2_index.masterdata_is_curated()
-                and (
-                    r1_index.data.get(Fields.MD_PROV, "a")
-                    != r2_index.data.get(Fields.MD_PROV, "b")
-                )
-            )
+    #         different_curated_repositories = (
+    #             r1_index.masterdata_is_curated()
+    #             and r2_index.masterdata_is_curated()
+    #             and (
+    #                 r1_index.data.get(Fields.MD_PROV, "a")
+    #                 != r2_index.data.get(Fields.MD_PROV, "b")
+    #             )
+    #         )
 
-            if different_curated_repositories:
-                return "no"
+    #         if different_curated_repositories:
+    #             return "no"
 
-        except (
-            colrev_exceptions.RecordNotInIndexException,
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-        ):
-            pass
+    #     except (
+    #         colrev_exceptions.RecordNotInIndexException,
+    #         colrev_exceptions.NotEnoughDataToIdentifyException,
+    #     ):
+    #         pass
 
-        return "unknown"
+    #     return "unknown"

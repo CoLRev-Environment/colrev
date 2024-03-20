@@ -14,34 +14,34 @@ from colrev.constants import RecordState
 # pylint: disable=line-too-long
 
 
-def test_is_duplicate(local_index, local_index_test_records_dict) -> None:  # type: ignore
-    """Test is_duplicate()"""
-    record1_colrev_id = colrev.record.Record(
-        data=local_index_test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
-    ).get_colrev_id()
-    record2_colrev_id = colrev.record.Record(
-        data=local_index_test_records_dict[Path("misq.bib")][
-            "AbbasiAlbrechtVanceEtAl2012"
-        ]
-    ).get_colrev_id()
-    expected = "no"
-    actual = local_index.is_duplicate(
-        record1_colrev_id=record1_colrev_id, record2_colrev_id=record2_colrev_id
-    )
-    assert expected == actual
+# def test_is_duplicate(local_index, local_index_test_records_dict) -> None:  # type: ignore
+#     """Test is_duplicate()"""
+#     record1_colrev_id = colrev.record.Record(
+#         data=local_index_test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
+#     ).get_colrev_id()
+#     record2_colrev_id = colrev.record.Record(
+#         data=local_index_test_records_dict[Path("misq.bib")][
+#             "AbbasiAlbrechtVanceEtAl2012"
+#         ]
+#     ).get_colrev_id()
+#     expected = "no"
+#     actual = local_index.is_duplicate(
+#         record1_colrev_id=record1_colrev_id, record2_colrev_id=record2_colrev_id
+#     )
+#     assert expected == actual
 
-    expected = "yes"
-    actual = local_index.is_duplicate(
-        record1_colrev_id=record1_colrev_id, record2_colrev_id=record1_colrev_id
-    )
-    assert expected == actual
+#     expected = "yes"
+#     actual = local_index.is_duplicate(
+#         record1_colrev_id=record1_colrev_id, record2_colrev_id=record1_colrev_id
+#     )
+#     assert expected == actual
 
-    expected = "unknown"
-    actual = local_index.is_duplicate(
-        record1_colrev_id=record1_colrev_id,
-        record2_colrev_id=["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"],
-    )
-    assert expected == actual
+#     expected = "unknown"
+#     actual = local_index.is_duplicate(
+#         record1_colrev_id=record1_colrev_id,
+#         record2_colrev_id=["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"],
+#     )
+#     assert expected == actual
 
 
 def test_get_year_from_toc(local_index) -> None:  # type: ignore

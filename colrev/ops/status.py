@@ -116,7 +116,7 @@ class StatusStats:
         records: Optional[dict] = None,
     ) -> None:
         self.review_manager = review_manager
-        colrev.operation.CheckOperation(review_manager=review_manager)
+        colrev.operation.CheckOperation(review_manager)
 
         if records:
             self.records = records
