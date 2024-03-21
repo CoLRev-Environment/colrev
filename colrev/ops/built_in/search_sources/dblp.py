@@ -688,8 +688,4 @@ class DBLPSearchSource(JsonSchemaMixin):
             if self.review_manager.force_mode:
                 self.review_manager.logger.error("Service not available: DBLP")
 
-        except colrev_exceptions.ServiceNotAvailableException:
-            if self.review_manager.force_mode:
-                self.review_manager.logger.error("Service not available: DBLP")
-
         return record

@@ -140,6 +140,9 @@ class Initializer:
         if all(x.startswith((".git", ".devcontainer", ".vscode")) for x in cur_content):
             return
 
+        if all(x.startswith((".git", ".devcontainer", ".vscode")) for x in cur_content):
+            return
+
         if cur_content:
             raise colrev_exceptions.NonEmptyDirectoryError(
                 filepath=self.target_path, content=cur_content
