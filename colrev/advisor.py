@@ -15,6 +15,8 @@ from git.exc import NoSuchPathError
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 
 class Advisor:
@@ -251,8 +253,10 @@ class Advisor:
 
         return collaboration_instructions
 
-    def _append_initial_load_instruction(self, *, review_instructions: list) -> None:
-        if not self.review_manager.dataset.records_file.is_file():
+    def _append_initial_load_instruction(
+        self, *, review_instructions: list, current_origin_states_dict: dict
+    ) -> None:
+        if len(current_origin_states_dict) == 0:
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
@@ -327,7 +331,8 @@ class Advisor:
     def _append_initial_operations(
         self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
     ) -> bool:
-        if not Path(self.review_manager.search_dir).iterdir():
+        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+        if not Path(search_dir).iterdir():
             instruction = {
                 "msg": "Add search results to data/search",
                 "priority": "yes",
@@ -465,12 +470,12 @@ class Advisor:
     ) -> list:
         # excluding pdf_not_available
         file_required_status = [
-            colrev.record.RecordState.pdf_imported,
-            colrev.record.RecordState.pdf_needs_manual_preparation,
-            colrev.record.RecordState.pdf_prepared,
-            colrev.record.RecordState.rev_excluded,
-            colrev.record.RecordState.rev_included,
-            colrev.record.RecordState.rev_synthesized,
+            RecordState.pdf_imported,
+            RecordState.pdf_needs_manual_preparation,
+            RecordState.pdf_prepared,
+            RecordState.rev_excluded,
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
         ]
         missing_files = []
         for record_dict in status_stats.records.values():
@@ -557,7 +562,10 @@ class Advisor:
         review_instructions: typing.List[typing.Dict] = []
         current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
 
-        self._append_initial_load_instruction(review_instructions=review_instructions)
+        self._append_initial_load_instruction(
+            review_instructions=review_instructions,
+            current_origin_states_dict=current_origin_states_dict,
+        )
 
         self._append_operation_in_progress_instructions(
             review_instructions=review_instructions,
@@ -653,7 +661,9 @@ class Advisor:
 
         # pylint: disable=too-many-locals
 
-        with open(self.review_manager.dataset.records_file, encoding="utf8") as file:
+        with open(
+            self.review_manager.get_path(Filepaths.RECORDS_FILE), encoding="utf8"
+        ) as file:
             outlets = []
             for line in file.readlines():
                 if line.lstrip()[:8] == "journal ":
@@ -725,7 +735,8 @@ class Advisor:
 
         environment_instructions += list(filter(None, add_instructions))
 
-        if len(list(self.review_manager.corrections_path.glob("*.json"))) > 0:
+        corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        if len(list(corrections_path.glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
                 "cmd": "colrev push -r",

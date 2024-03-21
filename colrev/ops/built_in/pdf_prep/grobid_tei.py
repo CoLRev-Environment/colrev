@@ -43,7 +43,7 @@ class GROBIDTEI(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record.Record,
+        record: colrev.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""

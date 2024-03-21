@@ -16,6 +16,8 @@ from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+from colrev.constants import Filepaths
+from colrev.record_state_model import RecordStateModel
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -102,7 +104,7 @@ class Operation:
         return decorator_func
 
     def _check_record_state_model_precondition(self) -> None:
-        colrev.record.RecordStateModel.check_operation_precondition(operation=self)
+        RecordStateModel.check_operation_precondition(self)
 
     def _require_clean_repo_general(
         self,
@@ -117,8 +119,8 @@ class Operation:
 
         if len(git_repo.index.diff("HEAD")) == 0:
             unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
-            if self.review_manager.dataset.RECORDS_FILE_RELATIVE in unstaged_changes:
-                git_repo.index.add([self.review_manager.dataset.RECORDS_FILE_RELATIVE])
+            if Filepaths.RECORDS_FILE in unstaged_changes:
+                git_repo.index.add([Filepaths.RECORDS_FILE])
 
         # Principle: working tree always has to be clean
         # because processing functions may change content
@@ -131,7 +133,7 @@ class Operation:
                 changed_files = [item.a_path for item in git_repo.index.diff(None)] + [
                     x.a_path
                     for x in git_repo.head.commit.diff()
-                    if x.a_path not in [str(self.review_manager.STATUS_RELATIVE)]
+                    if x.a_path not in [str(Filepaths.STATUS_FILE)]
                 ]
                 if len(changed_files) > 0:
                     raise colrev_exceptions.CleanRepoRequiredError(changed_files, "")
@@ -145,8 +147,8 @@ class Operation:
                     for x in git_repo.head.commit.diff()
                     if not any(str(ip) in x.a_path for ip in ignore_pattern)
                 ]
-                if str(self.review_manager.STATUS_RELATIVE) in changed_files:
-                    changed_files.remove(str(self.review_manager.STATUS_RELATIVE))
+                if str(Filepaths.STATUS_FILE) in changed_files:
+                    changed_files.remove(str(Filepaths.STATUS_FILE))
                 if changed_files:
                     raise colrev_exceptions.CleanRepoRequiredError(
                         changed_files, ",".join([str(x) for x in ignore_pattern])
@@ -162,8 +164,8 @@ class Operation:
         if OperationsType.load == self.type:
             self._require_clean_repo_general(
                 ignore_pattern=[
-                    self.review_manager.SEARCHDIR_RELATIVE,
-                    self.review_manager.SETTINGS_RELATIVE,
+                    Filepaths.SEARCH_DIR,
+                    Filepaths.SETTINGS_FILE,
                 ]
             )
             self._check_record_state_model_precondition()
@@ -174,9 +176,7 @@ class Operation:
                 self._check_record_state_model_precondition()
 
         elif OperationsType.prep_man == self.type:
-            self._require_clean_repo_general(
-                ignore_pattern=[self.review_manager.dataset.RECORDS_FILE_RELATIVE]
-            )
+            self._require_clean_repo_general(ignore_pattern=[Filepaths.RECORDS_FILE])
             self._check_record_state_model_precondition()
 
         elif OperationsType.dedupe == self.type:
@@ -188,15 +188,11 @@ class Operation:
             self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_get == self.type:
-            self._require_clean_repo_general(
-                ignore_pattern=[self.review_manager.PDF_DIR_RELATIVE]
-            )
+            self._require_clean_repo_general(ignore_pattern=[Filepaths.PDF_DIR])
             self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_get_man == self.type:
-            self._require_clean_repo_general(
-                ignore_pattern=[self.review_manager.PDF_DIR_RELATIVE]
-            )
+            self._require_clean_repo_general(ignore_pattern=[Filepaths.PDF_DIR])
             self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_prep == self.type:
@@ -251,7 +247,7 @@ class CheckOperation(Operation):
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
+    def __init__(self, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
             operations_type=OperationsType.check,

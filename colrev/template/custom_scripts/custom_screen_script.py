@@ -12,7 +12,7 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.screen.Screen
 
 # pylint: disable=too-few-public-methods
@@ -47,7 +47,7 @@ class CustomScreen:
                 if record_dict[Fields.ID] not in split:
                     continue
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.Record(record_dict)
 
             if random.random() < 0.5:  # nosec
                 if screening_criteria_available:
@@ -69,9 +69,9 @@ class CustomScreen:
                     screening_criteria="...",
                 )
 
-        screen_operation.review_manager.dataset.save_records_dict(records=records)
+        screen_operation.review_manager.dataset.save_records_dict(records)
         screen_operation.review_manager.dataset.add_record_changes()
-        screen_operation.review_manager.create_commit(
+        screen_operation.review_manager.dataset.create_commit(
             msg="Screen (random)", manual_author=False, script_call="colrev screen"
         )
         return records

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -13,6 +12,7 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree  # nosec
 from xml.etree.ElementTree import Element  # nosec
 
+import pandas as pd
 import requests
 import zope.interface
 from dacite import from_dict
@@ -23,12 +23,11 @@ from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_table
-import colrev.ops.search
 import colrev.record
+import colrev.record_prep
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.constants import FieldValues
-
+from colrev.constants import RecordState
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -412,9 +411,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                     msg="Pubmed: no records retrieved"
                 )
 
-            retrieved_record = colrev.record.Record(data=retrieved_record_dict)
+            retrieved_record = colrev.record.Record(retrieved_record_dict)
 
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
@@ -431,17 +430,17 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.pubmed_lock.acquire(timeout=60)
 
                 # Note : need to reload file because the object is not shared between processes
-                pubmed_feed = self.search_source.get_feed(
+                pubmed_feed = self.search_source.get_api_feed(
                     review_manager=self.review_manager,
                     source_identifier=self.source_identifier,
                     update_only=False,
+                    prep_mode=True,
                 )
 
-                pubmed_feed.set_id(record_dict=retrieved_record.data)
-                pubmed_feed.add_record(record=retrieved_record)
+                pubmed_feed.add_update_record(retrieved_record)
 
                 record.merge(
-                    merging_record=retrieved_record,
+                    retrieved_record,
                     default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
@@ -449,9 +448,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                     source=retrieved_record.data[Fields.ORIGIN][0],
                     masterdata_repository=self.review_manager.settings.is_curated_repo(),
                 )
-                record.set_status(target_state=colrev.record.RecordState.md_prepared)
+                record.set_status(RecordState.md_prepared)
                 if save_feed:
-                    pubmed_feed.save_feed_file()
+                    pubmed_feed.save()
                 try:
                     self.pubmed_lock.release()
                 except ValueError:
@@ -479,7 +478,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             pass
         return record
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -533,7 +532,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -541,56 +540,34 @@ class PubMedSearchSource(JsonSchemaMixin):
                 "Performing a search of the full history (may take time)"
             )
 
-        records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self._get_pubmed_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
-                    Fields.TITLE, ""
-                ):
-                    self.review_manager.logger.warning(f"Skipped record: {record_dict}")
-                    continue
                 try:
-                    pubmed_feed.set_id(record_dict=record_dict)
+                    # Note : discard "empty" records
+                    if "" == record_dict.get(
+                        Fields.AUTHOR, ""
+                    ) and "" == record_dict.get(Fields.TITLE, ""):
+                        self.review_manager.logger.warning(
+                            f"Skipped record: {record_dict}"
+                        )
+                        continue
+                    prep_record = colrev.record_prep.PrepRecord(record_dict)
+
+                    if Fields.D_PROV in prep_record.data:
+                        del prep_record.data[Fields.D_PROV]
+
+                    added = pubmed_feed.add_update_record(prep_record)
+
+                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                    if not added and not rerun:
+                        # problem: some publishers don't necessarily
+                        # deposit papers chronologically
+                        break
                 except colrev_exceptions.NotFeedIdentifiableException:
                     print("Cannot set id for record")
                     continue
 
-                prev_record_dict_version = {}
-                if record_dict[Fields.ID] in pubmed_feed.feed_records:
-                    prev_record_dict_version = deepcopy(
-                        pubmed_feed.feed_records[record_dict[Fields.ID]]
-                    )
-
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-
-                if Fields.D_PROV in prep_record.data:
-                    del prep_record.data[Fields.D_PROV]
-
-                added = pubmed_feed.add_record(record=prep_record)
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve pubmed-id=" + prep_record.data["pubmedid"]
-                    )
-                else:
-                    pubmed_feed.update_existing_record(
-                        records=records,
-                        record_dict=prep_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-
-                # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                if not added and not rerun:
-                    # problem: some publishers don't necessarily
-                    # deposit papers chronologically
-                    break
-
-            pubmed_feed.print_post_run_search_infos(records=records)
-            pubmed_feed.save_feed_file()
-            self.review_manager.dataset.save_records_dict(records=records)
+            pubmed_feed.save()
 
         except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
@@ -606,54 +583,35 @@ class PubMedSearchSource(JsonSchemaMixin):
     def _run_md_search(
         self,
         *,
-        pubmed_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        pubmed_feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
 
         for feed_record_dict in pubmed_feed.feed_records.values():
-            feed_record = colrev.record.Record(data=feed_record_dict)
+            feed_record = colrev.record.Record(feed_record_dict)
 
             try:
-                retrieved_record = self._pubmed_query_id(
+                retrieved_record_dict = self._pubmed_query_id(
                     pubmed_id=feed_record_dict["pubmedid"]
                 )
 
-                if retrieved_record["pubmedid"] != feed_record.data["pubmedid"]:
+                if retrieved_record_dict["pubmedid"] != feed_record.data["pubmedid"]:
                     continue
-
-                pubmed_feed.set_id(record_dict=retrieved_record)
+                retrieved_record = colrev.record.Record(retrieved_record_dict)
+                pubmed_feed.add_update_record(retrieved_record)
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
                 colrev_exceptions.NotFeedIdentifiableException,
             ):
                 continue
 
-            prev_record_dict_version = {}
-            if retrieved_record[Fields.ID] in pubmed_feed.feed_records:
-                prev_record_dict_version = pubmed_feed.feed_records[
-                    retrieved_record[Fields.ID]
-                ]
+        pubmed_feed.save()
 
-            pubmed_feed.add_record(record=colrev.record.Record(data=retrieved_record))
-
-            pubmed_feed.update_existing_record(
-                records=records,
-                record_dict=retrieved_record,
-                prev_record_dict_version=prev_record_dict_version,
-                source=self.search_source,
-                update_time_variant_fields=True,
-            )
-
-        pubmed_feed.save_feed_file()
-        pubmed_feed.print_post_run_search_infos(records=records)
-        self.review_manager.dataset.save_records_dict(records=records)
-
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Pubmed"""
 
         self._validate_source()
 
-        pubmed_feed = self.search_source.get_feed(
+        pubmed_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -677,72 +635,75 @@ class PubMedSearchSource(JsonSchemaMixin):
         else:
             raise NotImplementedError
 
+    def _load_csv(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+
+        def field_mapper(record_dict: dict) -> None:
+            record_dict[Fields.TITLE] = record_dict.pop("Title", "")
+            record_dict[Fields.JOURNAL] = record_dict.pop("Journal/Book", "")
+            record_dict[Fields.YEAR] = record_dict.pop("Publication Year", "")
+            record_dict[Fields.URL] = record_dict.pop("URL", "")
+            record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+            record_dict["NIHMS_ID"] = record_dict.pop("NIHMS ID", "")
+            record_dict["create_date"] = record_dict.pop("Create Date", "")
+
+            author_list = record_dict.pop("Authors", "").split(", ")
+            for i, author_part in enumerate(author_list):
+                author_field_parts = author_part.split(" ")
+                author_list[i] = (
+                    author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
+                )
+            record_dict[Fields.AUTHOR] = " and ".join(author_list)
+
+            if "Citation" in record_dict:
+                details_part = record_dict["Citation"]
+                details_part = details_part[details_part.find(";") + 1 :]
+                details_part = details_part[: details_part.find(".")]
+                if ":" in details_part:
+                    record_dict[Fields.PAGES] = details_part[
+                        details_part.find(":") + 1 :
+                    ]
+                    details_part = details_part[: details_part.find(":")]
+                if "(" in details_part:
+                    record_dict[Fields.NUMBER] = details_part[
+                        details_part.find("(") + 1 : -1
+                    ]
+                    details_part = details_part[: details_part.find("(")]
+                record_dict[Fields.VOLUME] = details_part
+
+            record_dict.pop("First Author", None)
+            record_dict.pop("Citation", None)
+
+            for key in list(record_dict.keys()):
+                value = record_dict[key]
+                record_dict[key] = str(value)
+                if value == "" or pd.isna(value):
+                    del record_dict[key]
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="PMID",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".csv":
-            table_loader = colrev.ops.load_utils_table.TableLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                unique_id_field="pmid",
-            )
-            table_entries = table_loader.load_table_entries()
-            records = table_loader.convert_to_records(entries=table_entries)
-            self._load_fixes(records=records)
-            return records
+            return self._load_csv()
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
-
-    def _load_fixes(
-        self,
-        records: typing.Dict,
-    ) -> None:
-        """Load fixes for Pubmed"""
-
-        for record in records.values():
-            if Fields.AUTHOR in record and record[Fields.AUTHOR].count(",") >= 1:
-                author_list = record[Fields.AUTHOR].split(", ")
-                for i, author_part in enumerate(author_list):
-                    author_field_parts = author_part.split(" ")
-                    author_list[i] = (
-                        author_field_parts[0] + ", " + " ".join(author_field_parts[1:])
-                    )
-
-                record[Fields.AUTHOR] = " and ".join(author_list)
-            if "first_author" in record:
-                del record["first_author"]
-            if record.get(Fields.JOURNAL, "") != "":
-                record[Fields.ENTRYTYPE] = "article"
-            if (
-                record.get("pii", "pii").lower()
-                == record.get(Fields.DOI, Fields.DOI).lower()
-            ):
-                del record["pii"]
-            if record.get("nihms_id", "") == "nan":
-                del record["nihms_id"]
-            if "citation" in record:
-                details_part = record["citation"]
-                details_part = details_part[details_part.find(";") + 1 :]
-                details_part = details_part[: details_part.find(".")]
-                if ":" in details_part:
-                    record[Fields.PAGES] = details_part[details_part.find(":") + 1 :]
-                    details_part = details_part[: details_part.find(":")]
-                if "(" in details_part:
-                    record[Fields.NUMBER] = details_part[
-                        details_part.find("(") + 1 : -1
-                    ]
-                    details_part = details_part[: details_part.find("(")]
-                record[Fields.VOLUME] = details_part
-                del record["citation"]
-            if "journal/book" in record:
-                record[Fields.JOURNAL] = record.pop("journal/book")
 
     def prepare(
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
@@ -751,26 +712,12 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         if "colrev.pubmed.first_author" in record.data:
             record.remove_field(key="colrev.pubmed.first_author")
-        if (
-            record.data.get(Fields.AUTHOR) == FieldValues.UNKNOWN
-            and "authors" in record.data
-        ):
-            record.remove_field(key=Fields.AUTHOR)
-            record.rename_field(key="authors", new_key=Fields.AUTHOR)
-
-        if record.data.get(Fields.YEAR) == FieldValues.UNKNOWN:
-            record.remove_field(key=Fields.YEAR)
-            if "colrev.pubmed.publication_year" in record.data:
-                record.rename_field(
-                    key="colrev.pubmed.publication_year", new_key=Fields.YEAR
-                )
 
         if Fields.AUTHOR in record.data:
-            record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
-                input_string=record.data[Fields.AUTHOR]
+            record.data[Fields.AUTHOR] = (
+                colrev.record_prep.PrepRecord.format_author_field(
+                    input_string=record.data[Fields.AUTHOR]
+                )
             )
-
-        # TBD: how to distinguish other types?
-        record.change_entrytype(new_entrytype="article", qm=self.quality_model)
 
         return record

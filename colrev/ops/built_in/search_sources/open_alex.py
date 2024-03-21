@@ -15,8 +15,8 @@ from pyalex import Works
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
 import colrev.record
+import colrev.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -97,7 +97,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 continue
             if author["author"].get("display_name", None) is None:
                 continue
-            author_string = colrev.record.PrepRecord.format_author_field(
+            author_string = colrev.record_prep.PrepRecord.format_author_field(
                 input_string=author["author"]["display_name"]
             )
             author_list.append(author_string)
@@ -165,7 +165,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
 
         self._set_author_from_item(record_dict=record_dict, item=item)
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
 
         self._fix_errors(record=record)
         return record
@@ -189,24 +189,24 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.open_alex_lock.acquire(timeout=120)
 
             # Note : need to reload file because the object is not shared between processes
-            open_alex_feed = self.search_source.get_feed(
+            open_alex_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
+                prep_mode=True,
             )
 
-            open_alex_feed.set_id(record_dict=retrieved_record.data)
-            open_alex_feed.add_record(record=retrieved_record)
+            open_alex_feed.add_update_record(retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
                 qm=self.review_manager.get_qm(),
             )
 
             record.merge(
-                merging_record=retrieved_record,
+                retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            open_alex_feed.save_feed_file()
+            open_alex_feed.save()
         except (
             colrev_exceptions.InvalidMerge,
             colrev_exceptions.RecordNotParsableException,
@@ -223,7 +223,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -244,12 +244,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of OpenAlex"""
 
         # https://docs.openalex.org/api-entities/works
 
-        # crossref_feed = self.search_source.get_feed(
+        # crossref_feed = self.search_source.get_api_feed(
         #     review_manager=search_operation.review_manager,
         #     source_identifier=self.source_identifier,
         #     update_only=(not rerun),
@@ -313,10 +313,10 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError

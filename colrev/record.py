@@ -2,38 +2,19 @@
 """Functionality for individual records."""
 from __future__ import annotations
 
-import io
-import logging
 import pprint
 import re
-import textwrap
 import typing
 from copy import deepcopy
-from enum import Enum
 from pathlib import Path
 from typing import Optional
 from typing import TYPE_CHECKING
 
 import dictdiffer
-import pandas as pd
-import pdfminer
-from nameparser import HumanName
-from pdfminer.converter import TextConverter
-from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
-from pdfminer.pdfinterp import PDFPageInterpreter
-from pdfminer.pdfinterp import PDFResourceManager
-from pdfminer.pdfinterp import resolve1
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfparser import PDFParser
-from pdfminer.pdfparser import PDFSyntaxError
-from PyPDF2 import PdfFileReader
-from PyPDF2 import PdfFileWriter
 from rapidfuzz import fuzz
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.prep.utils as prep_utils
 import colrev.qm.colrev_id
 import colrev.qm.colrev_pdf_id
 from colrev.constants import Colors
@@ -42,9 +23,9 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
-from colrev.constants import Operations
+from colrev.constants import RecordState
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.qm.quality_model
 
@@ -61,11 +42,10 @@ class Record:
         # "colrev_pdf_id",
         # Fields.SCREENING_CRITERIA,
     ]
-    dict_fields_keys = [Fields.MD_PROV, Fields.D_PROV]
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-    def __init__(self, *, data: dict) -> None:
+    def __init__(self, data: dict) -> None:
         self.data = data
         """Dictionary containing the record data"""
         # Note : avoid parsing upon Record instantiation as much as possible
@@ -97,18 +77,18 @@ class Record:
 
     def copy(self) -> Record:
         """Copy the record object"""
-        return Record(data=deepcopy(self.data))
+        return Record(deepcopy(self.data))
 
-    def copy_prep_rec(self) -> PrepRecord:
+    def copy_prep_rec(self) -> colrev.record_prep.PrepRecord:
         """Copy the record object (as a PrepRecord)"""
-        return PrepRecord(data=deepcopy(self.data))
+        return colrev.record_prep.PrepRecord(deepcopy(self.data))
 
-    def update_by_record(self, *, update_record: Record) -> None:
+    def update_by_record(self, update_record: Record) -> None:
         """Update all data of a record object based on another record"""
         self.data = update_record.copy_prep_rec().get_data()
 
     def get_diff(
-        self, *, other_record: Record, identifying_fields_only: bool = True
+        self, other_record: Record, *, identifying_fields_only: bool = True
     ) -> list:
         """Get diff between record objects"""
 
@@ -159,68 +139,26 @@ class Record:
         )
         return bib_formatted
 
-    def _save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
-        list_to_return = []
-        assert input_key in [Fields.MD_PROV, Fields.D_PROV]
-        if input_key == Fields.MD_PROV:
-            for key, value in input_dict.items():
-                if isinstance(value, dict):
-                    formated_node = ",".join(
-                        sorted(e for e in value["note"].split(",") if "" != e)
-                    )
-                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
-
-        elif input_key == Fields.D_PROV:
-            for key, value in input_dict.items():
-                if isinstance(value, dict):
-                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
-
-        return list_to_return
-
-    def get_data(self, *, stringify: bool = False) -> dict:
-        """Get the record data (optionally: in stringified version, i.e., without lists/dicts)"""
-
-        def _get_stringified_record() -> dict:
-            data_copy = deepcopy(self.data)
-
-            def list_to_str(*, val: list) -> str:
-                return ("\n" + " " * 36).join([f.rstrip() for f in val])
-
-            for key in self.list_fields_keys:
-                if key in data_copy:
-                    if key in [Fields.ORIGIN]:
-                        data_copy[key] = sorted(list(set(data_copy[key])))
-                    for ind, val in enumerate(data_copy[key]):
-                        if len(val) > 0:
-                            if val[-1] != ";":
-                                data_copy[key][ind] = val + ";"
-                    data_copy[key] = list_to_str(val=data_copy[key])
-
-            for key in self.dict_fields_keys:
-                if key in data_copy:
-                    if isinstance(data_copy[key], dict):
-                        data_copy[key] = self._save_field_dict(
-                            input_dict=data_copy[key], input_key=key
-                        )
-                    if isinstance(data_copy[key], list):
-                        data_copy[key] = list_to_str(val=data_copy[key])
-
-            return data_copy
+    def get_data(self) -> dict:
+        """Get the record data"""
 
         if not isinstance(self.data.get(Fields.ORIGIN, []), list):
             self.data[Fields.ORIGIN] = self.data[Fields.ORIGIN].rstrip(";").split(";")
         assert isinstance(self.data.get(Fields.ORIGIN, []), list)
 
-        if stringify:
-            return _get_stringified_record()
-
         return self.data
+
+    def set_masterdata_curated(self, source: str) -> None:
+        """Set record masterdata to curated"""
+        self.data[Fields.MD_PROV] = {
+            FieldValues.CURATED: {"source": source, "note": ""}
+        }
 
     def masterdata_is_curated(self) -> bool:
         """Check whether the record masterdata is curated"""
         return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
 
-    def set_status(self, *, target_state: RecordState, force: bool = False) -> None:
+    def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""
 
         if RecordState.md_prepared == target_state and not force:
@@ -238,14 +176,14 @@ class Record:
                 continue
             self.data[f"{prefix}.{key}"] = self.data.pop(key)
 
-    def shares_origins(self, *, other_record: Record) -> bool:
+    def shares_origins(self, other_record: Record) -> bool:
         """Check at least one origin is shared with the other record"""
         return any(
             x in other_record.data.get(Fields.ORIGIN, [])
             for x in self.data.get(Fields.ORIGIN, [])
         )
 
-    def get_value(self, *, key: str, default: Optional[str] = None) -> str:
+    def get_value(self, key: str, *, default: Optional[str] = None) -> str:
         """Get a record value (based on the key parameter)"""
         if default is not None:
             try:
@@ -270,7 +208,7 @@ class Record:
                 colrev_id = self.data[Fields.COLREV_ID]
         return [c for c in colrev_id if len(c) > 20]
 
-    def has_overlapping_colrev_id(self, *, record: Record) -> bool:
+    def has_overlapping_colrev_id(self, record: Record) -> bool:
         """Check if a record has an overlapping colrev_id with the other record"""
         own_colrev_ids = self.get_colrev_id()
         other_colrev_ids = record.get_colrev_id()
@@ -346,28 +284,53 @@ class Record:
 
         self.remove_field(key=key)
 
+    def align_provenance(self) -> None:
+        """Remove unnecessary provenance information and add missing provenance information"""
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
+        for key in list(self.data[Fields.MD_PROV].keys()):
+            if key not in self.data and key != FieldValues.CURATED:
+                del self.data[Fields.MD_PROV][key]
+        for key in list(self.data[Fields.D_PROV].keys()):
+            if key not in self.data:
+                del self.data[Fields.D_PROV][key]
+
+        for key in self.data.keys():
+            if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.ENTRYTYPE]:
+                continue
+            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
+                if self.masterdata_is_curated():
+                    continue
+                if key not in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
+            else:
+                if key not in self.data[Fields.D_PROV]:
+                    self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
+
+    # pylint: disable=too-many-branches
     def change_entrytype(
         self,
-        *,
         new_entrytype: str,
+        *,
         qm: colrev.qm.quality_model.QualityModel,
     ) -> None:
         """Change the ENTRYTYPE"""
         for value in self.data.get(Fields.MD_PROV, {}).values():
-            if DefectCodes.INCONSISTENT_WITH_ENTRYTYPE in value["note"]:
-                value["note"] = ""
-            if DefectCodes.MISSING in value["note"]:
+            if any(
+                x in value["note"]
+                for x in [DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, DefectCodes.MISSING]
+            ):
                 value["note"] = ""
         missing_fields = [k for k, v in self.data.items() if v == FieldValues.UNKNOWN]
         for missing_field in missing_fields:
             self.remove_field(key=missing_field)
 
+        self.align_provenance()
+
         self.data[Fields.ENTRYTYPE] = new_entrytype
         if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
-            if self.data.get(Fields.VOLUME, "") == FieldValues.UNKNOWN:
-                self.remove_field(key=Fields.VOLUME)
-            if self.data.get(Fields.NUMBER, "") == FieldValues.UNKNOWN:
-                self.remove_field(key=Fields.NUMBER)
             if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
                 self.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
         elif new_entrytype == ENTRYTYPES.ARTICLE:
@@ -386,6 +349,7 @@ class Record:
             ENTRYTYPES.MISC,
             ENTRYTYPES.SOFTWARE,
             ENTRYTYPES.ONLINE,
+            ENTRYTYPES.CONFERENCE,
         ]:
             pass
         else:
@@ -411,7 +375,7 @@ class Record:
             # we should keep that information that a particular masterdata
             # field is not required
             if key not in self.data[Fields.MD_PROV]:
-                self.data[Fields.MD_PROV][key] = {}
+                self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
             self.data[Fields.MD_PROV][key]["note"] = f"IGNORE:{DefectCodes.MISSING}"
             if source != "":
                 self.data[Fields.MD_PROV][key]["source"] = source
@@ -502,22 +466,22 @@ class Record:
                     "note": "",
                 }
 
-    def _merge_origins(self, *, merging_record: Record) -> None:
+    def _merge_origins(self, merging_record: Record) -> None:
         """Merge the origins with those of the merging_record"""
 
         if Fields.ORIGIN in merging_record.data:
             origins = self.data[Fields.ORIGIN] + merging_record.data[Fields.ORIGIN]
             self.data[Fields.ORIGIN] = sorted(list(set(origins)))
 
-    def _merge_status(self, *, merging_record: Record) -> None:
+    def _merge_status(self, merging_record: Record) -> None:
         """Merge the status with the merging_record"""
 
         if Fields.STATUS in merging_record.data:
             # Set both status to the latter in the state model
             if self.data[Fields.STATUS] < merging_record.data[Fields.STATUS]:
-                self.set_status(target_state=merging_record.data[Fields.STATUS])
+                self.set_status(merging_record.data[Fields.STATUS])
             else:
-                merging_record.set_status(target_state=self.data[Fields.STATUS])
+                merging_record.set_status(self.data[Fields.STATUS])
 
     def _get_merging_val(self, *, merging_record: Record, key: str) -> str:
         val = merging_record.data.get(key, "")
@@ -541,7 +505,7 @@ class Record:
 
         return val
 
-    def _prevent_invalid_merges(self, *, merging_record: Record) -> None:
+    def _prevent_invalid_merges(self, merging_record: Record) -> None:
         """Prevents invalid merges like ... part 1 / ... part 2"""
 
         lower_title_a = self.data.get(Fields.TITLE, "").lower()
@@ -569,8 +533,8 @@ class Record:
 
     def merge(
         self,
-        *,
         merging_record: Record,
+        *,
         default_source: str,
         preferred_masterdata_source_prefixes: Optional[list] = None,
     ) -> None:
@@ -591,9 +555,9 @@ class Record:
             ):
                 merging_record_preferred = True
 
-        self._prevent_invalid_merges(merging_record=merging_record)
-        self._merge_origins(merging_record=merging_record)
-        self._merge_status(merging_record=merging_record)
+        self._prevent_invalid_merges(merging_record)
+        self._merge_origins(merging_record)
+        self._merge_status(merging_record)
 
         if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
             self.data[Fields.MD_PROV] = merging_record.data[Fields.MD_PROV]
@@ -660,7 +624,7 @@ class Record:
                 )
 
     @classmethod
-    def _select_best_author(cls, *, record: Record, merging_record: Record) -> str:
+    def _select_best_author(cls, record: Record, merging_record: Record) -> str:
         if not record.has_quality_defects(
             field=Fields.AUTHOR
         ) and merging_record.has_quality_defects(field=Fields.AUTHOR):
@@ -691,7 +655,6 @@ class Record:
     @classmethod
     def _select_best_pages(
         cls,
-        *,
         record: Record,
         merging_record: Record,
     ) -> str:
@@ -706,7 +669,6 @@ class Record:
     @classmethod
     def _select_best_title(
         cls,
-        *,
         record: Record,
         merging_record: Record,
     ) -> str:
@@ -731,29 +693,27 @@ class Record:
     @classmethod
     def _select_best_journal(
         cls,
-        *,
         record: Record,
         merging_record: Record,
     ) -> str:
         return cls._select_best_container_title(
-            default=record.data[Fields.JOURNAL],
-            candidate=merging_record.data[Fields.JOURNAL],
+            record.data[Fields.JOURNAL],
+            merging_record.data[Fields.JOURNAL],
         )
 
     @classmethod
     def _select_best_booktitle(
         cls,
-        *,
         record: Record,
         merging_record: Record,
     ) -> str:
         return cls._select_best_container_title(
-            default=record.data[Fields.BOOKTITLE],
-            candidate=merging_record.data[Fields.BOOKTITLE],
+            record.data[Fields.BOOKTITLE],
+            merging_record.data[Fields.BOOKTITLE],
         )
 
     @classmethod
-    def _select_best_container_title(cls, *, default: str, candidate: str) -> str:
+    def _select_best_container_title(cls, default: str, candidate: str) -> str:
         best_journal = default
 
         default_upper = colrev.env.utils.percent_upper_chars(default)
@@ -790,8 +750,8 @@ class Record:
         if key in custom_field_selectors:
             if key in self.data:
                 best_value = custom_field_selectors[key](
-                    record=self,
-                    merging_record=merging_record,
+                    self,
+                    merging_record,
                 )
                 if self.data[key] != best_value:
                     self.update_field(
@@ -823,7 +783,7 @@ class Record:
                 self.add_data_provenance(key=key, source=source)
 
     @classmethod
-    def get_record_change_score(cls, *, record_a: Record, record_b: Record) -> float:
+    def get_record_change_score(cls, record_a: Record, record_b: Record) -> float:
         """Determine how much records changed
 
         This method is less sensitive than get_record_similarity, especially when
@@ -847,7 +807,7 @@ class Record:
         return 1 - fuzz.ratio(str_a.lower(), str_b.lower()) / 100
 
     @classmethod
-    def get_record_similarity(cls, *, record_a: Record, record_b: Record) -> float:
+    def get_record_similarity(cls, record_a: Record, record_b: Record) -> float:
         """Determine the similarity between two records (their masterdata)"""
         record_a_dict = record_a.copy().get_data()
         record_b_dict = record_b.copy().get_data()
@@ -889,20 +849,10 @@ class Record:
                 + record_b_dict.get(Fields.SERIES, "")
             )
 
-        df_a = pd.DataFrame.from_dict([record_a_dict])  # type: ignore
-        df_b = pd.DataFrame.from_dict([record_b_dict])  # type: ignore
-
-        return Record.get_similarity(df_a=df_a.iloc[0], df_b=df_b.iloc[0])
+        return Record._get_similarity_detailed(record_a_dict, record_b_dict)
 
     @classmethod
-    def get_similarity(cls, *, df_a: dict, df_b: dict) -> float:
-        """Determine the similarity between two records"""
-
-        details = Record.get_similarity_detailed(record_a=df_a, record_b=df_b)
-        return details["score"]
-
-    @classmethod
-    def get_similarity_detailed(cls, *, record_a: dict, record_b: dict) -> dict:
+    def _get_similarity_detailed(cls, record_a: dict, record_b: dict) -> float:
         """Determine the detailed similarities between records"""
         try:
             author_similarity = (
@@ -942,21 +892,6 @@ class Record:
                     1 if (record_a[Fields.NUMBER] == record_b[Fields.NUMBER]) else 0
                 )
 
-                # page similarity is not considered at the moment.
-                #
-                # sometimes, only the first page is provided.
-                # if str(record_a[Fields.PAGES]) == "nan" or str(record_b[Fields.PAGES]) == "nan":
-                #     pages_similarity = 1
-                # else:
-                #     if record_a[Fields.PAGES] == record_b[Fields.PAGES]:
-                #         pages_similarity = 1
-                #     else:
-                #         if record_a[Fields.PAGES].split("-")[0] ==
-                #               record_b[Fields.PAGES].split("-")[0]:
-                #             pages_similarity = 1
-                #         else:
-                #            pages_similarity = 0
-
                 # Put more weight on other fields if the title is very common
                 # ie., non-distinctive
                 # The list is based on a large export of distinct papers, tabulated
@@ -974,14 +909,14 @@ class Record:
                 else:
                     weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
 
-                sim_names = [
-                    Fields.AUTHOR,
-                    Fields.TITLE,
-                    Fields.YEAR,
-                    "outlet",
-                    Fields.VOLUME,
-                    Fields.NUMBER,
-                ]
+                # sim_names = [
+                #     Fields.AUTHOR,
+                #     Fields.TITLE,
+                #     Fields.YEAR,
+                #     "outlet",
+                #     Fields.VOLUME,
+                #     Fields.NUMBER,
+                # ]
                 similarities = [
                     author_similarity,
                     title_similarity,
@@ -993,12 +928,12 @@ class Record:
 
             else:
                 weights = [0.15, 0.75, 0.05, 0.05]
-                sim_names = [
-                    Fields.AUTHOR,
-                    Fields.TITLE,
-                    Fields.YEAR,
-                    "outlet",
-                ]
+                # sim_names = [
+                #     Fields.AUTHOR,
+                #     Fields.TITLE,
+                #     Fields.YEAR,
+                #     "outlet",
+                # ]
                 similarities = [
                     author_similarity,
                     title_similarity,
@@ -1010,23 +945,24 @@ class Record:
                 similarities[g] * weights[g] for g in range(len(similarities))
             )
 
-            details = (
-                "["
-                + ",".join([sim_names[g] for g in range(len(similarities))])
-                + "]"
-                + "*weights_vecor^T = "
-                + "["
-                + ",".join([str(similarities[g]) for g in range(len(similarities))])
-                + "]*"
-                + "["
-                + ",".join([str(weights[g]) for g in range(len(similarities))])
-                + "]^T"
-            )
+            # details = (
+            #     "["
+            #     + ",".join([sim_names[g] for g in range(len(similarities))])
+            #     + "]"
+            #     + "*weights_vecor^T = "
+            #     + "["
+            #     + ",".join([str(similarities[g]) for g in range(len(similarities))])
+            #     + "]*"
+            #     + "["
+            #     + ",".join([str(weights[g]) for g in range(len(similarities))])
+            #     + "]^T"
+            # )
+            # print(details)
             similarity_score = round(weighted_average, 4)
         except AttributeError:
             similarity_score = 0
-            details = ""
-        return {"score": similarity_score, "details": details}
+
+        return similarity_score
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
@@ -1036,21 +972,44 @@ class Record:
         note = default_note
         source = default_source
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if Fields.MD_PROV in self.data:
-                if key in self.data.get(Fields.MD_PROV, {}):
-                    if "source" in self.data[Fields.MD_PROV][key]:
-                        source = self.data[Fields.MD_PROV][key]["source"]
-                    if "note" in self.data[Fields.MD_PROV][key]:
-                        note = self.data[Fields.MD_PROV][key]["note"]
+            if Fields.MD_PROV in self.data and key in self.data[Fields.MD_PROV]:
+                if "source" in self.data[Fields.MD_PROV][key]:
+                    source = self.data[Fields.MD_PROV][key]["source"]
+                if "note" in self.data[Fields.MD_PROV][key]:
+                    note = self.data[Fields.MD_PROV][key]["note"]
         else:
-            if Fields.D_PROV in self.data:
-                if key in self.data[Fields.D_PROV]:
-                    if "source" in self.data[Fields.D_PROV][key]:
-                        source = self.data[Fields.D_PROV][key]["source"]
-                    if "note" in self.data[Fields.D_PROV][key]:
-                        note = self.data[Fields.D_PROV][key]["note"]
+            if Fields.D_PROV in self.data and key in self.data[Fields.D_PROV]:
+                if "source" in self.data[Fields.D_PROV][key]:
+                    source = self.data[Fields.D_PROV][key]["source"]
+                if "note" in self.data[Fields.D_PROV][key]:
+                    note = self.data[Fields.D_PROV][key]["note"]
 
         return {"source": source, "note": note}
+
+    def get_masterdata_provenance_notes(self, key: str) -> list:
+        """Get a masterdata provenance note based on a key"""
+        if Fields.MD_PROV not in self.data:
+            return []
+        if key not in self.data[Fields.MD_PROV]:
+            return []
+        notes = self.data[Fields.MD_PROV][key]["note"].split(",")
+        return [note for note in notes if note]
+
+    def get_masterdata_provenance_source(self, key: str) -> str:
+        """Get a masterdata provenance source based on a key"""
+        if Fields.MD_PROV not in self.data:
+            return ""
+        if key not in self.data[Fields.MD_PROV]:
+            return ""
+        return self.data[Fields.MD_PROV][key]["source"]
+
+    def get_data_provenance_source(self, key: str) -> str:
+        """Get a data provenance source based on a key"""
+        if Fields.D_PROV not in self.data:
+            return ""
+        if key not in self.data[Fields.D_PROV]:
+            return ""
+        return self.data[Fields.D_PROV][key]["source"]
 
     def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Remove a masterdata provenance note"""
@@ -1077,6 +1036,15 @@ class Record:
                 "source": "ORIGINAL",
                 "note": note,
             }
+
+    def get_data_provenance_notes(self, *, key: str) -> list:
+        """Get a data provenance note based on a key"""
+        if Fields.D_PROV not in self.data:
+            return []
+        if key not in self.data[Fields.D_PROV]:
+            return []
+        notes = self.data[Fields.D_PROV][key]["note"].split(",")
+        return [note.strip() for note in notes if note]
 
     def add_data_provenance_note(self, *, key: str, note: str) -> None:
         """Add a data provenance note (based on a key)"""
@@ -1203,7 +1171,11 @@ class Record:
         """Ignore a defect for a field"""
         ignore_code = f"IGNORE:{defect}"
 
-        if field in FieldSet.IDENTIFYING_FIELD_KEYS:
+        if field in FieldSet.IDENTIFYING_FIELD_KEYS + [
+            Fields.DOI,
+            Fields.PUBMED_ID,
+            Fields.ISBN,
+        ]:
             if (
                 Fields.MD_PROV not in self.data
                 or field not in self.data[Fields.MD_PROV]
@@ -1323,7 +1295,7 @@ class Record:
                 f"remove from synthesis: {self.data['ID']}{Colors.END}\n"
             )
 
-        self.set_status(target_state=RecordState.rev_prescreen_excluded)
+        self.set_status(RecordState.rev_prescreen_excluded)
 
         if (
             FieldValues.RETRACTED not in self.data.get(Fields.PRESCREEN_EXCLUSION, "")
@@ -1334,6 +1306,7 @@ class Record:
                 f"\n{Colors.RED}Paper retracted and prescreen "
                 f"excluded: {self.data['ID']}{Colors.END}\n"
             )
+            self.data[Fields.RETRACTED] = FieldValues.RETRACTED
 
         self.data[Fields.PRESCREEN_EXCLUSION] = reason
 
@@ -1344,110 +1317,6 @@ class Record:
                 to_drop.append(key)
         for key in to_drop:
             self.remove_field(key=key)
-
-    def extract_text_by_page(
-        self,
-        *,
-        pages: Optional[list] = None,
-    ) -> str:
-        """Extract the text from the PDF for a given number of pages"""
-        text_list: list = []
-        pdf_path = Path(self.data[Fields.FILE]).absolute()
-
-        # https://stackoverflow.com/questions/49457443/python-pdfminer-converts-pdf-file-into-one-chunk-of-string-with-no-spaces-betwee
-        laparams = pdfminer.layout.LAParams()
-        setattr(laparams, "all_texts", True)
-
-        with open(pdf_path, "rb") as pdf_file:
-            try:
-                for page in PDFPage.get_pages(
-                    pdf_file,
-                    pagenos=pages,  # note: maybe skip potential cover pages?
-                    caching=True,
-                    check_extractable=True,
-                ):
-                    resource_manager = PDFResourceManager()
-                    fake_file_handle = io.StringIO()
-                    converter = TextConverter(
-                        resource_manager, fake_file_handle, laparams=laparams
-                    )
-                    page_interpreter = PDFPageInterpreter(resource_manager, converter)
-                    page_interpreter.process_page(page)
-
-                    text = fake_file_handle.getvalue()
-                    text_list += text
-
-                    # close open handles
-                    converter.close()
-                    fake_file_handle.close()
-            except (
-                TypeError,
-                KeyError,
-                pdfminer.pdfparser.PDFSyntaxError,
-            ):  # pragma: no cover
-                pass
-        return "".join(text_list)
-
-    def set_pages_in_pdf(self) -> None:
-        """Set the pages_in_file field based on the PDF"""
-        pdf_path = Path(self.data[Fields.FILE]).absolute()
-        try:
-            with open(pdf_path, "rb") as file:
-                parser = PDFParser(file)
-                document = PDFDocument(parser)
-                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-            self.data[Fields.PAGES_IN_FILE] = pages_in_file
-        except pdfminer.pdfparser.PDFSyntaxError:
-            pass
-
-    def set_text_from_pdf(self) -> None:
-        """Set the text_from_pdf field based on the PDF"""
-        self.data[Fields.TEXT_FROM_PDF] = ""
-        try:
-            self.set_pages_in_pdf()
-            text = self.extract_text_by_page(pages=[0, 1, 2])
-            self.data[Fields.TEXT_FROM_PDF] = text.replace("\n", " ").replace(
-                "\x0c", ""
-            )
-
-        except PDFSyntaxError:  # pragma: no cover
-            self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
-            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-        except PDFTextExtractionNotAllowed:  # pragma: no cover
-            self.add_data_provenance_note(key=Fields.FILE, note="pdf_protected")
-            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-
-    def extract_pages(
-        self, *, pages: list, project_path: Path, save_to_path: Optional[Path] = None
-    ) -> None:  # pragma: no cover
-        """Extract pages from the PDF (saveing them to the save_to_path)"""
-        pdf_path = project_path / Path(self.data[Fields.FILE])
-        pdf_reader = PdfFileReader(str(pdf_path), strict=False)
-        writer = PdfFileWriter()
-        for i in range(0, len(pdf_reader.pages)):
-            if i in pages:
-                continue
-            writer.addPage(pdf_reader.getPage(i))
-        with open(pdf_path, "wb") as outfile:
-            writer.write(outfile)
-
-        if save_to_path:
-            writer_cp = PdfFileWriter()
-            for page in pages:
-                writer_cp.addPage(pdf_reader.getPage(page))
-            filepath = Path(pdf_path)
-            with open(save_to_path / filepath.name, "wb") as outfile:
-                writer_cp.write(outfile)
-
-    @classmethod
-    def get_colrev_pdf_id(
-        cls,
-        *,
-        pdf_path: Path,
-    ) -> str:  # pragma: no cover
-        """Generate the colrev_pdf_id"""
-
-        return colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
 
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
@@ -1523,8 +1392,8 @@ class Record:
         """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""
         if Fields.TEXT_FROM_PDF in self.data:
             del self.data[Fields.TEXT_FROM_PDF]
-        if Fields.PAGES_IN_FILE in self.data:
-            del self.data[Fields.PAGES_IN_FILE]
+        if Fields.NR_PAGES_IN_FILE in self.data:
+            del self.data[Fields.NR_PAGES_IN_FILE]
 
     def run_pdf_quality_model(
         self,
@@ -1536,9 +1405,9 @@ class Record:
 
         pdf_qm.run(record=self)
         if self.has_pdf_defects():
-            self.set_status(target_state=RecordState.pdf_needs_manual_preparation)
+            self.set_status(RecordState.pdf_needs_manual_preparation)
         elif set_prepared:
-            self.set_status(target_state=RecordState.pdf_prepared)
+            self.set_status(RecordState.pdf_prepared)
 
     def run_quality_model(
         self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False
@@ -1548,11 +1417,11 @@ class Record:
         if Fields.MD_PROV not in self.data:
             self.data[Fields.MD_PROV] = {}
 
-        self.check_potential_retracts()
+        self.is_retracted()
 
         if self.masterdata_is_curated():
             if set_prepared:
-                self.set_status(target_state=RecordState.md_prepared)
+                self.set_status(RecordState.md_prepared)
             return
 
         # Apply the checkers (including field key requirements etc.)
@@ -1565,16 +1434,25 @@ class Record:
             return
 
         if self.has_quality_defects():
-            self.set_status(target_state=RecordState.md_needs_manual_preparation)
+            self.set_status(RecordState.md_needs_manual_preparation)
         elif set_prepared:
-            self.set_status(target_state=RecordState.md_prepared)
+            self.set_status(RecordState.md_prepared)
 
-    def check_potential_retracts(self) -> bool:
+    def is_retracted(self) -> bool:
         """Check for potential retracts"""
-        # Note : we retrieved metadata in get_masterdata_from_crossref()
-        if self.data.get("crossmark", "") == "True":
+
+        if Fields.RETRACTED in self.data:
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
+            return True
+
+        # Legacy
+        if (
+            self.data.get("crossmark", "") == "True"
+            or self.data.get("colrev.crossref.crossmark", "") == "True"
+        ):
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="crossmark")
+            self.remove_field(key="colrev.crossref.crossmark")
             return True
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
@@ -1582,104 +1460,12 @@ class Record:
             return True
         return False
 
-    def print_prescreen_record(self) -> None:
-        """Print the record for prescreen operations"""
-
-        ret_str = f"  ID: {self.data['ID']} ({self.data[Fields.ENTRYTYPE]})"
-        ret_str += (
-            f"\n  {Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}"
-            f"\n  {self.data.get(Fields.AUTHOR, 'no-author')}"
-        )
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            ret_str += (
-                f"\n  {self.data.get(Fields.JOURNAL, 'no-journal')} "
-                f"({self.data.get(Fields.YEAR, 'no-year')}) "
-                f"{self.data.get(Fields.VOLUME, 'no-volume')}"
-                f"({self.data.get(Fields.NUMBER, '')})"
-            )
-        elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            ret_str += f"\n  {self.data.get(Fields.BOOKTITLE, 'no-booktitle')}"
-        if Fields.ABSTRACT in self.data:
-            lines = textwrap.wrap(
-                self.data[Fields.ABSTRACT], 100, break_long_words=False
-            )
-            if lines:
-                ret_str += f"\n  Abstract: {lines.pop(0)}\n"
-                ret_str += "\n  ".join(lines) + ""
-
-        if Fields.URL in self.data:
-            ret_str += f"\n  url: {self.data[Fields.URL]}"
-
-        if Fields.FILE in self.data:
-            ret_str += f"\n  file: {self.data[Fields.FILE]}"
-
-        print(ret_str)
-
-    def print_pdf_prep_man(self) -> None:
-        """Print the record for pdf-prep-man operations"""
-        # pylint: disable=too-many-branches
-        ret_str = ""
-        if Fields.FILE in self.data:
-            ret_str += (
-                f"\nfile: {Colors.ORANGE}{self.data[Fields.FILE]}{Colors.END}\n\n"
-            )
-
-        pdf_prep_note = self.get_field_provenance(key=Fields.FILE)
-
-        if "author_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += (
-                f"{Colors.RED}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
-            )
-        else:
-            ret_str += f"{Colors.GREEN}{self.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
-
-        if "title_not_in_first_pages" in pdf_prep_note["note"]:
-            ret_str += (
-                f"{Colors.RED}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
-            )
-        else:
-            ret_str += (
-                f"{Colors.GREEN}{self.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
-            )
-
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            ret_str += (
-                f"{self.data.get(Fields.JOURNAL, 'no-journal')} "
-                f"({self.data.get(Fields.YEAR, 'no-year')}) "
-                f"{self.data.get(Fields.VOLUME, 'no-volume')}"
-                f"({self.data.get(Fields.NUMBER, '')})"
-            )
-            if Fields.PAGES in self.data:
-                if "nr_pages_not_matching" in pdf_prep_note["note"]:
-                    ret_str += (
-                        f", {Colors.RED}pp.{self.data[Fields.PAGES]}{Colors.END}\n"
-                    )
-                else:
-                    ret_str += (
-                        f", pp.{Colors.GREEN}{self.data[Fields.PAGES]}{Colors.END}\n"
-                    )
-            else:
-                ret_str += "\n"
-        elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            ret_str += f"{self.data.get(Fields.BOOKTITLE, 'no-booktitle')}\n"
-        if Fields.ABSTRACT in self.data:
-            lines = textwrap.wrap(
-                self.data[Fields.ABSTRACT], 100, break_long_words=False
-            )
-            ret_str += f"\nAbstract: {lines.pop(0)}\n"
-            ret_str += "\n".join(lines) + "\n"
-
-        if Fields.URL in self.data:
-            ret_str += f"\nurl: {self.data[Fields.URL]}\n"
-
-        print(ret_str)
-
     def to_screen(self) -> bool:
         """
         This method checks if the record is ready to be screened.
         It returns True if the status of the record is 'pdf_prepared', otherwise it returns False.
         """
-        if colrev.record.RecordState.pdf_prepared == self.data[Fields.STATUS]:
+        if RecordState.pdf_prepared == self.data[Fields.STATUS]:
             return True
         if (
             "screening_criteria" in self.data
@@ -1688,685 +1474,11 @@ class Record:
             return True
         return False
 
-
-class PrepRecord(Record):
-    """The PrepRecord class provides a range of convenience functions for record preparation"""
-
     @classmethod
-    def format_author_field(cls, *, input_string: str) -> str:
-        """Format the author field (recognizing first/last names based on HumanName parser)"""
-
-        def mostly_upper_case(input_string: str) -> bool:
-            if not re.match(r"[a-zA-Z]+", input_string):
-                return False
-            input_string = input_string.replace(".", "").replace(",", "")
-            words = input_string.split()
-            return sum(word.isupper() for word in words) / len(words) > 0.8
-
-        input_string = input_string.replace("\n", " ")
-        # DBLP appends identifiers to non-unique authors
-        input_string = str(re.sub(r"[0-9]{4}", "", input_string))
-
-        if " and " in input_string:
-            names = input_string.split(" and ")
-        elif input_string.count(";") > 1:
-            names = input_string.split(";")
-        elif input_string.count(",") > 1:
-            names = input_string.split(" ")
-        else:
-            names = [input_string]
-        author_string = ""
-        for name in names:
-            # Note: https://github.com/derek73/python-nameparser
-            # is very effective (maybe not perfect)
-
-            parsed_name = HumanName(name)
-            if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
-                parsed_name.capitalize(force=True)
-
-            # Fix typical parser error
-            if parsed_name.last == "" and parsed_name.title != "":
-                parsed_name.last = parsed_name.title
-
-            # pylint: disable=chained-comparison
-            # Fix: when first names are abbreviated, nameparser creates errors:
-            if (
-                len(parsed_name.last) <= 3
-                and parsed_name.last.isupper()
-                and len(parsed_name.first) > 3
-                and not parsed_name.first.isupper()
-            ):
-                # in these casees, first and last names are confused
-                author_name_string = parsed_name.first + ", " + parsed_name.last
-            else:
-                parsed_name.string_format = "{last} {suffix}, {first} {middle}"
-                # '{last} {suffix}, {first} ({nickname}) {middle}'
-                author_name_string = str(parsed_name).replace(" , ", ", ")
-                # Note: there are errors for the following author:
-                # JR Cromwell and HK Gardner
-                # The JR is probably recognized as Junior.
-                # Check whether this is fixed in the Grobid name parser
-
-            if author_string == "":
-                author_string = author_name_string
-            else:
-                author_string = author_string + " and " + author_name_string
-
-        return author_string
-
-    @classmethod
-    def _format_authors_string_for_comparison(cls, *, record: Record) -> None:
-        if Fields.AUTHOR not in record.data:
-            return
-        authors = record.data[Fields.AUTHOR]
-        authors = str(authors).lower()
-        authors_string = ""
-        authors = colrev.env.utils.remove_accents(input_str=authors)
-
-        # abbreviate first names
-        # "Webster, Jane" -> "Webster, J"
-        # also remove all special characters and do not include separators (and)
-        for author in authors.split(" and "):
-            if "," in author:
-                last_names = [
-                    word[0] for word in author.split(",")[1].split(" ") if len(word) > 0
-                ]
-                authors_string = (
-                    authors_string
-                    + author.split(",")[0]
-                    + " "
-                    + " ".join(last_names)
-                    + " "
-                )
-            else:
-                authors_string = authors_string + author + " "
-        authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
-        record.data[Fields.AUTHOR] = authors_string
-
-    def container_is_abbreviated(self) -> bool:
-        """Check whether the container title is abbreviated"""
-        if Fields.JOURNAL in self.data:
-            if self.data[Fields.JOURNAL].count(".") > 2:
-                return True
-            if self.data[Fields.JOURNAL].isupper():
-                return True
-        if Fields.BOOKTITLE in self.data:
-            if self.data[Fields.BOOKTITLE].count(".") > 2:
-                return True
-            if self.data[Fields.BOOKTITLE].isupper():
-                return True
-        # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
-        return False
-
-    @classmethod
-    def _abbreviate_container_titles(
+    def get_colrev_pdf_id(
         cls,
-        *,
-        record: colrev.record.PrepRecord,
-        retrieved_record: colrev.record.PrepRecord,
-    ) -> None:
-        def abbreviate_container(*, record: colrev.record.Record, min_len: int) -> None:
-            if Fields.JOURNAL in record.data:
-                record.data[Fields.JOURNAL] = " ".join(
-                    [x[:min_len] for x in record.data[Fields.JOURNAL].split(" ")]
-                )
+        pdf_path: Path,
+    ) -> str:  # pragma: no cover
+        """Generate the colrev_pdf_id"""
 
-        def get_abbrev_container_min_len(*, record: colrev.record.Record) -> int:
-            min_len = -1
-            if Fields.JOURNAL in record.data:
-                min_len = min(
-                    len(x)
-                    for x in record.data[Fields.JOURNAL].replace(".", "").split(" ")
-                )
-            if Fields.BOOKTITLE in record.data:
-                min_len = min(
-                    len(x)
-                    for x in record.data[Fields.BOOKTITLE].replace(".", "").split(" ")
-                )
-            return min_len
-
-        if record.container_is_abbreviated():
-            min_len = get_abbrev_container_min_len(record=record)
-            abbreviate_container(record=retrieved_record, min_len=min_len)
-            abbreviate_container(record=record, min_len=min_len)
-        if retrieved_record.container_is_abbreviated():
-            min_len = get_abbrev_container_min_len(record=retrieved_record)
-            abbreviate_container(record=record, min_len=min_len)
-            abbreviate_container(record=retrieved_record, min_len=min_len)
-
-    @classmethod
-    def _prep_records_for_similarity(
-        cls,
-        *,
-        record: colrev.record.PrepRecord,
-        retrieved_record: colrev.record.PrepRecord,
-    ) -> None:
-        cls._abbreviate_container_titles(
-            record=record, retrieved_record=retrieved_record
-        )
-
-        if Fields.TITLE in record.data:
-            record.data[Fields.TITLE] = record.data[Fields.TITLE][:90]
-        if Fields.TITLE in retrieved_record.data:
-            retrieved_record.data[Fields.TITLE] = retrieved_record.data[Fields.TITLE][
-                :90
-            ]
-
-        if Fields.AUTHOR in record.data:
-            cls._format_authors_string_for_comparison(record=record)
-            record.data[Fields.AUTHOR] = record.data[Fields.AUTHOR][:45]
-        if Fields.AUTHOR in retrieved_record.data:
-            cls._format_authors_string_for_comparison(record=retrieved_record)
-            retrieved_record.data[Fields.AUTHOR] = retrieved_record.data[Fields.AUTHOR][
-                :45
-            ]
-        if not (
-            Fields.VOLUME in record.data and Fields.VOLUME in retrieved_record.data
-        ):
-            record.data[Fields.VOLUME] = "nan"
-            retrieved_record.data[Fields.VOLUME] = "nan"
-        if not (
-            Fields.NUMBER in record.data and Fields.NUMBER in retrieved_record.data
-        ):
-            record.data[Fields.NUMBER] = "nan"
-            retrieved_record.data[Fields.NUMBER] = "nan"
-        if not (Fields.PAGES in record.data and Fields.PAGES in retrieved_record.data):
-            record.data[Fields.PAGES] = "nan"
-            retrieved_record.data[Fields.PAGES] = "nan"
-        # Sometimes, the number of pages is provided (not the range)
-        elif not (
-            "--" in record.data[Fields.PAGES]
-            and "--" in retrieved_record.data[Fields.PAGES]
-        ):
-            record.data[Fields.PAGES] = "nan"
-            retrieved_record.data[Fields.PAGES] = "nan"
-
-        if Fields.YEAR in record.data and Fields.YEAR in retrieved_record.data:
-            if record.data[Fields.YEAR] == FieldValues.FORTHCOMING:
-                record.data[Fields.YEAR] = retrieved_record.data[Fields.YEAR]
-            if retrieved_record.data[Fields.YEAR] == FieldValues.FORTHCOMING:
-                retrieved_record.data[Fields.YEAR] = record.data[Fields.YEAR]
-
-    @classmethod
-    def get_retrieval_similarity(
-        cls,
-        *,
-        record_original: Record,
-        retrieved_record_original: Record,
-        same_record_type_required: bool = True,
-    ) -> float:
-        """Get the retrieval similarity between the record and a retrieved record"""
-
-        if same_record_type_required:
-            if record_original.data.get(
-                Fields.ENTRYTYPE, "a"
-            ) != retrieved_record_original.data.get(Fields.ENTRYTYPE, "b"):
-                return 0.0
-
-        record = record_original.copy_prep_rec()
-        retrieved_record = retrieved_record_original.copy_prep_rec()
-
-        cls._prep_records_for_similarity(
-            record=record, retrieved_record=retrieved_record
-        )
-
-        if "editorial" in record.data.get(Fields.TITLE, "NA").lower():
-            if not all(x in record.data for x in [Fields.VOLUME, Fields.NUMBER]):
-                return 0.0
-
-        similarity = Record.get_record_similarity(
-            record_a=record, record_b=retrieved_record
-        )
-        return similarity
-
-    def format_if_mostly_upper(self, *, key: str, case: str = "sentence") -> None:
-        """Format the field if it is mostly in upper case"""
-
-        if key not in self.data or self.data[key] == FieldValues.UNKNOWN:
-            return
-
-        if colrev.env.utils.percent_upper_chars(self.data[key]) < 0.6:
-            return
-
-        # Note: the truecase package is not very reliable (yet)
-
-        self.data[key] = self.data[key].replace("\n", " ")
-
-        if case == "sentence":
-            self.data[key] = self.data[key].capitalize()
-        elif case == "title":
-            self.data[key] = self.data[key].title()
-        else:
-            raise colrev_exceptions.ParameterError(
-                parameter="case", value=case, options=["sentence", "title"]
-            )
-
-        self.data[key] = prep_utils.capitalize_entities(self.data[key])
-
-    def rename_fields_based_on_mapping(self, *, mapping: dict) -> None:
-        """Convenience function for the prep scripts (to rename fields)"""
-
-        mapping = {k.lower(): v.lower() for k, v in mapping.items()}
-        prior_keys = list(self.data.keys())
-        # Note : warning: do not create a new dict.
-        for key in prior_keys:
-            if key.lower() in mapping:
-                self.rename_field(key=key, new_key=mapping[key.lower()])
-
-    def unify_pages_field(self) -> None:
-        """Unify the format of the page field"""
-        if Fields.PAGES not in self.data:
-            return
-        if not isinstance(self.data[Fields.PAGES], str):
-            return
-        if 1 == self.data[Fields.PAGES].count("-"):
-            self.data[Fields.PAGES] = self.data[Fields.PAGES].replace("-", "--")
-        self.data[Fields.PAGES] = (
-            self.data[Fields.PAGES]
-            .replace("–", "--")
-            .replace("----", "--")
-            .replace(" -- ", "--")
-            .rstrip(".")
-        )
-        if re.match(r"^\d+\-\-\d+$", self.data[Fields.PAGES]):
-            from_page, to_page = re.findall(r"(\d+)", self.data[Fields.PAGES])
-            if len(from_page) > len(to_page):
-                self.data[Fields.PAGES] = (
-                    f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
-                )
-
-    def fix_name_particles(self) -> None:
-        """Fix the name particles in the author field"""
-        if Fields.AUTHOR not in self.data:
-            return
-        names = self.data[Fields.AUTHOR].split(" and ")
-        for ind, name in enumerate(names):
-            for prefix in [
-                "van den",
-                "von den",
-                "van der",
-                "von der",
-                "vom",
-                "van",
-                "von",
-            ]:
-                if name.startswith(f"{prefix} "):
-                    if "," in name:
-                        name = "{" + name.replace(", ", "}, ")
-                    else:
-                        name = "{" + name + "}"
-                if name.endswith(f" {prefix}"):
-                    if "," in name:
-                        name = (
-                            "{"
-                            + prefix
-                            + " "
-                            + name[: -len(prefix)].replace(", ", "}, ")
-                        )
-                    else:
-                        name = "{" + prefix + " " + name[: -len(prefix)] + "}"
-
-                names[ind] = name
-        self.data[Fields.AUTHOR] = " and ".join(names)
-
-    def preparation_save_condition(self) -> bool:
-        """Check whether the save condition for the prep operation is given"""
-
-        if self.data.get(Fields.STATUS, "NA") in [
-            RecordState.rev_prescreen_excluded,
-            RecordState.md_prepared,
-        ]:
-            return True
-
-        if any(
-            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
-            for x in self.data.get(Fields.MD_PROV, {}).values()
-        ):
-            return True
-
-        return False
-
-    def preparation_break_condition(self) -> bool:
-        """Check whether the break condition for the prep operation is given"""
-        if any(
-            DefectCodes.RECORD_NOT_IN_TOC in x["note"]
-            for x in self.data.get(Fields.MD_PROV, {}).values()
-        ):
-            return True
-
-        if self.data.get(Fields.STATUS, "NA") in [
-            RecordState.rev_prescreen_excluded,
-        ]:
-            return True
-        return False
-
-    def status_to_prepare(self) -> bool:
-        """Check whether the record needs to be prepared"""
-        return self.data.get(Fields.STATUS, "NA") in [
-            RecordState.md_needs_manual_preparation,
-            RecordState.md_imported,
-            RecordState.md_prepared,
-        ]
-
-
-class RecordState(Enum):
-    """The possible RecordStates stored in the colrev_status field
-    (corresponding to the RecordStateModel)"""
-
-    # pylint: disable=invalid-name
-
-    # without the md_retrieved state, we could not display the load transition
-    md_retrieved = 1
-    """Record is retrieved and stored in the ./search directory"""
-    md_imported = 2
-    """Record is imported into the RECORDS_FILE"""
-    md_needs_manual_preparation = 3
-    """Record requires manual preparation
-    (colrev_masterdata_provenance provides hints)"""
-    md_prepared = 4
-    """Record is prepared (no missing or incomplete fields, inconsistencies checked)"""
-    md_processed = 5
-    """Record has been checked for duplicate associations
-    with any record in RecordState md_processed or later"""
-    rev_prescreen_excluded = 6
-    """Record was excluded in the prescreen (based on titles/abstracts)"""
-    rev_prescreen_included = 7
-    """Record was included in the prescreen (based on titles/abstracts)"""
-    pdf_needs_manual_retrieval = 8
-    """Record marked for manual PDF retrieval"""
-    pdf_imported = 9
-    """PDF imported and marked for preparation"""
-    pdf_not_available = 10
-    """PDF is not available"""
-    pdf_needs_manual_preparation = 11
-    """PDF marked for manual preparation"""
-    pdf_prepared = 12
-    """PDF prepared"""
-    rev_excluded = 13
-    """Record excluded in screen (full-text)"""
-    rev_included = 14
-    """Record included in screen (full-text)"""
-    rev_synthesized = 15
-    """Record synthesized"""
-    # Note : TBD: rev_coded
-
-    def __str__(self) -> str:
-        return f"{self.name}"
-
-    def __lt__(self, other) -> bool:  # type: ignore
-        if self.__class__ == RecordState and other.__class__ == RecordState:
-            return self.value < other.value
-        raise NotImplementedError
-
-    @classmethod
-    def get_non_processed_states(cls) -> list:
-        """Get the states that correspond to not-yet-processed"""
-        return [
-            colrev.record.RecordState.md_retrieved,
-            colrev.record.RecordState.md_imported,
-            colrev.record.RecordState.md_prepared,
-            colrev.record.RecordState.md_needs_manual_preparation,
-        ]
-
-    @classmethod
-    def get_post_x_states(cls, *, state: RecordState) -> typing.Set[RecordState]:
-        """Get the states after state x (passed as a parameter)"""
-        if state == RecordState.md_prepared:
-            return {
-                RecordState.md_prepared,
-                RecordState.md_processed,
-                RecordState.rev_prescreen_included,
-                RecordState.rev_prescreen_excluded,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-        if state == RecordState.md_processed:
-            return {
-                RecordState.md_processed,
-                RecordState.rev_prescreen_included,
-                RecordState.rev_prescreen_excluded,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-        if state == RecordState.rev_prescreen_included:
-            return {
-                RecordState.rev_prescreen_included,
-                RecordState.rev_prescreen_excluded,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-        if state == RecordState.pdf_prepared:
-            return {
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-
-        if state == RecordState.rev_included:
-            return {
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            }
-
-        # pylint: disable=no-member
-        raise colrev_exceptions.ParameterError(
-            parameter="state", value="state", options=cls._member_names_
-        )
-
-
-non_processing_transitions = [
-    [
-        {
-            "trigger": "format",
-            "source": state,
-            "dest": state,
-        },
-        {
-            "trigger": "explore",
-            "source": state,
-            "dest": state,
-        },
-        {
-            "trigger": "check",
-            "source": state,
-            "dest": state,
-        },
-    ]
-    for state in list(RecordState)
-]
-
-
-class RecordStateModel:
-    """The RecordStateModel describes transitions between RecordStates"""
-
-    transitions = [
-        {
-            "trigger": Operations.LOAD,
-            "source": RecordState.md_retrieved,
-            "dest": RecordState.md_imported,
-        },
-        {
-            "trigger": Operations.PREP,
-            "source": RecordState.md_imported,
-            "dest": RecordState.md_needs_manual_preparation,
-        },
-        {
-            "trigger": Operations.PREP,
-            "source": RecordState.md_imported,
-            "dest": RecordState.md_prepared,
-        },
-        {
-            "trigger": Operations.PREP_MAN,
-            "source": RecordState.md_needs_manual_preparation,
-            "dest": RecordState.md_prepared,
-        },
-        {
-            "trigger": Operations.DEDUPE,
-            "source": RecordState.md_prepared,
-            "dest": RecordState.md_processed,
-        },
-        {
-            "trigger": Operations.PRESCREEN,
-            "source": RecordState.md_processed,
-            "dest": RecordState.rev_prescreen_excluded,
-        },
-        {
-            "trigger": Operations.PRESCREEN,
-            "source": RecordState.md_processed,
-            "dest": RecordState.rev_prescreen_included,
-        },
-        {
-            "trigger": Operations.PDF_GET,
-            "source": RecordState.rev_prescreen_included,
-            "dest": RecordState.pdf_imported,
-        },
-        {
-            "trigger": Operations.PDF_GET,
-            "source": RecordState.rev_prescreen_included,
-            "dest": RecordState.pdf_needs_manual_retrieval,
-        },
-        {
-            "trigger": Operations.PDF_GET_MAN,
-            "source": RecordState.pdf_needs_manual_retrieval,
-            "dest": RecordState.pdf_not_available,
-        },
-        {
-            "trigger": Operations.PDF_GET_MAN,
-            "source": RecordState.pdf_needs_manual_retrieval,
-            "dest": RecordState.pdf_imported,
-        },
-        {
-            "trigger": Operations.PDF_PREP,
-            "source": RecordState.pdf_imported,
-            "dest": RecordState.pdf_needs_manual_preparation,
-        },
-        {
-            "trigger": Operations.PDF_PREP,
-            "source": RecordState.pdf_imported,
-            "dest": RecordState.pdf_prepared,
-        },
-        {
-            "trigger": Operations.PDF_PREP_MAN,
-            "source": RecordState.pdf_needs_manual_preparation,
-            "dest": RecordState.pdf_prepared,
-        },
-        {
-            "trigger": Operations.SCREEN,
-            "source": RecordState.pdf_prepared,
-            "dest": RecordState.rev_excluded,
-        },
-        {
-            "trigger": Operations.SCREEN,
-            "source": RecordState.pdf_prepared,
-            "dest": RecordState.rev_included,
-        },
-        {
-            "trigger": Operations.DATA,
-            "source": RecordState.rev_included,
-            "dest": RecordState.rev_synthesized,
-        },
-    ]
-
-    transitions_non_processing = [
-        item for sublist in non_processing_transitions for item in sublist
-    ]
-
-    # from transitions import Machine
-    # def __init__(
-    #     self,
-    #     *,
-    #     state: RecordState,
-    # ) -> None:
-    #     self.state = state
-
-    #     self.machine = Machine(
-    #         model=self,
-    #         states=RecordState,
-    #         transitions=self.transitions + self.transitions_non_processing,
-    #         initial=self.state,
-    #     )
-
-    @classmethod
-    def get_valid_transitions(cls, *, state: RecordState) -> set:
-        """Get the list of valid transitions"""
-        logging.getLogger("transitions").setLevel(logging.WARNING)
-        return set({x["trigger"] for x in cls.transitions if x["source"] == state})
-
-    @classmethod
-    def get_preceding_states(cls, *, state: RecordState) -> set:
-        """Get the states preceding the state that is given as a parameter"""
-
-        logging.getLogger("transitions").setLevel(logging.WARNING)
-        preceding_states: set[RecordState] = set()
-        added = True
-        while added:
-            preceding_states_size = len(preceding_states)
-            for transition in RecordStateModel.transitions:
-                if (
-                    transition["dest"] in preceding_states
-                    or state == transition["dest"]
-                ):
-                    preceding_states.add(transition["source"])  # type: ignore
-            if preceding_states_size == len(preceding_states):
-                added = False
-        return preceding_states
-
-    @classmethod
-    def check_operation_precondition(
-        cls, *, operation: colrev.operation.Operation
-    ) -> None:
-        """Check the preconditions for an operation"""
-
-        def get_states_set() -> set:
-            if not operation.review_manager.dataset.records_file.is_file():
-                return set()
-            records_headers = operation.review_manager.dataset.load_records_dict(
-                header_only=True
-            )
-            record_header_list = list(records_headers.values())
-
-            return {el[Fields.STATUS] for el in record_header_list}
-
-        if operation.review_manager.settings.project.delay_automated_processing:
-            start_states: list[str] = [
-                str(x["source"])
-                for x in colrev.record.RecordStateModel.transitions
-                if str(operation.type) == x["trigger"]
-            ]
-            state = colrev.record.RecordState[start_states[0]]
-
-            cur_state_list = get_states_set()
-            # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")
-            # self.review_manager.logger.debug(f"precondition: {self.state}")
-            required_absent = cls.get_preceding_states(state=state)
-            # self.review_manager.logger.debug(f"required_absent: {required_absent}")
-            intersection = cur_state_list.intersection(required_absent)
-            if (
-                len(cur_state_list) == 0
-                and not operation.type.name == "load"  # type: ignore
-            ):
-                raise colrev_exceptions.NoRecordsError()
-            if len(intersection) != 0:
-                raise colrev_exceptions.ProcessOrderViolation(
-                    operation.type.name, str(state), list(intersection)
-                )
+        return colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)

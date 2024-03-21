@@ -22,6 +22,8 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 
@@ -48,22 +50,16 @@ class Dedupe(colrev.operation.Operation):
             operations_type=colrev.operation.OperationsType.dedupe,
             notify_state_transition_operation=notify_state_transition_operation,
         )
+        self.dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)
+        self.non_dupe_file_xlsx = self.dedupe_dir / self.NON_DUPLICATE_FILE_XLSX
+        self.non_dupe_file_txt = self.dedupe_dir / self.NON_DUPLICATE_FILE_TXT
+        self.dupe_file = self.dedupe_dir / self.DUPLICATES_TO_VALIDATE
 
-        self.non_dupe_file_xlsx = (
-            self.review_manager.dedupe_dir / self.NON_DUPLICATE_FILE_XLSX
-        )
-        self.non_dupe_file_txt = (
-            self.review_manager.dedupe_dir / self.NON_DUPLICATE_FILE_TXT
-        )
-        self.dupe_file = self.review_manager.dedupe_dir / self.DUPLICATES_TO_VALIDATE
-
-        self.same_source_merge_file = (
-            self.review_manager.dedupe_dir / self.SAME_SOURCE_MERGE_FILE
-        )
+        self.same_source_merge_file = self.dedupe_dir / self.SAME_SOURCE_MERGE_FILE
         self.prevented_same_source_merge_file = (
-            self.review_manager.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
+            self.dedupe_dir / self.PREVENTED_SAME_SOURCE_MERGE_FILE
         )
-        self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
+        self.dedupe_dir.mkdir(exist_ok=True, parents=True)
 
     @classmethod
     def _dfs(cls, node: str, graph: dict, visited: dict, component: list) -> None:
@@ -149,26 +145,26 @@ class Dedupe(colrev.operation.Operation):
                 dupe_record = rec_1
 
         # 2. If a record is md_prepared, use it as the dupe record
-        elif rec_1[Fields.STATUS] == colrev.record.RecordState.md_prepared:
+        elif rec_1[Fields.STATUS] == RecordState.md_prepared:
             main_record = rec_2
             dupe_record = rec_1
-        elif rec_2[Fields.STATUS] == colrev.record.RecordState.md_prepared:
+        elif rec_2[Fields.STATUS] == RecordState.md_prepared:
             main_record = rec_1
             dupe_record = rec_2
 
         # 3. If a record is md_processed, use the other record as the dupe record
         # -> during the fix_errors procedure, records are in md_processed
         # and beyond.
-        elif rec_1[Fields.STATUS] == colrev.record.RecordState.md_processed:
+        elif rec_1[Fields.STATUS] == RecordState.md_processed:
             main_record = rec_1
             dupe_record = rec_2
-        elif rec_2[Fields.STATUS] == colrev.record.RecordState.md_processed:
+        elif rec_2[Fields.STATUS] == RecordState.md_processed:
             main_record = rec_2
             dupe_record = rec_1
 
         # 4. Merge into curated record (otherwise)
         else:
-            if colrev.record.Record(data=rec_2).masterdata_is_curated():
+            if colrev.record.Record(rec_2).masterdata_is_curated():
                 main_record = rec_2
                 dupe_record = rec_1
             else:
@@ -267,10 +263,7 @@ class Dedupe(colrev.operation.Operation):
             duplicate_ids = [x.replace(record_id, "-") for x in duplicate_ids]
             if record_id not in records:
                 continue
-            if (
-                colrev.record.RecordState.md_prepared
-                == records[record_id][Fields.STATUS]
-            ):
+            if RecordState.md_prepared == records[record_id][Fields.STATUS]:
                 if complete_dedupe:
                     self.review_manager.logger.info(
                         f" {Colors.GREEN}{record_id} ({'|'.join(duplicate_ids)}) ".ljust(
@@ -311,14 +304,12 @@ class Dedupe(colrev.operation.Operation):
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
             for record_dict in records.values():
-                if record_dict[Fields.STATUS] == colrev.record.RecordState.md_prepared:
-                    record = colrev.record.Record(data=record_dict)
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_processed
-                    )
+                if record_dict[Fields.STATUS] == RecordState.md_prepared:
+                    record = colrev.record.Record(record_dict)
+                    record.set_status(RecordState.md_processed)
                     set_to_md_processed.append(record.data[Fields.ID])
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         return set_to_md_processed
 
     def _skip_merge_condition(
@@ -425,7 +416,7 @@ class Dedupe(colrev.operation.Operation):
                 )
                 dupe_record.data["MOVED_DUPE_ID"] = main_record.data[Fields.ID]
                 main_record.merge(
-                    merging_record=dupe_record,
+                    dupe_record,
                     default_source="merged",
                     preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
                 )
@@ -472,8 +463,8 @@ class Dedupe(colrev.operation.Operation):
                     rec_1, rec_2
                 )
 
-                main_record = colrev.record.Record(data=main_record_dict)
-                dupe_record = colrev.record.Record(data=dupe_record_dict)
+                main_record = colrev.record.Record(main_record_dict)
+                dupe_record = colrev.record.Record(dupe_record_dict)
 
                 yield (main_record, dupe_record)
 
@@ -528,9 +519,7 @@ class Dedupe(colrev.operation.Operation):
                     if any(orig in origins for orig in hist_rec.get(Fields.ORIGIN, [])):
                         # TODO Avoid ID conflicts
                         assert hist_rec[Fields.ID] not in unmerged_records
-                        hist_rec.update(
-                            {Fields.STATUS: colrev.record.RecordState.md_processed}
-                        )
+                        hist_rec.update({Fields.STATUS: RecordState.md_processed})
                         print(f"add historical record: {hist_rec[Fields.ID]}")
                         unmerged_records[hist_rec[Fields.ID]] = hist_rec
                         unmerged_rids.append(rid)
@@ -570,7 +559,7 @@ class Dedupe(colrev.operation.Operation):
         records = self._revert_merge_for_records(records, ids_origins)
         print(f"After revert: {records.keys()}")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     def fix_errors(self, *, false_positives: list, false_negatives: list) -> None:
         """Fix lists of errors"""
@@ -579,7 +568,7 @@ class Dedupe(colrev.operation.Operation):
         self.apply_merges(id_sets=false_negatives, complete_dedupe=False)
 
         if self.review_manager.dataset.records_changed():
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Validate and correct duplicates",
                 manual_author=True,
             )
@@ -647,7 +636,7 @@ class Dedupe(colrev.operation.Operation):
 
         if apply:
             self.apply_merges(id_sets=id_sets)
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Merge records (identical global IDs)"
             )
 
@@ -726,11 +715,9 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.logger.info("Skipping prescreen/including all records")
             records = self.review_manager.dataset.load_records_dict()
             for record_dict in records.values():
-                record = colrev.record.Record(data=record_dict)
-                if colrev.record.RecordState.md_processed == record.data[Fields.STATUS]:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_prescreen_included
-                    )
+                record = colrev.record.Record(record_dict)
+                if RecordState.md_processed == record.data[Fields.STATUS]:
+                    record.set_status(RecordState.rev_prescreen_included)
 
-            self.review_manager.dataset.save_records_dict(records=records)
-            self.review_manager.create_commit(msg="Skip prescreen/include all")
+            self.review_manager.dataset.save_records_dict(records)
+            self.review_manager.dataset.create_commit(msg="Skip prescreen/include all")

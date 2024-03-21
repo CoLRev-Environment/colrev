@@ -5,7 +5,6 @@ from __future__ import annotations
 import dataclasses
 import json
 import typing
-import warnings
 from dataclasses import asdict
 from dataclasses import dataclass
 from enum import Enum
@@ -15,12 +14,11 @@ import dacite
 from dacite import from_dict
 from dacite.exceptions import MissingValueError
 from dacite.exceptions import WrongTypeError
-from dataclasses_jsonschema import FieldEncoder
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-
+from colrev.constants import Filepaths
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
@@ -41,12 +39,6 @@ class IDPattern(Enum):
         """Get the options"""
         # pylint: disable=no-member
         return cls._member_names_
-
-    @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        """Get the field details"""
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
 
 
 @dataclass
@@ -82,12 +74,6 @@ class ShareStatReq(Enum):
     completed = "completed"
 
     @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        """Get the field details"""
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
-
-    @classmethod
     def get_options(cls) -> typing.List[str]:
         """Get the options"""
         # pylint: disable=no-member
@@ -116,8 +102,7 @@ class ProjectSettings(JsonSchemaMixin):
 
     def __str__(self) -> str:
         project_str = f"- review ({self.review_type}):"
-        if self.title:
-            project_str += f"\n- title: {self.title}"
+        project_str += f"\n- title: {self.title}"
         return project_str
 
 
@@ -135,12 +120,6 @@ class SearchType(Enum):
     FILES = "FILES"  # Replaces PDFS
     OTHER = "OTHER"
     MD = "MD"
-
-    @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        """Get the field details"""
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
@@ -202,15 +181,18 @@ class SearchSource(JsonSchemaMixin):
         """Get the corresponding origin prefix"""
         assert not any(x in str(self.filename.name) for x in [";", "/"])
         return (
-            str(self.filename.name)
-            .replace(str(colrev.review_manager.ReviewManager.SEARCHDIR_RELATIVE), "")
-            .lstrip("/")
+            str(self.filename.name).replace(str(Filepaths.SEARCH_DIR), "").lstrip("/")
         )
 
     def is_md_source(self) -> bool:
         """Check whether the source is a metadata source (for preparation)"""
 
         return str(self.filename.name).startswith("md_")
+
+    def is_curated_source(self) -> bool:
+        """Check whether the source is a curated source (for preparation)"""
+
+        return self.get_origin_prefix() == "md_curated.bib"
 
     def get_query(self) -> str:
         """Get the query filepath"""
@@ -234,45 +216,31 @@ class SearchSource(JsonSchemaMixin):
 
         return exported_dict
 
-    def get_feed(
+    def get_api_feed(
         self,
         review_manager: colrev.review_manager.ReviewManager,
         source_identifier: str,
         update_only: bool,
-    ) -> colrev.ops.search_feed.GeneralOriginFeed:
+        prep_mode: bool = False,
+    ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
         # pylint: disable=import-outside-toplevel
         # pylint: disable=cyclic-import
         # pylint: disable=redefined-outer-name
-        import colrev.ops.search_feed
+        import colrev.ops.search_api_feed
 
-        return colrev.ops.search_feed.GeneralOriginFeed(
+        return colrev.ops.search_api_feed.SearchAPIFeed(
             review_manager=review_manager,
-            search_source=self,
             source_identifier=source_identifier,
+            search_source=self,
             update_only=update_only,
+            prep_mode=prep_mode,
         )
 
     def __str__(self) -> str:
-        formatted_str = ""
-        if self.search_type == SearchType.MD:
-            formatted_str += "md: "
-        elif self.search_type == SearchType.FILES:
-            formatted_str += "files: "
-        elif self.search_type == SearchType.DB:
-            formatted_str += "db: "
-        elif self.search_type == SearchType.API:
-            formatted_str += "api: "
-        elif self.search_type == SearchType.OTHER:
-            formatted_str += "other: "
-        elif self.search_type == SearchType.BACKWARD_SEARCH:
-            formatted_str += "backward-search: "
-        elif self.search_type == SearchType.FORWARD_SEARCH:
-            formatted_str += "forward-search: "
-        elif self.search_type == SearchType.TOC:
-            formatted_str += "toc: "
-
-        formatted_str += f"{self.endpoint} >> {self.filename}"
+        formatted_str = (
+            f"{str(self.search_type).lower()}: {self.endpoint} >> {self.filename}"
+        )
         if self.search_parameters:
             formatted_str += f"\n   search parameters:   {self.search_parameters}"
         if self.comment:
@@ -289,17 +257,6 @@ class SearchSettings(JsonSchemaMixin):
 
     def __str__(self) -> str:
         return f"- retrieve_forthcoming: {self.retrieve_forthcoming}"
-
-
-# Load
-
-
-@dataclass
-class LoadSettings(JsonSchemaMixin):
-    """Load settings"""
-
-    def __str__(self) -> str:
-        return ""
 
 
 # Prep
@@ -387,12 +344,6 @@ class PDFPathType(Enum):
     copy = "copy"
 
     @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        """Get the field details"""
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
-
-    @classmethod
     def get_options(cls) -> typing.List[str]:
         """Get the options"""
         # pylint: disable=no-member
@@ -454,12 +405,6 @@ class ScreenCriterionType(Enum):
     # pylint: disable=invalid-name
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
-
-    @classmethod
-    def get_field_details(cls) -> typing.Dict:
-        """Get the field details"""
-        # pylint: disable=no-member
-        return {"options": cls._member_names_, "type": "selection"}
 
     @classmethod
     def get_options(cls) -> typing.List[str]:
@@ -532,7 +477,6 @@ class Settings(JsonSchemaMixin):
     project: ProjectSettings
     sources: typing.List[SearchSource]
     search: SearchSettings
-    load: LoadSettings
     prep: PrepSettings
     dedupe: DedupeSettings
     prescreen: PrescreenSettings
@@ -566,11 +510,9 @@ class Settings(JsonSchemaMixin):
         return False
 
     def __str__(self) -> str:
-        sources_str = (
-            "\n- "
-            + "\n- ".join([str(s) for s in self.sources if s.is_md_source()])
-            + "\n- "
-            + "\n- ".join([str(s) for s in self.sources if not s.is_md_source()])
+        sources_str = "\n- " + "\n- ".join(
+            [str(s) for s in self.sources if s.is_md_source()]
+            + [str(s) for s in self.sources if not s.is_md_source()]
         )
 
         return (
@@ -579,9 +521,6 @@ class Settings(JsonSchemaMixin):
             + str(self.search)
             + "\nSources"
             + sources_str
-            # Note : no settings yet
-            # + "\nLoad\n"
-            # + str(self.load)
             + "\nPreparation\n"
             + str(self.prep)
             + "\nDedupe\n"
@@ -598,74 +537,9 @@ class Settings(JsonSchemaMixin):
             + str(self.data)
         )
 
-    @classmethod
-    def get_settings_schema(cls) -> dict:
-        """Get the json-schema for the settings"""
 
-        class PathField(FieldEncoder):
-            """JsonSchemaMixin encoder for Path fields"""
-
-            # pylint: disable=too-few-public-methods
-            @property
-            def json_schema(self) -> dict:
-                """Return the json schema"""
-                return {"type": "path"}
-
-        JsonSchemaMixin.register_field_encoders({Path: PathField()})
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            schema = cls.json_schema()
-
-        sdefs = schema["definitions"]
-
-        # pylint: disable=unused-variable
-        sdefs["PrepRound"]["properties"]["prep_package_endpoints"] = {  # type: ignore # noqa: F841
-            "package_endpoint_type": "prep",
-            "type": "package_endpoint_array",
-        }
-        sdefs["PrepSettings"]["properties"]["prep_man_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "prep_man",
-            "type": "package_endpoint_array",
-        }
-        sdefs["DedupeSettings"]["properties"]["dedupe_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "dedupe",
-            "type": "package_endpoint_array",
-        }
-        sdefs["PrescreenSettings"]["properties"]["prescreen_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "prescreen",
-            "type": "package_endpoint_array",
-        }
-        sdefs["PDFGetSettings"]["properties"]["pdf_get_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "pdf_get",
-            "type": "package_endpoint_array",
-        }
-        sdefs["PDFGetSettings"]["properties"]["pdf_get_man_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "pdf_get_man",
-            "type": "package_endpoint_array",
-        }
-        sdefs["PDFPrepSettings"]["properties"]["pdf_prep_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "pdf_prep",
-            "type": "package_endpoint_array",
-        }
-        sdefs["PDFPrepSettings"]["properties"]["pdf_prep_man_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "pdf_prep_man",
-            "type": "package_endpoint_array",
-        }
-        sdefs["ScreenSettings"]["properties"]["screen_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "screen",
-            "type": "package_endpoint_array",
-        }
-        sdefs["DataSettings"]["properties"]["data_package_endpoints"] = {  # type: ignore
-            "package_endpoint_type": "data",
-            "type": "package_endpoint_array",
-        }
-
-        return schema
-
-
-def _add_missing_attributes(loaded_dict: dict) -> None:
-    # TODO : replace dict with defaults if values are missing (to avoid exceptions)
+def _add_missing_attributes(loaded_dict: dict) -> None:  # pragma: no cover
+    # replace dict with defaults if values are missing (to avoid exceptions)
     if "defects_to_ignore" not in loaded_dict["pdf_get"]:
         loaded_dict["pdf_get"]["defects_to_ignore"] = []
 
@@ -690,10 +564,13 @@ def _load_settings_from_dict(*, loaded_dict: dict) -> Settings:
             msg = f"Non-unique source filename(s): {', '.join(non_unique)}"
             raise colrev_exceptions.InvalidSettingsError(msg=msg, fix_per_upgrade=False)
 
-    except (ValueError, MissingValueError, WrongTypeError, AssertionError) as exc:
-        raise colrev_exceptions.InvalidSettingsError(
-            msg=str(exc)
-        ) from exc  # pragma: no cover
+    except (
+        ValueError,
+        MissingValueError,
+        WrongTypeError,
+        AssertionError,
+    ) as exc:  # pragma: no cover
+        raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 
     return settings
 
@@ -719,4 +596,4 @@ def save_settings(*, review_manager: colrev.review_manager.ReviewManager) -> Non
 
     with open("settings.json", "w", encoding="utf-8") as outfile:
         json.dump(exported_dict, outfile, indent=4)
-    review_manager.dataset.add_changes(path=Path("settings.json"))
+    review_manager.dataset.add_changes(Path("settings.json"))

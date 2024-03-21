@@ -27,10 +27,19 @@ class ContainerTitleAbbreviatedChecker:
             ):
                 continue
 
-            if len(record.data[key]) < 6 and record.data[key].isupper():
+            if self.__container_title_abbreviated(record=record, key=key):
                 record.add_masterdata_provenance_note(key=key, note=self.msg)
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
+
+    def __container_title_abbreviated(
+        self, *, record: colrev.record.Record, key: str
+    ) -> bool:
+        if len(record.data[key]) < 6 and record.data[key].isupper():
+            return True
+        if key == Fields.BOOKTITLE and "Proc." in record.data[Fields.BOOKTITLE]:
+            return True
+        return False
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

@@ -15,7 +15,7 @@ class SearchSources:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         package_manager = review_manager.get_package_manager()
-        check_operation = colrev.operation.CheckOperation(review_manager=review_manager)
+        check_operation = colrev.operation.CheckOperation(review_manager)
 
         self.all_available_packages_names = package_manager.discover_packages(
             package_type=colrev.env.package_manager.PackageEndpointType.search_source,

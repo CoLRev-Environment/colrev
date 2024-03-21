@@ -12,6 +12,7 @@ import colrev.ops.built_in.prescreen.prescreen_table
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 class Prescreen(colrev.operation.Operation):
@@ -58,14 +59,12 @@ class Prescreen(colrev.operation.Operation):
 
     def _include_all_in_prescreen_precondition(self, *, records: dict) -> bool:
         if not [
-            r
-            for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_processed
+            r for r in records.values() if r[Fields.STATUS] == RecordState.md_processed
         ]:
             if [
                 r
                 for r in records.values()
-                if r[Fields.STATUS] == colrev.record.RecordState.pdf_prepared
+                if r[Fields.STATUS] == RecordState.pdf_prepared
             ]:
                 self.review_manager.logger.warning(
                     "No records to prescreen. Use "
@@ -91,7 +90,7 @@ class Prescreen(colrev.operation.Operation):
         selected_record_ids = [
             r[Fields.ID]
             for r in records.values()
-            if colrev.record.RecordState.md_processed == r[Fields.STATUS]
+            if RecordState.md_processed == r[Fields.STATUS]
         ]
 
         endpoint = (
@@ -118,9 +117,9 @@ class Prescreen(colrev.operation.Operation):
             if record_id not in records:
                 self.review_manager.logger.info(f" not found: {record_id}")
                 continue
-            record = colrev.record.Record(data=records[record_id])
+            record = colrev.record.Record(records[record_id])
             if (
-                record.data[Fields.STATUS] != colrev.record.RecordState.md_processed
+                record.data[Fields.STATUS] != RecordState.md_processed
                 and not self.review_manager.force_mode
             ):
                 self.review_manager.logger.info(
@@ -128,21 +127,17 @@ class Prescreen(colrev.operation.Operation):
                 )
                 continue
             if include:
-                record.set_status(
-                    target_state=colrev.record.RecordState.rev_prescreen_included
-                )
+                record.set_status(RecordState.rev_prescreen_included)
             else:
-                record.set_status(
-                    target_state=colrev.record.RecordState.rev_prescreen_excluded
-                )
+                record.set_status(RecordState.rev_prescreen_excluded)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         msg = f"Pre-screen (exclude {ids})"
         if include:
             msg = f"Pre-screen (include {ids})"
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg=msg,
             manual_author=False,
         )
@@ -160,14 +155,14 @@ class Prescreen(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.md_processed == x[Fields.STATUS]
+                if RecordState.md_processed == x[Fields.STATUS]
             ]
         )
         pad = 0
         if record_header_list:
             pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 40)
         items = self.review_manager.dataset.read_next_record(
-            conditions=[{Fields.STATUS: colrev.record.RecordState.md_processed}]
+            conditions=[{Fields.STATUS: RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
 
@@ -205,7 +200,7 @@ class Prescreen(colrev.operation.Operation):
             with open("custom_prescreen_script.py", "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_prescreen_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_prescreen_script.py"))
 
         self.review_manager.settings.prescreen.prescreen_package_endpoints.append(
             {"endpoint": "custom_prescreen_script"}
@@ -216,29 +211,29 @@ class Prescreen(colrev.operation.Operation):
         # pylint: disable=duplicate-code
         self.review_manager.logger.info("Prescreen-including all records")
         for record_dict in records.values():
-            if record_dict[Fields.STATUS] == colrev.record.RecordState.md_processed:
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(
-                    target_state=colrev.record.RecordState.rev_prescreen_included
-                )
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+            if record_dict[Fields.STATUS] == RecordState.md_processed:
+                record = colrev.record.Record(record_dict)
+                record.set_status(RecordState.rev_prescreen_included)
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
         )
 
     def _print_stats(self, *, selected_record_ids: list) -> None:
-        records = self.review_manager.dataset.load_records_dict(header_only=True)
+        records_headers = self.review_manager.dataset.load_records_dict(
+            header_only=True
+        )
         prescreen_excluded = [
             r[Fields.ID]
-            for r in records.values()
-            if colrev.record.RecordState.rev_prescreen_excluded == r[Fields.STATUS]
+            for r in records_headers.values()
+            if RecordState.rev_prescreen_excluded == r[Fields.STATUS]
             and r[Fields.ID] in selected_record_ids
         ]
         prescreen_included = [
             r[Fields.ID]
-            for r in records.values()
-            if colrev.record.RecordState.rev_prescreen_included == r[Fields.STATUS]
+            for r in records_headers.values()
+            if RecordState.rev_prescreen_included == r[Fields.STATUS]
             and r[Fields.ID] in selected_record_ids
         ]
 
@@ -247,7 +242,7 @@ class Prescreen(colrev.operation.Operation):
 
         print()
         self.review_manager.logger.info("Statistics")
-        for record_dict in records.values():
+        for record_dict in records_headers.values():
             if record_dict[Fields.ID] in prescreen_excluded:
                 self.review_manager.logger.info(
                     f" {record_dict['ID']}".ljust(41)
@@ -286,29 +281,25 @@ class Prescreen(colrev.operation.Operation):
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
-            record.set_status(
-                target_state=colrev.record.RecordState.rev_prescreen_included
-            )
+            record.set_status(RecordState.rev_prescreen_included)
             self.review_manager.dataset.save_records_dict(
-                records={record.data[Fields.ID]: record.get_data()}, partial=True
+                {record.data[Fields.ID]: record.get_data()}, partial=True
             )
 
         else:
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
-            record.set_status(
-                target_state=colrev.record.RecordState.rev_prescreen_excluded
-            )
+            record.set_status(RecordState.rev_prescreen_excluded)
             self.review_manager.dataset.save_records_dict(
-                records={record.data[Fields.ID]: record.get_data()}, partial=True
+                {record.data[Fields.ID]: record.get_data()}, partial=True
             )
 
     def _auto_include(self, *, records: dict) -> list:
         selected_auto_include_ids = [
             r[Fields.ID]
             for r in records.values()
-            if colrev.record.RecordState.md_processed == r[Fields.STATUS]
+            if RecordState.md_processed == r[Fields.STATUS]
             and r.get("include_flag", "0") == "1"
         ]
         if not selected_auto_include_ids:
@@ -320,7 +311,7 @@ class Prescreen(colrev.operation.Operation):
             if record_dict[Fields.ID] not in selected_auto_include_ids:
                 continue
             self.prescreen(
-                record=colrev.record.Record(data=record_dict),
+                record=colrev.record.Record(record_dict),
                 prescreen_inclusion=True,
             )
         return selected_auto_include_ids
@@ -375,7 +366,7 @@ class Prescreen(colrev.operation.Operation):
             selected_record_ids = [
                 r[Fields.ID]
                 for r in records.values()
-                if colrev.record.RecordState.md_processed == r[Fields.STATUS]
+                if RecordState.md_processed == r[Fields.STATUS]
                 and not r.get("include_flag", "0") == "1"
             ]
             endpoint.run_prescreen(records, split)  # type: ignore

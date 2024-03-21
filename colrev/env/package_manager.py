@@ -114,7 +114,7 @@ class SearchSourcePackageEndpointInterface(
     source_identifier = zope.interface.Attribute(
         """Source identifier for search and provenance
         Retrieved records are identified through the source_identifier
-        when they are added to/updated in the GeneralOriginFeed"""
+        when they are added to/updated in the SearchAPIFeed"""
     )
     search_types = zope.interface.Attribute(
         """SearchTypes associated with the SearchSource"""
@@ -141,11 +141,11 @@ class SearchSourcePackageEndpointInterface(
         """
 
     # pylint: disable=no-self-argument
-    def run_search(rerun: bool) -> None:  # type: ignore
+    def search(rerun: bool) -> None:  # type: ignore
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def get_masterdata(  # type: ignore
+    def prep_link_md(  # type: ignore
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
         save_feed: bool = True,
@@ -264,7 +264,7 @@ class PDFPrepPackageEndpointInterface(
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(  # type: ignore
-        record: colrev.record.PrepRecord,
+        record: colrev.record_pdf.PDFRecord,
         pad: int,
     ) -> dict:
         """Run the prep-pdf operation"""
@@ -348,16 +348,7 @@ class DefaultSettings(JsonSchemaMixin):
 
         required_fields = [field.name for field in dataclasses.fields(cls)]
         available_fields = list(data.keys())
-
-        converters = {Path: Path}
-        settings = from_dict(
-            data_class=cls,
-            data=data,
-            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
-        )
-
         non_supported_fields = [f for f in available_fields if f not in required_fields]
-
         if non_supported_fields:
             raise colrev_exceptions.ParameterError(
                 parameter="non_supported_fields",
@@ -365,6 +356,12 @@ class DefaultSettings(JsonSchemaMixin):
                 options=[],
             )
 
+        converters = {Path: Path}
+        settings = from_dict(
+            data_class=cls,
+            data=data,
+            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
+        )
         return settings
 
 
@@ -470,7 +467,7 @@ class PackageManager:
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/package_endpoints.json")
         )
-        if not filedata:
+        if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
                 "Package index not available (colrev/template/package_endpoints.json)"
             )
@@ -1214,7 +1211,7 @@ class PackageManager:
             operation.review_manager.settings.sources.append(add_source)
             operation.review_manager.save_settings()
             operation.review_manager.dataset.add_changes(
-                path=add_source.filename, ignore_missing=True
+                add_source.filename, ignore_missing=True
             )
             add_package = add_source.to_dict()
 
@@ -1223,7 +1220,7 @@ class PackageManager:
             endpoints.append(add_package)  # type: ignore
 
         operation.review_manager.save_settings()
-        operation.review_manager.create_commit(
+        operation.review_manager.dataset.create_commit(
             msg=f"Add {operation.type} {package_identifier}",
         )
         return add_package

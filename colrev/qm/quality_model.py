@@ -48,13 +48,15 @@ class QualityModel:
 
             try:
                 module = importlib.import_module(module_path + filename.stem)
-            except ValueError as exc:
-                print(exc)
-            except ImportError as exc:
+            except ValueError as exc:  # pragma: no cover
+                print(f"Problem with filepath for module import {filename}: {exc}")
+            except ImportError as exc:  # pragma: no cover
                 print(f"Problem importing module {filename}: {exc}")
             else:
                 if hasattr(module, "register"):
                     module.register(self)
+                else:  # pragma: no cover
+                    print(f"Module {filename} does not have a register function")
 
     def register_checker(self, checker) -> None:  # type: ignore
         """Register a checker"""
@@ -64,10 +66,18 @@ class QualityModel:
         """Run the checkers"""
 
         if self.pdf_mode:
-            if "file" not in record.data or not Path(record.data["file"]).is_file():
+            if (
+                Fields.FILE not in record.data
+                or not Path(record.data[Fields.FILE]).is_file()
+            ):
                 return
             # text_from_pdf is already set in tests
-            if Fields.TEXT_FROM_PDF not in record.data:
+            if (
+                Fields.TEXT_FROM_PDF not in record.data
+                or Fields.NR_PAGES_IN_FILE not in record.data
+            ):
+                # The following should be improved.
+                record = colrev.record_pdf.PDFRecord(record.data)
                 record.set_text_from_pdf()
 
         for checker in self.checkers:
@@ -76,7 +86,5 @@ class QualityModel:
             checker.run(record=record)
 
         if self.pdf_mode:
-            if Fields.TEXT_FROM_PDF in record.data:
-                del record.data[Fields.TEXT_FROM_PDF]
-            if Fields.PAGES_IN_FILE in record.data:
-                del record.data[Fields.PAGES_IN_FILE]
+            record.data.pop(Fields.TEXT_FROM_PDF, None)
+            record.data.pop(Fields.NR_PAGES_IN_FILE, None)

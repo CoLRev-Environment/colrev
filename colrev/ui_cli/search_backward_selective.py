@@ -15,7 +15,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         conditions=[{Fields.ID: bws}]
     )
     record_dict = list(items)[0]
-    record = colrev.record.Record(data=record_dict)
+    record = colrev.record.Record(record_dict)
 
     if not record.data.get(Fields.FILE, "NA").endswith(".pdf"):
         return
@@ -35,7 +35,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         search_parameters={},
         comment="",
     )
-    feed = search_source.get_feed(
+    feed = search_source.get_api_feed(
         review_manager=search_operation.review_manager,
         source_identifier="bws_id",
         update_only=False,
@@ -44,7 +44,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
     # print list
     tei_recs = tei.get_references()
     for i, tei_rec_dict in enumerate(tei_recs):
-        tei_rec = colrev.record.Record(data=tei_rec_dict)
+        tei_rec = colrev.record.Record(tei_rec_dict)
         print(f"{i}  : {tei_rec.format_bib_style()}")
 
     # import as record
@@ -55,7 +55,8 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
             selected_record = tei_recs[int(selection)]
             selected_record["bws_id"] = f"{bws}/#{selection}"
             print(selected_record)
-            feed.set_id(record_dict=selected_record)
-            feed.add_record(record=colrev.record.Record(data=selected_record))
+            feed.add_update_record(
+                retrieved_record=colrev.record.Record(selected_record)
+            )
 
-        feed.save_feed_file()
+        feed.save()

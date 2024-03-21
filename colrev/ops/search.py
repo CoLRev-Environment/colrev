@@ -14,6 +14,8 @@ import colrev.operation
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.writer.write_utils import write_file
 
 
 class Search(colrev.operation.Operation):
@@ -71,7 +73,7 @@ class Search(colrev.operation.Operation):
                     f"Created {Colors.ORANGE}{query_filename}{Colors.END}. "
                     "Please store your query in the file and press Enter to continue."
                 )
-            self.review_manager.dataset.add_changes(path=query_filename)
+            self.review_manager.dataset.add_changes(query_filename)
         return query_filename
 
     def add_db_source(  # type: ignore
@@ -99,7 +101,7 @@ class Search(colrev.operation.Operation):
             )
             print(f"- Save search results in {Colors.ORANGE}{filename}{Colors.END}")
             input("Press Enter to complete")
-            self.review_manager.dataset.add_changes(path=filename)
+            self.review_manager.dataset.add_changes(filename)
 
         query_file = self.get_query_filename(filename=filename, instantiate=True)
 
@@ -180,7 +182,7 @@ class Search(colrev.operation.Operation):
             + Colors.END
         )
         input("Press enter to continue")
-        self.review_manager.dataset.add_changes(path=source.filename)
+        self.review_manager.dataset.add_changes(source.filename)
 
     def _get_search_sources(
         self, *, selection_str: Optional[str] = None
@@ -207,24 +209,23 @@ class Search(colrev.operation.Operation):
             print(f"{source.filename.suffix} not yet supported")
             return
 
-        with open(source.filename, encoding="utf8") as bibtex_file:
-            records = self.review_manager.dataset.load_records_dict(
-                load_str=bibtex_file.read()
-            )
+        records = colrev.loader.load_utils.load(
+            filename=source.filename,
+            logger=self.review_manager.logger,
+        )
 
-            record_list = list(records.values())
-            before = len(record_list)
-            record_list = [
-                r for r in record_list if "forthcoming" != r.get(Fields.YEAR, "")
-            ]
-            removed = before - len(record_list)
-            self.review_manager.logger.info(
-                f"{Colors.GREEN}Removed {removed} forthcoming{Colors.END}"
-            )
-            records = {r[Fields.ID]: r for r in record_list}
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=source.filename
-            )
+        record_list = list(records.values())
+        before = len(record_list)
+        record_list = [
+            r for r in record_list if "forthcoming" != r.get(Fields.YEAR, "")
+        ]
+        removed = before - len(record_list)
+        self.review_manager.logger.info(
+            f"{Colors.GREEN}Removed {removed} forthcoming{Colors.END}"
+        )
+        records = {r[Fields.ID]: r for r in record_list}
+
+        write_file(records_dict=records, filename=source.filename)
 
     # pylint: disable=no-self-argument
     def check_source_selection_exists(var_name: str) -> Callable:  # type: ignore
@@ -257,9 +258,9 @@ class Search(colrev.operation.Operation):
     def _get_new_search_files(self) -> list[Path]:
         """Retrieve new search files (not yet registered in settings)"""
 
+        search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
         files = [
-            f.relative_to(self.review_manager.path)
-            for f in self.review_manager.search_dir.glob("**/*")
+            f.relative_to(self.review_manager.path) for f in search_dir.glob("**/*")
         ]
 
         # Only files that are not yet registered
@@ -374,10 +375,11 @@ class Search(colrev.operation.Operation):
                     query_path
                 )
                 query_path.write_text("", encoding="utf-8")
-                self.review_manager.dataset.add_changes(path=query_path)
+                self.review_manager.dataset.add_changes(query_path)
 
             self.review_manager.settings.sources.append(source["source_candidate"])
         self.review_manager.save_settings()
+        self.review_manager.dataset.create_commit(msg="Add new search sources")
 
     def get_new_sources_heuristic_list(self) -> dict:
         """Get the heuristic result list of SearchSources candidates
@@ -463,7 +465,7 @@ class Search(colrev.operation.Operation):
             )
 
             try:
-                endpoint.run_search(rerun=rerun)  # type: ignore
+                endpoint.search(rerun=rerun)  # type: ignore
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.warning("ServiceNotAvailableException")
             except colrev_exceptions.SearchNotAutomated as exc:
@@ -473,9 +475,9 @@ class Search(colrev.operation.Operation):
                 continue
 
             self.remove_forthcoming(source=source)
-            self.review_manager.dataset.add_changes(path=source.filename)
+            self.review_manager.dataset.add_changes(source.filename)
             if not skip_commit:
-                self.review_manager.create_commit(msg="Run search")
+                self.review_manager.dataset.create_commit(msg="Run search")
 
         if self.review_manager.in_ci_environment():
             print("\n\n")

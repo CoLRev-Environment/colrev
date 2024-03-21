@@ -13,6 +13,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 
 class PDFGetMan(colrev.operation.Operation):
@@ -42,10 +44,7 @@ class PDFGetMan(colrev.operation.Operation):
         """Get the records that are missing a PDF"""
         missing_records = []
         for record in records.values():
-            if (
-                record[Fields.STATUS]
-                == colrev.record.RecordState.pdf_needs_manual_retrieval
-            ):
+            if record[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
                 missing_records.append(record)
         return missing_records
 
@@ -84,16 +83,11 @@ class PDFGetMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            record = colrev.record.Record(data=record_dict)
-            if (
-                record.data[Fields.STATUS]
-                == colrev.record.RecordState.pdf_needs_manual_retrieval
-            ):
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_not_available
-                )
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+            record = colrev.record.Record(record_dict)
+            if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
+                record.set_status(RecordState.pdf_not_available)
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(
             msg="Discard missing PDFs", manual_author=True
         )
 
@@ -101,7 +95,8 @@ class PDFGetMan(colrev.operation.Operation):
         """Get the data for pdf-get-man"""
         # pylint: disable=duplicate-code
 
-        self.review_manager.pdf_dir.mkdir(exist_ok=True)
+        pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+        pdf_dir.mkdir(exist_ok=True)
 
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
@@ -111,15 +106,12 @@ class PDFGetMan(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.pdf_needs_manual_retrieval
-                == x[Fields.STATUS]
+                if RecordState.pdf_needs_manual_retrieval == x[Fields.STATUS]
             ]
         )
         pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 40)
         items = self.review_manager.dataset.read_next_record(
-            conditions=[
-                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_retrieval}
-            ]
+            conditions=[{Fields.STATUS: RecordState.pdf_needs_manual_retrieval}]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
         self.review_manager.logger.debug(
@@ -129,7 +121,7 @@ class PDFGetMan(colrev.operation.Operation):
 
     def pdfs_retrieved_manually(self) -> bool:
         """Check whether PDFs were retrieved manually"""
-        return self.review_manager.dataset.has_changes()
+        return self.review_manager.dataset.has_record_changes()
 
     def pdf_get_man_record(
         self,
@@ -140,7 +132,7 @@ class PDFGetMan(colrev.operation.Operation):
     ) -> None:
         """Record pdf-get-man decision"""
         if filepath is not None:
-            record.set_status(target_state=colrev.record.RecordState.pdf_imported)
+            record.set_status(RecordState.pdf_imported)
             record.data.update(file=str(filepath.relative_to(self.review_manager.path)))
             self.review_manager.report_logger.info(
                 f" {record.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
@@ -152,9 +144,7 @@ class PDFGetMan(colrev.operation.Operation):
             if (
                 self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis
             ):
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_not_available
-                )
+                record.set_status(RecordState.pdf_not_available)
                 self.review_manager.report_logger.info(
                     f" {record.data['ID']}".ljust(PAD, " ")
                     + "recorded as not_available"
@@ -164,7 +154,7 @@ class PDFGetMan(colrev.operation.Operation):
                     + "recorded as not_available"
                 )
             else:
-                record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
+                record.set_status(RecordState.pdf_prepared)
 
                 record.add_data_provenance(
                     key=Fields.FILE, source="pdf-get-man", note="not_available"
@@ -181,14 +171,17 @@ class PDFGetMan(colrev.operation.Operation):
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
     @colrev.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""
 
-        if self.review_manager.in_ci_environment():
+        if (
+            self.review_manager.in_ci_environment()
+            and not self.review_manager.in_test_environment()
+        ):
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-get-man",
                 detailed_trace="pdf-get-man not available in ci environment",

@@ -16,8 +16,6 @@ from git import Repo
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -236,14 +234,14 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
         assert source.search_type == colrev.settings.SearchType.API
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets"""
 
         self._validate_source()
 
         dataset_df = self._load_dataset()
 
-        synergy_feed = self.search_source.get_feed(
+        synergy_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=False,
@@ -304,19 +302,19 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
             if "openalex_id" in record:
                 existing_keys["openalex_id"].append(record["openalex_id"])
 
-            synergy_feed.set_id(record_dict=record)
-            synergy_feed.add_record(record=colrev.record.Record(data=record))
+            synergy_feed.add_update_record(
+                retrieved_record=colrev.record.Record(record)
+            )
 
             # The linking of doi/... should happen in the prep operation
 
         self._check_quality(decisions=decisions)
         self.review_manager.logger.info(f"Dropped {empty_records} empty records")
         self.review_manager.logger.info(f"Dropped {duplicates} duplicate records")
-        records = self.review_manager.dataset.load_records_dict()
-        synergy_feed.print_post_run_search_infos(records=records)
-        synergy_feed.save_feed_file()
+        self.review_manager.dataset.load_records_dict()
+        synergy_feed.save()
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -330,11 +328,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file(check_bib_file=False)
-
             for record in records.values():
                 if "pmid" in record:
                     record["pubmedid"] = record["pmid"].replace(

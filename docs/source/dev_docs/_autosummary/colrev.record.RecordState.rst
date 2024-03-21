@@ -1,4 +1,4 @@
-colrev.record.RecordState
+RecordState
 =========================
 
 .. currentmodule:: colrev.record

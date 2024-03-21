@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import PDFDefectCodes
 
 
@@ -47,13 +48,15 @@ class OCRMyPDF(JsonSchemaMixin):
     def _apply_ocr(
         self,
         *,
-        record: colrev.record.Record,
-    ) -> colrev.record.Record:
+        record: colrev.record_pdf.PDFRecord,
+    ) -> colrev.record_pdf.PDFRecord:
         pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
         pdf_path.rename(non_ocred_filename)
         orig_path = (
-            pdf_path.parents[0] if pdf_path.is_file() else self.review_manager.pdf_dir
+            pdf_path.parents[0]
+            if pdf_path.is_file()
+            else self.review_manager.get_path(Filepaths.PDF_DIR)
         )
 
         # options = ""
@@ -85,7 +88,7 @@ class OCRMyPDF(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record.Record,
+        record: colrev.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the PDF by applying OCR"""

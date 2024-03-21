@@ -13,7 +13,7 @@ import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import ExitCodes
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.status
 
 
@@ -242,7 +242,7 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         return
 
     # To format:
-    # status_operation.review_manager.dataset.save_records_dict(records=checker.records)
+    # status_operation.review_manager.dataset.save_records_dict(checker.records)
 
     # if (
     #     not status_operation.review_manager.in_virtualenv()

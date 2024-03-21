@@ -11,6 +11,7 @@ import colrev.record  # pylint: disable=cyclic-import
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 def _format_author_field_for_cid(input_string: str) -> str:
@@ -75,7 +76,7 @@ def _robust_append(*, input_string: str, to_append: str) -> str:
     to_append = to_append.replace("emph{", "")
     to_append = to_append.replace("&amp;", "and")
     to_append = to_append.replace(" & ", " and ")
-    to_append = colrev.env.utils.remove_accents(input_str=to_append)
+    to_append = colrev.env.utils.remove_accents(to_append)
     to_append = re.sub("[^0-9a-zA-Z -]+", "", to_append)
     to_append = re.sub(r"\s+", "-", to_append)
     to_append = re.sub(r"-+", "-", to_append)
@@ -94,8 +95,8 @@ def _check_colrev_id_preconditions(
     if assume_complete:
         return
     if record.data.get(Fields.STATUS, "NA") in [
-        colrev.record.RecordState.md_imported,
-        colrev.record.RecordState.md_needs_manual_preparation,
+        RecordState.md_imported,
+        RecordState.md_needs_manual_preparation,
     ]:
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="cannot determine field requirements "
@@ -155,7 +156,7 @@ def _get_colrev_id_from_record(*, record: colrev.record.Record) -> str:
         # srep = _robust_append(srep, pages)
     except KeyError as exc:
         if "ENTRYTYPE" in str(exc):
-            print(f"Missing ENTRYTYPE in {record.data['ID']}")
+            print(f"Missing ENTRYTYPE in {record.data.get('ID', record.data)}")
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="Missing field:" + str(exc), missing_fields=["ENTRYTYPE"]
         )
@@ -172,7 +173,7 @@ def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> 
     srep = _get_colrev_id_from_record(record=record)
 
     # Safeguard against titles that are rarely distinct
-    if any(x in srep for x in ["|minitrack-introduction|"]):
+    if any(x in srep for x in ["|minitrack-introduction"]):
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
             msg="Title typically non-distinct", missing_fields=[Fields.TITLE]
         )

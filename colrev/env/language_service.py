@@ -80,7 +80,7 @@ class LanguageService:
             return "ara"
         if nr_chinese_characters / len(str_to_check) > 0.75:
             return "chi"
-        return ""
+        return ""  # pragma: no cover
 
     def compute_language(self, *, text: str) -> str:
         """Compute the most likely language code"""

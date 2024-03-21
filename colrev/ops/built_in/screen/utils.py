@@ -6,6 +6,7 @@ import colrev.env.package_manager
 import colrev.record
 import colrev.settings
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 __FULL_SCREEN_EXPLANATION = (
@@ -43,9 +44,9 @@ def get_screening_criteria_from_user_input(
             for r in records.values()
             if r[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_excluded,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_excluded,
+                RecordState.rev_synthesized,
             ]
         ]
     ):

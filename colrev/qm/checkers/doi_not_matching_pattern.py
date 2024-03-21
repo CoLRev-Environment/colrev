@@ -29,10 +29,7 @@ class DOIPatternChecker:
         ):
             return
 
-        if (
-            not re.match(self._DOI_REGEX, record.data[Fields.DOI])
-            or record.data[Fields.DOI].islower()
-        ):
+        if not re.match(self._DOI_REGEX, record.data[Fields.DOI]):
             record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
         else:
             record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)

@@ -15,13 +15,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_enl
-import colrev.ops.search
 import colrev.record
+import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -247,67 +245,15 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         response.raise_for_status()
 
         # Note: the following writes the enl to the feed file (bib).
-        # This file is replaced by ais_feed.save_feed_file()
+        # This file is replaced by ais_feed.save()
+        records = self._load_enl()
 
-        enl_mapping = {
-            ENTRYTYPES.ARTICLE: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-            ENTRYTYPES.INPROCEEDINGS: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-        }
-
-        entrytype_map = {
-            "Journal Article": ENTRYTYPES.ARTICLE,
-            "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
-        }
-        self.search_source.filename.write_text(
-            response.content.decode(encoding="utf-8")
-        )
-        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            load_operation=self.review_manager.get_load_operation(),
-            source=self.search_source,
-            list_fields={"A": " and "},
-            unique_id_field="ID",
-        )
-
-        records = enl_loader.load_enl_entries()
-        for record_dict in records.values():
-            self._fix_entrytype_before_conversion(record_dict=record_dict)
-            enl_loader.apply_entrytype_mapping(
-                record_dict=record_dict, entrytype_map=entrytype_map
-            )
-            enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
-            record_dict["ID"] = record_dict[Fields.URL].replace(
-                "https://aisel.aisnet.org/", ""
-            )
         return list(records.values())
 
     def _run_api_search(
         self,
         *,
-        ais_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        ais_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -317,46 +263,20 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 "Performing a search of the full history (may take time)"
             )
 
-        records = self.review_manager.dataset.load_records_dict()
-
         try:
             for record_dict in self._get_ais_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
-                    Fields.TITLE, ""
-                ):
-                    continue
-
                 try:
-                    ais_feed.set_id(record_dict=record_dict)
+                    # Note : discard "empty" records
+                    if "" == record_dict.get(
+                        Fields.AUTHOR, ""
+                    ) and "" == record_dict.get(Fields.TITLE, ""):
+                        continue
+
+                    prep_record = colrev.record_prep.PrepRecord(record_dict)
+                    ais_feed.add_update_record(prep_record)
+
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
-
-                # prev_record_dict_version = {}
-                # if record_dict[Fields.ID] in ais_feed.feed_records:
-                #     prev_record_dict_version = deepcopy(
-                #         ais_feed.feed_records[record_dict[Fields.ID]]
-                #     )
-
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-
-                if Fields.D_PROV in prep_record.data:
-                    del prep_record.data[Fields.D_PROV]
-
-                added = ais_feed.add_record(record=prep_record)
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + prep_record.data[Fields.URL]
-                    )
-                # else:
-                #     search_operation.update_existing_record(
-                #         records=records,
-                #         record_dict=prep_record.data,
-                #         prev_record_dict_version=prev_record_dict_version,
-                #         source=self.search_source,
-                #         update_time_variant_fields=rerun,
-                #     )
         except (
             requests.exceptions.JSONDecodeError,
             requests.exceptions.HTTPError,
@@ -371,16 +291,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 f"Crossref (check https://status.crossref.org/) ({exc})"
             )
 
-        ais_feed.print_post_run_search_infos(records=records)
-        ais_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        ais_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of AISeLibrary"""
 
         self._validate_source()
 
-        ais_feed = self.search_source.get_feed(
+        ais_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -397,7 +315,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 source=self.search_source,
             )
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -407,90 +325,118 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def _load_enl(self) -> dict:
+        def id_labeler(records: list) -> None:
+            for record_dict in records:
+                record_dict["ID"] = record_dict["U"].replace(
+                    "https://aisel.aisnet.org/", ""
+                )
+
+        def entrytype_setter(record_dict: dict) -> None:
+            if "0" not in record_dict:
+                keys_to_check = ["V", "N"]
+                if any(k in record_dict for k in keys_to_check):
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+                else:
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                if record_dict["0"] == "Journal Article":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+                elif record_dict["0"] == "Inproceedings":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+                else:
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "T": Fields.TITLE,
+                    "A": Fields.AUTHOR,
+                    "D": Fields.YEAR,
+                    "B": Fields.JOURNAL,
+                    "V": Fields.VOLUME,
+                    "N": Fields.NUMBER,
+                    "P": Fields.PAGES,
+                    "X": Fields.ABSTRACT,
+                    "U": Fields.URL,
+                    "8": "date",
+                    "0": "type",
+                },
+                ENTRYTYPES.INPROCEEDINGS: {
+                    "T": Fields.TITLE,
+                    "A": Fields.AUTHOR,
+                    "D": Fields.YEAR,
+                    "B": Fields.JOURNAL,
+                    "V": Fields.VOLUME,
+                    "N": Fields.NUMBER,
+                    "P": Fields.PAGES,
+                    "X": Fields.ABSTRACT,
+                    "U": Fields.URL,
+                    "8": "date",
+                    "0": "type",
+                },
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("type", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            id_labeler=id_labeler,
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+
+        return records
+
+    def _load_bib(self) -> dict:
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+        )
+
+        for record_dict in records.values():
+            record_dict.pop("type", None)
+
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
-        enl_mapping = {
-            ENTRYTYPES.ARTICLE: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-            ENTRYTYPES.INPROCEEDINGS: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-        }
-
-        entrytype_map = {
-            "Journal Article": ENTRYTYPES.ARTICLE,
-            "Inproceedings": ENTRYTYPES.INPROCEEDINGS,
-        }
-
         # pylint: disable=colrev-missed-constant-usage
         if self.search_source.filename.suffix in [".txt", ".enl"]:
-            enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                list_fields={"A": " and "},
-                unique_id_field="ID",
-            )
-            records = enl_loader.load_enl_entries()
-
-            for record_dict in records.values():
-                self._fix_entrytype_before_conversion(record_dict=record_dict)
-                enl_loader.apply_entrytype_mapping(
-                    record_dict=record_dict, entrytype_map=entrytype_map
-                )
-                enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
-                record_dict["ID"] = record_dict[Fields.URL].replace(
-                    "https://aisel.aisnet.org/", ""
-                )
-                record_dict.pop("type")
-            return records
+            return self._load_enl()
 
         # for API-based searches
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = bib_loader.load_bib_file()
-            for record_dict in records.values():
-                record_dict.pop("type")
-
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
-
-    def _fix_entrytype_before_conversion(self, *, record_dict: dict) -> None:
-        """
-        Fix entrytype
-        :param record_dict: record that is being prepared
-        :return: None
-        """
-        if "0" not in record_dict:
-            keys_to_check = ["V", "N"]
-            if any(k in record_dict for k in keys_to_check):
-                record_dict["0"] = "Journal Article"
-            else:
-                record_dict["0"] = "Inproceedings"
 
     def _fix_entrytype(self, *, record: colrev.record.Record) -> None:
         # Note : simple heuristic
@@ -520,7 +466,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 record.rename_field(key=Fields.CHAPTER, new_key=Fields.TITLE)
                 record.remove_field(key=Fields.PUBLISHER)
 
-            record.change_entrytype(new_entrytype="article", qm=self.quality_model)
+            record.change_entrytype("article", qm=self.quality_model)
         else:
             # Inproceedings
 
@@ -587,7 +533,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     source="prep_ais_source",
                 )
 
-    def _format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record_prep.PrepRecord) -> None:
         if Fields.ABSTRACT in record.data:
             if record.data[Fields.ABSTRACT] == "N/A":
                 record.remove_field(key=Fields.ABSTRACT)
@@ -611,7 +557,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             record.prescreen_exclude(reason="complementary material")
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 

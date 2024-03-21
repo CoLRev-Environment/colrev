@@ -69,7 +69,7 @@ class InconsistentWithEntrytypeChecker:
         inconsistent_fields = self.record_field_inconsistencies[
             record.data["ENTRYTYPE"]
         ]
-        for key in record.data:
+        for key in list(record.data.keys()):
             if record.ignored_defect(field=key, defect=self.msg):
                 continue
             if key in inconsistent_fields:

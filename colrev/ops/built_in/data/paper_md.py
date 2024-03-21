@@ -24,6 +24,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.writer.write_utils import write_file
 
 
 # pylint: disable=too-many-instance-attributes
@@ -100,23 +102,15 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.settings.paper_path = (
-            self.review_manager.data_dir / self.settings.paper_path
-        )
-        self.settings.word_template = (
-            self.review_manager.data_dir / self.settings.word_template
-        )
-        self.non_sample_references = (
-            self.review_manager.data_dir / self.NON_SAMPLE_REFERENCES_RELATIVE
-        )
-        self.sample_references = (
-            self.review_manager.data_dir / self.SAMPLE_REFERENCES_RELATIVE
-        )
+        self.data_dir = self.review_manager.get_path(Filepaths.DATA_DIR)
+        self.settings.paper_path = self.data_dir / self.settings.paper_path
+        self.settings.word_template = self.data_dir / self.settings.word_template
+        self.non_sample_references = self.data_dir / self.NON_SAMPLE_REFERENCES_RELATIVE
+        self.sample_references = self.data_dir / self.SAMPLE_REFERENCES_RELATIVE
         self.data_operation = data_operation
 
-        self.settings.paper_output = (
-            self.review_manager.output_dir / self.settings.paper_output
-        )
+        output_dir = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
+        self.settings.paper_output = output_dir / self.settings.paper_output
 
         self._create_non_sample_references_bib()
 
@@ -147,7 +141,7 @@ class PaperMarkdown(JsonSchemaMixin):
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def _retrieve_default_word_template(self) -> Path:
-        template_name = self.review_manager.data_dir / Path("APA-7.docx")
+        template_name = self.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
             file_path=Path("template/paper_md/APA-7.docx")
@@ -156,7 +150,7 @@ class PaperMarkdown(JsonSchemaMixin):
         if filedata:
             with open(template_name, "wb") as file:
                 file.write(filedata)
-        self.review_manager.dataset.add_changes(path=template_name)
+        self.review_manager.dataset.add_changes(template_name)
         return template_name
 
     def _retrieve_default_csl(self) -> None:
@@ -169,7 +163,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if "http" in csl_link:
             ret = requests.get(csl_link, allow_redirects=True, timeout=30)
-            csl_filename = self.review_manager.DATA_DIR_RELATIVE / Path(csl_link).name
+            csl_filename = Filepaths.DATA_DIR / Path(csl_link).name
             with open(csl_filename, "wb") as file:
                 file.write(ret.content)
             colrev.env.utils.inplace_change(
@@ -177,8 +171,8 @@ class PaperMarkdown(JsonSchemaMixin):
                 old_string=f'csl: "{csl_link}"',
                 new_string=f'csl: "{csl_filename}"',
             )
-            self.review_manager.dataset.add_changes(path=self.settings.paper_path)
-            self.review_manager.dataset.add_changes(path=Path(csl_filename))
+            self.review_manager.dataset.add_changes(self.settings.paper_path)
+            self.review_manager.dataset.add_changes(Path(csl_filename))
             self.review_manager.logger.debug("Downloaded csl file for offline use")
 
     def _check_new_record_source_tag(
@@ -362,7 +356,7 @@ class PaperMarkdown(JsonSchemaMixin):
             self.review_manager.logger.info("Create paper")
 
         title = "Paper template"
-        readme_file = self.review_manager.readme
+        readme_file = self.review_manager.get_path(Filepaths.README_FILE)
         if readme_file.is_file():
             with open(readme_file, encoding="utf-8") as file:
                 title = file.readline()
@@ -391,7 +385,7 @@ class PaperMarkdown(JsonSchemaMixin):
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
-        except FileNotFoundError:
+        except colrev_exceptions.TemplateNotAvailableError:
             paper_resource_path = Path("template/paper_md") / Path("paper.md")
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
@@ -460,7 +454,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 ):
                     del synthesized_record_status_matrix[record_id]
                     screen_operation.screen(
-                        record=colrev.record.Record(data=records[record_id]),
+                        record=colrev.record.Record(records[record_id]),
                         screen_inclusion=False,
                         screening_criteria="NA",
                     )
@@ -512,14 +506,16 @@ class PaperMarkdown(JsonSchemaMixin):
         filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
 
         if filedata:
-            non_sample_records = {}
-            with open(self.non_sample_references, encoding="utf8") as file:
-                non_sample_records = self.review_manager.dataset.load_records_dict(
-                    load_str=file.read()
-                )
 
-            records_to_add = self.review_manager.dataset.load_records_dict(
-                load_str=filedata.decode("utf-8")
+            non_sample_records = colrev.loader.load_utils.load(
+                filename=self.non_sample_references,
+                logger=self.review_manager.logger,
+            )
+
+            records_to_add = colrev.loader.load_utils.loads(
+                load_string=filedata.decode("utf-8"),
+                implementation="bib",
+                logger=self.review_manager.logger,
             )
 
             # maybe prefix "non_sample_NameYear"? (also avoid conflicts with records.bib)
@@ -541,15 +537,16 @@ class PaperMarkdown(JsonSchemaMixin):
                     f"please change ID and add manually:{Colors.END}"
                 )
                 for duplicated_record in duplicated_records:
-                    print(colrev.record.Record(data=duplicated_record))
+                    print(colrev.record.Record(duplicated_record))
 
             non_sample_records = {**non_sample_records, **records_to_add}
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=non_sample_records,
-                save_path=self.non_sample_references,
+
+            write_file(
+                records_dict=non_sample_records, filename=self.non_sample_references
             )
+
             self.review_manager.dataset.add_changes(
-                path=(Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE)
+                Path("data/data/") / self.NON_SAMPLE_REFERENCES_RELATIVE
             )
 
     def _add_prisma_if_available(self, *, silent_mode: bool) -> None:
@@ -618,7 +615,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         self._add_prisma_if_available(silent_mode=silent_mode)
 
-        review_manager.dataset.add_changes(path=self.settings.paper_path)
+        review_manager.dataset.add_changes(self.settings.paper_path)
 
         return records
 
@@ -630,7 +627,7 @@ class PaperMarkdown(JsonSchemaMixin):
                     template_file=retrieval_path,
                     target=self.non_sample_references,
                 )
-                self.review_manager.dataset.add_changes(path=self.non_sample_references)
+                self.review_manager.dataset.add_changes(self.non_sample_references)
             except AttributeError:
                 pass
 
@@ -639,14 +636,13 @@ class PaperMarkdown(JsonSchemaMixin):
         for record_id, record_dict in records.items():
             record_dict = {k.replace(".", "_"): v for k, v in record_dict.items()}
             records[record_id] = record_dict
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=self.sample_references
-        )
+
+        write_file(records_dict=records, filename=self.sample_references)
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
-            uid = os.stat(self.review_manager.dataset.records_file).st_uid
-            gid = os.stat(self.review_manager.dataset.records_file).st_gid
+            uid = os.stat(self.review_manager.get_path(Filepaths.RECORDS_FILE)).st_uid
+            gid = os.stat(self.review_manager.get_path(Filepaths.RECORDS_FILE)).st_gid
             user = f"{uid}:{gid}"
 
             client = docker.from_env()
@@ -676,8 +672,8 @@ class PaperMarkdown(JsonSchemaMixin):
     def build_paper(self) -> None:
         """Build the paper (based on pandoc)"""
 
-        if not self.review_manager.dataset.records_file.is_file():
-            self.review_manager.dataset.records_file.touch()
+        if not self.review_manager.get_path(Filepaths.RECORDS_FILE).is_file():
+            self.review_manager.get_path(Filepaths.RECORDS_FILE).touch()
 
         if not self.settings.paper_path.is_file():
             self.review_manager.logger.error(
@@ -701,9 +697,7 @@ class PaperMarkdown(JsonSchemaMixin):
         )
 
         if (
-            not self.review_manager.dataset.has_changes(
-                relative_path=self.paper_relative_path
-            )
+            not self.review_manager.dataset.has_changes(self.paper_relative_path)
             and self.settings.paper_output.is_file()
         ):
             self.review_manager.logger.debug("Skipping paper build (no changes)")
@@ -735,7 +729,7 @@ class PaperMarkdown(JsonSchemaMixin):
             return
 
         if self.review_manager.dataset.has_changes(
-            relative_path=self.paper_relative_path, change_type="unstaged"
+            self.paper_relative_path, change_type="unstaged"
         ):
             self.review_manager.logger.warning(
                 f"{Colors.RED}Skipping updates of "

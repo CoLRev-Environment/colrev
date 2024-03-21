@@ -18,7 +18,6 @@ colrev.review\_manager.ReviewManager
 
       ~ReviewManager.check_repo
       ~ReviewManager.check_repository_setup
-      ~ReviewManager.create_commit
       ~ReviewManager.format_records_file
       ~ReviewManager.get_advisor
       ~ReviewManager.get_cached_session
@@ -63,8 +62,8 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_trace_operation
       ~ReviewManager.get_upgrade
       ~ReviewManager.get_validate_operation
-      ~ReviewManager.get_zotero_translation_service
       ~ReviewManager.in_ci_environment
+      ~ReviewManager.in_test_environment
       ~ReviewManager.in_virtualenv
       ~ReviewManager.load_settings
       ~ReviewManager.notify
@@ -93,7 +92,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.README_RELATIVE
       ~ReviewManager.REPORT_RELATIVE
       ~ReviewManager.SCREEN_RELATIVE
-      ~ReviewManager.SEARCHDIR_RELATIVE
+      ~ReviewManager.SEARCH_DIR_RELATIVE
       ~ReviewManager.SETTINGS_RELATIVE
       ~ReviewManager.STATUS_RELATIVE
       ~ReviewManager.notified_next_operation

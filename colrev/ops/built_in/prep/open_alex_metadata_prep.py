@@ -59,7 +59,7 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the OpenAlex API"""
         self.open_alex_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare a record based on OpenAlex metadata"""
 
         if any(
@@ -70,7 +70,7 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
             # Already linked to an OpenAlex record
             return record
 
-        self.open_alex_source.get_masterdata(
+        self.open_alex_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

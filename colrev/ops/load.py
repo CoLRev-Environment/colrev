@@ -8,13 +8,14 @@ from pathlib import Path
 
 import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils_formatter
 import colrev.operation
-import colrev.ops.load_utils_formatter
 import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 
 class Load(colrev.operation.Operation):
@@ -36,7 +37,7 @@ class Load(colrev.operation.Operation):
         self.quality_model = review_manager.get_qm()
         self.package_manager = self.review_manager.get_package_manager()
 
-        self.load_formatter = colrev.ops.load_utils_formatter.LoadFormatter()
+        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
@@ -79,7 +80,6 @@ class Load(colrev.operation.Operation):
         )
         prior_file_content = ""
         for commit, filecontents in list(revlist):
-            print(prior_file_content)
             if not filecontents.decode("utf-8").startswith(prior_file_content):
                 raise colrev_exceptions.AppendOnlyViolation(
                     f"{file} was changed (commit: {commit})"
@@ -130,7 +130,7 @@ class Load(colrev.operation.Operation):
     def _import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.Record(record_dict)
 
         # For better readability of the git diff:
         self.load_formatter.run(record=record)
@@ -138,12 +138,12 @@ class Load(colrev.operation.Operation):
         self._import_provenance(record=record)
 
         if record.data[Fields.STATUS] in [
-            colrev.record.RecordState.md_retrieved,
-            colrev.record.RecordState.md_needs_manual_preparation,
+            RecordState.md_retrieved,
+            RecordState.md_needs_manual_preparation,
         ]:
-            record.set_status(target_state=colrev.record.RecordState.md_imported)
+            record.set_status(RecordState.md_imported)
 
-        if record.check_potential_retracts():
+        if record.is_retracted():
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{Colors.END}"
@@ -173,16 +173,20 @@ class Load(colrev.operation.Operation):
             if source_settings.endpoint == "colrev.local_index":
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                record.update(colrev_status=colrev.record.RecordState.md_prepared)
-                if "curation_ID" in record:
+                colrev.record.Record(record).set_status(
+                    target_state=RecordState.md_prepared
+                )
+                if Fields.CURATION_ID in record:
                     record[Fields.MD_PROV] = {
                         FieldValues.CURATED: {
-                            "source": record["curation_ID"].split("#")[0],
+                            "source": record[Fields.CURATION_ID].split("#")[0],
                             "note": "",
                         }
                     }
             else:
-                record.update(colrev_status=colrev.record.RecordState.md_retrieved)
+                colrev.record.Record(record).set_status(
+                    target_state=RecordState.md_retrieved
+                )
 
             if Fields.DOI in record:
                 formatted_doi = (
@@ -264,7 +268,7 @@ class Load(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         for source_record in source.search_source.source_records_list:
-            colrev.record.Record(data=source_record).prefix_non_standardized_field_keys(
+            colrev.record.Record(source_record).prefix_non_standardized_field_keys(
                 prefix=source.search_source.endpoint
             )
 
@@ -291,7 +295,7 @@ class Load(colrev.operation.Operation):
                 + f"md_retrieved →  {source_record['colrev_status']}{Colors.END}"
             )
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
 
         if source.search_source.to_import == 0:
@@ -316,7 +320,7 @@ class Load(colrev.operation.Operation):
             "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
         self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(path=source.search_source.filename)
+        self.review_manager.dataset.add_changes(source.search_source.filename)
 
     def _add_source_to_settings(
         self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
@@ -332,11 +336,9 @@ class Load(colrev.operation.Operation):
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
             if source.search_source.filename.stem in obj.b_path:
-                self.review_manager.dataset.add_changes(
-                    path=Path(obj.b_path), remove=True
-                )
+                self.review_manager.dataset.add_changes(Path(obj.b_path), remove=True)
 
-    def load_active_sources(self) -> list:
+    def load_active_sources(self, *, include_md: bool = False) -> list:
         """
         Loads and returns a list of active source endpoints from the settings.
 
@@ -359,7 +361,8 @@ class Load(colrev.operation.Operation):
             # if source.endpoint.lower() not in endpoint_dict:
             #     raise ...
             endpoint = endpoint_dict[source.endpoint.lower()]
-            if endpoint.search_source.search_type == colrev.settings.SearchType.MD:  # type: ignore
+            s_type = endpoint.search_source.search_type  # type: ignore
+            if s_type == colrev.settings.SearchType.MD and not include_md:
                 continue
             sources.append(endpoint)
 
@@ -417,8 +420,8 @@ class Load(colrev.operation.Operation):
         self.review_manager.exact_call = (
             f"{part_exact_call} -s {source.search_source.filename.name}"
         )
-        self.review_manager.create_commit(
-            msg=f"Load {source.search_source.filename.name}",
+        self.review_manager.dataset.create_commit(
+            msg=f"Load {source.search_source.filename.name}", skip_hooks=True
         )
         if stashed:
             git_repo.git.stash("pop")

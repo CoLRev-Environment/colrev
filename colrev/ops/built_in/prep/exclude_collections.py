@@ -39,7 +39,7 @@ class ExcludeCollectionsPrep(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record.PrepRecord,
+        record: colrev.record_prep.PrepRecord,
     ) -> colrev.record.Record:
         """Prepare records by excluding collections (proceedings)"""
 

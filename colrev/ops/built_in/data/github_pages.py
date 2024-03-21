@@ -14,6 +14,8 @@ import colrev.env.utils
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
+from colrev.writer.write_utils import write_file
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -89,13 +91,13 @@ class GithubPages(JsonSchemaMixin):
             old_string="{{project_title}}",
             new_string=project_title.rstrip(" ").capitalize(),
         )
-        self.review_manager.dataset.add_changes(path=Path("README.md"))
+        self.review_manager.dataset.add_changes(Path("README.md"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/index.html"),
             target=Path("index.html"),
         )
-        self.review_manager.dataset.add_changes(path=Path("index.html"))
+        self.review_manager.dataset.add_changes(Path("index.html"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/_config.yml"),
@@ -106,15 +108,15 @@ class GithubPages(JsonSchemaMixin):
             old_string="{{project_title}}",
             new_string=project_title,
         )
-        self.review_manager.dataset.add_changes(path=Path("_config.yml"))
+        self.review_manager.dataset.add_changes(Path("_config.yml"))
 
         colrev.env.utils.retrieve_package_file(
             template_file=Path("template/github_pages/about.md"),
             target=Path("about.md"),
         )
-        self.review_manager.dataset.add_changes(path=Path("about.md"))
+        self.review_manager.dataset.add_changes(Path("about.md"))
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Setup gh-pages branch", skip_status_yaml=True
         )
 
@@ -133,8 +135,8 @@ class GithubPages(JsonSchemaMixin):
             for r in records.values()
             if r[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_synthesized,
-                colrev.record.RecordState.rev_included,
+                RecordState.rev_synthesized,
+                RecordState.rev_included,
             ]
         }
 
@@ -144,17 +146,16 @@ class GithubPages(JsonSchemaMixin):
                 template_file=Path("template/github_pages/pre-commit-config.yaml"),
                 target=Path(".pre-commit-config.yaml"),
             )
-            self.review_manager.dataset.add_changes(
-                path=Path(".pre-commit-config.yaml")
-            )
+            self.review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
 
         data_file = Path("data.bib")
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=included_records, save_path=data_file
-        )
-        self.review_manager.dataset.add_changes(path=data_file)
+        write_file(records_dict=included_records, filename=data_file)
 
-        self.review_manager.create_commit(msg="Update sample", skip_status_yaml=True)
+        self.review_manager.dataset.add_changes(data_file)
+
+        self.review_manager.dataset.create_commit(
+            msg="Update sample", skip_status_yaml=True
+        )
 
     def _push_branch(
         self,
@@ -230,7 +231,7 @@ class GithubPages(JsonSchemaMixin):
             )
             return
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.error(
                 "Cannot update github pages because there are uncommited changes."
             )

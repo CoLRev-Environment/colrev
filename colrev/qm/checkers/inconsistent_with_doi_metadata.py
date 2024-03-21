@@ -40,9 +40,9 @@ class InconsistentWithDOIMetadataChecker:
             field=Fields.DOI, defect=self.msg
         ):
             return
-        if Fields.DOI in record.data.get(Fields.D_PROV, {}):
-            if "md_curated.bib" in record.data[Fields.D_PROV][Fields.DOI]["source"]:
-                return
+
+        if "md_curated.bib" in record.get_masterdata_provenance_source(Fields.DOI):
+            return
 
         if self._doi_metadata_conflicts(record=record):
             record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
@@ -57,10 +57,8 @@ class InconsistentWithDOIMetadataChecker:
                 doi=record_copy.data[Fields.DOI], etiquette=self._etiquette
             )
 
-            for key, value in crossref_md.data.items():
+            for key in crossref_md.data.keys():
                 if key not in self._fields_to_check:
-                    continue
-                if not isinstance(value, str):
                     continue
                 if key not in record.data:
                     continue

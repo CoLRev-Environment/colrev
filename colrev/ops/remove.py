@@ -7,9 +7,8 @@ from pathlib import Path
 import colrev.env.utils
 import colrev.operation
 from colrev.constants import Fields
-
-
-# pylint: disable=too-few-public-methods
+from colrev.constants import Filepaths
+from colrev.writer.write_utils import write_file
 
 
 class Remove(colrev.operation.Operation):
@@ -42,18 +41,22 @@ class Remove(colrev.operation.Operation):
                 for origin in origins:
                     file, origin_id = origin.split("/")
 
-                    filepath = self.review_manager.search_dir / Path(file)
+                    search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
+                    filepath = search_dir / Path(file)
 
-                    origin_file_content = filepath.read_text()
-                    origin_records = self.review_manager.dataset.load_records_dict(
-                        load_str=origin_file_content
+                    origin_records = colrev.loader.load_utils.load(
+                        filename=filepath,
+                        logger=self.review_manager.logger,
                     )
+
                     if origin_id in origin_records:
                         del origin_records[origin_id]
-                    self.review_manager.dataset.save_records_dict_to_file(
-                        records=origin_records, save_path=filepath
-                    )
-                    self.review_manager.dataset.add_changes(path=filepath)
 
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(msg="Remove records", manual_author=False)
+                    write_file(records_dict=origin_records, filename=filepath)
+
+                    self.review_manager.dataset.add_changes(filepath)
+
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(
+            msg="Remove records", manual_author=False
+        )

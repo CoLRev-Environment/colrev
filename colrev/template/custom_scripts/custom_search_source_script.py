@@ -24,43 +24,23 @@ class CustomSearch:
     def __init__(
         self,
         *,
-        source_operation: colrev.ops.search.Search,  # pylint: disable=unused-argument
+        source_operation: colrev.ops.search.Search,
         settings: dict,
     ) -> None:
-        self.settings = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.review_manager = source_operation.review_manager
 
-    def run_search(
-        self,
-        search_operation: colrev.ops.search.Search,
-        params: dict,  # pylint: disable=unused-argument
-        feed_file: Path,
-    ) -> None:
+    def search(self, rerun: bool) -> None:
         """Run the search"""
 
-        max_id = 1
-        if not feed_file.is_file():
-            records = {}
-        else:
-            with open(feed_file, encoding="utf8") as bibtex_file:
-                records = search_operation.review_manager.dataset.load_records_dict(
-                    load_str=bibtex_file.read()
-                )
-
-            max_id = (
-                max(
-                    [
-                        int(x[Fields.ID])
-                        for x in records.values()
-                        if x[Fields.ID].isdigit()
-                    ]
-                    + [1]
-                )
-                + 1
-            )
-
-        # Add new records to the dictionary:
-        records[max_id] = {
-            Fields.ID: max_id,
+        feed = self.search_source.get_api_feed(
+            review_manager=self.review_manager,
+            source_identifier=self.source_identifier,
+            update_only=(not rerun),
+            update_time_variant_fields=rerun,
+        )
+        retrieved_record = {
+            Fields.ID: "ID00001",
             Fields.ENTRYTYPE: "article",
             Fields.AUTHOR: "Smith, M.",
             Fields.TITLE: "Editorial",
@@ -68,10 +48,8 @@ class CustomSearch:
             Fields.YEAR: "2020",
         }
 
-        feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        search_operation.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=feed_file
-        )
+        feed.add_update_record(retrieved_record)
+        feed.save()
 
     @classmethod
     def validate_search_params(cls, query: str) -> None:
@@ -97,13 +75,12 @@ class CustomSearch:
 
         return result
 
-    def load_fixes(
+    def load(
         self,
         load_operation: colrev.ops.load.Load,  # pylint: disable=unused-argument
-        source: colrev.settings.SearchSource,  # pylint: disable=unused-argument
-        records: dict,
     ) -> dict:
         """Load fixes for the custom source"""
+        records = {"ID1": {"ID": "ID1", "title": "..."}}
 
         return records
 

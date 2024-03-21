@@ -15,7 +15,10 @@ import colrev.operation
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
-from colrev.constants import FieldValues
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
+from colrev.loader.bib import BIBLoader
+from colrev.record_state_model import RecordStateModel
 
 
 class Status(colrev.operation.Operation):
@@ -113,7 +116,7 @@ class StatusStats:
         records: Optional[dict] = None,
     ) -> None:
         self.review_manager = review_manager
-        colrev.operation.CheckOperation(review_manager=review_manager)
+        colrev.operation.CheckOperation(review_manager)
 
         if records:
             self.records = records
@@ -178,13 +181,14 @@ class StatusStats:
         self.overall.rev_prescreen = self.overall.md_processed
         self.currently.pdf_needs_retrieval = self.currently.rev_prescreen_included
 
-        colrev_masterdata_items = [
-            x[Fields.MD_PROV] for x in self.records.values() if Fields.MD_PROV in x
-        ]
-
         self.nr_curated_records = len(
-            [x for x in colrev_masterdata_items if FieldValues.CURATED in x]
+            [
+                r
+                for r in self.records.values()
+                if colrev.record.Record(r).masterdata_is_curated()
+            ]
         )
+
         if review_manager.settings.is_curated_masterdata_repo():
             self.nr_curated_records = self.overall.md_processed
 
@@ -216,7 +220,7 @@ class StatusStats:
         #     "Set overall colrev_status statistics (going backwards)"
         # )
         visited_states = []
-        current_state = colrev.record.RecordState.rev_synthesized  # start with the last
+        current_state = RecordState.rev_synthesized  # start with the last
         atomic_step_number = 0
         while True:
             # self.review_manager.logger.debug(
@@ -224,7 +228,7 @@ class StatusStats:
             #     current_state,
             #     getattr(self.overall, str(current_state)),
             # )
-            if colrev.record.RecordState.md_prepared == current_state:
+            if RecordState.md_prepared == current_state:
                 overall_md_prepared = (
                     getattr(self.overall, str(current_state))
                     + self.md_duplicates_removed
@@ -235,8 +239,8 @@ class StatusStats:
             predecessors: list[dict[str, typing.Any]] = [
                 {
                     "trigger": "init",
-                    "source": colrev.record.RecordState.md_imported,
-                    "dest": colrev.record.RecordState.md_imported,
+                    "source": RecordState.md_imported,
+                    "dest": RecordState.md_imported,
                 }
             ]
             # Go backward through the process model
@@ -244,7 +248,7 @@ class StatusStats:
             while predecessors:
                 predecessors = [
                     t
-                    for t in colrev.record.RecordStateModel.transitions
+                    for t in RecordStateModel.transitions
                     if t["source"] in states_to_consider
                     and t["dest"] not in visited_states
                 ]
@@ -283,21 +287,17 @@ class StatusStats:
             atomic_step_number += 1
             # Note : the following does not consider multiple parallel steps.
             for trans_for_completeness in [
-                t
-                for t in colrev.record.RecordStateModel.transitions
-                if current_state == t["dest"]
+                t for t in RecordStateModel.transitions if current_state == t["dest"]
             ]:
                 self.nr_incomplete += getattr(
                     self.currently, str(trans_for_completeness["source"])
                 )
 
             t_list = [
-                t
-                for t in colrev.record.RecordStateModel.transitions
-                if current_state == t["dest"]
+                t for t in RecordStateModel.transitions if current_state == t["dest"]
             ]
             transition: dict = t_list.pop()
-            if current_state == colrev.record.RecordState.md_imported:
+            if current_state == RecordState.md_imported:
                 break
             current_state = transition["source"]  # go a step back
             self.currently.non_completed += getattr(self.currently, str(current_state))
@@ -357,7 +357,7 @@ class StatusStats:
 
             operations_type = [
                 x["trigger"]
-                for x in colrev.record.RecordStateModel.transitions
+                for x in RecordStateModel.transitions
                 if x["source"] == transitioned_record["source"]
                 and x["dest"] == transitioned_record["dest"]
             ]
@@ -378,7 +378,7 @@ class StatusStats:
 
         # get "earliest" states (going backward)
         earliest_state = []
-        search_states = [colrev.record.RecordState.rev_synthesized]
+        search_states = [RecordState.rev_synthesized]
         while True:
             if any(
                 search_state in current_origin_states_dict.values()
@@ -391,7 +391,7 @@ class StatusStats:
                 ]
             search_states = [
                 x["source"]  # type: ignore
-                for x in colrev.record.RecordStateModel.transitions
+                for x in RecordStateModel.transitions
                 if x["dest"] in search_states
             ]
             if [] == search_states:
@@ -401,7 +401,7 @@ class StatusStats:
         # next: get the priority transition for the earliest states
         priority_transitions = [
             x["trigger"]
-            for x in colrev.record.RecordStateModel.transitions
+            for x in RecordStateModel.transitions
             if x["source"] in earliest_state
         ]
 
@@ -415,9 +415,7 @@ class StatusStats:
 
         active_operations: typing.List[str] = []
         for state in set(current_origin_states_dict.values()):
-            valid_transitions = colrev.record.RecordStateModel.get_valid_transitions(
-                state=state
-            )
+            valid_transitions = RecordStateModel.get_valid_transitions(state=state)
             active_operations.extend(valid_transitions)
 
         self.review_manager.logger.debug(f"active_operations: {set(active_operations)}")
@@ -447,39 +445,35 @@ class StatusStats:
         ) -> None:
             self.status_stats = status_stats
 
-            self.md_retrieved = self._get_freq(colrev.record.RecordState.md_retrieved)
+            self.md_retrieved = self._get_freq(RecordState.md_retrieved)
 
-            self.md_imported = self._get_freq(colrev.record.RecordState.md_imported)
+            self.md_imported = self._get_freq(RecordState.md_imported)
             self.md_needs_manual_preparation = self._get_freq(
-                colrev.record.RecordState.md_needs_manual_preparation
+                RecordState.md_needs_manual_preparation
             )
-            self.md_prepared = self._get_freq(colrev.record.RecordState.md_prepared)
-            self.md_processed = self._get_freq(colrev.record.RecordState.md_processed)
+            self.md_prepared = self._get_freq(RecordState.md_prepared)
+            self.md_processed = self._get_freq(RecordState.md_processed)
             self.rev_prescreen_excluded = self._get_freq(
-                colrev.record.RecordState.rev_prescreen_excluded
+                RecordState.rev_prescreen_excluded
             )
             self.rev_prescreen_included = self._get_freq(
-                colrev.record.RecordState.rev_prescreen_included
+                RecordState.rev_prescreen_included
             )
             self.pdf_needs_manual_retrieval = self._get_freq(
-                colrev.record.RecordState.pdf_needs_manual_retrieval
+                RecordState.pdf_needs_manual_retrieval
             )
-            self.pdf_imported = self._get_freq(colrev.record.RecordState.pdf_imported)
-            self.pdf_not_available = self._get_freq(
-                colrev.record.RecordState.pdf_not_available
-            )
+            self.pdf_imported = self._get_freq(RecordState.pdf_imported)
+            self.pdf_not_available = self._get_freq(RecordState.pdf_not_available)
             self.pdf_needs_manual_preparation = self._get_freq(
-                colrev.record.RecordState.pdf_needs_manual_preparation
+                RecordState.pdf_needs_manual_preparation
             )
-            self.pdf_prepared = self._get_freq(colrev.record.RecordState.pdf_prepared)
-            self.rev_excluded = self._get_freq(colrev.record.RecordState.rev_excluded)
-            self.rev_included = self._get_freq(colrev.record.RecordState.rev_included)
-            self.rev_synthesized = self._get_freq(
-                colrev.record.RecordState.rev_synthesized
-            )
+            self.pdf_prepared = self._get_freq(RecordState.pdf_prepared)
+            self.rev_excluded = self._get_freq(RecordState.rev_excluded)
+            self.rev_included = self._get_freq(RecordState.rev_included)
+            self.rev_synthesized = self._get_freq(RecordState.rev_synthesized)
             self.md_duplicates_removed = self.status_stats.md_duplicates_removed
 
-        def _get_freq(self, colrev_status: colrev.record.RecordState) -> int:
+        def _get_freq(self, colrev_status: RecordState) -> int:
             return len([x for x in self.status_stats.status_list if colrev_status == x])
 
     @dataclass
@@ -550,9 +544,8 @@ class StatusStats:
             self.rev_screen = 0
             self.rev_prescreen = 0
             super().__init__(status_stats=status_stats)
-            self.md_retrieved = self._get_nr_search(
-                search_dir=self.status_stats.review_manager.search_dir
-            )
+            search_dir = self.status_stats.review_manager.get_path(Filepaths.SEARCH_DIR)
+            self.md_retrieved = self._get_nr_search(search_dir=search_dir)
 
         def _get_nr_search(self, *, search_dir: Path) -> int:
             if not search_dir.is_dir():
@@ -563,7 +556,14 @@ class StatusStats:
                 # Note : skip md-prep sources
                 if str(search_file.name).startswith("md_"):
                     continue
-                number_search += self.status_stats.review_manager.dataset.get_nr_in_bib(
-                    file_path=search_file
+
+                # TODO : incomplete (only covers bib files?!)
+                bib_loader = BIBLoader(
+                    filename=search_file,
+                    logger=self.status_stats.review_manager.logger,
+                    unique_id_field="ID",
                 )
+
+                number_search += bib_loader.get_nr_in_bib()
+
             return number_search

@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import colrev.review_manager
+from colrev.constants import ExitCodes
 
 
 def main() -> int:
@@ -13,11 +14,9 @@ def main() -> int:
     msgfile = Path(sys.argv[1])
 
     review_manager = colrev.review_manager.ReviewManager()
-    ret = review_manager.report(msg_file=msgfile)
+    review_manager.report(msg_file=msgfile)
 
-    print(ret["msg"])
-
-    return ret["status"]
+    return ExitCodes.SUCCESS
 
 
 if __name__ == "__main__":

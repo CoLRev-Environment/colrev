@@ -43,7 +43,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
             review_manager=prep_operation.review_manager
         )
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record by applying source-specific fixes"""
 
         # Note : we take the first origin (ie., the source-specific prep should

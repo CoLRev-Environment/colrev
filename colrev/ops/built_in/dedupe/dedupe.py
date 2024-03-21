@@ -16,6 +16,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -60,9 +61,7 @@ class Dedupe(JsonSchemaMixin):
 
         records_df.loc[
             records_df[Fields.STATUS].isin(
-                colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_processed
-                )
+                RecordState.get_post_x_states(state=RecordState.md_processed)
             ),
             "search_set",
         ] = "old_search"
@@ -85,7 +84,7 @@ class Dedupe(JsonSchemaMixin):
             id_sets=duplicate_id_sets, complete_dedupe=True
         )
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Merge duplicate records",
         )
         # TODO : export to custom path

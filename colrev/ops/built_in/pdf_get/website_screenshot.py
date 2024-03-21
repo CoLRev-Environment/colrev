@@ -17,10 +17,10 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
-
-
 # pylint: disable=too-few-public-methods
 
 
@@ -54,7 +54,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
         if self.screenshot_service_available():
             return
 
-        self.review_manager.environment_manager.register_ports(ports=["3000"])
+        self.review_manager.environment_manager.register_ports(["3000"])
 
         try:
             client = docker.from_env()
@@ -133,9 +133,8 @@ class WebsiteScreenshot(JsonSchemaMixin):
                 value=str(pdf_filepath),
                 source="chrome (browserless) screenshot",
             )
-            record.data.update(
-                colrev_status=colrev.record.RecordState.rev_prescreen_included
-            )
+            # pylint: disable=colrev-direct-status-assign
+            record.data.update(colrev_status=RecordState.rev_prescreen_included)
             record.update_field(
                 key="urldate", value=urldate, source="chrome (browserless) screenshot"
             )
@@ -156,7 +155,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
         self._start_screenshot_service()
 
-        pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+        pdf_filepath = self.review_manager.get_path(Filepaths.PDF_DIR) / Path(
             f"{record.data['ID']}.pdf"
         )
         record = self._add_screenshot(record=record, pdf_filepath=pdf_filepath)

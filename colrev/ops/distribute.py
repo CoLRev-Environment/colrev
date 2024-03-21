@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.operation
 import colrev.settings
 from colrev.constants import Fields
+from colrev.writer.write_utils import write_file
 
 
 class Distribute(colrev.operation.Operation):
@@ -31,6 +32,20 @@ class Distribute(colrev.operation.Operation):
             for x in environment_manager.local_repos()
             if "curated_metadata/" not in x["repo_source_path"]
         ]
+
+    def get_next_id(self, *, bib_file: Path) -> int:
+        """Get the next ID (incrementing counter)"""
+        ids = []
+        if bib_file.is_file():
+            with open(bib_file, encoding="utf8") as file:
+                line = file.readline()
+                while line:
+                    if "@" in line[:3]:
+                        current_id = line[line.find("{") + 1 : line.rfind(",")]
+                        ids.append(current_id)
+                    line = file.readline()
+        max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
+        return max_id
 
     @colrev.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
@@ -78,13 +93,13 @@ class Distribute(colrev.operation.Operation):
                 target_bib_file = target / Path("data/search/local_import.bib")
                 self.review_manager.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
-                    with open(target_bib_file, encoding="utf8") as target_bib:
-                        import_records_dict = (
-                            self.review_manager.dataset.load_records_dict(
-                                load_str=target_bib.read()
-                            )
-                        )
-                        import_records = list(import_records_dict.values())
+
+                    import_records_dict = colrev.loader.load_utils.load(
+                        filename=target_bib_file,
+                        logger=self.review_manager.logger,
+                    )
+                    import_records = list(import_records_dict.values())
+
                 else:
                     import_records = []
 
@@ -100,19 +115,14 @@ class Distribute(colrev.operation.Operation):
                     self.review_manager.save_settings()
 
                 if 0 != len(import_records):
-                    record_id = int(
-                        self.review_manager.dataset.get_next_id(
-                            bib_file=target_bib_file
-                        )
-                    )
+                    record_id = int(self.get_next_id(bib_file=target_bib_file))
 
                 record[Fields.ID] = f"{record_id}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))
                 import_records.append(record)
 
                 import_records_dict = {r[Fields.ID]: r for r in import_records}
-                self.review_manager.dataset.save_records_dict_to_file(
-                    records=import_records_dict, save_path=target_bib_file
-                )
 
-                self.review_manager.dataset.add_changes(path=target_bib_file)
+                write_file(records_dict=import_records_dict, filename=target_bib_file)
+
+                self.review_manager.dataset.add_changes(target_bib_file)

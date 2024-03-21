@@ -10,8 +10,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 
@@ -47,6 +45,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -89,7 +88,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of WebOfScience"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
@@ -101,7 +100,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -111,20 +110,32 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def _load_bib(self) -> dict:
+        def field_mapper(record_dict: dict) -> None:
+            for key in list(record_dict.keys()):
+                if key not in ["ID", "ENTRYTYPE"]:
+                    record_dict[key.lower()] = record_dict.pop(key)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+            field_mapper=field_mapper,
+        )
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = bib_loader.load_bib_file(check_bib_file=False)
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
+        self,
+        record: colrev.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
     ) -> colrev.record.Record:
         """Source-specific preparation for Web of Science"""
 

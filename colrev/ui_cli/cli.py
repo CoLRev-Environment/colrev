@@ -27,6 +27,8 @@ import colrev.ui_cli.cli_validation
 import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
@@ -386,17 +388,17 @@ def retrieve(
         {"verbose_mode": verbose, "force_mode": force, "high_level_operation": True},
     )
 
-    if not any(review_manager.search_dir.iterdir()) and not any(
-        review_manager.pdf_dir.iterdir()
-    ):
+    pdf_dir = review_manager.get_path(Filepaths.PDF_DIR)
+    search_dir = review_manager.get_path(Filepaths.SEARCH_DIR)
+    if not any(search_dir.iterdir()) and not any(pdf_dir.iterdir()):
         # Note : API-based searches automatically retrieve files
         # when they are added, i.e., the following message should
         # not be shown.
         print(
             "To retrieve search results,\n"
             " - copy files (*.bib, *.ris, *.xlsx, ...) "
-            f"to the directory {review_manager.SEARCHDIR_RELATIVE} or\n"
-            f" - copy PDF files to the directory {review_manager.PDF_DIR_RELATIVE} or \n"
+            f"to the directory {Filepaths.SEARCH_DIR} or\n"
+            f" - copy PDF files to the directory {Filepaths.PDF_DIR} or \n"
             " - add an API-based search, as described in the documentation:\n"
             "https://colrev.readthedocs.io/en/latest/manual/metadata_retrieval/search.html"
         )
@@ -647,20 +649,6 @@ def load(
     help="Polish record metadata (includes records in md_processed or beyond).",
 )
 @click.option(
-    "--reset_records",
-    default="NA",
-    type=str,
-    help="Reset record metadata to the imported version. "
-    "Format: --reset_records ID1,ID2,ID3",
-)
-@click.option(
-    "-rid",
-    "--reset_ids",
-    is_flag=True,
-    default=False,
-    help="Reset IDs that have been changed (to fix the sort order in data/records.bib)",
-)
-@click.option(
     "-sid",
     "--set_ids",
     is_flag=True,
@@ -720,8 +708,6 @@ def prep(
     params: str,
     keep_ids: bool,
     polish: bool,
-    reset_records: str,
-    reset_ids: bool,
     set_ids: bool,
     debug: str,
     debug_file: Path,
@@ -743,16 +729,6 @@ def prep(
         )
         prep_operation = review_manager.get_prep_operation()
 
-        if reset_records != "NA":
-            try:
-                reset_records = str(reset_records)
-            except ValueError:
-                pass
-            prep_operation.reset_records(reset_ids=reset_records.split(","))
-            return
-        if reset_ids:
-            prep_operation.reset_ids()
-            return
         if set_ids:
             prep_operation.set_ids()
             return
@@ -1303,7 +1279,21 @@ def screen(
         screen_operation.include_all_in_screen(persist=include_all_always)
         return
     if add_criterion:
-        screen_operation.add_criterion(criterion_to_add=add_criterion)
+        assert add_criterion.count(",") == 2
+        (
+            criterion_name,
+            criterion_type_str,
+            criterion_explanation,
+        ) = add_criterion.split(",")
+        criterion_type = colrev.settings.ScreenCriterionType[criterion_type_str]
+        criterion = colrev.settings.ScreenCriterion(
+            explanation=criterion_explanation,
+            criterion_type=criterion_type,
+            comment="",
+        )
+        screen_operation.add_criterion(
+            criterion_name=criterion_name, criterion=criterion
+        )
         return
     if delete_criterion:
         screen_operation.delete_criterion(criterion_to_delete=delete_criterion)
@@ -1322,11 +1312,14 @@ def screen(
 
 
 def _extract_coverpage(*, cover: Path) -> None:
+    # pylint: disable=import-outside-toplevel
+    import colrev.record_pdf
+
     cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
     cp_path.mkdir(exist_ok=True)
 
     assert Path(cover).suffix == ".pdf"
-    record = colrev.record.Record(data={Fields.FILE: cover})
+    record = colrev.record_pdf.PDFRecord({Fields.FILE: cover})
     record.extract_pages(
         pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
     )
@@ -1643,8 +1636,8 @@ def pdf_get_man(
             for r in records.values()
             if r[Fields.STATUS]
             in [
-                colrev.record.RecordState.pdf_needs_manual_retrieval,
-                colrev.record.RecordState.rev_prescreen_included,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.rev_prescreen_included,
             ]
         ]
         pdf_get_man_records_df = pd.DataFrame.from_records(pdf_get_man_records)
@@ -1679,6 +1672,7 @@ def pdf_get_man(
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
     from PyPDF2 import PdfFileReader
     import colrev.qm.colrev_pdf_id
+    import colrev.record_pdf
 
     try:
         pdf_reader = PdfFileReader(str(pdf_path), strict=False)
@@ -1687,32 +1681,16 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
         return
 
     assert Path(pdf_path).suffix == ".pdf"
-
-    first_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=1,
-        hash_size=16,
-    )
+    record = colrev.record_pdf.PDFRecord({"file": pdf_path})
+    first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
     print(f"first page: {first_page_average_hash_16}")
-    first_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=1,
-        hash_size=32,
-    )
+    first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)
     print(f"first page: {first_page_average_hash_32}")
 
     last_page_nr = len(pdf_reader.pages)
-    last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=last_page_nr,
-        hash_size=16,
-    )
+    last_page_average_hash_16 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=16)
     print(f"last page: {last_page_average_hash_16}")
-    last_page_average_hash_32 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-        pdf_path=Path(pdf_path),
-        page_nr=last_page_nr,
-        hash_size=32,
-    )
+    last_page_average_hash_32 = record.get_pdf_hash(page_nr=last_page_nr, hash_size=32)
     print(f"last page: {last_page_average_hash_32}")
 
 
@@ -1848,7 +1826,7 @@ def _delete_first_pages_cli(
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
                 pdf_prep_man_operation.set_pdf_man_prepared(
-                    record=colrev.record.Record(data=record_dict)
+                    record=colrev.record.Record(record_dict)
                 )
             else:
                 print("no file in record")
@@ -2075,11 +2053,13 @@ def data(
     ret = data_operation.main()
     if data_operation.review_manager.in_ci_environment():
         if ret["ask_to_commit"]:
-            review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+            review_manager.dataset.create_commit(
+                msg="Data and synthesis", manual_author=True
+            )
     else:
         if ret["ask_to_commit"]:
             if input("Create commit (y/n)?") == "y":
-                review_manager.create_commit(
+                review_manager.dataset.create_commit(
                     msg="Data and synthesis", manual_author=True
                 )
         if ret["no_endpoints_registered"]:
@@ -2439,7 +2419,7 @@ def env(
 
     if register:
         environment_manager = review_manager.get_environment_manager()
-        environment_manager.register_repo(path_to_register=Path.cwd())
+        environment_manager.register_repo(Path.cwd())
         return
 
     if unregister is not None:
@@ -2456,7 +2436,7 @@ def env(
                 "repos"
             ] = updated_local_repos
             environment_manager.save_environment_registry(
-                updated_registry=environment_manager.environment_registry
+                environment_manager.environment_registry
             )
             logging.info("Removed from local registry: %s", unregister)
         return
@@ -2524,7 +2504,7 @@ def settings(
     if update_hooks:
         print("Update pre-commit hooks")
 
-        if review_manager.dataset.has_changes():
+        if review_manager.dataset.has_record_changes():
             print("Clean repo required. Commit or stash changes.")
             return
 
@@ -2539,8 +2519,8 @@ def settings(
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)  # nosec
 
-        review_manager.dataset.add_changes(path=Path(".pre-commit-config.yaml"))
-        review_manager.create_commit(msg="Update pre-commit hooks")
+        review_manager.dataset.add_changes(Path(".pre-commit-config.yaml"))
+        review_manager.dataset.create_commit(msg="Update pre-commit hooks")
         print("Successfully updated pre-commit hooks")
         return
 
@@ -2572,8 +2552,8 @@ def settings(
         with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(project_settings, outfile, indent=4)
 
-        review_manager.dataset.add_changes(path=Path("settings.json"))
-        review_manager.create_commit(msg="Change settings", manual_author=True)
+        review_manager.dataset.add_changes(Path("settings.json"))
+        review_manager.dataset.create_commit(msg="Change settings", manual_author=True)
 
     # import colrev_ui.ui_web.settings_editor
 
@@ -2823,7 +2803,7 @@ def show(  # type: ignore
 
     elif keyword == "cmd_history":
         cmds = []
-        colrev.operation.CheckOperation(review_manager=review_manager)
+        colrev.operation.CheckOperation(review_manager)
         revlist = review_manager.dataset.get_repo().iter_commits()
 
         for commit in reversed(list(revlist)):
@@ -2939,7 +2919,7 @@ def upgrade(
 
         review_manager.settings.project.auto_upgrade = False
         review_manager.save_settings()
-        review_manager.create_commit(msg="Disable auto-upgrade")
+        review_manager.dataset.create_commit(msg="Disable auto-upgrade")
         return
     review_manager = colrev.review_manager.ReviewManager(
         force_mode=True, verbose_mode=verbose
@@ -3080,7 +3060,7 @@ def merge(
     )
 
     if not branch:
-        colrev.operation.CheckOperation(review_manager=review_manager)
+        colrev.operation.CheckOperation(review_manager)
         git_repo = review_manager.dataset.get_repo()
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
@@ -3120,7 +3100,7 @@ def undo(
     )
 
     if selection == "commit":
-        colrev.operation.CheckOperation(review_manager=review_manager)
+        colrev.operation.CheckOperation(review_manager)
         git_repo = review_manager.dataset.get_repo()
         git_repo.git.reset("--hard", "HEAD~1")
 

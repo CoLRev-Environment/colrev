@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import colrev.env.language_service
 import colrev.env.utils
 import colrev.qm.quality_model
 from colrev.constants import Fields
@@ -20,7 +19,6 @@ class TextInPDFChecker:
 
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
-        self.language_service = colrev.env.language_service.LanguageService()
 
     def run(self, *, record: colrev.record.Record) -> None:
         """Run the no-text-in-pdf checks"""
@@ -45,9 +43,7 @@ class TextInPDFChecker:
         if record.data[Fields.TEXT_FROM_PDF] == "":
             return False
 
-        return "eng" == self.language_service.compute_language(
-            text=record.data[Fields.TEXT_FROM_PDF]
-        )
+        return True
 
 
 def register(quality_model: colrev.qm.quality_model.QualityModel) -> None:

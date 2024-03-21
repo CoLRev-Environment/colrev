@@ -7,9 +7,12 @@ import pytest
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record
+import colrev.record_prep
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
@@ -28,7 +31,7 @@ v1 = {
         Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
     },
     Fields.D_PROV: {},
-    Fields.STATUS: colrev.record.RecordState.md_prepared,
+    Fields.STATUS: RecordState.md_prepared,
     Fields.ORIGIN: ["import.bib/id_0001"],
     Fields.YEAR: "2020",
     Fields.TITLE: "EDITORIAL",
@@ -51,7 +54,7 @@ v2 = {
         Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
     },
     Fields.D_PROV: {},
-    Fields.STATUS: colrev.record.RecordState.md_prepared,
+    Fields.STATUS: RecordState.md_prepared,
     Fields.ORIGIN: ["import.bib/id_0001"],
     Fields.YEAR: "2020",
     Fields.TITLE: "EDITORIAL",
@@ -62,8 +65,8 @@ v2 = {
     Fields.PAGES: "1--3",
 }
 
-r1 = colrev.record.Record(data=v1)
-r2 = colrev.record.Record(data=v2)
+r1 = colrev.record.Record(v1)
+r2 = colrev.record.Record(v2)
 
 
 def test_eq() -> None:
@@ -77,6 +80,14 @@ def test_copy() -> None:
     """Test record copies"""
     r1_cop = r1.copy()
     assert r1 == r1_cop
+
+
+def test_get_data() -> None:
+    """Test record.get_data()"""
+    expected = v1
+    r1.data[Fields.ORIGIN] = "import.bib/id_0001"
+    actual = r1.get_data()
+    assert expected == actual
 
 
 def test_update_field() -> None:
@@ -128,6 +139,8 @@ def test_rename_field() -> None:
 
     r2_mod = r2.copy()
 
+    r2_mod.rename_field(key="xyz", new_key="abc")
+
     # Identifying field
     r2_mod.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
     expected = "import.bib/id_0001|rename-from:journal"
@@ -167,7 +180,7 @@ def test_remove_field() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -180,6 +193,8 @@ def test_remove_field() -> None:
     actual = r2_mod.data
     print(actual)
     assert expected == actual
+    r2_mod.data.pop(Fields.MD_PROV, None)
+    r2_mod.remove_field(key=Fields.PAGES, not_missing_note=True, source="test")
 
 
 def test_diff() -> None:
@@ -195,7 +210,7 @@ def test_diff() -> None:
     r2_mod.update_field(key="non_identifying_field", value="nfi_value", source="test")
     r2_mod.update_field(key=Fields.BOOKTITLE, value="ICIS", source="test")
     r2_mod.update_field(key=Fields.PUBLISHER, value="Elsevier", source="test")
-    print(r1.get_diff(other_record=r2_mod))
+    print(r1.get_diff(r2_mod))
     expected = [
         (
             "add",
@@ -211,10 +226,10 @@ def test_diff() -> None:
         ("add", "", [(Fields.BOOKTITLE, "ICIS"), (Fields.PUBLISHER, "Elsevier")]),
         ("remove", "", [(Fields.PAGES, "1--3")]),
     ]
-    actual = r1.get_diff(other_record=r2_mod)
+    actual = r1.get_diff(r2_mod)
     assert expected == actual
 
-    print(r1.get_diff(other_record=r2_mod, identifying_fields_only=False))
+    print(r1.get_diff(r2_mod, identifying_fields_only=False))
     expected = [
         (
             "add",
@@ -247,14 +262,14 @@ def test_diff() -> None:
         ),
         ("remove", "", [(Fields.PAGES, "1--3")]),
     ]
-    actual = r1.get_diff(other_record=r2_mod, identifying_fields_only=False)
+    actual = r1.get_diff(r2_mod, identifying_fields_only=False)
     assert expected == actual
 
 
 def test_change_entrytype_inproceedings(
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
-    """Test record.change_entrytype(new_entrytype=ENTRYTYPES.INPROCEEDINGS)"""
+    """Test record.change_entrytype(ENTRYTYPES.INPROCEEDINGS)"""
 
     r1_mod = r1.copy()
     r1_mod.data[Fields.VOLUME] = "UNKNOWN"
@@ -267,7 +282,7 @@ def test_change_entrytype_inproceedings(
         source="import.bib/id_0001",
         note="inconsistent-with-entrytype",
     )
-    r1_mod.change_entrytype(new_entrytype=ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+    r1_mod.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
     print(r1_mod.data)
     expected = {
         Fields.ID: "r1",
@@ -283,8 +298,8 @@ def test_change_entrytype_inproceedings(
                 "note": "",
             },
         },
-        Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.D_PROV: {"language": {"note": "", "source": "manual"}},
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.BOOKTITLE: "MIS Quarterly",
         Fields.YEAR: "2020",
@@ -297,16 +312,67 @@ def test_change_entrytype_inproceedings(
     actual = r1_mod.data
     assert expected == actual
 
+    r1_mod.change_entrytype(ENTRYTYPES.MASTERSTHESIS, qm=quality_model)
+
     with pytest.raises(
         colrev.exceptions.MissingRecordQualityRuleSpecification,
     ):
-        r1_mod.change_entrytype(new_entrytype="dialoge", qm=quality_model)
+        r1_mod.change_entrytype("dialoge", qm=quality_model)
+
+
+def test_change_entrytype_inproceedings_2(
+    quality_model: colrev.qm.quality_model.QualityModel,
+) -> None:
+
+    record_dict = {
+        Fields.ID: "r2",
+        Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+        Fields.MD_PROV: {
+            Fields.AUTHOR: {"source": "files.bib/000025", "note": ""},
+            Fields.TITLE: {"source": "files.bib/000025", "note": ""},
+            Fields.JOURNAL: {"source": "generic_field_requirements", "note": "missing"},
+            Fields.YEAR: {"source": "generic_field_requirements", "note": ""},
+            Fields.VOLUME: {"source": "generic_field_requirements", "note": "missing"},
+            Fields.NUMBER: {"source": "generic_field_requirements", "note": "missing"},
+        },
+        Fields.STATUS: RecordState.md_needs_manual_preparation,
+        Fields.ORIGIN: ["files.bib/000025"],
+        Fields.AUTHOR: "Aydin, Ömer and Karaarslan, Enis",
+        Fields.BOOKTITLE: "Emerging Computer Technologies",
+        Fields.TITLE: "OpenAI ChatGPT Generated Literature Review: Digital Twin in Healthcare",
+        Fields.YEAR: "2022",
+        Fields.PAGES: "22--31",
+    }
+    record = colrev.record.Record(record_dict)
+    record.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
+
+    expected = {
+        Fields.ID: "r2",
+        Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
+        Fields.D_PROV: {},
+        Fields.MD_PROV: {
+            Fields.AUTHOR: {"source": "files.bib/000025", "note": ""},
+            Fields.TITLE: {"source": "files.bib/000025", "note": "language-unknown"},
+            Fields.BOOKTITLE: {"source": "manual", "note": ""},
+            Fields.YEAR: {"source": "generic_field_requirements", "note": ""},
+            Fields.PAGES: {"source": "manual", "note": ""},
+        },
+        Fields.STATUS: RecordState.md_needs_manual_preparation,
+        Fields.ORIGIN: ["files.bib/000025"],
+        Fields.AUTHOR: "Aydin, Ömer and Karaarslan, Enis",
+        Fields.BOOKTITLE: "Emerging Computer Technologies",
+        Fields.TITLE: "OpenAI ChatGPT Generated Literature Review: Digital Twin in Healthcare",
+        Fields.YEAR: "2022",
+        Fields.PAGES: "22--31",
+    }
+
+    assert record.data == expected
 
 
 def test_change_entrytype_article(
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
-    """Test record.change_entrytype(new_entrytype=ENTRYTYPES.ARTICLE)"""
+    """Test record.change_entrytype(ENTRYTYPES.ARTICLE)"""
     input_value = {
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.INPROCEEDINGS,
@@ -322,7 +388,7 @@ def test_change_entrytype_article(
             },
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.BOOKTITLE: "MIS Quarterly",
         Fields.YEAR: "2020",
@@ -354,8 +420,8 @@ def test_change_entrytype_article(
                 "note": DefectCodes.MISSING,
             },
         },
-        Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_needs_manual_preparation,
+        Fields.D_PROV: {"language": {"note": "", "source": "manual"}},
+        Fields.STATUS: RecordState.md_needs_manual_preparation,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "Editorial",
@@ -367,8 +433,8 @@ def test_change_entrytype_article(
         Fields.NUMBER: "UNKNOWN",
         Fields.LANGUAGE: "eng",
     }
-    rec = colrev.record.Record(data=input_value)
-    rec.change_entrytype(new_entrytype=ENTRYTYPES.ARTICLE, qm=quality_model)
+    rec = colrev.record.Record(input_value)
+    rec.change_entrytype(ENTRYTYPES.ARTICLE, qm=quality_model)
     actual = rec.data
     assert expected == actual
 
@@ -387,7 +453,7 @@ def test_add_provenance_all() -> None:
             Fields.ID: {"source": "import.bib/id_0001", "note": ""},
             Fields.ORIGIN: {"source": "import.bib/id_0001", "note": ""},
         },
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -426,21 +492,21 @@ def test_print_citation_format() -> None:
 
 def test_shares_origins() -> None:
     """Test record.shares_origins()"""
-    assert r1.shares_origins(other_record=r2)
+    assert r1.shares_origins(r2)
 
 
 def test_get_value() -> None:
     """Test record.get_value()"""
     expected = "Rai, Arun"
-    actual = r1.get_value(key=Fields.AUTHOR)
+    actual = r1.get_value(Fields.AUTHOR)
     assert expected == actual
 
     expected = "Rai, Arun"
-    actual = r1.get_value(key=Fields.AUTHOR, default="custom_file")
+    actual = r1.get_value(Fields.AUTHOR, default="custom_file")
     assert expected == actual
 
     expected = "custom_file"
-    actual = r1.get_value(key=Fields.FILE, default="custom_file")
+    actual = r1.get_value(Fields.FILE, default="custom_file")
     assert expected == actual
 
 
@@ -525,10 +591,10 @@ def test_has_overlapping_colrev_id() -> None:
     r2_mod = r1.copy()
     r2_mod.data[Fields.COLREV_ID] = r2_mod.create_colrev_id()
 
-    assert r2_mod.has_overlapping_colrev_id(record=r1_mod)
+    assert r2_mod.has_overlapping_colrev_id(r1_mod)
 
     r2_mod.data[Fields.COLREV_ID] = []
-    assert not r2_mod.has_overlapping_colrev_id(record=r1_mod)
+    assert not r2_mod.has_overlapping_colrev_id(r1_mod)
 
 
 def test_provenance() -> None:
@@ -589,7 +655,7 @@ def test_set_masterdata_complete() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -621,7 +687,7 @@ def test_set_masterdata_complete() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -651,7 +717,7 @@ def test_set_masterdata_complete() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -693,7 +759,7 @@ def test_set_masterdata_consistent() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -715,7 +781,7 @@ def test_set_masterdata_consistent() -> None:
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.MD_PROV: {},
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -755,7 +821,7 @@ def test_reset_pdf_provenance_notes() -> None:
         Fields.D_PROV: {
             Fields.FILE: {"source": "test", "note": ""},
         },
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -785,7 +851,7 @@ def test_reset_pdf_provenance_notes() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {Fields.FILE: {"source": "ORIGINAL", "note": ""}},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -817,7 +883,7 @@ def test_reset_pdf_provenance_notes() -> None:
         Fields.D_PROV: {
             Fields.FILE: {"source": "NA", "note": ""},
         },
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -838,7 +904,7 @@ def test_cleanup_pdf_processing_fields() -> None:
 
     r1_mod = r1.copy()
     r1_mod.data["text_from_pdf"] = "This is the full text inserted from the PDF...."
-    r1_mod.data["pages_in_file"] = "12"
+    r1_mod.data[Fields.NR_PAGES_IN_FILE] = "12"
 
     expected = {
         Fields.ID: "r1",
@@ -853,7 +919,7 @@ def test_cleanup_pdf_processing_fields() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -891,8 +957,8 @@ def test_merge_select_non_all_caps() -> None:
     """Test record.merge() - all-caps cases"""
     # Select title-case (not all-caps title) and full author name
 
-    r1_mod = colrev.record.Record(data=v1).copy()
-    r2_mod = colrev.record.Record(data=v2).copy()
+    r1_mod = colrev.record.Record(v1).copy()
+    r2_mod = colrev.record.Record(v2).copy()
     print(r1_mod)
     print(r2_mod)
     r1_mod.data[Fields.TITLE] = "Editorial"
@@ -910,7 +976,7 @@ def test_merge_select_non_all_caps() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001", "import.bib/id_0002"],
         Fields.YEAR: "2020",
         Fields.TITLE: "Editorial",
@@ -921,7 +987,7 @@ def test_merge_select_non_all_caps() -> None:
         Fields.PAGES: "1--3",
     }
 
-    r1_mod.merge(merging_record=r2_mod, default_source="test")
+    r1_mod.merge(r2_mod, default_source="test")
     actual = r1_mod.data
     assert expected == actual
 
@@ -937,7 +1003,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r2_mod.merge(merging_record=r1_mod, default_source="test")
+        r2_mod.merge(r1_mod, default_source="test")
 
     # Mismatching erratum (a-b)
     r1_mod = r1.copy()
@@ -946,7 +1012,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r1_mod.merge(merging_record=r2_mod, default_source="test")
+        r1_mod.merge(r2_mod, default_source="test")
 
     # Mismatching erratum (b-a)
     r1_mod = r1.copy()
@@ -955,7 +1021,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r2_mod.merge(merging_record=r1_mod, default_source="test")
+        r2_mod.merge(r1_mod, default_source="test")
 
     # Mismatching commentary
     r1_mod = r1.copy()
@@ -964,7 +1030,7 @@ def test_merge_except_errata() -> None:
     with pytest.raises(
         colrev.exceptions.InvalidMerge,
     ):
-        r2_mod.merge(merging_record=r1_mod, default_source="test")
+        r2_mod.merge(r1_mod, default_source="test")
 
 
 def test_merge_local_index(mocker) -> None:  # type: ignore
@@ -980,7 +1046,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
             Fields.ID: "r1",
             Fields.D_PROV: {},
             Fields.MD_PROV: {Fields.VOLUME: {"source": "source-1", "note": ""}},
-            Fields.STATUS: colrev.record.RecordState.md_prepared,
+            Fields.STATUS: RecordState.md_prepared,
             Fields.ORIGIN: ["orig1"],
             Fields.TITLE: "EDITORIAL",
             Fields.AUTHOR: "Rai, Arun",
@@ -997,7 +1063,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
                 Fields.VOLUME: {"source": "source-1", "note": ""},
                 Fields.NUMBER: {"source": "source-1", "note": ""},
             },
-            Fields.STATUS: colrev.record.RecordState.md_prepared,
+            Fields.STATUS: RecordState.md_prepared,
             Fields.ORIGIN: ["orig2"],
             Fields.TITLE: "Editorial",
             Fields.AUTHOR: "ARUN RAI",
@@ -1008,71 +1074,8 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
         }
     )
 
-    r1_mod.merge(merging_record=r2_mod, default_source="test")
+    r1_mod.merge(r2_mod, default_source="test")
     print(r1_mod)
-
-    # from colrev.env import LocalIndex
-
-    # LOCAL_INDEX = LocalIndex()
-    # record = {
-    #     Fields.ID: "StandingStandingLove2010",
-    #     Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-    #     Fields.ORIGIN: "lr_db.bib/Standing2010",
-    #     Fields.STATUS: RecordState.rev_synthesized,
-    #     Fields.COLREV_ID: "colrev_id1:|a|decision-support-systems|49|1|2010|standing-standing-love|a-review-of-research-on-e-marketplaces-1997-2008;",
-    #     "colrev_pdf_id": "cpid2:ffffffffffffffffc3f00fffc2000023c2000023c0000003ffffdfffc0005fffc007ffffffffffffffffffffc1e00003c1e00003cfe00003ffe00003ffe00003ffffffffe7ffffffe3dd8003c0008003c0008003c0008003c0008003c0008003c0008003c0008003c0018003ffff8003e7ff8003e1ffffffffffffffffffffff",
-    #     "exclusion_criteria": "NA",
-    #     Fields.FILE: "/home/gerit/ownCloud/data/journals/DSS/49_1/A-review-of-research-on-e-marketplaces-1997-2008_2010.pdf",
-    #     "doi": "10.1016/J.DSS.2009.12.008",
-    #     Fields.AUTHOR: "Standing, Susan and Standing, Craig and Love, Peter E. D",
-    #     Fields.JOURNAL: "Decision Support Systems",
-    #     Fields.TITLE: "A review of research on e-marketplaces 1997–2008",
-    #     Fields.YEAR: "2010",
-    #     Fields.VOLUME: "49",
-    #     Fields.NUMBER: "1",
-    #     Fields.PAGES: "41--51",
-    #     "literature_review": "yes",
-    #     "metadata_source_repository_paths": "/home/gerit/ownCloud/data/AI Research/Literature Reviews/LRDatabase/wip/lrs_target_variable",
-    # }
-
-    # LOCAL_INDEX.index_record(record=record)
-
-    # DEDUPE test:
-
-    local_index_instance = colrev.env.local_index.LocalIndex()
-    mocker.patch(
-        "colrev.env.local_index.LocalIndex.is_duplicate", return_value="unknown"
-    )
-
-    # short cids / empty lists
-    assert "unknown" == local_index_instance.is_duplicate(
-        record1_colrev_id=[], record2_colrev_id=[]
-    )
-    assert "unknown" == local_index_instance.is_duplicate(
-        record1_colrev_id=["short"], record2_colrev_id=["short"]
-    )
-
-    # Same repo and overlapping colrev_ids -> duplicate
-    # assert "yes" == local_index_instance.is_duplicate(
-    #     record1_colrev_id=[
-    #         "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|power-and-information-technology-research-a-metatriangulation-review"
-    #     ],
-    #     record2_colrev_id=[
-    #         "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|review-power-and-information-technology-research-a-metatriangulation-review"
-    #     ],
-    # )
-
-    mocker.patch("colrev.env.local_index.LocalIndex.is_duplicate", return_value="no")
-
-    # Different curated repos -> no duplicate
-    assert "no" == local_index_instance.is_duplicate(
-        record1_colrev_id=[
-            "colrev_id1:|a|mis-quarterly|26|4|2002|jasperson-carte-saunders-butler-croes-zheng|power-and-information-technology-research-a-metatriangulation-review"
-        ],
-        record2_colrev_id=[
-            "colrev_id1:|a|information-systems-research|15|2|2004|fichman|real-options-and-it-platform-adoption-implications-for-theory-and-practice"
-        ],
-    )
 
 
 def test_get_container_title() -> None:
@@ -1117,7 +1120,7 @@ def test_complete_provenance() -> None:
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.D_PROV: {Fields.URL: {"source": "test", "note": ""}},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -1154,7 +1157,7 @@ def test_get_toc_key() -> None:
         Fields.YEAR: "2012",
     }
     expected = "international-conference-on-information-systems|2012"
-    actual = colrev.record.Record(data=input_value).get_toc_key()
+    actual = colrev.record.Record(input_value).get_toc_key()
     assert expected == actual
 
     input_value = {
@@ -1167,14 +1170,14 @@ def test_get_toc_key() -> None:
         colrev_exceptions.NotTOCIdentifiableException,
         match="ENTRYTYPE .* not toc-identifiable",
     ):
-        colrev.record.Record(data=input_value).get_toc_key()
+        colrev.record.Record(input_value).get_toc_key()
 
 
 def test_prescreen_exclude() -> None:
     """Test record.prescreen_exclude()"""
 
     r1_mod = r1.copy()
-    r1_mod.data[Fields.STATUS] = colrev.record.RecordState.rev_synthesized
+    r1_mod.data[Fields.STATUS] = RecordState.rev_synthesized
     r1_mod.data[Fields.NUMBER] = "UNKNOWN"
     r1_mod.data[Fields.VOLUME] = "UNKNOWN"
 
@@ -1190,7 +1193,7 @@ def test_prescreen_exclude() -> None:
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.rev_prescreen_excluded,
+        Fields.STATUS: RecordState.rev_prescreen_excluded,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -1198,63 +1201,11 @@ def test_prescreen_exclude() -> None:
         Fields.JOURNAL: "MIS Quarterly",
         Fields.PAGES: "1--3",
         Fields.PRESCREEN_EXCLUSION: "retracted",
+        Fields.RETRACTED: FieldValues.RETRACTED,
     }
 
     actual = r1_mod.data
     print(actual)
-    assert expected == actual
-
-
-def test_parse_bib() -> None:
-    """Test parse_bib"""
-
-    r1_mod = r1.copy()
-    r1_mod.data[Fields.ORIGIN] = "import.bib/id_0001;md_crossref.bib/01;"
-    expected = {
-        Fields.ID: "r1",
-        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.MD_PROV: "year:import.bib/id_0001;;\n                                    title:import.bib/id_0001;;\n                                    author:import.bib/id_0001;;\n                                    journal:import.bib/id_0001;;\n                                    volume:import.bib/id_0001;;\n                                    number:import.bib/id_0001;;\n                                    pages:import.bib/id_0001;;",
-        Fields.D_PROV: "",
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
-        Fields.ORIGIN: "import.bib/id_0001;\n                                    md_crossref.bib/01;",
-        Fields.YEAR: "2020",
-        Fields.TITLE: "EDITORIAL",
-        Fields.AUTHOR: "Rai, Arun",
-        Fields.JOURNAL: "MIS Quarterly",
-        Fields.VOLUME: "45",
-        Fields.NUMBER: "1",
-        Fields.PAGES: "1--3",
-    }
-    print(type(r1_mod.data[Fields.ORIGIN]))
-    actual = r1_mod.get_data(stringify=True)
-    assert expected == actual
-
-
-def test_print_prescreen_record(capfd) -> None:  # type: ignore
-    """Test record.print_prescreen_record()"""
-
-    r1_mod = r1.copy()
-    expected = "  ID: r1 (article)\n  \x1b[92mEDITORIAL\x1b[0m\n  Rai, Arun\n  MIS Quarterly (2020) 45(1)\n"
-
-    r1_mod.print_prescreen_record()
-    actual, _ = capfd.readouterr()
-    assert expected == actual
-
-
-def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
-    """Test record.print_pdf_prep_man()"""
-    r2_mod = r2.copy()
-
-    r2_mod.data[Fields.ABSTRACT] = "This paper focuses on ..."
-    r2_mod.data[Fields.URL] = "www.gs.eu"
-    r2_mod.data[Fields.D_PROV][Fields.FILE] = {
-        "note": "nr_pages_not_matching,title_not_in_first_pages,author_not_in_first_pages"
-    }
-
-    expected = """\x1b[91mRai, A\x1b[0m\n\x1b[91mEDITORIAL\x1b[0m\nMISQ (2020) 45(1), \x1b[91mpp.1--3\x1b[0m\n\nAbstract: This paper focuses on ...\n\n\nurl: www.gs.eu\n\n"""
-
-    r2_mod.print_pdf_prep_man()
-    actual, _ = capfd.readouterr()
     assert expected == actual
 
 
@@ -1271,42 +1222,9 @@ def test_print_pdf_prep_man(capfd) -> None:  # type: ignore
 def test_format_author_field(input_string: str, expected: str) -> None:
     """Test record.format_author_field()"""
 
-    actual = colrev.record.PrepRecord.format_author_field(input_string=input_string)
-    assert expected == actual
-
-
-def test_extract_text_by_page(  # type: ignore
-    helpers, record_with_pdf: colrev.record.Record
-) -> None:
-    """Test record.extract_text_by_page()"""
-    expected = (
-        helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt")
-    ).read_text(encoding="utf-8")
-    actual = record_with_pdf.extract_text_by_page(pages=[0])
-    actual = actual.rstrip()
-    assert expected == actual
-
-
-def test_set_pages_in_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
-    """Test record.set_pages_in_pdf()"""
-
-    expected = 18
-    record_with_pdf.set_pages_in_pdf()
-    actual = record_with_pdf.data["pages_in_file"]
-    assert expected == actual
-
-
-def test_set_text_from_pdf(helpers, record_with_pdf: colrev.record.Record) -> None:  # type: ignore
-    """Test record.set_text_from_pdf()"""
-
-    expected = (
-        (helpers.test_data_path / Path("WagnerLukyanenkoParEtAl2022_content.txt"))
-        .read_text(encoding="utf-8")
-        .replace("\n", " ")
+    actual = colrev.record_prep.PrepRecord.format_author_field(
+        input_string=input_string
     )
-    record_with_pdf.set_text_from_pdf()
-    actual = record_with_pdf.data["text_from_pdf"]
-    actual = actual[0:4234]
     assert expected == actual
 
 
@@ -1314,7 +1232,7 @@ def test_get_retrieval_similarity() -> None:
     """Test record.get_retrieval_similarity()"""
 
     expected = 0.9333
-    actual = colrev.record.PrepRecord.get_retrieval_similarity(
+    actual = colrev.record_prep.PrepRecord.get_retrieval_similarity(
         record_original=r1, retrieved_record_original=r2
     )
     assert expected == actual
@@ -1349,7 +1267,7 @@ def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> No
     """Test record.format_if_mostly_upper()"""
 
     input_dict = {Fields.TITLE: input_text}
-    input_record = colrev.record.PrepRecord(data=input_dict)
+    input_record = colrev.record_prep.PrepRecord(input_dict)
     input_record.format_if_mostly_upper(key=Fields.TITLE, case=case)
     actual = input_record.data[Fields.TITLE]
     assert expected == actual
@@ -1375,7 +1293,7 @@ def test_rename_fields_based_on_mapping() -> None:
             "issue": {"source": "import.bib/id_0001|rename-from:number", "note": ""},
         },
         Fields.D_PROV: {},
-        Fields.STATUS: colrev.record.RecordState.md_prepared,
+        Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
         Fields.TITLE: "EDITORIAL",
@@ -1407,35 +1325,24 @@ def test_unify_pages_field() -> None:
     prep_rec.unify_pages_field()
 
 
-def test_preparation_save_condition() -> None:
-    """Test record.preparation_save_condition()"""
+def test_to_screen() -> None:
 
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.STATUS] = colrev.record.RecordState.md_imported
-    prep_rec.data[Fields.MD_PROV][Fields.TITLE]["note"] = DefectCodes.RECORD_NOT_IN_TOC
-    expected = True
-    actual = prep_rec.preparation_save_condition()
-    assert expected == actual
+    assert colrev.record_prep.PrepRecord(
+        data={Fields.STATUS: RecordState.pdf_prepared}
+    ).to_screen()
+    assert not colrev.record_prep.PrepRecord(
+        data={Fields.STATUS: RecordState.md_processed}
+    ).to_screen()
 
-    prep_rec.data[Fields.MD_PROV][Fields.TITLE]["note"] = DefectCodes.RECORD_NOT_IN_TOC
-    expected = True
-    actual = prep_rec.preparation_save_condition()
-    assert expected == actual
-
-
-def test_preparation_break_condition() -> None:
-    """Test record.preparation_break_condition()"""
-
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.MD_PROV][Fields.TITLE][
-        "note"
-    ] = DefectCodes.INCONSISTENT_WITH_DOI_METADATA
-    expected = False
-    actual = prep_rec.preparation_break_condition()
-    assert expected == actual
-
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.STATUS] = colrev.record.RecordState.rev_prescreen_excluded
-    expected = True
-    actual = prep_rec.preparation_break_condition()
-    assert expected == actual
+    assert not colrev.record_prep.PrepRecord(
+        data={
+            Fields.STATUS: RecordState.rev_synthesized,
+            Fields.SCREENING_CRITERIA: "focus_hr=in",
+        }
+    ).to_screen()
+    assert colrev.record_prep.PrepRecord(
+        data={
+            Fields.STATUS: RecordState.rev_synthesized,
+            Fields.SCREENING_CRITERIA: "focus_hr=TODO",
+        }
+    ).to_screen()

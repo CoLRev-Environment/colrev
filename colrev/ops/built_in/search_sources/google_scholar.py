@@ -10,8 +10,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 
@@ -47,6 +45,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation
+        self.review_manager = source_operation.review_manager
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -78,7 +77,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of GoogleScholar"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
@@ -90,7 +89,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -104,10 +103,10 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
@@ -116,27 +115,25 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         self, record: colrev.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.Record:
         """Source-specific preparation for GoogleScholar"""
-        if "note" in record.data:
-            if (
-                "cites: https://scholar.google.com/scholar?cites="
-                in record.data["note"]
-            ):
-                note = record.data["note"]
-                source = record.data[Fields.D_PROV]["note"]["source"]
-                record.rename_field(key="note", new_key=Fields.CITED_BY)
-                record.update_field(
-                    key=Fields.CITED_BY,
-                    value=record.data[Fields.CITED_BY][
-                        : record.data[Fields.CITED_BY].find(" cites: ")
-                    ],
-                    source="replace_link",
-                )
-                record.update_field(
-                    key="cited_by_link",
-                    value=note[note.find("cites: ") + 7 :],
-                    append_edit=False,
-                    source=source + "|extract-from-note",
-                )
+        if "cites: https://scholar.google.com/scholar?cites=" in record.data.get(
+            "note", ""
+        ):
+            note = record.data["note"]
+            source_field = record.get_data_provenance_source("note")
+            record.rename_field(key="note", new_key=Fields.CITED_BY)
+            record.update_field(
+                key=Fields.CITED_BY,
+                value=record.data[Fields.CITED_BY][
+                    : record.data[Fields.CITED_BY].find(" cites: ")
+                ],
+                source="replace_link",
+            )
+            record.update_field(
+                key="cited_by_link",
+                value=note[note.find("cites: ") + 7 :],
+                append_edit=False,
+                source=source_field + "|extract-from-note",
+            )
         if Fields.ABSTRACT in record.data:
             # Note: abstracts provided by GoogleScholar are very incomplete
             record.remove_field(key=Fields.ABSTRACT)

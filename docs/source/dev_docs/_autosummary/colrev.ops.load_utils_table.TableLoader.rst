@@ -16,6 +16,4 @@ colrev.ops.load\_utils\_table.TableLoader
    .. autosummary::
       :nosignatures:
 
-      ~TableLoader.convert_to_records
       ~TableLoader.load_table_entries
-      ~TableLoader.preprocess_records

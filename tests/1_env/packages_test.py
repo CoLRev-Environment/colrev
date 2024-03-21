@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
 
@@ -398,3 +399,9 @@ def test_update_package_list(
 
     os.chdir(Path(colrev_spec.origin).parents[1])  # type: ignore
     package_manager.update_package_list()
+
+
+def test_load_settings_not_supported() -> None:
+    """Test load_settings() with unsupported settings"""
+    with pytest.raises(colrev_exceptions.ParameterError):
+        colrev.env.package_manager.DefaultSettings.load_settings(data={"xyz": 123})

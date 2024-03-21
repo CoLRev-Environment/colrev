@@ -45,7 +45,7 @@ class LocalIndexPrep(JsonSchemaMixin):
         )
         self.prep_operation = prep_operation
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
         """Prepare the record metadata based on local-index"""
 
         # don't move to  jour_iss_number_year prep
@@ -58,7 +58,7 @@ class LocalIndexPrep(JsonSchemaMixin):
             # Note : cannot use local_index as an attribute of PrepProcess
             # because it creates problems with multiprocessing
             fields_to_remove = self.local_index_source.local_index.get_fields_to_remove(
-                record_dict=record.get_data()
+                record.get_data()
             )
             for field_to_remove in fields_to_remove:
                 if field_to_remove in record.data:
@@ -68,7 +68,7 @@ class LocalIndexPrep(JsonSchemaMixin):
                         source="local_index",
                     )
 
-        self.local_index_source.get_masterdata(
+        self.local_index_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
 

@@ -12,6 +12,7 @@ import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
 keys = [
@@ -175,11 +176,11 @@ def _validate_prep_prescreen_exclusions(
             prescreen_errors.append(prescreen_excluded_to_validate[index])
 
         for error in prescreen_errors:
-            colrev.record.Record(data=error).set_status(
-                target_state=colrev.record.RecordState.md_needs_manual_preparation
+            colrev.record.Record(error).set_status(
+                target_state=RecordState.md_needs_manual_preparation
             )
             validate_operation.review_manager.dataset.save_records_dict(
-                records={error[Fields.ID]: error},
+                {error[Fields.ID]: error},
                 partial=True,
             )
 
@@ -205,7 +206,7 @@ def _validate_prep(
         for origin in validation_element["origins"]:
             print()
             print(f"{origin[Fields.ORIGIN][0]} : change {origin['change_score']}")
-            colrev.record.Record(data=origin).print_citation_format()
+            colrev.record.Record(origin).print_citation_format()
             print_diff(
                 origin=origin,
                 record_dict=record_dict,
@@ -214,14 +215,14 @@ def _validate_prep(
 
         print()
         print(f"Current record: {record_dict[Fields.ID]}")
-        colrev.record.Record(data=record_dict).print_citation_format()
+        colrev.record.Record(record_dict).print_citation_format()
         print()
 
         user_selection = input("Validate [y,n,q for yes, no (undo), or quit]?")
 
         if user_selection == "n":
             validate_operation.review_manager.dataset.save_records_dict(
-                records={
+                {
                     validation_element["prior_record_dict"][
                         Fields.ID
                     ]: validation_element["prior_record_dict"]
@@ -362,4 +363,4 @@ def validate(
             print(validation_details)
 
     if validate_operation.review_manager.dataset.records_changed():
-        validate_operation.review_manager.create_commit(msg="validate")
+        validate_operation.review_manager.dataset.create_commit(msg="validate")

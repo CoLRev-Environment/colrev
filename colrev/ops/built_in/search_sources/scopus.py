@@ -10,8 +10,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.search
 import colrev.record
 from colrev.constants import Fields
 
@@ -77,7 +75,7 @@ class ScopusSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Scopus"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
@@ -89,7 +87,7 @@ class ScopusSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -99,15 +97,19 @@ class ScopusSearchSource(JsonSchemaMixin):
         """Not implemented"""
         return record
 
+    def _load_bib(self) -> dict:
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+        )
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = bib_loader.load_bib_file()
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
 
@@ -136,7 +138,7 @@ class ScopusSearchSource(JsonSchemaMixin):
                 )
 
             elif record.data["colrev.scopus.document_type"] == "Article":
-                record.change_entrytype(new_entrytype="article", qm=self.quality_model)
+                record.change_entrytype("article", qm=self.quality_model)
 
             record.remove_field(key="colrev.scopus.document_type")
 

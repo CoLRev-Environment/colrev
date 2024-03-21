@@ -10,8 +10,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.search
 import colrev.record
 
 # pylint: disable=unused-argument
@@ -80,7 +78,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ACM Digital Library"""
 
         if self.search_source.search_type == colrev.settings.SearchType.DB:
@@ -94,7 +92,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
             raise NotImplementedError
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
         record: colrev.record.Record,
@@ -108,11 +106,11 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
-            records = bib_loader.load_bib_file()
-
             return records
 
         raise NotImplementedError
