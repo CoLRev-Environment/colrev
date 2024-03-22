@@ -509,14 +509,14 @@ def test_language_format_error(
     # Test case 1: Language format error
     v_t_record.data[Fields.LANGUAGE] = "engg"
     language_format_checker.run(record=v_t_record)
-    assert v_t_record.get_data_provenance_notes(key=Fields.LANGUAGE) == [
+    assert v_t_record.get_data_provenance_notes(Fields.LANGUAGE) == [
         DefectCodes.LANGUAGE_FORMAT_ERROR
     ]
 
     # Test case 2: Language format correct
     v_t_record.data[Fields.LANGUAGE] = "eng"
     language_format_checker.run(record=v_t_record)
-    assert v_t_record.get_data_provenance_notes(key=Fields.LANGUAGE) == []
+    assert v_t_record.get_data_provenance_notes(Fields.LANGUAGE) == []
 
     # Test case 3: Ignoring language format error defect
     v_t_record.data[Fields.LANGUAGE] = "engg"
@@ -525,7 +525,7 @@ def test_language_format_error(
     )
     print(v_t_record)
     language_format_checker.run(record=v_t_record)
-    assert v_t_record.get_data_provenance_notes(key=Fields.LANGUAGE) == [
+    assert v_t_record.get_data_provenance_notes(Fields.LANGUAGE) == [
         f"IGNORE:{DefectCodes.LANGUAGE_FORMAT_ERROR}"
     ]
 

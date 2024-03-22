@@ -291,11 +291,22 @@ class Record:
         if Fields.D_PROV not in self.data:
             self.data[Fields.D_PROV] = {}
         for key in list(self.data[Fields.MD_PROV].keys()):
-            if key not in self.data and key != FieldValues.CURATED:
+            if (
+                key not in self.data
+                and key != FieldValues.CURATED
+                and "IGNORE:missing" not in self.get_masterdata_provenance_notes(key)
+            ):
                 del self.data[Fields.MD_PROV][key]
         for key in list(self.data[Fields.D_PROV].keys()):
-            if key not in self.data:
+            if (
+                key not in self.data
+                and "IGNORE:missing" not in self.get_data_provenance_notes(key)
+            ):
                 del self.data[Fields.D_PROV][key]
+
+        for non_prov_key in [Fields.ENTRYTYPE, Fields.ID] + FieldSet.PROVENANCE_KEYS:
+            self.data[Fields.MD_PROV].pop(non_prov_key, None)
+            self.data[Fields.D_PROV].pop(non_prov_key, None)
 
         for key in self.data.keys():
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.ENTRYTYPE]:
@@ -1037,7 +1048,7 @@ class Record:
                 "note": note,
             }
 
-    def get_data_provenance_notes(self, *, key: str) -> list:
+    def get_data_provenance_notes(self, key: str) -> list:
         """Get a data provenance note based on a key"""
         if Fields.D_PROV not in self.data:
             return []

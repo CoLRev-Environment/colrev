@@ -73,7 +73,7 @@ class Repare(colrev.operation.Operation):
             )
 
     def _fix_files(self, *, records: dict) -> None:
-
+        # pylint: disable=too-many-branches
         for record_dict in records.values():
             if Fields.FILE not in record_dict:
                 continue
@@ -123,6 +123,34 @@ class Repare(colrev.operation.Operation):
             del record_dict[Fields.FILE]
             record = colrev.record.Record(record_dict)
             record.set_status(RecordState.rev_prescreen_included)
+
+        file_search_sources = [
+            x
+            for x in self.review_manager.settings.sources
+            if x.search_type == SearchType.FILES
+        ]
+        for search_source in file_search_sources:
+            files_dir_feed = search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier="UNKNOWN",
+                update_only=True,
+            )
+            prefix = search_source.get_origin_prefix()
+            for record_dict in records.values():
+                if Fields.FILE not in record_dict:
+                    continue
+                for origin in record_dict[Fields.ORIGIN]:
+                    if origin.startswith(prefix):
+                        feed_id = origin[len(prefix) + 1 :]
+                        feed_record = files_dir_feed.feed_records[feed_id]
+                        if (
+                            feed_record.get(Fields.FILE, "a")
+                            != record_dict[Fields.FILE]
+                        ):
+                            feed_record[Fields.FILE] = record_dict[Fields.FILE]
+                            files_dir_feed.feed_records[feed_id] = feed_record
+
+            files_dir_feed.save()
 
     def _get_source_feeds(self) -> dict:
         source_feeds = {}
@@ -288,11 +316,7 @@ class Repare(colrev.operation.Operation):
     def _set_provenance(
         self, *, record: colrev.record.Record, source_feeds: dict
     ) -> None:
-        if Fields.D_PROV not in record.data:
-            record.data[Fields.D_PROV] = {}
-        if Fields.MD_PROV not in record.data:
-            record.data[Fields.MD_PROV] = {}
-
+        record.align_provenance()
         for key, value in record.data.items():
             if key in [
                 Fields.STATUS,
