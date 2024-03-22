@@ -312,13 +312,13 @@ class Record:
             if key in FieldSet.PROVENANCE_KEYS + [Fields.ID, Fields.ENTRYTYPE]:
                 continue
             if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-                if self.masterdata_is_curated():
-                    continue
-                if key not in self.data[Fields.MD_PROV]:
+                if (
+                    not self.masterdata_is_curated()
+                    and key not in self.data[Fields.MD_PROV]
+                ):
                     self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
-            else:
-                if key not in self.data[Fields.D_PROV]:
-                    self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
+            elif key not in self.data[Fields.D_PROV]:
+                self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
 
     # pylint: disable=too-many-branches
     def change_entrytype(
