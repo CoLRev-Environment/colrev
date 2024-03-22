@@ -6,6 +6,7 @@ from pathlib import Path
 
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
@@ -31,7 +32,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
     search_source = colrev.settings.SearchSource(
         endpoint="colrev.unknown_source",
         filename=Path("data/search/complementary_backward_search.bib"),
-        search_type=colrev.settings.SearchType.OTHER,
+        search_type=SearchType.OTHER,
         search_parameters={},
         comment="",
     )

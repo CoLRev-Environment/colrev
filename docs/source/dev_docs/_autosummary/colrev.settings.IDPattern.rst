@@ -1,4 +1,4 @@
-colrev.settings.IDPattern
+IDPattern
 =========================
 
 .. currentmodule:: colrev.settings

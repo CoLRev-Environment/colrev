@@ -24,6 +24,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -39,7 +40,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     # pylint: disable=too-many-instance-attributes
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = Fields.CURATION_ID
-    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
+    search_types = [SearchType.API, SearchType.MD]
     endpoint = "colrev.local_index"
 
     ci_supported: bool = True
@@ -91,7 +92,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self._local_index_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -217,12 +218,12 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.MD:
+        if self.search_source.search_type == SearchType.MD:
             self._run_md_search(local_index_feed=local_index_feed)
 
         elif self.search_source.search_type in [
-            colrev.settings.SearchType.API,
-            colrev.settings.SearchType.TOC,
+            SearchType.API,
+            SearchType.TOC,
         ]:
             self._run_api_search(
                 local_index_feed=local_index_feed,
@@ -260,7 +261,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint=cls.endpoint,
             filename=filename,
-            search_type=colrev.settings.SearchType.API,
+            search_type=SearchType.API,
             search_parameters={"query": params},
             comment="",
         )

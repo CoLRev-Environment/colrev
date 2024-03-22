@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.operation
 import colrev.settings
 from colrev.constants import Fields
+from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 
@@ -106,7 +107,7 @@ class Distribute(colrev.operation.Operation):
                     new_source = colrev.settings.SearchSource(
                         endpoint="colrev.unknown_source",
                         filename=Path("search") / target_bib_file.name,
-                        search_type=colrev.settings.SearchType.OTHER,
+                        search_type=SearchType.OTHER,
                         search_parameters={},
                         comment="",
                     )

@@ -29,6 +29,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
+from colrev.constants import ScreenCriterionType
 
 # pylint: disable=too-many-lines
 # pylint: disable=redefined-builtin
@@ -1285,7 +1286,7 @@ def screen(
             criterion_type_str,
             criterion_explanation,
         ) = add_criterion.split(",")
-        criterion_type = colrev.settings.ScreenCriterionType[criterion_type_str]
+        criterion_type = ScreenCriterionType[criterion_type_str]
         criterion = colrev.settings.ScreenCriterion(
             explanation=criterion_explanation,
             criterion_type=criterion_type,

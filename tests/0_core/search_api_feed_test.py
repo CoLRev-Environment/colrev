@@ -15,6 +15,7 @@ import colrev.settings
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
 
 # flake8: noqa: E501
 
@@ -28,7 +29,7 @@ def fixture_search_feed(
     source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
         filename=Path("data/search/test.bib"),
-        search_type=colrev.settings.SearchType.DB,
+        search_type=SearchType.DB,
         search_parameters={"query": "query"},
         comment="",
     )
@@ -72,7 +73,7 @@ def test_search_feed_update(  # type: ignore
     source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
         filename=Path("data/search/test.bib"),
-        search_type=colrev.settings.SearchType.DB,
+        search_type=SearchType.DB,
         search_parameters={"query": "query"},
         comment="",
     )

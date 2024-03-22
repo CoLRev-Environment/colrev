@@ -19,6 +19,7 @@ import colrev.record
 import colrev.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -35,7 +36,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"
     # "https://api.crossref.org/works/{{doi}}"
-    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
+    search_types = [SearchType.API, SearchType.MD]
 
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
@@ -73,7 +74,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.open_alex",
                 filename=self._open_alex_md_filename,
-                search_type=colrev.settings.SearchType.MD,
+                search_type=SearchType.MD,
                 search_parameters={},
                 comment="",
             )
@@ -256,12 +257,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         # )
 
         # try:
-        #     if self.search_source.search_type == colrev.settings.SearchType.MD:
+        #     if self.search_source.search_type == SearchType.MD:
         #         self._run_md_search_update(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #         )
-        #     elif self.search_source.search_type == colrev.settings.SearchType.API:
+        #     elif self.search_source.search_type == SearchType.API:
         #         self._run_parameter_search(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
@@ -281,7 +282,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         #         self._availability_exception_message
         #     )
 
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
+        # if self.search_source.search_type == SearchType.DB:
         #     if self.review_manager.in_ci_environment():
         #         raise colrev_exceptions.SearchNotAutomated(
         #             "DB search for OpenAlex not automated."

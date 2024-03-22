@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.record_prep
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -34,7 +35,7 @@ class ArXivSource:
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.arxiv"
     source_identifier = "arxivid"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     api_search_supported = True
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -71,7 +72,7 @@ class ArXivSource:
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.arxiv",
                     filename=self._arxiv_md_filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters={},
                     comment="",
                 )
@@ -115,7 +116,7 @@ class ArXivSource:
                 add_source = colrev.settings.SearchSource(
                     endpoint="colrev.arxiv",
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters={"query": query},
                     comment="",
                 )
@@ -408,12 +409,12 @@ class ArXivSource:
             update_only=(not rerun),
         )
 
-        # if self.search_source.search_type == colrev.settings.SearchType.MD:
+        # if self.search_source.search_type == SearchType.MD:
         #     self._run_md_search_update(
         #         arxiv_feed=arxiv_feed,
         #     )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_parameter_search(
                 arxiv_feed=arxiv_feed,
                 rerun=rerun,

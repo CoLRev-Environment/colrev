@@ -20,6 +20,7 @@ import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -36,9 +37,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
     search_types = [
-        colrev.settings.SearchType.DB,
-        colrev.settings.SearchType.TOC,
-        colrev.settings.SearchType.API,
+        SearchType.DB,
+        SearchType.TOC,
+        SearchType.API,
     ]
     endpoint = "colrev.ais_library"
 
@@ -169,14 +170,14 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.DB:
+        if search_type == SearchType.DB:
             return operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
             )
 
         # pylint: disable=colrev-missed-constant-usage
-        if search_type == colrev.settings.SearchType.API:
+        if search_type == SearchType.API:
             if "url" not in params:
                 # Add API search without params
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
@@ -190,13 +191,13 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters=q_params,
                     comment="",
                 )
                 return add_source
 
-        # if search_type == colrev.settings.SearchType.TOC:
+        # if search_type == SearchType.TOC:
 
         raise NotImplementedError
 
@@ -207,7 +208,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        if source.search_type == colrev.settings.SearchType.API:
+        if source.search_type == SearchType.API:
             if "query" not in source.search_parameters:
                 # if "search_terms" not in source.search_parameters["query"]:
                 raise colrev_exceptions.InvalidQueryException("query parameter missing")
@@ -304,12 +305,12 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(
                 ais_feed=ais_feed,
                 rerun=rerun,
             )
-        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+        elif self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

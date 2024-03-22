@@ -14,6 +14,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 
@@ -72,6 +73,7 @@ class Repare(colrev.operation.Operation):
             )
 
     def _fix_files(self, *, records: dict) -> None:
+
         for record_dict in records.values():
             if Fields.FILE not in record_dict:
                 continue

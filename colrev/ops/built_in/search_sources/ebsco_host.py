@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -33,7 +34,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     # What-is-the-Accession-Number-AN-in-EBSCOhost-records?language=en_US
     # Note : ID is the accession number.
     source_identifier = "{{ID}}"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -80,7 +81,7 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of EbscoHost"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

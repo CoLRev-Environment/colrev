@@ -10,6 +10,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import SearchType
 
 
 @pytest.fixture
@@ -66,7 +67,7 @@ def test_search_source_interfaces(
             {
                 "endpoint": p,
                 "filename": Path("test.bib"),
-                "search_type": colrev.settings.SearchType.DB,
+                "search_type": SearchType.DB,
                 "search_parameters": {"scope": {"path": "test"}},
                 "comment": "",
                 "interface_test": True,

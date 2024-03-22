@@ -7,6 +7,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import ScreenCriterionType
 
 
 __FULL_SCREEN_EXPLANATION = (
@@ -57,9 +58,9 @@ def get_screening_criteria_from_user_input(
         ):
             short_name = input("Provide a short name: ")
             if input("Inclusion or exclusion criterion [i,e]?: ") == "i":
-                criterion_type = colrev.settings.ScreenCriterionType.inclusion_criterion
+                criterion_type = ScreenCriterionType.inclusion_criterion
             else:
-                criterion_type = colrev.settings.ScreenCriterionType.exclusion_criterion
+                criterion_type = ScreenCriterionType.exclusion_criterion
             explanation = input("Provide a short explanation: ")
 
             screening_criteria[short_name] = colrev.settings.ScreenCriterion(

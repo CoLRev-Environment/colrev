@@ -27,6 +27,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-ancestors
@@ -373,7 +374,7 @@ class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     # pylint: disable=too-many-instance-attributes
     endpoint: str
     filename: Path
-    search_type: colrev.settings.SearchType
+    search_type: SearchType
     search_parameters: dict
     comment: typing.Optional[str]
 
@@ -1002,7 +1003,7 @@ class PackageManager:
 
     def _extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
         search_source_types: typing.Dict[str, list] = {}
-        for search_source_type in colrev.settings.SearchType:
+        for search_source_type in SearchType:
             if search_source_type.value not in search_source_types:
                 search_source_types[search_source_type.value] = []
             for search_source in package_endpoints_json["search_source"]:

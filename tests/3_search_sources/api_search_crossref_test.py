@@ -7,7 +7,7 @@ import requests_mock
 
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.prep
-
+from colrev.constants import SearchType
 
 # pylint: disable=line-too-long
 
@@ -20,7 +20,7 @@ def fixture_crossref_search_source(
     settings = {
         "endpoint": "colrev.crossref",
         "filename": Path("data/search/md_crossref.bib"),
-        "search_type": colrev.settings.SearchType.DB,
+        "search_type": SearchType.DB,
         "search_parameters": {},
         "comment": "",
     }

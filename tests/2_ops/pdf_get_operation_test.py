@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import colrev.review_manager
+from colrev.constants import PDFPathType
 
 
 # def test_pdf_get(  # type: ignore
@@ -42,9 +43,7 @@ def test_pdf_get_import_file(  # type: ignore
             data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
         )
     )
-    base_repo_review_manager.settings.pdf_get.pdf_path_type = (
-        colrev.settings.PDFPathType.copy
-    )
+    base_repo_review_manager.settings.pdf_get.pdf_path_type = PDFPathType.copy
 
     helpers.reset_commit(
         review_manager=base_repo_review_manager, commit="prescreen_commit"

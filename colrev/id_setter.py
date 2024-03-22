@@ -18,6 +18,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import IDPattern
 from colrev.constants import RecordState
 
 # pylint: disable=too-few-public-methods
@@ -64,10 +65,10 @@ class IDSetter:
                     author = author.split(" ", maxsplit=1)[0]
 
             id_pattern = self.review_manager.settings.project.id_pattern
-            if colrev.settings.IDPattern.first_author_year == id_pattern:
+            if IDPattern.first_author_year == id_pattern:
                 first_author = authors[0].split(",")[0].replace(" ", "")
                 temp_id = f'{first_author}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
-            elif colrev.settings.IDPattern.three_authors_year == id_pattern:
+            elif IDPattern.three_authors_year == id_pattern:
                 temp_id = ""
                 indices = len(authors)
                 if len(authors) > 3:

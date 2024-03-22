@@ -444,6 +444,89 @@ class Operations:
     DATA = "data"
 
 
+class IDPattern(Enum):
+    """The pattern for generating record IDs"""
+
+    # pylint: disable=invalid-name
+    first_author_year = "first_author_year"
+    three_authors_year = "three_authors_year"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
+class SearchType(Enum):
+    """Type of search source"""
+
+    API = "API"  # Keyword-searches
+    DB = "DB"  # search-results-file with search query
+    TOC = "TOC"
+    BACKWARD_SEARCH = "BACKWARD_SEARCH"
+    FORWARD_SEARCH = "FORWARD_SEARCH"
+    FILES = "FILES"  # Replaces PDFS
+    OTHER = "OTHER"
+    MD = "MD"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+
+class PDFPathType(Enum):
+    """Policy for handling PDFs (create symlinks or copy files)"""
+
+    # pylint: disable=invalid-name
+    symlink = "symlink"
+    copy = "copy"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
+class ScreenCriterionType(Enum):
+    """Type of screening criterion"""
+
+    # pylint: disable=invalid-name
+    inclusion_criterion = "inclusion_criterion"
+    exclusion_criterion = "exclusion_criterion"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ShareStatReq(Enum):
+    """Record status requirements for sharing"""
+
+    # pylint: disable=invalid-name
+    none = "none"
+    processed = "processed"
+    screened = "screened"
+    completed = "completed"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
 class ExitCodes:
     """Exit codes"""
 

@@ -18,6 +18,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 
 # pylint: disable=unused-argument
@@ -34,7 +35,7 @@ class ERICSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     endpoint = "colrev.eric"
 
     ci_supported: bool = True
@@ -97,7 +98,7 @@ class ERICSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,
                 filename=Path("data/search/eric.bib"),
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=SearchType.OTHER,
                 search_parameters={},
                 comment="",
             )
@@ -163,7 +164,7 @@ class ERICSearchSource(JsonSchemaMixin):
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
-                search_type=colrev.settings.SearchType.DB,
+                search_type=SearchType.DB,
                 search_parameters={"query": search, "start": start, "rows": rows},
                 comment="",
             )
@@ -210,7 +211,7 @@ class ERICSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(eric_feed=eric_feed, rerun=rerun)
         else:
             raise NotImplementedError

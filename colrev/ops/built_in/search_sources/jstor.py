@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -29,7 +30,7 @@ class JSTORSearchSource(JsonSchemaMixin):
     endpoint = "colrev.jstor"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -77,7 +78,7 @@ class JSTORSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of JSTOR"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

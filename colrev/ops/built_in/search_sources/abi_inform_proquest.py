@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
@@ -30,7 +31,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -76,7 +77,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.DB:
+        if search_type == SearchType.DB:
             return operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
@@ -87,7 +88,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of ABI/INFORM"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

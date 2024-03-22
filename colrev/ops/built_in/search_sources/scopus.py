@@ -12,6 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -28,7 +29,7 @@ class ScopusSearchSource(JsonSchemaMixin):
     endpoint = "colrev.scopus"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -78,7 +79,7 @@ class ScopusSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of Scopus"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

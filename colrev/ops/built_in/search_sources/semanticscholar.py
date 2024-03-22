@@ -28,6 +28,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import SearchType
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -60,7 +61,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     short_name = "S2"
     source_identifier = Fields.SEMANTIC_SCHOLAR_ID
@@ -93,7 +94,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.semanticscholar",
                 filename=self._s2_filename,
-                search_type=colrev.settings.SearchType.API,
+                search_type=SearchType.API,
                 search_parameters={},
                 comment="",
             )
@@ -380,7 +381,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
             filename=filename,
-            search_type=colrev.settings.SearchType.API,
+            search_type=SearchType.API,
             search_parameters=search_params,
             comment="",
         )

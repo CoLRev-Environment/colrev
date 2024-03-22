@@ -18,6 +18,7 @@ import colrev.record
 import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -34,7 +35,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     endpoint = "colrev.ieee"
 
     ci_supported: bool = True
@@ -110,7 +111,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,
                 filename=Path("data/search/ieee.bib"),
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=SearchType.OTHER,
                 search_parameters={},
                 comment="",
             )
@@ -141,7 +142,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.API:
+        if search_type == SearchType.API:
             if len(params) == 0:
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
@@ -174,13 +175,13 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters=search_parameters,
                     comment="",
                 )
                 return add_source
 
-        # if search_type == colrev.settings.SearchType.API:
+        # if search_type == SearchType.API:
 
         raise NotImplementedError
 
@@ -193,10 +194,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

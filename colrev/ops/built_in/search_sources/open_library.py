@@ -17,6 +17,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 import colrev.record_prep
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -37,7 +38,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     endpoint = "colrev.open_library"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"
-    search_types = [colrev.settings.SearchType.MD]
+    search_types = [SearchType.MD]
 
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
@@ -79,7 +80,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.open_library",
                     filename=self._open_library_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -257,7 +258,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of OpenLibrary"""
 
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
+        # if self.search_source.search_type == SearchType.DB:
         #     if self.review_manager.in_ci_environment():
         #         raise colrev_exceptions.SearchNotAutomated(
         #             "DB search for OpenLibrary not automated."

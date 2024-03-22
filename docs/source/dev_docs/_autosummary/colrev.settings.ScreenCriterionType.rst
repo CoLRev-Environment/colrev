@@ -1,4 +1,4 @@
-colrev.settings.ScreenCriterionType
+ScreenCriterionType
 ===================================
 
 .. currentmodule:: colrev.settings

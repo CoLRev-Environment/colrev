@@ -16,6 +16,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 
 class Load(colrev.operation.Operation):
@@ -362,7 +363,7 @@ class Load(colrev.operation.Operation):
             #     raise ...
             endpoint = endpoint_dict[source.endpoint.lower()]
             s_type = endpoint.search_source.search_type  # type: ignore
-            if s_type == colrev.settings.SearchType.MD and not include_md:
+            if s_type == SearchType.MD and not include_md:
                 continue
             sources.append(endpoint)
 

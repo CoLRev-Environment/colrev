@@ -26,6 +26,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -45,9 +46,9 @@ class DBLPSearchSource(JsonSchemaMixin):
     # TODO : standardize?! should the search-feed already contain namespaced fields?!
     source_identifier = "dblp_key"
     search_types = [
-        colrev.settings.SearchType.API,
-        colrev.settings.SearchType.MD,
-        colrev.settings.SearchType.TOC,
+        SearchType.API,
+        SearchType.MD,
+        SearchType.TOC,
     ]
     endpoint = "colrev.dblp"
 
@@ -69,7 +70,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-instance-attributes
         endpoint: str
         filename: Path
-        search_type: colrev.settings.SearchType
+        search_type: SearchType
         search_parameters: dict
         comment: Optional[str]
 
@@ -107,7 +108,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self._dblp_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -361,7 +362,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         assert source.search_type in self.search_types
 
         # maybe : validate/assert that the venue_key is available
-        if source.search_type == colrev.settings.SearchType.TOC:
+        if source.search_type == SearchType.TOC:
             assert "scope" in source.search_parameters
             if "venue_key" not in source.search_parameters["scope"]:
                 raise colrev_exceptions.InvalidQueryException(
@@ -371,10 +372,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 raise colrev_exceptions.InvalidQueryException(
                     "journal_abbreviated required in search_parameters/scope"
                 )
-        elif source.search_type == colrev.settings.SearchType.API:
+        elif source.search_type == SearchType.API:
             assert "query" in source.search_parameters
 
-        elif source.search_type == colrev.settings.SearchType.MD:
+        elif source.search_type == SearchType.MD:
             pass  # No parameters required
         else:
             raise colrev_exceptions.InvalidQueryException(
@@ -498,12 +499,12 @@ class DBLPSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.MD:
+        if self.search_source.search_type == SearchType.MD:
             self._run_md_search(dblp_feed=dblp_feed)
 
         elif self.search_source.search_type in [
-            colrev.settings.SearchType.API,
-            colrev.settings.SearchType.TOC,
+            SearchType.API,
+            SearchType.TOC,
         ]:
             self._run_api_search(dblp_feed=dblp_feed, rerun=rerun)
 
@@ -539,7 +540,7 @@ class DBLPSearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.API:
+        if search_type == SearchType.API:
             if len(params) == 0:
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
@@ -556,13 +557,13 @@ class DBLPSearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters={"query": query},
                     comment="",
                 )
                 return add_source
 
-        # if search_type == colrev.settings.SearchType.TOC:
+        # if search_type == SearchType.TOC:
 
         raise colrev_exceptions.PackageParameterError(
             f"Cannot add dblp endpoint with query {params}"

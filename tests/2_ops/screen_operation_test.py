@@ -3,6 +3,7 @@
 import pytest
 
 import colrev.review_manager
+from colrev.constants import ScreenCriterionType
 
 
 @pytest.fixture(scope="package", name="criterion")
@@ -11,7 +12,7 @@ def criterion_fixture() -> colrev.settings.ScreenCriterion:
 
     criterion = colrev.settings.ScreenCriterion(
         explanation="Explanation of the criterion",
-        criterion_type=colrev.settings.ScreenCriterionType["inclusion_criterion"],
+        criterion_type=ScreenCriterionType["inclusion_criterion"],
         comment="",
     )
     return criterion

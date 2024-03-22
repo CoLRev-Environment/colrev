@@ -1,4 +1,4 @@
-colrev.settings.SearchType
+SearchType
 ==========================
 
 .. currentmodule:: colrev.settings

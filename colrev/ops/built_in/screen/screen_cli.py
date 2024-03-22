@@ -17,6 +17,7 @@ import colrev.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import ScreenCriterionType
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -54,7 +55,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         ) in self.review_manager.settings.screen.criteria.items():
             color = Colors.GREEN
             if (
-                colrev.settings.ScreenCriterionType.exclusion_criterion
+                ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
                 color = Colors.RED
@@ -90,7 +91,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         for criterion_name, criterion_settings in self.screening_criteria.items():
             color = Colors.GREEN
             if (
-                colrev.settings.ScreenCriterionType.exclusion_criterion
+                ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
                 color = Colors.RED

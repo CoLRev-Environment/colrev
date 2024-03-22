@@ -28,6 +28,7 @@ import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -43,9 +44,9 @@ class PubMedSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "pubmedid"
     search_types = [
-        colrev.settings.SearchType.DB,
-        colrev.settings.SearchType.API,
-        colrev.settings.SearchType.MD,
+        SearchType.DB,
+        SearchType.API,
+        SearchType.MD,
     ]
     endpoint = "colrev.pubmed"
 
@@ -84,7 +85,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self._pubmed_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -127,13 +128,13 @@ class PubMedSearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.DB:
+        if search_type == SearchType.DB:
             return operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
             )
 
-        if search_type == colrev.settings.SearchType.API:
+        if search_type == SearchType.API:
             if len(params) == 0:
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
@@ -155,7 +156,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     add_source = colrev.settings.SearchSource(
                         endpoint=cls.endpoint,
                         filename=filename,
-                        search_type=colrev.settings.SearchType.API,
+                        search_type=SearchType.API,
                         search_parameters={"query": params},
                         comment="",
                     )
@@ -617,16 +618,16 @@ class PubMedSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.MD:
+        if self.search_source.search_type == SearchType.MD:
             self._run_md_search(pubmed_feed=pubmed_feed)
 
-        elif self.search_source.search_type == colrev.settings.SearchType.API:
+        elif self.search_source.search_type == SearchType.API:
             self._run_api_search(
                 pubmed_feed=pubmed_feed,
                 rerun=rerun,
             )
 
-        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+        elif self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

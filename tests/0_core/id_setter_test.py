@@ -3,6 +3,7 @@
 import pytest
 
 import colrev.review_manager
+from colrev.constants import IDPattern
 
 # flake8: noqa: E501
 
@@ -34,9 +35,7 @@ def test_id_generation_first_author_year(  # type: ignore
     """Test the id generation process for the first_author_year ID pattern."""
     local_index = base_repo_review_manager.get_local_index()
 
-    base_repo_review_manager.settings.project.id_pattern = (
-        colrev.settings.IDPattern.first_author_year
-    )
+    base_repo_review_manager.settings.project.id_pattern = IDPattern.first_author_year
     id_setter = colrev.id_setter.IDSetter(review_manager=base_repo_review_manager)
     temp_id = id_setter._generate_temp_id(
         local_index=local_index, record_dict=record_dict
@@ -73,9 +72,7 @@ def test_id_generation_three_authors_year(  # type: ignore
     """Test the id generation process for the three_authors_year ID pattern."""
     local_index = base_repo_review_manager.get_local_index()
 
-    base_repo_review_manager.settings.project.id_pattern = (
-        colrev.settings.IDPattern.three_authors_year
-    )
+    base_repo_review_manager.settings.project.id_pattern = IDPattern.three_authors_year
     id_setter = colrev.id_setter.IDSetter(review_manager=base_repo_review_manager)
     temp_id = id_setter._generate_temp_id(
         local_index=local_index, record_dict=record_dict

@@ -21,6 +21,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -35,7 +36,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     endpoint = "colrev.colrev_project"
 
     ci_supported: bool = True
@@ -87,7 +88,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=SearchType.OTHER,
                 search_parameters={"scope": {"url": params["url"]}},
                 comment="",
             )

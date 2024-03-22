@@ -1,4 +1,4 @@
-colrev.settings.PDFPathType
+PDFPathType
 ===========================
 
 .. currentmodule:: colrev.settings

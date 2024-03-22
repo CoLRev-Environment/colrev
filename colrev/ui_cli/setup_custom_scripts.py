@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import colrev.env.utils
+from colrev.constants import SearchType
 
 
 def setup_custom_search_script(
@@ -23,7 +24,7 @@ def setup_custom_search_script(
     new_source = colrev.settings.SearchSource(
         endpoint="custom_search_source_script",
         filename=Path("data/search/custom_search.bib"),
-        search_type=colrev.settings.SearchType.DB,
+        search_type=SearchType.DB,
         search_parameters={},
         comment="",
     )

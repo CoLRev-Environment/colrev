@@ -6,6 +6,10 @@ from pathlib import Path
 
 import colrev.env.utils
 import colrev.settings
+from colrev.constants import IDPattern
+from colrev.constants import PDFPathType
+from colrev.constants import ScreenCriterionType
+from colrev.constants import SearchType
 
 # expected_printout: in settings-expected-printout.txt
 
@@ -23,7 +27,7 @@ def test_settings_load() -> None:
             "keywords": [],
             "protocol": None,
             "review_type": "literature_review",
-            "id_pattern": colrev.settings.IDPattern.three_authors_year,
+            "id_pattern": IDPattern.three_authors_year,
             "share_stat_req": colrev.settings.ShareStatReq.processed,
             "delay_automated_processing": False,
             "colrev_version": "-",
@@ -33,7 +37,7 @@ def test_settings_load() -> None:
             {
                 "endpoint": "colrev.files_dir",
                 "filename": Path("data/search/files.bib"),
-                "search_type": colrev.settings.SearchType.FILES,
+                "search_type": SearchType.FILES,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
                 "comment": "",
             }
@@ -79,7 +83,7 @@ def test_settings_load() -> None:
             ],
         },
         "pdf_get": {
-            "pdf_path_type": colrev.settings.PDFPathType.symlink,
+            "pdf_path_type": PDFPathType.symlink,
             "pdf_required_for_screen_and_synthesis": True,
             "defects_to_ignore": [],
             "rename_pdfs": True,
@@ -124,7 +128,7 @@ def test_settings_load() -> None:
 
 
 def test_id_pattern() -> None:
-    pattern = colrev.settings.IDPattern("first_author_year")
+    pattern = IDPattern("first_author_year")
     print(pattern)
     assert pattern.get_options() == ["first_author_year", "three_authors_year"]
 
@@ -139,7 +143,7 @@ def test_sharing_req() -> None:
 
 
 def test_search_type() -> None:
-    assert set(colrev.settings.SearchType.get_options()) == {
+    assert set(SearchType.get_options()) == {
         "MD",
         "API",
         "OTHER",
@@ -152,11 +156,11 @@ def test_search_type() -> None:
 
 
 def test_pdf_path_type() -> None:
-    assert colrev.settings.PDFPathType.get_options() == ["symlink", "copy"]
+    assert PDFPathType.get_options() == ["symlink", "copy"]
 
 
 def test_screen_criterion_type() -> None:
-    assert colrev.settings.ScreenCriterionType.get_options() == [
+    assert ScreenCriterionType.get_options() == [
         "inclusion_criterion",
         "exclusion_criterion",
     ]

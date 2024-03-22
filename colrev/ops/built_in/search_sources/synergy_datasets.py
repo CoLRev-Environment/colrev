@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 
@@ -46,7 +47,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     endpoint = "colrev.synergy_datasets"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -117,7 +118,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.synergy_datasets",
             filename=filename,
-            search_type=colrev.settings.SearchType.API,
+            search_type=SearchType.API,
             search_parameters={"dataset": dataset},
             comment="",
         )
@@ -232,7 +233,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def _validate_source(self) -> None:
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
-        assert source.search_type == colrev.settings.SearchType.API
+        assert source.search_type == SearchType.API
 
     def search(self, rerun: bool) -> None:
         """Run a search of the SYNERGY datasets"""

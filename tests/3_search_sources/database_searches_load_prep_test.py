@@ -7,6 +7,7 @@ import pytest
 
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import SearchType
 
 # pylint: disable=line-too-long
 # pylint: disable=too-many-arguments
@@ -40,7 +41,7 @@ NO_CUSTOM_SOURCE = None
             colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
                 filename=Path("data/search/crossref_bib.bib"),
-                search_type=colrev.settings.SearchType.API,
+                search_type=SearchType.API,
                 search_parameters={},
                 comment="",
             ),
@@ -124,7 +125,7 @@ NO_CUSTOM_SOURCE = None
             colrev.settings.SearchSource(
                 endpoint="colrev.files_dir",
                 filename=Path("data/search/files_dir_bib.bib"),
-                search_type=colrev.settings.SearchType.FILES,
+                search_type=SearchType.FILES,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),
@@ -136,7 +137,7 @@ NO_CUSTOM_SOURCE = None
             colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
                 filename=Path("data/search/ieee_ris.ris"),
-                search_type=colrev.settings.SearchType.DB,
+                search_type=SearchType.DB,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),
@@ -148,7 +149,7 @@ NO_CUSTOM_SOURCE = None
             colrev.settings.SearchSource(
                 endpoint="colrev.ieee",
                 filename=Path("data/search/ieee_csv.csv"),
-                search_type=colrev.settings.SearchType.DB,
+                search_type=SearchType.DB,
                 search_parameters={"scope": {"path": "test"}},
                 comment="",
             ),

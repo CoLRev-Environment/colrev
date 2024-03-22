@@ -28,6 +28,7 @@ import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument
@@ -43,9 +44,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
-        colrev.settings.SearchType.API,
-        colrev.settings.SearchType.DB,
-        colrev.settings.SearchType.MD,
+        SearchType.API,
+        SearchType.DB,
+        SearchType.MD,
     ]
     endpoint = "colrev.europe_pmc"
 
@@ -67,7 +68,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-instance-attributes
         endpoint: str
         filename: Path
-        search_type: colrev.settings.SearchType
+        search_type: SearchType
         search_parameters: dict
         comment: typing.Optional[str]
 
@@ -105,7 +106,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self._europe_pmc_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -387,13 +388,13 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
 
-        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+        elif self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
@@ -513,7 +514,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.DB,
+                    search_type=SearchType.DB,
                     search_parameters={"query": query},
                     comment="",
                 )

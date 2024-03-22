@@ -28,6 +28,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
@@ -46,7 +47,7 @@ class FilesSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
-    search_types = [colrev.settings.SearchType.FILES]
+    search_types = [SearchType.FILES]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -384,7 +385,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        assert source.search_type == colrev.settings.SearchType.FILES
+        assert source.search_type == SearchType.FILES
 
         if "subdir_pattern" in source.search_parameters:
             if source.search_parameters["subdir_pattern"] != [
@@ -684,7 +685,7 @@ class FilesSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.files_dir",
             filename=filename,
-            search_type=colrev.settings.SearchType.FILES,
+            search_type=SearchType.FILES,
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )

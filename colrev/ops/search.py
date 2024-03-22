@@ -15,6 +15,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 
@@ -108,7 +109,7 @@ class Search(colrev.operation.Operation):
         add_source = colrev.settings.SearchSource(
             endpoint=search_source_cls.endpoint,
             filename=filename,
-            search_type=colrev.settings.SearchType.DB,
+            search_type=SearchType.DB,
             search_parameters={"query_file": str(query_file)},
             comment="",
         )
@@ -128,23 +129,21 @@ class Search(colrev.operation.Operation):
         add_source = colrev.settings.SearchSource(
             endpoint=endpoint,
             filename=filename,
-            search_type=colrev.settings.SearchType.API,
+            search_type=SearchType.API,
             search_parameters={"query": keywords},
             comment="",
         )
         return add_source
 
-    def select_search_type(
-        self, *, search_types: list, params: dict
-    ) -> colrev.settings.SearchType:
+    def select_search_type(self, *, search_types: list, params: dict) -> SearchType:
         """Select the SearchType (interactively if neccessary)"""
 
         if Fields.URL in params:
-            return colrev.settings.SearchType.API
+            return SearchType.API
         if "search_file" in params:
-            return colrev.settings.SearchType.DB
+            return SearchType.DB
 
-        choices = [x for x in search_types if x != colrev.settings.SearchType.MD]
+        choices = [x for x in search_types if x != SearchType.MD]
         if len(choices) == 1:
             return choices[0]
         questions = [
@@ -155,7 +154,7 @@ class Search(colrev.operation.Operation):
             ),
         ]
         answers = inquirer.prompt(questions)
-        return colrev.settings.SearchType[answers["search_type"]]
+        return SearchType[answers["search_type"]]
 
     def run_db_search(  # type: ignore
         self,
@@ -297,7 +296,7 @@ class Search(colrev.operation.Operation):
 
                 res["endpoint"] = endpoint
 
-                search_type = colrev.settings.SearchType.DB
+                search_type = SearchType.DB
                 # Note : as the identifier, we use the filename
                 # (if search results are added by file/not via the API)
 

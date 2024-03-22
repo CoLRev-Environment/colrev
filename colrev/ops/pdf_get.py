@@ -15,6 +15,7 @@ import colrev.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -129,14 +130,11 @@ class PDFGet(colrev.operation.Operation):
         if new_fp != original_fp and not new_fp.is_file():
             new_fp.parents[0].mkdir(exist_ok=True, parents=True)
             if (
-                colrev.settings.PDFPathType.symlink
+                PDFPathType.symlink
                 == self.review_manager.settings.pdf_get.pdf_path_type
             ):
                 new_fp.symlink_to(original_fp)
-            elif (
-                colrev.settings.PDFPathType.copy
-                == self.review_manager.settings.pdf_get.pdf_path_type
-            ):
+            elif PDFPathType.copy == self.review_manager.settings.pdf_get.pdf_path_type:
                 shutil.copyfile(original_fp, new_fp.resolve())
             # Note : else: leave absolute paths
 

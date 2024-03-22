@@ -29,6 +29,7 @@ import colrev.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -48,7 +49,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.pdf_backward_search"
     source_identifier = Fields.ID
-    search_types = [colrev.settings.SearchType.BACKWARD_SEARCH]
+    search_types = [SearchType.BACKWARD_SEARCH]
 
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -87,7 +88,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         return colrev.settings.SearchSource(
             endpoint="colrev.pdf_backward_search",
             filename=Path("data/search/pdf_backward_search.bib"),
-            search_type=colrev.settings.SearchType.BACKWARD_SEARCH,
+            search_type=SearchType.BACKWARD_SEARCH,
             search_parameters={
                 "scope": {"colrev_status": "rev_included|rev_synthesized"},
                 "min_intext_citations": 3,
@@ -100,7 +101,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         source = self.search_source
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        assert source.search_type == colrev.settings.SearchType.BACKWARD_SEARCH
+        assert source.search_type == SearchType.BACKWARD_SEARCH
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(

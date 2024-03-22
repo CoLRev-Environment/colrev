@@ -6,6 +6,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import SearchType
 
 
 def test_load_md(  # type: ignore
@@ -33,7 +34,7 @@ def test_load_md(  # type: ignore
     search_source = colrev.settings.SearchSource(
         endpoint="colrev.unknown_source",
         filename=Path("data/search/md_data.md"),
-        search_type=colrev.settings.SearchType.OTHER,
+        search_type=SearchType.OTHER,
         search_parameters={},
         comment="",
     )

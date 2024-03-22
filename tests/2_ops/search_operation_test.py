@@ -8,6 +8,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import SearchType
 
 
 @patch("colrev.review_manager.ReviewManager.in_ci_environment")
@@ -48,7 +49,7 @@ def test_search_add_source(  # type: ignore
     add_source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
         filename=Path("data/search/crossref_search.bib"),
-        search_type=colrev.settings.SearchType.DB,
+        search_type=SearchType.DB,
         search_parameters={"query": "test"},
         comment="",
     )

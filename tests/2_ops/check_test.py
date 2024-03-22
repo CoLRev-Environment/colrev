@@ -5,6 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import colrev.review_manager
+from colrev.constants import SearchType
 
 
 def test_checks(  # type: ignore
@@ -55,14 +56,14 @@ def test_checks(  # type: ignore
             # {  # type: ignore
             #     "endpoint": "colrev.files_dir",
             #     "filename": Path("data/search/pdfs.bib"),
-            #     "search_type": colrev.settings.SearchType.PDFS,
+            #     "search_type": SearchType.PDFS,
             #     "search_parameters": {"scope": {"path": "data/pdfs"}},
             #     "comment": "",
             # },
             {  # type: ignore
                 "endpoint": "colrev.unknown_source",
                 "filename": Path("data/search/test_records.bib"),
-                "search_type": colrev.settings.SearchType.DB,
+                "search_type": SearchType.DB,
                 "search_parameters": {
                     "query_file": "data/search/test_records_query.txt"
                 },

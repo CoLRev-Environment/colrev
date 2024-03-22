@@ -18,6 +18,7 @@ import colrev.ops.built_in.search_sources.crossref
 import colrev.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -35,7 +36,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
-    search_types = [colrev.settings.SearchType.FORWARD_SEARCH]
+    search_types = [SearchType.FORWARD_SEARCH]
 
     ci_supported: bool = True
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
@@ -65,7 +66,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         return colrev.settings.SearchSource(
             endpoint="colrev.open_citations_forward_search",
             filename=Path("data/search/forward_search.bib"),
-            search_type=colrev.settings.SearchType.FORWARD_SEARCH,
+            search_type=SearchType.FORWARD_SEARCH,
             search_parameters={
                 "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
             },
@@ -79,7 +80,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        assert source.search_type == colrev.settings.SearchType.FORWARD_SEARCH
+        assert source.search_type == SearchType.FORWARD_SEARCH
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(

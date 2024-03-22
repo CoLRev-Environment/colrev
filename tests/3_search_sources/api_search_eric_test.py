@@ -7,7 +7,7 @@ import requests_mock
 
 import colrev.ops.built_in.search_sources.eric
 import colrev.ops.prep
-
+from colrev.constants import SearchType
 
 # pylint: disable=line-too-long
 
@@ -20,7 +20,7 @@ def fixture_eric_search_source(
     settings = {
         "endpoint": "colrev.eric",
         "filename": Path("data/search/eric.bib"),
-        "search_type": colrev.settings.SearchType.DB,
+        "search_type": SearchType.DB,
         "search_parameters": {"query": "blockchain"},
         "comment": "",
     }

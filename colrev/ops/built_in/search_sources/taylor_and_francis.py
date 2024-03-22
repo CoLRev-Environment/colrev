@@ -13,6 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.record
 from colrev.constants import Fields
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -28,7 +29,7 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
     ci_supported: bool = False
     heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
     short_name = "Taylor and Francis"
@@ -72,7 +73,7 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of TaylorAndFrancis"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,

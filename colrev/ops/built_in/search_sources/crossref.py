@@ -33,6 +33,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -57,9 +58,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
     source_identifier = Fields.DOI
     # "https://api.crossref.org/works/{{doi}}"
     search_types = [
-        colrev.settings.SearchType.API,
-        colrev.settings.SearchType.MD,
-        colrev.settings.SearchType.TOC,
+        SearchType.API,
+        SearchType.MD,
+        SearchType.TOC,
     ]
 
     ci_supported: bool = True
@@ -100,7 +101,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.crossref",
                     filename=self._crossref_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -643,7 +644,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 f"Crossref search_type should be in {self.search_types}"
             )
 
-        if source.search_type == colrev.settings.SearchType.API:
+        if source.search_type == SearchType.API:
             self._validate_api_params()
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
@@ -885,14 +886,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         try:
             if self.search_source.search_type in [
-                colrev.settings.SearchType.API,
-                colrev.settings.SearchType.TOC,
+                SearchType.API,
+                SearchType.TOC,
             ]:
                 self._run_api_search(
                     crossref_feed=crossref_feed,
                     rerun=rerun,
                 )
-            elif self.search_source.search_type == colrev.settings.SearchType.MD:
+            elif self.search_source.search_type == SearchType.MD:
                 self._run_md_search(
                     crossref_feed=crossref_feed,
                 )
@@ -921,13 +922,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint"""
 
         if list(params) == [Fields.ISSN]:
-            search_type = colrev.settings.SearchType.TOC
+            search_type = SearchType.TOC
         else:
             search_type = operation.select_search_type(
                 search_types=cls.search_types, params=params
             )
 
-        if search_type == colrev.settings.SearchType.API:
+        if search_type == SearchType.API:
             if len(params) == 0:
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
@@ -944,7 +945,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint="colrev.crossref",
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters={"query": query},
                     comment="",
                 )
@@ -952,7 +953,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
             raise NotImplementedError
 
-        if search_type == colrev.settings.SearchType.TOC:
+        if search_type == SearchType.TOC:
             if len(params) == 0:
                 source = cls._add_toc_interactively(operation=operation)
                 return source
@@ -961,7 +962,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             add_source = colrev.settings.SearchSource(
                 endpoint="colrev.crossref",
                 filename=filename,
-                search_type=colrev.settings.SearchType.TOC,
+                search_type=SearchType.TOC,
                 search_parameters={"scope": params},
                 comment="",
             )
@@ -995,7 +996,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.crossref",
             filename=filename,
-            search_type=colrev.settings.SearchType.TOC,
+            search_type=SearchType.TOC,
             search_parameters={"scope": {Fields.ISSN: [issn]}},
             comment="",
         )

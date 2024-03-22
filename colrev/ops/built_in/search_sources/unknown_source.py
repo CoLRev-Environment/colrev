@@ -24,6 +24,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -41,11 +42,11 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     source_identifier = "colrev.unknown_source"
     search_types = [
-        colrev.settings.SearchType.DB,
-        colrev.settings.SearchType.OTHER,
-        colrev.settings.SearchType.BACKWARD_SEARCH,
-        colrev.settings.SearchType.FORWARD_SEARCH,
-        colrev.settings.SearchType.TOC,
+        SearchType.DB,
+        SearchType.OTHER,
+        SearchType.BACKWARD_SEARCH,
+        SearchType.FORWARD_SEARCH,
+        SearchType.TOC,
     ]
 
     ci_supported: bool = False
@@ -97,7 +98,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__, source=self.search_source
             )

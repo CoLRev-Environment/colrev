@@ -19,26 +19,17 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Filepaths
+from colrev.constants import IDPattern
+from colrev.constants import PDFPathType
+from colrev.constants import ScreenCriterionType
+from colrev.constants import SearchType
+from colrev.constants import ShareStatReq
 
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
 
 
 # Project
-
-
-class IDPattern(Enum):
-    """The pattern for generating record IDs"""
-
-    # pylint: disable=invalid-name
-    first_author_year = "first_author_year"
-    three_authors_year = "three_authors_year"
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        """Get the options"""
-        # pylint: disable=no-member
-        return cls._member_names_
 
 
 @dataclass
@@ -62,22 +53,6 @@ class Protocol(JsonSchemaMixin):
     """Review protocol"""
 
     url: str
-
-
-class ShareStatReq(Enum):
-    """Record status requirements for sharing"""
-
-    # pylint: disable=invalid-name
-    none = "none"
-    processed = "processed"
-    screened = "screened"
-    completed = "completed"
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        """Get the options"""
-        # pylint: disable=no-member
-        return cls._member_names_
 
 
 @dataclass
@@ -107,28 +82,6 @@ class ProjectSettings(JsonSchemaMixin):
 
 
 # Search
-
-
-class SearchType(Enum):
-    """Type of search source"""
-
-    API = "API"  # Keyword-searches
-    DB = "DB"  # search-results-file with search query
-    TOC = "TOC"
-    BACKWARD_SEARCH = "BACKWARD_SEARCH"
-    FORWARD_SEARCH = "FORWARD_SEARCH"
-    FILES = "FILES"  # Replaces PDFS
-    OTHER = "OTHER"
-    MD = "MD"
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        """Get the options"""
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    def __str__(self) -> str:
-        return f"{self.name}"
 
 
 @dataclass
@@ -209,9 +162,7 @@ class SearchSource(JsonSchemaMixin):
             self, dict_factory=colrev.env.utils.custom_asdict_factory
         )
 
-        exported_dict["search_type"] = colrev.settings.SearchType[
-            exported_dict["search_type"]
-        ]
+        exported_dict["search_type"] = SearchType[exported_dict["search_type"]]
         exported_dict["filename"] = Path(exported_dict["filename"])
 
         return exported_dict
@@ -336,20 +287,6 @@ class PrescreenSettings(JsonSchemaMixin):
 # PDF get
 
 
-class PDFPathType(Enum):
-    """Policy for handling PDFs (create symlinks or copy files)"""
-
-    # pylint: disable=invalid-name
-    symlink = "symlink"
-    copy = "copy"
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        """Get the options"""
-        # pylint: disable=no-member
-        return cls._member_names_
-
-
 @dataclass
 class PDFGetSettings(JsonSchemaMixin):
     """PDF get settings"""
@@ -397,23 +334,6 @@ class PDFPrepSettings(JsonSchemaMixin):
 
 
 # Screen
-
-
-class ScreenCriterionType(Enum):
-    """Type of screening criterion"""
-
-    # pylint: disable=invalid-name
-    inclusion_criterion = "inclusion_criterion"
-    exclusion_criterion = "exclusion_criterion"
-
-    @classmethod
-    def get_options(cls) -> typing.List[str]:
-        """Get the options"""
-        # pylint: disable=no-member
-        return cls._member_names_
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @dataclass
