@@ -12,7 +12,7 @@ import git
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths

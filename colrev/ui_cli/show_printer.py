@@ -3,7 +3,7 @@
 import platform
 from pathlib import Path
 
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -27,7 +27,7 @@ def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
         print("No records included in sample (yet)")
 
     for sample_r in sample:
-        colrev.record.Record(sample_r).print_citation_format()
+        colrev.record.record.Record(sample_r).print_citation_format()
 
 
 def print_venv_notes() -> None:

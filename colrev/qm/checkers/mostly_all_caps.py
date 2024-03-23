@@ -19,7 +19,7 @@ class MostlyAllCapsFieldChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the mostly-all-caps checks"""
         for key in [
             Fields.AUTHOR,
@@ -40,7 +40,9 @@ class MostlyAllCapsFieldChecker:
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def _is_mostly_all_caps(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _is_mostly_all_caps(
+        self, *, record: colrev.record.record.Record, key: str
+    ) -> bool:
         """Check if the field is mostly all caps"""
 
         # Online sources/software can be short/have caps

@@ -12,8 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -116,7 +116,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
 
     def _get_same_toc_recs(
-        self, *, record: colrev.record.Record, records: dict
+        self, *, record: colrev.record.record.Record, records: dict
     ) -> list:
         if self.review_manager.force_mode:
             if record.data[Fields.STATUS] in self._post_md_prepared_states:
@@ -136,7 +136,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         same_toc_recs = []
         for record_candidate in records.values():
             try:
-                candidate_toc_key = colrev.record.Record(
+                candidate_toc_key = colrev.record.record.Record(
                     data=record_candidate
                 ).get_toc_key()
             except colrev_exceptions.NotTOCIdentifiableException:
@@ -155,12 +155,12 @@ class CurationMissingDedupe(JsonSchemaMixin):
         return same_toc_recs
 
     def _print_same_toc_recs(
-        self, *, same_toc_recs: list, record: colrev.record.Record
+        self, *, same_toc_recs: list, record: colrev.record.record.Record
     ) -> list:
         for same_toc_rec in same_toc_recs:
             same_toc_rec["similarity"] = (
-                colrev.record_prep.PrepRecord.get_record_similarity(
-                    colrev.record.Record(same_toc_rec), record
+                colrev.record.record_prep.PrepRecord.get_record_similarity(
+                    colrev.record.record.Record(same_toc_rec), record
                 )
             )
 
@@ -220,7 +220,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         }
 
         for record_dict in records.values():
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
 
             same_toc_recs = self._get_same_toc_recs(record=record, records=records)
 
@@ -320,7 +320,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
             records = self.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in ret["records_to_prepare"]:
-                    record = colrev.record.Record(record_dict)
+                    record = colrev.record.record.Record(record_dict)
                     record.set_status(
                         target_state=RecordState.md_needs_manual_preparation
                     )
@@ -341,7 +341,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                         RecordState.md_needs_manual_preparation,
                         RecordState.md_imported,
                     ]:
-                        record = colrev.record.Record(record_dict)
+                        record = colrev.record.record.Record(record_dict)
                         record.set_status(RecordState.md_processed)
 
             self.review_manager.dataset.save_records_dict(records)

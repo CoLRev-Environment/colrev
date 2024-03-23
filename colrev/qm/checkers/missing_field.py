@@ -82,7 +82,7 @@ class MissingFieldChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the missing-field checks"""
 
         if record.data[Fields.ENTRYTYPE] not in self.record_field_requirements:
@@ -108,7 +108,7 @@ class MissingFieldChecker:
                     key=required_fields_key, note=self.msg
                 )
 
-    def _is_missing(self, *, key: str, record: colrev.record.Record) -> bool:
+    def _is_missing(self, *, key: str, record: colrev.record.record.Record) -> bool:
         if not self._required_in_forthcoming(key=key, record=record):
             return False
         if key in record.data and record.data[key] != FieldValues.UNKNOWN:
@@ -116,7 +116,7 @@ class MissingFieldChecker:
         return True
 
     def _required_in_forthcoming(
-        self, *, key: str, record: colrev.record.Record
+        self, *, key: str, record: colrev.record.record.Record
     ) -> bool:
         if record.data.get(Fields.YEAR, "") != FieldValues.FORTHCOMING:
             return True

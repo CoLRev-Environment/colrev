@@ -13,7 +13,7 @@ from dash import html
 from dash import Input
 from dash import Output
 
-import colrev.record
+import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import RecordState

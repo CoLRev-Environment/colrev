@@ -15,8 +15,8 @@ from pyalex import Works
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import SearchType
@@ -98,14 +98,14 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 continue
             if author["author"].get("display_name", None) is None:
                 continue
-            author_string = colrev.record_prep.PrepRecord.format_author_field(
+            author_string = colrev.record.record_prep.PrepRecord.format_author_field(
                 input_string=author["author"]["display_name"]
             )
             author_list.append(author_string)
 
         record_dict[Fields.AUTHOR] = " and ".join(author_list)
 
-    def _parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
+    def _parse_item_to_record(self, *, item: dict) -> colrev.record.record.Record:
         def set_entrytype(*, record_dict: dict, item: dict) -> None:
             # pylint: disable=colrev-missed-constant-usage
             if "title" in record_dict and record_dict["title"] is None:
@@ -166,12 +166,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
 
         self._set_author_from_item(record_dict=record_dict, item=item)
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         self._fix_errors(record=record)
         return record
 
-    def _fix_errors(self, *, record: colrev.record.Record) -> None:
+    def _fix_errors(self, *, record: colrev.record.record.Record) -> None:
         if "PubMed" == record.data.get(Fields.JOURNAL, ""):
             record.remove_field(key=Fields.JOURNAL)
         try:
@@ -180,8 +180,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record.remove_field(key=Fields.LANGUAGE)
 
     def _get_masterdata_record(
-        self, *, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, *, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         try:
             retrieved_record = self._parse_item_to_record(
                 item=Works()[record.data["colrev.open_alex.id"]]
@@ -227,10 +227,10 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 30,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from OpenAlex based on similarity with the record provided"""
 
         if "colrev.open_alex.id" not in record.data:
@@ -323,8 +323,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenAlex"""
 
         return record

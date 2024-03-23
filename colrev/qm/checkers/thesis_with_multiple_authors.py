@@ -17,7 +17,7 @@ class ThesisWithMultipleAuthorsChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the thesis-with-multiple-authors checks"""
 
         if record.ignored_defect(field=Fields.AUTHOR, defect=self.msg):
@@ -28,7 +28,7 @@ class ThesisWithMultipleAuthorsChecker:
         else:
             record.remove_masterdata_provenance_note(key=Fields.AUTHOR, note=self.msg)
 
-    def _multiple_authored_thesis(self, *, record: colrev.record.Record) -> bool:
+    def _multiple_authored_thesis(self, *, record: colrev.record.record.Record) -> bool:
         if record.data["ENTRYTYPE"] in [
             "thesis",
             "phdthesis",

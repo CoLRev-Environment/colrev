@@ -8,7 +8,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.operation
-import colrev.record
+import colrev.record.record
 
 
 # pylint: disable=too-few-public-methods
@@ -41,12 +41,13 @@ class CustomPrescreen:
         for record in records.values():
             if random.random() < 0.5:  # nosec
                 prescreen_operation.prescreen(
-                    record=colrev.record.Record(record), prescreen_inclusion=True
+                    record=colrev.record.record.Record(record), prescreen_inclusion=True
                 )
 
             else:
                 prescreen_operation.prescreen(
-                    record=colrev.record.Record(record), prescreen_inclusion=False
+                    record=colrev.record.record.Record(record),
+                    prescreen_inclusion=False,
                 )
 
         prescreen_operation.review_manager.dataset.save_records_dict(records)

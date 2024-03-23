@@ -8,7 +8,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 
@@ -33,9 +33,9 @@ class CustomPDFPrep:
     def prep_pdf(
         self,
         pdf_prep_operation: colrev.ops.pdf_prep.PDFPrep,  # pylint: disable=unused-argument
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         pad: int,  # pylint: disable=unused-argument
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Prepare the PDF"""
 
         if random.random() < 0.8:  # nosec

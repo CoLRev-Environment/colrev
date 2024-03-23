@@ -33,7 +33,7 @@ class InconsistentWithDOIMetadataChecker:
             review_manager=quality_model.review_manager
         )
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""
 
         if Fields.DOI not in record.data or record.ignored_defect(
@@ -49,7 +49,7 @@ class InconsistentWithDOIMetadataChecker:
         else:
             record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
 
-    def _doi_metadata_conflicts(self, *, record: colrev.record.Record) -> bool:
+    def _doi_metadata_conflicts(self, *, record: colrev.record.record.Record) -> bool:
         record_copy = record.copy_prep_rec()
 
         try:

@@ -33,7 +33,7 @@ class PDFIncompletenessChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record_pdf.PDFRecord) -> None:
+    def run(self, *, record: colrev.record.record_pdf.PDFRecord) -> None:
         """Run the pdf-incomplete checks"""
 
         if (
@@ -49,11 +49,11 @@ class PDFIncompletenessChecker:
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def _pages_match_pdf(self, *, record: colrev.record_pdf.PDFRecord) -> bool:
+    def _pages_match_pdf(self, *, record: colrev.record.record_pdf.PDFRecord) -> bool:
 
         def longer_with_appendix(
             *,
-            record: colrev.record_pdf.PDFRecord,
+            record: colrev.record.record_pdf.PDFRecord,
             nr_pages: int,
         ) -> bool:
             if 10 < nr_pages < record.data[Fields.NR_PAGES_IN_FILE]:

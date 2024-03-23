@@ -14,7 +14,7 @@ from lxml.etree import XMLSyntaxError  # nosec
 import colrev.env.grobid_service
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -615,9 +615,9 @@ class TEIParser:
                     RecordState.rev_synthesized,
                 ]:
                     continue
-                rec_sim = colrev.record.Record.get_record_similarity(
-                    colrev.record.Record(record_dict),
-                    colrev.record.Record(local_record_dict),
+                rec_sim = colrev.record.record.Record.get_record_similarity(
+                    colrev.record.record.Record(record_dict),
+                    colrev.record.record.Record(local_record_dict),
                 )
                 if rec_sim > max_sim:
                     max_sim_record = local_record_dict

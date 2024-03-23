@@ -16,7 +16,7 @@ from git import Repo
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import SearchType
@@ -304,7 +304,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
                 existing_keys["openalex_id"].append(record["openalex_id"])
 
             synergy_feed.add_update_record(
-                retrieved_record=colrev.record.Record(record)
+                retrieved_record=colrev.record.record.Record(record)
             )
 
             # The linking of doi/... should happen in the prep operation
@@ -318,10 +318,10 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -344,8 +344,8 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for SYNERGY-datasets"""
 
         record.rename_field(

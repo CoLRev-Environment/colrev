@@ -4,7 +4,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-from colrev.record_state_model import RecordStateModel
+from colrev.record.record_state_model import RecordStateModel
 
 
 def test_check_operation_precondition(  # type: ignore

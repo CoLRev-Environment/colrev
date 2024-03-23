@@ -27,7 +27,7 @@ import colrev.env.resources
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -173,7 +173,7 @@ class LocalIndex:
 
     def _get_record_hash(self, *, record_dict: dict) -> str:
         # Note : may raise NotEnoughDataToIdentifyException
-        string_to_hash = colrev.record.Record(record_dict).create_colrev_id()
+        string_to_hash = colrev.record.record.Record(record_dict).create_colrev_id()
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     # def _increment_hash(self, *, paper_hash: str) -> str:
@@ -295,7 +295,7 @@ class LocalIndex:
             x in internal_record_dict.keys() for x in [Fields.VOLUME, Fields.NUMBER]
         ):
             try:
-                toc_key_full = colrev.record.Record(
+                toc_key_full = colrev.record.record.Record(
                     data=internal_record_dict
                 ).get_toc_key()
 
@@ -305,7 +305,7 @@ class LocalIndex:
                 return fields_to_remove
             wo_nr = deepcopy(internal_record_dict)
             del wo_nr[Fields.NUMBER]
-            toc_key_wo_nr = colrev.record.Record(wo_nr).get_toc_key()
+            toc_key_wo_nr = colrev.record.record.Record(wo_nr).get_toc_key()
 
             if toc_key_wo_nr != "NA":
                 if self._toc_exists(toc_key_wo_nr):
@@ -314,7 +314,7 @@ class LocalIndex:
 
             wo_vol = deepcopy(internal_record_dict)
             del wo_vol[Fields.VOLUME]
-            toc_key_wo_vol = colrev.record.Record(wo_vol).get_toc_key()
+            toc_key_wo_vol = colrev.record.record.Record(wo_vol).get_toc_key()
             if toc_key_wo_vol != "NA":
                 if self._toc_exists(toc_key_wo_vol):
                     fields_to_remove.append(Fields.VOLUME)
@@ -323,7 +323,7 @@ class LocalIndex:
             wo_vol_nr = deepcopy(internal_record_dict)
             del wo_vol_nr[Fields.VOLUME]
             del wo_vol_nr[Fields.NUMBER]
-            toc_key_wo_vol_nr = colrev.record.Record(wo_vol_nr).get_toc_key()
+            toc_key_wo_vol_nr = colrev.record.record.Record(wo_vol_nr).get_toc_key()
             if toc_key_wo_vol_nr != "NA":
                 if self._toc_exists(toc_key_wo_vol_nr):
                     fields_to_remove.append(Fields.NUMBER)
@@ -375,7 +375,7 @@ class LocalIndex:
                             key=Fields.COLREV_ID,
                             value=item["colrev_id"],
                         )
-                        stored_colrev_id = colrev.record.Record(
+                        stored_colrev_id = colrev.record.record.Record(
                             data=stored_record
                         ).create_colrev_id()
 
@@ -439,7 +439,7 @@ class LocalIndex:
 
     def _retrieve_based_on_colrev_id(
         self, *, cids_to_retrieve: list
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         for cid_to_retrieve in cids_to_retrieve:
             try:
                 retrieved_record = self._get_item_from_index(
@@ -447,7 +447,7 @@ class LocalIndex:
                     key=Fields.COLREV_ID,
                     value=cid_to_retrieve,
                 )
-                return colrev.record.Record(retrieved_record)
+                return colrev.record.record.Record(retrieved_record)
 
             except colrev_exceptions.RecordNotInIndexException:
                 continue  # continue with the next cid_to_retrieve
@@ -456,7 +456,7 @@ class LocalIndex:
 
     def _retrieve_from_github_curation(
         self, record_dict: dict
-    ) -> colrev.record.Record:  # pragma: no cover
+    ) -> colrev.record.record.Record:  # pragma: no cover
         ret = {}
         try:
             gh_url, record_id = record_dict[Fields.CURATION_ID].split("#")
@@ -482,11 +482,13 @@ class LocalIndex:
             raise colrev_exceptions.RecordNotInIndexException
 
         ret[record_id][Fields.CURATION_ID] = record_dict[Fields.CURATION_ID]
-        return colrev.record.Record(ret[record_id])
+        return colrev.record.record.Record(ret[record_id])
 
-    def _retrieve_from_record_index(self, record_dict: dict) -> colrev.record.Record:
+    def _retrieve_from_record_index(
+        self, record_dict: dict
+    ) -> colrev.record.record.Record:
 
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         if not self._sqlite_available:  # pragma: no cover
             if record_dict.get(Fields.CURATION_ID, "NA").startswith(
@@ -513,7 +515,7 @@ class LocalIndex:
         *,
         include_file: bool = False,
         include_colrev_ids: bool = False,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Prepare a record for return (from local index)"""
 
         # pylint: disable=too-many-branches
@@ -553,7 +555,7 @@ class LocalIndex:
             if "colrev_pdf_id" in record_dict.get(Fields.D_PROV, {}):
                 del record_dict[Fields.D_PROV]["colrev_pdf_id"]
 
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
         record.set_status(RecordState.md_prepared)
 
         if record.masterdata_is_curated():
@@ -566,7 +568,7 @@ class LocalIndex:
 
         return record
 
-    def search(self, query: str) -> list[colrev.record.Record]:
+    def search(self, query: str) -> list[colrev.record.record.Record]:
         """Run a search for records"""
 
         records_to_return = []
@@ -662,7 +664,7 @@ class LocalIndex:
         # Provenance should point to the original repository path.
         # If the provenance/source was example.bib (and the record is amended during indexing)
         # we wouldn't know where the example.bib belongs to.
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
         # Make sure that we don't add provenance information without corresponding fields
         record.align_provenance()
         for key in list(record.data.keys()):
@@ -724,7 +726,7 @@ class LocalIndex:
     def _get_index_record(self, record_dict: dict) -> dict:
         try:
             record_dict = self._prepare_record_for_indexing(record_dict)
-            cid_to_index = colrev.record.Record(record_dict).create_colrev_id()
+            cid_to_index = colrev.record.record.Record(record_dict).create_colrev_id()
             record_dict[Fields.COLREV_ID] = cid_to_index
             record_dict["citation_key"] = record_dict[Fields.ID]
             record_dict["id"] = self._get_record_hash(record_dict=record_dict)
@@ -749,16 +751,16 @@ class LocalIndex:
         ]:
             return
 
-        toc_item = colrev.record.Record(copy_for_toc_index).get_toc_key()
+        toc_item = colrev.record.record.Record(copy_for_toc_index).get_toc_key()
         # Note : drop (do not index) tocs where records are missing
         # otherwise, record-not-in-toc will be triggered erroneously.
         drop_toc = copy_for_toc_index[
             Fields.STATUS
         ] not in RecordState.get_post_x_states(state=RecordState.md_processed)
         try:
-            colrev_id = colrev.record.Record(copy_for_toc_index).create_colrev_id(
-                assume_complete=True
-            )
+            colrev_id = colrev.record.record.Record(
+                copy_for_toc_index
+            ).create_colrev_id(assume_complete=True)
         except colrev_exceptions.NotEnoughDataToIdentifyException:
             drop_toc = True
         if drop_toc:
@@ -794,11 +796,11 @@ class LocalIndex:
 
                 if curated_fields:
                     for curated_field in curated_fields:
-                        colrev.record.Record(record_dict).add_data_provenance(
+                        colrev.record.record.Record(record_dict).add_data_provenance(
                             key=curated_field, source=f"CURATED:{curation_url}"
                         )
                 if curated_masterdata:
-                    colrev.record.Record(record_dict).set_masterdata_curated(
+                    colrev.record.record.Record(record_dict).set_masterdata_curated(
                         curation_url
                     )
 
@@ -980,7 +982,7 @@ class LocalIndex:
         """Determine the year of a paper based on its table-of-content (journal-volume-number)"""
 
         try:
-            toc_key = colrev.record.Record(record_dict).get_toc_key()
+            toc_key = colrev.record.record.Record(record_dict).get_toc_key()
             toc_items = []
             if self._toc_exists(toc_key):
                 res = self._get_item_from_index(
@@ -1064,12 +1066,12 @@ class LocalIndex:
 
     def retrieve_from_toc(
         self,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         *,
         similarity_threshold: float,
         include_file: bool = False,
         search_across_tocs: bool = False,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve a record from the toc (table-of-contents)"""
 
         try:
@@ -1172,7 +1174,10 @@ class LocalIndex:
                 retrieved_record = selected_row
 
             if key == Fields.COLREV_ID:
-                if value != colrev.record.Record(retrieved_record).create_colrev_id():
+                if (
+                    value
+                    != colrev.record.record.Record(retrieved_record).create_colrev_id()
+                ):
                     raise colrev_exceptions.RecordNotInIndexException()
             else:
                 if key not in retrieved_record:
@@ -1188,7 +1193,7 @@ class LocalIndex:
 
     def retrieve_based_on_colrev_pdf_id(
         self, *, colrev_pdf_id: str
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """
         Convenience function to retrieve the indexed record_dict metadata
         based on a colrev_pdf_id
@@ -1212,7 +1217,7 @@ class LocalIndex:
         *,
         include_file: bool = False,
         include_colrev_ids: bool = False,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """
         Convenience function to retrieve the indexed record_dict metadata
         based on another record_dict
@@ -1239,7 +1244,7 @@ class LocalIndex:
                 remove_colrev_id = False
                 if Fields.COLREV_ID not in record_dict:
                     try:
-                        record_dict[Fields.COLREV_ID] = colrev.record.Record(
+                        record_dict[Fields.COLREV_ID] = colrev.record.record.Record(
                             data=record_dict
                         ).create_colrev_id()
                         remove_colrev_id = True

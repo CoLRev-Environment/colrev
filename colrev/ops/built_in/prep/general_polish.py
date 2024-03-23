@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -58,7 +58,9 @@ class GeneralPolishPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record by applying polishing rules"""
 
         if Fields.TITLE in record.data:

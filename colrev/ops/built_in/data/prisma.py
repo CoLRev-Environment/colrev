@@ -17,7 +17,7 @@ from docker.errors import DockerException
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Filepaths
 
 

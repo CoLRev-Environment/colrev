@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchType
 
@@ -234,7 +234,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #     )
 
             #     pdf_get_operation.import_pdf(
-            #         record=colrev.record.Record(record_to_import)
+            #         record=colrev.record.record.Record(record_to_import)
             #     )
 
             record_to_import["colrev_project_identifier"] = (
@@ -246,7 +246,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
             try:
                 colrev_project_search_feed.add_record(
-                    record=colrev.record.Record(record_to_import),
+                    record=colrev.record.record.Record(record_to_import),
                 )
 
             except colrev_exceptions.NotFeedIdentifiableException:
@@ -258,10 +258,10 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -295,8 +295,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for CoLRev projects"""
 
         return record

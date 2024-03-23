@@ -11,7 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -41,7 +41,9 @@ class LocalIndexPDFGet(JsonSchemaMixin):
         self.pdf_get_operation = pdf_get_operation
         self.review_manager = pdf_get_operation.review_manager
 
-    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get PDFs from the local-index"""
 
         local_index = self.review_manager.get_local_index()

@@ -1,7 +1,7 @@
-colrev.record
+colrev.record.record
 =============
 
-.. automodule:: colrev.record
+.. automodule:: colrev.record.record
 
 
 

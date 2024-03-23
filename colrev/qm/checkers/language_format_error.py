@@ -20,7 +20,7 @@ class LanguageFormatChecker:
         self.quality_model = quality_model
         self.language_service = colrev.env.language_service.LanguageService()
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the language-format-error checks"""
 
         if Fields.LANGUAGE not in record.data or record.ignored_defect(

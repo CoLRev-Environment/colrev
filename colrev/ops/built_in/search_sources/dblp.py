@@ -19,8 +19,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -256,8 +256,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                     ]
                     authors = [x["text"] for x in authors_nodes if "text" in x]
                     author_string = " and ".join(authors)
-                author_string = colrev.record_prep.PrepRecord.format_author_field(
-                    input_string=author_string
+                author_string = (
+                    colrev.record.record_prep.PrepRecord.format_author_field(
+                        input_string=author_string
+                    )
                 )
                 item[Fields.AUTHOR] = author_string
 
@@ -330,7 +332,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                 for item in items
             ]
             retrieved_records = [
-                colrev.record_prep.PrepRecord(dblp_dict) for dblp_dict in dblp_dicts
+                colrev.record.record_prep.PrepRecord(dblp_dict)
+                for dblp_dict in dblp_dicts
             ]
             for retrieved_record in retrieved_records:
                 # Note : DBLP provides number-of-pages (instead of pages start-end)
@@ -391,7 +394,7 @@ class DBLPSearchSource(JsonSchemaMixin):
     ) -> None:
 
         for feed_record_dict in dblp_feed.feed_records.values():
-            feed_record = colrev.record.Record(feed_record_dict)
+            feed_record = colrev.record.record.Record(feed_record_dict)
             query = "" + feed_record.data.get(Fields.TITLE, "").replace("-", "_")
             for retrieved_record in self._retrieve_dblp_records(
                 query=query,
@@ -584,9 +587,9 @@ class DBLPSearchSource(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for DBLP"""
 
         if record.data.get(Fields.AUTHOR, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
@@ -608,10 +611,10 @@ class DBLPSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 60,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from DBLP based on similarity with the record provided"""
 
         if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
@@ -632,7 +635,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 if retrieved_record.data["dblp_key"] != record.data[Fields.DBLP_KEY]:
                     return record
 
-            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=same_record_type_required,

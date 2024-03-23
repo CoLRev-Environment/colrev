@@ -17,7 +17,7 @@ class InconsistentContentChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the inconsistent-content checks"""
 
         for key in [Fields.JOURNAL, Fields.BOOKTITLE, Fields.AUTHOR]:
@@ -31,7 +31,9 @@ class InconsistentContentChecker:
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def _inconsistent_content(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _inconsistent_content(
+        self, *, record: colrev.record.record.Record, key: str
+    ) -> bool:
         if key == Fields.JOURNAL:
             if Fields.JOURNAL in record.data and any(
                 x in record.data[Fields.JOURNAL].lower()

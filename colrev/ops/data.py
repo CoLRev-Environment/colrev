@@ -9,7 +9,7 @@ import pandas as pd
 
 import colrev.operation
 import colrev.ops.built_in.pdf_prep.grobid_tei
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues

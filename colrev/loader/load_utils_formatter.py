@@ -52,7 +52,9 @@ class LoadFormatter:
     def __init__(self) -> None:
         self.language_service = colrev.env.language_service.LanguageService()
 
-    def _apply_strict_requirements(self, *, record: colrev.record.Record) -> None:
+    def _apply_strict_requirements(
+        self, *, record: colrev.record.record.Record
+    ) -> None:
         if Fields.DOI in record.data:
             record.data[Fields.DOI] = (
                 record.data[Fields.DOI].replace("http://dx.doi.org/", "").upper()
@@ -62,7 +64,7 @@ class LoadFormatter:
         if Fields.NUMBER not in record.data and "issue" in record.data:
             record.data[Fields.NUMBER] = record.data.pop("issue")
 
-    def _lower_case_keys(self, *, record: colrev.record.Record) -> None:
+    def _lower_case_keys(self, *, record: colrev.record.record.Record) -> None:
         # Consistently set keys to lower case
         lower_keys = [k.lower() for k in list(record.data.keys())]
         for key, n_key in zip(list(record.data.keys()), lower_keys):
@@ -80,7 +82,7 @@ class LoadFormatter:
             input_str = re.sub(r"<.*?>", "", input_str)
         return input_str
 
-    def _unescape_field_values(self, *, record: colrev.record.Record) -> None:
+    def _unescape_field_values(self, *, record: colrev.record.record.Record) -> None:
         for field in record.data:
             if field not in self._FIELDS_TO_PROCESS:
                 continue
@@ -97,7 +99,7 @@ class LoadFormatter:
                 .replace("}", "")
             )
 
-    def _standardize_field_values(self, *, record: colrev.record.Record) -> None:
+    def _standardize_field_values(self, *, record: colrev.record.record.Record) -> None:
         if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
             record.data[Fields.TITLE] = re.sub(
                 r"\s+", " ", record.data[Fields.TITLE]
@@ -124,7 +126,7 @@ class LoadFormatter:
                 record.data[Fields.URL].find("login?url=https") + 10 :
             ]
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the load formatter"""
 
         self._apply_strict_requirements(record=record)

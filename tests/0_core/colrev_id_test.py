@@ -3,7 +3,7 @@
 import pytest
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 import colrev.review_manager
 
 # pylint: disable=line-too-long
@@ -90,12 +90,12 @@ def test_colrev_id(  # type: ignore
 
     if colrev_id == "NotEnoughDataToIdentifyException":
         with pytest.raises(colrev_exceptions.NotEnoughDataToIdentifyException):
-            colrev.record.Record(record_dict).create_colrev_id(
+            colrev.record.record.Record(record_dict).create_colrev_id(
                 assume_complete=False,
             )
         return
 
-    actual = colrev.record.Record(record_dict).create_colrev_id(
+    actual = colrev.record.record.Record(record_dict).create_colrev_id(
         assume_complete=False,
     )
     assert actual == colrev_id

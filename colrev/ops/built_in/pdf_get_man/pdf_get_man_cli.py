@@ -11,7 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.pdf_get
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -46,8 +46,8 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         self.pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
 
     def _get_pdf_from_google(
-        self, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         # import webbrowser
 
         title = record.data.get(Fields.TITLE, "no title")
@@ -58,8 +58,8 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         return record
 
     def _ask_authors_for_pdf(
-        self, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         # get the recipient email(s) from the local author index
         recipient = "TODO"
         subject = f"Copy of a PDF ({record.data['ID']})"
@@ -84,7 +84,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         return record
 
-    def _get_filepath(self, *, record: colrev.record.Record) -> Path:
+    def _get_filepath(self, *, record: colrev.record.record.Record) -> Path:
         filepath = (
             self.pdf_dir / f"{record.data.get('year', 'NA')}/{record.data['ID']}.pdf"
         )
@@ -118,7 +118,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     def _retrieve_record_from_downloads_folder(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> None:
         downloads_folder = Path.home() / Path("Downloads")
         pdfs_in_downloads_folder = list(downloads_folder.glob("*.pdf"))
@@ -201,7 +201,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
     def _pdf_get_man_record_cli(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> None:
         # self.review_manager.logger.debug(
         #     f"called pdf_get_man_cli for {record}"
@@ -264,7 +264,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
             self._get_from_downloads_folder = True
 
         for record_dict in records.values():
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             pdf_get_operation.link_pdf(record=record).get_data()
 
         self.pdf_get_man_operation.export_retrieval_table(records=records)
@@ -283,7 +283,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         for i, item in enumerate(pdf_get_man_data["items"]):
             stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
 
-            record = colrev.record.Record(records[item[Fields.ID]])
+            record = colrev.record.record.Record(records[item[Fields.ID]])
 
             print(f"\n\n{stat}")
 

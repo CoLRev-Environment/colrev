@@ -27,13 +27,13 @@ from PyPDF2 import PdfFileWriter
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
 
 
-class PDFRecord(colrev.record.Record):
+class PDFRecord(colrev.record.record.Record):
     """The PDFRecord class provides a range of convenience functions for PDF handling"""
 
     def extract_text_by_page(

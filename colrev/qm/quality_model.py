@@ -6,7 +6,7 @@ import importlib
 from pathlib import Path
 
 import colrev.qm.checkers
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -62,7 +62,7 @@ class QualityModel:
         """Register a checker"""
         self.checkers.append(checker)
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the checkers"""
 
         if self.pdf_mode:
@@ -77,7 +77,7 @@ class QualityModel:
                 or Fields.NR_PAGES_IN_FILE not in record.data
             ):
                 # The following should be improved.
-                record = colrev.record_pdf.PDFRecord(record.data)
+                record = colrev.record.record_pdf.PDFRecord(record.data)
                 record.set_text_from_pdf()
 
         for checker in self.checkers:

@@ -11,7 +11,7 @@ import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -83,7 +83,7 @@ class PDFGetMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             if record.data[Fields.STATUS] == RecordState.pdf_needs_manual_retrieval:
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
@@ -126,7 +126,7 @@ class PDFGetMan(colrev.operation.Operation):
     def pdf_get_man_record(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         filepath: Optional[Path] = None,
         PAD: int = 40,
     ) -> None:

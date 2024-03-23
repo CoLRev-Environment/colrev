@@ -6,7 +6,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.qm.quality_model
-import colrev.record
+import colrev.record.record
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -15,7 +15,7 @@ from colrev.constants import RecordState
 
 
 def test_container_title_abbreviated(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the ContainerTitleAbbreviatedChecker directly
@@ -64,7 +64,7 @@ def test_container_title_abbreviated(
 
 
 def test_doi_not_matching_pattern(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the DOIPatternChecker directly
@@ -100,7 +100,7 @@ def test_doi_not_matching_pattern(
 
 
 def test_erroneous_symbol_in_field(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the ErroneousSymbolInFieldChecker directly
@@ -139,7 +139,7 @@ def test_erroneous_symbol_in_field(
 
 
 def test_erroneous_term_in_field(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the ErroneousTermInFieldChecker directly
@@ -176,7 +176,7 @@ def test_erroneous_term_in_field(
 
 
 def test_erroneous_title_field(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the ErroneousTitleFieldChecker directly
@@ -213,7 +213,7 @@ def test_erroneous_title_field(
 
 
 def test_html_tags_(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the HTMLTagChecker directly
@@ -258,7 +258,7 @@ def test_html_tags_(
 
 
 def test_identical_values_between_title_and_container(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the IdenticalValuesChecker directly
@@ -317,7 +317,7 @@ def test_identical_values_between_title_and_container(
 
 
 def test_incomplete_field(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the IncompleteFieldChecker directly
@@ -368,7 +368,7 @@ def test_incomplete_field(
 
 
 def test_inconsistent_content(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the InconsistentContentChecker directly
@@ -413,7 +413,7 @@ def test_inconsistent_content(
 
 
 def test_inconsistent_with_entrytype(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the InconsistentWithEntrytypeChecker directly
@@ -463,7 +463,7 @@ def test_inconsistent_with_entrytype(
 
 
 def test_isbn_not_matching_pattern(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the ISBNPatternChecker directly
@@ -498,7 +498,7 @@ def test_isbn_not_matching_pattern(
 
 
 def test_language_format_error(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the LanguageFormatChecker directly
@@ -531,7 +531,7 @@ def test_language_format_error(
 
 
 def test_language_unknown(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the LanguageUnknownChecker directly
@@ -561,7 +561,7 @@ def test_language_unknown(
 
 
 def test_missing_field(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the MissingFieldChecker directly
@@ -597,7 +597,7 @@ def test_missing_field(
 
 
 def test_mostly_all_caps(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the MostlyAllCapsChecker directly
@@ -643,7 +643,7 @@ def test_mostly_all_caps(
 
 
 def test_name_abbreviated(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the NameAbbreviatedChecker directly
@@ -686,7 +686,7 @@ def test_name_abbreviated(
 
 
 def test_name_format_separators(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the NameFormatSeparatorsChecker directly
@@ -753,7 +753,7 @@ def test_name_format_separators(
 
 
 def test_name_format_titles(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the NameFormatTitleChecker directly
@@ -796,7 +796,7 @@ def test_name_format_titles(
 
 
 def test_name_particles(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the NameParticlesChecker directly
@@ -839,7 +839,7 @@ def test_name_particles(
 
 
 def test_page_range(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the PageRangeChecker directly
@@ -872,7 +872,7 @@ def test_page_range(
 
 
 def test_pubmedid_not_matching_pattern(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the PubmedIDPatternChecker directly
@@ -908,7 +908,7 @@ def test_pubmedid_not_matching_pattern(
 
 
 def test_thesis_with_multiple_authors(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the ThesisWithMultipleAuthorsChecker directly
@@ -950,7 +950,7 @@ def test_thesis_with_multiple_authors(
 
 
 def test_year_format(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the YearFormatChecker directly
@@ -983,7 +983,7 @@ def test_year_format(
 
 
 def test_inconsistent_with_doi_metadata(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     # Setup: Instantiate the DOIConsistencyChecker directly
@@ -1018,7 +1018,7 @@ def test_inconsistent_with_doi_metadata(
 
         # Return the simulated response if DOI is in the simulated responses
         if doi in simulated_responses:
-            return colrev.record.Record(simulated_responses[doi])
+            return colrev.record.record.Record(simulated_responses[doi])
         else:
             # Simulate a DOI not found scenario
             return None
@@ -1133,7 +1133,7 @@ def test_inconsistent_with_doi_metadata(
 
 
 def test_record_not_in_toc(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test record_not_in_toc"""
@@ -1144,7 +1144,10 @@ def test_record_not_in_toc(
     original_retrieve_from_toc = record_not_in_toc_checker.local_index.retrieve_from_toc
 
     def patched_retrieve_from_toc(  # type: ignore
-        record: colrev.record.Record, *, similarity_threshold=0.9, include_file=False
+        record: colrev.record.record.Record,
+        *,
+        similarity_threshold=0.9,
+        include_file=False,
     ):
         """
         Patched method to simulate TOC query responses for testing purposes.
@@ -1226,7 +1229,7 @@ def test_record_not_in_toc(
 
 
 def test_get_quality_defects_incomplete_field(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test incomplete_field"""
@@ -1254,7 +1257,7 @@ def test_get_quality_defects_incomplete_field(
 def test_get_quality_defects_title(
     title_str: str,
     defects: list,
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.get_quality_defects() - title field"""
@@ -1285,7 +1288,7 @@ def test_get_quality_defects_title(
 def test_get_quality_defects_journal(
     journal_str: str,
     defects: list,
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.get_quality_defects() - journal field"""
@@ -1304,7 +1307,7 @@ def test_get_quality_defects_journal(
 
 
 def test_get_quality_defects_testing_missing_field_year_forthcoming(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Tests for when year = forthcoming"""
@@ -1333,7 +1336,7 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
 def test_get_quality_defects_book_title_abbr(
     booktitle: str,
     defects: list,
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test if booktitle is abbreviated"""
@@ -1367,7 +1370,7 @@ def test_get_quality_defects_missing_fields(
     entrytype: str,
     missing: list,
     defects: list,
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Tests for missing and inconsistent data for ENTRYTYPE"""
@@ -1394,7 +1397,7 @@ def test_get_quality_defects_missing_fields(
 
 def test_retracted(
     quality_model: colrev.qm.quality_model.QualityModel,
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
 ) -> None:
     """Test whether run_quality_model detects retracts"""
 
@@ -1438,7 +1441,7 @@ def test_retracted(
 
 
 def test_defect_ignore(
-    v_t_record: colrev.record.Record,
+    v_t_record: colrev.record.record.Record,
     quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     v_t_record.data["journal"] = "JOURNAL OF INFORMATION TECHNOLOGY"

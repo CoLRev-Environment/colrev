@@ -38,7 +38,7 @@ v1 = {
     Fields.PAGES: "1--3",
 }
 
-R1 = colrev.record.Record(v1)
+R1 = colrev.record.record.Record(v1)
 
 
 @pytest.mark.parametrize(

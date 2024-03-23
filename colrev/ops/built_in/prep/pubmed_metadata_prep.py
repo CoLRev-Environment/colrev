@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.pubmed as pubmed_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -60,7 +60,9 @@ class PubmedMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Pubmed API"""
         self.pubmed_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on Pubmed metadata"""
 
         if any(

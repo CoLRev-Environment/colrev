@@ -18,7 +18,7 @@ class IdenticalValuesChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the identical-values-between-title-and-container checks"""
 
         if record.ignored_defect(field=Fields.TITLE, defect=self.msg):
@@ -30,7 +30,7 @@ class IdenticalValuesChecker:
             record.remove_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
 
     def _identical_values_between_title_and_container(
-        self, *, record: colrev.record.Record
+        self, *, record: colrev.record.record.Record
     ) -> bool:
         if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) == FieldValues.UNKNOWN:
             return False

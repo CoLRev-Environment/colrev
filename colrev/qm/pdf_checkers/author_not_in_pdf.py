@@ -23,7 +23,7 @@ class AuthorNotInPDFChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the author-not-in-pdf checks"""
 
         if (
@@ -40,7 +40,7 @@ class AuthorNotInPDFChecker:
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def _author_in_pdf(self, *, record: colrev.record.Record) -> bool:
+    def _author_in_pdf(self, *, record: colrev.record.record.Record) -> bool:
         # Many editorials do not have authors in the PDF (or on the last page)
         if "editorial" in record.data.get(Fields.TITLE, "").lower():
             return True

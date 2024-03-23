@@ -1,9 +1,9 @@
 import unittest
 
 from colrev.loader.load_utils_formatter import LoadFormatter
-from colrev.record import Fields
-from colrev.record import Record
-from colrev.record import RecordState
+from colrev.record.record import Fields
+from colrev.record.record import Record
+from colrev.record.record import RecordState
 
 
 class LoadFormatterTests(unittest.TestCase):

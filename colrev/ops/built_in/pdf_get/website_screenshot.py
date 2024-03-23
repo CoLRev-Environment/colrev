@@ -15,7 +15,7 @@ from docker.errors import DockerException
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -104,8 +104,8 @@ class WebsiteScreenshot(JsonSchemaMixin):
         return False
 
     def _add_screenshot(
-        self, *, record: colrev.record.Record, pdf_filepath: Path
-    ) -> colrev.record.Record:
+        self, *, record: colrev.record.record.Record, pdf_filepath: Path
+    ) -> colrev.record.record.Record:
         """Add a PDF screenshot to the record"""
 
         if Fields.URL not in record.data:
@@ -147,7 +147,9 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
         return record
 
-    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get a PDF of the website (screenshot)"""
 
         if record.data[Fields.ENTRYTYPE] != "online":

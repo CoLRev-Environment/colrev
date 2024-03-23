@@ -23,8 +23,8 @@ from lxml.etree import XMLSyntaxError
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -385,10 +385,10 @@ class PubMedSearchSource(JsonSchemaMixin):
     def _get_masterdata_record(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool,
         timeout: int,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         try:
             retrieved_record_dict = self._pubmed_query_id(
                 pubmed_id=record.data["pubmedid"],
@@ -412,9 +412,9 @@ class PubMedSearchSource(JsonSchemaMixin):
                     msg="Pubmed: no records retrieved"
                 )
 
-            retrieved_record = colrev.record.Record(retrieved_record_dict)
+            retrieved_record = colrev.record.record.Record(retrieved_record_dict)
 
-            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
@@ -482,10 +482,10 @@ class PubMedSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from Pubmed based on similarity with the record provided"""
 
         # To test the metadata provided for a particular pubmed-id use:
@@ -552,7 +552,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                             f"Skipped record: {record_dict}"
                         )
                         continue
-                    prep_record = colrev.record_prep.PrepRecord(record_dict)
+                    prep_record = colrev.record.record_prep.PrepRecord(record_dict)
 
                     if Fields.D_PROV in prep_record.data:
                         del prep_record.data[Fields.D_PROV]
@@ -588,7 +588,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     ) -> None:
 
         for feed_record_dict in pubmed_feed.feed_records.values():
-            feed_record = colrev.record.Record(feed_record_dict)
+            feed_record = colrev.record.record.Record(feed_record_dict)
 
             try:
                 retrieved_record_dict = self._pubmed_query_id(
@@ -597,7 +597,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
                 if retrieved_record_dict["pubmedid"] != feed_record.data["pubmedid"]:
                     continue
-                retrieved_record = colrev.record.Record(retrieved_record_dict)
+                retrieved_record = colrev.record.record.Record(retrieved_record_dict)
                 pubmed_feed.add_update_record(retrieved_record)
             except (
                 colrev_exceptions.RecordNotFoundInPrepSourceException,
@@ -707,8 +707,8 @@ class PubMedSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for Pubmed"""
 
         if "colrev.pubmed.first_author" in record.data:
@@ -716,7 +716,7 @@ class PubMedSearchSource(JsonSchemaMixin):
 
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = (
-                colrev.record_prep.PrepRecord.format_author_field(
+                colrev.record.record_prep.PrepRecord.format_author_field(
                     input_string=record.data[Fields.AUTHOR]
                 )
             )

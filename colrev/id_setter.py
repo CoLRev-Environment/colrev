@@ -14,7 +14,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
 import colrev.operation
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -51,7 +51,7 @@ class IDSetter:
                 authors_string = record_dict.get(
                     Fields.AUTHOR, record_dict.get(Fields.EDITOR, "Anonymous")
                 )
-                authors = colrev.record_prep.PrepRecord.format_author_field(
+                authors = colrev.record.record_prep.PrepRecord.format_author_field(
                     input_string=authors_string
                 ).split(" and ")
             else:
@@ -170,7 +170,7 @@ class IDSetter:
 
                 temp_stat = record_dict[Fields.STATUS]
                 if selected_ids:
-                    record = colrev.record.Record(record_dict)
+                    record = colrev.record.record.Record(record_dict)
                     record.set_status(RecordState.md_prepared)
                 new_id = self._generate_id(
                     local_index=local_index,
@@ -178,7 +178,7 @@ class IDSetter:
                     existing_ids=[x for x in id_list if x != record_id],
                 )
                 if selected_ids:
-                    record = colrev.record.Record(record_dict)
+                    record = colrev.record.record.Record(record_dict)
                     record.set_status(temp_stat)
 
                 id_list.append(new_id)

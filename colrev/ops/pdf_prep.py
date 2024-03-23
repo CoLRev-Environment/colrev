@@ -13,7 +13,7 @@ import requests
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.built_in.pdf_prep.grobid_tei
-import colrev.record_pdf
+import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -51,7 +51,7 @@ class PDFPrep(colrev.operation.Operation):
         self.pdf_qm = self.review_manager.get_pdf_qm()
 
     def _complete_successful_pdf_prep(
-        self, *, record: colrev.record.Record, original_filename: str
+        self, *, record: colrev.record.record.Record, original_filename: str
     ) -> None:
         # pylint: disable=colrev-direct-status-assign
         record.data.update(colrev_status=RecordState.pdf_prepared)
@@ -132,7 +132,7 @@ class PDFPrep(colrev.operation.Operation):
             )
             return record_dict
 
-        record = colrev.record_pdf.PDFRecord(record_dict)
+        record = colrev.record.record_pdf.PDFRecord(record_dict)
         if record_dict[Fields.FILE].endswith(".pdf"):
             record.set_text_from_pdf()
         original_filename = record_dict[Fields.FILE]
@@ -264,7 +264,7 @@ class PDFPrep(colrev.operation.Operation):
             if RecordState.pdf_needs_manual_preparation != record_dict["colrev_stauts"]:
                 continue
 
-            record = colrev.record_pdf.PDFRecord(record_dict)
+            record = colrev.record.record_pdf.PDFRecord(record_dict)
             # pylint: disable=colrev-direct-status-assign
             record.data.update(colrev_status=RecordState.pdf_imported)
             record.reset_pdf_provenance_notes()
@@ -276,7 +276,9 @@ class PDFPrep(colrev.operation.Operation):
         if Fields.FILE in record_dict:
             pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
             record_dict.update(
-                colrev_pdf_id=colrev.record_pdf.PDFRecord.get_colrev_pdf_id(pdf_path)
+                colrev_pdf_id=colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
+                    pdf_path
+                )
             )
         return record_dict
 
@@ -370,7 +372,7 @@ class PDFPrep(colrev.operation.Operation):
             self.review_manager.logger.info(record_dict[Fields.ID])
             try:
                 endpoint.prep_pdf(
-                    record=colrev.record_pdf.PDFRecord(record_dict),
+                    record=colrev.record.record_pdf.PDFRecord(record_dict),
                     pad=0,
                 )
             except colrev_exceptions.TEIException:

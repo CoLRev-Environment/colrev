@@ -20,7 +20,7 @@ class TextInPDFChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the no-text-in-pdf checks"""
 
         if (
@@ -38,7 +38,7 @@ class TextInPDFChecker:
     def _text_in_pdf(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> bool:
         if record.data[Fields.TEXT_FROM_PDF] == "":
             return False

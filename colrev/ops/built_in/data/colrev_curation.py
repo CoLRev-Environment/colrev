@@ -15,7 +15,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -357,7 +357,7 @@ class ColrevCuration(JsonSchemaMixin):
                     continue
                 if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
                     continue
-                cid = colrev.record.Record(record_dict).create_colrev_id(
+                cid = colrev.record.record.Record(record_dict).create_colrev_id(
                     assume_complete=True
                 )
                 if cid in identical_colrev_ids:

@@ -12,7 +12,7 @@ from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -61,7 +61,9 @@ class CurationDedupe(JsonSchemaMixin):
         self.pdf_qm = self.review_manager.get_pdf_qm()
 
     def _has_overlapping_colrev_id(
-        self, record_a: colrev.record.Record, record_b: colrev.record.Record
+        self,
+        record_a: colrev.record.record.Record,
+        record_b: colrev.record.record.Record,
     ) -> bool:
         """Check if a record has an overlapping colrev_id with the other record"""
         own_colrev_ids = record_a.get_colrev_id()
@@ -263,7 +265,7 @@ class CurationDedupe(JsonSchemaMixin):
                             source_record_dict.get(k, "NA") == v
                             for k, v in toc_item.items()
                         ):
-                            source_record = colrev.record.Record(
+                            source_record = colrev.record.record.Record(
                                 data=source_record_dict
                             )
                             source_record.set_status(
@@ -364,8 +366,8 @@ class CurationDedupe(JsonSchemaMixin):
                 for new_same_toc_record in new_same_toc_records:
                     for rec2 in processed_same_toc_records:
                         overlapping_colrev_ids = self._has_overlapping_colrev_id(
-                            colrev.record.Record(data=new_same_toc_record),
-                            colrev.record.Record(rec2),
+                            colrev.record.record.Record(data=new_same_toc_record),
+                            colrev.record.record.Record(rec2),
                         )
                         if overlapping_colrev_ids:
                             decision_list.append(
@@ -386,7 +388,7 @@ class CurationDedupe(JsonSchemaMixin):
         else:  # None of the records is curated
             raise FileNotFoundError
 
-        updated_record = colrev.record.Record(updated_record_dict)
+        updated_record = colrev.record.record.Record(updated_record_dict)
         updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
         return updated_record.has_pdf_defects()
 
@@ -418,7 +420,7 @@ class CurationDedupe(JsonSchemaMixin):
             return
 
         overlapping_colrev_ids = self._has_overlapping_colrev_id(
-            colrev.record.Record(data=rec1), colrev.record.Record(rec2)
+            colrev.record.record.Record(data=rec1), colrev.record.record.Record(rec2)
         )
         if validated or overlapping_colrev_ids:
             decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])

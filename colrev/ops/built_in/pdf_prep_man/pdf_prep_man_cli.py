@@ -16,7 +16,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -49,7 +49,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         self.review_manager = pdf_prep_man_operation.review_manager
         self.pdf_prep_man_operation = pdf_prep_man_operation
 
-    def _update_metadata(self, *, record: colrev.record.Record) -> colrev.record.Record:
+    def _update_metadata(
+        self, *, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         questions = [
             inquirer.List(
                 "field",
@@ -174,7 +176,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         self,
         *,
         filepath: Path,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> None:
         if not self._is_inside_wsl():
             self._open_pdf(filepath=filepath)
@@ -232,7 +234,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             elif user_selection == "Quit":
                 raise QuitPressedException()
 
-    def _print_pdf_prep_man(self, record: colrev.record.Record) -> None:
+    def _print_pdf_prep_man(self, record: colrev.record.record.Record) -> None:
         """Print the record for pdf-prep-man operations"""
         # pylint: disable=too-many-branches
         ret_str = ""
@@ -302,12 +304,12 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         # to do : if authors mismatch: color those that do/do not match
         print(stat)
-        record = colrev.record.Record(item)
+        record = colrev.record.record.Record(item)
         file_provenance = record.get_field_provenance(key=Fields.FILE)
 
         self._print_pdf_prep_man(record)
         record_dict = records[item[Fields.ID]]
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
         if RecordState.pdf_needs_manual_preparation != record_dict[Fields.STATUS]:
             return record_dict
 

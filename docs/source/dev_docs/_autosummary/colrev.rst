@@ -38,7 +38,7 @@
    colrev.ops
    colrev.pandas
    colrev.qm
-   colrev.record
+   colrev.record.record
    colrev.review_manager
    colrev.settings
    colrev.ui_cli

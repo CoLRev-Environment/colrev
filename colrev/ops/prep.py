@@ -23,7 +23,7 @@ from requests.exceptions import ReadTimeout
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record_prep
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
@@ -148,8 +148,8 @@ class Prep(colrev.operation.Operation):
     def _print_diffs_for_debug(
         self,
         *,
-        prior: colrev.record_prep.PrepRecord,
-        preparation_record: colrev.record_prep.PrepRecord,
+        prior: colrev.record.record_prep.PrepRecord,
+        preparation_record: colrev.record.record_prep.PrepRecord,
         prep_package_endpoint: colrev.env.package_manager.PrepPackageEndpointInterface,
     ) -> None:
         if not self.debug_mode:
@@ -188,8 +188,8 @@ class Prep(colrev.operation.Operation):
     def _package_prep(
         self,
         prep_round_package_endpoint: dict,
-        record: colrev.record_prep.PrepRecord,
-        preparation_record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
+        preparation_record: colrev.record.record_prep.PrepRecord,
     ) -> None:
         try:
             if (
@@ -257,7 +257,7 @@ class Prep(colrev.operation.Operation):
     def _print_post_package_prep_polish_info(
         self,
         *,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         prior_state: RecordState,
         progress: str,
     ) -> None:
@@ -301,7 +301,7 @@ class Prep(colrev.operation.Operation):
             )
 
     def _preparation_break_condition(
-        self, record: colrev.record_prep.PrepRecord
+        self, record: colrev.record.record_prep.PrepRecord
     ) -> bool:
         """Check whether the break condition for the prep operation is given"""
 
@@ -321,7 +321,7 @@ class Prep(colrev.operation.Operation):
         return False
 
     def _preparation_save_condition(
-        self, record: colrev.record_prep.PrepRecord
+        self, record: colrev.record.record_prep.PrepRecord
     ) -> bool:
         """Check whether the save condition for the prep operation is given"""
 
@@ -342,7 +342,7 @@ class Prep(colrev.operation.Operation):
 
         return False
 
-    def _status_to_prepare(self, record: colrev.record_prep.PrepRecord) -> bool:
+    def _status_to_prepare(self, record: colrev.record.record_prep.PrepRecord) -> bool:
         """Check whether the record needs to be prepared"""
         return record.data.get(Fields.STATUS, "NA") in [
             RecordState.md_needs_manual_preparation,
@@ -352,7 +352,7 @@ class Prep(colrev.operation.Operation):
 
     def _print_post_package_prep_info(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         item: dict,
         prior_state: RecordState,
     ) -> None:
@@ -409,8 +409,8 @@ class Prep(colrev.operation.Operation):
 
     def _post_package_prep(
         self,
-        record: colrev.record_prep.PrepRecord,
-        preparation_record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
+        preparation_record: colrev.record.record_prep.PrepRecord,
         item: dict,
         prior_state: RecordState,
     ) -> None:
@@ -431,7 +431,7 @@ class Prep(colrev.operation.Operation):
                 record=record, item=item, prior_state=prior_state
             )
 
-    def _save_to_temp(self, *, record: colrev.record_prep.PrepRecord) -> None:
+    def _save_to_temp(self, *, record: colrev.record.record_prep.PrepRecord) -> None:
         rec_str = to_string(
             records_dict={record.data[Fields.ID]: record.get_data()},
             implementation="bib",
@@ -460,7 +460,10 @@ class Prep(colrev.operation.Operation):
         self.current_temp_records.unlink(missing_ok=True)
 
     def _validate_record(
-        self, *, record: colrev.record_prep.PrepRecord, prep_round_package_endpoint: str
+        self,
+        *,
+        record: colrev.record.record_prep.PrepRecord,
+        prep_round_package_endpoint: str,
     ) -> None:
         if Fields.STATUS not in record.data:
             print(record.data)
@@ -503,7 +506,7 @@ class Prep(colrev.operation.Operation):
         # #concurrent.futures.Executor.map
         # Exceptions are raised at the end/when results are retrieved from the iterator
 
-        record: colrev.record_prep.PrepRecord = item["record"]
+        record: colrev.record.record_prep.PrepRecord = item["record"]
 
         if not self._status_to_prepare(record) and not self.polish:
             return record.get_data()
@@ -732,7 +735,7 @@ class Prep(colrev.operation.Operation):
         for item in items:
             prep_data.append(
                 {
-                    "record": colrev.record_prep.PrepRecord(item),
+                    "record": colrev.record.record_prep.PrepRecord(item),
                     "nr_items": nr_items,
                     # Note : we cannot load endpoints here
                     # because pathos/multiprocessing
@@ -788,7 +791,7 @@ class Prep(colrev.operation.Operation):
                     self.review_manager.logger.info(
                         f"Setting colrev_status to md_imported {record_dict['ID']}"
                     )
-                    record = colrev.record_prep.PrepRecord(record_dict)
+                    record = colrev.record.record_prep.PrepRecord(record_dict)
                     record.set_status(RecordState.md_imported)
             debug_ids_list = list(records_dict.keys())
             debug_ids = ",".join(debug_ids_list)
@@ -888,8 +891,8 @@ class Prep(colrev.operation.Operation):
                 if r[Fields.ID] == previous_record.data[Fields.ID]
             ][0]
 
-            change = colrev.record_prep.PrepRecord.get_record_change_score(
-                colrev.record_prep.PrepRecord(prepared_record),
+            change = colrev.record.record_prep.PrepRecord.get_record_change_score(
+                colrev.record.record_prep.PrepRecord(prepared_record),
                 previous_record,
             )
             if change > 0.05:
@@ -903,7 +906,7 @@ class Prep(colrev.operation.Operation):
             [
                 r
                 for r in prepared_records
-                if colrev.record_prep.PrepRecord(r).masterdata_is_curated()
+                if colrev.record.record_prep.PrepRecord(r).masterdata_is_curated()
             ]
         )
 
@@ -962,7 +965,7 @@ class Prep(colrev.operation.Operation):
 
         for record_dict in records.values():
             if RecordState.md_imported == record_dict[Fields.STATUS]:
-                record = colrev.record_prep.PrepRecord(record_dict)
+                record = colrev.record.record_prep.PrepRecord(record_dict)
                 record.set_status(RecordState.md_prepared)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(msg="Skip prep")

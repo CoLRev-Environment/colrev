@@ -38,7 +38,7 @@ class Repare(colrev.operation.Operation):
         )
 
     def _fix_broken_symlink_based_on_local_index(
-        self, *, record: colrev.record.Record, full_path: Path
+        self, *, record: colrev.record.record.Record, full_path: Path
     ) -> None:
         """Fix broken symlinks based on local_index"""
 
@@ -111,7 +111,7 @@ class Repare(colrev.operation.Operation):
             full_path = self.review_manager.path / Path(record_dict[Fields.FILE])
 
             if not full_path.is_file():
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 self._fix_broken_symlink_based_on_local_index(
                     record=record, full_path=full_path
                 )
@@ -121,7 +121,7 @@ class Repare(colrev.operation.Operation):
 
             record_dict["colrev_status_backup"] = record_dict[Fields.STATUS]
             del record_dict[Fields.FILE]
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             record.set_status(RecordState.rev_prescreen_included)
 
         file_search_sources = [
@@ -165,7 +165,7 @@ class Repare(colrev.operation.Operation):
         return source_feeds
 
     # pylint: disable=too-many-branches
-    def _remove_fields(self, *, record: colrev.record.Record) -> None:
+    def _remove_fields(self, *, record: colrev.record.record.Record) -> None:
         if "pdf_hash" in record.data:
             record.data[Fields.PDF_ID] = record.data["pdf_hash"]
             del record.data["pdf_hash"]
@@ -200,7 +200,7 @@ class Repare(colrev.operation.Operation):
                 del record.data[Fields.MD_PROV][FieldValues.CURATED]
 
     def _set_data_provenance_field(
-        self, *, record: colrev.record.Record, key: str, source_feeds: dict
+        self, *, record: colrev.record.record.Record, key: str, source_feeds: dict
     ) -> None:
         if key in record.data[Fields.D_PROV]:
             if not any(
@@ -238,7 +238,12 @@ class Repare(colrev.operation.Operation):
             prov_details["source"] = record.data[Fields.ORIGIN][0]
 
     def _add_missing_masterdata_provenance(
-        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+        self,
+        *,
+        record: colrev.record.record.Record,
+        key: str,
+        value: str,
+        source_feeds: dict,
     ) -> None:
         options = {}
         for origin in record.data[Fields.ORIGIN]:
@@ -279,7 +284,12 @@ class Repare(colrev.operation.Operation):
         record.add_masterdata_provenance(key=key, source=source_value, note="")
 
     def _set_non_curated_masterdata_provenance_field(
-        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+        self,
+        *,
+        record: colrev.record.record.Record,
+        key: str,
+        value: str,
+        source_feeds: dict,
     ) -> None:
         if key in record.data[Fields.MD_PROV]:
             if not any(
@@ -299,7 +309,12 @@ class Repare(colrev.operation.Operation):
             prov_details["source"] = record.data[Fields.ORIGIN][0]
 
     def _set_provenance_field(
-        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+        self,
+        *,
+        record: colrev.record.record.Record,
+        key: str,
+        value: str,
+        source_feeds: dict,
     ) -> None:
         if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
             if FieldValues.CURATED in record.data[Fields.MD_PROV]:
@@ -314,7 +329,7 @@ class Repare(colrev.operation.Operation):
             )
 
     def _set_provenance(
-        self, *, record: colrev.record.Record, source_feeds: dict
+        self, *, record: colrev.record.record.Record, source_feeds: dict
     ) -> None:
         record.align_provenance()
         for key, value in record.data.items():
@@ -338,7 +353,7 @@ class Repare(colrev.operation.Operation):
     def _fix_provenance(self, *, records: dict) -> None:
         source_feeds = self._get_source_feeds()
         for record_dict in records.values():
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             self._remove_fields(record=record)
             self._set_provenance(record=record, source_feeds=source_feeds)
 
@@ -387,7 +402,7 @@ class Repare(colrev.operation.Operation):
     def _update_field_names(self, *, records: dict) -> None:
         for record_dict in records.values():
             # TBD: which parts are in upgrade/repare and which parts are in prepare??
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             if Fields.FULLTEXT in record_dict.get("link", ""):
                 record.rename_field(key="link", new_key=Fields.FULLTEXT)
             if (
@@ -455,11 +470,11 @@ class Repare(colrev.operation.Operation):
         # removing specific fields
         # for record_dict in records.values():
         #     if "colrev_status_backup" in record_dict:
-        #         colrev.record.Record(record_dict).remove_field(
+        #         colrev.record.record.Record(record_dict).remove_field(
         #             key="colrev_status_backup"
         #         )
         #     if "colrev_local_index" in record_dict:
-        #         colrev.record.Record(record_dict).remove_field(
+        #         colrev.record.record.Record(record_dict).remove_field(
         #             key="colrev_local_index"
         #         )
 

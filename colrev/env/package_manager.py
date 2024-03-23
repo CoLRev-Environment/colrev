@@ -23,7 +23,7 @@ from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -148,7 +148,7 @@ class SearchSourcePackageEndpointInterface(
     # pylint: disable=no-self-argument
     def prep_link_md(  # type: ignore
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
     ):
@@ -265,7 +265,7 @@ class PDFPrepPackageEndpointInterface(
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(  # type: ignore
-        record: colrev.record_pdf.PDFRecord,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,
     ) -> dict:
         """Run the prep-pdf operation"""

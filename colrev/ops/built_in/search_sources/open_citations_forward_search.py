@@ -15,7 +15,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 from colrev.constants import SearchType
@@ -177,7 +177,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                         record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
                     )
                     new_record["cites_IDs"] = record[Fields.ID]
-                    retrieved_record = colrev.record.Record(new_record)
+                    retrieved_record = colrev.record.record.Record(new_record)
 
                     forward_search_feed.add_update_record(
                         retrieved_record=retrieved_record
@@ -214,10 +214,10 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -234,7 +234,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record

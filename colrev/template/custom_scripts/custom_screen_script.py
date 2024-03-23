@@ -9,7 +9,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -47,7 +47,7 @@ class CustomScreen:
                 if record_dict[Fields.ID] not in split:
                     continue
 
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
 
             if random.random() < 0.5:  # nosec
                 if screening_criteria_available:

@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -48,7 +48,7 @@ class WebsiteDownload(JsonSchemaMixin):
         self.pdf_get_operation = pdf_get_operation
 
     def _download_from_jmir(
-        self, *, record: colrev.record.Record, pdf_filepath: Path
+        self, *, record: colrev.record.record.Record, pdf_filepath: Path
     ) -> None:
         article_url = record.data[Fields.URL]
         response = requests.get(article_url, headers=self.headers, timeout=60)
@@ -87,7 +87,7 @@ class WebsiteDownload(JsonSchemaMixin):
             )
 
     def _download_from_bmj_open_science(
-        self, *, record: colrev.record.Record, pdf_filepath: Path
+        self, *, record: colrev.record.record.Record, pdf_filepath: Path
     ) -> None:
         url = record.data[Fields.URL]
         response = requests.get(url, headers=self.headers, timeout=60)
@@ -127,7 +127,7 @@ class WebsiteDownload(JsonSchemaMixin):
             )
 
     def _download_unknown(
-        self, *, record: colrev.record.Record, pdf_filepath: Path
+        self, *, record: colrev.record.record.Record, pdf_filepath: Path
     ) -> None:
         url = record.data[Fields.URL]
         response = requests.get(url, headers=self.headers, timeout=60)
@@ -170,7 +170,9 @@ class WebsiteDownload(JsonSchemaMixin):
                 f"Failed to retrieve the Minerva Medica page. Status code: {response.status_code}"
             )
 
-    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get PDFs from website (URL)"""
 
         if Fields.URL not in record.data:

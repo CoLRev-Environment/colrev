@@ -9,7 +9,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 
@@ -39,7 +39,9 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.prep_operation = prep_operation
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)"""
 
         if self.prep_operation.polish and not self.prep_operation.force_mode:

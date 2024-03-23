@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import SearchType
 
@@ -16,7 +16,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
         conditions=[{Fields.ID: bws}]
     )
     record_dict = list(items)[0]
-    record = colrev.record.Record(record_dict)
+    record = colrev.record.record.Record(record_dict)
 
     if not record.data.get(Fields.FILE, "NA").endswith(".pdf"):
         return
@@ -45,7 +45,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
     # print list
     tei_recs = tei.get_references()
     for i, tei_rec_dict in enumerate(tei_recs):
-        tei_rec = colrev.record.Record(tei_rec_dict)
+        tei_rec = colrev.record.record.Record(tei_rec_dict)
         print(f"{i}  : {tei_rec.format_bib_style()}")
 
     # import as record
@@ -57,7 +57,7 @@ def main(*, search_operation: colrev.ops.search.Search, bws: str) -> None:
             selected_record["bws_id"] = f"{bws}/#{selection}"
             print(selected_record)
             feed.add_update_record(
-                retrieved_record=colrev.record.Record(selected_record)
+                retrieved_record=colrev.record.record.Record(selected_record)
             )
 
         feed.save()

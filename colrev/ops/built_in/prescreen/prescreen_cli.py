@@ -9,7 +9,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -38,7 +38,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         self.prescreen_operation = prescreen_operation
         self.review_manager = prescreen_operation.review_manager
 
-    def _print_prescreen_record(self, record: colrev.record.Record) -> None:
+    def _print_prescreen_record(self, record: colrev.record.record.Record) -> None:
         """Print the record for prescreen operations"""
 
         ret_str = f"  ID: {record.data['ID']} ({record.data[Fields.ENTRYTYPE]})"
@@ -105,7 +105,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 if record_dict[Fields.ID] not in split:
                     continue
 
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             ret, inclusion_decision_str = "NA", "NA"
             i += 1
 

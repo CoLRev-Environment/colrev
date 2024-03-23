@@ -1,7 +1,7 @@
 RecordState
 =========================
 
-.. currentmodule:: colrev.record
+.. currentmodule:: colrev.record.record
 
 .. autoclass:: RecordState
    :members:

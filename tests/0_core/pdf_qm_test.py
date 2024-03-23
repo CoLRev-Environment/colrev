@@ -5,14 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.qm.quality_model
-import colrev.record_pdf
+import colrev.record.record_pdf
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
 
 
 def test_pdf_qm(  # type: ignore
-    v_t_pdf_record: colrev.record_pdf.PDFRecord,
+    v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
     pdf_quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     """Test pdf-qm"""
@@ -35,7 +35,7 @@ def test_pdf_qm(  # type: ignore
 
 
 def test_author_not_in_pdf(
-    v_t_pdf_record: colrev.record_pdf.PDFRecord,
+    v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
     pdf_quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     from colrev.qm.pdf_checkers.author_not_in_pdf import (
@@ -90,7 +90,7 @@ def test_author_not_in_pdf(
 
 
 def test_title_not_in_pdf(
-    v_t_pdf_record: colrev.record_pdf.PDFRecord,
+    v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
     pdf_quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     from colrev.qm.pdf_checkers.title_not_in_pdf import TitleNotInPDFChecker
@@ -110,7 +110,7 @@ def test_title_not_in_pdf(
 
 
 def test_no_text_in_pdf(
-    v_t_pdf_record: colrev.record_pdf.PDFRecord,
+    v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
     pdf_quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     from colrev.qm.pdf_checkers.no_text_in_pdf import TextInPDFChecker
@@ -145,7 +145,7 @@ def test_no_text_in_pdf(
 
 
 def test_pdf_incompleteness(
-    v_t_pdf_record: colrev.record_pdf.PDFRecord,
+    v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
     pdf_quality_model: colrev.qm.quality_model.QualityModel,
 ) -> None:
     from colrev.qm.pdf_checkers.pdf_incomplete import PDFIncompletenessChecker
@@ -230,12 +230,12 @@ def test_pdf_incompleteness(
     def patched_extract_text_by_page(self, *, pages):  # type: ignore
         return "This is a paper with appendix attached (ie., more pages)"
 
-    original_method = colrev.record_pdf.PDFRecord.extract_text_by_page
-    colrev.record_pdf.PDFRecord.extract_text_by_page = patched_extract_text_by_page  # type: ignore
+    original_method = colrev.record.record_pdf.PDFRecord.extract_text_by_page
+    colrev.record.record_pdf.PDFRecord.extract_text_by_page = patched_extract_text_by_page  # type: ignore
 
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
     assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
-    colrev.record_pdf.PDFRecord.extract_text_by_page = original_method  # type: ignore
+    colrev.record.record_pdf.PDFRecord.extract_text_by_page = original_method  # type: ignore
     v_t_pdf_record.data[Fields.NR_PAGES_IN_FILE] = 18
 
     # Test case 10: PDF is incomplete (with roman numbers)

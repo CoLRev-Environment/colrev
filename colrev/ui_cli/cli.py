@@ -20,7 +20,7 @@ import pandas as pd
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 import colrev.review_manager
 import colrev.ui_cli.cli_status_printer
 import colrev.ui_cli.cli_validation
@@ -1314,13 +1314,13 @@ def screen(
 
 def _extract_coverpage(*, cover: Path) -> None:
     # pylint: disable=import-outside-toplevel
-    import colrev.record_pdf
+    import colrev.record.record_pdf
 
     cp_path = Path.home().joinpath("colrev") / Path(".coverpages")
     cp_path.mkdir(exist_ok=True)
 
     assert Path(cover).suffix == ".pdf"
-    record = colrev.record_pdf.PDFRecord({Fields.FILE: cover})
+    record = colrev.record.record_pdf.PDFRecord({Fields.FILE: cover})
     record.extract_pages(
         pages=[0], project_path=Path(cover).parent, save_to_path=cp_path
     )
@@ -1672,7 +1672,7 @@ def pdf_get_man(
 
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
     from PyPDF2 import PdfFileReader
-    import colrev.record_pdf
+    import colrev.record.record_pdf
 
     try:
         pdf_reader = PdfFileReader(str(pdf_path), strict=False)
@@ -1681,7 +1681,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
         return
 
     assert Path(pdf_path).suffix == ".pdf"
-    record = colrev.record_pdf.PDFRecord({"file": pdf_path})
+    record = colrev.record.record_pdf.PDFRecord({"file": pdf_path})
     first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
     print(f"first page: {first_page_average_hash_16}")
     first_page_average_hash_32 = record.get_pdf_hash(page_nr=1, hash_size=32)
@@ -1826,7 +1826,7 @@ def _delete_first_pages_cli(
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
                 pdf_prep_man_operation.set_pdf_man_prepared(
-                    record=colrev.record.Record(record_dict)
+                    record=colrev.record.record.Record(record_dict)
                 )
             else:
                 print("no file in record")

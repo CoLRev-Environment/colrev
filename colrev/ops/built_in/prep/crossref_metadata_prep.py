@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -62,7 +62,9 @@ class CrossrefMetadataPrep(JsonSchemaMixin):
         """Check status (availability) of the Crossref API"""
         self.crossref_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on Crossref metadata"""
 
         if any(

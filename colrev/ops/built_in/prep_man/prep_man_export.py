@@ -15,7 +15,7 @@ from PyPDF2 import PdfFileWriter
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
@@ -175,7 +175,7 @@ class ExportManPrep(JsonSchemaMixin):
             man_prep_info_df.to_csv(self.prep_man_csv_path, index=False)
 
     def _drop_unnecessary_provenance_fiels(
-        self, *, record: colrev.record.Record
+        self, *, record: colrev.record.record.Record
     ) -> None:
         colrev_data_provenance_keys_to_drop = []
         for key, items in record.data.get(Fields.D_PROV, {}).items():
@@ -198,7 +198,10 @@ class ExportManPrep(JsonSchemaMixin):
             del record.data[Fields.MD_PROV][md_prov_key_to_drop]
 
     def _update_original_record_based_on_man_prepped(
-        self, *, original_record: colrev.record.Record, man_prepped_record_dict: dict
+        self,
+        *,
+        original_record: colrev.record.record.Record,
+        man_prepped_record_dict: dict,
     ) -> None:
         dropped_keys = [
             k
@@ -243,7 +246,7 @@ class ExportManPrep(JsonSchemaMixin):
                 key=dropped_key, not_missing_note=True, source="man_prep"
             )
 
-    def _print_stats(self, *, original_record: colrev.record.Record) -> None:
+    def _print_stats(self, *, original_record: colrev.record.record.Record) -> None:
         if original_record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             self.review_manager.logger.info(
                 f" {Colors.RED}{original_record.data['ID']}".ljust(46)
@@ -272,7 +275,7 @@ class ExportManPrep(JsonSchemaMixin):
         self,
         *,
         man_prepped_record_dict: dict,
-        original_record: colrev.record.Record,
+        original_record: colrev.record.record.Record,
         imported_records: list,
     ) -> None:
         imported_records.append(original_record.data[Fields.ID])
@@ -330,7 +333,7 @@ class ExportManPrep(JsonSchemaMixin):
             if record_id not in records:
                 print(f"ID no longer in records: {record_id}")
                 continue
-            original_record = colrev.record.Record(
+            original_record = colrev.record.record.Record(
                 data=records[man_prepped_record_dict[Fields.ID]]
             )
             self._import_record(

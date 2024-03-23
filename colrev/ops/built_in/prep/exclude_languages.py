@@ -12,7 +12,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -70,7 +70,9 @@ class ExcludeLanguagesPrep(JsonSchemaMixin):
             return True
         return False
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record by excluding records whose metadata is not in English"""
 
         # Note : other languages are not yet supported

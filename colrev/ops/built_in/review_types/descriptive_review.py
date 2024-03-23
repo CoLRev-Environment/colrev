@@ -7,7 +7,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search
-import colrev.record
+import colrev.record.record
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code

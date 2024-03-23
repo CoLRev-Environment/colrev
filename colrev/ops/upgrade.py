@@ -362,7 +362,7 @@ class Upgrade(colrev.operation.Operation):
                 continue
 
             pdf_path = Path(record_dict["file"])
-            colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path)
+            colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(pdf_path)
             # pylint: disable=colrev-missed-constant-usage
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
@@ -423,7 +423,7 @@ class Upgrade(colrev.operation.Operation):
                 if "tei_id" in record_dict[Fields.D_PROV]:
                     del record_dict[Fields.D_PROV]["tei_id"]
 
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             prior_state = record.data[Fields.STATUS]
             record.run_quality_model(qm=quality_model)
             if prior_state == RecordState.rev_prescreen_excluded:
@@ -472,46 +472,46 @@ class Upgrade(colrev.operation.Operation):
         records = self.load_records_dict()
         for record_dict in records.values():
             if "pubmedid" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="pubmedid", new_key="colrev.pubmed.pubmedid")
 
             if "pii" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="pii", new_key="colrev.pubmed.pii")
 
             if "pmc" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="pmc", new_key="colrev.pubmed.pmc")
 
             if "label_included" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="label_included",
                     new_key="colrev.synergy_datasets.label_included",
                 )
             if "method" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="method", new_key="colrev.synergy_datasets.method"
                 )
 
             if "dblp_key" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="dblp_key", new_key=Fields.DBLP_KEY)
             if "wos_accession_number" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="wos_accession_number",
                     new_key=Fields.WEB_OF_SCIENCE_ID,
                 )
             if "sem_scholar_id" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="sem_scholar_id", new_key=Fields.SEMANTIC_SCHOLAR_ID
                 )
 
             if "openalex_id" in record_dict:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
         self.save_records_dict(records)

@@ -10,7 +10,7 @@ from nameparser import HumanName
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.prep.utils as prep_utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-many-public-methods
 
 
-class PrepRecord(colrev.record.Record):
+class PrepRecord(colrev.record.record.Record):
     """The PrepRecord class provides a range of convenience functions for record preparation"""
 
     @classmethod
@@ -89,7 +89,7 @@ class PrepRecord(colrev.record.Record):
 
     @classmethod
     def _format_authors_string_for_comparison(
-        cls, *, record: colrev.record.Record
+        cls, *, record: colrev.record.record.Record
     ) -> None:
         if Fields.AUTHOR not in record.data:
             return
@@ -137,16 +137,18 @@ class PrepRecord(colrev.record.Record):
     def _abbreviate_container_titles(
         cls,
         *,
-        record: colrev.record_prep.PrepRecord,
-        retrieved_record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
+        retrieved_record: colrev.record.record_prep.PrepRecord,
     ) -> None:
-        def abbreviate_container(*, record: colrev.record.Record, min_len: int) -> None:
+        def abbreviate_container(
+            *, record: colrev.record.record.Record, min_len: int
+        ) -> None:
             if Fields.JOURNAL in record.data:
                 record.data[Fields.JOURNAL] = " ".join(
                     [x[:min_len] for x in record.data[Fields.JOURNAL].split(" ")]
                 )
 
-        def get_abbrev_container_min_len(*, record: colrev.record.Record) -> int:
+        def get_abbrev_container_min_len(*, record: colrev.record.record.Record) -> int:
             min_len = -1
             if Fields.JOURNAL in record.data:
                 min_len = min(
@@ -173,8 +175,8 @@ class PrepRecord(colrev.record.Record):
     def _prep_records_for_similarity(
         cls,
         *,
-        record: colrev.record_prep.PrepRecord,
-        retrieved_record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
+        retrieved_record: colrev.record.record_prep.PrepRecord,
     ) -> None:
         cls._abbreviate_container_titles(
             record=record, retrieved_record=retrieved_record
@@ -226,8 +228,8 @@ class PrepRecord(colrev.record.Record):
     def get_retrieval_similarity(
         cls,
         *,
-        record_original: colrev.record.Record,
-        retrieved_record_original: colrev.record.Record,
+        record_original: colrev.record.record.Record,
+        retrieved_record_original: colrev.record.record.Record,
         same_record_type_required: bool = True,
     ) -> float:
         """Get the retrieval similarity between the record and a retrieved record"""

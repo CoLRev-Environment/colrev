@@ -1,7 +1,7 @@
-colrev.record_prep.PrepRecord
+colrev.record.record_prep.PrepRecord
 ========================
 
-.. currentmodule:: colrev.record
+.. currentmodule:: colrev.record.record
 
 .. autoclass:: PrepRecord
    :members:

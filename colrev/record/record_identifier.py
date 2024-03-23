@@ -13,8 +13,8 @@ import fitz
 import imagehash
 from nameparser import HumanName
 from PIL import Image
-import colrev.env.utils
 
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
@@ -24,7 +24,7 @@ from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
 if TYPE_CHECKING:
-    import colrev.record
+    import colrev.record.record
 
 
 # pylint: disable=duplicate-code
@@ -62,7 +62,7 @@ def _format_author_field_for_cid(input_string: str) -> str:
     return " ".join(author_list)
 
 
-def _get_container_title(*, record: colrev.record.Record) -> str:
+def _get_container_title(*, record: colrev.record.record.Record) -> str:
     # Note: custom __get_container_title for the colrev_id
 
     # school as the container title for theses
@@ -105,7 +105,7 @@ def _robust_append(*, input_string: str, to_append: str) -> str:
 
 def _check_colrev_id_preconditions(
     *,
-    record: colrev.record.Record,
+    record: colrev.record.record.Record,
     assume_complete: bool,
 ) -> None:
     if assume_complete:
@@ -129,7 +129,7 @@ def _check_colrev_id_preconditions(
             )
 
 
-def _get_colrev_id_from_record(*, record: colrev.record.Record) -> str:
+def _get_colrev_id_from_record(*, record: colrev.record.record.Record) -> str:
     try:
         # Including the version of the identifier prevents cases
         # in which almost all identifiers are identical
@@ -179,7 +179,9 @@ def _get_colrev_id_from_record(*, record: colrev.record.Record) -> str:
     return srep
 
 
-def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> str:
+def create_colrev_id(
+    *, record: colrev.record.record.Record, assume_complete: bool
+) -> str:
     """Create the colrev_id"""
     _check_colrev_id_preconditions(
         record=record,
@@ -233,7 +235,7 @@ def create_colrev_pdf_id(*, pdf_path: Path, cpid_version: str = "cpid2") -> str:
     raise NotImplementedError
 
 
-def get_toc_key(record: colrev.record.Record) -> str:
+def get_toc_key(record: colrev.record.record.Record) -> str:
     """Get the record's toc-key"""
 
     try:

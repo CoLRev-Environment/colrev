@@ -31,8 +31,8 @@ class CustomPrep:
     def prepare(
         self,
         prep_operation: colrev.ops.prep.Prep,  # pylint: disable=unused-argument
-        record: colrev.record.Record,
-    ) -> colrev.record.Record:
+        record: colrev.record.record.Record,
+    ) -> colrev.record.record.Record:
         """Update record (metadata)"""
 
         if Fields.JOURNAL in record.data:

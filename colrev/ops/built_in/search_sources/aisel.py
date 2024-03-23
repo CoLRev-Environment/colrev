@@ -15,8 +15,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -273,7 +273,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     ) and "" == record_dict.get(Fields.TITLE, ""):
                         continue
 
-                    prep_record = colrev.record_prep.PrepRecord(record_dict)
+                    prep_record = colrev.record.record_prep.PrepRecord(record_dict)
                     ais_feed.add_update_record(prep_record)
 
                 except colrev_exceptions.NotFeedIdentifiableException:
@@ -319,10 +319,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -439,7 +439,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def _fix_entrytype(self, *, record: colrev.record.Record) -> None:
+    def _fix_entrytype(self, *, record: colrev.record.record.Record) -> None:
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
         if (
@@ -494,7 +494,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                         key=Fields.BOOKTITLE, value="ECIS", source="prep_ais_source"
                     )
 
-    def _unify_container_titles(self, *, record: colrev.record.Record) -> None:
+    def _unify_container_titles(self, *, record: colrev.record.record.Record) -> None:
         if "https://aisel.aisnet.org/misq/" in record.data.get(Fields.URL, ""):
             record.update_field(
                 key=Fields.JOURNAL, value="MIS Quarterly", source="prep_ais_source"
@@ -534,7 +534,7 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                     source="prep_ais_source",
                 )
 
-    def _format_fields(self, *, record: colrev.record_prep.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record.record_prep.PrepRecord) -> None:
         if Fields.ABSTRACT in record.data:
             if record.data[Fields.ABSTRACT] == "N/A":
                 record.remove_field(key=Fields.ABSTRACT)
@@ -550,7 +550,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
         record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
 
-    def _exclude_complementary_material(self, *, record: colrev.record.Record) -> None:
+    def _exclude_complementary_material(
+        self, *, record: colrev.record.record.Record
+    ) -> None:
         if re.match(
             r"MISQ Volume \d{1,2}, Issue \d Table of Contents",
             record.data.get(Fields.TITLE, ""),
@@ -559,9 +561,9 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for the AIS electronic Library (AISeL)"""
 
         self._fix_entrytype(record=record)

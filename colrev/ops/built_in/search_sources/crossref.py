@@ -27,8 +27,8 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.doi_org as doi_connector
 import colrev.ops.built_in.search_sources.utils as connector_utils
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -144,7 +144,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 Fields.ENTRYTYPE: "article",
             }
             returned_record = self.crossref_query(
-                record_input=colrev.record_prep.PrepRecord(test_rec),
+                record_input=colrev.record.record_prep.PrepRecord(test_rec),
                 jour_vol_iss_list=False,
                 timeout=20,
             )[0]
@@ -177,7 +177,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     @classmethod
     def query_doi(
         cls, *, doi: str, etiquette: Etiquette
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         """Get records from Crossref based on a doi query"""
 
         try:
@@ -234,7 +234,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
             yield from crossref_query_return
 
     def _create_query_url(
-        self, *, record: colrev.record.Record, jour_vol_iss_list: bool
+        self, *, record: colrev.record.record.Record, jour_vol_iss_list: bool
     ) -> str:
         if jour_vol_iss_list:
             if not all(
@@ -290,14 +290,14 @@ class CrossrefSearchSource(JsonSchemaMixin):
         return url
 
     def _get_similarity(
-        self, *, record: colrev.record.Record, retrieved_record_dict: dict
+        self, *, record: colrev.record.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
             retrieved_record_dict.get(Fields.TITLE, "NA").lower(),
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
-            colrev.record_prep.PrepRecord(retrieved_record_dict)
+            colrev.record.record_prep.PrepRecord(retrieved_record_dict)
             .get_container_title()
             .lower(),
             record.get_container_title().lower(),
@@ -315,7 +315,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def _prep_crossref_record(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         prep_main_record: bool = True,
         crossref_source: str = "",
     ) -> None:
@@ -353,7 +353,11 @@ class CrossrefSearchSource(JsonSchemaMixin):
             record.set_status(RecordState.md_prepared)
 
     def _get_crossref_query_items(
-        self, *, record: colrev.record.Record, jour_vol_iss_list: bool, timeout: int
+        self,
+        *,
+        record: colrev.record.record.Record,
+        jour_vol_iss_list: bool,
+        timeout: int,
     ) -> list:
         # Note : only returning a multiple-item list for jour_vol_iss_list
         try:
@@ -392,7 +396,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def crossref_query(
         self,
         *,
-        record_input: colrev.record.Record,
+        record_input: colrev.record.record.Record,
         jour_vol_iss_list: bool = False,
         timeout: int = 40,
     ) -> list:
@@ -426,17 +430,19 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if not jour_vol_iss_list:
             if most_similar_record:
-                record_list = [colrev.record_prep.PrepRecord(most_similar_record)]
+                record_list = [
+                    colrev.record.record_prep.PrepRecord(most_similar_record)
+                ]
 
         return record_list
 
     def _get_masterdata_record(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         timeout: int,
         save_feed: bool,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         try:
             if Fields.DOI in record.data:
                 retrieved_record = self.query_doi(
@@ -472,7 +478,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     msg="Record not found in crossref"
                 )
 
-            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record, retrieved_record_original=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
@@ -539,13 +545,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
         return record
 
     def _check_doi_masterdata(
-        self, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         try:
             retrieved_record = self.query_doi(
                 doi=record.data[Fields.DOI], etiquette=self.etiquette
             )
-            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=False,
@@ -573,10 +579,10 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 30,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from Crossref based on similarity with the record provided"""
 
         # To test the metadata provided for a particular DOI use:
@@ -668,7 +674,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     def _restore_url(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         feed: colrev.ops.search_api_feed.SearchAPIFeed,
     ) -> None:
         """Restore the url from the feed if it exists
@@ -687,7 +693,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         for feed_record_dict in crossref_feed.feed_records.values():
             try:
-                feed_record = colrev.record.Record(feed_record_dict)
+                feed_record = colrev.record.record.Record(feed_record_dict)
                 retrieved_record = self.query_doi(
                     doi=feed_record_dict[Fields.DOI], etiquette=self.etiquette
                 )
@@ -1017,9 +1023,9 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Crossref"""
         source_item = [
             x

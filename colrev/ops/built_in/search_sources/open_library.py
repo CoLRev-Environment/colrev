@@ -14,8 +14,8 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import SearchType
 
@@ -122,13 +122,13 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     @classmethod
     def _open_library_json_to_record(
         cls, *, item: dict, url: str
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         retrieved_record: dict = {}
 
         if "author_name" in item:
             authors_string = " and ".join(
                 [
-                    colrev.record_prep.PrepRecord.format_author_field(
+                    colrev.record.record_prep.PrepRecord.format_author_field(
                         input_string=author
                     )
                     for author in item["author_name"]
@@ -151,13 +151,16 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         if Fields.ISBN in item:
             retrieved_record[Fields.ISBN] = str(item["isbn"][0])
 
-        record = colrev.record_prep.PrepRecord(retrieved_record)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record)
         record.add_provenance_all(source=url)
         return record
 
     def _get_record_from_open_library(
-        self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.record.Record,
+    ) -> colrev.record.record.Record:
         session = prep_operation.review_manager.get_cached_session()
 
         url = "NA"
@@ -267,10 +270,10 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from OpenLibrary based on similarity with the record provided"""
 
         if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
@@ -325,8 +328,8 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenLibrary"""
 
         return record

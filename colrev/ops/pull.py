@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 
 # pylint: disable=too-few-public-methods

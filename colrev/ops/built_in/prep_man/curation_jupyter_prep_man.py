@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.record
+import colrev.record.record
 
 
 # pylint: disable=too-few-public-methods

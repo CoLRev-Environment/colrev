@@ -13,9 +13,9 @@ import dictdiffer
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-from colrev import record_identifier
-from colrev import record_merger
-from colrev import record_similarity
+import colrev.record.record_identifier
+import colrev.record.record_merger
+import colrev.record.record_similarity
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
@@ -87,9 +87,9 @@ class Record:
         """Copy the record object"""
         return Record(deepcopy(self.data))
 
-    def copy_prep_rec(self) -> colrev.record_prep.PrepRecord:
+    def copy_prep_rec(self) -> colrev.record.record_prep.PrepRecord:
         """Copy the record object (as a PrepRecord)"""
-        return colrev.record_prep.PrepRecord(deepcopy(self.data))
+        return colrev.record.record_prep.PrepRecord(deepcopy(self.data))
 
     def update_by_record(self, update_record: Record) -> None:
         """Update all data of a record object based on another record"""
@@ -478,13 +478,15 @@ class Record:
         records, get_similarity will return a value > 1.0. The get_record_changes
         will return 0.0 (if all other fields are equal)."""
 
-        return record_similarity.get_record_change_score(record_a, record_b)
+        return colrev.record.record_similarity.get_record_change_score(
+            record_a, record_b
+        )
 
     @classmethod
     def get_record_similarity(cls, record_a: Record, record_b: Record) -> float:
         """Determine the similarity between two records (their masterdata)"""
 
-        return record_similarity.get_record_similarity(record_a, record_b)
+        return colrev.record.record_similarity.get_record_similarity(record_a, record_b)
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
@@ -797,7 +799,7 @@ class Record:
     ) -> str:
         """Returns the colrev_id of the Record."""
 
-        return record_identifier.create_colrev_id(
+        return colrev.record.record_identifier.create_colrev_id(
             record=self,
             assume_complete=assume_complete,
         )
@@ -809,11 +811,11 @@ class Record:
     ) -> str:  # pragma: no cover
         """Generate the colrev_pdf_id"""
 
-        return record_identifier.create_colrev_pdf_id(pdf_path=pdf_path)
+        return colrev.record.record_identifier.create_colrev_pdf_id(pdf_path=pdf_path)
 
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
-        return record_identifier.get_toc_key(self)
+        return colrev.record.record_identifier.get_toc_key(self)
 
     def prescreen_exclude(self, *, reason: str, print_warning: bool = False) -> None:
         """Prescreen-exclude a record"""
@@ -940,7 +942,7 @@ class Record:
         Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
-        record_merger.merge(
+        colrev.record.record_merger.merge(
             self,
             merging_record,
             default_source=default_source,

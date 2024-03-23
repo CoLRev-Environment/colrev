@@ -24,8 +24,8 @@ from tqdm import tqdm
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -180,14 +180,14 @@ class BackwardSearchSource(JsonSchemaMixin):
         return references
 
     def _get_similarity(
-        self, *, record: colrev.record.Record, retrieved_record_dict: dict
+        self, *, record: colrev.record.record.Record, retrieved_record_dict: dict
     ) -> float:
         title_similarity = fuzz.partial_ratio(
             retrieved_record_dict.get(Fields.TITLE, "").lower(),
             record.data.get(Fields.TITLE, "").lower(),
         )
         container_similarity = fuzz.partial_ratio(
-            colrev.record_prep.PrepRecord(retrieved_record_dict)
+            colrev.record.record_prep.PrepRecord(retrieved_record_dict)
             .get_container_title()
             .lower(),
             record.get_container_title().lower(),
@@ -307,7 +307,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     def _update_feed_records_with_open_citations_data(
         self, feed_record_dict: dict, backward_references: list
     ) -> None:
-        feed_record = colrev.record.Record(feed_record_dict)
+        feed_record = colrev.record.record.Record(feed_record_dict)
         max_similarity, best_match = self._find_best_match(
             feed_record, backward_references
         )
@@ -319,7 +319,7 @@ class BackwardSearchSource(JsonSchemaMixin):
             )
 
     def _find_best_match(
-        self, feed_record: colrev.record.Record, backward_references: list
+        self, feed_record: colrev.record.record.Record, backward_references: list
     ) -> tuple:
         max_similarity = 0.0
         best_match = None
@@ -337,7 +337,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         *,
         item: dict,
         pdf_backward_search_feed: colrev.ops.search_api_feed.SearchAPIFeed,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         item[Fields.ID] = "new"
         # Note: multiple source_identifiers are merged in origin field.
         for feed_record in pdf_backward_search_feed.feed_records.values():
@@ -370,7 +370,7 @@ class BackwardSearchSource(JsonSchemaMixin):
         item = {
             k: v for k, v in item.items() if not pd.isna(v)
         }  # Drop fields where value is NaN
-        return colrev.record.Record(item)
+        return colrev.record.record.Record(item)
 
     def search(self, rerun: bool) -> None:
         """Run a search of PDFs (backward search based on GROBID)"""
@@ -487,7 +487,7 @@ class BackwardSearchSource(JsonSchemaMixin):
                 pdf_path = review_manager.path / Path(record[Fields.FILE])
                 tei = review_manager.get_tei(
                     pdf_path=pdf_path,
-                    tei_path=colrev.record.Record(record).get_tei_filename(),
+                    tei_path=colrev.record.record.Record(record).get_tei_filename(),
                 )
 
                 references = tei.get_references(add_intext_citation_count=True)
@@ -602,18 +602,18 @@ class BackwardSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for PDF backward searches (GROBID)"""
 
         record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")

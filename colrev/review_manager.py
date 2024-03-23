@@ -22,7 +22,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.logger
 import colrev.operation
 import colrev.qm.quality_model
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Filepaths

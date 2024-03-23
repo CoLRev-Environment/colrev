@@ -21,7 +21,7 @@ from docker.errors import DockerException
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -454,7 +454,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 ):
                     del synthesized_record_status_matrix[record_id]
                     screen_operation.screen(
-                        record=colrev.record.Record(records[record_id]),
+                        record=colrev.record.record.Record(records[record_id]),
                         screen_inclusion=False,
                         screening_criteria="NA",
                     )
@@ -537,7 +537,7 @@ class PaperMarkdown(JsonSchemaMixin):
                     f"please change ID and add manually:{Colors.END}"
                 )
                 for duplicated_record in duplicated_records:
-                    print(colrev.record.Record(duplicated_record))
+                    print(colrev.record.record.Record(duplicated_record))
 
             non_sample_records = {**non_sample_records, **records_to_add}
 

@@ -11,7 +11,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -161,7 +161,7 @@ class TablePrescreen(JsonSchemaMixin):
         self.review_manager.logger.info("Update prescreen results")
         for prescreened_record in prescreened_records:
             if prescreened_record.get(Fields.ID, "") in records:
-                record = colrev.record.Record(
+                record = colrev.record.record.Record(
                     data=records[prescreened_record.get(Fields.ID, "")]
                 )
                 if record.data[Fields.STATUS] in RecordState.get_post_x_states(

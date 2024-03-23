@@ -15,7 +15,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchType
@@ -174,7 +174,7 @@ class ERICSearchSource(JsonSchemaMixin):
             f"Cannot add ERIC endpoint with query {params}"
         )
 
-    def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
+    def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""
         full_url = self._build_search_url()
 
@@ -225,7 +225,7 @@ class ERICSearchSource(JsonSchemaMixin):
         rows_param = params.get("rows", "2000")
         return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
 
-    def _create_record(self, doc: dict) -> colrev.record.Record:
+    def _create_record(self, doc: dict) -> colrev.record.record.Record:
         # pylint: disable=too-many-branches
         record_dict = {Fields.ID: doc["id"]}
         record_dict[Fields.ENTRYTYPE] = "other"
@@ -264,7 +264,7 @@ class ERICSearchSource(JsonSchemaMixin):
             # pylint: disable=colrev-missed-constant-usage
             record_dict[Fields.YEAR] = str(record_dict["year"])
 
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
         if Fields.LANGUAGE in record.data:
             try:
                 record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]
@@ -276,10 +276,10 @@ class ERICSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -364,8 +364,8 @@ class ERICSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ERIC"""
 
         if Fields.ISSN in record.data:

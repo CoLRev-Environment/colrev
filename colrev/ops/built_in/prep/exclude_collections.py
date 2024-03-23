@@ -9,7 +9,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -39,8 +39,8 @@ class ExcludeCollectionsPrep(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
-    ) -> colrev.record.Record:
+        record: colrev.record.record_prep.PrepRecord,
+    ) -> colrev.record.record.Record:
         """Prepare records by excluding collections (proceedings)"""
 
         if record.data[Fields.ENTRYTYPE].lower() == "proceedings":

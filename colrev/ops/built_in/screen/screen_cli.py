@@ -13,7 +13,7 @@ from inquirer import prompt
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.screen.utils as util_cli_screen
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -68,7 +68,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 print(f"   {criterion_settings.comment}")
 
     def _screen_with_criteria_print_overall_decision(
-        self, *, record: colrev.record.Record, screen_inclusion: bool
+        self, *, record: colrev.record.record.Record, screen_inclusion: bool
     ) -> None:
         if screen_inclusion:
             print(
@@ -84,7 +84,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def _screen_record_with_criteria(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         abstract_from_tei: bool,
     ) -> str:
         choices = []
@@ -148,7 +148,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def _screen_record_without_criteria(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         abstract_from_tei: bool,
     ) -> str:
         quit_pressed = False
@@ -192,7 +192,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         *,
         record_dict: dict,
     ) -> str:
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
         abstract_from_tei = False
         if (
             Fields.ABSTRACT not in record.data

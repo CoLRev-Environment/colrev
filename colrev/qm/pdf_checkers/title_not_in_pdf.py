@@ -23,7 +23,7 @@ class TitleNotInPDFChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the title-not-in-pdf checks"""
 
         if (
@@ -40,7 +40,7 @@ class TitleNotInPDFChecker:
         else:
             record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
 
-    def _title_in_pdf(self, *, record: colrev.record.Record) -> bool:
+    def _title_in_pdf(self, *, record: colrev.record.record.Record) -> bool:
         text = record.data[Fields.TEXT_FROM_PDF]
         text = text.replace(" ", "").replace("\n", "").lower()
         text = colrev.env.utils.remove_accents(text)

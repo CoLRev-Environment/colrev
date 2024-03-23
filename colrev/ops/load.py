@@ -10,7 +10,7 @@ import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
 import colrev.operation
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -96,11 +96,13 @@ class Load(colrev.operation.Operation):
     def _import_provenance(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> None:
         """Set the provenance for an imported record"""
 
-        def set_initial_import_provenance(*, record: colrev.record.Record) -> None:
+        def set_initial_import_provenance(
+            *, record: colrev.record.record.Record
+        ) -> None:
             # Initialize Fields.MD_PROV
             colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
@@ -131,7 +133,7 @@ class Load(colrev.operation.Operation):
     def _import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         # For better readability of the git diff:
         self.load_formatter.run(record=record)
@@ -174,7 +176,7 @@ class Load(colrev.operation.Operation):
             if source_settings.endpoint == "colrev.local_index":
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                colrev.record.Record(record).set_status(
+                colrev.record.record.Record(record).set_status(
                     target_state=RecordState.md_prepared
                 )
                 if Fields.CURATION_ID in record:
@@ -185,7 +187,7 @@ class Load(colrev.operation.Operation):
                         }
                     }
             else:
-                colrev.record.Record(record).set_status(
+                colrev.record.record.Record(record).set_status(
                     target_state=RecordState.md_retrieved
                 )
 
@@ -269,9 +271,9 @@ class Load(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         for source_record in source.search_source.source_records_list:
-            colrev.record.Record(source_record).prefix_non_standardized_field_keys(
-                prefix=source.search_source.endpoint
-            )
+            colrev.record.record.Record(
+                source_record
+            ).prefix_non_standardized_field_keys(prefix=source.search_source.endpoint)
 
             source_record = self._import_record(record_dict=source_record)
 

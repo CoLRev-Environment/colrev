@@ -24,7 +24,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.ops.built_in.search_sources.semanticscholar_utils as connector_utils
 import colrev.ops.load
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -327,7 +327,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             for item in _search_return:
                 retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
-                retrieved_record = colrev.record.Record(retrieved_record_dict)
+                retrieved_record = colrev.record.record.Record(retrieved_record_dict)
                 s2_feed.add_update_record(retrieved_record)
 
         except (
@@ -390,10 +390,10 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 30,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve master data from Semantic Scholar"""
         # Not yet implemented
         return record
@@ -422,9 +422,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         # Not yet implemented
         return record

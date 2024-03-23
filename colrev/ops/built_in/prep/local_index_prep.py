@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.local_index as local_index_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -45,7 +45,9 @@ class LocalIndexPrep(JsonSchemaMixin):
         )
         self.prep_operation = prep_operation
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record metadata based on local-index"""
 
         # don't move to  jour_iss_number_year prep

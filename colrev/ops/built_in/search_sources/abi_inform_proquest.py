@@ -11,7 +11,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchType
@@ -106,9 +106,9 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 # Note: between duplicate records,
                 # there are variations in spelling and completeness
                 if (
-                    colrev.record.Record.get_record_similarity(
-                        record_a=colrev.record.Record(record),
-                        record_b=colrev.record.Record(original_record),
+                    colrev.record.record.Record.get_record_similarity(
+                        record_a=colrev.record.record.Record(record),
+                        record_b=colrev.record.record.Record(original_record),
                     )
                     < 0.9
                 ):
@@ -127,10 +127,10 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -271,8 +271,8 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 
         if (

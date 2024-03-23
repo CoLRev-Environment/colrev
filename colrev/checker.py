@@ -18,7 +18,7 @@ from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
-from colrev.record_state_model import RecordStateModel
+from colrev.record.record_state_model import RecordStateModel
 
 
 class Checker:

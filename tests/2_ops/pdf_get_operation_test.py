@@ -39,7 +39,7 @@ def test_pdf_get_import_file(  # type: ignore
         target=Path("data/pdfs/SrivastavaShainesh2015.pdf"),
     )
     pdf_get_operation.import_pdf(
-        record=colrev.record.Record(
+        record=colrev.record.record.Record(
             data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
         )
     )
@@ -50,7 +50,7 @@ def test_pdf_get_import_file(  # type: ignore
     )
 
     pdf_get_operation.import_pdf(
-        record=colrev.record.Record(
+        record=colrev.record.record.Record(
             data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
         )
     )
@@ -125,21 +125,21 @@ def test_pdf_get_get_target_filepath(  # type: ignore
     }
 
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(record_dict)
+        record=colrev.record.record.Record(record_dict)
     )
     expected = Path("data/pdfs/SrivastavaShainesh2015.pdf")
     assert actual == expected
 
     pdf_get_operation.filepath_directory_pattern = "year"
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(record_dict)
+        record=colrev.record.record.Record(record_dict)
     )
     expected = Path("data/pdfs/2015/SrivastavaShainesh2015.pdf")
     assert actual == expected
 
     pdf_get_operation.filepath_directory_pattern = "volume_number"
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(record_dict)
+        record=colrev.record.record.Record(record_dict)
     )
     expected = Path("data/pdfs/43/1/SrivastavaShainesh2015.pdf")
     assert actual == expected
@@ -147,7 +147,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
     del record_dict["number"]
     pdf_get_operation.filepath_directory_pattern = "volume_number"
     actual = pdf_get_operation.get_target_filepath(
-        record=colrev.record.Record(record_dict)
+        record=colrev.record.record.Record(record_dict)
     )
     expected = Path("data/pdfs/43/SrivastavaShainesh2015.pdf")
     assert actual == expected
@@ -177,7 +177,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 #       target=Path("data/pdfs/Srivastava2015.pdf"),
 #   )
 #   pdf_get_operation.import_pdf(
-#       record=colrev.record.Record(
+#       record=colrev.record.record.Record(
 #           data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
 #       )
 #   )

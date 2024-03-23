@@ -12,7 +12,7 @@ import colrev.env.language_service
 import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
 
@@ -120,12 +120,14 @@ class ScopePrescreen(JsonSchemaMixin):
             colrev.env.utils.load_complementary_material_keywords()
         )
 
-    def _conditional_prescreen_entrytypes(self, record: colrev.record.Record) -> None:
+    def _conditional_prescreen_entrytypes(
+        self, record: colrev.record.record.Record
+    ) -> None:
         if self.settings.ENTRYTYPEScope:
             if record.data[Fields.ENTRYTYPE] not in self.settings.ENTRYTYPEScope:
                 record.prescreen_exclude(reason="not in ENTRYTYPEScope")
 
-    def _predatory_journal_exclusion(self, record: colrev.record.Record) -> None:
+    def _predatory_journal_exclusion(self, record: colrev.record.record.Record) -> None:
         if not self.settings.ExcludePredatoryJournals:
             return
         if Fields.JOURNAL not in record.data:
@@ -136,7 +138,7 @@ class ScopePrescreen(JsonSchemaMixin):
             record.prescreen_exclude(reason="predatory_journals_beal")
 
     def _conditional_prescreen_outlets_exclusion(
-        self, record: colrev.record.Record
+        self, record: colrev.record.record.Record
     ) -> None:
         if not self.settings.OutletExclusionScope:
             return
@@ -149,7 +151,7 @@ class ScopePrescreen(JsonSchemaMixin):
                     record.prescreen_exclude(reason="in OutletExclusionScope")
 
     def _conditional_prescreen_outlets_inclusion(
-        self, record: colrev.record.Record
+        self, record: colrev.record.record.Record
     ) -> None:
         if not self.settings.OutletInclusionScope:
             return
@@ -163,7 +165,9 @@ class ScopePrescreen(JsonSchemaMixin):
         if not in_outlet_scope:
             record.prescreen_exclude(reason="not in OutletInclusionScope")
 
-    def _conditional_prescreen_timescope(self, record: colrev.record.Record) -> None:
+    def _conditional_prescreen_timescope(
+        self, record: colrev.record.record.Record
+    ) -> None:
         if self.settings.TimeScopeFrom:
             if int(record.data.get(Fields.YEAR, 0)) < self.settings.TimeScopeFrom:
                 record.prescreen_exclude(
@@ -177,7 +181,7 @@ class ScopePrescreen(JsonSchemaMixin):
                 )
 
     def _conditional_prescreen_complementary_materials(
-        self, record: colrev.record.Record
+        self, record: colrev.record.record.Record
     ) -> None:
         if not self.settings.ExcludeComplementaryMaterials:
             return
@@ -190,7 +194,7 @@ class ScopePrescreen(JsonSchemaMixin):
                 record.prescreen_exclude(reason="complementary material")
 
     def _conditional_presecreen_not_in_ranking(
-        self, record: colrev.record.Record
+        self, record: colrev.record.record.Record
     ) -> None:
         if not self.settings.RequireRankedJournals:
             return
@@ -208,7 +212,7 @@ class ScopePrescreen(JsonSchemaMixin):
 
         # Note : LanguageScope is covered in prep
         # because dedupe cannot handle merges between languages
-        record = colrev.record.Record(record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         self._predatory_journal_exclusion(record=record)
         self._conditional_prescreen_entrytypes(record=record)

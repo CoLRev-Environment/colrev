@@ -7,7 +7,7 @@ import re
 from semanticscholar import Paper
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record_prep
+import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
@@ -71,8 +71,10 @@ def _assign_authors(*, record_dict: dict) -> None:
     authors = [
         author["name"] for author in record_dict.get("authors", []) if "name" in author
     ]
-    record_dict[Fields.AUTHOR] = colrev.record_prep.PrepRecord.format_author_field(
-        input_string=" and ".join(authors)
+    record_dict[Fields.AUTHOR] = (
+        colrev.record.record_prep.PrepRecord.format_author_field(
+            input_string=" and ".join(authors)
+        )
     )
 
 

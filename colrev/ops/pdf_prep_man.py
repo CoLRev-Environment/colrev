@@ -11,7 +11,7 @@ from PyPDF2.errors import PdfReadError
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -41,7 +41,7 @@ class PDFPrepMan(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.pdf_needs_manual_preparation:
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.set_status(RecordState.pdf_not_available)
         self.review_manager.dataset.save_records_dict(records)
         self.review_manager.dataset.create_commit(
@@ -103,7 +103,7 @@ class PDFPrepMan(colrev.operation.Operation):
             else:
                 stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             prov_d = record.data[Fields.D_PROV]
 
             if Fields.FILE in prov_d:
@@ -284,7 +284,7 @@ class PDFPrepMan(colrev.operation.Operation):
         except PdfReadError as exc:
             raise colrev_exceptions.InvalidPDFException(filepath) from exc
 
-    def set_pdf_man_prepared(self, *, record: colrev.record.Record) -> None:
+    def set_pdf_man_prepared(self, *, record: colrev.record.record.Record) -> None:
         """Set the PDF to manually prepared"""
 
         record.set_status(RecordState.pdf_prepared)

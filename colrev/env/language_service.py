@@ -8,7 +8,7 @@ import pycountry
 from lingua import LanguageDetectorBuilder  # pylint: disable=no-name-in-module
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -127,7 +127,7 @@ class LanguageService:
             )
 
     def unify_to_iso_639_3_language_codes(
-        self, *, record: colrev.record.Record
+        self, *, record: colrev.record.record.Record
     ) -> None:
         """Unifies a language_code string to the ISO 639-3 standard"""
 

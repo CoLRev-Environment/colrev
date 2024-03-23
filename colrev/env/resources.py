@@ -8,7 +8,7 @@ import git
 
 import colrev.env.environment_manager
 import colrev.operation
-import colrev.record
+import colrev.record.record
 
 
 class Resources:

@@ -6,8 +6,8 @@ import pytest
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -65,8 +65,8 @@ v2 = {
     Fields.PAGES: "1--3",
 }
 
-r1 = colrev.record.Record(v1)
-r2 = colrev.record.Record(v2)
+r1 = colrev.record.record.Record(v1)
+r2 = colrev.record.record.Record(v2)
 
 
 def test_eq() -> None:
@@ -343,7 +343,7 @@ def test_change_entrytype_inproceedings_2(
         Fields.YEAR: "2022",
         Fields.PAGES: "22--31",
     }
-    record = colrev.record.Record(record_dict)
+    record = colrev.record.record.Record(record_dict)
     record.change_entrytype(ENTRYTYPES.INPROCEEDINGS, qm=quality_model)
 
     expected = {
@@ -433,7 +433,7 @@ def test_change_entrytype_article(
         Fields.NUMBER: "UNKNOWN",
         Fields.LANGUAGE: "eng",
     }
-    rec = colrev.record.Record(input_value)
+    rec = colrev.record.record.Record(input_value)
     rec.change_entrytype(ENTRYTYPES.ARTICLE, qm=quality_model)
     actual = rec.data
     assert expected == actual
@@ -893,7 +893,7 @@ def test_get_record_similarity() -> None:
     """Test record.get_record_similarity()"""
 
     expected = 0.8541
-    actual = colrev.record.Record.get_record_similarity(record_a=r1, record_b=r2)
+    actual = colrev.record.record.Record.get_record_similarity(record_a=r1, record_b=r2)
     assert expected == actual
 
 
@@ -901,8 +901,8 @@ def test_merge_select_non_all_caps() -> None:
     """Test record.merge() - all-caps cases"""
     # Select title-case (not all-caps title) and full author name
 
-    r1_mod = colrev.record.Record(v1).copy()
-    r2_mod = colrev.record.Record(v2).copy()
+    r1_mod = colrev.record.record.Record(v1).copy()
+    r2_mod = colrev.record.record.Record(v2).copy()
     print(r1_mod)
     print(r2_mod)
     r1_mod.data[Fields.TITLE] = "Editorial"
@@ -985,7 +985,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
         return_value=("Gerit Wagner", "gerit.wagner@uni-bamberg.de"),
     )
 
-    r1_mod = colrev.record.Record(
+    r1_mod = colrev.record.record.Record(
         data={
             Fields.ID: "r1",
             Fields.D_PROV: {},
@@ -999,7 +999,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
             Fields.PAGES: "1--3",
         }
     )
-    r2_mod = colrev.record.Record(
+    r2_mod = colrev.record.record.Record(
         data={
             Fields.ID: "r2",
             Fields.D_PROV: {},
@@ -1101,7 +1101,7 @@ def test_get_toc_key() -> None:
         Fields.YEAR: "2012",
     }
     expected = "international-conference-on-information-systems|2012"
-    actual = colrev.record.Record(input_value).get_toc_key()
+    actual = colrev.record.record.Record(input_value).get_toc_key()
     assert expected == actual
 
     input_value = {
@@ -1114,7 +1114,7 @@ def test_get_toc_key() -> None:
         colrev_exceptions.NotTOCIdentifiableException,
         match="ENTRYTYPE .* not toc-identifiable",
     ):
-        colrev.record.Record(input_value).get_toc_key()
+        colrev.record.record.Record(input_value).get_toc_key()
 
 
 def test_prescreen_exclude() -> None:
@@ -1166,7 +1166,7 @@ def test_prescreen_exclude() -> None:
 def test_format_author_field(input_string: str, expected: str) -> None:
     """Test record.format_author_field()"""
 
-    actual = colrev.record_prep.PrepRecord.format_author_field(
+    actual = colrev.record.record_prep.PrepRecord.format_author_field(
         input_string=input_string
     )
     assert expected == actual
@@ -1176,7 +1176,7 @@ def test_get_retrieval_similarity() -> None:
     """Test record.get_retrieval_similarity()"""
 
     expected = 0.9333
-    actual = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+    actual = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
         record_original=r1, retrieved_record_original=r2
     )
     assert expected == actual
@@ -1211,7 +1211,7 @@ def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> No
     """Test record.format_if_mostly_upper()"""
 
     input_dict = {Fields.TITLE: input_text}
-    input_record = colrev.record_prep.PrepRecord(input_dict)
+    input_record = colrev.record.record_prep.PrepRecord(input_dict)
     input_record.format_if_mostly_upper(key=Fields.TITLE, case=case)
     actual = input_record.data[Fields.TITLE]
     assert expected == actual

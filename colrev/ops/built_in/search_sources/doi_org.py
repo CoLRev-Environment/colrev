@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.utils as connector_utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
@@ -34,9 +34,9 @@ class DOIConnector:
         cls,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         timeout: int = 60,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve the metadata from DOI.org based on a record (similarity)"""
 
         if Fields.DOI not in record.data:
@@ -99,7 +99,7 @@ class DOIConnector:
         cls,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         timeout: int = 30,
     ) -> None:
         """Get the website link from DOI resolution API"""

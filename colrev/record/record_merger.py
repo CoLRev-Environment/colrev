@@ -5,18 +5,20 @@ from __future__ import annotations
 import re
 from typing import Optional
 from typing import TYPE_CHECKING
-import colrev.env.utils
 
+import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+
 if TYPE_CHECKING:
-    import colrev.record
+    import colrev.record.record
 
 
 def _prevent_invalid_merges(
-    main_record: colrev.record.Record, merging_record: colrev.record.Record
+    main_record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> None:
     """Prevents invalid merges like ... part 1 / ... part 2"""
 
@@ -48,7 +50,7 @@ def _prevent_invalid_merges(
         )
 
 
-def _get_merging_val(merging_record: colrev.record.Record, *, key: str) -> str:
+def _get_merging_val(merging_record: colrev.record.record.Record, *, key: str) -> str:
     val = merging_record.data.get(key, "")
 
     if val == "":
@@ -72,7 +74,8 @@ def _get_merging_val(merging_record: colrev.record.Record, *, key: str) -> str:
 
 
 def _merge_origins(
-    main_record: colrev.record.Record, merging_record: colrev.record.Record
+    main_record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> None:
     """Merge the origins with those of the merging_record"""
 
@@ -82,7 +85,8 @@ def _merge_origins(
 
 
 def _merge_status(
-    main_record: colrev.record.Record, merging_record: colrev.record.Record
+    main_record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> None:
     """Merge the status with the merging_record"""
 
@@ -95,8 +99,8 @@ def _merge_status(
 
 
 def merge(
-    main_record: colrev.record.Record,
-    merging_record: colrev.record.Record,
+    main_record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
     *,
     default_source: str,
     preferred_masterdata_source_prefixes: Optional[list] = None,
@@ -192,7 +196,7 @@ def merge(
 
 
 def _select_best_author(
-    record: colrev.record.Record, merging_record: colrev.record.Record
+    record: colrev.record.record.Record, merging_record: colrev.record.record.Record
 ) -> str:
     if not record.has_quality_defects(
         field=Fields.AUTHOR
@@ -223,8 +227,8 @@ def _select_best_author(
 
 
 def _select_best_pages(
-    record: colrev.record.Record,
-    merging_record: colrev.record.Record,
+    record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> str:
     best_pages = record.data[Fields.PAGES]
     if (
@@ -236,8 +240,8 @@ def _select_best_pages(
 
 
 def _select_best_title(
-    record: colrev.record.Record,
-    merging_record: colrev.record.Record,
+    record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> str:
     default = record.data[Fields.TITLE]
     candidate = merging_record.data[Fields.TITLE]
@@ -259,8 +263,8 @@ def _select_best_title(
 
 
 def _select_best_journal(
-    record: colrev.record.Record,
-    merging_record: colrev.record.Record,
+    record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> str:
     return _select_best_container_title(
         record.data[Fields.JOURNAL],
@@ -269,8 +273,8 @@ def _select_best_journal(
 
 
 def _select_best_booktitle(
-    record: colrev.record.Record,
-    merging_record: colrev.record.Record,
+    record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
 ) -> str:
     return _select_best_container_title(
         record.data[Fields.BOOKTITLE],
@@ -295,9 +299,9 @@ def _select_best_container_title(default: str, candidate: str) -> str:
 
 
 def _fuse_best_field(
-    main_record: colrev.record.Record,
+    main_record: colrev.record.record.Record,
     *,
-    merging_record: colrev.record.Record,
+    merging_record: colrev.record.record.Record,
     key: str,
     val: str,
     source: str,

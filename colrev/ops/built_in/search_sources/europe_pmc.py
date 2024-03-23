@@ -22,8 +22,8 @@ from rapidfuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -129,7 +129,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     @classmethod
     def _europe_pmc_xml_to_record(
         cls, *, item: Element
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         retrieved_record_dict: dict = {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE}
         retrieved_record_dict[Fields.AUTHOR] = cls._get_string_from_item(
             item=item, key="authorString"
@@ -178,15 +178,15 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             if k not in ["epmc_id", "epmc_source"] and v != ""
         }
 
-        record = colrev.record_prep.PrepRecord(retrieved_record_dict)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record_dict)
         return record
 
     @classmethod
     def _get_similarity(
         cls,
         *,
-        record: colrev.record.Record,
-        retrieved_record: colrev.record.Record,
+        record: colrev.record.record.Record,
+        retrieved_record: colrev.record.record.Record,
     ) -> float:
         title_similarity = fuzz.partial_ratio(
             retrieved_record.data[Fields.TITLE].lower(),
@@ -226,7 +226,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def _europe_pmc_query(
         self,
         *,
-        record_input: colrev.record.Record,
+        record_input: colrev.record.record.Record,
         most_similar_only: bool = True,
         timeout: int = 60,
     ) -> list:
@@ -283,17 +283,17 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             ) from exc
 
         if most_similar_only:
-            record_list = [colrev.record_prep.PrepRecord(most_similar_record)]
+            record_list = [colrev.record.record_prep.PrepRecord(most_similar_record)]
 
         return record_list
 
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,  # pylint: disable=unused-argument
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
@@ -319,8 +319,11 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 if 0 == len(retrieved_record.data):
                     return record
 
-                similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
-                    record_original=record, retrieved_record_original=retrieved_record
+                similarity = (
+                    colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
+                        record_original=record,
+                        retrieved_record_original=retrieved_record,
+                    )
                 )
 
                 if similarity > prep_operation.retrieval_similarity:
@@ -545,8 +548,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data[Fields.AUTHOR].rstrip(".")
         record.data[Fields.TITLE].rstrip(".")

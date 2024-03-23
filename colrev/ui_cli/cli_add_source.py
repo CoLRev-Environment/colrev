@@ -6,7 +6,7 @@ from pathlib import Path
 
 import inquirer
 
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 
 # pylint: disable=too-few-public-methods

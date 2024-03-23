@@ -12,11 +12,11 @@ import pytest
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
-import colrev.record_pdf
+import colrev.record.record_pdf
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-from colrev.record_state_model import RecordStateModel
+from colrev.record.record_state_model import RecordStateModel
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -309,9 +309,9 @@ def fixture_pdedupe_operation(
 
 
 @pytest.fixture
-def record_with_pdf() -> colrev.record.Record:
+def record_with_pdf() -> colrev.record.record.Record:
     """Fixture returning a record containing a file (PDF)"""
-    return colrev.record_pdf.PDFRecord(
+    return colrev.record.record_pdf.PDFRecord(
         data={
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -431,9 +431,9 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
 
 
 @pytest.fixture(name="v_t_record")
-def fixture_v_t_record() -> colrev.record.Record:
+def fixture_v_t_record() -> colrev.record.record.Record:
     """Record for testing quality defects"""
-    return colrev.record.Record(
+    return colrev.record.record.Record(
         data={
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -451,16 +451,16 @@ def fixture_v_t_record() -> colrev.record.Record:
 
 @pytest.fixture(name="v_t_pdf_record")
 def fixture_v_t_pdf_record(
-    v_t_record: colrev.record.Record,
-) -> colrev.record_pdf.PDFRecord:
+    v_t_record: colrev.record.record.Record,
+) -> colrev.record.record_pdf.PDFRecord:
     """Record for testing quality defects"""
-    return colrev.record_pdf.PDFRecord(v_t_record.data)
+    return colrev.record.record_pdf.PDFRecord(v_t_record.data)
 
 
 @pytest.fixture(name="book_record")
-def fixture_book_record() -> colrev.record.Record:
+def fixture_book_record() -> colrev.record.record.Record:
     """Book record for testing quality defects"""
-    return colrev.record.Record(
+    return colrev.record.record.Record(
         data={
             Fields.ID: "Popper2014",
             Fields.ENTRYTYPE: ENTRYTYPES.BOOK,

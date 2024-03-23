@@ -35,7 +35,7 @@ class ErroneousTermInFieldChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the erroneous-term-in-field checks"""
 
         for key, erroneous_term_list in self.erroneous_terms.items():

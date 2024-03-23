@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -51,8 +51,8 @@ class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
-    ) -> colrev.record.Record:
+        record: colrev.record.record_prep.PrepRecord,
+    ) -> colrev.record.record.Record:
         """Prepare the records by excluding records whose metadata is not in Latin alphabet"""
 
         if self.prep_operation.polish:

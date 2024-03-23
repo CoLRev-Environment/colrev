@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -44,7 +44,9 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record by removing URLs with 500 errors"""
 
         session = self.review_manager.get_cached_session()

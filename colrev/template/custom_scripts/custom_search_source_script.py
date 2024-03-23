@@ -84,7 +84,9 @@ class CustomSearch:
 
         return records
 
-    def prepare(self, record: colrev.record.Record) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for the custom source"""
 
         return record

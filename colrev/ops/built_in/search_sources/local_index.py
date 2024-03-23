@@ -18,7 +18,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -180,7 +180,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 continue
 
         for record_dict in local_index_feed.records.values():
-            record = colrev.record.Record(record_dict)
+            record = colrev.record.record.Record(record_dict)
             record.remove_field(key="colrev.local_index.curation_ID")
 
         local_index_feed.save()
@@ -193,7 +193,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         for retrieved_record_dict in self._retrieve_from_index():
             try:
-                retrieved_record = colrev.record.Record(retrieved_record_dict)
+                retrieved_record = colrev.record.record.Record(retrieved_record_dict)
                 local_index_feed.add_update_record(retrieved_record)
             except colrev_exceptions.NotFeedIdentifiableException:
                 continue
@@ -287,20 +287,20 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for local-index"""
 
         return record
 
-    def _add_cpid(self, *, record: colrev.record.Record) -> bool:
+    def _add_cpid(self, *, record: colrev.record.record.Record) -> bool:
         # To enable retrieval based on colrev_pdf_id (as part of the global_ids)
         if Fields.FILE in record.data and "colrev_pdf_id" not in record.data:
             pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))
             if pdf_path.is_file():
                 try:
                     record.data.update(
-                        colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(
+                        colrev_pdf_id=colrev.record.record.Record.get_colrev_pdf_id(
                             pdf_path,
                         )
                     )
@@ -312,9 +312,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _retrieve_record_from_local_index(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         retrieval_similarity: float,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         # add colrev_pdf_id
         added_colrev_pdf_id = self._add_cpid(record=record)
 
@@ -364,8 +364,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _store_retrieved_record_in_feed(
         self,
         *,
-        record: colrev.record.Record,
-        retrieved_record: colrev.record.Record,
+        record: colrev.record.record.Record,
+        retrieved_record: colrev.record.record.Record,
         default_source: str,
         prep_operation: colrev.ops.prep.Prep,
     ) -> None:
@@ -436,10 +436,10 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
         retrieved_record = self._retrieve_record_from_local_index(
@@ -470,7 +470,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _get_local_base_repos(self, *, change_itemsets: list) -> dict:
         base_repos = []
         for item in change_itemsets:
-            repo_path = colrev.record.Record(
+            repo_path = colrev.record.record.Record(
                 data=item["original_record"]
             ).get_masterdata_provenance_source(FieldValues.CURATED)
             if repo_path != "":
@@ -505,7 +505,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         print()
         self.review_manager.logger.info(f"Base repository: {local_base_repo}")
         for item in change_itemsets:
-            repo_path = colrev.record.Record(
+            repo_path = colrev.record.record.Record(
                 data=item["original_record"]
             ).get_masterdata_provenance_source(FieldValues.CURATED)
             assert "#" not in repo_path
@@ -514,7 +514,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 continue
 
             # self.review_manager.p_printer.pprint(item["original_record"])
-            colrev.record.Record(item["original_record"]).print_citation_format()
+            colrev.record.record.Record(item["original_record"]).print_citation_format()
             for change_item in item["changes"]:
                 if change_item[0] == "change":
                     edit_type, field, values = change_item
@@ -600,7 +600,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _retrieve_by_colrev_id(
         self, *, indexed_record_dict: dict, records: list[dict]
     ) -> dict:
-        indexed_record = colrev.record.Record(indexed_record_dict)
+        indexed_record = colrev.record.record.Record(indexed_record_dict)
 
         if "colrev_id" in indexed_record.data:
             cid_to_retrieve = indexed_record.get_colrev_id()
@@ -611,7 +611,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             x
             for x in records
             if any(
-                cid in colrev.record.Record(x).get_colrev_id()
+                cid in colrev.record.record.Record(x).get_colrev_id()
                 for cid in cid_to_retrieve
             )
         ]

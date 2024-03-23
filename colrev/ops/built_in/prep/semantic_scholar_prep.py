@@ -12,8 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -48,15 +48,15 @@ class SemanticScholarPrep(JsonSchemaMixin):
         self.session = prep_operation.review_manager.get_cached_session()
 
     def _get_record_from_item(
-        self, *, item: dict, record_in: colrev.record_prep.PrepRecord
-    ) -> colrev.record_prep.PrepRecord:
+        self, *, item: dict, record_in: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record_prep.PrepRecord:
         # pylint: disable=too-many-branches
         retrieved_record: dict = {}
         if "authors" in item:
             authors_string = " and ".join(
                 [author["name"] for author in item["authors"] if "name" in author]
             )
-            authors_string = colrev.record_prep.PrepRecord.format_author_field(
+            authors_string = colrev.record.record_prep.PrepRecord.format_author_field(
                 input_string=authors_string
             )
             retrieved_record.update(author=authors_string)
@@ -87,15 +87,15 @@ class SemanticScholarPrep(JsonSchemaMixin):
         for key in keys_to_drop:
             record_in.remove_field(key=key)
 
-        record = colrev.record_prep.PrepRecord(retrieved_record)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record)
         return record
 
     def retrieve_record_from_semantic_scholar(
         self,
         *,
         url: str,
-        record_in: colrev.record_prep.PrepRecord,
-    ) -> colrev.record_prep.PrepRecord:
+        record_in: colrev.record.record_prep.PrepRecord,
+    ) -> colrev.record.record_prep.PrepRecord:
         """Prepare the record metadata based on SemanticScholar"""
 
         # prep_operation.review_manager.logger.debug(url)
@@ -128,7 +128,9 @@ class SemanticScholarPrep(JsonSchemaMixin):
 
         return record
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on metadata from SemanticScholar"""
 
         same_record_type_required = (
@@ -153,7 +155,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 if key in orig_record.data:
                     record.remove_field(key=key)
 
-            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=orig_record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=same_record_type_required,

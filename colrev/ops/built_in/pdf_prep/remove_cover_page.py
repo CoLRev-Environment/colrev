@@ -110,7 +110,9 @@ class PDFCoverPage(JsonSchemaMixin):
                 ):
                     coverpages.append(1)
 
-    def _get_coverpages(self, record: colrev.record_pdf.PDFRecord) -> typing.List[int]:
+    def _get_coverpages(
+        self, record: colrev.record.record_pdf.PDFRecord
+    ) -> typing.List[int]:
         coverpages: typing.List[int] = []
 
         try:
@@ -161,7 +163,7 @@ class PDFCoverPage(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record_pdf.PDFRecord,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the PDF by removing coverpages (if any)"""

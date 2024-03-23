@@ -18,7 +18,7 @@ class ContainerTitleAbbreviatedChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the container-title-abbreviated checks"""
 
         for key in self.fields_to_check:
@@ -33,7 +33,7 @@ class ContainerTitleAbbreviatedChecker:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
     def __container_title_abbreviated(
-        self, *, record: colrev.record.Record, key: str
+        self, *, record: colrev.record.record.Record, key: str
     ) -> bool:
         if len(record.data[key]) < 6 and record.data[key].isupper():
             return True

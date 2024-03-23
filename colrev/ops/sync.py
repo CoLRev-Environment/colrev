@@ -10,7 +10,7 @@ import pybtex.errors
 import colrev.constants as c
 import colrev.dataset
 import colrev.env.local_index
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.writer.write_utils import write_file
@@ -22,7 +22,7 @@ class Sync:
     cited_papers: list
 
     def __init__(self) -> None:
-        self.records_to_import: typing.List[colrev.record.Record] = []
+        self.records_to_import: typing.List[colrev.record.record.Record] = []
         self.non_unique_for_import: typing.List[typing.Dict] = []
 
         self.logger = self._setup_logger(level=logging.DEBUG)
@@ -150,7 +150,7 @@ class Sync:
                 print(f"{citation_key} not in {src}")
                 continue
             self.records_to_import.append(
-                colrev.record.Record(refs_in_src[citation_key])
+                colrev.record.record.Record(refs_in_src[citation_key])
             )
 
     def get_cited_papers(self) -> None:
@@ -201,7 +201,7 @@ class Sync:
 
         return list(records.keys())
 
-    def add_to_records_to_import(self, *, record: colrev.record.Record) -> None:
+    def add_to_records_to_import(self, *, record: colrev.record.record.Record) -> None:
         """Add a record to the records_to_import list"""
         if record.data[Fields.ID] not in [
             r.data[Fields.ID] for r in self.records_to_import
@@ -277,7 +277,7 @@ class Sync:
         added = []
         for record_to_import in self.records_to_import:
             if record_to_import.data[Fields.ID] not in available_ids:
-                record_to_import = colrev.record.Record(
+                record_to_import = colrev.record.record.Record(
                     data={
                         k: v
                         for k, v in record_to_import.data.items()

@@ -12,8 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -53,7 +53,7 @@ class CiteAsPrep(JsonSchemaMixin):
 
     def _cite_as_json_to_record(
         self, *, json_str: str, url: str
-    ) -> colrev.record_prep.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         retrieved_record: dict = {}
         data = json.loads(json_str)
 
@@ -81,11 +81,13 @@ class CiteAsPrep(JsonSchemaMixin):
         if "DOI" in data["metadata"]:
             retrieved_record.update(doi=data["metadata"]["DOI"])
 
-        record = colrev.record_prep.PrepRecord(retrieved_record)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record)
         record.add_provenance_all(source=url)
         return record
 
-    def prepare(self, record: colrev.record_prep.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record based on citeas"""
 
         if record.data.get(Fields.ENTRYTYPE, "NA") not in ["misc", "software"]:
@@ -108,7 +110,7 @@ class CiteAsPrep(JsonSchemaMixin):
 
             retrieved_record = self._cite_as_json_to_record(json_str=ret.text, url=url)
 
-            similarity = colrev.record_prep.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=retrieved_record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=self.same_record_type_required,

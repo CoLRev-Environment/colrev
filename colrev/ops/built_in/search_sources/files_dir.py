@@ -20,9 +20,9 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.qm.checkers.missing_field
-import colrev.record
-import colrev.record_pdf
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_pdf
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -124,7 +124,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 potential_pdfs = file_path.glob("*.pdf")
 
                 for potential_pdf in potential_pdfs:
-                    cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
+                    cpid_potential_pdf = colrev.record.record.Record.get_colrev_pdf_id(
                         potential_pdf,
                     )
 
@@ -317,7 +317,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = colrev.record_pdf.PDFRecord(record_dict)
+                    record = colrev.record.record_pdf.PDFRecord(record_dict)
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
@@ -436,10 +436,10 @@ class FilesSearchSource(JsonSchemaMixin):
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -501,7 +501,7 @@ class FilesSearchSource(JsonSchemaMixin):
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
 
-                colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(
+                colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(
                     pdf_path=Path(file_path)
                 )
                 new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
@@ -594,7 +594,7 @@ class FilesSearchSource(JsonSchemaMixin):
                     continue
 
                 self._add_doi_from_pdf_if_not_available(new_record)
-                retrieved_record = colrev.record.Record(new_record)
+                retrieved_record = colrev.record.record.Record(new_record)
                 files_dir_feed.add_update_record(
                     retrieved_record=retrieved_record,
                 )
@@ -608,7 +608,7 @@ class FilesSearchSource(JsonSchemaMixin):
     def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        record = colrev.record_pdf.PDFRecord(record_dict)
+        record = colrev.record.record_pdf.PDFRecord(record_dict)
         if Fields.DOI not in record_dict:
             record.set_text_from_pdf()
             res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
@@ -698,8 +698,8 @@ class FilesSearchSource(JsonSchemaMixin):
                 doi=record_dict[Fields.DOI], etiquette=self._etiquette
             )
             if (
-                colrev.record_prep.PrepRecord.get_retrieval_similarity(
-                    record_original=colrev.record.Record(record_dict),
+                colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
+                    record_original=colrev.record.record.Record(record_dict),
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=True,
                 )
@@ -747,7 +747,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def _fix_special_chars(self, *, record: colrev.record.Record) -> None:
+    def _fix_special_chars(self, *, record: colrev.record.record.Record) -> None:
         # We may also apply the following upon loading tei content
         if Fields.TITLE in record.data:
             record.data[Fields.TITLE] = (
@@ -775,7 +775,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 .replace("a ˜", "ã")
             )
 
-    def _fix_title_suffix(self, *, record: colrev.record.Record) -> None:
+    def _fix_title_suffix(self, *, record: colrev.record.record.Record) -> None:
         if Fields.TITLE not in record.data:
             return
         if record.data[Fields.TITLE].endswith("Formula 1"):
@@ -785,7 +785,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if record.data.get(Fields.TITLE, "").endswith(" 1"):
             record.data[Fields.TITLE] = record.data[Fields.TITLE][:-2]
 
-    def _fix_special_outlets(self, *, record: colrev.record.Record) -> None:
+    def _fix_special_outlets(self, *, record: colrev.record.record.Record) -> None:
         # Erroneous suffixes in IS conferences
         if record.data.get(Fields.BOOKTITLE, "") in [
             "Americas Conference on Information Systems",
@@ -809,9 +809,9 @@ class FilesSearchSource(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record_prep.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         source: colrev.settings.SearchSource,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for files"""
 
         if Fields.FILE not in record.data:

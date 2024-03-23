@@ -13,7 +13,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.screen.utils as util_cli_screen
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -172,7 +172,7 @@ class TableScreen(JsonSchemaMixin):
         for screened_record in screened_records:
             if screened_record.get(Fields.ID, "") in records:
                 record_dict = records[screened_record.get(Fields.ID, "")]
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 if "screen_inclusion" in screened_record:
                     if screened_record["screen_inclusion"] == "in":
                         record.set_status(RecordState.rev_included)

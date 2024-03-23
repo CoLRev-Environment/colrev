@@ -11,7 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -104,7 +104,7 @@ class Obsidian(JsonSchemaMixin):
         try:
             tei_file = (
                 self.review_manager.path
-                / colrev.record.Record(record_dict).get_tei_filename()
+                / colrev.record.record.Record(record_dict).get_tei_filename()
             )
 
             if tei_file.is_file():

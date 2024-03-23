@@ -14,10 +14,10 @@ from colrev.constants import RecordState
 
 # def test_is_duplicate(local_index, local_index_test_records_dict) -> None:  # type: ignore
 #     """Test is_duplicate()"""
-#     record1_colrev_id = colrev.record.Record(
+#     record1_colrev_id = colrev.record.record.Record(
 #         data=local_index_test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
 #     ).get_colrev_id()
-#     record2_colrev_id = colrev.record.Record(
+#     record2_colrev_id = colrev.record.record.Record(
 #         data=local_index_test_records_dict[Path("misq.bib")][
 #             "AbbasiAlbrechtVanceEtAl2012"
 #         ]
@@ -70,7 +70,7 @@ def test_search(local_index) -> None:  # type: ignore
     """Test search()"""
 
     expected = [
-        colrev.record.Record(
+        colrev.record.record.Record(
             data={
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.ID: "AbbasZhouDengEtAl2018",
@@ -100,7 +100,7 @@ def test_search(local_index) -> None:  # type: ignore
     assert expected == actual
 
     expected = [
-        colrev.record.Record(
+        colrev.record.record.Record(
             data={
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.ID: "AlaviLeidner2001",
@@ -174,7 +174,7 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         Fields.VOLUME: "42",
         Fields.YEAR: "2018",
     }
-    record = colrev.record.Record(record_dict)
+    record = colrev.record.record.Record(record_dict)
     expected_dict = {
         Fields.ID: "AbbasZhouDengEtAl2018",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -197,7 +197,7 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         "curation_ID": "gh...#AbbasZhouDengEtAl2018",
     }
     actual = local_index.retrieve_from_toc(record, similarity_threshold=0.8)
-    expected = colrev.record.Record(expected_dict)
+    expected = colrev.record.record.Record(expected_dict)
     assert expected == actual
 
 
@@ -205,7 +205,7 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
     """Test retrieve_based_on_colrev_pdf_id()"""
 
     colrev_pdf_id = "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff"
-    expected = colrev.record.Record(
+    expected = colrev.record.record.Record(
         data={
             Fields.ID: "AbbasiAlbrechtVanceEtAl2012",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,

@@ -12,13 +12,13 @@ import yaml
 
 import colrev.env.utils
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
 from colrev.loader.bib import BIBLoader
-from colrev.record_state_model import RecordStateModel
+from colrev.record.record_state_model import RecordStateModel
 
 
 class Status(colrev.operation.Operation):
@@ -185,7 +185,7 @@ class StatusStats:
             [
                 r
                 for r in self.records.values()
-                if colrev.record.Record(r).masterdata_is_curated()
+                if colrev.record.record.Record(r).masterdata_is_curated()
             ]
         )
 

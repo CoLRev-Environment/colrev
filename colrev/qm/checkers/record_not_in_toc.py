@@ -21,7 +21,7 @@ class RecordNotInTOCChecker:
         self.quality_model = quality_model
         self.local_index = colrev.env.local_index.LocalIndex(verbose_mode=False)
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the record-not-in-toc checks"""
 
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
@@ -48,7 +48,7 @@ class RecordNotInTOCChecker:
                 )
             return
 
-    def _is_in_toc(self, record: colrev.record.Record) -> bool:
+    def _is_in_toc(self, record: colrev.record.record.Record) -> bool:
         try:
             # Search within the table-of-content in local_index
             self.local_index.retrieve_from_toc(

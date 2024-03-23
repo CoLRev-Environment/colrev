@@ -7,7 +7,7 @@ from pathlib import Path
 
 import colrev.operation
 import colrev.ops.correct
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths

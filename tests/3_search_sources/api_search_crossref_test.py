@@ -159,6 +159,6 @@ def test_crossref_query(  # type: ignore
         )
 
         actual = crossref_search_source.query_doi(doi=doi, etiquette=etiquette)
-        expected = colrev.record_prep.PrepRecord(expected_dict)
+        expected = colrev.record.record_prep.PrepRecord(expected_dict)
 
         assert actual.data == expected.data

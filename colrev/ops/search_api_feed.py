@@ -96,8 +96,8 @@ class SearchAPIFeed:
         )
 
     def _get_prev_feed_record(
-        self, retrieved_record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, retrieved_record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get the previous record dict version"""
         self._set_id(retrieved_record)
 
@@ -106,9 +106,9 @@ class SearchAPIFeed:
             prev_feed_record_dict = deepcopy(
                 self.feed_records[retrieved_record.data[Fields.ID]]
             )
-        return colrev.record.Record(prev_feed_record_dict)
+        return colrev.record.record.Record(prev_feed_record_dict)
 
-    def _set_id(self, record: colrev.record.Record) -> None:
+    def _set_id(self, record: colrev.record.record.Record) -> None:
         """Set incremental record ID
         If self.source_identifier is in record_dict, it is updated, otherwise added as a new record.
         """
@@ -124,7 +124,9 @@ class SearchAPIFeed:
             record.data[Fields.ID] = str(self._next_incremental_id).rjust(6, "0")
 
     def _add_record_to_feed(
-        self, record: colrev.record.Record, prev_feed_record: colrev.record.Record
+        self,
+        record: colrev.record.record.Record,
+        prev_feed_record: colrev.record.record.Record,
     ) -> bool:
         """Add a record to the feed and set its colrev_origin"""
 
@@ -158,10 +160,12 @@ class SearchAPIFeed:
         return added_new
 
     def _have_changed(
-        self, record_a: colrev.record.Record, record_b: colrev.record.Record
+        self,
+        record_a: colrev.record.record.Record,
+        record_b: colrev.record.record.Record,
     ) -> bool:
 
-        def tostr_and_load(record: colrev.record.Record) -> dict:
+        def tostr_and_load(record: colrev.record.record.Record) -> dict:
             record_dict = deepcopy(record.data)
             bibtex_str = to_string(
                 records_dict={record_dict[Fields.ID]: record_dict}, implementation="bib"
@@ -190,7 +194,10 @@ class SearchAPIFeed:
         return changed
 
     def _update_record_retract(
-        self, *, record: colrev.record.Record, main_record: colrev.record.Record
+        self,
+        *,
+        record: colrev.record.record.Record,
+        main_record: colrev.record.record.Record,
     ) -> bool:
         if record.is_retracted():
             self.review_manager.logger.info(
@@ -205,7 +212,10 @@ class SearchAPIFeed:
         return False
 
     def _notify_record_forthcoming(
-        self, *, record: colrev.record.Record, prev_feed_record: colrev.record.Record
+        self,
+        *,
+        record: colrev.record.record.Record,
+        prev_feed_record: colrev.record.record.Record,
     ) -> None:
 
         if self._forthcoming_published(record=record, prev_record=prev_feed_record):
@@ -215,7 +225,7 @@ class SearchAPIFeed:
             )
 
     def _missing_ignored_field(
-        self, main_record: colrev.record.Record, key: str
+        self, main_record: colrev.record.record.Record, key: str
     ) -> bool:
         source = main_record.get_masterdata_provenance_source(key)
         notes = main_record.get_masterdata_provenance_notes(key)
@@ -229,8 +239,8 @@ class SearchAPIFeed:
     def _update_record_fields(
         self,
         *,
-        record: colrev.record.Record,
-        main_record: colrev.record.Record,
+        record: colrev.record.record.Record,
+        main_record: colrev.record.record.Record,
         origin: str,
     ) -> None:
 
@@ -272,7 +282,10 @@ class SearchAPIFeed:
                 )
 
     def _forthcoming_published(
-        self, *, record: colrev.record.Record, prev_record: colrev.record.Record
+        self,
+        *,
+        record: colrev.record.record.Record,
+        prev_record: colrev.record.record.Record,
     ) -> bool:
         if (
             record.data[Fields.ENTRYTYPE] != ENTRYTYPES.ARTICLE
@@ -302,7 +315,7 @@ class SearchAPIFeed:
             return True
         return False
 
-    def _get_main_record(self, colrev_origin: str) -> colrev.record.Record:
+    def _get_main_record(self, colrev_origin: str) -> colrev.record.record.Record:
 
         main_record_dict: dict = {}
         for record_dict in self.records.values():
@@ -314,13 +327,13 @@ class SearchAPIFeed:
             raise colrev_exceptions.RecordNotFoundException(
                 f"Could not find/update {colrev_origin}"
             )
-        return colrev.record.Record(main_record_dict)
+        return colrev.record.record.Record(main_record_dict)
 
     def _update_record(
         self,
         *,
-        retrieved_record: colrev.record.Record,
-        prev_feed_record: colrev.record.Record,
+        retrieved_record: colrev.record.record.Record,
+        prev_feed_record: colrev.record.record.Record,
     ) -> None:
         """Convenience function to update existing records (main data/records.bib)"""
 
@@ -344,7 +357,7 @@ class SearchAPIFeed:
             return
 
         if self._have_changed(retrieved_record, prev_feed_record):
-            similarity_score = colrev.record.Record.get_record_similarity(
+            similarity_score = colrev.record.record.Record.get_record_similarity(
                 retrieved_record,
                 prev_feed_record,
             )
@@ -390,23 +403,25 @@ class SearchAPIFeed:
                 )
 
     def get_prev_feed_record(
-        self, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get the previous record dict version"""
         record = deepcopy(record)
         self._set_id(record)
         prev_feed_record_dict = {}
         if record.data[Fields.ID] in self.feed_records:
             prev_feed_record_dict = deepcopy(self.feed_records[record.data[Fields.ID]])
-        return colrev.record.Record(prev_feed_record_dict)
+        return colrev.record.record.Record(prev_feed_record_dict)
 
-    def _prep_retrieved_record(self, retrieved_record: colrev.record.Record) -> None:
+    def _prep_retrieved_record(
+        self, retrieved_record: colrev.record.record.Record
+    ) -> None:
         """Prepare the retrieved record for the search feed"""
         for provenance_key in FieldSet.PROVENANCE_KEYS:
             if provenance_key in retrieved_record.data:
                 del retrieved_record.data[provenance_key]
 
-    def add_update_record(self, retrieved_record: colrev.record.Record) -> bool:
+    def add_update_record(self, retrieved_record: colrev.record.record.Record) -> bool:
         """Add or update a record in the api_search_feed and records"""
         self._prep_retrieved_record(retrieved_record)
         prev_feed_record = self._get_prev_feed_record(retrieved_record)

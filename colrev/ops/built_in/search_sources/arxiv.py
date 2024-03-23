@@ -16,8 +16,8 @@ from dacite import from_dict
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
-import colrev.record_prep
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import SearchType
 
@@ -226,10 +226,10 @@ class ArXivSource:
     def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata fromArXiv based on similarity with the record provided"""
         # https://info.arxiv.org/help/api/user-manual.html#_query_interface
         # id_list
@@ -333,7 +333,7 @@ class ArXivSource:
                         )
                         continue
 
-                    prep_record = colrev.record_prep.PrepRecord(record_dict)
+                    prep_record = colrev.record.record_prep.PrepRecord(record_dict)
 
                     added = arxiv_feed.add_update_record(prep_record)
 
@@ -366,7 +366,7 @@ class ArXivSource:
     #     records = self.review_manager.dataset.load_records_dict()
 
     #     for feed_record_dict in arxiv_feed.feed_records.values():
-    #         feed_record = colrev.record.Record(feed_record_dict)
+    #         feed_record = colrev.record.record.Record(feed_record_dict)
 
     #         try:
     #             retrieved_record = self._arxiv_query_id(
@@ -381,7 +381,7 @@ class ArXivSource:
     #         retrieved_record=feed_record
     #     )
     # )
-    #         retrieved_record = colrev.record.Record(retrieved_record)
+    #         retrieved_record = colrev.record.record.Record(retrieved_record)
     #         arxiv_feed.add_update_record(retrieved_record)
 
     #         changed = self.operation.update_existing_record(
@@ -445,13 +445,13 @@ class ArXivSource:
         return records
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ArXiv"""
 
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = (
-                colrev.record_prep.PrepRecord.format_author_field(
+                colrev.record.record_prep.PrepRecord.format_author_field(
                     input_string=record.data[Fields.AUTHOR]
                 )
             )

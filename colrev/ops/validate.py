@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
@@ -94,9 +94,9 @@ class Validate(colrev.operation.Operation):
             for origin in record_dict[Fields.ORIGIN]:
                 origin_record = origin_records[origin]
 
-                change_score = colrev.record.Record.get_record_change_score(
-                    colrev.record.Record(record_dict),
-                    colrev.record.Record(origin_record),
+                change_score = colrev.record.record.Record.get_record_change_score(
+                    colrev.record.record.Record(record_dict),
+                    colrev.record.record.Record(origin_record),
                 )
 
                 origin_record["change_score"] = change_score
@@ -152,13 +152,13 @@ class Validate(colrev.operation.Operation):
 
         with open(merge_candidates_file, "w", encoding="utf-8") as file:
             for ref_rec_dict in tqdm(records):
-                ref_rec = colrev.record.Record(ref_rec_dict)
+                ref_rec = colrev.record.record.Record(ref_rec_dict)
                 for comp_rec_dict in reversed(records):
                     # Note : due to symmetry, we only need one part of the matrix
                     if ref_rec_dict[Fields.ID] == comp_rec_dict[Fields.ID]:
                         break
-                    comp_rec = colrev.record.Record(comp_rec_dict)
-                    similarity = colrev.record.Record.get_record_similarity(
+                    comp_rec = colrev.record.record.Record(comp_rec_dict)
+                    similarity = colrev.record.record.Record.get_record_similarity(
                         ref_rec, comp_rec
                     )
 
@@ -190,7 +190,7 @@ class Validate(colrev.operation.Operation):
         #     return True
 
         # def _gids_conflict(
-        #     self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+        #     self, *, main_record: colrev.record.record.Record, dupe_record: colrev.record.record.Record
         # ) -> bool:
         #     gid_conflict = False
         #     if Fields.DOI in main_record.data and Fields.DOI in dupe_record.data:
@@ -238,9 +238,9 @@ class Validate(colrev.operation.Operation):
             reference_record = merged_records_list.pop(0)
             # Note : should usually be only one merged_rec (but multiple-merges are possible)
             for merged_rec in merged_records_list:
-                change_score = colrev.record.Record.get_record_change_score(
-                    colrev.record.Record(reference_record),
-                    colrev.record.Record(merged_rec),
+                change_score = colrev.record.record.Record.get_record_change_score(
+                    colrev.record.record.Record(reference_record),
+                    colrev.record.record.Record(merged_rec),
                 )
                 change_diff.append(
                     {

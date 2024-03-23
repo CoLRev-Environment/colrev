@@ -18,7 +18,7 @@ class IncompleteFieldChecker:
     def __init__(self, quality_model: colrev.qm.quality_model.QualityModel) -> None:
         self.quality_model = quality_model
 
-    def run(self, *, record: colrev.record.Record) -> None:
+    def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the missing-field checks"""
 
         for key in [
@@ -40,7 +40,9 @@ class IncompleteFieldChecker:
             else:
                 record.remove_masterdata_provenance_note(key=key, note=self.msg)
 
-    def _incomplete_field(self, *, record: colrev.record.Record, key: str) -> bool:
+    def _incomplete_field(
+        self, *, record: colrev.record.record.Record, key: str
+    ) -> bool:
         """check for incomplete field"""
         if record.data[key].endswith("...") or record.data[key].endswith("…"):
             return True
@@ -54,7 +56,9 @@ class IncompleteFieldChecker:
                 return True
         return False
 
-    def _institutional_author(self, *, key: str, record: colrev.record.Record) -> bool:
+    def _institutional_author(
+        self, *, key: str, record: colrev.record.record.Record
+    ) -> bool:
         if key != Fields.AUTHOR or Fields.AUTHOR not in record.data:
             return False
         if record.data[Fields.AUTHOR].startswith("{") and record.data[

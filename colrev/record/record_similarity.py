@@ -10,11 +10,11 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 
 if TYPE_CHECKING:
-    import colrev.record
+    import colrev.record.record
 
 
 def get_record_change_score(
-    record_a: colrev.record.Record, record_b: colrev.record.Record
+    record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
 ) -> float:
     """Determine how much records changed"""
 
@@ -35,7 +35,7 @@ def get_record_change_score(
 
 
 def get_record_similarity(
-    record_a: colrev.record.Record, record_b: colrev.record.Record
+    record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
 ) -> float:
     """Determine the similarity between two records (their masterdata)"""
 

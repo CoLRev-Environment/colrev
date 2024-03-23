@@ -1,7 +1,7 @@
-colrev.record.Record
+colrev.record.record.Record
 ====================
 
-.. currentmodule:: colrev.record
+.. currentmodule:: colrev.record.record
 
 .. autoclass:: Record
    :members:

@@ -15,9 +15,9 @@ import git
 from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Filepaths
-from colrev.record_state_model import RecordStateModel
+from colrev.record.record_state_model import RecordStateModel
 
 
 F = TypeVar("F", bound=Callable[..., Any])

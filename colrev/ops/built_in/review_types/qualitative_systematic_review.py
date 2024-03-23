@@ -7,7 +7,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.ops.built_in.search_sources.open_citations_forward_search import (
     OpenCitationsSearchSource,
 )

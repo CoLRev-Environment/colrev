@@ -39,7 +39,7 @@ def test_eric(  # type: ignore
     json_str = helpers.retrieve_test_file_content(
         source=Path("3_search_sources/api_output/eric/blockchain.json")
     )
-    expected_record = colrev.record.Record(
+    expected_record = colrev.record.record.Record(
         data={
             "ENTRYTYPE": "article",
             "ID": "EJ1286736",

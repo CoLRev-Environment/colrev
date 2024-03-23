@@ -17,7 +17,7 @@ from bib_dedupe.bib_dedupe import prep
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
@@ -164,7 +164,7 @@ class Dedupe(colrev.operation.Operation):
 
         # 4. Merge into curated record (otherwise)
         else:
-            if colrev.record.Record(rec_2).masterdata_is_curated():
+            if colrev.record.record.Record(rec_2).masterdata_is_curated():
                 main_record = rec_2
                 dupe_record = rec_1
             else:
@@ -174,7 +174,10 @@ class Dedupe(colrev.operation.Operation):
         return [main_record, dupe_record]
 
     def _same_source_merge(
-        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+        self,
+        *,
+        main_record: colrev.record.record.Record,
+        dupe_record: colrev.record.record.Record,
     ) -> bool:
         main_rec_sources = [x.split("/")[0] for x in main_record.data[Fields.ORIGIN]]
         dupe_rec_sources = [x.split("/")[0] for x in dupe_record.data[Fields.ORIGIN]]
@@ -202,7 +205,10 @@ class Dedupe(colrev.operation.Operation):
         return True
 
     def _notify_on_merge(
-        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+        self,
+        *,
+        main_record: colrev.record.record.Record,
+        dupe_record: colrev.record.record.Record,
     ) -> None:
         merge_info = main_record.data[Fields.ID] + " - " + dupe_record.data[Fields.ID]
         if not self._same_source_merge(
@@ -225,7 +231,10 @@ class Dedupe(colrev.operation.Operation):
         )
 
     def _is_cross_level_merge(
-        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+        self,
+        *,
+        main_record: colrev.record.record.Record,
+        dupe_record: colrev.record.record.Record,
     ) -> bool:
         is_cross_level_merge_attempt = False
         if main_record.data[Fields.ENTRYTYPE] in [
@@ -305,7 +314,7 @@ class Dedupe(colrev.operation.Operation):
             # have been considered by dedupe
             for record_dict in records.values():
                 if record_dict[Fields.STATUS] == RecordState.md_prepared:
-                    record = colrev.record.Record(record_dict)
+                    record = colrev.record.record.Record(record_dict)
                     record.set_status(RecordState.md_processed)
                     set_to_md_processed.append(record.data[Fields.ID])
 
@@ -313,7 +322,10 @@ class Dedupe(colrev.operation.Operation):
         return set_to_md_processed
 
     def _skip_merge_condition(
-        self, *, main_record: colrev.record.Record, dupe_record: colrev.record.Record
+        self,
+        *,
+        main_record: colrev.record.record.Record,
+        dupe_record: colrev.record.record.Record,
     ) -> bool:
         if self.review_manager.force_mode:
             return False
@@ -340,8 +352,8 @@ class Dedupe(colrev.operation.Operation):
         self,
         *,
         duplicate_id_mappings: dict,
-        main_record: colrev.record.Record,
-        dupe_record: colrev.record.Record,
+        main_record: colrev.record.record.Record,
+        dupe_record: colrev.record.record.Record,
     ) -> None:
         if main_record.data[Fields.ID] not in duplicate_id_mappings:
             duplicate_id_mappings[main_record.data[Fields.ID]] = [
@@ -463,8 +475,8 @@ class Dedupe(colrev.operation.Operation):
                     rec_1, rec_2
                 )
 
-                main_record = colrev.record.Record(main_record_dict)
-                dupe_record = colrev.record.Record(dupe_record_dict)
+                main_record = colrev.record.record.Record(main_record_dict)
+                dupe_record = colrev.record.record.Record(dupe_record_dict)
 
                 yield (main_record, dupe_record)
 
@@ -613,7 +625,7 @@ class Dedupe(colrev.operation.Operation):
         if Fields.COLREV_ID in global_keys:
             for record in records.values():
                 try:
-                    record[Fields.COLREV_ID] = colrev.record.Record(
+                    record[Fields.COLREV_ID] = colrev.record.record.Record(
                         data=record
                     ).create_colrev_id()
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
@@ -715,7 +727,7 @@ class Dedupe(colrev.operation.Operation):
             self.review_manager.logger.info("Skipping prescreen/including all records")
             records = self.review_manager.dataset.load_records_dict()
             for record_dict in records.values():
-                record = colrev.record.Record(record_dict)
+                record = colrev.record.record.Record(record_dict)
                 if RecordState.md_processed == record.data[Fields.STATUS]:
                     record.set_status(RecordState.rev_prescreen_included)
 
