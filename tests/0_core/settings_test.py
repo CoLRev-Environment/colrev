@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 """Test the colrev project settings"""
+import json
 import os
 from dataclasses import asdict
 from pathlib import Path
 
+import pytest
+
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.settings
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
 from colrev.constants import SearchType
+
+# flake8: noqa: E501
 
 # expected_printout: in settings-expected-printout.txt
 
@@ -20,6 +26,15 @@ def test_settings_load() -> None:
         settings_path=Path(colrev.__file__).parents[0]
         / Path("template/init/settings.json")
     )
+    settings.sources[0].comment = "user comment"
+    settings.screen.criteria = {  # type: ignore
+        "test": colrev.settings.ScreenCriterion(
+            explanation="Explanation of test",
+            comment="",
+            criterion_type=ScreenCriterionType.inclusion_criterion,
+        )
+    }
+    settings.data.data_package_endpoints = [{"endpoint": "colrev.export_data"}]
     expected = {
         "project": {
             "title": "",
@@ -39,7 +54,7 @@ def test_settings_load() -> None:
                 "filename": Path("data/search/files.bib"),
                 "search_type": SearchType.FILES,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "comment": "",
+                "comment": "user comment",
             }
         ],
         "search": {"retrieve_forthcoming": True},
@@ -111,10 +126,16 @@ def test_settings_load() -> None:
         },
         "screen": {
             "explanation": None,
-            "criteria": {},
+            "criteria": {
+                "test": {
+                    "explanation": "Explanation of test",
+                    "comment": "",
+                    "criterion_type": ScreenCriterionType.inclusion_criterion,
+                }
+            },
             "screen_package_endpoints": [{"endpoint": "colrev.colrev_cli_screen"}],
         },
-        "data": {"data_package_endpoints": []},
+        "data": {"data_package_endpoints": [{"endpoint": "colrev.export_data"}]},
     }
     actual = asdict(settings)
 
@@ -127,40 +148,70 @@ def test_settings_load() -> None:
     assert not settings.is_curated_repo()
 
 
-def test_id_pattern() -> None:
-    pattern = IDPattern("first_author_year")
-    print(pattern)
-    assert pattern.get_options() == ["first_author_year", "three_authors_year"]
+def test_search_source_error_wrong_path() -> None:
+    with open(
+        Path(colrev.__file__).parents[0] / Path("template/init/settings.json")
+    ) as file:
+        settings = json.load(file)
+    settings["sources"][0]["filename"] = "other_path"
+
+    with pytest.raises(colrev_exceptions.InvalidSettingsError):
+        colrev.settings._load_settings_from_dict(loaded_dict=settings)
 
 
-def test_sharing_req() -> None:
-    assert colrev.settings.ShareStatReq.get_options() == [
-        "none",
-        "processed",
-        "screened",
-        "completed",
+def test_search_source_error_duplicate_path() -> None:
+    with open(
+        Path(colrev.__file__).parents[0] / Path("template/init/settings.json")
+    ) as file:
+        settings = json.load(file)
+    settings["sources"].append(settings["sources"][0])
+
+    with pytest.raises(colrev_exceptions.InvalidSettingsError):
+        colrev.settings._load_settings_from_dict(loaded_dict=settings)
+
+
+def test_curated_masterdata() -> None:
+
+    settings = colrev.settings.load_settings(
+        settings_path=Path(colrev.__file__).parents[0]
+        / Path("template/init/settings.json")
+    )
+
+    settings.data.data_package_endpoints = [
+        {
+            "endpoint": "colrev.colrev_curation",
+            "curation_url": "https://github.com/CoLRev-curations/the-journal-of-strategic-information-systems",
+            "curated_masterdata": True,
+            "masterdata_restrictions": {
+                "1991": {
+                    "ENTRYTYPE": "article",
+                    "volume": True,
+                    "number": True,
+                    "journal": "The Journal of Strategic Information Systems",
+                }
+            },
+            "curated_fields": ["doi", "url", "dblp_key"],
+        }
     ]
 
-
-def test_search_type() -> None:
-    assert set(SearchType.get_options()) == {
-        "MD",
-        "API",
-        "OTHER",
-        "FORWARD_SEARCH",
-        "DB",
-        "TOC",
-        "FILES",
-        "BACKWARD_SEARCH",
-    }
+    assert settings.is_curated_masterdata_repo()
 
 
-def test_pdf_path_type() -> None:
-    assert PDFPathType.get_options() == ["symlink", "copy"]
+def test_get_query(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    print(base_repo_review_manager.settings.sources)
+    Path(
+        base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
+    ).write_text("test_query")
+    print(base_repo_review_manager.settings.sources[0].get_query())
+    assert "test_query" == base_repo_review_manager.settings.sources[0].get_query()
+    Path(
+        base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
+    ).unlink()
+    with pytest.raises(FileNotFoundError):
+        base_repo_review_manager.settings.sources[0].get_query()
 
-
-def test_screen_criterion_type() -> None:
-    assert ScreenCriterionType.get_options() == [
-        "inclusion_criterion",
-        "exclusion_criterion",
-    ]
+    base_repo_review_manager.settings.sources[0].search_parameters.pop("query_file")
+    with pytest.raises(KeyError):
+        base_repo_review_manager.settings.sources[0].get_query()

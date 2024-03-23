@@ -221,7 +221,8 @@ class PDFPrep(colrev.operation.Operation):
                 record=record, original_filename=original_filename
             )
 
-        record.cleanup_pdf_processing_fields()
+        record.data.pop(Fields.TEXT_FROM_PDF, None)
+        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
         return record.get_data()
 

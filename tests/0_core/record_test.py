@@ -582,21 +582,6 @@ def test_get_colrev_id() -> None:
     assert expected == actual
 
 
-def test_has_overlapping_colrev_id() -> None:
-    """Test record.has_overlapping_colrev_id()"""
-
-    r1_mod = r1.copy()
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-
-    r2_mod = r1.copy()
-    r2_mod.data[Fields.COLREV_ID] = r2_mod.create_colrev_id()
-
-    assert r2_mod.has_overlapping_colrev_id(r1_mod)
-
-    r2_mod.data[Fields.COLREV_ID] = []
-    assert not r2_mod.has_overlapping_colrev_id(r1_mod)
-
-
 def test_provenance() -> None:
     """Test record provenance"""
 
@@ -894,42 +879,6 @@ def test_reset_pdf_provenance_notes() -> None:
         Fields.PAGES: "1--3",
     }
     r1_mod.reset_pdf_provenance_notes()
-    actual = r1_mod.data
-    print(actual)
-    assert expected == actual
-
-
-def test_cleanup_pdf_processing_fields() -> None:
-    """Test record.cleanup_pdf_processing_fields()"""
-
-    r1_mod = r1.copy()
-    r1_mod.data["text_from_pdf"] = "This is the full text inserted from the PDF...."
-    r1_mod.data[Fields.NR_PAGES_IN_FILE] = "12"
-
-    expected = {
-        Fields.ID: "r1",
-        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.MD_PROV: {
-            Fields.YEAR: {"source": "import.bib/id_0001", "note": ""},
-            Fields.TITLE: {"source": "import.bib/id_0001", "note": ""},
-            Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
-            Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
-            Fields.VOLUME: {"source": "import.bib/id_0001", "note": ""},
-            Fields.NUMBER: {"source": "import.bib/id_0001", "note": ""},
-            Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
-        },
-        Fields.D_PROV: {},
-        Fields.STATUS: RecordState.md_prepared,
-        Fields.ORIGIN: ["import.bib/id_0001"],
-        Fields.YEAR: "2020",
-        Fields.TITLE: "EDITORIAL",
-        Fields.AUTHOR: "Rai, Arun",
-        Fields.JOURNAL: "MIS Quarterly",
-        Fields.VOLUME: "45",
-        Fields.NUMBER: "1",
-        Fields.PAGES: "1--3",
-    }
-    r1_mod.cleanup_pdf_processing_fields()
     actual = r1_mod.data
     print(actual)
     assert expected == actual
@@ -1323,26 +1272,3 @@ def test_unify_pages_field() -> None:
 
     prep_rec.data[Fields.PAGES] = ["1", "2"]
     prep_rec.unify_pages_field()
-
-
-def test_to_screen() -> None:
-
-    assert colrev.record_prep.PrepRecord(
-        data={Fields.STATUS: RecordState.pdf_prepared}
-    ).to_screen()
-    assert not colrev.record_prep.PrepRecord(
-        data={Fields.STATUS: RecordState.md_processed}
-    ).to_screen()
-
-    assert not colrev.record_prep.PrepRecord(
-        data={
-            Fields.STATUS: RecordState.rev_synthesized,
-            Fields.SCREENING_CRITERIA: "focus_hr=in",
-        }
-    ).to_screen()
-    assert colrev.record_prep.PrepRecord(
-        data={
-            Fields.STATUS: RecordState.rev_synthesized,
-            Fields.SCREENING_CRITERIA: "focus_hr=TODO",
-        }
-    ).to_screen()

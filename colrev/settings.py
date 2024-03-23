@@ -106,8 +106,11 @@ class SearchSource(JsonSchemaMixin):
         comment: typing.Optional[str],
     ) -> None:
         self.endpoint = endpoint
-        assert filename.parent.name == "search"
-        assert filename.parent.parent.name == "data"
+
+        if not str(filename).replace("\\", "/").startswith("data/search"):
+            msg = f"Source filename does not start with data/search: {filename}"
+            raise colrev_exceptions.InvalidSettingsError(msg=msg)
+
         self.filename = filename
         self.search_type = search_type
         self.search_parameters = search_parameters
@@ -149,10 +152,12 @@ class SearchSource(JsonSchemaMixin):
 
     def get_query(self) -> str:
         """Get the query filepath"""
+        assert self.search_type == SearchType.DB
+        # Note : save API queries in settings.json
         if "query_file" not in self.search_parameters:
-            return "no query_file"
+            raise KeyError
         if not Path(self.search_parameters["query_file"]).is_file():
-            return "query_file does not exist"
+            raise FileNotFoundError
         return Path(self.search_parameters["query_file"]).read_text(encoding="utf-8")
 
     def get_dict(self) -> dict:
@@ -345,7 +350,7 @@ class ScreenCriterion(JsonSchemaMixin):
     criterion_type: ScreenCriterionType
 
     def __str__(self) -> str:
-        return f"{self.criterion_type} {self.explanation} ({self.explanation})"
+        return f"{self.explanation} ({self.criterion_type}, {self.comment})"
 
 
 @dataclass
@@ -362,12 +367,15 @@ class ScreenSettings(JsonSchemaMixin):
             endpoints_str = "- endpoints:\n - " + "\n - ".join(
                 [s["endpoint"] for s in self.screen_package_endpoints]
             )
-        criteria_str = "- criteria: []"
+        criteria_str = "- Criteria: []"
         if self.criteria:
             criteria_str = "- Criteria:\n - " + "\n - ".join(
-                [str(c) for c in self.criteria]
+                [
+                    f"{short_name}: " + str(criterion)
+                    for short_name, criterion in self.criteria.items()
+                ]
             )
-        return endpoints_str + criteria_str
+        return criteria_str + "\n" + endpoints_str
 
 
 # Data
@@ -423,6 +431,7 @@ class Settings(JsonSchemaMixin):
             for x in self.data.data_package_endpoints
             if x["endpoint"] == "colrev.colrev_curation"
         ]
+
         if curation_endpoints:
             curation_endpoint = curation_endpoints[0]
             if curation_endpoint["curated_masterdata"]:
@@ -473,10 +482,6 @@ def _load_settings_from_dict(*, loaded_dict: dict) -> Settings:
             data=loaded_dict,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
-        for source in settings.sources:
-            if not str(source.filename).replace("\\", "/").startswith("data/search"):
-                msg = f"Source filename does not start with data/search: {source.filename}"
-                raise colrev_exceptions.InvalidSettingsError(msg=msg)
 
         filenames = [x.filename for x in settings.sources]
         if not len(filenames) == len(set(filenames)):
@@ -488,7 +493,6 @@ def _load_settings_from_dict(*, loaded_dict: dict) -> Settings:
         ValueError,
         MissingValueError,
         WrongTypeError,
-        AssertionError,
     ) as exc:  # pragma: no cover
         raise colrev_exceptions.InvalidSettingsError(msg=str(exc)) from exc
 

@@ -208,15 +208,6 @@ class Record:
                 colrev_id = self.data[Fields.COLREV_ID]
         return [c for c in colrev_id if len(c) > 20]
 
-    def has_overlapping_colrev_id(self, record: Record) -> bool:
-        """Check if a record has an overlapping colrev_id with the other record"""
-        own_colrev_ids = self.get_colrev_id()
-        other_colrev_ids = record.get_colrev_id()
-        if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
-            if any(cid in own_colrev_ids for cid in other_colrev_ids):
-                return True
-        return False
-
     # pylint: disable=too-many-arguments
     def update_field(
         self,
@@ -1399,13 +1390,6 @@ class Record:
             ).with_suffix(".tei.xml")
         return tei_filename
 
-    def cleanup_pdf_processing_fields(self) -> None:
-        """Cleanup the PDF processing fiels (text_from_pdf, pages_in_file)"""
-        if Fields.TEXT_FROM_PDF in self.data:
-            del self.data[Fields.TEXT_FROM_PDF]
-        if Fields.NR_PAGES_IN_FILE in self.data:
-            del self.data[Fields.NR_PAGES_IN_FILE]
-
     def run_pdf_quality_model(
         self,
         *,
@@ -1468,20 +1452,6 @@ class Record:
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="warning")
-            return True
-        return False
-
-    def to_screen(self) -> bool:
-        """
-        This method checks if the record is ready to be screened.
-        It returns True if the status of the record is 'pdf_prepared', otherwise it returns False.
-        """
-        if RecordState.pdf_prepared == self.data[Fields.STATUS]:
-            return True
-        if (
-            "screening_criteria" in self.data
-            and "TODO" in self.data["screening_criteria"]
-        ):
             return True
         return False
 

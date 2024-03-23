@@ -60,6 +60,17 @@ class CurationDedupe(JsonSchemaMixin):
 
         self.pdf_qm = self.review_manager.get_pdf_qm()
 
+    def _has_overlapping_colrev_id(
+        self, record_a: colrev.record.Record, record_b: colrev.record.Record
+    ) -> bool:
+        """Check if a record has an overlapping colrev_id with the other record"""
+        own_colrev_ids = record_a.get_colrev_id()
+        other_colrev_ids = record_b.get_colrev_id()
+        if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
+            if any(cid in own_colrev_ids for cid in other_colrev_ids):
+                return True
+        return False
+
     def _get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
         author_similarity = fuzz.ratio(df_a[Fields.AUTHOR], df_b[Fields.AUTHOR]) / 100
 
@@ -352,9 +363,10 @@ class CurationDedupe(JsonSchemaMixin):
                 # print(new_same_toc_records)
                 for new_same_toc_record in new_same_toc_records:
                     for rec2 in processed_same_toc_records:
-                        overlapping_colrev_ids = colrev.record.Record(
-                            data=new_same_toc_record
-                        ).has_overlapping_colrev_id(colrev.record.Record(rec2))
+                        overlapping_colrev_ids = self._has_overlapping_colrev_id(
+                            colrev.record.Record(data=new_same_toc_record),
+                            colrev.record.Record(rec2),
+                        )
                         if overlapping_colrev_ids:
                             decision_list.append(
                                 [new_same_toc_record[Fields.ID], rec2[Fields.ID]]
@@ -405,9 +417,9 @@ class CurationDedupe(JsonSchemaMixin):
         except FileNotFoundError:
             return
 
-        overlapping_colrev_ids = colrev.record.Record(
-            data=rec1
-        ).has_overlapping_colrev_id(colrev.record.Record(rec2))
+        overlapping_colrev_ids = self._has_overlapping_colrev_id(
+            colrev.record.Record(data=rec1), colrev.record.Record(rec2)
+        )
         if validated or overlapping_colrev_ids:
             decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 

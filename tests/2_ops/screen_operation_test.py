@@ -3,6 +3,8 @@
 import pytest
 
 import colrev.review_manager
+from colrev.constants import Fields
+from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
 
@@ -60,3 +62,26 @@ def test_delete_criterion(  # type: ignore
 
     # Verify the criterion was deleted
     assert criterion_to_delete not in base_repo_review_manager.settings.screen.criteria
+
+
+def test_to_screen(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    screen_operation = base_repo_review_manager.get_screen_operation()
+
+    assert screen_operation.to_screen({Fields.STATUS: RecordState.pdf_prepared})
+
+    assert not screen_operation.to_screen({Fields.STATUS: RecordState.md_processed})
+
+    assert not screen_operation.to_screen(
+        {
+            Fields.STATUS: RecordState.rev_synthesized,
+            Fields.SCREENING_CRITERIA: "focus_hr=in",
+        }
+    )
+    assert screen_operation.to_screen(
+        {
+            Fields.STATUS: RecordState.rev_synthesized,
+            Fields.SCREENING_CRITERIA: "focus_hr=TODO",
+        }
+    )
