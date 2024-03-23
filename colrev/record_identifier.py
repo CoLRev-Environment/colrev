@@ -1,17 +1,33 @@
 #! /usr/bin/env python
-"""Generate colrev-ids."""
+"""Functionality to identify records."""
 from __future__ import annotations
 
+import logging
+import os
 import re
+import tempfile
+from pathlib import Path
+from typing import TYPE_CHECKING
 
+import fitz
+import imagehash
 from nameparser import HumanName
+from PIL import Image
+import colrev.env.utils
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record  # pylint: disable=cyclic-import
+from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+
+if TYPE_CHECKING:
+    import colrev.record
+
+
+# pylint: disable=duplicate-code
 
 
 def _format_author_field_for_cid(input_string: str) -> str:
@@ -179,3 +195,91 @@ def create_colrev_id(*, record: colrev.record.Record, assume_complete: bool) -> 
         )
 
     return srep
+
+
+def _create_colrev_pdf_id_cpid2(*, pdf_path: Path) -> str:
+    with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
+        file_name = temp_file.name
+        try:
+            doc: fitz.Document = fitz.open(pdf_path)
+            page = next(iter(doc))  # get the first page
+            pix = page.get_pixmap(dpi=200)
+            pix.save(file_name)  # store image as a PNG
+            with Image.open(file_name) as img:
+                average_hash = imagehash.average_hash(img, hash_size=32)
+                average_hash_str = str(average_hash).replace("\n", "")
+                if len(average_hash_str) * "0" == average_hash_str:
+                    raise colrev_exceptions.PDFHashError(path=pdf_path)
+                return "cpid2:" + average_hash_str
+        except StopIteration as exc:  # pragma: no cover
+            raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
+        except fitz.fitz.FileDataError as exc:
+            raise colrev_exceptions.InvalidPDFException(path=pdf_path) from exc
+        except RuntimeError as exc:
+            raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
+
+
+def create_colrev_pdf_id(*, pdf_path: Path, cpid_version: str = "cpid2") -> str:
+    """Get the PDF hash"""
+
+    pdf_path = pdf_path.resolve()
+    if 0 == os.path.getsize(pdf_path):
+        logging.error("%sPDF with size 0: %s %s", Colors.RED, pdf_path, Colors.END)
+        raise colrev_exceptions.InvalidPDFException(path=pdf_path)
+
+    if cpid_version == "cpid2":
+        return _create_colrev_pdf_id_cpid2(pdf_path=pdf_path)
+
+    raise NotImplementedError
+
+
+def get_toc_key(record: colrev.record.Record) -> str:
+    """Get the record's toc-key"""
+
+    try:
+        if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            toc_key = (
+                record.data[Fields.JOURNAL]
+                .replace(" ", "-")
+                .replace("\\", "")
+                .replace("&", "and")
+                .lower()
+            )
+            toc_key += (
+                f"|{record.data[Fields.VOLUME]}"
+                if (
+                    FieldValues.UNKNOWN
+                    != record.data.get(Fields.VOLUME, FieldValues.UNKNOWN)
+                )
+                else "|-"
+            )
+            toc_key += (
+                f"|{record.data[Fields.NUMBER]}"
+                if (
+                    FieldValues.UNKNOWN
+                    != record.data.get(Fields.NUMBER, FieldValues.UNKNOWN)
+                )
+                else "|-"
+            )
+
+        elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            toc_key = (
+                record.data[Fields.BOOKTITLE]
+                .replace(" ", "-")
+                .replace("\\", "")
+                .replace("&", "and")
+                .lower()
+                + f"|{record.data.get(Fields.YEAR, '')}"
+            )
+        else:
+            msg = (
+                f"ENTRYTYPE {record.data[Fields.ENTRYTYPE]} "
+                + f"({record.data['ID']}) not toc-identifiable"
+            )
+            raise colrev_exceptions.NotTOCIdentifiableException(msg)
+    except KeyError as exc:
+        raise colrev_exceptions.NotTOCIdentifiableException(
+            f"missing key {exc}"
+        ) from exc
+
+    return toc_key

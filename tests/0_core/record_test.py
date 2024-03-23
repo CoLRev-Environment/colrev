@@ -490,11 +490,6 @@ def test_print_citation_format() -> None:
     r1.print_citation_format()
 
 
-def test_shares_origins() -> None:
-    """Test record.shares_origins()"""
-    assert r1.shares_origins(r2)
-
-
 def test_get_value() -> None:
     """Test record.get_value()"""
     expected = "Rai, Arun"

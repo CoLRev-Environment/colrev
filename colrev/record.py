@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pprint
-import re
 import typing
 from copy import deepcopy
 from pathlib import Path
@@ -11,12 +10,12 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import dictdiffer
-from rapidfuzz import fuzz
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.qm.colrev_id
-import colrev.qm.colrev_pdf_id
+from colrev import record_identifier
+from colrev import record_merger
+from colrev import record_similarity
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
@@ -29,7 +28,6 @@ if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.qm.quality_model
 
-# pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods
 
 
@@ -74,6 +72,16 @@ class Record:
 
     def __eq__(self, other: object) -> bool:
         return self.__dict__ == other.__dict__
+
+    def print_citation_format(self) -> None:
+        """Print the record as a citation"""
+        formatted_ref = (
+            f"{self.data.get(Fields.AUTHOR, '')} ({self.data.get(Fields.YEAR, '')}) "
+            + f"{self.data.get(Fields.TITLE, '')}. "
+            + f"{self.data.get(Fields.JOURNAL, '')}{self.data.get(Fields.BOOKTITLE, '')}, "
+            + f"{self.data.get(Fields.VOLUME, '')} ({self.data.get(Fields.NUMBER, '')})"
+        )
+        print(formatted_ref)
 
     def copy(self) -> Record:
         """Copy the record object"""
@@ -175,13 +183,6 @@ class Record:
             if key.startswith("colrev."):
                 continue
             self.data[f"{prefix}.{key}"] = self.data.pop(key)
-
-    def shares_origins(self, other_record: Record) -> bool:
-        """Check at least one origin is shared with the other record"""
-        return any(
-            x in other_record.data.get(Fields.ORIGIN, [])
-            for x in self.data.get(Fields.ORIGIN, [])
-        )
 
     def get_value(self, key: str, *, default: Optional[str] = None) -> str:
         """Get a record value (based on the key parameter)"""
@@ -468,322 +469,6 @@ class Record:
                     "note": "",
                 }
 
-    def _merge_origins(self, merging_record: Record) -> None:
-        """Merge the origins with those of the merging_record"""
-
-        if Fields.ORIGIN in merging_record.data:
-            origins = self.data[Fields.ORIGIN] + merging_record.data[Fields.ORIGIN]
-            self.data[Fields.ORIGIN] = sorted(list(set(origins)))
-
-    def _merge_status(self, merging_record: Record) -> None:
-        """Merge the status with the merging_record"""
-
-        if Fields.STATUS in merging_record.data:
-            # Set both status to the latter in the state model
-            if self.data[Fields.STATUS] < merging_record.data[Fields.STATUS]:
-                self.set_status(merging_record.data[Fields.STATUS])
-            else:
-                merging_record.set_status(self.data[Fields.STATUS])
-
-    def _get_merging_val(self, *, merging_record: Record, key: str) -> str:
-        val = merging_record.data.get(key, "")
-
-        if val == "":
-            return ""
-        if not val:
-            return ""
-
-        # do not override provenance, ID, ... fields
-        if key in [
-            Fields.ID,
-            Fields.MD_PROV,
-            Fields.D_PROV,
-            Fields.COLREV_ID,
-            Fields.STATUS,
-            Fields.ORIGIN,
-            "MOVED_DUPE_ID",
-        ]:
-            return ""
-
-        return val
-
-    def _prevent_invalid_merges(self, merging_record: Record) -> None:
-        """Prevents invalid merges like ... part 1 / ... part 2"""
-
-        lower_title_a = self.data.get(Fields.TITLE, "").lower()
-        lower_title_b = merging_record.data.get(Fields.TITLE, "").lower()
-
-        part_match_a = re.findall(r"part [A-Za-z0-9]+$", lower_title_a)
-        part_match_b = re.findall(r"part [A-Za-z0-9]+$", lower_title_b)
-
-        if part_match_a != part_match_b:
-            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
-
-        terms_required_to_match = [
-            "erratum",
-            "correction",
-            "corrigendum",
-            "comment",
-            "commentary",
-            "response",
-        ]
-        terms_in_a = [t for t in terms_required_to_match if t in lower_title_a]
-        terms_in_b = [t for t in terms_required_to_match if t in lower_title_b]
-
-        if terms_in_a != terms_in_b:
-            raise colrev_exceptions.InvalidMerge(record_a=self, record_b=merging_record)
-
-    def merge(
-        self,
-        merging_record: Record,
-        *,
-        default_source: str,
-        preferred_masterdata_source_prefixes: Optional[list] = None,
-    ) -> None:
-        """General-purpose record merging
-        for preparation, curated/non-curated records and records with origins
-
-
-        Apply heuristics to create a fusion of the best fields based on
-        quality heuristics"""
-
-        # pylint: disable=too-many-branches
-
-        merging_record_preferred = False
-        if preferred_masterdata_source_prefixes:
-            if any(
-                any(ps in origin for ps in preferred_masterdata_source_prefixes)
-                for origin in merging_record.data[Fields.ORIGIN]
-            ):
-                merging_record_preferred = True
-
-        self._prevent_invalid_merges(merging_record)
-        self._merge_origins(merging_record)
-        self._merge_status(merging_record)
-
-        if not self.masterdata_is_curated() and merging_record.masterdata_is_curated():
-            self.data[Fields.MD_PROV] = merging_record.data[Fields.MD_PROV]
-            # Note : remove all masterdata fields
-            # because the curated record may have fewer masterdata fields
-            # and we iterate over the curated record (merging_record) in the next step
-            for k in list(self.data.keys()):
-                if k in FieldSet.IDENTIFYING_FIELD_KEYS and k != Fields.PAGES:
-                    del self.data[k]
-
-        for key in list(merging_record.data.keys()):
-            val = self._get_merging_val(merging_record=merging_record, key=key)
-            if val == "":
-                continue
-
-            field_provenance = merging_record.get_field_provenance(
-                key=key, default_source=default_source
-            )
-            source = field_provenance["source"]
-            note = field_provenance["note"]
-
-            # Always update from curated merging_records
-            if merging_record.masterdata_is_curated():
-                self.data[key] = merging_record.data[key]
-                if key not in FieldSet.IDENTIFYING_FIELD_KEYS + [Fields.ENTRYTYPE]:
-                    self.add_data_provenance(key=key, source=source, note=note)
-
-            # Do not change if MERGING_RECORD is not curated
-            elif (
-                self.masterdata_is_curated()
-                and not merging_record.masterdata_is_curated()
-            ):
-                continue
-
-            # Part 1: identifying fields
-            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-                if preferred_masterdata_source_prefixes:
-                    if merging_record_preferred:
-                        self.update_field(
-                            key=key, value=str(val), source=source, append_edit=False
-                        )
-
-                # Fuse best fields if none is curated
-                else:
-                    self._fuse_best_field(
-                        merging_record=merging_record,
-                        key=key,
-                        val=str(val),
-                        source=source,
-                    )
-
-            # Part 2: other fields
-            else:
-                # keep existing values per default
-                if key in self.data:
-                    continue
-                self.update_field(
-                    key=key,
-                    value=str(val),
-                    source=source,
-                    note=note,
-                    keep_source_if_equal=True,
-                    append_edit=False,
-                )
-
-    @classmethod
-    def _select_best_author(cls, record: Record, merging_record: Record) -> str:
-        if not record.has_quality_defects(
-            field=Fields.AUTHOR
-        ) and merging_record.has_quality_defects(field=Fields.AUTHOR):
-            return record.data[Fields.AUTHOR]
-        if record.has_quality_defects(
-            field=Fields.AUTHOR
-        ) and not merging_record.has_quality_defects(field=Fields.AUTHOR):
-            return merging_record.data[Fields.AUTHOR]
-
-        if (
-            len(record.data[Fields.AUTHOR]) > 0
-            and len(merging_record.data[Fields.AUTHOR]) > 0
-        ):
-            default_mostly_upper = (
-                colrev.env.utils.percent_upper_chars(record.data[Fields.AUTHOR]) > 0.8
-            )
-            candidate_mostly_upper = (
-                colrev.env.utils.percent_upper_chars(merging_record.data[Fields.AUTHOR])
-                > 0.8
-            )
-
-            # Prefer title case (not all-caps)
-            if default_mostly_upper and not candidate_mostly_upper:
-                return merging_record.data[Fields.AUTHOR]
-
-        return record.data[Fields.AUTHOR]
-
-    @classmethod
-    def _select_best_pages(
-        cls,
-        record: Record,
-        merging_record: Record,
-    ) -> str:
-        best_pages = record.data[Fields.PAGES]
-        if (
-            "--" in merging_record.data[Fields.PAGES]
-            and "--" not in record.data[Fields.PAGES]
-        ):
-            best_pages = merging_record.data[Fields.PAGES]
-        return best_pages
-
-    @classmethod
-    def _select_best_title(
-        cls,
-        record: Record,
-        merging_record: Record,
-    ) -> str:
-        default = record.data[Fields.TITLE]
-        candidate = merging_record.data[Fields.TITLE]
-        best_title = record.data[Fields.TITLE]
-
-        # Note : avoid switching titles
-        if default.replace(" - ", ": ") == candidate.replace(" - ", ": "):
-            return default
-
-        default_upper = colrev.env.utils.percent_upper_chars(default)
-        candidate_upper = colrev.env.utils.percent_upper_chars(candidate)
-
-        if candidate[-1] not in ["*", "1", "2"]:
-            # Relatively simple rule...
-            # catches cases when default is all upper or title case
-            if default_upper > candidate_upper:
-                best_title = candidate
-        return best_title
-
-    @classmethod
-    def _select_best_journal(
-        cls,
-        record: Record,
-        merging_record: Record,
-    ) -> str:
-        return cls._select_best_container_title(
-            record.data[Fields.JOURNAL],
-            merging_record.data[Fields.JOURNAL],
-        )
-
-    @classmethod
-    def _select_best_booktitle(
-        cls,
-        record: Record,
-        merging_record: Record,
-    ) -> str:
-        return cls._select_best_container_title(
-            record.data[Fields.BOOKTITLE],
-            merging_record.data[Fields.BOOKTITLE],
-        )
-
-    @classmethod
-    def _select_best_container_title(cls, default: str, candidate: str) -> str:
-        best_journal = default
-
-        default_upper = colrev.env.utils.percent_upper_chars(default)
-        candidate_upper = colrev.env.utils.percent_upper_chars(candidate)
-
-        # Simple heuristic to avoid abbreviations
-        if "." in default and "." not in candidate:
-            best_journal = candidate
-        # Relatively simple rule...
-        # catches cases when default is all upper or title case
-        if default_upper > candidate_upper:
-            best_journal = candidate
-        return best_journal
-
-    def _fuse_best_field(
-        self,
-        *,
-        merging_record: Record,
-        key: str,
-        val: str,
-        source: str,
-    ) -> None:
-        # Note : the assumption is that we need masterdata_provenance notes
-        # only for authors
-
-        custom_field_selectors = {
-            Fields.AUTHOR: self._select_best_author,
-            Fields.PAGES: self._select_best_pages,
-            Fields.TITLE: self._select_best_title,
-            Fields.JOURNAL: self._select_best_journal,
-            Fields.BOOKTITLE: self._select_best_booktitle,
-        }
-
-        if key in custom_field_selectors:
-            if key in self.data:
-                best_value = custom_field_selectors[key](
-                    self,
-                    merging_record,
-                )
-                if self.data[key] != best_value:
-                    self.update_field(
-                        key=key, value=best_value, source=source, append_edit=False
-                    )
-            else:
-                self.update_field(key=key, value=val, source=source, append_edit=False)
-
-        elif key == Fields.FILE:
-            if key in self.data:
-                self.data[key] = self.data[key] + ";" + merging_record.data.get(key, "")
-            else:
-                self.data[key] = merging_record.data[key]
-        elif key in [Fields.URL]:
-            if (
-                key in self.data
-                and self.data[key].rstrip("/") != merging_record.data[key].rstrip("/")
-                and "https" not in self.data[key]
-            ):
-                self.update_field(key=key, value=val, source=source, append_edit=False)
-
-        elif FieldValues.UNKNOWN == self.data.get(
-            key, ""
-        ) and FieldValues.UNKNOWN != merging_record.data.get(key, ""):
-            self.data[key] = merging_record.data[key]
-            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-                self.add_masterdata_provenance(key=key, source=source)
-            else:
-                self.add_data_provenance(key=key, source=source)
-
     @classmethod
     def get_record_change_score(cls, record_a: Record, record_b: Record) -> float:
         """Determine how much records changed
@@ -793,178 +478,13 @@ class Record:
         records, get_similarity will return a value > 1.0. The get_record_changes
         will return 0.0 (if all other fields are equal)."""
 
-        # At some point, this may become more sensitive to major changes
-        str_a = (
-            f"{record_a.data.get(Fields.AUTHOR, '')} ({record_a.data.get(Fields.YEAR, '')}) "
-            + f"{record_a.data.get(Fields.TITLE, '')}. "
-            + f"{record_a.data.get(Fields.JOURNAL, '')}{record_a.data.get(Fields.BOOKTITLE, '')}, "
-            + f"{record_a.data.get(Fields.VOLUME, '')} ({record_a.data.get(Fields.NUMBER, '')})"
-        )
-        str_b = (
-            f"{record_b.data.get(Fields.AUTHOR, '')} ({record_b.data.get(Fields.YEAR, '')}) "
-            + f"{record_b.data.get(Fields.TITLE, '')}. "
-            + f"{record_b.data.get(Fields.JOURNAL, '')}{record_b.data.get(Fields.BOOKTITLE, '')}, "
-            + f"{record_b.data.get(Fields.VOLUME, '')} ({record_b.data.get(Fields.NUMBER, '')})"
-        )
-        return 1 - fuzz.ratio(str_a.lower(), str_b.lower()) / 100
+        return record_similarity.get_record_change_score(record_a, record_b)
 
     @classmethod
     def get_record_similarity(cls, record_a: Record, record_b: Record) -> float:
         """Determine the similarity between two records (their masterdata)"""
-        record_a_dict = record_a.copy().get_data()
-        record_b_dict = record_b.copy().get_data()
 
-        mandatory_fields = [
-            Fields.TITLE,
-            Fields.AUTHOR,
-            Fields.YEAR,
-            Fields.JOURNAL,
-            Fields.VOLUME,
-            Fields.NUMBER,
-            Fields.PAGES,
-            Fields.BOOKTITLE,
-        ]
-
-        for mandatory_field in mandatory_fields:
-            if (
-                record_a_dict.get(mandatory_field, FieldValues.UNKNOWN)
-                == FieldValues.UNKNOWN
-            ):
-                record_a_dict[mandatory_field] = ""
-            if (
-                record_b_dict.get(mandatory_field, FieldValues.UNKNOWN)
-                == FieldValues.UNKNOWN
-            ):
-                record_b_dict[mandatory_field] = ""
-
-        if Fields.CONTAINER_TITLE not in record_a_dict:
-            record_a_dict[Fields.CONTAINER_TITLE] = (
-                record_a_dict.get(Fields.JOURNAL, "")
-                + record_a_dict.get(Fields.BOOKTITLE, "")
-                + record_a_dict.get(Fields.SERIES, "")
-            )
-
-        if Fields.CONTAINER_TITLE not in record_b_dict:
-            record_b_dict[Fields.CONTAINER_TITLE] = (
-                record_b_dict.get(Fields.JOURNAL, "")
-                + record_b_dict.get(Fields.BOOKTITLE, "")
-                + record_b_dict.get(Fields.SERIES, "")
-            )
-
-        return Record._get_similarity_detailed(record_a_dict, record_b_dict)
-
-    @classmethod
-    def _get_similarity_detailed(cls, record_a: dict, record_b: dict) -> float:
-        """Determine the detailed similarities between records"""
-        try:
-            author_similarity = (
-                fuzz.ratio(record_a[Fields.AUTHOR], record_b[Fields.AUTHOR]) / 100
-            )
-
-            title_similarity = (
-                fuzz.ratio(
-                    record_a[Fields.TITLE].lower().replace(":", "").replace("-", ""),
-                    record_b[Fields.TITLE].lower().replace(":", "").replace("-", ""),
-                )
-                / 100
-            )
-
-            # partial ratio (catching 2010-10 or 2001-2002)
-            year_similarity = (
-                fuzz.ratio(str(record_a[Fields.YEAR]), str(record_b[Fields.YEAR])) / 100
-            )
-
-            outlet_similarity = 0.0
-            if record_b[Fields.CONTAINER_TITLE] and record_a[Fields.CONTAINER_TITLE]:
-                outlet_similarity = (
-                    fuzz.ratio(
-                        record_a[Fields.CONTAINER_TITLE],
-                        record_b[Fields.CONTAINER_TITLE],
-                    )
-                    / 100
-                )
-
-            if str(record_a[Fields.JOURNAL]) != "nan":
-                # Note: for journals papers, we expect more details
-                volume_similarity = (
-                    1 if (record_a[Fields.VOLUME] == record_b[Fields.VOLUME]) else 0
-                )
-
-                number_similarity = (
-                    1 if (record_a[Fields.NUMBER] == record_b[Fields.NUMBER]) else 0
-                )
-
-                # Put more weight on other fields if the title is very common
-                # ie., non-distinctive
-                # The list is based on a large export of distinct papers, tabulated
-                # according to titles and sorted by frequency
-                if [record_a[Fields.TITLE], record_b[Fields.TITLE]] in [
-                    ["editorial", "editorial"],
-                    ["editorial introduction", "editorial introduction"],
-                    ["editorial notes", "editorial notes"],
-                    ["editor's comments", "editor's comments"],
-                    ["book reviews", "book reviews"],
-                    ["editorial note", "editorial note"],
-                    ["reviewer ackowledgment", "reviewer ackowledgment"],
-                ]:
-                    weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
-                else:
-                    weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
-
-                # sim_names = [
-                #     Fields.AUTHOR,
-                #     Fields.TITLE,
-                #     Fields.YEAR,
-                #     "outlet",
-                #     Fields.VOLUME,
-                #     Fields.NUMBER,
-                # ]
-                similarities = [
-                    author_similarity,
-                    title_similarity,
-                    year_similarity,
-                    outlet_similarity,
-                    volume_similarity,
-                    number_similarity,
-                ]
-
-            else:
-                weights = [0.15, 0.75, 0.05, 0.05]
-                # sim_names = [
-                #     Fields.AUTHOR,
-                #     Fields.TITLE,
-                #     Fields.YEAR,
-                #     "outlet",
-                # ]
-                similarities = [
-                    author_similarity,
-                    title_similarity,
-                    year_similarity,
-                    outlet_similarity,
-                ]
-
-            weighted_average = sum(
-                similarities[g] * weights[g] for g in range(len(similarities))
-            )
-
-            # details = (
-            #     "["
-            #     + ",".join([sim_names[g] for g in range(len(similarities))])
-            #     + "]"
-            #     + "*weights_vecor^T = "
-            #     + "["
-            #     + ",".join([str(similarities[g]) for g in range(len(similarities))])
-            #     + "]*"
-            #     + "["
-            #     + ",".join([str(weights[g]) for g in range(len(similarities))])
-            #     + "]^T"
-            # )
-            # print(details)
-            similarity_score = round(weighted_average, 4)
-        except AttributeError:
-            similarity_score = 0
-
-        return similarity_score
+        return record_similarity.get_record_similarity(record_a, record_b)
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
@@ -1277,10 +797,23 @@ class Record:
     ) -> str:
         """Returns the colrev_id of the Record."""
 
-        return colrev.qm.colrev_id.create_colrev_id(
+        return record_identifier.create_colrev_id(
             record=self,
             assume_complete=assume_complete,
         )
+
+    @classmethod
+    def get_colrev_pdf_id(
+        cls,
+        pdf_path: Path,
+    ) -> str:  # pragma: no cover
+        """Generate the colrev_pdf_id"""
+
+        return record_identifier.create_colrev_pdf_id(pdf_path=pdf_path)
+
+    def get_toc_key(self) -> str:
+        """Get the record's toc-key"""
+        return record_identifier.get_toc_key(self)
 
     def prescreen_exclude(self, *, reason: str, print_warning: bool = False) -> None:
         """Prescreen-exclude a record"""
@@ -1319,67 +852,6 @@ class Record:
                 to_drop.append(key)
         for key in to_drop:
             self.remove_field(key=key)
-
-    def get_toc_key(self) -> str:
-        """Get the record's toc-key"""
-
-        try:
-            if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                toc_key = (
-                    self.data[Fields.JOURNAL]
-                    .replace(" ", "-")
-                    .replace("\\", "")
-                    .replace("&", "and")
-                    .lower()
-                )
-                toc_key += (
-                    f"|{self.data[Fields.VOLUME]}"
-                    if (
-                        FieldValues.UNKNOWN
-                        != self.data.get(Fields.VOLUME, FieldValues.UNKNOWN)
-                    )
-                    else "|-"
-                )
-                toc_key += (
-                    f"|{self.data[Fields.NUMBER]}"
-                    if (
-                        FieldValues.UNKNOWN
-                        != self.data.get(Fields.NUMBER, FieldValues.UNKNOWN)
-                    )
-                    else "|-"
-                )
-
-            elif self.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-                toc_key = (
-                    self.data[Fields.BOOKTITLE]
-                    .replace(" ", "-")
-                    .replace("\\", "")
-                    .replace("&", "and")
-                    .lower()
-                    + f"|{self.data.get(Fields.YEAR, '')}"
-                )
-            else:
-                msg = (
-                    f"ENTRYTYPE {self.data[Fields.ENTRYTYPE]} "
-                    + f"({self.data['ID']}) not toc-identifiable"
-                )
-                raise colrev_exceptions.NotTOCIdentifiableException(msg)
-        except KeyError as exc:
-            raise colrev_exceptions.NotTOCIdentifiableException(
-                f"missing key {exc}"
-            ) from exc
-
-        return toc_key
-
-    def print_citation_format(self) -> None:
-        """Print the record as a citation"""
-        formatted_ref = (
-            f"{self.data.get(Fields.AUTHOR, '')} ({self.data.get(Fields.YEAR, '')}) "
-            + f"{self.data.get(Fields.TITLE, '')}. "
-            + f"{self.data.get(Fields.JOURNAL, '')}{self.data.get(Fields.BOOKTITLE, '')}, "
-            + f"{self.data.get(Fields.VOLUME, '')} ({self.data.get(Fields.NUMBER, '')})"
-        )
-        print(formatted_ref)
 
     def get_tei_filename(self) -> Path:
         """Get the TEI filename associated with the file (PDF)"""
@@ -1455,11 +927,22 @@ class Record:
             return True
         return False
 
-    @classmethod
-    def get_colrev_pdf_id(
-        cls,
-        pdf_path: Path,
-    ) -> str:  # pragma: no cover
-        """Generate the colrev_pdf_id"""
+    def merge(
+        self,
+        merging_record: Record,
+        *,
+        default_source: str,
+        preferred_masterdata_source_prefixes: Optional[list] = None,
+    ) -> None:
+        """General-purpose record merging
+        for preparation, curated/non-curated records and records with origins
 
-        return colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
+        Apply heuristics to create a fusion of the best fields based on
+        quality heuristics"""
+
+        record_merger.merge(
+            self,
+            merging_record,
+            default_source=default_source,
+            preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
+        )

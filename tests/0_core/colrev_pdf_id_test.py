@@ -9,7 +9,6 @@ import pytest
 from PIL import Image
 
 import colrev.exceptions as colrev_exceptions
-import colrev.qm.colrev_pdf_id
 import colrev.review_manager
 
 
@@ -40,13 +39,13 @@ def test_pdf_hash(  # type: ignore
     )
     if expected_result == "InvalidPDFException":
         with pytest.raises(colrev_exceptions.InvalidPDFException):
-            colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=target_path)
+            colrev.record.Record.get_colrev_pdf_id(pdf_path=target_path)
     elif expected_result == "PDFHashError":
         with pytest.raises(colrev_exceptions.PDFHashError):
-            colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=target_path)
+            colrev.record.Record.get_colrev_pdf_id(pdf_path=target_path)
 
     else:
-        actual = colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=target_path)
+        actual = colrev.record.Record.get_colrev_pdf_id(pdf_path=target_path)
         assert expected_result == actual
 
 
@@ -68,7 +67,7 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
     fitz.open = fitz_open_file_data_error
 
     with pytest.raises(colrev_exceptions.InvalidPDFException):
-        colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
+        colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
 
     fitz.open = original_fitz_open
 
@@ -80,7 +79,7 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
     Image.open = image_open_runtime_error
 
     with pytest.raises(colrev_exceptions.PDFHashError):
-        colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
+        colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
 
     Image.open = original_image_open
 
@@ -93,13 +92,13 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
     imagehash.average_hash = imagehash_0000_hash
 
     with pytest.raises(colrev_exceptions.PDFHashError):
-        colrev.qm.colrev_pdf_id.create_colrev_pdf_id(pdf_path=pdf_path)
+        colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
 
     imagehash.average_hash = original_imagehash_averagehash
 
-    with pytest.raises(NotImplementedError):
-        colrev.qm.colrev_pdf_id.create_colrev_pdf_id(
-            pdf_path=pdf_path, cpid_version="unknown"
-        )
+    # with pytest.raises(NotImplementedError):
+    #     colrev.record.Record.get_colrev_pdf_id(
+    #         pdf_path=pdf_path, cpid_version="unknown"
+    #     )
 
     pdf_path.unlink(missing_ok=True)

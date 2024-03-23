@@ -3,7 +3,6 @@
 import pytest
 
 import colrev.exceptions as colrev_exceptions
-import colrev.qm.colrev_id
 import colrev.record
 import colrev.review_manager
 
@@ -91,14 +90,12 @@ def test_colrev_id(  # type: ignore
 
     if colrev_id == "NotEnoughDataToIdentifyException":
         with pytest.raises(colrev_exceptions.NotEnoughDataToIdentifyException):
-            colrev.qm.colrev_id.create_colrev_id(
-                record=colrev.record.Record(record_dict),
+            colrev.record.Record(record_dict).create_colrev_id(
                 assume_complete=False,
             )
         return
 
-    actual = colrev.qm.colrev_id.create_colrev_id(
-        record=colrev.record.Record(record_dict),
+    actual = colrev.record.Record(record_dict).create_colrev_id(
         assume_complete=False,
     )
     assert actual == colrev_id

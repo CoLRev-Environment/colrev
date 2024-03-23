@@ -6,8 +6,6 @@ import logging
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.qm.colrev_id
-import colrev.qm.colrev_pdf_id
 from colrev.constants import Fields
 from colrev.constants import Operations
 from colrev.constants import RecordState

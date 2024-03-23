@@ -20,7 +20,6 @@ import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
 import colrev.qm.checkers.missing_field
-import colrev.qm.colrev_pdf_id
 import colrev.record
 import colrev.record_pdf
 import colrev.record_prep
@@ -502,7 +501,7 @@ class FilesSearchSource(JsonSchemaMixin):
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
 
-                colrev_pdf_id = colrev.qm.colrev_pdf_id.create_colrev_pdf_id(
+                colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(
                     pdf_path=Path(file_path)
                 )
                 new_record_object = local_index.retrieve_based_on_colrev_pdf_id(

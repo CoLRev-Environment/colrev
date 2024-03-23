@@ -27,8 +27,6 @@ from PyPDF2 import PdfFileWriter
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.qm.colrev_id
-import colrev.qm.colrev_pdf_id
 import colrev.record
 from colrev.constants import Colors
 from colrev.constants import Fields

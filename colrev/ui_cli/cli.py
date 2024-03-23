@@ -1672,7 +1672,6 @@ def pdf_get_man(
 
 def _print_pdf_hashes(*, pdf_path: Path) -> None:
     from PyPDF2 import PdfFileReader
-    import colrev.qm.colrev_pdf_id
     import colrev.record_pdf
 
     try:
