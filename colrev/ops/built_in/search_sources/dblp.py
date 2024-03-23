@@ -657,7 +657,6 @@ class DBLPSearchSource(JsonSchemaMixin):
 
                 dblp_feed.add_update_record(retrieved_record)
 
-                # TODO : extract as function (apply similarly in other search sources)
                 # Assign schema
                 retrieved_record.data[Fields.DBLP_KEY] = retrieved_record.data.pop(
                     "dblp_key"

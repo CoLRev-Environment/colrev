@@ -169,7 +169,7 @@ class Fields:
 
     # CITED_BY refers to forward citations
     # (as extracted from GoogleScholar cited_by for example)
-    # TODO : rename to NR_CITED_BY and use CITED_BY for a list of citing papers?
+    # Note : rename to CITED_BY_COUNT and use CITED_BY for a list of citing papers?
     CITED_BY = "cited_by"
 
     # REFERENCES is a list containing a dictionary for each reference in the bibliography

@@ -190,7 +190,8 @@ class Validate(colrev.operation.Operation):
         #     return True
 
         # def _gids_conflict(
-        #     self, *, main_record: colrev.record.record.Record, dupe_record: colrev.record.record.Record
+        #     self, *, main_record: colrev.record.record.Record,
+        #               sdupe_record: colrev.record.record.Record
         # ) -> bool:
         #     gid_conflict = False
         #     if Fields.DOI in main_record.data and Fields.DOI in dupe_record.data:
