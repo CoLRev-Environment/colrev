@@ -281,7 +281,10 @@ class Sync:
                     data={
                         k: v
                         for k, v in record_to_import.data.items()
-                        if k not in c.FieldSet.PROVENANCE_KEYS
+                        if k
+                        not in c.FieldSet.PROVENANCE_KEYS
+                        + [Fields.SCREENING_CRITERIA, Fields.PRESCREEN_EXCLUSION]
+                        and "." not in k
                     }
                 )
                 records.append(record_to_import.get_data())
