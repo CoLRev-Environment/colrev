@@ -2369,6 +2369,12 @@ def env(
         package_manager.update_package_list()
         return
 
+    if index:
+        local_index = colrev.review_manager.ReviewManager.get_local_index()
+        local_index.index()
+        local_index.load_journal_rankings()
+        return
+
     # The following options may need a review_manager
 
     review_manager = get_review_manager(
@@ -2378,12 +2384,6 @@ def env(
             "force_mode": True,
         },
     )
-
-    if index:
-        local_index = review_manager.get_local_index()
-        local_index.index()
-        local_index.load_journal_rankings()
-        return
 
     if install:
         env_resources = review_manager.get_resources()
