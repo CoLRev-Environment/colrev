@@ -122,13 +122,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
                 assert returned_record[Fields.URL] == test_record[Fields.URL]
             else:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException(
                         self._availability_exception_message
                     )
         except (requests.exceptions.RequestException, IndexError) as exc:
             print(exc)
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 ) from exc

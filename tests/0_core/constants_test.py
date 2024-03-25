@@ -3,6 +3,7 @@
 import colrev.env.utils
 import colrev.settings
 from colrev.constants import IDPattern
+from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import ScreenCriterionType
 from colrev.constants import SearchType
@@ -45,3 +46,7 @@ def test_sharing_req() -> None:
         "screened",
         "completed",
     ]
+
+
+def test_operation_type_print() -> None:
+    print(OperationsType.search)

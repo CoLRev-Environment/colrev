@@ -111,10 +111,10 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 timeout=30,
             )
             if ret.status_code != 200:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException as exc:
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "OPENLIBRARY"
                 ) from exc

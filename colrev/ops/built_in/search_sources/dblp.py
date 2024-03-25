@@ -149,10 +149,10 @@ class DBLPSearchSource(JsonSchemaMixin):
                 assert dblp_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert dblp_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("DBLP")
         except requests.exceptions.RequestException as exc:
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("DBLP") from exc
 
     def _get_dblp_venue(

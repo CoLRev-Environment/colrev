@@ -38,13 +38,14 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
         self.prep_operation = prep_operation
+        self.review_manager = prep_operation.review_manager
 
     def prepare(
         self, record: colrev.record.record_prep.PrepRecord
     ) -> colrev.record.record.Record:
         """Prepare the record by removing broken IDs (invalid DOIs/ISBNs)"""
 
-        if self.prep_operation.polish and not self.prep_operation.force_mode:
+        if self.prep_operation.polish and not self.review_manager.force_mode:
             return record
 
         if (

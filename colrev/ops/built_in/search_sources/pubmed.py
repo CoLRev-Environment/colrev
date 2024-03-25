@@ -208,11 +208,11 @@ class PubMedSearchSource(JsonSchemaMixin):
                 assert returned_record_dict[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert returned_record_dict[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("Pubmed")
         except (requests.exceptions.RequestException, IndexError, KeyError) as exc:
             print(exc)
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("Pubmed") from exc
 
     @classmethod

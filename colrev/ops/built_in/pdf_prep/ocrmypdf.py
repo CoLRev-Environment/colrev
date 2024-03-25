@@ -29,6 +29,7 @@ class OCRMyPDF(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
+    OCRMYPDF_IMAGE = "jbarlow83/ocrmypdf:latest"
 
     def __init__(
         self,
@@ -40,10 +41,10 @@ class OCRMyPDF(JsonSchemaMixin):
         self.review_manager = pdf_prep_operation.review_manager
 
         if not self.review_manager.in_ci_environment():
-            self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
             self.review_manager.environment_manager.build_docker_image(
-                imagename=self.ocrmypdf_image
+                imagename=self.OCRMYPDF_IMAGE
             )
+        pdf_prep_operation.docker_images_to_stop.append(self.OCRMYPDF_IMAGE)
 
     def _apply_ocr(
         self,
@@ -73,7 +74,7 @@ class OCRMyPDF(JsonSchemaMixin):
 
         client = docker.from_env(timeout=120)
         client.containers.run(
-            image=self.ocrmypdf_image,
+            image=self.OCRMYPDF_IMAGE,
             command=args,
             auto_remove=True,
             user=f"{os.geteuid()}:{os.getegid()}",

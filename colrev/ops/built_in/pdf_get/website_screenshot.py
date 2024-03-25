@@ -31,6 +31,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
+    CHROME_BROWSERLESS_IMAGE = "browserless/chrome:latest"
 
     def __init__(
         self,
@@ -39,12 +40,12 @@ class WebsiteScreenshot(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-        self.chrome_browserless_image = "browserless/chrome:latest"
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
         self.review_manager.environment_manager.build_docker_image(
-            imagename=self.chrome_browserless_image
+            imagename=self.CHROME_BROWSERLESS_IMAGE
         )
+        pdf_get_operation.docker_images_to_stop.append(self.CHROME_BROWSERLESS_IMAGE)
 
     def _start_screenshot_service(self) -> None:
         """Start the screenshot service"""
@@ -62,9 +63,9 @@ class WebsiteScreenshot(JsonSchemaMixin):
             running_containers = [
                 str(container.image) for container in client.containers.list()
             ]
-            if self.chrome_browserless_image not in running_containers:
+            if self.CHROME_BROWSERLESS_IMAGE not in running_containers:
                 client.containers.run(
-                    self.chrome_browserless_image,
+                    self.CHROME_BROWSERLESS_IMAGE,
                     ports={"3000/tcp": ("127.0.0.1", 3000)},
                     auto_remove=True,
                     detach=True,

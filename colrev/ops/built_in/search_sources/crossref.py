@@ -154,13 +154,13 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 assert returned_record.data[Fields.TITLE] == test_rec[Fields.TITLE]
                 assert returned_record.data[Fields.AUTHOR] == test_rec[Fields.AUTHOR]
             else:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException(
                         self._availability_exception_message
                     )
         except (requests.exceptions.RequestException, IndexError) as exc:
             print(exc)
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 ) from exc

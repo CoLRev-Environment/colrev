@@ -75,7 +75,7 @@ class BibliographyExport(JsonSchemaMixin):
     # https://github.com/zotero/translators/
     # https://www.zotero.org/support/dev/translators
     # https://github.com/zotero/translation-server/blob/master/src/formats.js
-    IMAGE_NAME = "zotero/translation-server:2.0.4"
+    ZOTERO_TRANSLATION_SERVER_IMAGE_NAME = "zotero/translation-server:2.0.4"
 
     def __init__(
         self,
@@ -96,7 +96,13 @@ class BibliographyExport(JsonSchemaMixin):
 
         if not self.review_manager.in_ci_environment():
             environment_manager = self.review_manager.get_environment_manager()
-            environment_manager.build_docker_image(imagename=self.IMAGE_NAME)
+            environment_manager.build_docker_image(
+                imagename=self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
+            )
+
+        data_operation.docker_images_to_stop.append(
+            self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
+        )
 
     def _pybtex_conversion(self, *, selected_records: dict) -> None:
         self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
@@ -274,7 +280,7 @@ class BibliographyExport(JsonSchemaMixin):
         try:
             client = docker.from_env()
             for container in client.containers.list():
-                if self.IMAGE_NAME in str(container.image):
+                if self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME in str(container.image):
                     container.stop_zotero()
         except DockerException as exc:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -291,7 +297,7 @@ class BibliographyExport(JsonSchemaMixin):
 
             client = docker.from_env()
             _ = client.containers.run(
-                self.IMAGE_NAME,
+                self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME,
                 ports={"1969/tcp": ("127.0.0.1", 1969)},
                 auto_remove=True,
                 detach=True,

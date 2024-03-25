@@ -17,7 +17,7 @@ from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.record.record_state_model import RecordStateModel
 
-if typing.TYPE_CHECKING: # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -26,9 +26,6 @@ F = TypeVar("F", bound=Callable[..., Any])
 class Operation:
     """Operations correspond to the work steps in a CoLRev project"""
 
-    # pylint: disable=too-few-public-methods
-
-    force_mode: bool
     type: OperationsType
 
     def __init__(
@@ -39,25 +36,14 @@ class Operation:
         notify_state_transition_operation: bool = True,
     ) -> None:
         self.review_manager = review_manager
-        self.force_mode = self.review_manager.force_mode
-
         self.type = operations_type
-
         self.notify_state_transition_operation = notify_state_transition_operation
-        if notify_state_transition_operation:
-            self.review_manager.notify(operation=self)
-        else:
-            self.review_manager.notify(operation=self, state_transition=False)
-
+        self.notify(state_transition=notify_state_transition_operation)
         self.cpus = 4
-
         self.docker_images_to_stop: typing.List[str] = []
 
         # Note: the following call seems to block the flow (if debug is enabled)
         # self.review_manager.logger.debug(f"Created {self.type} operation")
-
-        # Note: we call review_manager.notify() in the subclasses
-        # to make sure that the review_manager calls the right check_preconditions()
 
     # pylint: disable=too-many-nested-blocks
     @classmethod
@@ -78,24 +64,27 @@ class Operation:
 
         return decorator_func
 
+    def conclude(self) -> None:  # pragma: no cover
+        """Conclude the operation (stop Docker containers)"""
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if any(x in container.image.tags for x in self.docker_images_to_stop):
+                    container.stop()
+        except DockerException:
+            pass
+
     def _check_record_state_model_precondition(self) -> None:
         RecordStateModel.check_operation_precondition(self)
 
     def _require_clean_repo_general(
         self,
         *,
-        git_repo: Optional[git.Repo] = None,
-        ignore_pattern: Optional[list] = None,
+        ignored_files: Optional[list] = None,
     ) -> bool:
-        if git_repo is None:
-            git_repo = git.Repo(self.review_manager.path)
 
         # Note : not considering untracked files.
-
-        if len(git_repo.index.diff("HEAD")) == 0:
-            unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
-            if Filepaths.RECORDS_FILE in unstaged_changes:
-                git_repo.index.add([Filepaths.RECORDS_FILE])
+        git_repo = git.Repo(self.review_manager.path)
 
         # Principle: working tree always has to be clean
         # because processing functions may change content
@@ -103,42 +92,40 @@ class Operation:
             changed_files = [item.a_path for item in git_repo.index.diff(None)]
             raise colrev_exceptions.UnstagedGitChangesError(changed_files)
 
-        if git_repo.is_dirty():
-            if ignore_pattern is None:
-                changed_files = [item.a_path for item in git_repo.index.diff(None)] + [
-                    x.a_path
-                    for x in git_repo.head.commit.diff()
-                    if x.a_path not in [str(Filepaths.STATUS_FILE)]
-                ]
-                if len(changed_files) > 0:
-                    raise colrev_exceptions.CleanRepoRequiredError(changed_files, "")
-            else:
-                changed_files = [
-                    item.a_path
-                    for item in git_repo.index.diff(None)
-                    if not any(str(ip) in item.a_path for ip in ignore_pattern)
-                ] + [
-                    x.a_path
-                    for x in git_repo.head.commit.diff()
-                    if not any(str(ip) in x.a_path for ip in ignore_pattern)
-                ]
-                if str(Filepaths.STATUS_FILE) in changed_files:
-                    changed_files.remove(str(Filepaths.STATUS_FILE))
-                if changed_files:
-                    raise colrev_exceptions.CleanRepoRequiredError(
-                        changed_files, ",".join([str(x) for x in ignore_pattern])
-                    )
+        if not git_repo.is_dirty():
+            return True
+
+        ignored_file_list = [str(Filepaths.STATUS_FILE)]
+        if ignored_files:
+            ignored_file_list += ignored_files
+        ignored_file_list = [str(x).replace("\\", "/") for x in ignored_file_list]
+
+        changed_files = [
+            item.a_path
+            for item in git_repo.index.diff(None)
+            if not any(ip in item.a_path.replace("\\", "/") for ip in ignored_file_list)
+        ] + [
+            item.a_path
+            for item in git_repo.head.commit.diff()
+            if not any(ip in item.a_path.replace("\\", "/") for ip in ignored_file_list)
+        ]
+
+        if changed_files:
+            raise colrev_exceptions.CleanRepoRequiredError(
+                changed_files, ",".join(ignored_file_list)
+            )
+
         return True
 
     def check_precondition(self) -> None:
         """Check the operation precondition"""
 
-        if self.force_mode:
+        if self.review_manager.force_mode:
             return
 
         if OperationsType.load == self.type:
             self._require_clean_repo_general(
-                ignore_pattern=[
+                ignored_files=[
                     Filepaths.SEARCH_DIR,
                     Filepaths.SETTINGS_FILE,
                 ]
@@ -146,12 +133,12 @@ class Operation:
             self._check_record_state_model_precondition()
 
         elif OperationsType.prep == self.type:
-            if self.notify_state_transition_operation:
-                self._require_clean_repo_general()
-                self._check_record_state_model_precondition()
+            # if self.notify_state_transition_operation:
+            self._require_clean_repo_general()
+            self._check_record_state_model_precondition()
 
         elif OperationsType.prep_man == self.type:
-            self._require_clean_repo_general(ignore_pattern=[Filepaths.RECORDS_FILE])
+            self._require_clean_repo_general(ignored_files=[Filepaths.RECORDS_FILE_GIT])
             self._check_record_state_model_precondition()
 
         elif OperationsType.dedupe == self.type:
@@ -163,11 +150,11 @@ class Operation:
             self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_get == self.type:
-            self._require_clean_repo_general(ignore_pattern=[Filepaths.PDF_DIR])
+            self._require_clean_repo_general(ignored_files=[Filepaths.PDF_DIR])
             self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_get_man == self.type:
-            self._require_clean_repo_general(ignore_pattern=[Filepaths.PDF_DIR])
+            self._require_clean_repo_general(ignored_files=[Filepaths.PDF_DIR])
             self._check_record_state_model_precondition()
 
         elif OperationsType.pdf_prep == self.type:
@@ -179,24 +166,18 @@ class Operation:
             self._check_record_state_model_precondition()
 
         elif OperationsType.data == self.type:
-            # __require_clean_repo_general(
-            #     ignore_pattern=[
-            #         # data.csv, paper.md etc.?,
-            #     ]
-            # )
             self._check_record_state_model_precondition()
 
         # ie., implicit pass for check, pdf_prep_man
 
-    def conclude(self) -> None:
-        """Conclude the operation (stop Docker containers)"""
-        try:
-            client = docker.from_env()
-            for container in client.containers.list():
-                if any(x in container.image.tags for x in self.docker_images_to_stop):
-                    container.stop()
-        except DockerException:
-            pass
+    def notify(self, *, state_transition: bool = True) -> None:
+        """Notify the review_manager about the next operation"""
+
+        self.review_manager.notified_next_operation = self.type
+        if state_transition:
+            self.check_precondition()
+        if hasattr(self.review_manager, "dataset"):
+            self.review_manager.dataset.reset_log_if_no_changes()
 
 
 class CheckOperation(Operation):

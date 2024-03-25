@@ -265,22 +265,6 @@ class ReviewManager:
 
         return self.dataset.get_format_report()
 
-    def notify(
-        self, *, operation: colrev.operation.Operation, state_transition: bool = True
-    ) -> None:
-        """Notify the review_manager about the next operation"""
-
-        try:
-            self.notified_next_operation = operation.type
-            if state_transition:
-                operation.check_precondition()
-            self.dataset.reset_log_if_no_changes()
-        except AttributeError as exc:
-            if self.force_mode:
-                pass
-            else:
-                raise exc
-
     def update_status_yaml(
         self, *, add_to_git: bool = True, records: Optional[dict] = None
     ) -> None:

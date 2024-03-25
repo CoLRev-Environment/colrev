@@ -171,8 +171,6 @@ class Dataset:
     ) -> dict:
         """Load the records
 
-        - requires review_manager.notify(...)
-
         header_only:
 
         {"Staehr2010": {'ID': 'Staehr2010',
@@ -403,7 +401,7 @@ class Dataset:
     # GIT operations -----------------------------------------------
 
     def get_repo(self) -> git.Repo:
-        """Get the git repository object (requires review_manager.notify(...))"""
+        """Get the git repository object"""
 
         if self.review_manager.notified_next_operation is None:
             raise colrev_exceptions.ReviewManagerNotNotifiedError()

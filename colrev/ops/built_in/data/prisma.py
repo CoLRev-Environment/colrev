@@ -37,6 +37,7 @@ class PRISMA(JsonSchemaMixin):
         diagram_path: List[Path] = field(default_factory=lambda: [Path("PRISMA.png")])
 
     settings_class = PRISMASettings
+    PRISMA_IMAGE = "colrev/prisma:latest"
 
     def __init__(
         self,
@@ -66,10 +67,10 @@ class PRISMA(JsonSchemaMixin):
         ]
 
         if not self.review_manager.in_ci_environment():
-            self.prisma_image = "colrev/prisma:latest"
             self.review_manager.environment_manager.build_docker_image(
-                imagename=self.prisma_image
+                imagename=self.PRISMA_IMAGE
             )
+        data_operation.docker_images_to_stop.append(self.PRISMA_IMAGE)
 
     # pylint: disable=unused-argument
     @classmethod
@@ -171,11 +172,11 @@ class PRISMA(JsonSchemaMixin):
 
             client = docker.from_env()
 
-            msg = f"Running docker container created from image {self.prisma_image}"
+            msg = f"Running docker container created from image {self.PRISMA_IMAGE}"
             self.review_manager.report_logger.info(msg)
 
             client.containers.run(
-                image=self.prisma_image,
+                image=self.PRISMA_IMAGE,
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],
