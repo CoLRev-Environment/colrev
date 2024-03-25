@@ -28,10 +28,10 @@ from colrev.constants import Colors
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
-
 
 # pylint: disable=too-many-lines
 
@@ -83,7 +83,7 @@ class Prep(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.prep,
+            operations_type=OperationsType.prep,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.notify_state_transition_operation = notify_state_transition_operation

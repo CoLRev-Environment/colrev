@@ -17,6 +17,7 @@ import colrev.operation
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.record.record_state_model import RecordStateModel
 
@@ -33,9 +34,7 @@ class Checker:
     ) -> None:
         self.review_manager = review_manager
 
-        self.review_manager.notified_next_operation = (
-            colrev.operation.OperationsType.check
-        )
+        self.review_manager.notified_next_operation = OperationsType.check
 
     def get_colrev_versions(self) -> list[str]:
         """Get the colrev version as a list: (last_version, current_version)"""

@@ -21,6 +21,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
@@ -41,7 +42,7 @@ class Upgrade(colrev.operation.Operation):
         review_manager.force_mode = True
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
         review_manager.force_mode = prev_force_mode

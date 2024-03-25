@@ -27,6 +27,7 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import OperationsType
 from colrev.constants import SearchType
 
 # pylint: disable=too-many-lines
@@ -1122,49 +1123,49 @@ class PackageManager:
 
         settings = operation.review_manager.settings
         package_type_dict = {
-            colrev.operation.OperationsType.search: {
+            OperationsType.search: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.search_source,
                 "endpoint_location": settings.sources,
             },
-            colrev.operation.OperationsType.prep: {
+            OperationsType.prep: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.prep,
                 "endpoint_location": settings.prep.prep_rounds[
                     0
                 ].prep_package_endpoints,
             },
-            colrev.operation.OperationsType.prep_man: {
+            OperationsType.prep_man: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.prep_man,
                 "endpoint_location": settings.prep.prep_man_package_endpoints,
             },
-            colrev.operation.OperationsType.dedupe: {
+            OperationsType.dedupe: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.dedupe,
                 "endpoint_location": settings.dedupe.dedupe_package_endpoints,
             },
-            colrev.operation.OperationsType.prescreen: {
+            OperationsType.prescreen: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.prescreen,
                 "endpoint_location": settings.prescreen.prescreen_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_get: {
+            OperationsType.pdf_get: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get,
                 "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_get_man: {
+            OperationsType.pdf_get_man: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get_man,
                 "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_prep: {
+            OperationsType.pdf_prep: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep,
                 "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_prep_man: {
+            OperationsType.pdf_prep_man: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
                 "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
             },
-            colrev.operation.OperationsType.screen: {
+            OperationsType.screen: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.screen,
                 "endpoint_location": settings.screen.screen_package_endpoints,
             },
-            colrev.operation.OperationsType.data: {
+            OperationsType.data: {
                 "package_type": colrev.env.package_manager.PackageEndpointType.data,
                 "endpoint_location": settings.data.data_package_endpoints,
             },

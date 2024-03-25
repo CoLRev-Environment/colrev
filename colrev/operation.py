@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import typing
-from enum import auto
-from enum import Enum
 from typing import Any
 from typing import Callable
 from typing import Optional
@@ -17,35 +15,11 @@ from docker.errors import DockerException
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.record.record_state_model import RecordStateModel
 
 
 F = TypeVar("F", bound=Callable[..., Any])
-
-
-class OperationsType(Enum):
-    """Operation types correspond to the main state transitions (see RecordStateModel)"""
-
-    # pylint: disable=invalid-name
-
-    search = auto()
-    load = auto()
-    prep = auto()
-    prep_man = auto()
-    dedupe = auto()
-    prescreen = auto()
-    pdf_get = auto()
-    pdf_get_man = auto()
-    pdf_prep = auto()
-    pdf_prep_man = auto()
-    screen = auto()
-    data = auto()
-
-    format = auto()
-    check = auto()
-
-    def __str__(self) -> str:
-        return f"{self.name}"
 
 
 class Operation:

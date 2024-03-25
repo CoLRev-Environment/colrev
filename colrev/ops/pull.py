@@ -5,6 +5,7 @@ from __future__ import annotations
 import colrev.operation
 import colrev.record.record
 from colrev.constants import Colors
+from colrev.constants import OperationsType
 
 # pylint: disable=too-few-public-methods
 
@@ -17,7 +18,7 @@ class Pull(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.format,
+            operations_type=OperationsType.format,
         )
 
     @colrev.operation.Operation.decorate()

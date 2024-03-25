@@ -9,6 +9,7 @@ from pathlib import Path
 import colrev.operation
 import colrev.settings
 from colrev.constants import Fields
+from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
@@ -20,7 +21,7 @@ class Distribute(colrev.operation.Operation):
         # pylint: disable=duplicate-code
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
         self.review_manager = review_manager

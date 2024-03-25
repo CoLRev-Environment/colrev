@@ -13,6 +13,7 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
@@ -28,7 +29,7 @@ class Repare(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
         # fix file no longer available

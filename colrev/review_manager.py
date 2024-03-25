@@ -26,6 +26,7 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 
 
 class ReviewManager:
@@ -254,7 +255,7 @@ class ReviewManager:
         (Entrypoint for pre-commit hooks)
         """
 
-        self.notified_next_operation = colrev.operation.OperationsType.check
+        self.notified_next_operation = OperationsType.check
         advisor = self.get_advisor()
         sharing_advice = advisor.get_sharing_instructions()
         return sharing_advice

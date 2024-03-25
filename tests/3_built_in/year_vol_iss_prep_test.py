@@ -6,6 +6,7 @@ import colrev.ops.built_in.prep.year_vol_iss_prep
 import colrev.ops.prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import OperationsType
 
 
 @pytest.fixture(name="yvip")
@@ -14,9 +15,7 @@ def get_yvip(
 ) -> colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep:
     """Get the YearVolIssPrep fixture"""
     settings = {"endpoint": "colrev.exclude_languages"}
-    prep_operation.review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    prep_operation.review_manager.notified_next_operation = OperationsType.check
     yvip = colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep(
         prep_operation=prep_operation, settings=settings
     )

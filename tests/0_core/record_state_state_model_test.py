@@ -2,6 +2,7 @@
 """Tests for the RecordState model"""
 import pytest
 
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.record.record_state_model import RecordStateModel
 
@@ -141,21 +142,21 @@ def test_record_state_model() -> None:
 def test_get_valid_transitions() -> None:
     """Test get_valid_transitions"""
 
-    expected = {"load"}
+    expected = {OperationsType.load}
     actual = RecordStateModel.get_valid_transitions(state=RecordState.md_retrieved)
     assert expected == actual
 
-    expected = {"prep"}
+    expected = {OperationsType.prep}
     actual = RecordStateModel.get_valid_transitions(state=RecordState.md_imported)
     assert expected == actual
 
-    expected = {"prep_man"}
+    expected = {OperationsType.prep_man}
     actual = RecordStateModel.get_valid_transitions(
         state=RecordState.md_needs_manual_preparation
     )
     assert expected == actual
 
-    expected = {"dedupe"}
+    expected = {OperationsType.dedupe}
     actual = RecordStateModel.get_valid_transitions(state=RecordState.md_prepared)
     assert expected == actual
 
@@ -165,27 +166,27 @@ def test_get_valid_transitions() -> None:
     )
     assert expected == actual
 
-    expected = {"pdf_get"}
+    expected = {OperationsType.pdf_get}
     actual = RecordStateModel.get_valid_transitions(
         state=RecordState.rev_prescreen_included
     )
     assert expected == actual
 
-    expected = {"pdf_prep"}
+    expected = {OperationsType.pdf_prep}
     actual = RecordStateModel.get_valid_transitions(state=RecordState.pdf_imported)
     assert expected == actual
 
-    expected = {"pdf_get_man"}
+    expected = {OperationsType.pdf_get_man}
     actual = RecordStateModel.get_valid_transitions(
         state=RecordState.pdf_needs_manual_retrieval
     )
     assert expected == actual
 
-    expected = {"screen"}
+    expected = {OperationsType.screen}
     actual = RecordStateModel.get_valid_transitions(state=RecordState.pdf_prepared)
     assert expected == actual
 
-    expected = {"pdf_prep_man"}
+    expected = {OperationsType.pdf_prep_man}
     actual = RecordStateModel.get_valid_transitions(
         state=RecordState.pdf_needs_manual_preparation
     )
@@ -195,7 +196,7 @@ def test_get_valid_transitions() -> None:
     actual = RecordStateModel.get_valid_transitions(state=RecordState.rev_excluded)
     assert expected == actual
 
-    expected = {"data"}
+    expected = {OperationsType.data}
     actual = RecordStateModel.get_valid_transitions(state=RecordState.rev_included)
     assert expected == actual
 

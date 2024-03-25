@@ -11,6 +11,7 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 
 
 class Push(colrev.operation.Operation):
@@ -19,7 +20,7 @@ class Push(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
         )
 
     @colrev.operation.Operation.decorate()

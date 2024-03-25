@@ -12,6 +12,7 @@ import colrev.ops.built_in.prescreen.prescreen_table
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 
@@ -26,7 +27,7 @@ class Prescreen(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.prescreen,
+            operations_type=OperationsType.prescreen,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

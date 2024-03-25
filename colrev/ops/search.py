@@ -15,6 +15,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
@@ -30,7 +31,7 @@ class Search(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.search,
+            operations_type=OperationsType.search,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.review_manager = review_manager

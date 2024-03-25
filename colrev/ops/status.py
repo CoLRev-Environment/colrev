@@ -16,6 +16,7 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.loader.bib import BIBLoader
 from colrev.record.record_state_model import RecordStateModel
@@ -27,7 +28,7 @@ class Status(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
         )
 
     def get_analytics(self) -> dict:
@@ -273,7 +274,10 @@ class StatusStats:
                 if len(predecessors) > 0:
                     if predecessors[0]["trigger"] != "init":
                         # ignore _man versions to avoid double-counting:
-                        if "_man" not in predecessors[0]["trigger"]:
+                        if (
+                            predecessors[0]["trigger"]
+                            not in OperationsType.get_manual_extra_operations()
+                        ):
                             self.completed_atomic_steps += getattr(
                                 self.overall, str(predecessor["dest"])
                             )

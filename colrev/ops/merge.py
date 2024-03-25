@@ -12,7 +12,7 @@ import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
-
+from colrev.constants import OperationsType
 
 # pylint: disable=too-few-public-methods
 
@@ -27,7 +27,7 @@ class Merge(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
 

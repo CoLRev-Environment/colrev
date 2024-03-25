@@ -15,6 +15,7 @@ import colrev.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 
@@ -24,7 +25,7 @@ class Validate(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
         )
 
         self.cpus = 4

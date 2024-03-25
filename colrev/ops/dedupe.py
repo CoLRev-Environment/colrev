@@ -23,6 +23,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
@@ -47,7 +48,7 @@ class Dedupe(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.dedupe,
+            operations_type=OperationsType.dedupe,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)

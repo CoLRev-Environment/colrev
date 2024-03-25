@@ -14,6 +14,7 @@ import colrev.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
@@ -29,7 +30,7 @@ class PDFPrepMan(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.pdf_prep_man,
+            operations_type=OperationsType.pdf_prep_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

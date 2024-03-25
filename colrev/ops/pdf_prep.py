@@ -17,6 +17,7 @@ import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 
@@ -38,7 +39,7 @@ class PDFPrep(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.pdf_prep,
+            operations_type=OperationsType.pdf_prep,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

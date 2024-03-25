@@ -1,4 +1,5 @@
 import colrev.review_manager
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 # flake8: noqa: E501
@@ -215,9 +216,7 @@ def test_get_changed_records(
     # Retrieve the last commit SHA
     last_commit_sha = base_repo_review_manager.dataset.get_last_commit_sha()
 
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Retrieve changed records based on the last commit
     changed_records = validate_operation._get_changed_records(

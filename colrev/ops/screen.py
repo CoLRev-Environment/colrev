@@ -10,6 +10,7 @@ import colrev.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 
@@ -24,7 +25,7 @@ class Screen(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.screen,
+            operations_type=OperationsType.screen,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

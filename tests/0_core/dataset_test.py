@@ -9,6 +9,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import ExitCodes
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 # flake8: noqa: E501
@@ -151,9 +152,7 @@ def test_get_format_report(
     """Test the get_format_report method."""
     # TODO : develop the following test
 
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    base_repo_review_manager.notified_next_operation = OperationsType.check
 
     records = base_repo_review_manager.dataset.load_records_dict()
     base_repo_review_manager.dataset.save_records_dict(records)
@@ -313,9 +312,7 @@ def test_get_repo(
     with pytest.raises(colrev_exceptions.ReviewManagerNotNotifiedError):
         base_repo_review_manager.dataset.get_repo()
 
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
     base_repo_review_manager.dataset.get_repo()
@@ -395,9 +392,7 @@ def test_has_changes_staged_no_changes(
 ) -> None:
     """Test has_changes method with change_type 'staged' when there are no staged changes."""
 
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
     has_staged_changes = base_repo_review_manager.dataset.has_record_changes(
@@ -418,9 +413,7 @@ def test_has_changes_unstaged_changes(
     new_file_path.write_text("This is an unstaged file.")
     # Note: Do not stage the file to keep it as an unstaged change
 
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
     has_changes = base_repo_review_manager.dataset.has_changes(
@@ -439,9 +432,7 @@ def test_has_changes_unstaged_no_changes(
     # Ensure there are no unstaged changes by staging any existing changes
     base_repo_review_manager.dataset._git_repo.git.add("-A")
 
-    base_repo_review_manager.notified_next_operation = (
-        colrev.operation.OperationsType.check
-    )
+    base_repo_review_manager.notified_next_operation = OperationsType.check
 
     # Test
     has_changes = base_repo_review_manager.dataset.has_record_changes(

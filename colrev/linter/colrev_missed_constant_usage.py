@@ -13,7 +13,7 @@ from colrev.constants import DefectCodes
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.constants import Operations
+from colrev.constants import OperationsType
 
 if TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
@@ -40,7 +40,11 @@ class MissedConstantUsageChecker(checkers.BaseChecker):
         [getattr(ENTRYTYPES, v) for v in dir(ENTRYTYPES) if not v.startswith("__")]
         + [getattr(FieldValues, v) for v in dir(FieldValues) if not v.startswith("__")]
         + [getattr(DefectCodes, v) for v in dir(DefectCodes) if not v.startswith("__")]
-        + [getattr(Operations, v) for v in dir(Operations) if not v.startswith("__")]
+        + [
+            getattr(OperationsType, v)
+            for v in dir(OperationsType)
+            if not v.startswith("__")
+        ]
     )
 
     @only_required_for_messages("colrev-missed-constant-usage")

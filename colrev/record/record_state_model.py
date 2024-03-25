@@ -4,32 +4,11 @@ from __future__ import annotations
 
 import logging
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.operation
 from colrev.constants import Fields
-from colrev.constants import Operations
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
-
-non_processing_transitions = [
-    [
-        {
-            "trigger": "format",
-            "source": state,
-            "dest": state,
-        },
-        {
-            "trigger": "explore",
-            "source": state,
-            "dest": state,
-        },
-        {
-            "trigger": "check",
-            "source": state,
-            "dest": state,
-        },
-    ]
-    for state in list(RecordState)
-]
 
 
 class RecordStateModel:
@@ -37,110 +16,91 @@ class RecordStateModel:
 
     transitions = [
         {
-            "trigger": Operations.LOAD,
+            "trigger": OperationsType.load,
             "source": RecordState.md_retrieved,
             "dest": RecordState.md_imported,
         },
         {
-            "trigger": Operations.PREP,
+            "trigger": OperationsType.prep,
             "source": RecordState.md_imported,
             "dest": RecordState.md_needs_manual_preparation,
         },
         {
-            "trigger": Operations.PREP,
+            "trigger": OperationsType.prep,
             "source": RecordState.md_imported,
             "dest": RecordState.md_prepared,
         },
         {
-            "trigger": Operations.PREP_MAN,
+            "trigger": OperationsType.prep_man,
             "source": RecordState.md_needs_manual_preparation,
             "dest": RecordState.md_prepared,
         },
         {
-            "trigger": Operations.DEDUPE,
+            "trigger": OperationsType.dedupe,
             "source": RecordState.md_prepared,
             "dest": RecordState.md_processed,
         },
         {
-            "trigger": Operations.PRESCREEN,
+            "trigger": OperationsType.prescreen,
             "source": RecordState.md_processed,
             "dest": RecordState.rev_prescreen_excluded,
         },
         {
-            "trigger": Operations.PRESCREEN,
+            "trigger": OperationsType.prescreen,
             "source": RecordState.md_processed,
             "dest": RecordState.rev_prescreen_included,
         },
         {
-            "trigger": Operations.PDF_GET,
+            "trigger": OperationsType.pdf_get,
             "source": RecordState.rev_prescreen_included,
             "dest": RecordState.pdf_imported,
         },
         {
-            "trigger": Operations.PDF_GET,
+            "trigger": OperationsType.pdf_get,
             "source": RecordState.rev_prescreen_included,
             "dest": RecordState.pdf_needs_manual_retrieval,
         },
         {
-            "trigger": Operations.PDF_GET_MAN,
+            "trigger": OperationsType.pdf_get_man,
             "source": RecordState.pdf_needs_manual_retrieval,
             "dest": RecordState.pdf_not_available,
         },
         {
-            "trigger": Operations.PDF_GET_MAN,
+            "trigger": OperationsType.pdf_get_man,
             "source": RecordState.pdf_needs_manual_retrieval,
             "dest": RecordState.pdf_imported,
         },
         {
-            "trigger": Operations.PDF_PREP,
+            "trigger": OperationsType.pdf_prep,
             "source": RecordState.pdf_imported,
             "dest": RecordState.pdf_needs_manual_preparation,
         },
         {
-            "trigger": Operations.PDF_PREP,
+            "trigger": OperationsType.pdf_prep,
             "source": RecordState.pdf_imported,
             "dest": RecordState.pdf_prepared,
         },
         {
-            "trigger": Operations.PDF_PREP_MAN,
+            "trigger": OperationsType.pdf_prep_man,
             "source": RecordState.pdf_needs_manual_preparation,
             "dest": RecordState.pdf_prepared,
         },
         {
-            "trigger": Operations.SCREEN,
+            "trigger": OperationsType.screen,
             "source": RecordState.pdf_prepared,
             "dest": RecordState.rev_excluded,
         },
         {
-            "trigger": Operations.SCREEN,
+            "trigger": OperationsType.screen,
             "source": RecordState.pdf_prepared,
             "dest": RecordState.rev_included,
         },
         {
-            "trigger": Operations.DATA,
+            "trigger": OperationsType.data,
             "source": RecordState.rev_included,
             "dest": RecordState.rev_synthesized,
         },
     ]
-
-    transitions_non_processing = [
-        item for sublist in non_processing_transitions for item in sublist
-    ]
-
-    # from transitions import Machine
-    # def __init__(
-    #     self,
-    #     *,
-    #     state: RecordState,
-    # ) -> None:
-    #     self.state = state
-
-    #     self.machine = Machine(
-    #         model=self,
-    #         states=RecordState,
-    #         transitions=self.transitions + self.transitions_non_processing,
-    #         initial=self.state,
-    #     )
 
     @classmethod
     def get_valid_transitions(cls, *, state: RecordState) -> set:
@@ -182,12 +142,12 @@ class RecordStateModel:
             return {el[Fields.STATUS] for el in record_header_list}
 
         if operation.review_manager.settings.project.delay_automated_processing:
-            start_states: list[str] = [
-                str(x["source"])
+            start_states = [
+                x["source"]
                 for x in RecordStateModel.transitions
-                if str(operation.type) == x["trigger"]
+                if operation.type == x["trigger"]
             ]
-            state = RecordState[start_states[0]]
+            state: RecordState = start_states[0]  # type: ignore
 
             cur_state_list = get_states_set()
             # self.review_manager.logger.debug(f"cur_state_list: {cur_state_list}")

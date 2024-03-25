@@ -15,6 +15,7 @@ import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
@@ -35,7 +36,7 @@ class PDFGet(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.pdf_get,
+            operations_type=OperationsType.pdf_get,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

@@ -15,6 +15,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
 
@@ -31,7 +32,7 @@ class Load(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.load,
+            operations_type=OperationsType.load,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

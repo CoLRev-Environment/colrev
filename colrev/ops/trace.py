@@ -10,6 +10,7 @@ import dictdiffer
 import colrev.operation
 from colrev.constants import Colors
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 
 if TYPE_CHECKING:  # pragma: no cover
     import git.objects.commit
@@ -21,7 +22,7 @@ class Trace(colrev.operation.Operation):
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
         )
 
     def _lpad_multiline(self, *, s: str, lpad: int) -> str:

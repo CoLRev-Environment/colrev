@@ -427,21 +427,38 @@ class PDFDefectCodes:
     LAST_PAGE_APPENDED = "last-page-appended"
 
 
-class Operations:
-    """Constant operation strings"""
+class OperationsType(Enum):
+    """Operation types correspond to the main state transitions (see RecordStateModel)"""
 
-    SEARCH = "search"
-    LOAD = "load"
-    PREP = "prep"
-    PREP_MAN = "prep_man"
-    DEDUPE = "dedupe"
-    PRESCREEN = "prescreen"
-    PDF_GET = "pdf_get"
-    PDF_GET_MAN = "pdf_get_man"
-    PDF_PREP = "pdf_prep"
-    PDF_PREP_MAN = "pdf_prep_man"
-    SCREEN = "screen"
-    DATA = "data"
+    # pylint: disable=invalid-name
+
+    search = "search"
+    load = "load"
+    prep = "prep"
+    prep_man = "prep_man"
+    dedupe = "dedupe"
+    prescreen = "prescreen"
+    pdf_get = "pdf_get"
+    pdf_get_man = "pdf_get_man"
+    pdf_prep = "pdf_prep"
+    pdf_prep_man = "pdf_prep_man"
+    screen = "screen"
+    data = "data"
+
+    format = "format"
+    check = "check"
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+    @classmethod
+    def get_manual_extra_operations(cls) -> list:
+        """Get the manual operations that require extra manual steps"""
+        return [
+            OperationsType.pdf_prep_man,
+            OperationsType.pdf_get_man,
+            OperationsType.prep_man,
+        ]
 
 
 class IDPattern(Enum):

@@ -14,6 +14,7 @@ import colrev.operation
 import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 
@@ -28,7 +29,7 @@ class PrepMan(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.prep_man,
+            operations_type=OperationsType.prep_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
