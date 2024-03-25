@@ -12,6 +12,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 
 
 class Push(colrev.operation.Operation):
@@ -99,7 +100,7 @@ class Push(colrev.operation.Operation):
 
             # pylint: disable=duplicate-code
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                package_type=PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
             )

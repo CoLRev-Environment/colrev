@@ -28,6 +28,7 @@ import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
@@ -60,7 +61,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     short_name = "S2"

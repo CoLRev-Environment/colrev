@@ -29,6 +29,7 @@ import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -52,7 +53,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     search_types = [SearchType.BACKWARD_SEARCH]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "PDF backward search"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

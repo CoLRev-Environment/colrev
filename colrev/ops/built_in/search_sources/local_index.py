@@ -24,6 +24,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -44,7 +45,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     endpoint = "colrev.local_index"
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "LocalIndex"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

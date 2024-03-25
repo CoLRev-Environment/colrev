@@ -27,6 +27,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
@@ -49,7 +50,7 @@ class FilesSearchSource(JsonSchemaMixin):
     search_types = [SearchType.FILES]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Files directory"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

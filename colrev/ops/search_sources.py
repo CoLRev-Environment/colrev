@@ -6,6 +6,7 @@ import typing
 from dataclasses import asdict
 
 import colrev.operation
+from colrev.constants import PackageEndpointType
 
 # pylint: disable=too-few-public-methods
 
@@ -18,12 +19,12 @@ class SearchSources:
         check_operation = colrev.operation.CheckOperation(review_manager)
 
         self.all_available_packages_names = package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             installed_only=True,
         )
         # Note: class-objects only (instantiate_objects) for heuristics
         self.all_available_packages = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             selected_packages=[
                 {
                     "endpoint": k,
@@ -35,7 +36,7 @@ class SearchSources:
         )
 
         self.packages: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             selected_packages=[asdict(s) for s in review_manager.settings.sources],
             operation=check_operation,
             ignore_not_available=False,

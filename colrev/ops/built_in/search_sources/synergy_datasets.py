@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -50,7 +51,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "SYNERGY-datasets"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

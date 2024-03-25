@@ -16,6 +16,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import PDFPathType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
@@ -188,7 +189,7 @@ class PDFGet(colrev.operation.Operation):
             pdf_get_package_endpoint
         ) in self.review_manager.settings.pdf_get.pdf_get_package_endpoints:
             endpoint_dict = self.package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+                package_type=PackageEndpointType.pdf_get,
                 selected_packages=[pdf_get_package_endpoint],
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),

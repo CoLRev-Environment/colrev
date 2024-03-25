@@ -24,6 +24,7 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import PackageEndpointType
 
 
 # pylint: disable=too-few-public-methods
@@ -312,7 +313,7 @@ class Initializer:
                 review_manager=self.review_manager
             )
             review_type_endpoint = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+                package_type=PackageEndpointType.review_type,
                 selected_packages=[{"endpoint": self.review_type}],
                 operation=check_operation,
                 ignore_not_available=False,

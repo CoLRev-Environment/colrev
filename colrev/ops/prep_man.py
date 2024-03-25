@@ -15,6 +15,7 @@ import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -282,7 +283,7 @@ class PrepMan(colrev.operation.Operation):
             prep_man_package_endpoint
         ) in self.review_manager.settings.prep.prep_man_package_endpoints:
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+                package_type=PackageEndpointType.prep_man,
                 selected_packages=self.review_manager.settings.prep.prep_man_package_endpoints,
                 operation=self,
             )

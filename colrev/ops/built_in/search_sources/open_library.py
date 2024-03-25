@@ -17,6 +17,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # Note: not (yet) implemented as a full search_source
@@ -41,7 +42,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     search_types = [SearchType.MD]
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
+    heuristic_status = SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

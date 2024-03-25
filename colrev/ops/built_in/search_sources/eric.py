@@ -18,8 +18,8 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
-
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -39,7 +39,7 @@ class ERICSearchSource(JsonSchemaMixin):
     endpoint = "colrev.eric"
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/eric.md"

@@ -497,6 +497,19 @@ class SearchType(Enum):
         return f"{self.name}"
 
 
+class SearchSourceHeuristicStatus(Enum):
+    """Status of the SearchSource heuristic"""
+
+    # pylint: disable=invalid-name
+    na = "not_applicable"
+    oni = "output_not_identifiable"
+    supported = "supported"
+    todo = "to_be_implemented"
+
+    def __str__(self) -> str:
+        return f"{self.name}"  # pragma: no cover
+
+
 class PDFPathType(Enum):
     """Policy for handling PDFs (create symlinks or copy files)"""
 
@@ -542,6 +555,37 @@ class ShareStatReq(Enum):
         """Get the options"""
         # pylint: disable=no-member
         return cls._member_names_
+
+
+# pylint: disable=colrev-missed-constant-usage
+class PackageEndpointType(Enum):
+    """An enum for the types of PackageEndpoints"""
+
+    # pylint: disable=C0103
+    review_type = "review_type"
+    """Endpoint for review types"""
+    search_source = "search_source"
+    """Endpoint for search sources"""
+    prep = "prep"
+    """Endpoint for prep"""
+    prep_man = "prep_man"
+    """Endpoint for prep-man"""
+    dedupe = "dedupe"
+    """Endpoint for dedupe"""
+    prescreen = "prescreen"
+    """Endpoint for prescreen"""
+    pdf_get = "pdf_get"
+    """Endpoint for pdf-get"""
+    pdf_get_man = "pdf_get_man"
+    """Endpoint for pdf-get-man"""
+    pdf_prep = "pdf_prep"
+    """Endpoint for pdf-prep"""
+    pdf_prep_man = "pdf_prep_man"
+    """Endpoint for pdf-prep-man"""
+    screen = "screen"
+    """Endpoint for screen"""
+    data = "data"
+    """Endpoint for data"""
 
 
 class ExitCodes:

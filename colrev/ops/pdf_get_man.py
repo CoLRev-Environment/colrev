@@ -15,6 +15,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -196,7 +197,7 @@ class PDFGetMan(colrev.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
         self.pdf_get_man_package_endpoints: dict[str, typing.Any] = (
             package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+                package_type=PackageEndpointType.pdf_get_man,
                 selected_packages=pdf_get_man_package_endpoints,
                 operation=self,
             )

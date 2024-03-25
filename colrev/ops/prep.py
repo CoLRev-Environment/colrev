@@ -29,6 +29,7 @@ from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 from colrev.writer.write_utils import write_file
@@ -851,7 +852,7 @@ class Prep(colrev.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
         self.prep_package_endpoints: dict[str, typing.Any] = (
             package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.prep,
+                package_type=PackageEndpointType.prep,
                 selected_packages=prep_round.prep_package_endpoints,
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),

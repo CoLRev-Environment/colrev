@@ -19,6 +19,7 @@ import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -39,7 +40,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     search_types = [SearchType.API, SearchType.MD]
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_alex.md"

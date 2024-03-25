@@ -33,6 +33,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -64,7 +65,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     ]
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/crossref.md"

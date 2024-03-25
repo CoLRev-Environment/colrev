@@ -18,6 +18,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -422,7 +423,7 @@ class PDFPrep(colrev.operation.Operation):
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_prep_package_endpoints = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            package_type=PackageEndpointType.pdf_prep,
             selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),

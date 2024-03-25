@@ -28,6 +28,7 @@ import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.constants import ScreenCriterionType
 
@@ -237,7 +238,7 @@ def exit(
     "--type",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+            package_type=PackageEndpointType.review_type,
             installed_only=True,
         )
     ),
@@ -440,7 +441,7 @@ def retrieve(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             installed_only=True,
         )
     ),
@@ -624,7 +625,7 @@ def load(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep,
+            package_type=PackageEndpointType.prep,
             installed_only=True,
         )
     ),
@@ -769,7 +770,7 @@ def prep(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+            package_type=PackageEndpointType.prep_man,
             installed_only=True,
         )
     ),
@@ -862,7 +863,7 @@ def _view_dedupe_details(dedupe_operation: colrev.ops.dedupe.Dedupe) -> None:
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+            package_type=PackageEndpointType.dedupe,
             installed_only=True,
         ),
         case_sensitive=False,
@@ -1013,7 +1014,7 @@ def dedupe(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+            package_type=PackageEndpointType.prescreen,
             installed_only=True,
         )
     ),
@@ -1173,7 +1174,7 @@ def prescreen(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.screen,
+            package_type=PackageEndpointType.screen,
             installed_only=True,
         )
     ),
@@ -1444,7 +1445,7 @@ def pdfs(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+            package_type=PackageEndpointType.pdf_get,
             installed_only=True,
         )
     ),
@@ -1558,7 +1559,7 @@ def pdf_get(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+            package_type=PackageEndpointType.pdf_get_man,
             installed_only=True,
         )
     ),
@@ -1700,7 +1701,7 @@ def _print_pdf_hashes(*, pdf_path: Path) -> None:
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            package_type=PackageEndpointType.pdf_prep,
             installed_only=True,
         )
     ),
@@ -1841,7 +1842,7 @@ def _delete_first_pages_cli(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+            package_type=PackageEndpointType.pdf_prep_man,
             installed_only=True,
         )
     ),
@@ -1956,7 +1957,7 @@ def pdf_prep_man(
     "--add",
     type=click.Choice(
         package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.data,
+            package_type=PackageEndpointType.data,
             installed_only=True,
         )
     ),

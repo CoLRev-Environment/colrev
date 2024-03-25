@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record.record
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -32,7 +33,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     search_types = [SearchType.DB]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "ACM Digital Library"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"

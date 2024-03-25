@@ -19,6 +19,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -38,7 +39,7 @@ class ArXivSource:
     search_types = [SearchType.API]
     api_search_supported = True
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "arXiv"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

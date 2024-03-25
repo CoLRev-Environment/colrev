@@ -8,6 +8,7 @@ import inquirer
 
 import colrev.record.record
 from colrev.constants import Colors
+from colrev.constants import PackageEndpointType
 
 # pylint: disable=too-few-public-methods
 
@@ -55,7 +56,7 @@ class CLISourceAdder:
             )
 
         endpoint_dict = self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             selected_packages=[heuristic_source_dict["source_candidate"].get_dict()],
             operation=self.search_operation,
             only_ci_supported=self.review_manager.in_ci_environment(),

@@ -16,7 +16,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-
+from colrev.constants import SearchSourceHeuristicStatus
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -27,7 +27,7 @@ from colrev.constants import RecordState
 class DOIConnector:
     """Connector for the DOI.org API"""
 
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
 
     @classmethod
     def retrieve_doi_metadata(

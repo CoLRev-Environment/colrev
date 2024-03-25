@@ -24,6 +24,7 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
@@ -688,7 +689,7 @@ class Dedupe(colrev.operation.Operation):
             # Note : load package/script at this point because the same script
             # may run with different parameters
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+                package_type=PackageEndpointType.dedupe,
                 selected_packages=[dedupe_package_endpoint],
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),

@@ -16,6 +16,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -433,7 +434,7 @@ class Advisor:
                     data_package_endpoint
                 ) in self.review_manager.settings.data.data_package_endpoints:
                     endpoint_dict = package_manager.load_packages(
-                        package_type=colrev.env.package_manager.PackageEndpointType.data,
+                        package_type=PackageEndpointType.data,
                         selected_packages=[data_package_endpoint],
                         operation=check_operation,
                     )

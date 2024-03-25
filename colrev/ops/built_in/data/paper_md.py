@@ -25,6 +25,7 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
+from colrev.constants import PackageEndpointType
 from colrev.writer.write_utils import write_file
 
 
@@ -372,7 +373,7 @@ class PaperMarkdown(JsonSchemaMixin):
         )
 
         review_type_endpoint = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+            package_type=PackageEndpointType.review_type,
             selected_packages=[{"endpoint": review_type}],
             operation=check_operation,
             ignore_not_available=False,

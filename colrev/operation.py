@@ -17,7 +17,7 @@ from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.record.record_state_model import RecordStateModel
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING: # pragma: no cover
     import colrev.review_manager
 
 F = TypeVar("F", bound=Callable[..., Any])

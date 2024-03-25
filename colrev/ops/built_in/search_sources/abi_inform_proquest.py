@@ -14,6 +14,7 @@ import colrev.env.package_manager
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
@@ -34,7 +35,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     search_types = [SearchType.DB]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"

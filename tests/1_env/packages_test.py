@@ -10,6 +10,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import PackageEndpointType
 from colrev.constants import SearchType
 
 
@@ -31,11 +32,11 @@ def test_review_type_interfaces(
     load_operation = base_repo_review_manager.get_load_operation()
 
     review_type_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+        package_type=PackageEndpointType.review_type,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+        package_type=PackageEndpointType.review_type,
         selected_packages=[
             {
                 "endpoint": p,
@@ -58,11 +59,11 @@ def test_search_source_interfaces(
     )
 
     search_source_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        package_type=PackageEndpointType.search_source,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        package_type=PackageEndpointType.search_source,
         selected_packages=[
             {
                 "endpoint": p,
@@ -90,11 +91,11 @@ def test_prep_package_interfaces(
     )
 
     prep_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        package_type=PackageEndpointType.prep,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        package_type=PackageEndpointType.prep,
         selected_packages=[
             {
                 "endpoint": p,
@@ -117,11 +118,11 @@ def test_prep_man_package_interfaces(
     )
 
     prep_man_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+        package_type=PackageEndpointType.prep_man,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+        package_type=PackageEndpointType.prep_man,
         selected_packages=[
             {
                 "endpoint": p,
@@ -144,11 +145,11 @@ def test_dedupe_package_interfaces(
     )
 
     dedupe_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+        package_type=PackageEndpointType.dedupe,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.dedupe,
+        package_type=PackageEndpointType.dedupe,
         selected_packages=[
             {"endpoint": p}
             for p in dedupe_identifiers
@@ -176,11 +177,11 @@ def test_prescreen_package_interfaces(
     )
 
     prescreen_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+        package_type=PackageEndpointType.prescreen,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+        package_type=PackageEndpointType.prescreen,
         selected_packages=[
             {
                 "endpoint": p,
@@ -205,11 +206,11 @@ def test_pdf_get_package_interfaces(
     )
 
     pdf_get_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+        package_type=PackageEndpointType.pdf_get,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_get,
+        package_type=PackageEndpointType.pdf_get,
         selected_packages=[
             {
                 "endpoint": p,
@@ -232,11 +233,11 @@ def test_pdf_get_man_package_interfaces(
     )
 
     pdf_get_man_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+        package_type=PackageEndpointType.pdf_get_man,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+        package_type=PackageEndpointType.pdf_get_man,
         selected_packages=[
             {
                 "endpoint": p,
@@ -258,11 +259,11 @@ def test_pdf_prep_package_interfaces(
     )
 
     pdf_prep_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+        package_type=PackageEndpointType.pdf_prep,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+        package_type=PackageEndpointType.pdf_prep,
         selected_packages=[
             {
                 "endpoint": p,
@@ -284,11 +285,11 @@ def test_pdf_prep_man_package_interfaces(
     )
 
     pdf_prep_man_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+        package_type=PackageEndpointType.pdf_prep_man,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+        package_type=PackageEndpointType.pdf_prep_man,
         selected_packages=[
             {
                 "endpoint": p,
@@ -311,11 +312,11 @@ def test_screen_package_interfaces(
     )
 
     screen_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.screen,
+        package_type=PackageEndpointType.screen,
         installed_only=True,
     )
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.screen,
+        package_type=PackageEndpointType.screen,
         selected_packages=[
             {
                 "endpoint": p,
@@ -338,12 +339,12 @@ def test_data_package_interfaces(
     )
 
     data_identifiers = package_manager.discover_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.data,
+        package_type=PackageEndpointType.data,
         installed_only=True,
     )
 
     package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.data,
+        package_type=PackageEndpointType.data,
         selected_packages=[
             {
                 "endpoint": p,
@@ -384,7 +385,7 @@ def test_get_package_details(
         "$schema": "http://json-schema.org/draft-06/schema#",
     }
     actual = package_manager.get_package_details(
-        package_type=colrev.env.package_manager.PackageEndpointType.prep,
+        package_type=PackageEndpointType.prep,
         package_identifier="colrev.colrev_curation",
     )
     print(actual)

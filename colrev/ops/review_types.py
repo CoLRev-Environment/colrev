@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 
 import colrev.operation
+from colrev.constants import PackageEndpointType
 
 # pylint: disable=too-few-public-methods
 
@@ -22,14 +23,14 @@ class ReviewTypes:
         check_operation = colrev.operation.CheckOperation(review_manager)
 
         self.all_available_packages_names = package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+            package_type=PackageEndpointType.review_type,
             installed_only=True,
         )
 
         packages_to_load = [{"endpoint": review_type}]
 
         self.packages: dict[str, typing.Any] = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.review_type,
+            package_type=PackageEndpointType.review_type,
             selected_packages=packages_to_load,
             operation=check_operation,
             ignore_not_available=False,

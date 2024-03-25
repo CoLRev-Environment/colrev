@@ -24,6 +24,7 @@ from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
@@ -50,7 +51,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     ]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
+    heuristic_status = SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"

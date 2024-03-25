@@ -16,6 +16,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 from colrev.constants import SearchType
 
@@ -358,7 +359,7 @@ class Load(colrev.operation.Operation):
         sources = []
         for source in sources_settings:
             endpoint_dict = self.package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                package_type=PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
             )

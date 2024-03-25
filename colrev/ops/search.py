@@ -16,6 +16,7 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
@@ -398,12 +399,12 @@ class Search(colrev.operation.Operation):
         self.review_manager.logger.debug("Load available search_source endpoints...")
 
         search_source_identifiers = self.package_manager.discover_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             installed_only=True,
         )
 
         search_sources = self.package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+            package_type=PackageEndpointType.search_source,
             selected_packages=[{"endpoint": p} for p in search_source_identifiers],
             operation=self,
             instantiate_objects=False,
@@ -449,7 +450,7 @@ class Search(colrev.operation.Operation):
 
         for source in self._get_search_sources(selection_str=selection_str):
             endpoint_dict = self.package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                package_type=PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),

@@ -13,6 +13,7 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -344,7 +345,7 @@ class Prescreen(colrev.operation.Operation):
                 f"Run {prescreen_package_endpoint['endpoint']}"
             )
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.prescreen,
+                package_type=PackageEndpointType.prescreen,
                 selected_packages=prescreen_package_endpoints,
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),

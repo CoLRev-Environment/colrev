@@ -11,7 +11,6 @@ import sys
 import typing
 from copy import deepcopy
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 
 import dacite
@@ -28,6 +27,8 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
 # pylint: disable=too-many-lines
@@ -37,37 +38,6 @@ from colrev.constants import SearchType
 # Inspiration for package descriptions:
 # https://github.com/rstudio/reticulate/blob/
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
-
-
-# pylint: disable=colrev-missed-constant-usage
-class PackageEndpointType(Enum):
-    """An enum for the types of PackageEndpoints"""
-
-    # pylint: disable=C0103
-    review_type = "review_type"
-    """Endpoint for review types"""
-    search_source = "search_source"
-    """Endpoint for search sources"""
-    prep = "prep"
-    """Endpoint for prep"""
-    prep_man = "prep_man"
-    """Endpoint for prep-man"""
-    dedupe = "dedupe"
-    """Endpoint for dedupe"""
-    prescreen = "prescreen"
-    """Endpoint for prescreen"""
-    pdf_get = "pdf_get"
-    """Endpoint for pdf-get"""
-    pdf_get_man = "pdf_get_man"
-    """Endpoint for pdf-get-man"""
-    pdf_prep = "pdf_prep"
-    """Endpoint for pdf-prep"""
-    pdf_prep_man = "pdf_prep_man"
-    """Endpoint for pdf-prep-man"""
-    screen = "screen"
-    """Endpoint for screen"""
-    data = "data"
-    """Endpoint for data"""
 
 
 # pylint: disable=too-few-public-methods
@@ -92,19 +62,6 @@ class ReviewTypePackageEndpointInterface(
     def initialize(settings: dict) -> dict:  # type: ignore
         """Initialize the review type"""
         return settings  # pragma: no cover
-
-
-class SearchSourceHeuristicStatus(Enum):
-    """Status of the SearchSource heuristic"""
-
-    # pylint: disable=invalid-name
-    na = "not_applicable"
-    oni = "output_not_identifiable"
-    supported = "supported"
-    todo = "to_be_implemented"
-
-    def __str__(self) -> str:
-        return f"{self.name}"  # pragma: no cover
 
 
 class SearchSourcePackageEndpointInterface(
@@ -1124,49 +1081,49 @@ class PackageManager:
         settings = operation.review_manager.settings
         package_type_dict = {
             OperationsType.search: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.search_source,
+                "package_type": PackageEndpointType.search_source,
                 "endpoint_location": settings.sources,
             },
             OperationsType.prep: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.prep,
+                "package_type": PackageEndpointType.prep,
                 "endpoint_location": settings.prep.prep_rounds[
                     0
                 ].prep_package_endpoints,
             },
             OperationsType.prep_man: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.prep_man,
+                "package_type": PackageEndpointType.prep_man,
                 "endpoint_location": settings.prep.prep_man_package_endpoints,
             },
             OperationsType.dedupe: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.dedupe,
+                "package_type": PackageEndpointType.dedupe,
                 "endpoint_location": settings.dedupe.dedupe_package_endpoints,
             },
             OperationsType.prescreen: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.prescreen,
+                "package_type": PackageEndpointType.prescreen,
                 "endpoint_location": settings.prescreen.prescreen_package_endpoints,
             },
             OperationsType.pdf_get: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get,
+                "package_type": PackageEndpointType.pdf_get,
                 "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
             },
             OperationsType.pdf_get_man: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+                "package_type": PackageEndpointType.pdf_get_man,
                 "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
             },
             OperationsType.pdf_prep: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep,
+                "package_type": PackageEndpointType.pdf_prep,
                 "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
             },
             OperationsType.pdf_prep_man: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+                "package_type": PackageEndpointType.pdf_prep_man,
                 "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
             },
             OperationsType.screen: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.screen,
+                "package_type": PackageEndpointType.screen,
                 "endpoint_location": settings.screen.screen_package_endpoints,
             },
             OperationsType.data: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.data,
+                "package_type": PackageEndpointType.data,
                 "endpoint_location": settings.data.data_package_endpoints,
             },
         }

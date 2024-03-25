@@ -11,6 +11,7 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
@@ -436,7 +437,7 @@ class Screen(colrev.operation.Operation):
             screen_package_endpoint
         ) in self.review_manager.settings.screen.screen_package_endpoints:
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.screen,
+                package_type=PackageEndpointType.screen,
                 selected_packages=self.review_manager.settings.screen.screen_package_endpoints,
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),

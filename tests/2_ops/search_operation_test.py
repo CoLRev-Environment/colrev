@@ -8,6 +8,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import PackageEndpointType
 from colrev.constants import SearchType
 
 
@@ -57,7 +58,7 @@ def test_search_add_source(  # type: ignore
     package_manager = search_operation.review_manager.get_package_manager()
 
     search_source = package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        package_type=PackageEndpointType.search_source,
         selected_packages=[{"endpoint": add_source.endpoint}],
         operation=search_operation,
         instantiate_objects=False,
@@ -107,7 +108,7 @@ def test_search_get_unique_filename(
 #     package_manager = search_operation.review_manager.get_package_manager()
 
 #     search_source = package_manager.load_packages(
-#         package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+#         package_type=PackageEndpointType.search_source,
 #         selected_packages=[{"endpoint": "colrev.crossref"}],
 #         operation=search_operation,
 #         instantiate_objects=False,
