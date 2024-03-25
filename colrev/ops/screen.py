@@ -8,7 +8,6 @@ from pathlib import Path
 import colrev.exceptions as colrev_exceptions
 import colrev.operation
 import colrev.record.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -86,19 +85,21 @@ class Screen(colrev.operation.Operation):
         saved_args = locals()
         saved_args["include_all"] = ""
         pad = 50
-        for record_id, record in records.items():
-            if record[Fields.STATUS] != RecordState.pdf_prepared:
+        for record_id, record_dict in records.items():
+            if record_dict[Fields.STATUS] != RecordState.pdf_prepared:
                 continue
             self.review_manager.report_logger.info(
                 f" {record_id}".ljust(pad, " ") + "Included in screen (automatically)"
             )
             if len(screening_criteria) == 0:
-                record.update(screening_criteria="NA")
+                record_dict.update(screening_criteria="NA")
             else:
-                record.update(
+                record_dict.update(
                     screening_criteria=";".join([e + "=in" for e in screening_criteria])
                 )
-            record.set_status(RecordState.rev_included)
+            colrev.record.record.Record(data=record_dict).set_status(
+                RecordState.rev_included
+            )
 
         self.review_manager.dataset.save_records_dict(records)
         self._print_stats(selected_record_ids=selected_record_ids)
