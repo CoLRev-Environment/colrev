@@ -84,7 +84,7 @@ class EnvironmentManager:
 
     def register_repo(self, path_to_register: Path) -> None:
         """Register a repository"""
-
+        path_to_register = path_to_register.resolve().absolute()
         self.environment_registry = self.load_environment_registry()
 
         if "local_index" not in self.environment_registry:
