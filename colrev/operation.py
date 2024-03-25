@@ -13,11 +13,12 @@ import git
 from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
-import colrev.record.record
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.record.record_state_model import RecordStateModel
 
+if typing.TYPE_CHECKING:
+    import colrev.review_manager
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -185,7 +186,7 @@ class Operation:
             # )
             self._check_record_state_model_precondition()
 
-        # ie., implicit pass for format, explore, check, pdf_prep_man
+        # ie., implicit pass for check, pdf_prep_man
 
     def conclude(self) -> None:
         """Conclude the operation (stop Docker containers)"""
@@ -196,24 +197,6 @@ class Operation:
                     container.stop()
         except DockerException:
             pass
-
-
-class FormatOperation(Operation):
-    """A dummy operation that is expected to introduce formatting changes only"""
-
-    # pylint: disable=too-few-public-methods
-
-    def __init__(
-        self,
-        *,
-        review_manager: colrev.review_manager.ReviewManager,
-        notify: bool = True,
-    ) -> None:
-        super().__init__(
-            review_manager=review_manager, operations_type=OperationsType.format
-        )
-        if notify:
-            self.review_manager.notify(operation=self)
 
 
 class CheckOperation(Operation):

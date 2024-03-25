@@ -330,7 +330,7 @@ class Dataset:
             return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
         try:
-            colrev.operation.FormatOperation(
+            colrev.operation.CheckOperation(
                 review_manager=self.review_manager
             )  # to notify
             quality_model = self.review_manager.get_qm()
