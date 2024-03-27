@@ -13,7 +13,7 @@ import yaml
 from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -229,7 +229,7 @@ class EnvironmentManager:
                 cp_review_manager = colrev.review_manager.ReviewManager(
                     path_str=repo["repo_source_path"]
                 )
-                check_operation = colrev.operation.CheckOperation(
+                check_operation = colrev.process.operation.CheckOperation(
                     review_manager=cp_review_manager
                 )
                 repo_stat = self._get_status(cp_review_manager)

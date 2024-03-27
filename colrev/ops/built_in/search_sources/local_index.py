@@ -70,7 +70,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -576,7 +576,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                         Path(selected_change[Fields.FILE]).unlink()
 
     def _apply_corrections_precondition(
-        self, *, check_operation: colrev.operation.Operation, source_url: str
+        self, *, check_operation: colrev.process.operation.Operation, source_url: str
     ) -> bool:
         git_repo = check_operation.review_manager.dataset.get_repo()
 
@@ -692,7 +692,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _apply_record_correction(
         self,
         *,
-        check_operation: colrev.operation.Operation,
+        check_operation: colrev.process.operation.Operation,
         records: dict,
         record_dict: dict,
         change_item: dict,
@@ -764,7 +764,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     def _apply_change_item_correction(
         self,
         *,
-        check_operation: colrev.operation.Operation,
+        check_operation: colrev.process.operation.Operation,
         source_url: str,
         change_list: list,
     ) -> bool:
@@ -851,7 +851,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         check_review_manager = self.review_manager.get_connecting_review_manager(
             path_str=source_url
         )
-        check_operation = colrev.operation.CheckOperation(
+        check_operation = colrev.process.operation.CheckOperation(
             review_manager=check_review_manager
         )
 

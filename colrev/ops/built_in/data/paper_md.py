@@ -368,7 +368,7 @@ class PaperMarkdown(JsonSchemaMixin):
         review_type = self.review_manager.settings.project.review_type
 
         package_manager = self.review_manager.get_package_manager()
-        check_operation = colrev.operation.CheckOperation(
+        check_operation = colrev.process.operation.CheckOperation(
             review_manager=self.review_manager
         )
 

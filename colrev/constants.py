@@ -255,7 +255,7 @@ class FieldSet:
 
 class RecordState(Enum):
     """The possible RecordStates stored in the colrev_status field
-    (corresponding to the RecordStateModel)"""
+    (corresponding to the ProcessModel)"""
 
     # pylint: disable=invalid-name
 
@@ -428,7 +428,7 @@ class PDFDefectCodes:
 
 
 class OperationsType(Enum):
-    """Operation types correspond to the main state transitions (see RecordStateModel)"""
+    """Operation types correspond to the main state transitions (see ProcessModel)"""
 
     # pylint: disable=invalid-name
 

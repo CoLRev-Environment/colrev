@@ -20,6 +20,7 @@ colrev.ops.prep.Prep
       ~Prep.conclude
       ~Prep.decorate
       ~Prep.main
+      ~Prep.notify
       ~Prep.prepare
       ~Prep.set_ids
       ~Prep.setup_custom_script
@@ -33,16 +34,13 @@ colrev.ops.prep.Prep
 
    .. autosummary::
 
-      ~Prep.fields_to_keep
+      ~Prep.debug_mode
       ~Prep.max_retries_on_error
-      ~Prep.requests_headers
+      ~Prep.pad
+      ~Prep.polish
       ~Prep.timeout
       ~Prep.retrieval_similarity
       ~Prep.first_round
       ~Prep.last_round
-      ~Prep.debug_mode
-      ~Prep.pad
-      ~Prep.polish
       ~Prep.prep_package_endpoints
-      ~Prep.force_mode
       ~Prep.type

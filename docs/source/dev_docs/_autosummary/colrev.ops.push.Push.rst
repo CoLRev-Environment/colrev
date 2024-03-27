@@ -20,6 +20,7 @@ colrev.ops.push.Push
       ~Push.conclude
       ~Push.decorate
       ~Push.main
+      ~Push.notify
 
 
 
@@ -29,5 +30,4 @@ colrev.ops.push.Push
 
    .. autosummary::
 
-      ~Push.force_mode
       ~Push.type

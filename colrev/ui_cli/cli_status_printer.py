@@ -187,9 +187,9 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
         ret_check = {"status": ExitCodes.FAIL, "msg": exc}
 
     try:
-        status_stats = status_operation.review_manager.get_status_stats(
-            records=checker.records
-        )
+        advisor = status_operation.review_manager.get_advisor()
+        status_stats = advisor.status_stats
+
         status_report = status_operation.get_review_status_report(
             records=checker.records
         )
@@ -205,8 +205,7 @@ def print_project_status(status_operation: colrev.ops.status.Status) -> None:
             )
         print("")
 
-        advisor = status_operation.review_manager.get_advisor()
-        instructions = advisor.get_instructions(status_stats=status_stats)
+        instructions = advisor.get_instructions()
         print_review_instructions(instructions["review_instructions"])
         print_collaboration_instructions(
             status_operation=status_operation,

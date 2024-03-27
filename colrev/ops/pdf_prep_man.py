@@ -10,7 +10,7 @@ from PyPDF2 import PdfFileWriter
 from PyPDF2.errors import PdfReadError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -20,7 +20,7 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
-class PDFPrepMan(colrev.operation.Operation):
+class PDFPrepMan(colrev.process.operation.Operation):
     """Prepare PDFs manually"""
 
     def __init__(
@@ -304,7 +304,7 @@ class PDFPrepMan(colrev.operation.Operation):
         )
         self.review_manager.dataset.add_changes(Filepaths.RECORDS_FILE)
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""
 

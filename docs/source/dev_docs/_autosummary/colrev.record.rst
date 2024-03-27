@@ -1,7 +1,7 @@
-colrev.record.record
+colrev.record
 =============
 
-.. automodule:: colrev.record.record
+.. automodule:: colrev.record
 
 
 
@@ -13,14 +13,22 @@ colrev.record.record
 
 
 
-   .. rubric:: Classes
 
-   .. autosummary::
-      :toctree:
-      :template: custom-class-template.rst
-      :nosignatures:
 
-      PrepRecord
-      Record
-      RecordState
-      RecordStateModel
+
+
+
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   colrev.record.record
+   colrev.record.record_identifier
+   colrev.record.record_merger
+   colrev.record.record_pdf
+   colrev.record.record_prep
+   colrev.record.record_similarity

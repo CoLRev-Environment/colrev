@@ -55,7 +55,7 @@ class PubmedMetadataPrep(JsonSchemaMixin):
         ]
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Pubmed API"""
         self.pubmed_source.check_availability(source_operation=source_operation)

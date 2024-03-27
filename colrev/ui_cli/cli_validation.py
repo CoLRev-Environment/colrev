@@ -117,7 +117,7 @@ def print_diff_pair(record_pair: list) -> None:
 
 def _validate_dedupe(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
     threshold: float,  # pylint: disable=unused-argument
 ) -> None:
@@ -147,7 +147,7 @@ def _validate_dedupe(
 
 def _validate_prep_prescreen_exclusions(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
 ) -> None:
 
@@ -187,7 +187,7 @@ def _validate_prep_prescreen_exclusions(
 
 def _validate_prep(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
     threshold: float,
 ) -> None:
@@ -243,7 +243,7 @@ def _validate_prep(
 
 def _validate_properties(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
 ) -> None:
 
@@ -263,7 +263,7 @@ def _validate_properties(
 
 def _validate_contributor_commits(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
 ) -> None:
     validate_operation.review_manager.logger.info(
@@ -290,7 +290,7 @@ def _validate_contributor_commits(
 
 def _validate_general(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
 ) -> None:
     validate_operation.review_manager.logger.info("Start general validation")
@@ -319,7 +319,7 @@ def _validate_general(
 
 def validate(
     *,
-    validate_operation: colrev.operation.Operation,
+    validate_operation: colrev.process.operation.Operation,
     validation_details: dict,
     threshold: float,
 ) -> None:

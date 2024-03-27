@@ -33,6 +33,7 @@ colrev.constants.Fields
       ~Fields.CITED_BY
       ~Fields.COLREV_ID
       ~Fields.CONTAINER_TITLE
+      ~Fields.CURATION_ID
       ~Fields.DATE
       ~Fields.DBLP_KEY
       ~Fields.DOI
@@ -66,6 +67,7 @@ colrev.constants.Fields
       ~Fields.PUBLISHER
       ~Fields.PUBMED_ID
       ~Fields.REFERENCES
+      ~Fields.RETRACTED
       ~Fields.SCHOOL
       ~Fields.SCREENING_CRITERIA
       ~Fields.SEMANTIC_SCHOLAR_ID

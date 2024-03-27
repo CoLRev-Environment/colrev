@@ -6,7 +6,6 @@ import typing
 from collections import Counter
 from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
-from typing import Optional
 
 import git
 from git.exc import InvalidGitRepositoryError
@@ -45,6 +44,7 @@ class Advisor:
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         self.review_manager = review_manager
+        self.status_stats = review_manager.get_status_stats()
 
     def _append_merge_conflict_warning(
         self, *, collaboration_instructions: dict, git_repo: git.Repo
@@ -88,7 +88,6 @@ class Advisor:
         self,
         *,
         collaboration_instructions: dict,
-        status_stats: colrev.ops.status.StatusStats,
     ) -> None:
         # pylint: disable=too-many-branches
 
@@ -127,10 +126,10 @@ class Advisor:
 
         if share_stat_req == "PROCESSED":
             if (
-                0 == status_stats.currently.md_retrieved
-                and 0 == status_stats.currently.md_imported
-                and 0 == status_stats.currently.md_needs_manual_preparation
-                and 0 == status_stats.currently.md_prepared
+                0 == self.status_stats.currently.md_retrieved
+                and 0 == self.status_stats.currently.md_imported
+                and 0 == self.status_stats.currently.md_needs_manual_preparation
+                and 0 == self.status_stats.currently.md_prepared
             ):
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
@@ -154,16 +153,16 @@ class Advisor:
         # pylint: disable=too-many-boolean-expressions
         if share_stat_req == "SCREENED":
             if (
-                0 == status_stats.currently.md_retrieved
-                and 0 == status_stats.currently.md_imported
-                and 0 == status_stats.currently.md_needs_manual_preparation
-                and 0 == status_stats.currently.md_prepared
-                and 0 == status_stats.currently.md_processed
-                and 0 == status_stats.currently.rev_prescreen_included
-                and 0 == status_stats.currently.pdf_needs_manual_retrieval
-                and 0 == status_stats.currently.pdf_imported
-                and 0 == status_stats.currently.pdf_needs_manual_preparation
-                and 0 == status_stats.currently.pdf_prepared
+                0 == self.status_stats.currently.md_retrieved
+                and 0 == self.status_stats.currently.md_imported
+                and 0 == self.status_stats.currently.md_needs_manual_preparation
+                and 0 == self.status_stats.currently.md_prepared
+                and 0 == self.status_stats.currently.md_processed
+                and 0 == self.status_stats.currently.rev_prescreen_included
+                and 0 == self.status_stats.currently.pdf_needs_manual_retrieval
+                and 0 == self.status_stats.currently.pdf_imported
+                and 0 == self.status_stats.currently.pdf_needs_manual_preparation
+                and 0 == self.status_stats.currently.pdf_prepared
             ):
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
@@ -182,7 +181,7 @@ class Advisor:
                 }
 
         if share_stat_req == "COMPLETED":
-            if 0 == status_stats.currently.non_completed:
+            if 0 == self.status_stats.currently.non_completed:
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
@@ -199,13 +198,8 @@ class Advisor:
                 }
 
     # pylint: disable=colrev-missed-constant-usage
-    def _get_collaboration_instructions(
-        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
-    ) -> dict:
+    def _get_collaboration_instructions(self) -> dict:
         """Get instructions related to collaboration"""
-
-        if status_stats is None:
-            status_stats = self.review_manager.get_status_stats()
 
         collaboration_instructions: dict = {"items": []}
         git_repo = self.review_manager.dataset.get_repo()
@@ -242,7 +236,6 @@ class Advisor:
         if remote_connected:
             self._add_sharing_notifications(
                 collaboration_instructions=collaboration_instructions,
-                status_stats=status_stats,
             )
 
         if 0 == len(collaboration_instructions["items"]):
@@ -271,13 +264,12 @@ class Advisor:
         self,
         *,
         review_instructions: list,
-        status_stats: colrev.ops.status.StatusStats,
         current_origin_states_dict: dict,
     ) -> None:
         # If changes in RECORDS_FILE are staged, we need to detect the process type
         if self.review_manager.dataset.records_changed():
             # Detect and validate transitions
-            transitioned_records = status_stats.get_transitioned_records(
+            transitioned_records = self.status_stats.get_transitioned_records(
                 current_origin_states_dict=current_origin_states_dict
             )
 
@@ -305,7 +297,7 @@ class Advisor:
                             }
                         )
 
-            in_progress_processes = status_stats.get_operation_in_progress(
+            in_progress_processes = self.status_stats.get_operation_in_progress(
                 transitioned_records=transitioned_records
             )
 
@@ -330,7 +322,9 @@ class Advisor:
                 review_instructions.append(instruction)
 
     def _append_initial_operations(
-        self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
+        self,
+        *,
+        review_instructions: list,
     ) -> bool:
         search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
         if not Path(search_dir).iterdir():
@@ -341,7 +335,7 @@ class Advisor:
             review_instructions.append(instruction)
             return True
 
-        if status_stats.overall.md_retrieved == 0:
+        if self.status_stats.overall.md_retrieved == 0:
             instruction = {
                 "msg": self._next_step_description["retrieve"],
                 "cmd": "colrev retrieve",
@@ -350,7 +344,7 @@ class Advisor:
             review_instructions.append(instruction)
             return True
 
-        if status_stats.currently.md_retrieved > 0:
+        if self.status_stats.currently.md_retrieved > 0:
             instruction = {
                 "msg": self._next_step_description["retrieve"],
                 "cmd": "colrev retrieve",
@@ -365,15 +359,14 @@ class Advisor:
     def _append_active_operations(
         self,
         *,
-        status_stats: colrev.ops.status.StatusStats,
         current_origin_states_dict: dict,
         review_instructions: list,
     ) -> None:
-        active_operations = status_stats.get_active_operations(
+        active_operations = self.status_stats.get_active_operations(
             current_origin_states_dict=current_origin_states_dict
         )
 
-        priority_processing_operations = status_stats.get_priority_operations(
+        priority_processing_operations = self.status_stats.get_priority_operations(
             current_origin_states_dict=current_origin_states_dict
         )
 
@@ -427,7 +420,7 @@ class Advisor:
                 # review_instructions.pop(0)
 
                 package_manager = self.review_manager.get_package_manager()
-                check_operation = colrev.operation.CheckOperation(
+                check_operation = colrev.process.operation.CheckOperation(
                     review_manager=self.review_manager
                 )
                 for (
@@ -450,25 +443,19 @@ class Advisor:
         self,
         *,
         review_instructions: list,
-        status_stats: colrev.ops.status.StatusStats,
         current_origin_states_dict: dict,
     ) -> None:
-        if self._append_initial_operations(
-            review_instructions=review_instructions, status_stats=status_stats
-        ):
+        if self._append_initial_operations(review_instructions=review_instructions):
             return
 
         self._append_active_operations(
-            status_stats=status_stats,
             current_origin_states_dict=current_origin_states_dict,
             review_instructions=review_instructions,
         )
 
         self._append_data_operation_advice(review_instructions=review_instructions)
 
-    def _get_missing_files(
-        self, *, status_stats: colrev.ops.status.StatusStats
-    ) -> list:
+    def _get_missing_files(self) -> list:
         # excluding pdf_not_available
         file_required_status = [
             RecordState.pdf_imported,
@@ -479,7 +466,7 @@ class Advisor:
             RecordState.rev_synthesized,
         ]
         missing_files = []
-        for record_dict in status_stats.records.values():
+        for record_dict in self.status_stats.records.values():
             if (
                 record_dict[Fields.STATUS] in file_required_status
                 and Fields.FILE not in record_dict
@@ -489,11 +476,13 @@ class Advisor:
         return missing_files
 
     def _append_pdf_issue_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats, review_instructions: list
+        self,
+        *,
+        review_instructions: list,
     ) -> None:
         # Check pdf files
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
-            missing_files = self._get_missing_files(status_stats=status_stats)
+            missing_files = self._get_missing_files()
             if len(missing_files) > 0:
                 review_instructions.append(
                     {
@@ -515,7 +504,7 @@ class Advisor:
                 )
 
         pdfs_no_longer_available = []
-        for record_dict in status_stats.records.values():
+        for record_dict in self.status_stats.records.values():
             if Fields.FILE in record_dict:
                 if not (
                     self.review_manager.path / Path(record_dict[Fields.FILE])
@@ -531,11 +520,13 @@ class Advisor:
             )
 
     def _append_iteration_completed_instructions(
-        self, *, review_instructions: list, status_stats: colrev.ops.status.StatusStats
+        self,
+        *,
+        review_instructions: list,
     ) -> None:
         if (
-            status_stats.completeness_condition
-            and status_stats.currently.md_retrieved > 0
+            self.status_stats.completeness_condition
+            and self.status_stats.currently.md_retrieved > 0
         ):
             if not self.review_manager.dataset.has_untracked_search_records():
                 instruction = {
@@ -552,13 +543,8 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
 
-    def get_review_instructions(
-        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
-    ) -> list:
+    def get_review_instructions(self) -> list:
         """Get instructions related to the review (operations)"""
-
-        if status_stats is None:
-            status_stats = self.review_manager.get_status_stats()
 
         review_instructions: typing.List[typing.Dict] = []
         current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
@@ -570,22 +556,18 @@ class Advisor:
 
         self._append_operation_in_progress_instructions(
             review_instructions=review_instructions,
-            status_stats=status_stats,
             current_origin_states_dict=current_origin_states_dict,
         )
 
         self._append_next_operation_instructions(
             review_instructions=review_instructions,
-            status_stats=status_stats,
             current_origin_states_dict=current_origin_states_dict,
         )
 
-        self._append_pdf_issue_instructions(
-            status_stats=status_stats, review_instructions=review_instructions
-        )
+        self._append_pdf_issue_instructions(review_instructions=review_instructions)
 
         self._append_iteration_completed_instructions(
-            review_instructions=review_instructions, status_stats=status_stats
+            review_instructions=review_instructions
         )
 
         return review_instructions
@@ -709,16 +691,14 @@ class Advisor:
                 }
                 environment_instructions.append(instruction)
 
-    def _get_environment_instructions(
-        self, *, status_stats: colrev.ops.status.StatusStats
-    ) -> list:
+    def _get_environment_instructions(self) -> list:
         """Get instructions related to the CoLRev environment"""
 
         environment_manager = self.review_manager.get_environment_manager()
 
         environment_instructions: list[dict] = []
 
-        if status_stats.currently.md_imported > 10:
+        if self.status_stats.currently.md_imported > 10:
             self._append_download_outlets_instruction(
                 environment_manager=environment_manager,
                 environment_instructions=environment_instructions,
@@ -746,24 +726,13 @@ class Advisor:
 
         return environment_instructions
 
-    def get_instructions(
-        self, *, status_stats: Optional[colrev.ops.status.StatusStats] = None
-    ) -> dict:
+    def get_instructions(self) -> dict:
         """Get all instructions on the project"""
 
-        if status_stats is None:
-            status_stats = self.review_manager.get_status_stats()
-
         instructions = {
-            "review_instructions": self.get_review_instructions(
-                status_stats=status_stats
-            ),
-            "environment_instructions": self._get_environment_instructions(
-                status_stats=status_stats
-            ),
-            "collaboration_instructions": self._get_collaboration_instructions(
-                status_stats=status_stats
-            ),
+            "review_instructions": self.get_review_instructions(),
+            "environment_instructions": self._get_environment_instructions(),
+            "collaboration_instructions": self._get_collaboration_instructions(),
         }
         # self.review_manager.logger.debug(
         #     f"instructions: {self.review_manager.p_printer.pformat(instructions)}"

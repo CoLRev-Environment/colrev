@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.google\_scholar.GoogleScholarSearchSource
       ~GoogleScholarSearchSource.from_dict
       ~GoogleScholarSearchSource.from_json
       ~GoogleScholarSearchSource.from_object
-      ~GoogleScholarSearchSource.get_masterdata
       ~GoogleScholarSearchSource.heuristic
       ~GoogleScholarSearchSource.json_schema
       ~GoogleScholarSearchSource.load
+      ~GoogleScholarSearchSource.prep_link_md
       ~GoogleScholarSearchSource.prepare
       ~GoogleScholarSearchSource.register_field_encoders
-      ~GoogleScholarSearchSource.run_search
+      ~GoogleScholarSearchSource.search
       ~GoogleScholarSearchSource.to_dict
       ~GoogleScholarSearchSource.to_json
 

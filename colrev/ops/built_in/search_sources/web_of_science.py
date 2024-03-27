@@ -43,7 +43,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
     db_url = "http://webofscience.com/"
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.source_operation = source_operation

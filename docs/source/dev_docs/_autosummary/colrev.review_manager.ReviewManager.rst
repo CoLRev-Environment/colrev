@@ -37,6 +37,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_loggers_by_debug_mode
       ~ReviewManager.get_merge_operation
       ~ReviewManager.get_package_manager
+      ~ReviewManager.get_path
       ~ReviewManager.get_pdf_get_man_operation
       ~ReviewManager.get_pdf_get_operation
       ~ReviewManager.get_pdf_prep_man_operation
@@ -66,7 +67,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.in_test_environment
       ~ReviewManager.in_virtualenv
       ~ReviewManager.load_settings
-      ~ReviewManager.notify
       ~ReviewManager.report
       ~ReviewManager.reset_report_logger
       ~ReviewManager.save_settings
@@ -82,19 +82,6 @@ colrev.review\_manager.ReviewManager
 
    .. autosummary::
 
-      ~ReviewManager.CORRECTIONS_PATH_RELATIVE
-      ~ReviewManager.DATA_DIR_RELATIVE
-      ~ReviewManager.DEDUPE_RELATIVE
-      ~ReviewManager.OUTPUT_DIR_RELATIVE
-      ~ReviewManager.PDF_DIR_RELATIVE
-      ~ReviewManager.PREP_RELATIVE
-      ~ReviewManager.PRESCREEN_RELATIVE
-      ~ReviewManager.README_RELATIVE
-      ~ReviewManager.REPORT_RELATIVE
-      ~ReviewManager.SCREEN_RELATIVE
-      ~ReviewManager.SEARCH_DIR_RELATIVE
-      ~ReviewManager.SETTINGS_RELATIVE
-      ~ReviewManager.STATUS_RELATIVE
       ~ReviewManager.notified_next_operation
       ~ReviewManager.shell_mode
       ~ReviewManager.dataset

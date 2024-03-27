@@ -18,12 +18,12 @@ colrev.ops.built\_in.search\_sources.arxiv.ArXivSource
 
       ~ArXivSource.add_endpoint
       ~ArXivSource.check_availability
-      ~ArXivSource.get_masterdata
       ~ArXivSource.heuristic
       ~ArXivSource.load
       ~ArXivSource.load_fixes
+      ~ArXivSource.prep_link_md
       ~ArXivSource.prepare
-      ~ArXivSource.run_search
+      ~ArXivSource.search
       ~ArXivSource.validate_source
 
 

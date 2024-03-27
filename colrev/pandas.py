@@ -42,7 +42,7 @@ def load_df(
         raise NotImplementedError
 
     review_manager = colrev.review_manager.ReviewManager(path_str=project_path)
-    colrev.operation.CheckOperation(review_manager)
+    colrev.process.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
     loaded_df = pd.DataFrame.from_dict(records, orient="index")
     return loaded_df
@@ -93,14 +93,14 @@ def load_resolved_papers(other_project_path: str) -> pd.DataFrame:
     other_review_manager = colrev.review_manager.ReviewManager(
         path_str=other_project_path, force_mode=True
     )
-    colrev.operation.CheckOperation(other_review_manager)
+    colrev.process.operation.CheckOperation(other_review_manager)
     # pylint: disable=colrev-records-variable-naming-convention
     other_records = other_review_manager.dataset.load_records_dict()
     project_path = str(Path.cwd())
     review_manager = colrev.review_manager.ReviewManager(
         path_str=project_path, force_mode=True
     )
-    colrev.operation.CheckOperation(review_manager)
+    colrev.process.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
 
     # identify duplicates with dedupe

@@ -21,7 +21,7 @@ from m2r import parse_from_file
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
@@ -91,7 +91,7 @@ class SearchSourcePackageEndpointInterface(
 
     # pylint: disable=no-self-argument
     def add_endpoint(  # type: ignore
-        operation: colrev.operation.Operation,
+        operation: colrev.process.operation.Operation,
         params: dict,
     ) -> colrev.settings.SearchSource:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
@@ -702,7 +702,7 @@ class PackageManager:
         *,
         package_type: PackageEndpointType,
         selected_packages: list,
-        operation: colrev.operation.Operation,
+        operation: colrev.process.operation.Operation,
         ignore_not_available: bool = False,
         instantiate_objects: bool = True,
         only_ci_supported: bool = False,
@@ -1071,7 +1071,7 @@ class PackageManager:
     def add_endpoint_for_operation(
         self,
         *,
-        operation: colrev.operation.Operation,
+        operation: colrev.process.operation.Operation,
         package_identifier: str,
         params: str,
         prompt_on_same_source: bool = True,

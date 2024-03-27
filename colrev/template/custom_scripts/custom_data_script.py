@@ -5,7 +5,7 @@ from __future__ import annotations
 import zope.interface
 from dacite import from_dict
 
-import colrev.operation
+import colrev.process.operation
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)

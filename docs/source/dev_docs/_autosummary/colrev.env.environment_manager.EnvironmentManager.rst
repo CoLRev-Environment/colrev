@@ -21,7 +21,6 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.check_git_installed
       ~EnvironmentManager.get_curated_outlets
       ~EnvironmentManager.get_environment_details
-      ~EnvironmentManager.get_environment_stats
       ~EnvironmentManager.get_name_mail_from_git
       ~EnvironmentManager.get_settings_by_key
       ~EnvironmentManager.load_environment_registry
@@ -39,10 +38,4 @@ colrev.env.environment\_manager.EnvironmentManager
 
    .. autosummary::
 
-      ~EnvironmentManager.REGISTRY_RELATIVE
-      ~EnvironmentManager.REGISTRY_RELATIVE_YAML
-      ~EnvironmentManager.cache_path
-      ~EnvironmentManager.colrev_path
       ~EnvironmentManager.load_yaml
-      ~EnvironmentManager.registry
-      ~EnvironmentManager.registry_yaml

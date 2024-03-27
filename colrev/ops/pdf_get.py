@@ -10,7 +10,7 @@ from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -22,7 +22,7 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
-class PDFGet(colrev.operation.Operation):
+class PDFGet(colrev.process.operation.Operation):
     """Get the PDFs"""
 
     to_retrieve: int
@@ -593,7 +593,7 @@ class PDFGet(colrev.operation.Operation):
 
         self.review_manager.save_settings()
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs (main entrypoint)"""
 

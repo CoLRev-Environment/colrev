@@ -6,9 +6,9 @@ import math
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
 import colrev.ops.built_in.prescreen.conditional_prescreen
 import colrev.ops.built_in.prescreen.prescreen_table
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -17,7 +17,7 @@ from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
-class Prescreen(colrev.operation.Operation):
+class Prescreen(colrev.process.operation.Operation):
     """Prescreen records (based on metadata)"""
 
     def __init__(
@@ -77,7 +77,7 @@ class Prescreen(colrev.operation.Operation):
             return False
         return True
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def include_all_in_prescreen(self, *, persist: bool) -> None:
         """Include all records in the prescreen"""
 
@@ -318,7 +318,7 @@ class Prescreen(colrev.operation.Operation):
             )
         return selected_auto_include_ids
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:
         """Prescreen records (main entrypoint)"""
 

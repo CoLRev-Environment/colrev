@@ -23,6 +23,7 @@ colrev.ops.load.Load
       ~Load.load_active_sources
       ~Load.load_source_records
       ~Load.main
+      ~Load.notify
       ~Load.setup_source_for_load
 
 
@@ -33,5 +34,4 @@ colrev.ops.load.Load
 
    .. autosummary::
 
-      ~Load.force_mode
       ~Load.type

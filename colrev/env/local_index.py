@@ -26,7 +26,7 @@ import colrev.env.environment_manager
 import colrev.env.resources
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
@@ -886,7 +886,7 @@ class LocalIndex:
                 path_str=str(repo_source_path)
             )
 
-            check_operation = colrev.operation.CheckOperation(review_manager)
+            check_operation = colrev.process.operation.CheckOperation(review_manager)
 
             if review_manager.dataset.get_repo().active_branch.name != "main":
                 print(

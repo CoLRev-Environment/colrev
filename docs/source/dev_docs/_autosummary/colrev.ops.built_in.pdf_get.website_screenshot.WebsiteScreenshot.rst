@@ -36,4 +36,5 @@ colrev.ops.built\_in.pdf\_get.website\_screenshot.WebsiteScreenshot
 
    .. autosummary::
 
+      ~WebsiteScreenshot.CHROME_BROWSERLESS_IMAGE
       ~WebsiteScreenshot.ci_supported

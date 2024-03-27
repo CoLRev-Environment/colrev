@@ -99,7 +99,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager

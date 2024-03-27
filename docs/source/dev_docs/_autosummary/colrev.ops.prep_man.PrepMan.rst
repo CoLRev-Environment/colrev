@@ -21,6 +21,7 @@ colrev.ops.prep\_man.PrepMan
       ~PrepMan.decorate
       ~PrepMan.get_data
       ~PrepMan.main
+      ~PrepMan.notify
       ~PrepMan.prep_man_langs
       ~PrepMan.prep_man_stats
       ~PrepMan.set_data
@@ -33,5 +34,4 @@ colrev.ops.prep\_man.PrepMan
 
    .. autosummary::
 
-      ~PrepMan.force_mode
       ~PrepMan.type

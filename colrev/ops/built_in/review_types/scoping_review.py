@@ -25,7 +25,7 @@ class ScopingReview(JsonSchemaMixin):
     ci_supported: bool = True
 
     def __init__(
-        self, *, operation: colrev.operation.CheckOperation, settings: dict
+        self, *, operation: colrev.process.operation.CheckOperation, settings: dict
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 

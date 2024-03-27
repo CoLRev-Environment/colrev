@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -15,7 +15,7 @@ from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
-class Screen(colrev.operation.Operation):
+class Screen(colrev.process.operation.Operation):
     """Screen records (based on PDFs)"""
 
     def __init__(
@@ -405,7 +405,7 @@ class Screen(colrev.operation.Operation):
         )
         return selected_auto_include_ids
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, split_str: str = "NA") -> None:
         """Screen records for inclusion (main entrypoint)"""
 

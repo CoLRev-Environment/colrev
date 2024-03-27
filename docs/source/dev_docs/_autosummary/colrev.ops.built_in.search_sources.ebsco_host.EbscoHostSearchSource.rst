@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.ebsco\_host.EbscoHostSearchSource
       ~EbscoHostSearchSource.from_dict
       ~EbscoHostSearchSource.from_json
       ~EbscoHostSearchSource.from_object
-      ~EbscoHostSearchSource.get_masterdata
       ~EbscoHostSearchSource.heuristic
       ~EbscoHostSearchSource.json_schema
       ~EbscoHostSearchSource.load
+      ~EbscoHostSearchSource.prep_link_md
       ~EbscoHostSearchSource.prepare
       ~EbscoHostSearchSource.register_field_encoders
-      ~EbscoHostSearchSource.run_search
+      ~EbscoHostSearchSource.search
       ~EbscoHostSearchSource.to_dict
       ~EbscoHostSearchSource.to_json
 

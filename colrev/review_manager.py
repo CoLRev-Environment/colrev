@@ -20,7 +20,7 @@ import colrev.dataset
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
-import colrev.operation
+import colrev.process.operation
 import colrev.qm.quality_model
 import colrev.record.record
 import colrev.settings
@@ -246,7 +246,7 @@ class ReviewManager:
             not self.settings.is_curated_masterdata_repo()
             and self.dataset.records_changed()
         ):
-            colrev.operation.CheckOperation(self)  # to notify
+            colrev.process.operation.CheckOperation(self)  # to notify
             corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
             corrections_operation.check_corrections_of_records()
 
@@ -329,12 +329,17 @@ class ReviewManager:
 
     def get_status_stats(
         self, *, records: Optional[dict] = None
-    ) -> colrev.ops.status.StatusStats:  # pragma: no cover
+    ) -> colrev.process.status.StatusStats:  # pragma: no cover
         """Get a status stats object"""
 
-        import colrev.ops.status
+        import colrev.process.status
 
-        return colrev.ops.status.StatusStats(review_manager=self, records=records)
+        colrev.process.operation.CheckOperation(self)
+
+        if records is None:
+            records = self.dataset.load_records_dict()
+
+        return colrev.process.status.StatusStats(review_manager=self, records=records)
 
     def get_completeness_condition(self) -> bool:
         """Get the completeness condition"""

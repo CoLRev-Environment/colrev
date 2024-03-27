@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.acm\_digital\_library.ACMDigitalLibrarySear
       ~ACMDigitalLibrarySearchSource.from_dict
       ~ACMDigitalLibrarySearchSource.from_json
       ~ACMDigitalLibrarySearchSource.from_object
-      ~ACMDigitalLibrarySearchSource.get_masterdata
       ~ACMDigitalLibrarySearchSource.heuristic
       ~ACMDigitalLibrarySearchSource.json_schema
       ~ACMDigitalLibrarySearchSource.load
+      ~ACMDigitalLibrarySearchSource.prep_link_md
       ~ACMDigitalLibrarySearchSource.prepare
       ~ACMDigitalLibrarySearchSource.register_field_encoders
-      ~ACMDigitalLibrarySearchSource.run_search
+      ~ACMDigitalLibrarySearchSource.search
       ~ACMDigitalLibrarySearchSource.to_dict
       ~ACMDigitalLibrarySearchSource.to_json
 

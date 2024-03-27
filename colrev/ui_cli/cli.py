@@ -2779,7 +2779,7 @@ def show(  # type: ignore
 ) -> None:
     """Show aspects (sample, ...)"""
 
-    import colrev.operation
+    import colrev.process.operation
     import colrev.ui_cli.show_printer
 
     if keyword == "venv":
@@ -2804,7 +2804,7 @@ def show(  # type: ignore
 
     elif keyword == "cmd_history":
         cmds = []
-        colrev.operation.CheckOperation(review_manager)
+        colrev.process.operation.CheckOperation(review_manager)
         revlist = review_manager.dataset.get_repo().iter_commits()
 
         for commit in reversed(list(revlist)):
@@ -3061,7 +3061,7 @@ def merge(
     )
 
     if not branch:
-        colrev.operation.CheckOperation(review_manager)
+        colrev.process.operation.CheckOperation(review_manager)
         git_repo = review_manager.dataset.get_repo()
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
@@ -3101,7 +3101,7 @@ def undo(
     )
 
     if selection == "commit":
-        colrev.operation.CheckOperation(review_manager)
+        colrev.process.operation.CheckOperation(review_manager)
         git_repo = review_manager.dataset.get_repo()
         git_repo.git.reset("--hard", "HEAD~1")
 

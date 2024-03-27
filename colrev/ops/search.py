@@ -10,7 +10,7 @@ from typing import Optional
 import inquirer
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -21,7 +21,7 @@ from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 
-class Search(colrev.operation.Operation):
+class Search(colrev.process.operation.Operation):
     """Search for new records"""
 
     def __init__(
@@ -426,7 +426,7 @@ class Search(colrev.operation.Operation):
     @check_source_selection_exists(  # pylint: disable=too-many-function-args
         "selection_str"
     )
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

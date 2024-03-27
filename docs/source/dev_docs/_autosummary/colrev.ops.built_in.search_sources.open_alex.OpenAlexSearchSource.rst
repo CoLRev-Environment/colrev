@@ -23,13 +23,13 @@ colrev.ops.built\_in.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.from_dict
       ~OpenAlexSearchSource.from_json
       ~OpenAlexSearchSource.from_object
-      ~OpenAlexSearchSource.get_masterdata
       ~OpenAlexSearchSource.heuristic
       ~OpenAlexSearchSource.json_schema
       ~OpenAlexSearchSource.load
+      ~OpenAlexSearchSource.prep_link_md
       ~OpenAlexSearchSource.prepare
       ~OpenAlexSearchSource.register_field_encoders
-      ~OpenAlexSearchSource.run_search
+      ~OpenAlexSearchSource.search
       ~OpenAlexSearchSource.to_dict
       ~OpenAlexSearchSource.to_json
 

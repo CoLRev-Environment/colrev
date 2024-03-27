@@ -58,7 +58,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -91,7 +91,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         self.origin_prefix = self.search_source.get_origin_prefix()
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check the status (availability) of the OpenLibrary API"""
 

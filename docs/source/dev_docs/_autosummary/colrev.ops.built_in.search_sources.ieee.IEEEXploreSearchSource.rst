@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.from_dict
       ~IEEEXploreSearchSource.from_json
       ~IEEEXploreSearchSource.from_object
-      ~IEEEXploreSearchSource.get_masterdata
       ~IEEEXploreSearchSource.heuristic
       ~IEEEXploreSearchSource.json_schema
       ~IEEEXploreSearchSource.load
+      ~IEEEXploreSearchSource.prep_link_md
       ~IEEEXploreSearchSource.prepare
       ~IEEEXploreSearchSource.register_field_encoders
-      ~IEEEXploreSearchSource.run_search
+      ~IEEEXploreSearchSource.search
       ~IEEEXploreSearchSource.to_dict
       ~IEEEXploreSearchSource.to_json
 

@@ -61,7 +61,7 @@ class FilesSearchSource(JsonSchemaMixin):
     _batch_size = 20
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation

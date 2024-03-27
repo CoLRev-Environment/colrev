@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.jstor.JSTORSearchSource
       ~JSTORSearchSource.from_dict
       ~JSTORSearchSource.from_json
       ~JSTORSearchSource.from_object
-      ~JSTORSearchSource.get_masterdata
       ~JSTORSearchSource.heuristic
       ~JSTORSearchSource.json_schema
       ~JSTORSearchSource.load
+      ~JSTORSearchSource.prep_link_md
       ~JSTORSearchSource.prepare
       ~JSTORSearchSource.register_field_encoders
-      ~JSTORSearchSource.run_search
+      ~JSTORSearchSource.search
       ~JSTORSearchSource.to_dict
       ~JSTORSearchSource.to_json
 

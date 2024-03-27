@@ -21,6 +21,7 @@ colrev.ops.pdf\_prep.PDFPrep
       ~PDFPrep.decorate
       ~PDFPrep.generate_tei
       ~PDFPrep.main
+      ~PDFPrep.notify
       ~PDFPrep.prepare_pdf
       ~PDFPrep.setup_custom_script
       ~PDFPrep.update_colrev_pdf_ids
@@ -37,5 +38,4 @@ colrev.ops.pdf\_prep.PDFPrep
       ~PDFPrep.pdf_prepared
       ~PDFPrep.not_prepared
       ~PDFPrep.pdf_prep_package_endpoints
-      ~PDFPrep.force_mode
       ~PDFPrep.type

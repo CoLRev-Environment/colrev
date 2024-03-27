@@ -51,7 +51,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -87,7 +87,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         _, pyalex.config.email = self.review_manager.get_committer()
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the OpenAlex API"""
 

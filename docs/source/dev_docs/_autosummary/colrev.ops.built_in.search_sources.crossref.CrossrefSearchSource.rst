@@ -25,14 +25,14 @@ colrev.ops.built\_in.search\_sources.crossref.CrossrefSearchSource
       ~CrossrefSearchSource.from_json
       ~CrossrefSearchSource.from_object
       ~CrossrefSearchSource.get_etiquette
-      ~CrossrefSearchSource.get_masterdata
       ~CrossrefSearchSource.heuristic
       ~CrossrefSearchSource.json_schema
       ~CrossrefSearchSource.load
+      ~CrossrefSearchSource.prep_link_md
       ~CrossrefSearchSource.prepare
       ~CrossrefSearchSource.query_doi
       ~CrossrefSearchSource.register_field_encoders
-      ~CrossrefSearchSource.run_search
+      ~CrossrefSearchSource.search
       ~CrossrefSearchSource.to_dict
       ~CrossrefSearchSource.to_json
 

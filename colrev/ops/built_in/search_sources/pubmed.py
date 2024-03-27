@@ -64,7 +64,7 @@ class PubMedSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -185,7 +185,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Pubmed API"""
 

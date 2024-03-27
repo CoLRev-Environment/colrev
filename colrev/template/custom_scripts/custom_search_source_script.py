@@ -8,7 +8,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Fields
 
 

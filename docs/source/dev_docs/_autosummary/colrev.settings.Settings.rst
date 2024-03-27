@@ -21,7 +21,6 @@ colrev.settings.Settings
       ~Settings.from_dict
       ~Settings.from_json
       ~Settings.from_object
-      ~Settings.get_settings_schema
       ~Settings.is_curated_masterdata_repo
       ~Settings.is_curated_repo
       ~Settings.json_schema
@@ -40,7 +39,6 @@ colrev.settings.Settings
       ~Settings.project
       ~Settings.sources
       ~Settings.search
-      ~Settings.load
       ~Settings.prep
       ~Settings.dedupe
       ~Settings.prescreen

@@ -16,7 +16,6 @@ colrev.env.utils
       :nosignatures:
 
       custom_asdict_factory
-      dict_keys_exists
       dict_set_nested
       get_by_path
       get_package_file_content
@@ -28,4 +27,3 @@ colrev.env.utils
       percent_upper_chars
       remove_accents
       retrieve_package_file
-      set_by_path

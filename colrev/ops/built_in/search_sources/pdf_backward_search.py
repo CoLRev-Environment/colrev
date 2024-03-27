@@ -61,7 +61,7 @@ class BackwardSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
         if "min_intext_citations" not in settings["search_parameters"]:

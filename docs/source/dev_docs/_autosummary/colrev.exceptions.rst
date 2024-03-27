@@ -23,7 +23,6 @@ colrev.exceptions
       :toctree:
 
       AppendOnlyViolation
-      BrokenFilesError
       CleanRepoRequiredError
       CoLRevException
       CoLRevUpgradeError
@@ -42,13 +41,10 @@ colrev.exceptions
       InvalidMerge
       InvalidPDFException
       InvalidQueryException
-      InvalidRegistryKeyException
       InvalidSettingsError
       MissingDependencyError
       MissingRecordQualityRuleSpecification
-      NoPaperEndpointRegistered
       NoRecordsError
-      NoSearchFeedRegistered
       NonEmptyDirectoryError
       NotEnoughDataToIdentifyException
       NotFeedIdentifiableException
@@ -59,9 +55,9 @@ colrev.exceptions
       PackageSettingMustStartWithPackagesException
       ParameterError
       PortAlreadyRegisteredException
-      PreparationBreak
       ProcessOrderViolation
       PropagatedIDChange
+      RecordNotFoundException
       RecordNotFoundInPrepSourceException
       RecordNotInIndexException
       RecordNotInRepoException
@@ -74,11 +70,11 @@ colrev.exceptions
       SearchNotAutomated
       SearchSourceException
       ServiceNotAvailableException
-      SourceHeuristicsException
       StatusFieldValueError
       StatusTransitionError
       TEIException
       TEITimeoutException
       TOCNotAvailableException
+      TemplateNotAvailableError
       UnstagedGitChangesError
       UnsupportedImportFormatError

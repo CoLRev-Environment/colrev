@@ -40,8 +40,8 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
 
    .. autosummary::
 
-      ~BibliographyExport.IMAGE_NAME
       ~BibliographyExport.PYBTEX_FORMATS
       ~BibliographyExport.ZOTERO_FORMATS
+      ~BibliographyExport.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
       ~BibliographyExport.ci_supported
       ~BibliographyExport.settings

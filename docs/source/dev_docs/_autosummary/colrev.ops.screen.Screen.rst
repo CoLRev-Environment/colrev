@@ -26,9 +26,11 @@ colrev.ops.screen.Screen
       ~Screen.get_screening_criteria
       ~Screen.include_all_in_screen
       ~Screen.main
+      ~Screen.notify
       ~Screen.screen
       ~Screen.set_screening_criteria
       ~Screen.setup_custom_script
+      ~Screen.to_screen
 
 
 
@@ -38,5 +40,4 @@ colrev.ops.screen.Screen
 
    .. autosummary::
 
-      ~Screen.force_mode
       ~Screen.type

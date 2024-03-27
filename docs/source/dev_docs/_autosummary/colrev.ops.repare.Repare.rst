@@ -20,6 +20,7 @@ colrev.ops.repare.Repare
       ~Repare.conclude
       ~Repare.decorate
       ~Repare.main
+      ~Repare.notify
 
 
 
@@ -29,5 +30,4 @@ colrev.ops.repare.Repare
 
    .. autosummary::
 
-      ~Repare.force_mode
       ~Repare.type

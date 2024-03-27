@@ -5,14 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import colrev.env.utils
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.writer.write_utils import write_file
 
 
-class Remove(colrev.operation.Operation):
+class Remove(colrev.process.operation.Operation):
     """Remove records, ... from CoLRev projects."""
 
     def __init__(
@@ -26,7 +26,7 @@ class Remove(colrev.operation.Operation):
             notify_state_transition_operation=False,
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def remove_records(self, *, ids: str) -> None:
         """Remove records from CoLRev project."""
 

@@ -2,7 +2,7 @@
 """CoLRev pull operation: Pull project and records."""
 from __future__ import annotations
 
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import OperationsType
@@ -12,7 +12,7 @@ from colrev.constants import OperationsType
 CHANGE_COUNTER = None
 
 
-class Pull(colrev.operation.Operation):
+class Pull(colrev.process.operation.Operation):
     """Pull the project and records"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -21,7 +21,7 @@ class Pull(colrev.operation.Operation):
             operations_type=OperationsType.format,
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Pull the CoLRev project and records (main entrypoint)"""
 

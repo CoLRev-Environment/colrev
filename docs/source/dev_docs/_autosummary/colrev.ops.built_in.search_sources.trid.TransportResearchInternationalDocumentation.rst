@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.trid.TransportResearchInternationalDocument
       ~TransportResearchInternationalDocumentation.from_dict
       ~TransportResearchInternationalDocumentation.from_json
       ~TransportResearchInternationalDocumentation.from_object
-      ~TransportResearchInternationalDocumentation.get_masterdata
       ~TransportResearchInternationalDocumentation.heuristic
       ~TransportResearchInternationalDocumentation.json_schema
       ~TransportResearchInternationalDocumentation.load
+      ~TransportResearchInternationalDocumentation.prep_link_md
       ~TransportResearchInternationalDocumentation.prepare
       ~TransportResearchInternationalDocumentation.register_field_encoders
-      ~TransportResearchInternationalDocumentation.run_search
+      ~TransportResearchInternationalDocumentation.search
       ~TransportResearchInternationalDocumentation.to_dict
       ~TransportResearchInternationalDocumentation.to_json
 

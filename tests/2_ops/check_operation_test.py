@@ -4,7 +4,7 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
-from colrev.record.record_state_model import RecordStateModel
+from colrev.process.model import ProcessModel
 
 
 def test_check_operation_precondition(  # type: ignore
@@ -20,7 +20,7 @@ def test_check_operation_precondition(  # type: ignore
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
 
     with pytest.raises(colrev_exceptions.NoRecordsError):
-        RecordStateModel.check_operation_precondition(dedupe_operation)
+        ProcessModel.check_operation_precondition(dedupe_operation)
 
     helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
 
@@ -30,7 +30,7 @@ def test_check_operation_precondition(  # type: ignore
     )
 
     with pytest.raises(colrev_exceptions.ProcessOrderViolation):
-        RecordStateModel.check_operation_precondition(prescreen_operation)
+        ProcessModel.check_operation_precondition(prescreen_operation)
     prescreen_operation.review_manager.settings.project.delay_automated_processing = (
         False
     )

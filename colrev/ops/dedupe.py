@@ -16,7 +16,7 @@ from bib_dedupe.bib_dedupe import prep
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
@@ -30,7 +30,7 @@ from colrev.constants import RecordState
 # pylint: disable=too-many-lines
 
 
-class Dedupe(colrev.operation.Operation):
+class Dedupe(colrev.process.operation.Operation):
     """Deduplicate records (entity resolution)"""
 
     NON_DUPLICATE_FILE_XLSX = Path("non_duplicates_to_validate.xlsx")
@@ -666,7 +666,7 @@ class Dedupe(colrev.operation.Operation):
         else:
             print()
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, debug: bool = False) -> None:
         """Dedupe records (main entrypoint)"""
 

@@ -26,6 +26,7 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.import_pdf
       ~PDFGet.link_pdf
       ~PDFGet.main
+      ~PDFGet.notify
       ~PDFGet.relink_pdfs
       ~PDFGet.rename_pdfs
       ~PDFGet.setup_custom_script
@@ -41,5 +42,4 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.to_retrieve
       ~PDFGet.retrieved
       ~PDFGet.not_retrieved
-      ~PDFGet.force_mode
       ~PDFGet.type

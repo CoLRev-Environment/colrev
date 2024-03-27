@@ -23,13 +23,13 @@ colrev.ops.built\_in.search\_sources.pubmed.PubMedSearchSource
       ~PubMedSearchSource.from_dict
       ~PubMedSearchSource.from_json
       ~PubMedSearchSource.from_object
-      ~PubMedSearchSource.get_masterdata
       ~PubMedSearchSource.heuristic
       ~PubMedSearchSource.json_schema
       ~PubMedSearchSource.load
+      ~PubMedSearchSource.prep_link_md
       ~PubMedSearchSource.prepare
       ~PubMedSearchSource.register_field_encoders
-      ~PubMedSearchSource.run_search
+      ~PubMedSearchSource.search
       ~PubMedSearchSource.to_dict
       ~PubMedSearchSource.to_json
 

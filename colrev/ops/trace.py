@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import dictdiffer
 
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
@@ -16,7 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import git.objects.commit
 
 
-class Trace(colrev.operation.Operation):
+class Trace(colrev.process.operation.Operation):
     """Trace a record through history"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -86,7 +86,7 @@ class Trace(colrev.operation.Operation):
         prev_record = record
         return prev_record
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, record_id: str) -> None:
         """Trace a record (main entrypoint)"""
 

@@ -9,7 +9,7 @@ from pathlib import Path
 import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils_formatter
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
@@ -21,7 +21,7 @@ from colrev.constants import RecordState
 from colrev.constants import SearchType
 
 
-class Load(colrev.operation.Operation):
+class Load(colrev.process.operation.Operation):
     """Load the records"""
 
     def __init__(
@@ -433,7 +433,7 @@ class Load(colrev.operation.Operation):
         if not self.review_manager.high_level_operation:
             print()
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

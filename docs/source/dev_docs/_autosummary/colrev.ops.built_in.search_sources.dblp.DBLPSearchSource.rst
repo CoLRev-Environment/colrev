@@ -23,13 +23,13 @@ colrev.ops.built\_in.search\_sources.dblp.DBLPSearchSource
       ~DBLPSearchSource.from_dict
       ~DBLPSearchSource.from_json
       ~DBLPSearchSource.from_object
-      ~DBLPSearchSource.get_masterdata
       ~DBLPSearchSource.heuristic
       ~DBLPSearchSource.json_schema
       ~DBLPSearchSource.load
+      ~DBLPSearchSource.prep_link_md
       ~DBLPSearchSource.prepare
       ~DBLPSearchSource.register_field_encoders
-      ~DBLPSearchSource.run_search
+      ~DBLPSearchSource.search
       ~DBLPSearchSource.to_dict
       ~DBLPSearchSource.to_json
 

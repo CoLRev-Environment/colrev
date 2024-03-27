@@ -26,5 +26,4 @@ colrev.env.resources.Resources
 
    .. autosummary::
 
-      ~Resources.annotators_path
       ~Resources.curations_path

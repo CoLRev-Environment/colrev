@@ -16,7 +16,7 @@ from yaml import safe_load
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -28,7 +28,7 @@ from colrev.writer.write_utils import to_string
 # pylint: disable=too-few-public-methods
 
 
-class Upgrade(colrev.operation.Operation):
+class Upgrade(colrev.process.operation.Operation):
     """Upgrade a CoLRev project"""
 
     repo: git.Repo

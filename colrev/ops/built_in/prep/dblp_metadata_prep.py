@@ -55,7 +55,7 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         ]
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Crossref API"""
         self.dblp_source.check_availability(source_operation=source_operation)

@@ -13,13 +13,13 @@ import yaml
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
-from colrev.record.record_state_model import RecordStateModel
+from colrev.process.model import ProcessModel
 
 
 class Checker:
@@ -519,7 +519,7 @@ class Checker:
         else:
             proc_transition_list: list = [
                 x["trigger"]
-                for x in RecordStateModel.transitions
+                for x in ProcessModel.transitions
                 if str(x["source"]) == prior_status[0] and str(x["dest"]) == status
             ]
             if len(proc_transition_list) == 0 and prior_status[0] != status:

@@ -20,6 +20,7 @@ colrev.ops.merge.Merge
       ~Merge.conclude
       ~Merge.decorate
       ~Merge.main
+      ~Merge.notify
 
 
 
@@ -29,5 +30,4 @@ colrev.ops.merge.Merge
 
    .. autosummary::
 
-      ~Merge.force_mode
       ~Merge.type

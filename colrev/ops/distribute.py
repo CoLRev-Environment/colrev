@@ -6,7 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
-import colrev.operation
+import colrev.process.operation
 import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import OperationsType
@@ -14,7 +14,7 @@ from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 
-class Distribute(colrev.operation.Operation):
+class Distribute(colrev.process.operation.Operation):
     """Distribute records to other local CoLRev projects"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -49,7 +49,7 @@ class Distribute(colrev.operation.Operation):
         max_id = max([int(cid) for cid in ids if cid.isdigit()] + [0]) + 1
         return max_id
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, path: Path, target: Path) -> None:
         """Distribute records to other CoLRev repositories (main entrypoint)"""
 

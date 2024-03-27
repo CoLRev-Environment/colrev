@@ -10,7 +10,7 @@ from typing import Optional
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -19,7 +19,7 @@ from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
-class PDFGetMan(colrev.operation.Operation):
+class PDFGetMan(colrev.process.operation.Operation):
     """Get PDFs manually"""
 
     pdf_get_man_package_endpoints: dict[str, typing.Any]
@@ -176,7 +176,7 @@ class PDFGetMan(colrev.operation.Operation):
             {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Get PDFs manually (main entrypoint)"""
 

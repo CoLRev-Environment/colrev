@@ -18,7 +18,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.settings
@@ -328,7 +328,7 @@ class Dataset:
             return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
         try:
-            colrev.operation.CheckOperation(
+            colrev.process.operation.CheckOperation(
                 review_manager=self.review_manager
             )  # to notify
             quality_model = self.review_manager.get_qm()

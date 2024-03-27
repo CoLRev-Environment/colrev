@@ -22,7 +22,7 @@ from requests.exceptions import ReadTimeout
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
@@ -56,7 +56,7 @@ FIELDS_TO_KEEP = FieldSet.STANDARDIZED_FIELD_KEYS + [
 
 
 # pylint: disable=too-many-instance-attributes
-class Prep(colrev.operation.Operation):
+class Prep(colrev.process.operation.Operation):
     """Prepare records (metadata)"""
 
     timeout = 30
@@ -1082,7 +1082,7 @@ class Prep(colrev.operation.Operation):
             print("\n\n")
 
     # pylint: disable=too-many-arguments
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

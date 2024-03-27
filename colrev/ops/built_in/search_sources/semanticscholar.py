@@ -21,9 +21,9 @@ import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
 import colrev.ops.built_in.search_sources.semanticscholar_utils as connector_utils
 import colrev.ops.load
+import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
@@ -82,7 +82,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -102,7 +102,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.s2_lock = Lock()
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check the availability of the Semantic Scholar API"""
 

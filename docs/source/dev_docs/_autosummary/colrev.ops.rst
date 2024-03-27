@@ -36,13 +36,6 @@ colrev.ops
    colrev.ops.distribute
    colrev.ops.init
    colrev.ops.load
-   colrev.ops.load_utils_bib
-   colrev.ops.load_utils_enl
-   colrev.ops.load_utils_formatter
-   colrev.ops.load_utils_md
-   colrev.ops.load_utils_nbib
-   colrev.ops.load_utils_ris
-   colrev.ops.load_utils_table
    colrev.ops.merge
    colrev.ops.pdf_get
    colrev.ops.pdf_get_man
@@ -58,11 +51,10 @@ colrev.ops
    colrev.ops.review_types
    colrev.ops.screen
    colrev.ops.search
-   colrev.ops.search_feed
+   colrev.ops.search_api_feed
    colrev.ops.search_sources
    colrev.ops.status
    colrev.ops.sync
    colrev.ops.trace
    colrev.ops.upgrade
    colrev.ops.validate
-   colrev.ops.write_utils_bib

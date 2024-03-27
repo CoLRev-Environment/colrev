@@ -12,7 +12,7 @@ from colrev.constants import RecordState
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
     """Print the sample on cli"""
 
-    colrev.operation.CheckOperation(review_manager)
+    colrev.process.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
     sample = [
         r

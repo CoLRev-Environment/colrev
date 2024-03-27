@@ -33,12 +33,15 @@
    colrev.env
    colrev.exceptions
    colrev.hooks
+   colrev.id_setter
+   colrev.loader
    colrev.logger
-   colrev.operation
    colrev.ops
    colrev.pandas
+   colrev.process
    colrev.qm
-   colrev.record.record
+   colrev.record
    colrev.review_manager
    colrev.settings
    colrev.ui_cli
+   colrev.writer

@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.remove\_error500\_urls.RemoveError500URLsPrep
 
       ~RemoveError500URLsPrep.always_apply_changes
       ~RemoveError500URLsPrep.ci_supported
+      ~RemoveError500URLsPrep.requests_headers
       ~RemoveError500URLsPrep.source_correction_hint

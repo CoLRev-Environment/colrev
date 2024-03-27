@@ -8,7 +8,7 @@ from pathlib import Path
 import colrev.constants as c
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -19,7 +19,7 @@ from colrev.constants import SearchType
 from colrev.writer.write_utils import write_file
 
 
-class Repare(colrev.operation.Operation):
+class Repare(colrev.process.operation.Operation):
     """Repare a CoLRev project"""
 
     def __init__(
@@ -422,7 +422,7 @@ class Repare(colrev.operation.Operation):
             ) and record.data.get("link", "").endswith("Accept=text/xml"):
                 record.remove_field(key="link")
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
 

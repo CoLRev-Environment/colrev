@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.synergy\_datasets.SYNERGYDatasetsSearchSour
       ~SYNERGYDatasetsSearchSource.from_dict
       ~SYNERGYDatasetsSearchSource.from_json
       ~SYNERGYDatasetsSearchSource.from_object
-      ~SYNERGYDatasetsSearchSource.get_masterdata
       ~SYNERGYDatasetsSearchSource.heuristic
       ~SYNERGYDatasetsSearchSource.json_schema
       ~SYNERGYDatasetsSearchSource.load
+      ~SYNERGYDatasetsSearchSource.prep_link_md
       ~SYNERGYDatasetsSearchSource.prepare
       ~SYNERGYDatasetsSearchSource.register_field_encoders
-      ~SYNERGYDatasetsSearchSource.run_search
+      ~SYNERGYDatasetsSearchSource.search
       ~SYNERGYDatasetsSearchSource.to_dict
       ~SYNERGYDatasetsSearchSource.to_json
 

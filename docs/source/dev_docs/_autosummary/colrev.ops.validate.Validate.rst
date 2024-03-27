@@ -20,6 +20,7 @@ colrev.ops.validate.Validate
       ~Validate.conclude
       ~Validate.decorate
       ~Validate.main
+      ~Validate.notify
       ~Validate.validate_merge_prescreen_screen
 
 
@@ -30,5 +31,4 @@ colrev.ops.validate.Validate
 
    .. autosummary::
 
-      ~Validate.force_mode
       ~Validate.type

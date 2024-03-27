@@ -309,7 +309,7 @@ class Initializer:
             )
         else:
             package_manager = self.review_manager.get_package_manager()
-            check_operation = colrev.operation.CheckOperation(
+            check_operation = colrev.process.operation.CheckOperation(
                 review_manager=self.review_manager
             )
             review_type_endpoint = package_manager.load_packages(

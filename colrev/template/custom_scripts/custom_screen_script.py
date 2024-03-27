@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import zope.interface
 from dacite import from_dict
 
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 

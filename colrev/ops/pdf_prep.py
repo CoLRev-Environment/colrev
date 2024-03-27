@@ -11,8 +11,8 @@ from pathlib import Path
 import requests
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
 import colrev.ops.built_in.pdf_prep.grobid_tei
+import colrev.process.operation
 import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -22,7 +22,7 @@ from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
-class PDFPrep(colrev.operation.Operation):
+class PDFPrep(colrev.process.operation.Operation):
     """Prepare PDFs"""
 
     to_prepare: int
@@ -380,7 +380,7 @@ class PDFPrep(colrev.operation.Operation):
             except colrev_exceptions.TEIException:
                 self.review_manager.logger.error("Error generating TEI")
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

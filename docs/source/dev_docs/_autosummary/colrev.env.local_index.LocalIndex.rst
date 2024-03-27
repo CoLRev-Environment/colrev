@@ -21,7 +21,6 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.index
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_records
-      ~LocalIndex.is_duplicate
       ~LocalIndex.load_journal_rankings
       ~LocalIndex.reinitialize_sqlite_db
       ~LocalIndex.retrieve
@@ -43,13 +42,8 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.SELECT_ALL_QUERIES
       ~LocalIndex.SELECT_KEY_QUERIES
       ~LocalIndex.SELECT_LAYERD_FIELDS_QUERY
-      ~LocalIndex.LOCAL_INDEX_SQLITE_FILE
       ~LocalIndex.TOC_INDEX
       ~LocalIndex.UPDATE_LAYERD_FIELDS_QUERY
-      ~LocalIndex.annotators_path
       ~LocalIndex.global_keys
-      ~LocalIndex.local_environment_path
-      ~LocalIndex.max_len_sha256
       ~LocalIndex.request_timeout
       ~LocalIndex.sqlite_connection
-      ~LocalIndex.teiind_path

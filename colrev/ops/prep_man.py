@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -19,7 +19,7 @@ from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
-class PrepMan(colrev.operation.Operation):
+class PrepMan(colrev.process.operation.Operation):
     """Prepare records manually (metadata)"""
 
     def __init__(
@@ -262,7 +262,7 @@ class PrepMan(colrev.operation.Operation):
             {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
 

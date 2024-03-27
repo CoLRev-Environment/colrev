@@ -7,7 +7,7 @@ import random
 import zope.interface
 from dacite import from_dict
 
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 
 

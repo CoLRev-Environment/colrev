@@ -13,7 +13,7 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields

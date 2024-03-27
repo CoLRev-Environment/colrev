@@ -11,7 +11,7 @@ from typing import Optional
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -19,7 +19,7 @@ from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
 
-class Validate(colrev.operation.Operation):
+class Validate(colrev.process.operation.Operation):
     """Validate changes"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -672,7 +672,7 @@ class Validate(colrev.operation.Operation):
             and "." != scope
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

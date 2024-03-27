@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import colrev.operation
 import colrev.ops.correct
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -15,7 +15,7 @@ from colrev.constants import OperationsType
 from colrev.constants import PackageEndpointType
 
 
-class Push(colrev.operation.Operation):
+class Push(colrev.process.operation.Operation):
     """Push the project and record corrections"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
@@ -24,7 +24,7 @@ class Push(colrev.operation.Operation):
             operations_type=OperationsType.check,
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

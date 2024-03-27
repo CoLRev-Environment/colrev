@@ -16,6 +16,7 @@ colrev.constants.ENTRYTYPES
    .. autosummary::
       :nosignatures:
 
+      ~ENTRYTYPES.get_all
 
 
 

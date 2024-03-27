@@ -20,6 +20,7 @@ colrev.ops.pull.Pull
       ~Pull.conclude
       ~Pull.decorate
       ~Pull.main
+      ~Pull.notify
 
 
 
@@ -29,5 +30,4 @@ colrev.ops.pull.Pull
 
    .. autosummary::
 
-      ~Pull.force_mode
       ~Pull.type

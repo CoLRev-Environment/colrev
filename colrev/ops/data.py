@@ -7,8 +7,8 @@ from typing import Optional
 
 import pandas as pd
 
-import colrev.operation
 import colrev.ops.built_in.pdf_prep.grobid_tei
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -18,7 +18,7 @@ from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
 
 
-class Data(colrev.operation.Operation):
+class Data(colrev.process.operation.Operation):
     """Class supporting structured and unstructured
     data extraction, analysis and synthesis"""
 
@@ -307,7 +307,7 @@ class Data(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

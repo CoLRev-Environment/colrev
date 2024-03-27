@@ -8,7 +8,7 @@ from dictdiffer import diff
 from git.exc import GitCommandError
 
 import colrev.env.utils
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -17,7 +17,7 @@ from colrev.constants import OperationsType
 # pylint: disable=too-few-public-methods
 
 
-class Merge(colrev.operation.Operation):
+class Merge(colrev.process.operation.Operation):
     """Merge branches of CoLRev project"""
 
     def __init__(
@@ -82,7 +82,7 @@ class Merge(colrev.operation.Operation):
 
         return non_status_changes
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, branch: str) -> None:
         """Merge branches of a CoLRev project (main entrypoint)"""
 
