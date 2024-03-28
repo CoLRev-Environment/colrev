@@ -12,9 +12,7 @@ def test_check_operation_precondition(  # type: ignore
 ) -> None:
     """Test the check operation preconditions"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="changed_settings_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
 
     dedupe_operation = base_repo_review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
@@ -22,7 +20,7 @@ def test_check_operation_precondition(  # type: ignore
     with pytest.raises(colrev_exceptions.NoRecordsError):
         ProcessModel.check_operation_precondition(dedupe_operation)
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
 
     prescreen_operation = base_repo_review_manager.get_prescreen_operation()
     prescreen_operation.review_manager.settings.project.delay_automated_processing = (

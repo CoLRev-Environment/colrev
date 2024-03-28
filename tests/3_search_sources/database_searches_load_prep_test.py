@@ -191,9 +191,7 @@ def test_source(  # type: ignore
 ) -> None:
     """Test the source_specific prep"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="changed_settings_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="changed_settings_commit")
 
     print(Path.cwd())  # To facilitate debugging
 

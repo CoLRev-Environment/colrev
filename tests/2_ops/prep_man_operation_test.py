@@ -12,7 +12,7 @@ def test_prep_man(  # type: ignore
 ) -> None:
     """Test the prep-man operation"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     prep_man_operation = base_repo_review_manager.get_prep_man_operation()
     prep_man_operation.prep_man_stats()
     prep_man_operation.main()

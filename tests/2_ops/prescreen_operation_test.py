@@ -16,7 +16,5 @@ def test_prescreen(  # type: ignore
     prescreen_operation.create_prescreen_split(create_split=2)
     prescreen_operation.include_all_in_prescreen(persist=False)
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="dedupe_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
     prescreen_operation.setup_custom_script()

@@ -15,7 +15,7 @@ def fixture_dedupe_test_setup(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> colrev.review_manager.ReviewManager:
     """Fixture returning the dedupe_test_setup"""
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
 
     helpers.retrieve_test_file(
         source=Path("data/dedupe/records.bib"),

@@ -12,7 +12,7 @@ from colrev.constants import PDFPathType
 #     """Test the pdf-get operation"""
 
 #     helpers.reset_commit(
-#         review_manager=base_repo_review_manager, commit="prescreen_commit"
+#         base_repo_review_manager, commit="prescreen_commit"
 #     )
 
 #     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
@@ -26,9 +26,7 @@ def test_pdf_get_import_file(  # type: ignore
 ) -> None:
     """Test the pdf-get import_file()"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="prescreen_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -45,9 +43,7 @@ def test_pdf_get_import_file(  # type: ignore
     )
     base_repo_review_manager.settings.pdf_get.pdf_path_type = PDFPathType.copy
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="prescreen_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
 
     pdf_get_operation.import_pdf(
         record=colrev.record.record.Record(
@@ -67,9 +63,7 @@ def test_pdf_get_setup_custom_script(  # type: ignore
 ) -> None:
     """Test the pdf-get setup_custom_script()"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="prescreen_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="prescreen_commit")
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -82,9 +76,7 @@ def test_pdf_get_copy_pdfs_to_repo(  # type: ignore
 ) -> None:
     """Test the pdf-get copy_pdfs_to_repo()"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="pdf_get_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -108,9 +100,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 ) -> None:
     """Test the pdf-get get_target_filepath()"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="pdf_get_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
 
     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(
         notify_state_transition_operation=True
@@ -159,7 +149,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 #     """Test the pdf-get get_relink_pdfs()"""
 
 #     helpers.reset_commit(
-#         review_manager=base_repo_review_manager, commit="pdf_get_commit"
+#         base_repo_review_manager, commit="pdf_get_commit"
 #     )
 
 #     pdf_get_operation = base_repo_review_manager.get_pdf_get_operation(

@@ -46,8 +46,8 @@ class Helpers:
 
     @staticmethod
     def reset_commit(
-        *,
         review_manager: colrev.review_manager.ReviewManager,
+        *,
         commit: str = "",
         commit_sha: str = "",
     ) -> None:
@@ -92,7 +92,7 @@ def run_around_tests(  # type: ignore
     base_repo_review_manager.notified_next_operation = None
     repo = git.Repo(base_repo_review_manager.path)
     repo.git.clean("-df")
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="data_commit")
 
 
 @pytest.fixture(scope="session", name="test_local_index_dir")

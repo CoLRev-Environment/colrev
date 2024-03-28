@@ -8,9 +8,7 @@ def test_get_analytics(  # type: ignore
 ) -> None:
     """Test the prescreen operation"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="dedupe_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
 
     status_operation = base_repo_review_manager.get_status_operation()
     ret = status_operation.get_analytics()

@@ -8,7 +8,7 @@ def test_prep(  # type: ignore
 ) -> None:
     """Test the prep operation"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="load_commit")
 
     base_repo_review_manager.verbose_mode = True
     prep_operation = base_repo_review_manager.get_prep_operation()
@@ -20,7 +20,7 @@ def test_skip_prep(  # type: ignore
 ) -> None:
     """Test skip-prep"""
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="load_commit")
     prep_operation = base_repo_review_manager.get_prep_operation()
     prep_operation.skip_prep()
 
@@ -49,9 +49,7 @@ def test_prep_with_polish_flag(  # type: ignore
     """Test prep operation with polish flag"""
 
     # Using helper to checkout to the specific commit for pdf-get
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="pdf_get_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="pdf_get_commit")
 
     # Setting up the prep operation with polish flag
     prep_operation = base_repo_review_manager.get_prep_operation()

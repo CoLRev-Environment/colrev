@@ -28,7 +28,7 @@ def test_search_selection(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the search selection"""
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="load_commit")
 
     search_operation = base_repo_review_manager.get_search_operation()
 
@@ -92,7 +92,7 @@ def test_search_get_unique_filename(
 #     """Test the search.remove_forthcoming()"""
 
 #     helpers.reset_commit(
-#         review_manager=base_repo_review_manager, commit="changed_settings_commit"
+#         base_repo_review_manager, commit="changed_settings_commit"
 #     )
 
 #     print(Path.cwd())  # To facilitate debugging

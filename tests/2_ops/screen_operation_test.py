@@ -25,17 +25,13 @@ def test_screen(  # type: ignore
 ) -> None:
     """Test the screen operation"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="screen_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="screen_commit")
     screen_operation = base_repo_review_manager.get_screen_operation()
     screen_operation.include_all_in_screen(persist=False)
     screen_operation.create_screen_split(create_split=2)
     screen_operation.setup_custom_script()
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="screen_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="screen_commit")
 
 
 def test_add_criterion(  # type: ignore

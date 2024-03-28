@@ -25,7 +25,7 @@ def test_check_precondition_load(  # type: ignore
     with pytest.raises(colrev_exceptions.CleanRepoRequiredError):
         load_operation.check_precondition()
 
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
     dedupe_operation = colrev.process.operation.Operation(
         review_manager=base_repo_review_manager, operations_type=OperationsType.dedupe
     )
