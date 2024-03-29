@@ -100,9 +100,7 @@ class PRISMA(JsonSchemaMixin):
         prisma_data["ind"] = prisma_data["data"]
         prisma_data.set_index("ind", inplace=True)
         prisma_data.loc["database_results", "n"] = status_stats.overall.md_retrieved
-        prisma_data.loc["duplicates", "n"] = (
-            status_stats.currently.md_duplicates_removed
-        )
+        prisma_data.loc["duplicates", "n"] = status_stats.md_duplicates_removed
         prisma_data.loc["records_screened", "n"] = status_stats.overall.rev_prescreen
         prisma_data.loc["records_excluded", "n"] = (
             status_stats.overall.rev_prescreen_excluded

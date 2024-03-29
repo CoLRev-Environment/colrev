@@ -1,5 +1,5 @@
-colrev.process.record\_state\_model.ProcessModel
-====================================================
+colrev.process.model.ProcessModel
+=================================
 
 .. currentmodule:: colrev.process.model
 

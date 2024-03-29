@@ -16,5 +16,6 @@ colrev.loader.md.MarkdownLoader
    .. autosummary::
       :nosignatures:
 
+      ~MarkdownLoader.get_nr_records
       ~MarkdownLoader.load
       ~MarkdownLoader.load_records_list

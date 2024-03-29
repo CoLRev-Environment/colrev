@@ -32,15 +32,20 @@ class Status(colrev.process.operation.Operation):
         revlist = list(
             (
                 commit.hexsha,
+                commit.message,
                 commit.author.name,
                 commit.committed_date,
                 (commit.tree / "status.yaml").data_stream.read(),
             )
             for commit in git_repo.iter_commits(paths="status.yaml")
         )
-        for ind, (commit_id, commit_author, committed_date, filecontents) in enumerate(
-            revlist
-        ):
+        for ind, (
+            commit_id,
+            commit_msg,
+            commit_author,
+            committed_date,
+            filecontents,
+        ) in enumerate(revlist):
             try:
                 var_t = io.StringIO(filecontents.decode("utf-8"))
 
@@ -55,6 +60,7 @@ class Status(colrev.process.operation.Operation):
                     "atomic_steps": data_loaded["atomic_steps"],
                     "completed_atomic_steps": data_loaded["completed_atomic_steps"],
                     "commit_id": commit_id,
+                    "commit_message": commit_msg.split("\n")[0],
                     "commit_author": commit_author,
                     "committed_date": committed_date,
                     "search": data_loaded["overall"]["md_retrieved"],

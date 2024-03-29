@@ -194,3 +194,30 @@ def loads(  # type: ignore
         unique_id_field=unique_id_field,
         logger=logger,
     )
+
+
+def get_nr_records(  # type: ignore
+    filename: Path,
+    # logger: logging.Logger = logging.getLogger(__name__),
+) -> int:
+    """Get the number of records in a file"""
+
+    if not filename.exists():
+        raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
+
+    if filename.suffix == ".bib":
+        parser = colrev.loader.bib.BIBLoader  # type: ignore
+    elif filename.suffix in [".csv", ".xls", ".xlsx"]:
+        parser = colrev.loader.table.TableLoader  # type: ignore
+    elif filename.suffix == ".ris":
+        parser = colrev.loader.ris.RISLoader  # type: ignore
+    elif filename.suffix in [".enl", ".txt"]:
+        parser = colrev.loader.enl.ENLLoader  # type: ignore
+    elif filename.suffix == ".md":
+        parser = colrev.loader.md.MarkdownLoader  # type: ignore
+    elif filename.suffix == ".nbib":
+        parser = colrev.loader.nbib.NBIBLoader  # type: ignore
+    else:
+        raise NotImplementedError
+
+    return parser.get_nr_records(filename)

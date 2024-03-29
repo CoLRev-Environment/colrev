@@ -315,6 +315,7 @@ class RecordState(Enum):
     @classmethod
     def get_post_x_states(cls, *, state: "RecordState") -> typing.Set["RecordState"]:
         """Get the states after state x (passed as a parameter)"""
+        # pylint: disable=too-many-return-statements
         if state == RecordState.md_prepared:
             return {
                 RecordState.md_prepared,
@@ -357,6 +358,15 @@ class RecordState(Enum):
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             }
+        if state == RecordState.pdf_imported:
+            return {
+                RecordState.pdf_imported,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
         if state == RecordState.pdf_prepared:
             return {
                 RecordState.pdf_prepared,
@@ -364,13 +374,18 @@ class RecordState(Enum):
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             }
-
+        if state == RecordState.pdf_not_available:
+            return {
+                RecordState.pdf_not_available,
+            }
         if state == RecordState.rev_included:
             return {
                 RecordState.rev_excluded,
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             }
+        if state == RecordState.rev_synthesized:
+            return {RecordState.rev_synthesized}
 
         raise ValueError(f"state {state}")
 

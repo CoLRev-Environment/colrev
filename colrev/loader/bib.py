@@ -55,6 +55,16 @@ class BIBLoader(colrev.loader.loader.Loader):
             logger=logger,
         )
 
+    @classmethod
+    def get_nr_records(cls, filename: Path) -> int:
+        """Get the number of records in the file"""
+        count = 0
+        with open(filename, encoding="utf8") as file:
+            for line in file:
+                if line.startswith("@"):
+                    count += 1
+        return count
+
     def _generate_next_unique_id(
         self,
         *,

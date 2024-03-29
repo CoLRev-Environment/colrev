@@ -16,6 +16,7 @@ colrev.loader.nbib.NBIBLoader
    .. autosummary::
       :nosignatures:
 
+      ~NBIBLoader.get_nr_records
       ~NBIBLoader.load
       ~NBIBLoader.load_records_list
 

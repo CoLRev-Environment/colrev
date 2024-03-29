@@ -17,6 +17,7 @@ colrev.loader.bib.BIBLoader
       :nosignatures:
 
       ~BIBLoader.get_nr_in_bib
+      ~BIBLoader.get_nr_records
       ~BIBLoader.get_record_header_items
       ~BIBLoader.load
       ~BIBLoader.load_records_list

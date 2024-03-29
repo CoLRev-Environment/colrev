@@ -16,5 +16,6 @@ colrev.loader.table.TableLoader
    .. autosummary::
       :nosignatures:
 
+      ~TableLoader.get_nr_records
       ~TableLoader.load
       ~TableLoader.load_records_list

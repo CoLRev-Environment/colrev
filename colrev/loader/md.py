@@ -44,6 +44,18 @@ class MarkdownLoader(colrev.loader.loader.Loader):
             logger=logger,
         )
 
+    @classmethod
+    def get_nr_records(cls, filename: Path) -> int:
+        """Get the number of records in the file"""
+
+        count = 0
+        with open(filename, encoding="utf8") as file:
+            for line in file:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    count += 1
+        return count
+
     def load_records_list(self) -> list:
         """Load records from the source"""
 

@@ -1,5 +1,5 @@
-colrev.process.record\_state\_model
-===================================
+colrev.process.model
+====================
 
 .. automodule:: colrev.process.model
 

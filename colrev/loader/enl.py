@@ -55,6 +55,16 @@ class ENLLoader(colrev.loader.loader.Loader):
         self.current: dict = {}
         self.pattern = re.compile(self.PATTERN)
 
+    @classmethod
+    def get_nr_records(cls, filename: Path) -> int:
+        """Get the number of records in the file"""
+        count = 0
+        with open(filename, encoding="utf-8") as file:
+            for line in file:
+                if line.startswith("%T"):
+                    count += 1
+        return count
+
     def _get_tag(self, line: str) -> str:
         """Get the tag from a line in the ENL file."""
         return line[1:3].rstrip()

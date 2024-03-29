@@ -21,3 +21,6 @@ colrev.process.status
       :nosignatures:
 
       StatusStats
+      StatusStatsCurrently
+      StatusStatsOverall
+      StatusStatsParent

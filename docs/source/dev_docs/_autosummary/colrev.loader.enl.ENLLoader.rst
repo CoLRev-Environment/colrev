@@ -16,6 +16,7 @@ colrev.loader.enl.ENLLoader
    .. autosummary::
       :nosignatures:
 
+      ~ENLLoader.get_nr_records
       ~ENLLoader.load
       ~ENLLoader.load_records_list
 

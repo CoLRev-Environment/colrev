@@ -16,6 +16,7 @@ colrev.loader.ris.RISLoader
    .. autosummary::
       :nosignatures:
 
+      ~RISLoader.get_nr_records
       ~RISLoader.load
       ~RISLoader.load_records_list
 

@@ -15,5 +15,6 @@ colrev.loader.load\_utils
       :toctree:
       :nosignatures:
 
+      get_nr_records
       load
       loads

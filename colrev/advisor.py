@@ -247,9 +247,8 @@ class Advisor:
 
         return collaboration_instructions
 
-    def _append_initial_load_instruction(
-        self, *, review_instructions: list, current_origin_states_dict: dict
-    ) -> None:
+    def _append_initial_load_instruction(self, review_instructions: list) -> None:
+        current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
         if len(current_origin_states_dict) == 0:
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
@@ -262,16 +261,12 @@ class Advisor:
 
     def _append_operation_in_progress_instructions(
         self,
-        *,
         review_instructions: list,
-        current_origin_states_dict: dict,
     ) -> None:
         # If changes in RECORDS_FILE are staged, we need to detect the process type
         if self.review_manager.dataset.records_changed():
             # Detect and validate transitions
-            transitioned_records = self.status_stats.get_transitioned_records(
-                current_origin_states_dict=current_origin_states_dict
-            )
+            transitioned_records = self.status_stats.get_transitioned_records()
 
             for transitioned_record in transitioned_records:
                 if transitioned_record["dest"] == "no_source_state":
@@ -303,9 +298,9 @@ class Advisor:
 
             if len(in_progress_processes) == 1:
                 instruction = {
-                    "msg": f"Detected {in_progress_processes[0]} in progress. "
+                    "msg": f"Detected {list(in_progress_processes)[0]} in progress. "
                     + "Complete this process",
-                    "cmd": f"colrev {in_progress_processes[0]}",
+                    "cmd": f"colrev {list(in_progress_processes)[0]}",
                     "priority": "yes",
                 }
                 review_instructions.append(instruction)
@@ -359,16 +354,11 @@ class Advisor:
     def _append_active_operations(
         self,
         *,
-        current_origin_states_dict: dict,
         review_instructions: list,
     ) -> None:
-        active_operations = self.status_stats.get_active_operations(
-            current_origin_states_dict=current_origin_states_dict
-        )
+        active_operations = self.status_stats.get_active_operations()
 
-        priority_processing_operations = self.status_stats.get_priority_operations(
-            current_origin_states_dict=current_origin_states_dict
-        )
+        priority_processing_operations = self.status_stats.get_priority_operations()
 
         for active_operation in active_operations:
             if active_operation in ["load", "prep", "dedupe"]:
@@ -441,15 +431,12 @@ class Advisor:
 
     def _append_next_operation_instructions(
         self,
-        *,
         review_instructions: list,
-        current_origin_states_dict: dict,
     ) -> None:
         if self._append_initial_operations(review_instructions=review_instructions):
             return
 
         self._append_active_operations(
-            current_origin_states_dict=current_origin_states_dict,
             review_instructions=review_instructions,
         )
 
@@ -477,7 +464,6 @@ class Advisor:
 
     def _append_pdf_issue_instructions(
         self,
-        *,
         review_instructions: list,
     ) -> None:
         # Check pdf files
@@ -521,7 +507,6 @@ class Advisor:
 
     def _append_iteration_completed_instructions(
         self,
-        *,
         review_instructions: list,
     ) -> None:
         if (
@@ -545,31 +530,12 @@ class Advisor:
 
     def get_review_instructions(self) -> list:
         """Get instructions related to the review (operations)"""
-
         review_instructions: typing.List[typing.Dict] = []
-        current_origin_states_dict = self.review_manager.dataset.get_origin_state_dict()
-
-        self._append_initial_load_instruction(
-            review_instructions=review_instructions,
-            current_origin_states_dict=current_origin_states_dict,
-        )
-
-        self._append_operation_in_progress_instructions(
-            review_instructions=review_instructions,
-            current_origin_states_dict=current_origin_states_dict,
-        )
-
-        self._append_next_operation_instructions(
-            review_instructions=review_instructions,
-            current_origin_states_dict=current_origin_states_dict,
-        )
-
-        self._append_pdf_issue_instructions(review_instructions=review_instructions)
-
-        self._append_iteration_completed_instructions(
-            review_instructions=review_instructions
-        )
-
+        self._append_initial_load_instruction(review_instructions)
+        self._append_operation_in_progress_instructions(review_instructions)
+        self._append_next_operation_instructions(review_instructions)
+        self._append_pdf_issue_instructions(review_instructions)
+        self._append_iteration_completed_instructions(review_instructions)
         return review_instructions
 
     # Note : no named arguments for multiprocessing
@@ -697,7 +663,6 @@ class Advisor:
         environment_manager = self.review_manager.get_environment_manager()
 
         environment_instructions: list[dict] = []
-
         if self.status_stats.currently.md_imported > 10:
             self._append_download_outlets_instruction(
                 environment_manager=environment_manager,
@@ -734,9 +699,6 @@ class Advisor:
             "environment_instructions": self._get_environment_instructions(),
             "collaboration_instructions": self._get_collaboration_instructions(),
         }
-        # self.review_manager.logger.debug(
-        #     f"instructions: {self.review_manager.p_printer.pformat(instructions)}"
-        # )
         if self.review_manager.shell_mode:
             for category in instructions.values():
                 for item in category:

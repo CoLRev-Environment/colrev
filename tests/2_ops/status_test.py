@@ -19,30 +19,34 @@ def test_get_analytics(  # type: ignore
 
     assert ret == {
         5: {
-            "atomic_steps": 8,
-            "completed_atomic_steps": 2,
+            "atomic_steps": 9,
+            "completed_atomic_steps": 4,
             "commit_author": "script: -s test_records.bib",
+            "commit_message": "Merge duplicate records",
             "search": 1,
             "included": 0,
         },
         4: {
-            "atomic_steps": 8,
-            "completed_atomic_steps": 1,
+            "atomic_steps": 9,
+            "completed_atomic_steps": 3,
             "commit_author": "script: -s test_records.bib",
+            "commit_message": "Prepare records (prep)",
             "search": 1,
             "included": 0,
         },
         3: {
-            "atomic_steps": 8,
-            "completed_atomic_steps": 0,
+            "atomic_steps": 9,
+            "completed_atomic_steps": 2,
             "commit_author": "script: -s test_records.bib",
+            "commit_message": "Load test_records.bib",
             "search": 1,
             "included": 0,
         },
         2: {
-            "atomic_steps": 8,
+            "atomic_steps": 9,
             "completed_atomic_steps": 0,
-            "commit_author": "Tester Name",
+            "commit_author": "script:",
+            "commit_message": "Add new search sources",
             "search": 1,
             "included": 0,
         },
@@ -50,6 +54,7 @@ def test_get_analytics(  # type: ignore
             "atomic_steps": 0,
             "completed_atomic_steps": 0,
             "commit_author": "Tester Name",
+            "commit_message": "Initial commit",
             "search": 0,
             "included": 0,
         },
@@ -64,4 +69,4 @@ def test_status_stats(  # type: ignore
     records = base_repo_review_manager.dataset.load_records_dict()
     status_stats = base_repo_review_manager.get_status_stats(records=records)
     print(status_stats)
-    assert status_stats.atomic_steps == 8
+    assert status_stats.atomic_steps == 9

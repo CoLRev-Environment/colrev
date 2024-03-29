@@ -40,6 +40,16 @@ class TableLoader(colrev.loader.loader.Loader):
             logger=logger,
         )
 
+    @classmethod
+    def get_nr_records(cls, filename: Path) -> int:
+        """Get the number of records in the file"""
+        if filename.name.endswith(".csv"):
+            data = pd.read_csv(filename)
+        elif filename.name.endswith((".xls", ".xlsx")):
+            data = pd.read_excel(filename, dtype=str)
+        count = len(data)
+        return count
+
     def load_records_list(self) -> list:
         try:
             if self.filename.name.endswith(".csv"):
