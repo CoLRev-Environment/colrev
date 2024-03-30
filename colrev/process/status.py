@@ -49,7 +49,6 @@ class StatusStats:
         review_manager: colrev.review_manager.ReviewManager,
         records: dict,
     ) -> None:
-
         self.review_manager = review_manager
         self.records = records
         self.origin_states_dict = self._get_origin_states_dict()
@@ -67,8 +66,15 @@ class StatusStats:
         self.perc_curated = self._get_perc_curated()
 
         self.completed_atomic_steps = self._get_completed_atomic_steps()
-        self.atomic_steps = (
-            # initially, all records have to pass 9 operations
+        self.atomic_steps = self._get_atomic_steps()
+
+        self.completeness_condition = (self.nr_incomplete == 0) and (
+            self.currently.md_retrieved == 0
+        )
+
+    def _get_atomic_steps(self) -> int:
+        return (
+            # initially, all records have to pass 9 operations (including search)
             9 * self.overall.md_retrieved
             # for removed duplicates, 5 operations are no longer needed
             - 5 * self.md_duplicates_removed
@@ -76,10 +82,6 @@ class StatusStats:
             - 4 * self.currently.rev_prescreen_excluded
             - 3 * self.currently.pdf_not_available
             - self.currently.rev_excluded
-        )
-
-        self.completeness_condition = (self.nr_incomplete == 0) and (
-            self.currently.md_retrieved == 0
         )
 
     def _get_origin_states_dict(self) -> dict:
@@ -162,16 +164,13 @@ class StatusStats:
                     screening_statistics[criterion_name] += 1
         return screening_statistics
 
-    def _get_nr_completed_atomic_steps(self, record_dict: dict) -> int:
-        """Get the number of completed atomic steps for a record"""
-        return self.REQUIRED_ATOMIC_STEPS[record_dict[Fields.STATUS]]
-
     def _get_completed_atomic_steps(self) -> int:
         """Get the number of completed atomic steps"""
-        completed_atomic_steps = 0
+        completed_steps = 0
         for record_dict in self.records.values():
-            completed_atomic_steps += self._get_nr_completed_atomic_steps(record_dict)
-        return completed_atomic_steps
+            completed_steps += self.REQUIRED_ATOMIC_STEPS[record_dict[Fields.STATUS]]
+        completed_steps += 4 * self.md_duplicates_removed
+        return completed_steps
 
     def get_active_metadata_operation_info(self) -> str:
         """Get active metadata operation info (convenience function for status printing)"""
@@ -329,7 +328,9 @@ class StatusStatsCurrently(StatusStatsParent):
     # pylint: disable=too-many-instance-attributes
 
     pdf_needs_retrieval: int
-    non_completed: int
+    non_completed: (
+        int  # for sharing (all records must bet excluded/pdf_not_available/synthesized)
+    )
     exclusion: dict
     md_needs_manual_preparation: int
     pdf_needs_manual_retrieval: int
@@ -342,8 +343,13 @@ class StatusStatsCurrently(StatusStatsParent):
     ) -> None:
 
         super().__init__(status_stats=status_stats)
+        self.md_retrieved = max(
+            status_stats.overall.md_retrieved
+            - status_stats.overall.md_imported
+            - status_stats.nr_origins,
+            0,
+        )
 
-        self.md_retrieved = self._get_freq(RecordState.md_retrieved)
         self.md_imported = self._get_freq(RecordState.md_imported)
         self.md_prepared = self._get_freq(RecordState.md_prepared)
         self.md_processed = self._get_freq(RecordState.md_processed)
@@ -360,10 +366,6 @@ class StatusStatsCurrently(StatusStatsParent):
         self.exclusion = status_stats.screening_statistics
         self.pdf_needs_retrieval = self.rev_prescreen_included
 
-        self.md_retrieved = max(
-            status_stats.overall.md_retrieved - status_stats.nr_origins, 0
-        )
-
         self.md_needs_manual_preparation = self._get_freq(
             RecordState.md_needs_manual_preparation
         )
@@ -377,7 +379,13 @@ class StatusStatsCurrently(StatusStatsParent):
             [
                 r
                 for r in status_stats.records.values()
-                if r[Fields.STATUS] != RecordState.rev_synthesized
+                if r[Fields.STATUS]
+                not in [
+                    RecordState.rev_synthesized,
+                    RecordState.rev_prescreen_excluded,
+                    RecordState.pdf_not_available,
+                    RecordState.rev_excluded,
+                ]
             ]
         )
 
@@ -427,6 +435,8 @@ class StatusStatsOverall(StatusStatsParent):
     def _get_md_retrieved(self, status_stats: StatusStats) -> int:
         md_retrieved = 0
         for source in status_stats.review_manager.settings.sources:
+            if str(source.filename.name).startswith("md_"):
+                continue
             nr_in_file = colrev.loader.load_utils.get_nr_records(source.filename)
             md_retrieved += nr_in_file
         return md_retrieved
