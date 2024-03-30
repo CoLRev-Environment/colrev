@@ -44,7 +44,7 @@ def test_get_analytics(  # type: ignore
         },
         2: {
             "atomic_steps": 9,
-            "completed_atomic_steps": 0,
+            "completed_atomic_steps": 1,
             "commit_author": "script:",
             "commit_message": "Add new search sources",
             "search": 1,

@@ -170,6 +170,7 @@ class StatusStats:
         for record_dict in self.records.values():
             completed_steps += self.REQUIRED_ATOMIC_STEPS[record_dict[Fields.STATUS]]
         completed_steps += 4 * self.md_duplicates_removed
+        completed_steps += self.currently.md_retrieved  # not in records
         return completed_steps
 
     def get_active_metadata_operation_info(self) -> str:
