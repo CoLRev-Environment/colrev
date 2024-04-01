@@ -18,7 +18,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
     )
     review_manager.settings = colrev.settings.load_settings(
         settings_path=helpers.test_data_path.parents[0]
-        / Path("colrev/template/init/settings.json")
+        / Path("colrev/ops/init/settings.json")
     )
 
     with pytest.raises(colrev_exceptions.RepoInitError):
@@ -67,7 +67,7 @@ def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
     )
     review_manager.settings = colrev.settings.load_settings(
         settings_path=helpers.test_data_path.parents[0]
-        / Path("colrev/template/init/settings.json")
+        / Path("colrev/ops/init/settings.json")
     )
 
     review_manager = colrev.review_manager.get_init_operation(

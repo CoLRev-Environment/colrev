@@ -23,8 +23,7 @@ from colrev.constants import SearchType
 def test_settings_load() -> None:
     """Test the settings_load"""
     settings = colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
+        settings_path=Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     )
     settings.sources[0].comment = "user comment"
     settings.screen.criteria = {  # type: ignore
@@ -150,7 +149,7 @@ def test_settings_load() -> None:
 
 def test_search_source_error_wrong_path() -> None:
     with open(
-        Path(colrev.__file__).parents[0] / Path("template/init/settings.json")
+        Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     ) as file:
         settings = json.load(file)
     settings["sources"][0]["filename"] = "other_path"
@@ -161,7 +160,7 @@ def test_search_source_error_wrong_path() -> None:
 
 def test_search_source_error_duplicate_path() -> None:
     with open(
-        Path(colrev.__file__).parents[0] / Path("template/init/settings.json")
+        Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     ) as file:
         settings = json.load(file)
     settings["sources"].append(settings["sources"][0])
@@ -173,8 +172,7 @@ def test_search_source_error_duplicate_path() -> None:
 def test_curated_masterdata() -> None:
 
     settings = colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
+        settings_path=Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     )
 
     settings.data.data_package_endpoints = [

@@ -32,6 +32,6 @@ Links to Exclusion Lists
 ------------------------
 
 
-* `Exact Matches <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/ops/complementary_material_strings.txt>`_
-* `Prefixes <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/ops/complementary_material_prefixes.txt>`_
-* `Keywords <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/ops/complementary_material_keywords.txt>`_
+* `Exact Matches <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/complementary_material_strings.txt>`_
+* `Prefixes <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/complementary_material_prefixes.txt>`_
+* `Keywords <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/complementary_material_keywords.txt>`_

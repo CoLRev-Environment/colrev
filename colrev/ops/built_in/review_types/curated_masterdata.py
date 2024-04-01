@@ -42,12 +42,14 @@ class CuratedMasterdata(JsonSchemaMixin):
 
         # replace readme
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("template/review_type/curated_masterdata/readme.md"),
+            template_file=Path(
+                "ops/built_in/review_types/curated_masterdata/readme.md"
+            ),
             target=Path("readme.md"),
         )
         colrev.env.utils.retrieve_package_file(
             template_file=Path(
-                "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                "ops/built_in/review_types/curated_masterdata/curations_github_colrev_update.yml"
             ),
             target=Path(".github/workflows/colrev_update.yml"),
         )

@@ -389,9 +389,11 @@ class Dataset:
         # pylint: disable=redefined-outer-name
         # pylint: disable=import-outside-toplevel
 
-        import colrev.id_setter
+        import colrev.record.record_id_setter
 
-        id_setter = colrev.id_setter.IDSetter(review_manager=self.review_manager)
+        id_setter = colrev.record.record_id_setter.IDSetter(
+            review_manager=self.review_manager
+        )
         updated_records = id_setter.set_ids(
             records=records,
             selected_ids=selected_ids,

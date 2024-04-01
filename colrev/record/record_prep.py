@@ -16,7 +16,7 @@ from colrev.constants import FieldValues
 
 if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
-    import colrev.qm.quality_model
+    import colrev.record.qm.quality_model
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-public-methods

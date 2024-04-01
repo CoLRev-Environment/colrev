@@ -143,11 +143,8 @@ class LocalIndex:
 
         print("Index rankings")
 
-        rankings_csv_path = (
-            str(Path(__file__).parents[1])
-            / Path("template")
-            / Path("ops")
-            / Path("journal_rankings.csv")
+        rankings_csv_path = str(Path(__file__).parents[1]) / Path(
+            "env/journal_rankings.csv"
         )
         conn = sqlite3.connect(str(Filepaths.LOCAL_INDEX_SQLITE_FILE))
         data_frame = pd.read_csv(rankings_csv_path, encoding="utf-8")
@@ -843,7 +840,7 @@ class LocalIndex:
         # based on the data (between colrev load and prep)
         masterdata_curations = {}
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/ops/masterdata_curations.csv")
+            file_path=Path("env/masterdata_curations.csv")
         )
 
         if filedata:

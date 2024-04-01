@@ -195,7 +195,7 @@ class Prescreen(colrev.process.operation.Operation):
         """Setup a custom prescreen script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_scripts/custom_prescreen_script.py")
+            file_path=Path("ops/custom_scripts/custom_prescreen_script.py")
         )
 
         if filedata:

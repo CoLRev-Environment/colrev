@@ -145,7 +145,7 @@ class PaperMarkdown(JsonSchemaMixin):
         template_name = self.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/paper_md/APA-7.docx")
+            file_path=Path("ops/built_in/data/paper_md/APA-7.docx")
         )
 
         if filedata:
@@ -379,15 +379,15 @@ class PaperMarkdown(JsonSchemaMixin):
             ignore_not_available=False,
         )
         r_type_suffix = str(review_type_endpoint[review_type])
-        paper_resource_path = Path(f"template/review_type/{r_type_suffix}/") / Path(
-            "paper.md"
-        )
+        paper_resource_path = Path(
+            f"ops/built_in/review_types/{r_type_suffix}/"
+        ) / Path("paper.md")
         try:
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
         except colrev_exceptions.TemplateNotAvailableError:
-            paper_resource_path = Path("template/paper_md") / Path("paper.md")
+            paper_resource_path = Path("ops/built_in/data/paper_md") / Path("paper.md")
             colrev.env.utils.retrieve_package_file(
                 template_file=paper_resource_path, target=self.settings.paper_path
             )
@@ -561,7 +561,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 if not silent_mode:
                     self.review_manager.logger.info("Add PRISMA diagram to paper")
                 self._append_to_non_sample_references(
-                    filepath=Path("template/prisma/prisma-refs.bib"),
+                    filepath=Path("ops/built_in/data/prisma/prisma-refs.bib"),
                 )
 
                 # pylint: disable=consider-using-with
@@ -582,7 +582,9 @@ class PaperMarkdown(JsonSchemaMixin):
                         writer.write(line)
 
                         filedata = colrev.env.utils.get_package_file_content(
-                            file_path=Path("template/prisma/prisma_text.md")
+                            file_path=Path(
+                                "ops/built_in/data/prisma/prisma/prisma_text.md"
+                            )
                         )
                         if filedata:
                             writer.write(filedata.decode("utf-8"))
@@ -623,7 +625,9 @@ class PaperMarkdown(JsonSchemaMixin):
     def _create_non_sample_references_bib(self) -> None:
         if not self.NON_SAMPLE_REFERENCES_RELATIVE.is_file():
             try:
-                retrieval_path = Path("template/paper_md/non_sample_references.bib")
+                retrieval_path = Path(
+                    "ops/built_in/data/paper_md/non_sample_references.bib"
+                )
                 colrev.env.utils.retrieve_package_file(
                     template_file=retrieval_path,
                     target=self.non_sample_references,

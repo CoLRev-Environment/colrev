@@ -31,8 +31,10 @@ colrev.process.status.StatusStats
 
    .. autosummary::
 
+      ~StatusStats.REQUIRED_ATOMIC_STEPS
       ~StatusStats.atomic_steps
       ~StatusStats.nr_curated_records
+      ~StatusStats.md_duplicates_removed
       ~StatusStats.currently
       ~StatusStats.overall
       ~StatusStats.completed_atomic_steps

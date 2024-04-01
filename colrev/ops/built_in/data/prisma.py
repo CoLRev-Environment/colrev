@@ -85,7 +85,9 @@ class PRISMA(JsonSchemaMixin):
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def _export_csv(self, silent_mode: bool) -> None:
-        csv_resource_path = Path("template/") / Path("prisma/PRISMA.csv")
+        csv_resource_path = Path("ops/built_in/data/prisma/") / Path(
+            "prisma/PRISMA.csv"
+        )
         self.csv_path.parent.mkdir(exist_ok=True, parents=True)
 
         if self.csv_path.is_file():

@@ -2360,7 +2360,7 @@ def env(
     if update_package_list:
         if "y" != input(
             "The following process instantiates objects listed in the "
-            + "colrev/template/package_endpoints.json "
+            + "colrev/env/package_endpoints.json "
             + "(including ones that may not be secure).\n"
             + "Please confirm (y) to proceed."
         ):

@@ -26,7 +26,7 @@ from colrev.constants import RecordState
 
 if TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
-    import colrev.qm.quality_model
+    import colrev.record.qm.quality_model
 
 # pylint: disable=too-many-public-methods
 
@@ -317,7 +317,7 @@ class Record:
         self,
         new_entrytype: str,
         *,
-        qm: colrev.qm.quality_model.QualityModel,
+        qm: colrev.record.qm.quality_model.QualityModel,
     ) -> None:
         """Change the ENTRYTYPE"""
         for value in self.data.get(Fields.MD_PROV, {}).values():
@@ -867,7 +867,7 @@ class Record:
     def run_pdf_quality_model(
         self,
         *,
-        pdf_qm: colrev.qm.quality_model.QualityModel,
+        pdf_qm: colrev.record.qm.quality_model.QualityModel,
         set_prepared: bool = False,
     ) -> None:
         """Run the PDF quality model"""
@@ -879,7 +879,10 @@ class Record:
             self.set_status(RecordState.pdf_prepared)
 
     def run_quality_model(
-        self, *, qm: colrev.qm.quality_model.QualityModel, set_prepared: bool = False
+        self,
+        *,
+        qm: colrev.record.qm.quality_model.QualityModel,
+        set_prepared: bool = False,
     ) -> None:
         """Update the masterdata provenance"""
 

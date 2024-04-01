@@ -25,22 +25,20 @@ colrev.process.status.StatusStatsCurrently
 
    .. autosummary::
 
-      ~StatusStatsCurrently.non_processed
       ~StatusStatsCurrently.pdf_needs_retrieval
       ~StatusStatsCurrently.non_completed
       ~StatusStatsCurrently.exclusion
+      ~StatusStatsCurrently.md_needs_manual_preparation
+      ~StatusStatsCurrently.pdf_needs_manual_retrieval
+      ~StatusStatsCurrently.pdf_needs_manual_preparation
       ~StatusStatsCurrently.md_retrieved
       ~StatusStatsCurrently.md_imported
       ~StatusStatsCurrently.md_prepared
-      ~StatusStatsCurrently.md_needs_manual_preparation
-      ~StatusStatsCurrently.md_duplicates_removed
       ~StatusStatsCurrently.md_processed
       ~StatusStatsCurrently.rev_prescreen_excluded
       ~StatusStatsCurrently.rev_prescreen_included
-      ~StatusStatsCurrently.pdf_needs_manual_retrieval
       ~StatusStatsCurrently.pdf_not_available
       ~StatusStatsCurrently.pdf_imported
-      ~StatusStatsCurrently.pdf_needs_manual_preparation
       ~StatusStatsCurrently.pdf_prepared
       ~StatusStatsCurrently.rev_excluded
       ~StatusStatsCurrently.rev_included

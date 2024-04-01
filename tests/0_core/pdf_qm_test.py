@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import colrev.qm.quality_model
+import colrev.record.qm.quality_model
 import colrev.record.record_pdf
 import colrev.review_manager
 from colrev.constants import Fields
@@ -13,7 +13,7 @@ from colrev.constants import PDFDefectCodes
 
 def test_pdf_qm(  # type: ignore
     v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
-    pdf_quality_model: colrev.qm.quality_model.QualityModel,
+    pdf_quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
     """Test pdf-qm"""
 
@@ -36,9 +36,9 @@ def test_pdf_qm(  # type: ignore
 
 def test_author_not_in_pdf(
     v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
-    pdf_quality_model: colrev.qm.quality_model.QualityModel,
+    pdf_quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
-    from colrev.qm.pdf_checkers.author_not_in_pdf import (
+    from colrev.record.qm.pdf_checkers.author_not_in_pdf import (
         AuthorNotInPDFChecker,
     )
 
@@ -91,9 +91,9 @@ def test_author_not_in_pdf(
 
 def test_title_not_in_pdf(
     v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
-    pdf_quality_model: colrev.qm.quality_model.QualityModel,
+    pdf_quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
-    from colrev.qm.pdf_checkers.title_not_in_pdf import TitleNotInPDFChecker
+    from colrev.record.qm.pdf_checkers.title_not_in_pdf import TitleNotInPDFChecker
 
     # Setup: Instantiate the TitleNotInPDFChecker directly
     title_not_in_pdf_checker = TitleNotInPDFChecker(pdf_quality_model)
@@ -111,9 +111,9 @@ def test_title_not_in_pdf(
 
 def test_no_text_in_pdf(
     v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
-    pdf_quality_model: colrev.qm.quality_model.QualityModel,
+    pdf_quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
-    from colrev.qm.pdf_checkers.no_text_in_pdf import TextInPDFChecker
+    from colrev.record.qm.pdf_checkers.no_text_in_pdf import TextInPDFChecker
 
     # Setup: Instantiate the TextInPDFChecker directly
     no_text_in_pdf_checker = TextInPDFChecker(pdf_quality_model)
@@ -146,9 +146,9 @@ def test_no_text_in_pdf(
 
 def test_pdf_incompleteness(
     v_t_pdf_record: colrev.record.record_pdf.PDFRecord,
-    pdf_quality_model: colrev.qm.quality_model.QualityModel,
+    pdf_quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
-    from colrev.qm.pdf_checkers.pdf_incomplete import PDFIncompletenessChecker
+    from colrev.record.qm.pdf_checkers.pdf_incomplete import PDFIncompletenessChecker
 
     # Setup: Instantiate the PDFIncompletenessChecker directly
     pdf_incompleteness_checker = PDFIncompletenessChecker(pdf_quality_model)

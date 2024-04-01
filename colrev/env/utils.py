@@ -105,7 +105,7 @@ def load_complementary_material_keywords() -> list:
     """Load the list of keywords identifying complementary materials"""
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("template/ops/complementary_material_keywords.txt")
+        file_path=Path("env/complementary_material_keywords.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -118,7 +118,7 @@ def load_complementary_material_strings() -> list:
 
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("template/ops/complementary_material_strings.txt")
+        file_path=Path("env/complementary_material_strings.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -131,7 +131,7 @@ def load_complementary_material_prefixes() -> list:
 
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("template/ops/complementary_material_prefixes.txt")
+        file_path=Path("env/complementary_material_prefixes.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())

@@ -15,13 +15,13 @@ import git
 import requests_cache
 import yaml
 
-import colrev.checker
 import colrev.dataset
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
+import colrev.ops.checker
 import colrev.process.operation
-import colrev.qm.quality_model
+import colrev.record.qm.quality_model
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
@@ -198,21 +198,21 @@ class ReviewManager:
 
     def check_repo(self) -> dict:
         """Check the repository"""
-        checker = colrev.checker.Checker(review_manager=self)
+        checker = colrev.ops.checker.Checker(review_manager=self)
         return checker.check_repo()
 
     def in_virtualenv(self) -> bool:  # pragma: no cover
         """Check whether CoLRev operates in a virtual environment"""
-        return colrev.checker.Checker.in_virtualenv()
+        return colrev.ops.checker.Checker.in_virtualenv()
 
     def check_repository_setup(self) -> None:
         """Check the repository setup"""
-        checker = colrev.checker.Checker(review_manager=self)
+        checker = colrev.ops.checker.Checker(review_manager=self)
         checker.check_repository_setup()
 
     def get_colrev_versions(self) -> list[str]:
         """Get the CoLRev versions"""
-        checker = colrev.checker.Checker(review_manager=self)
+        checker = colrev.ops.checker.Checker(review_manager=self)
         return checker.get_colrev_versions()
 
     def report(self, *, msg_file: Path) -> None:
@@ -305,27 +305,31 @@ class ReviewManager:
 
         return colrev.ops.merge.Merge(review_manager=self)
 
-    def get_advisor(self) -> colrev.advisor.Advisor:  # pragma: no cover
+    def get_advisor(self) -> colrev.ops.advisor.Advisor:  # pragma: no cover
         """Get an advisor object"""
 
-        import colrev.advisor
+        import colrev.ops.advisor
 
-        return colrev.advisor.Advisor(review_manager=self)
+        return colrev.ops.advisor.Advisor(review_manager=self)
 
-    def get_checker(self) -> colrev.checker.Checker:  # pragma: no cover
+    def get_checker(self) -> colrev.ops.checker.Checker:  # pragma: no cover
         """Get a checker object"""
 
-        return colrev.checker.Checker(review_manager=self)
+        return colrev.ops.checker.Checker(review_manager=self)
 
-    def get_qm(self) -> colrev.qm.quality_model.QualityModel:  # pragma: no cover
+    def get_qm(self) -> colrev.record.qm.quality_model.QualityModel:  # pragma: no cover
         """Get the quality model"""
 
-        return colrev.qm.quality_model.QualityModel(review_manager=self)
+        return colrev.record.qm.quality_model.QualityModel(review_manager=self)
 
-    def get_pdf_qm(self) -> colrev.qm.quality_model.QualityModel:  # pragma: no cover
+    def get_pdf_qm(
+        self,
+    ) -> colrev.record.qm.quality_model.QualityModel:  # pragma: no cover
         """Get the PDF quality model"""
 
-        return colrev.qm.quality_model.QualityModel(review_manager=self, pdf_mode=True)
+        return colrev.record.qm.quality_model.QualityModel(
+            review_manager=self, pdf_mode=True
+        )
 
     def get_status_stats(
         self, *, records: Optional[dict] = None

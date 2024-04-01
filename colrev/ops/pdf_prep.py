@@ -342,7 +342,7 @@ class PDFPrep(colrev.process.operation.Operation):
         """Setup a custom pdf-prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_scripts/custom_pdf_prep_script.py")
+            file_path=Path("ops/custom_scripts/custom_pdf_prep_script.py")
         )
 
         if filedata:

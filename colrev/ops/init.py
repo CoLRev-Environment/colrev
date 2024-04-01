@@ -230,7 +230,7 @@ class Initializer:
 
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/init/settings.json")
+            file_path=Path("ops/init/settings.json")
         )
         if settings_filedata:
             settings = json.loads(settings_filedata.decode("utf-8"))
@@ -247,20 +247,20 @@ class Initializer:
         colrev_path.mkdir(exist_ok=True, parents=True)
 
         files_to_retrieve = [
-            [Path("template/init/readme.md"), Path("readme.md")],
+            [Path("ops/init/readme.md"), Path("readme.md")],
             [
-                Path("template/init/pre-commit-config.yaml"),
+                Path("ops/init/pre-commit-config.yaml"),
                 Path(".pre-commit-config.yaml"),
             ],
-            [Path("template/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
+            [Path("ops/init/markdownlint.yaml"), Path(".markdownlint.yaml")],
             [
-                Path("template/init/pre-commit.yml"),
+                Path("ops/init/pre-commit.yml"),
                 Path(".github/workflows/pre-commit.yml"),
             ],
-            [Path("template/init/gitattributes"), Path(".gitattributes")],
-            [Path("template/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
+            [Path("ops/init/gitattributes"), Path(".gitattributes")],
+            [Path("ops/init/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
-                Path("template/init/colrev_update.yml"),
+                Path("ops/init/colrev_update.yml"),
                 Path(".github/workflows/colrev_update.yml"),
             ],
         ]
@@ -441,7 +441,7 @@ class Initializer:
 
         self.review_manager.logger.info("Include 30_example_records.bib")
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("template/example/30_example_records.bib"),
+            template_file=Path("ops/init/30_example_records.bib"),
             target=Path("data/search/30_example_records.bib"),
         )
 

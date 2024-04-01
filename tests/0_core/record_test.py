@@ -267,7 +267,7 @@ def test_diff() -> None:
 
 
 def test_change_entrytype_inproceedings(
-    quality_model: colrev.qm.quality_model.QualityModel,
+    quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.change_entrytype(ENTRYTYPES.INPROCEEDINGS)"""
 
@@ -321,7 +321,7 @@ def test_change_entrytype_inproceedings(
 
 
 def test_change_entrytype_inproceedings_2(
-    quality_model: colrev.qm.quality_model.QualityModel,
+    quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
 
     record_dict = {
@@ -370,7 +370,7 @@ def test_change_entrytype_inproceedings_2(
 
 
 def test_change_entrytype_article(
-    quality_model: colrev.qm.quality_model.QualityModel,
+    quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
     """Test record.change_entrytype(ENTRYTYPES.ARTICLE)"""
     input_value = {

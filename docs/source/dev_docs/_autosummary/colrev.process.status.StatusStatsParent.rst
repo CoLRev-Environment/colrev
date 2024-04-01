@@ -28,15 +28,11 @@ colrev.process.status.StatusStatsParent
       ~StatusStatsParent.md_retrieved
       ~StatusStatsParent.md_imported
       ~StatusStatsParent.md_prepared
-      ~StatusStatsParent.md_needs_manual_preparation
-      ~StatusStatsParent.md_duplicates_removed
       ~StatusStatsParent.md_processed
       ~StatusStatsParent.rev_prescreen_excluded
       ~StatusStatsParent.rev_prescreen_included
-      ~StatusStatsParent.pdf_needs_manual_retrieval
       ~StatusStatsParent.pdf_not_available
       ~StatusStatsParent.pdf_imported
-      ~StatusStatsParent.pdf_needs_manual_preparation
       ~StatusStatsParent.pdf_prepared
       ~StatusStatsParent.rev_excluded
       ~StatusStatsParent.rev_included

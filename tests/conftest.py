@@ -266,7 +266,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 @pytest.fixture(scope="session", name="quality_model")
 def fixture_quality_model(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.qm.quality_model.QualityModel:
+) -> colrev.record.qm.quality_model.QualityModel:
     """Fixture returning the quality model"""
     return base_repo_review_manager.get_qm()
 
@@ -274,7 +274,7 @@ def fixture_quality_model(
 @pytest.fixture(scope="session", name="pdf_quality_model")
 def fixture_pdf_quality_model(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
-) -> colrev.qm.quality_model.QualityModel:
+) -> colrev.record.qm.quality_model.QualityModel:
     """Fixture returning the pdf quality model"""
 
     helpers.retrieve_test_file(

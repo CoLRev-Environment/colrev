@@ -26,7 +26,9 @@ colrev.ops
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.ops.advisor
    colrev.ops.built_in
+   colrev.ops.checker
    colrev.ops.clone
    colrev.ops.commit
    colrev.ops.correct

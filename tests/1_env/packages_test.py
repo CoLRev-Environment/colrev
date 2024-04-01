@@ -18,8 +18,7 @@ from colrev.constants import SearchType
 def settings() -> colrev.settings.Settings:
     """Fixture returning a settings object"""
     return colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
+        settings_path=Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     )
 
 

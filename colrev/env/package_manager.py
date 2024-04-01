@@ -416,19 +416,19 @@ class PackageManager:
             raise colrev_exceptions.MissingDependencyError(dep="colrev")
         self._colrev_path = Path(colrev_spec.origin).parents[1]
         self._package_endpoints_json_file = self._colrev_path / Path(
-            "colrev/template/package_endpoints.json"
+            "colrev/env/package_endpoints.json"
         )
         self._search_source_types_json_file = self._colrev_path / Path(
-            "colrev/template/search_source_types.json"
+            "colrev/env/search_source_types.json"
         )
 
     def _load_package_endpoints_index(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/package_endpoints.json")
+            file_path=Path("env/package_endpoints.json")
         )
         if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/package_endpoints.json)"
+                "Package index not available (colrev/env/package_endpoints.json)"
             )
 
         package_dict = json.loads(filedata.decode("utf-8"))
@@ -981,29 +981,29 @@ class PackageManager:
 
     def _load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/packages.json")
+            file_path=Path("env/packages.json")
         )
         if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/packages.json)"
+                "Package index not available (colrev/env/packages.json)"
             )
         packages = json.loads(filedata.decode("utf-8"))
         return packages
 
     def _load_package_status_json(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/package_status.json")
+            file_path=Path("env/package_status.json")
         )
         if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/package_status.json)"
+                "Package index not available (colrev/env/package_status.json)"
             )
         packages = json.loads(filedata.decode("utf-8"))
         return packages
 
     def update_package_list(self) -> None:
-        """Generates the template/package_endpoints.json
-        based on the packages in template/packages.json
+        """Generates the env/package_endpoints.json
+        based on the packages in env/packages.json
         and the endpoints.json files in the top directory of each package."""
 
         os.chdir(self._colrev_path)
@@ -1060,7 +1060,7 @@ class PackageManager:
 
         json_object = json.dumps(package_status, indent=4)
         with open(
-            Path("colrev/template/package_status.json"), "w", encoding="utf-8"
+            Path("colrev/env/package_status.json"), "w", encoding="utf-8"
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes

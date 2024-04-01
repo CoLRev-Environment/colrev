@@ -26,7 +26,9 @@ colrev.record
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.record.qm
    colrev.record.record
+   colrev.record.record_id_setter
    colrev.record.record_identifier
    colrev.record.record_merger
    colrev.record.record_pdf

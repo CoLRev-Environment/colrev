@@ -104,9 +104,6 @@ This documentation provides an overview of the CLI commands and the correspondin
    :prog: colrev trace
    :nested: full
 
-.. click:: colrev.ui_cli.cli:web
-   :prog: colrev web
-   :nested: full
 
 
 ..

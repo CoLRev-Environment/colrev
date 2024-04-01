@@ -308,21 +308,21 @@ class Upgrade(colrev.process.operation.Operation):
         if "colrev/curated_metadata" in str(self.review_manager.path):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update_curation.yml"),
+                template_file=Path("ops/init/colrev_update_curation.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
         else:
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update.yml"),
+                template_file=Path("ops/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
 
         Path(".github/workflows/pre-commit.yml").unlink(missing_ok=True)
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("template/init/pre-commit.yml"),
+            template_file=Path("ops/init/pre-commit.yml"),
             target=Path(".github/workflows/pre-commit.yml"),
         )
         self.repo.index.add([".github/workflows/pre-commit.yml"])
@@ -333,14 +333,14 @@ class Upgrade(colrev.process.operation.Operation):
         if "colrev/curated_metadata" in str(self.review_manager.path):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update_curation.yml"),
+                template_file=Path("ops/init/colrev_update_curation.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
         else:
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update.yml"),
+                template_file=Path("ops/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
@@ -611,7 +611,7 @@ class Upgrade(colrev.process.operation.Operation):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
                 template_file=Path(
-                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                    "ops/built_in/review_type/curated_masterdata/curations_github_colrev_update.yml"
                 ),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
@@ -619,7 +619,7 @@ class Upgrade(colrev.process.operation.Operation):
         else:
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update.yml"),
+                template_file=Path("ops/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])

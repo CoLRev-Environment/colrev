@@ -84,9 +84,7 @@ class Status(colrev.process.operation.Operation):
 
         status_stats = self.review_manager.get_status_stats(records=records)
 
-        template = colrev.env.utils.get_template(
-            template_path="template/ops/status.txt"
-        )
+        template = colrev.env.utils.get_template(template_path="ops/commit/status.txt")
 
         if colors:
             content = template.render(status_stats=status_stats, colors=Colors)
