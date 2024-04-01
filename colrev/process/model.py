@@ -145,7 +145,7 @@ class ProcessModel:
             start_states = [
                 x["source"]
                 for x in ProcessModel.transitions
-                if operation.type == x["trigger"]
+                if operation.operations_type == x["trigger"]
             ]
             state: RecordState = start_states[0]  # type: ignore
 
@@ -157,10 +157,10 @@ class ProcessModel:
             violating_states = cur_state_list.intersection(required_absent)
             if (
                 len(cur_state_list) == 0
-                and not operation.type.name == "load"  # type: ignore
+                and not operation.operations_type.name == "load"  # type: ignore
             ):
                 raise colrev_exceptions.NoRecordsError()
             if len(violating_states) != 0:
                 raise colrev_exceptions.ProcessOrderViolation(
-                    operation.type.name, str(state), list(violating_states)
+                    operation.operations_type.name, str(state), list(violating_states)
                 )

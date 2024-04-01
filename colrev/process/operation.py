@@ -26,7 +26,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 class Operation:
     """Operations correspond to the work steps in a CoLRev project"""
 
-    type: OperationsType
+    operations_type: OperationsType
 
     def __init__(
         self,
@@ -36,14 +36,14 @@ class Operation:
         notify_state_transition_operation: bool = True,
     ) -> None:
         self.review_manager = review_manager
-        self.type = operations_type
+        self.operations_type = operations_type
         self.notify_state_transition_operation = notify_state_transition_operation
         self.notify(state_transition=notify_state_transition_operation)
         self.cpus = 4
         self.docker_images_to_stop: typing.List[str] = []
 
         # Note: the following call seems to block the flow (if debug is enabled)
-        # self.review_manager.logger.debug(f"Created {self.type} operation")
+        # self.review_manager.logger.debug(f"Created {self.operations_type} operation")
 
     # pylint: disable=too-many-nested-blocks
     @classmethod
@@ -123,7 +123,7 @@ class Operation:
         if self.review_manager.force_mode:
             return
 
-        if OperationsType.load == self.type:
+        if self.operations_type == OperationsType.load:
             self._require_clean_repo_general(
                 ignored_files=[
                     Filepaths.SEARCH_DIR,
@@ -132,40 +132,28 @@ class Operation:
             )
             self._check_model_precondition()
 
-        elif OperationsType.prep == self.type:
-            # if self.notify_state_transition_operation:
-            self._require_clean_repo_general()
-            self._check_model_precondition()
-
-        elif OperationsType.prep_man == self.type:
+        elif self.operations_type == OperationsType.prep_man:
             self._require_clean_repo_general(ignored_files=[Filepaths.RECORDS_FILE_GIT])
             self._check_model_precondition()
 
-        elif OperationsType.dedupe == self.type:
+        elif self.operations_type in [
+            OperationsType.prep,
+            OperationsType.dedupe,
+            OperationsType.prescreen,
+            OperationsType.pdf_prep,
+            OperationsType.screen,
+        ]:
             self._require_clean_repo_general()
             self._check_model_precondition()
 
-        elif OperationsType.prescreen == self.type:
-            self._require_clean_repo_general()
-            self._check_model_precondition()
-
-        elif OperationsType.pdf_get == self.type:
+        elif self.operations_type in [
+            OperationsType.pdf_get,
+            OperationsType.pdf_get_man,
+        ]:
             self._require_clean_repo_general(ignored_files=[Filepaths.PDF_DIR])
             self._check_model_precondition()
 
-        elif OperationsType.pdf_get_man == self.type:
-            self._require_clean_repo_general(ignored_files=[Filepaths.PDF_DIR])
-            self._check_model_precondition()
-
-        elif OperationsType.pdf_prep == self.type:
-            self._require_clean_repo_general()
-            self._check_model_precondition()
-
-        elif OperationsType.screen == self.type:
-            self._require_clean_repo_general()
-            self._check_model_precondition()
-
-        elif OperationsType.data == self.type:
+        elif self.operations_type == OperationsType.data:
             self._check_model_precondition()
 
         # ie., implicit pass for check, pdf_prep_man
@@ -173,7 +161,7 @@ class Operation:
     def notify(self, *, state_transition: bool = True) -> None:
         """Notify the review_manager about the next operation"""
 
-        self.review_manager.notified_next_operation = self.type
+        self.review_manager.notified_next_operation = self.operations_type
         if state_transition:
             self.check_precondition()
         if hasattr(self.review_manager, "dataset"):

@@ -81,6 +81,9 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         == "Nature. 2021 Dec 21;1(2):10-11. doi: 10.1111/nature1111."
     )
 
+    nr_records = colrev.loader.load_utils.get_nr_records(Path("csv_data.csv"))
+    assert 2 == nr_records
+
     # Test xlsx
     helpers.retrieve_test_file(
         source=Path("2_loader/data/xlsx_data.xlsx"),
@@ -92,3 +95,6 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         entrytype_setter=entrytype_setter,
         field_mapper=field_mapper,
     )
+
+    nr_records = colrev.loader.load_utils.get_nr_records(Path("xlsx_data.xlsx"))
+    assert 3 == nr_records

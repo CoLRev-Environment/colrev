@@ -9,7 +9,7 @@ import pytest
 from PIL import Image
 
 import colrev.exceptions as colrev_exceptions
-import colrev.review_manager
+import colrev.record.record_identifier
 
 
 @pytest.mark.parametrize(
@@ -102,3 +102,16 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
     #     )
 
     pdf_path.unlink(missing_ok=True)
+
+
+def test_cpid(helpers) -> None:  # type: ignore
+
+    pdf_path = Path("data/WagnerLukyanenkoParEtAl2022.pdf")
+    helpers.retrieve_test_file(
+        source=pdf_path,
+        target=pdf_path,
+    )
+    with pytest.raises(NotImplementedError):
+        colrev.record.record_identifier.create_colrev_pdf_id(
+            pdf_path=pdf_path, cpid_version="unknown"
+        )

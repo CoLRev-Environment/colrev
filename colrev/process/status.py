@@ -436,8 +436,7 @@ class StatusStatsOverall(StatusStatsParent):
     def _get_md_retrieved(self, status_stats: StatusStats) -> int:
         md_retrieved = 0
         for source in status_stats.review_manager.settings.sources:
-            if str(source.filename.name).startswith("md_"):
-                continue
-            nr_in_file = colrev.loader.load_utils.get_nr_records(source.filename)
-            md_retrieved += nr_in_file
+            if not source.is_md_source():
+                nr_in_file = colrev.loader.load_utils.get_nr_records(source.filename)
+                md_retrieved += nr_in_file
         return md_retrieved

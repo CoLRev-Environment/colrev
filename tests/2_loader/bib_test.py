@@ -96,3 +96,8 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
             "title": "Mouse stories two",
         },
     }
+
+    nr_records = colrev.loader.load_utils.get_nr_records(
+        Path("data/search/bib_data.bib")
+    )
+    assert 5 == nr_records

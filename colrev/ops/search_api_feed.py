@@ -158,7 +158,9 @@ class SearchAPIFeed:
         if added_new:
             if not self.prep_mode:
                 self.logger.info(f"  add record: {record.data[self.source_identifier]}")
-            elif self.prep_mode and self.review_manager.verbose_mode:
+            elif (
+                self.prep_mode and self.review_manager.verbose_mode
+            ):  # pragma: no cover
                 self.logger.info(
                     f"  link record: {record.data[self.source_identifier]}"
                 )

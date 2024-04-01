@@ -104,3 +104,6 @@ def test_load_ris_entries(tmp_path, helpers):  # type: ignore
     assert entries["10.1111/MC.2017.66"][Fields.NUMBER] == "3"
     assert entries["10.1111/MC.2017.66"][Fields.VOLUME] == "50"
     assert entries["10.1111/MC.2017.66"][Fields.ISSN] == "1111-2222"
+
+    nr_records = colrev.loader.load_utils.get_nr_records(Path("ris_data.ris"))
+    assert 2 == nr_records

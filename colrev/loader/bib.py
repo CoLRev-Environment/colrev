@@ -61,7 +61,7 @@ class BIBLoader(colrev.loader.loader.Loader):
         count = 0
         with open(filename, encoding="utf8") as file:
             for line in file:
-                if line.startswith("@"):
+                if line.startswith("@") and "@comment" not in line[:10].lower():
                     count += 1
         return count
 
@@ -317,20 +317,6 @@ class BIBLoader(colrev.loader.loader.Loader):
                 }
 
         return return_dict
-
-    def get_nr_in_bib(self) -> int:
-        """Get the number of records in the file"""
-
-        nr_in_bib = 0
-        with open(self.filename, encoding="utf8") as file:
-            line = file.readline()
-            while line:
-                if "@" in line[:3]:
-                    if "@comment" not in line[:10].lower():
-                        nr_in_bib += 1
-                line = file.readline()
-
-        return nr_in_bib
 
     def _parse_k_v(self, item_string: str) -> tuple:
         if " = " in item_string:

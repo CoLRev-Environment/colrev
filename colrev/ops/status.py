@@ -46,28 +46,25 @@ class Status(colrev.process.operation.Operation):
             committed_date,
             filecontents,
         ) in enumerate(revlist):
-            try:
-                var_t = io.StringIO(filecontents.decode("utf-8"))
+            var_t = io.StringIO(filecontents.decode("utf-8"))
 
-                # TBD: we could simply include the whole status.yaml
-                # (to create a general-purpose status analyzer)
-                # -> flatten nested structures (e.g., overall/currently)
-                # -> integrate with get_status (current data) -
-                # and get_prior? (levels: aggregated_statistics vs. record-level?)
+            # TBD: we could simply include the whole status.yaml
+            # (to create a general-purpose status analyzer)
+            # -> flatten nested structures (e.g., overall/currently)
+            # -> integrate with get_status (current data) -
+            # and get_prior? (levels: aggregated_statistics vs. record-level?)
 
-                data_loaded = yaml.safe_load(var_t)
-                analytics_dict[len(revlist) - ind] = {
-                    "atomic_steps": data_loaded["atomic_steps"],
-                    "completed_atomic_steps": data_loaded["completed_atomic_steps"],
-                    "commit_id": commit_id,
-                    "commit_message": commit_msg.split("\n")[0],
-                    "commit_author": commit_author,
-                    "committed_date": committed_date,
-                    "search": data_loaded["overall"]["md_retrieved"],
-                    "included": data_loaded["overall"]["rev_included"],
-                }
-            except (IndexError, KeyError):
-                pass
+            data_loaded = yaml.safe_load(var_t)
+            analytics_dict[len(revlist) - ind] = {
+                "atomic_steps": data_loaded["atomic_steps"],
+                "completed_atomic_steps": data_loaded["completed_atomic_steps"],
+                "commit_id": commit_id,
+                "commit_message": commit_msg.split("\n")[0],
+                "commit_author": commit_author,
+                "committed_date": committed_date,
+                "search": data_loaded["overall"]["md_retrieved"],
+                "included": data_loaded["overall"]["rev_included"],
+            }
 
         # keys = list(analytics_dict.values())[0].keys()
         # with open("analytics.csv", "w", newline="", encoding="utf8") as output_file:

@@ -126,3 +126,6 @@ def test_load_md(  # type: ignore
     assert records["6"]["volume"] == "21"
     assert records["6"]["number"] == "1"
     assert records["6"]["author"] == "Antons, D and Breidbach, C"
+
+    nr_records = colrev.loader.load_utils.get_nr_records(Path("data/search/md_data.md"))
+    assert 6 == nr_records

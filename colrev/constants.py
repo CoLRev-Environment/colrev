@@ -374,10 +374,6 @@ class RecordState(Enum):
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             }
-        if state == RecordState.pdf_not_available:
-            return {
-                RecordState.pdf_not_available,
-            }
         if state == RecordState.rev_included:
             return {
                 RecordState.rev_excluded,

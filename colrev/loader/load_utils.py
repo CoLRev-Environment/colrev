@@ -120,6 +120,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def load(  # type: ignore
     filename: Path,
+    *,
     entrytype_setter: Callable = lambda x: x,
     field_mapper: Callable = lambda x: x,
     id_labeler: Callable = lambda x: x,

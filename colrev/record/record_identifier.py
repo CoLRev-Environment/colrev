@@ -23,7 +23,7 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 
@@ -62,7 +62,7 @@ def _format_author_field_for_cid(input_string: str) -> str:
     return " ".join(author_list)
 
 
-def _get_container_title(*, record: colrev.record.record.Record) -> str:
+def _get_container_title(record: colrev.record.record.Record) -> str:
     # Note: custom __get_container_title for the colrev_id
 
     # school as the container title for theses
@@ -85,7 +85,7 @@ def _get_container_title(*, record: colrev.record.record.Record) -> str:
     return container_title
 
 
-def _robust_append(*, input_string: str, to_append: str) -> str:
+def _robust_append(input_string: str, *, to_append: str) -> str:
     input_string = str(input_string)
     to_append = str(to_append).replace("\n", " ").replace("/", " ")
     to_append = to_append.rstrip().lstrip().replace("–", " ")
@@ -104,8 +104,8 @@ def _robust_append(*, input_string: str, to_append: str) -> str:
 
 
 def _check_colrev_id_preconditions(
-    *,
     record: colrev.record.record.Record,
+    *,
     assume_complete: bool,
 ) -> None:
     if assume_complete:
@@ -129,7 +129,7 @@ def _check_colrev_id_preconditions(
             )
 
 
-def _get_colrev_id_from_record(*, record: colrev.record.record.Record) -> str:
+def _get_colrev_id_from_record(record: colrev.record.record.Record) -> str:
     try:
         # Including the version of the identifier prevents cases
         # in which almost all identifiers are identical
@@ -138,16 +138,16 @@ def _get_colrev_id_from_record(*, record: colrev.record.record.Record) -> str:
         # (this may look like an anomaly and be hard to identify)
         srep = "colrev_id1:"
         if record.data["ENTRYTYPE"].lower() == "article":
-            srep = _robust_append(input_string=srep, to_append="a")
+            srep = _robust_append(srep, to_append="a")
         elif record.data["ENTRYTYPE"].lower() == "inproceedings":
-            srep = _robust_append(input_string=srep, to_append="p")
+            srep = _robust_append(srep, to_append="p")
         else:
             srep = _robust_append(
                 input_string=srep, to_append=record.data["ENTRYTYPE"].lower()
             )
         srep = _robust_append(
             input_string=srep,
-            to_append=_get_container_title(record=record),
+            to_append=_get_container_title(record),
         )
         if record.data["ENTRYTYPE"] == "article":
             # Note: volume/number may not be required.
@@ -157,14 +157,14 @@ def _get_colrev_id_from_record(*, record: colrev.record.record.Record) -> str:
             srep = _robust_append(
                 input_string=srep, to_append=record.data.get(Fields.NUMBER, "-")
             )
-        srep = _robust_append(input_string=srep, to_append=record.data[Fields.YEAR])
+        srep = _robust_append(srep, to_append=record.data[Fields.YEAR])
         author = _format_author_field_for_cid(record.data[Fields.AUTHOR])
         if author.replace("-", "") == "":
             raise colrev_exceptions.NotEnoughDataToIdentifyException(
                 msg="Missing field:", missing_fields=[Fields.AUTHOR]
             )
-        srep = _robust_append(input_string=srep, to_append=author)
-        srep = _robust_append(input_string=srep, to_append=record.data[Fields.TITLE])
+        srep = _robust_append(srep, to_append=author)
+        srep = _robust_append(srep, to_append=record.data[Fields.TITLE])
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
         # Note : pages not needed.
@@ -180,15 +180,15 @@ def _get_colrev_id_from_record(*, record: colrev.record.record.Record) -> str:
 
 
 def create_colrev_id(
-    *, record: colrev.record.record.Record, assume_complete: bool
+    record: colrev.record.record.Record, *, assume_complete: bool
 ) -> str:
     """Create the colrev_id"""
     _check_colrev_id_preconditions(
-        record=record,
+        record,
         assume_complete=assume_complete,
     )
 
-    srep = _get_colrev_id_from_record(record=record)
+    srep = _get_colrev_id_from_record(record)
 
     # Safeguard against titles that are rarely distinct
     if any(x in srep for x in ["|minitrack-introduction"]):
@@ -199,7 +199,7 @@ def create_colrev_id(
     return srep
 
 
-def _create_colrev_pdf_id_cpid2(*, pdf_path: Path) -> str:
+def _create_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
     with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
         file_name = temp_file.name
         try:
@@ -221,7 +221,7 @@ def _create_colrev_pdf_id_cpid2(*, pdf_path: Path) -> str:
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
 
-def create_colrev_pdf_id(*, pdf_path: Path, cpid_version: str = "cpid2") -> str:
+def create_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
     """Get the PDF hash"""
 
     pdf_path = pdf_path.resolve()
@@ -230,7 +230,7 @@ def create_colrev_pdf_id(*, pdf_path: Path, cpid_version: str = "cpid2") -> str:
         raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
     if cpid_version == "cpid2":
-        return _create_colrev_pdf_id_cpid2(pdf_path=pdf_path)
+        return _create_colrev_pdf_id_cpid2(pdf_path)
 
     raise NotImplementedError
 

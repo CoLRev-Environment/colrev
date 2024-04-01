@@ -50,3 +50,8 @@ def test_sharing_req() -> None:
 
 def test_operation_type_print() -> None:
     print(OperationsType.search)
+    assert OperationsType.get_manual_extra_operations() == [
+        OperationsType.pdf_prep_man,
+        OperationsType.pdf_get_man,
+        OperationsType.prep_man,
+    ]
