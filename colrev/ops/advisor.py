@@ -373,8 +373,8 @@ class Advisor:
                 }
             else:
                 instruction = {
-                    "msg": self._next_step_description[active_operation],
-                    "cmd": f"colrev {active_operation.replace('_', '-')}",
+                    "msg": self._next_step_description[str(active_operation)],
+                    "cmd": f"colrev {str(active_operation).replace('_', '-')}",
                 }
             if active_operation in priority_processing_operations:
                 # keylist = [list(x.keys()) for x in review_instructions]

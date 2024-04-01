@@ -156,7 +156,12 @@ class SearchAPIFeed:
 
         self.feed_records[frid] = feed_record_dict
         if added_new:
-            self.logger.info(f"  add record: {record.data[self.source_identifier]}")
+            if not self.prep_mode:
+                self.logger.info(f"  add record: {record.data[self.source_identifier]}")
+            elif self.prep_mode and self.review_manager.verbose_mode:
+                self.logger.info(
+                    f"  link record: {record.data[self.source_identifier]}"
+                )
         return added_new
 
     def _have_changed(

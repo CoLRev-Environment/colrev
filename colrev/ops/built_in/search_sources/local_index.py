@@ -367,10 +367,15 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         *,
         record: colrev.record.record.Record,
         retrieved_record: colrev.record.record.Record,
-        default_source: str,
         prep_operation: colrev.ops.prep.Prep,
     ) -> None:
         try:
+            default_source = retrieved_record.get_masterdata_provenance_source(
+                FieldValues.CURATED
+            )
+            if default_source == "":
+                default_source = "LOCAL_INDEX"
+
             # lock: to prevent different records from having the same origin
             self.local_index_lock.acquire(timeout=60)
 
@@ -385,6 +390,8 @@ class LocalIndexSearchSource(JsonSchemaMixin):
             local_index_feed.add_update_record(retrieved_record)
 
             retrieved_record.remove_field(key=Fields.CURATION_ID)
+
+            record.set_masterdata_curated(source=default_source)
             record.merge(
                 retrieved_record,
                 default_source=default_source,
@@ -453,16 +460,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         if not retrieved_record.masterdata_is_curated():
             return record
 
-        default_source = retrieved_record.get_masterdata_provenance_source(
-            FieldValues.CURATED
-        )
-        if default_source == "":
-            default_source = "LOCAL_INDEX"
-
         self._store_retrieved_record_in_feed(
             record=record,
             retrieved_record=retrieved_record,
-            default_source=default_source,
             prep_operation=prep_operation,
         )
 

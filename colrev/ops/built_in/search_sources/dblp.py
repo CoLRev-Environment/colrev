@@ -631,7 +631,10 @@ class DBLPSearchSource(JsonSchemaMixin):
             # Note: queries combining title+author/journal do not seem to work any more
             query = "" + record.data.get(Fields.TITLE, "").replace("-", "_")
 
-            retrieved_record = self._retrieve_dblp_records(query=query)[0]
+            ret = self._retrieve_dblp_records(query=query)
+            if not ret:
+                return record
+            retrieved_record = ret[0]
             if Fields.DBLP_KEY in record.data:
                 if retrieved_record.data["dblp_key"] != record.data[Fields.DBLP_KEY]:
                     return record

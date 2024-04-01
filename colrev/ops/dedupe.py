@@ -102,9 +102,11 @@ class Dedupe(colrev.process.operation.Operation):
         return components
 
     @classmethod
-    def get_records_for_dedupe(cls, *, records_df: pd.DataFrame) -> pd.DataFrame:
+    def get_records_for_dedupe(
+        cls, *, records_df: pd.DataFrame, verbosity_level: int = 0
+    ) -> pd.DataFrame:
         """Get (pre-processed) records for dedupe"""
-        return prep(records_df=records_df)
+        return prep(records_df=records_df, verbosity_level=verbosity_level)
 
     def _select_primary_merge_record(self, rec_1: dict, rec_2: dict) -> list:
         # pylint: disable=too-many-branches

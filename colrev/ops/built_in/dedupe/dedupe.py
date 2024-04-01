@@ -71,7 +71,9 @@ class Dedupe(JsonSchemaMixin):
                 )
             )
         ]
-
+        verbosity_level = 0
+        if self.review_manager.verbose_mode:
+            verbosity_level = 1
         records_df.loc[
             records_df[Fields.STATUS].isin(
                 RecordState.get_post_x_states(state=RecordState.md_processed)
@@ -79,13 +81,15 @@ class Dedupe(JsonSchemaMixin):
             "search_set",
         ] = "old_search"
 
-        records_df = self.dedupe_operation.get_records_for_dedupe(records_df=records_df)
+        records_df = self.dedupe_operation.get_records_for_dedupe(
+            records_df=records_df, verbosity_level=verbosity_level
+        )
 
         if 0 == records_df.shape[0]:
             return
 
-        deduplication_pairs = block(records_df)
-        matched_df = match(deduplication_pairs)
+        deduplication_pairs = block(records_df, verbosity_level=verbosity_level)
+        matched_df = match(deduplication_pairs, verbosity_level=verbosity_level)
         matched_df = import_maybe(matched_df)
 
         if self.dedupe_operation.debug:
