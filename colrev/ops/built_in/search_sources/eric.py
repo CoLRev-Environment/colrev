@@ -304,11 +304,11 @@ class ERICSearchSource(JsonSchemaMixin):
                     "AB": Fields.ABSTRACT,
                     "AID": Fields.DOI,
                     "ISSN": Fields.ISSN,
-                    "OID": "eric_id",
+                    "OID": f"{self.endpoint}.eric_id",
                     "OT": Fields.KEYWORDS,
                     "LA": Fields.LANGUAGE,
                     "PT": "type",
-                    "LID": "eric_url",
+                    "LID": f"{self.endpoint}.eric_url",
                 }
             }
 

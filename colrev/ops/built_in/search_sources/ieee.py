@@ -400,6 +400,8 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             record_dict.pop("JA", None)
             record_dict.pop("JO", None)
             record_dict.pop("VO", None)
+            record_dict.pop("VL", None)
+            record_dict.pop("IS", None)
             record_dict.pop("ER", None)
 
             for key, value in record_dict.items():

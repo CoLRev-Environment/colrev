@@ -23,6 +23,7 @@ import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -533,9 +534,16 @@ class UnknownSearchSource(JsonSchemaMixin):
         if self.search_source.filename.suffix not in __load_methods:
             raise NotImplementedError
 
-        return __load_methods[self.search_source.filename.suffix](
+        records = __load_methods[self.search_source.filename.suffix](
             load_operation=load_operation
         )
+        for record_id in records:
+            records[record_id] = {
+                k: v
+                for k, v in records[record_id].items()
+                if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
+            }
+        return records
 
     def _heuristically_fix_entrytypes(
         self, *, record: colrev.record.record_prep.PrepRecord

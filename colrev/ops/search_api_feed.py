@@ -345,10 +345,6 @@ class SearchAPIFeed:
         """Convenience function to update existing records (main data/records.bib)"""
 
         colrev_origin = f"{self.origin_prefix}/{retrieved_record.data['ID']}"
-        # retrieved_record.data[Fields.ORIGIN] = [colrev_origin]
-        # retrieved_record.add_provenance_all(source=colrev_origin)
-        retrieved_record.prefix_non_standardized_field_keys(prefix=self.source.endpoint)
-
         main_record = self._get_main_record(colrev_origin)
 
         self._update_record_fields(

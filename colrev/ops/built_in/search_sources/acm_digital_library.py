@@ -11,6 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.record.record
+from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
@@ -108,11 +109,31 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
+
+            def field_mapper(record_dict: dict) -> None:
+                record_dict.pop("url", None)
+                record_dict.pop("publisher", None)
+                record_dict.pop("numpages", None)
+                record_dict.pop("month", None)
+
+                if "issue_date" in record_dict:
+                    record_dict[f"{self.endpoint}.issue_date"] = record_dict.pop(
+                        "issue_date"
+                    )
+                if "location" in record_dict:
+                    record_dict[Fields.ADDRESS] = record_dict.pop("location", None)
+                if "articleno" in record_dict:
+                    record_dict[f"{self.endpoint}.articleno"] = record_dict.pop(
+                        "articleno"
+                    )
+
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
-                logger=self.review_manager.logger,
                 unique_id_field="ID",
+                field_mapper=field_mapper,
+                logger=self.review_manager.logger,
             )
+
             return records
 
         raise NotImplementedError
@@ -122,11 +143,5 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
     ) -> colrev.record.record.Record:
         """Source-specific preparation for ACM Digital Library"""
-        record.remove_field(key="url")
-        record.remove_field(key="publisher")
-        record.remove_field(key="numpages")
-        record.remove_field(key="issue_date")
-        record.remove_field(key="address")
-        record.remove_field(key="month")
 
         return record

@@ -726,10 +726,16 @@ class FilesSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
+
+            def field_mapper(record_dict: dict) -> None:
+                if "note" in record_dict:
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
-                logger=self.review_manager.logger,
                 unique_id_field="ID",
+                field_mapper=field_mapper,
+                logger=self.review_manager.logger,
             )
 
             for record_dict in records.values():

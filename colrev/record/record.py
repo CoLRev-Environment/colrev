@@ -175,15 +175,6 @@ class Record:
         # pylint: disable=colrev-direct-status-assign
         self.data[Fields.STATUS] = target_state
 
-    def prefix_non_standardized_field_keys(self, *, prefix: str) -> None:
-        """Prefix non-standardized field keys"""
-        for key in list(self.data.keys()):
-            if key in FieldSet.STANDARDIZED_FIELD_KEYS:
-                continue
-            if key.startswith("colrev."):
-                continue
-            self.data[f"{prefix}.{key}"] = self.data.pop(key)
-
     def get_value(self, key: str, *, default: Optional[str] = None) -> str:
         """Get a record value (based on the key parameter)"""
         if default is not None:

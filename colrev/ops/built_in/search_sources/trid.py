@@ -122,7 +122,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
                     "KW": Fields.KEYWORDS,
                     "UR": Fields.URL,
                     "SP": Fields.PAGES,
-                    "AN": "accession_number",
+                    "AN": f"{self.endpoint}.accession_number",
                 },
                 ENTRYTYPES.TECHREPORT: {
                     "PY": Fields.YEAR,
@@ -133,7 +133,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
                     "KW": Fields.KEYWORDS,
                     "SP": Fields.PAGES,
                     "AB": Fields.ABSTRACT,
-                    "AN": "accession_number",
+                    "AN": f"{self.endpoint}.accession_number",
                 },
             }
 
@@ -156,7 +156,7 @@ class TransportResearchInternationalDocumentation(JsonSchemaMixin):
             trid_url = [url for url in urls if url.startswith("https://trid.trb.org")]
             if trid_url:
                 urls.remove(trid_url[0])
-                record_dict["trid_url"] = trid_url[0]
+                record_dict[f"{self.endpoint}.trid_url"] = trid_url[0]
             record_dict[Fields.URL] = urls[0]
 
             if Fields.AUTHOR in record_dict and isinstance(

@@ -21,6 +21,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 
@@ -288,7 +289,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
-                    if k not in [Fields.STATUS, Fields.MD_PROV]
+                    if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
                 }
 
             return records

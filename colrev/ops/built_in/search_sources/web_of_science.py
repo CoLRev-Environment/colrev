@@ -117,6 +117,29 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
             for key in list(record_dict.keys()):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
+            record_dict.pop("book-group-author", None)
+            record_dict.pop("organization", None)
+            record_dict.pop("researcherid-numbers", None)
+            if Fields.ISSN not in record_dict:
+                record_dict[Fields.ISSN] = record_dict.pop("eissn", "")
+            else:
+                record_dict[Fields.ISSN] += ";" + record_dict.pop("eissn", "")
+            if "note" in record_dict:
+                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+            if "earlyaccessdate" in record_dict:
+                record_dict[f"{self.endpoint}.earlyaccessdate"] = record_dict.pop(
+                    "earlyaccessdate"
+                )
+            if "article-number" in record_dict:
+                record_dict[f"{self.endpoint}.article-number"] = record_dict.pop(
+                    "article-number"
+                )
+            if "orcid-numbers" in record_dict:
+                record_dict[f"{self.endpoint}.orcid-numbers"] = record_dict.pop(
+                    "orcid-numbers"
+                )
+            if "unique-id" in record_dict:
+                record_dict[f"{self.endpoint}.unique-id"] = record_dict.pop("unique-id")
 
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,

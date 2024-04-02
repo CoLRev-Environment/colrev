@@ -14,8 +14,8 @@ class LoadFormatterTests(unittest.TestCase):
         record = Record(
             data={
                 Fields.STATUS: RecordState.md_retrieved,
-                "Author": "John Doe",
-                "TITLE": "My Title \\textendash With special chars &amp; symbols",
+                "author": "John Doe",
+                "title": "My Title \\textendash With special chars &amp; symbols",
                 "ID": "123",
                 "year": "2020.0",
                 "pages": "n.pag",

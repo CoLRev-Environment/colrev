@@ -277,11 +277,20 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 logger=self.review_manager.logger,
             )
             for record_id in records:
-                records[record_id] = {
+                record_dict = {
                     k: v
                     for k, v in records[record_id].items()
-                    if k not in FieldSet.PROVENANCE_KEYS
+                    if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
                 }
+
+                if Fields.CURATION_ID in record_dict:
+                    record_dict[Fields.MD_PROV] = {
+                        FieldValues.CURATED: {
+                            "source": record_dict[Fields.CURATION_ID].split("#")[0],
+                            "note": "",
+                        }
+                    }
+                records[record_id] = record_dict
 
             return records
 

@@ -44,7 +44,6 @@ class DBLPSearchSource(JsonSchemaMixin):
     _api_url_venues = "https://dblp.org/search/venue/api?q="
     _START_YEAR = 1980
 
-    # TODO : standardize?! should the search-feed already contain namespaced fields?!
     source_identifier = "dblp_key"
     search_types = [
         SearchType.API,
@@ -577,10 +576,24 @@ class DBLPSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
+
+            def field_mapper(record_dict: dict) -> None:
+                if "timestamp" in record_dict:
+                    record_dict[f"{self.endpoint}.timestamp"] = record_dict.pop(
+                        "timestamp"
+                    )
+                if "biburl" in record_dict:
+                    record_dict[f"{self.endpoint}.biburl"] = record_dict.pop("biburl")
+                if "bibsource" in record_dict:
+                    record_dict[f"{self.endpoint}.bibsource"] = record_dict.pop(
+                        "bibsource"
+                    )
+
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
-                logger=self.review_manager.logger,
                 unique_id_field="ID",
+                field_mapper=field_mapper,
+                logger=self.review_manager.logger,
             )
             return records
 

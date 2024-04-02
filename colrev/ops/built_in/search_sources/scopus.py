@@ -100,10 +100,25 @@ class ScopusSearchSource(JsonSchemaMixin):
         return record
 
     def _load_bib(self) -> dict:
+        def field_mapper(record_dict: dict) -> None:
+            if "art_number" in record_dict:
+                record_dict[f"{self.endpoint}.art_number"] = record_dict.pop(
+                    "art_number"
+                )
+            if "note" in record_dict:
+                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+            if "document_type" in record_dict:
+                record_dict[f"{self.endpoint}.document_type"] = record_dict.pop(
+                    "document_type"
+                )
+            if "source" in record_dict:
+                record_dict[f"{self.endpoint}.source"] = record_dict.pop("source")
+
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
-            logger=self.review_manager.logger,
             unique_id_field="ID",
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
         )
         return records
 

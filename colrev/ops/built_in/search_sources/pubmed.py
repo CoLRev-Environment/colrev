@@ -647,8 +647,12 @@ class PubMedSearchSource(JsonSchemaMixin):
             record_dict[Fields.YEAR] = record_dict.pop("Publication Year", "")
             record_dict[Fields.URL] = record_dict.pop("URL", "")
             record_dict[Fields.DOI] = record_dict.pop("DOI", "")
-            record_dict["NIHMS_ID"] = record_dict.pop("NIHMS ID", "")
-            record_dict["create_date"] = record_dict.pop("Create Date", "")
+            record_dict[f"{self.endpoint}.nihms_id"] = record_dict.pop("NIHMS ID", "")
+            record_dict[Fields.PUBMED_ID] = record_dict.pop("PMID", "")
+            record_dict[Fields.PMCID] = record_dict.pop("PMCID", "")
+            record_dict[f"{self.endpoint}.create_date"] = record_dict.pop(
+                "Create Date", ""
+            )
 
             author_list = record_dict.pop("Authors", "").split(", ")
             for i, author_part in enumerate(author_list):

@@ -2,7 +2,6 @@
 """Tests of the CoLRev dedupe operation"""
 import difflib
 import shutil
-import typing
 from pathlib import Path
 
 import pytest
@@ -107,20 +106,3 @@ def test_dedupe_skip_prescreen(
     dedupe_test_setup.settings.prescreen.prescreen_package_endpoints = []
     dedupe_operation.main()
     # TODO : add testing of results
-
-
-def test_dedupe_get_info(
-    dedupe_test_setup: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test the get_info of dedupe"""
-
-    dedupe_operation = dedupe_test_setup.get_dedupe_operation(
-        notify_state_transition_operation=True
-    )
-    actual = dedupe_operation.get_info()
-    expected: typing.Dict[str, typing.Any] = {
-        "same_source_merges": [],
-        "source_overlaps": [],
-    }
-
-    assert expected == actual

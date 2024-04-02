@@ -105,6 +105,7 @@ def test_open_pdf_invalid_path(helpers, tmp_path):  # type: ignore
 
 
 def test_cpid(helpers) -> None:  # type: ignore
+    """Test for cpid"""
 
     pdf_path = Path("data/WagnerLukyanenkoParEtAl2022.pdf")
     helpers.retrieve_test_file(

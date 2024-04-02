@@ -95,7 +95,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 source=self.search_source,
             )
 
-    def _remove_duplicates(self, *, records: dict) -> None:
+    def _remove_duplicates(self, records: dict) -> None:
         to_delete = []
         for record in records.values():
             if re.search(r"-\d{1,2}$", record[Fields.ID]):
@@ -168,7 +168,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                     "SP": Fields.PAGES,
                     "PMID": Fields.PUBMED_ID,
                     "SN": Fields.ISSN,
-                    "AN": "accession_number",
+                    "AN": f"{self.endpoint}.accession_number",
                     "LA": Fields.LANGUAGE,
                     "L2": Fields.FULLTEXT,
                     "UR": Fields.URL,
@@ -180,12 +180,12 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                     "UR": Fields.URL,
                     "PB": Fields.SCHOOL,
                     "KW": Fields.KEYWORDS,
-                    "AN": "accession_number",
+                    "AN": f"{self.endpoint}.accession_number",
                     "AB": Fields.ABSTRACT,
                     "LA": Fields.LANGUAGE,
                     "CY": Fields.ADDRESS,
                     "L2": Fields.FULLTEXT,
-                    "A3": "supervisor",
+                    "A3": f"{self.endpoint}.supervisor",
                 },
             }
 
@@ -193,7 +193,6 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 if "T1" in record_dict and "TI" not in record_dict:
                     record_dict["TI"] = record_dict.pop("T1")
 
-            record_dict["accession_number"] = record_dict.pop("AN")
             key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
             for ris_key in list(record_dict.keys()):
                 if ris_key in key_map:
@@ -236,6 +235,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 "CY",
                 "SN",
                 "ER",
+                "AN",
             ]
 
             for key in keys_to_remove:
@@ -263,7 +263,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 logger=self.review_manager.logger,
                 unique_id_field="ID",
             )
-            self._remove_duplicates(records=records)
+            self._remove_duplicates(records)
             return records
 
         if self.search_source.filename.suffix == ".ris":

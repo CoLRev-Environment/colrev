@@ -494,10 +494,15 @@ class Dedupe(colrev.process.operation.Operation):
         # if history:
         #     for rid in ids_origins:
         #         ids_origins[rid] = history.get(rid, {}).get(Fields.ORIGIN, [])
-        # TODO : assert that all current_record_ids are in the first commit in history?!
+
         records = self.review_manager.dataset.load_records_dict()
         for rid in ids_origins:
             ids_origins[rid] = records.get(rid, {}).get(Fields.ORIGIN, [])
+            if ids_origins[rid] == []:
+                raise colrev_exceptions.RecordNotFoundException(
+                    f"Did not find record with ID {rid} for unmerge"
+                )
+
         return ids_origins
 
     def _remove_merged_records(self, records: dict, ids_origins: dict) -> None:
@@ -515,7 +520,6 @@ class Dedupe(colrev.process.operation.Operation):
         Attempt to revert the merge operation for each record based on its origins.
         """
 
-        # unmerged = False
         for hist_recs in self.review_manager.dataset.load_records_from_history():
             for rid in list(ids_origins.keys()):
                 origins = ids_origins[rid]
@@ -533,10 +537,11 @@ class Dedupe(colrev.process.operation.Operation):
                     if origins == hist_recs[rid].get(Fields.ORIGIN, []):
                         continue
                     if any(orig in origins for orig in hist_rec.get(Fields.ORIGIN, [])):
-                        # TODO Avoid ID conflicts
                         assert hist_rec[Fields.ID] not in unmerged_records
                         hist_rec.update({Fields.STATUS: RecordState.md_processed})
-                        print(f"add historical record: {hist_rec[Fields.ID]}")
+                        self.review_manager.logger.info(
+                            f"add historical record: {hist_rec[Fields.ID]}"
+                        )
                         unmerged_records[hist_rec[Fields.ID]] = hist_rec
                         unmerged_rids.append(rid)
 
@@ -592,16 +597,14 @@ class Dedupe(colrev.process.operation.Operation):
     def get_info(self) -> dict:
         """Get info on cuts (overlap of search sources) and same source merges"""
 
-        same_source_merges: typing.Any = []
-        source_overlaps: typing.Any = []
-
-        # TODO / to implement
-
-        info = {
-            "same_source_merges": same_source_merges,
-            "source_overlaps": source_overlaps,
-        }
-        return info
+        # same_source_merges: typing.Any = []
+        # source_overlaps: typing.Any = []
+        # info = {
+        #     "same_source_merges": same_source_merges,
+        #     "source_overlaps": source_overlaps,
+        # }
+        # return info
+        raise NotImplementedError
 
     def merge_records(self, *, merge: list) -> None:
         """Merge records by ID sets"""

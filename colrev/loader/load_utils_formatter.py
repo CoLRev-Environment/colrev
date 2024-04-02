@@ -57,19 +57,17 @@ class LoadFormatter:
     ) -> None:
         if Fields.DOI in record.data:
             record.data[Fields.DOI] = (
-                record.data[Fields.DOI].replace("http://dx.doi.org/", "").upper()
+                record.data[Fields.DOI]
+                .lower()
+                .replace("https://", "http://")
+                .replace("dx.doi.org", "doi.org")
+                .replace("http://doi.org/", "")
+                .upper()
             )
         if Fields.LANGUAGE in record.data and len(record.data[Fields.LANGUAGE]) != 3:
             self.language_service.unify_to_iso_639_3_language_codes(record=record)
         if Fields.NUMBER not in record.data and "issue" in record.data:
             record.data[Fields.NUMBER] = record.data.pop("issue")
-
-    def _lower_case_keys(self, *, record: colrev.record.record.Record) -> None:
-        # Consistently set keys to lower case
-        lower_keys = [k.lower() for k in list(record.data.keys())]
-        for key, n_key in zip(list(record.data.keys()), lower_keys):
-            if key not in [Fields.ID, Fields.ENTRYTYPE]:
-                record.data[n_key] = record.data.pop(key)
 
     def _unescape_latex(self, *, input_str: str) -> str:
         for latex_char, repl_char in self._LATEX_SPECIAL_CHAR_MAPPING.items():
@@ -134,6 +132,5 @@ class LoadFormatter:
         if record.data[Fields.STATUS] != RecordState.md_retrieved:
             return
 
-        self._lower_case_keys(record=record)
         self._unescape_field_values(record=record)
         self._standardize_field_values(record=record)

@@ -95,6 +95,11 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
 
     def _load_bib(self) -> dict:
         def field_mapper(record_dict: dict) -> None:
+            if "note" in record_dict:
+                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+            if "eprint" in record_dict:
+                record_dict[f"{self.endpoint}.eprint"] = record_dict.pop("eprint")
+
             for key in list(record_dict.keys()):
                 if key not in ["ID", "ENTRYTYPE"]:
                     record_dict[key.lower()] = record_dict.pop(key)
