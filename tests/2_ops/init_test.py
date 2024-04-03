@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.init
 import colrev.review_manager
 from colrev.constants import Filepaths
 
@@ -22,7 +23,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
     )
 
     with pytest.raises(colrev_exceptions.RepoInitError):
-        colrev.review_manager.get_init_operation(
+        colrev.ops.init.Initializer(
             review_type="literature_review",
             example=True,
             local_pdf_collection=True,
@@ -31,11 +32,11 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
         )
 
     with pytest.raises(colrev_exceptions.ParameterError):
-        colrev.review_manager.get_init_operation(
+        colrev.ops.init.Initializer(
             review_type="misspelled_review", target_path=tmp_path
         )
 
-    colrev.review_manager.get_init_operation(
+    colrev.ops.init.Initializer(
         review_type="literature_review",
         example=True,
         target_path=tmp_path,
@@ -43,13 +44,13 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
     )
 
 
-def test_non_empty_dir_error_init(tmp_path) -> None:  # type: ignore
+def test_non_empty_dir_error_Initializer(tmp_path) -> None:  # type: ignore
     """Test repo init error (non-empty dir)"""
     # A .report.log file that should be removed
     (tmp_path / Filepaths.REPORT_FILE).write_text("test", encoding="utf-8")
     (tmp_path / Path("test.txt")).write_text("test", encoding="utf-8")
     with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
-        colrev.review_manager.get_init_operation(
+        colrev.ops.init.Initializer(
             review_type="literature_review",
             example=False,
             target_path=tmp_path,
@@ -70,7 +71,7 @@ def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
         / Path("colrev/ops/init/settings.json")
     )
 
-    review_manager = colrev.review_manager.get_init_operation(
+    review_manager = colrev.ops.init.Initializer(
         review_type="curated_masterdata",
         example=False,
         local_pdf_collection=True,

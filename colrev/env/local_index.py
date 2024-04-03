@@ -28,6 +28,7 @@ import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
+import colrev.review_manager
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -934,13 +935,6 @@ class LocalIndex:
 
     def index(self) -> None:  # pragma: no cover
         """Index all registered CoLRev projects"""
-
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=redefined-outer-name
-        # pylint: disable=cyclic-import
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-        import colrev.review_manager
 
         # Note : this task takes long and does not need to run often
         session = requests_cache.CachedSession(

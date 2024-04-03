@@ -29,14 +29,13 @@ class IDSetter:
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
+        self.local_index = colrev.env.local_index.LocalIndex()
 
-    def _generate_temp_id(
-        self, *, local_index: colrev.env.local_index.LocalIndex, record_dict: dict
-    ) -> str:
+    def _generate_temp_id(self, record_dict: dict) -> str:
         # pylint: disable=too-many-branches
 
         try:
-            retrieved_record = local_index.retrieve(record_dict)
+            retrieved_record = self.local_index.retrieve(record_dict)
             temp_id = retrieved_record.data[Fields.ID]
 
             # Do not use IDs from local_index for curated_metadata repositories
@@ -111,9 +110,8 @@ class IDSetter:
 
     def _generate_id(
         self,
-        *,
-        local_index: colrev.env.local_index.LocalIndex,
         record_dict: dict,
+        *,
         existing_ids: Optional[list] = None,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
@@ -128,9 +126,7 @@ class IDSetter:
         # screen or data will not be replaced
         # (this would break the chain of evidence)
 
-        temp_id = self._generate_temp_id(
-            local_index=local_index, record_dict=record_dict
-        )
+        temp_id = self._generate_temp_id(record_dict)
 
         if existing_ids:
             temp_id = self._generate_next_unique_id(
@@ -144,8 +140,6 @@ class IDSetter:
         self, *, records: Optional[dict] = None, selected_ids: Optional[list] = None
     ) -> dict:
         """Set the IDs for the records in the dataset"""
-
-        local_index = self.review_manager.get_local_index()
 
         if records is None:
             records = {}
@@ -173,8 +167,7 @@ class IDSetter:
                     record = colrev.record.record.Record(record_dict)
                     record.set_status(RecordState.md_prepared)
                 new_id = self._generate_id(
-                    local_index=local_index,
-                    record_dict=record_dict,
+                    record_dict,
                     existing_ids=[x for x in id_list if x != record_id],
                 )
                 if selected_ids:

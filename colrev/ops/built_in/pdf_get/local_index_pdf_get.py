@@ -9,6 +9,7 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -46,7 +47,9 @@ class LocalIndexPDFGet(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Get PDFs from the local-index"""
 
-        local_index = self.review_manager.get_local_index()
+        local_index = colrev.env.local_index.LocalIndex(
+            verbose_mode=self.review_manager.verbose_mode
+        )
 
         try:
             retrieved_record = local_index.retrieve(record.data, include_file=True)

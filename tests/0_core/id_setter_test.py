@@ -28,20 +28,16 @@ def test_load_records_dict_not_notified_exception(
 )
 def test_id_generation_first_author_year(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager,
-    helpers,
     record_dict,
     expected_id,
 ) -> None:
     """Test the id generation process for the first_author_year ID pattern."""
-    local_index = base_repo_review_manager.get_local_index()
 
     base_repo_review_manager.settings.project.id_pattern = IDPattern.first_author_year
     id_setter = colrev.record.record_id_setter.IDSetter(
         review_manager=base_repo_review_manager
     )
-    temp_id = id_setter._generate_temp_id(
-        local_index=local_index, record_dict=record_dict
-    )
+    temp_id = id_setter._generate_temp_id(record_dict)
 
     assert (
         temp_id == expected_id
@@ -72,15 +68,12 @@ def test_id_generation_three_authors_year(  # type: ignore
     expected_id,
 ) -> None:
     """Test the id generation process for the three_authors_year ID pattern."""
-    local_index = base_repo_review_manager.get_local_index()
 
     base_repo_review_manager.settings.project.id_pattern = IDPattern.three_authors_year
     id_setter = colrev.record.record_id_setter.IDSetter(
         review_manager=base_repo_review_manager
     )
-    temp_id = id_setter._generate_temp_id(
-        local_index=local_index, record_dict=record_dict
-    )
+    temp_id = id_setter._generate_temp_id(record_dict)
 
     assert (
         temp_id == expected_id

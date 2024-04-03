@@ -15,6 +15,7 @@ from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
@@ -639,7 +640,7 @@ class FilesSearchSource(JsonSchemaMixin):
         grobid_service = self.review_manager.get_grobid_service()
         grobid_service.start()
 
-        local_index = self.review_manager.get_local_index()
+        local_index = colrev.env.local_index.LocalIndex()
 
         records = self.review_manager.dataset.load_records_dict()
         files_dir_feed = self.search_source.get_api_feed(

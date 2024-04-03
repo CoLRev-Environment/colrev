@@ -16,6 +16,7 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -102,7 +103,9 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
         self.origin_prefix = self.search_source.get_origin_prefix()
 
-        self.local_index = self.review_manager.get_local_index()
+        self.local_index = colrev.env.local_index.LocalIndex(
+            verbose_mode=self.review_manager.verbose_mode
+        )
 
     def _validate_source(self) -> None:
         """Validate the SearchSource (parameters etc.)"""

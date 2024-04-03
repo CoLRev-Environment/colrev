@@ -33,7 +33,7 @@ class Repare(colrev.process.operation.Operation):
             notify_state_transition_operation=False,
         )
         # fix file no longer available
-        self.local_index = self.review_manager.get_local_index()
+        self.local_index = colrev.env.local_index.LocalIndex(verbose_mode=False)
         self.pdf_get_operation = self.review_manager.get_pdf_get_operation(
             notify_state_transition_operation=False
         )
@@ -359,7 +359,6 @@ class Repare(colrev.process.operation.Operation):
             self._set_provenance(record=record, source_feeds=source_feeds)
 
     def _fix_curated_sources(self, *, records: dict) -> None:
-        local_index = self.review_manager.get_local_index()
         for search_source in self.review_manager.settings.sources:
             if search_source.endpoint != "colrev.local_index":
                 continue
@@ -372,7 +371,7 @@ class Repare(colrev.process.operation.Operation):
             for record_id in list(curation_recs.keys()):
                 if Fields.CURATION_ID not in curation_recs[record_id]:
                     try:
-                        retrieved_record = local_index.retrieve(
+                        retrieved_record = self.local_index.retrieve(
                             curation_recs[record_id], include_file=False
                         )
                         del retrieved_record.data[Fields.STATUS]

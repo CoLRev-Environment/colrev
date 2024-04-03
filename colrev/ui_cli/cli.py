@@ -18,6 +18,7 @@ import click_completion.core
 import click_repl
 import pandas as pd
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -285,9 +286,11 @@ def init(
 
     Docs: https://colrev.readthedocs.io/en/latest/manual/problem_formulation/init.html
     """
+    import colrev.ops.init
 
-    colrev.review_manager.get_init_operation(
+    colrev.ops.init.Initializer(
         review_type=type,
+        target_path=Path.cwd(),
         example=example,
         force_mode=force,
         light=light,
@@ -2371,7 +2374,7 @@ def env(
         return
 
     if index:
-        local_index = colrev.review_manager.ReviewManager.get_local_index()
+        local_index = colrev.env.local_index.LocalIndex(verbose_mode=verbose)
         local_index.index()
         local_index.load_journal_rankings()
         return
@@ -2683,9 +2686,9 @@ def clone(
 ) -> None:
     """Create local clone from shared CoLRev repository with git_url"""
 
-    clone_operation = colrev.review_manager.ReviewManager.get_clone_operation(
-        git_url=git_url
-    )
+    import colrev.ops.clone
+
+    clone_operation = colrev.ops.clone.Clone(git_url=git_url)
     clone_operation.clone_git_repo()
 
 

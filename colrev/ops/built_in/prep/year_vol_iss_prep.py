@@ -8,6 +8,7 @@ import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
@@ -46,7 +47,9 @@ class YearVolIssPrep(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
-        self.local_index = prep_operation.review_manager.get_local_index()
+        self.local_index = colrev.env.local_index.LocalIndex(
+            verbose_mode=self.review_manager.verbose_mode
+        )
         self.vol_nr_dict = self._get_vol_nr_dict()
         self.quality_model = self.review_manager.get_qm()
 

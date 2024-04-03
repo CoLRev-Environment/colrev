@@ -9,7 +9,7 @@ from pathlib import Path
 
 import git
 import pytest
-
+import colrev.ops.init
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_pdf
@@ -120,7 +120,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         test_repo_dir / "reg.json",
     )
     os.chdir(test_repo_dir)
-    colrev.review_manager.get_init_operation(
+    colrev.ops.init.Initializer(
         review_type="literature_review",
         target_path=test_repo_dir,
         light=True,

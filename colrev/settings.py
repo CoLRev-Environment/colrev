@@ -18,6 +18,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.search_api_feed
 from colrev.constants import Filepaths
 from colrev.constants import IDPattern
 from colrev.constants import PDFPathType
@@ -180,10 +181,6 @@ class SearchSource(JsonSchemaMixin):
         prep_mode: bool = False,
     ) -> colrev.ops.search_api_feed.SearchAPIFeed:
         """Get a feed to add and update records"""
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=cyclic-import
-        # pylint: disable=redefined-outer-name
-        import colrev.ops.search_api_feed
 
         return colrev.ops.search_api_feed.SearchAPIFeed(
             review_manager=review_manager,

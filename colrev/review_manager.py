@@ -351,16 +351,6 @@ class ReviewManager:
         return status_stats.completeness_condition
 
     @classmethod
-    def get_local_index(
-        cls, *, verbose_mode: bool = False
-    ) -> colrev.env.local_index.LocalIndex:
-        """Get a local-index object"""
-
-        import colrev.env.local_index
-
-        return colrev.env.local_index.LocalIndex(verbose_mode=verbose_mode)
-
-    @classmethod
     def get_package_manager(
         cls, *, verbose_mode: bool = True
     ) -> colrev.env.package_manager.PackageManager:  # pragma: no cover
@@ -427,15 +417,6 @@ class ReviewManager:
         import colrev.ops.sync
 
         return colrev.ops.sync.Sync()
-
-    @classmethod
-    def get_clone_operation(
-        cls, *, git_url: str
-    ) -> colrev.ops.clone.Clone:  # pragma: no cover
-        """Get a clone operation object"""
-        import colrev.ops.clone
-
-        return colrev.ops.clone.Clone(git_url=git_url)
 
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
@@ -668,29 +649,3 @@ class ReviewManager:
 
         identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
         return any("true" == os.getenv(x) for x in identifier_list)
-
-
-# pylint: disable=redefined-outer-name
-# pylint: disable=import-outside-toplevel
-# pylint: disable=too-many-arguments
-def get_init_operation(
-    review_type: str,
-    target_path: Path = Path.cwd(),
-    example: bool = False,
-    force_mode: bool = False,
-    light: bool = False,
-    local_pdf_collection: bool = False,
-    exact_call: str = "",
-) -> colrev.ops.init.Initializer:
-    """Get an init operation object"""
-    import colrev.ops.init
-
-    return colrev.ops.init.Initializer(
-        review_type=review_type,
-        target_path=target_path,
-        example=example,
-        force_mode=force_mode,
-        light=light,
-        local_pdf_collection=local_pdf_collection,
-        exact_call=exact_call,
-    )

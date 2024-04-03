@@ -6,6 +6,7 @@ from pathlib import Path
 from git import Repo
 
 import colrev.exceptions as colrev_exceptions
+import colrev.review_manager
 
 
 class Clone:
@@ -22,9 +23,6 @@ class Clone:
 
     def clone_git_repo(self) -> None:
         """Method to clone a CoLRev project from git remote repository"""
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=cyclic-import
-        import colrev.review_manager
 
         Repo.clone_from(self.git_url, str(self.local_path))
         os.chdir(str(self.local_path))
@@ -38,6 +36,6 @@ class Clone:
             return
         environment_manager = review_manager.get_environment_manager()
         environment_manager.register_repo(self.local_path)
-        local_index = review_manager.get_local_index()
+        local_index = colrev.env.local_index.LocalIndex()
 
         local_index.index_colrev_project(self.local_path)
