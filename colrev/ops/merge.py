@@ -20,6 +20,8 @@ from colrev.constants import OperationsType
 class Merge(colrev.process.operation.Operation):
     """Merge branches of CoLRev project"""
 
+    type = OperationsType.check
+
     def __init__(
         self,
         *,
@@ -27,7 +29,7 @@ class Merge(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
             notify_state_transition_operation=False,
         )
 

@@ -31,6 +31,8 @@ class PDFPrep(colrev.process.operation.Operation):
 
     pdf_prep_package_endpoints: dict
 
+    type = OperationsType.pdf_prep
+
     def __init__(
         self,
         *,
@@ -40,7 +42,7 @@ class PDFPrep(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.pdf_prep,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

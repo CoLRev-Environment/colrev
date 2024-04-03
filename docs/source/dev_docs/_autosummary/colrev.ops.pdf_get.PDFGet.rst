@@ -39,7 +39,7 @@ colrev.ops.pdf\_get.PDFGet
 
    .. autosummary::
 
+      ~PDFGet.type
       ~PDFGet.to_retrieve
       ~PDFGet.retrieved
       ~PDFGet.not_retrieved
-      ~PDFGet.type

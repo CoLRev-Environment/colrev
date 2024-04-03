@@ -18,10 +18,12 @@ from colrev.constants import PackageEndpointType
 class Push(colrev.process.operation.Operation):
     """Push the project and record corrections"""
 
+    type = OperationsType.check
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
         )
 
     @colrev.process.operation.Operation.decorate()

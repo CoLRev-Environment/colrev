@@ -19,10 +19,12 @@ if TYPE_CHECKING:  # pragma: no cover
 class Trace(colrev.process.operation.Operation):
     """Trace a record through history"""
 
+    type = OperationsType.check
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
         )
 
     def _lpad_multiline(self, *, s: str, lpad: int) -> str:

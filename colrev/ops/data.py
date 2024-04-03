@@ -23,6 +23,7 @@ class Data(colrev.process.operation.Operation):
     data extraction, analysis and synthesis"""
 
     _pad = 0
+    type = OperationsType.data
 
     def __init__(
         self,
@@ -32,7 +33,7 @@ class Data(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.data,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

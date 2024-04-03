@@ -26,6 +26,7 @@
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.colrev_pandas
    colrev.constants
    colrev.dataset
    colrev.env
@@ -34,7 +35,6 @@
    colrev.loader
    colrev.logger
    colrev.ops
-   colrev.pandas
    colrev.process
    colrev.record
    colrev.review_manager

@@ -9,9 +9,10 @@ from pathlib import Path
 
 import git
 import pytest
-import colrev.ops.init
+
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.init
 import colrev.record.record_pdf
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES

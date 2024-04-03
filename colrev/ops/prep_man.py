@@ -22,6 +22,8 @@ from colrev.constants import RecordState
 class PrepMan(colrev.process.operation.Operation):
     """Prepare records manually (metadata)"""
 
+    type = OperationsType.prep_man
+
     def __init__(
         self,
         *,
@@ -30,7 +32,7 @@ class PrepMan(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.prep_man,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

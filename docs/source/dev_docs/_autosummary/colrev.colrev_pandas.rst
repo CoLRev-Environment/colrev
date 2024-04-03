@@ -1,7 +1,7 @@
-colrev.pandas
-=============
+colrev.colrev\_pandas
+=====================
 
-.. automodule:: colrev.pandas
+.. automodule:: colrev.colrev_pandas
 
 
 

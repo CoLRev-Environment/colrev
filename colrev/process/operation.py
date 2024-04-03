@@ -173,9 +173,11 @@ class CheckOperation(Operation):
 
     # pylint: disable=too-few-public-methods
 
+    type = OperationsType.check
+
     def __init__(self, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
             notify_state_transition_operation=False,
         )
