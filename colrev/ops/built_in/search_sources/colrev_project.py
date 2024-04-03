@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,10 +19,11 @@ from tqdm import tqdm
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import FieldSet
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -36,11 +38,11 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     endpoint = "colrev.colrev_project"
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "CoLRev project"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -48,7 +50,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
@@ -88,7 +90,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=SearchType.OTHER,
                 search_parameters={"scope": {"url": params["url"]}},
                 comment="",
             )
@@ -121,11 +123,56 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info(
             f'Loading records from {self.search_source.search_parameters["scope"]["url"]}'
         )
-        records_to_import = project_review_manager.dataset.load_records_dict()
+        records = project_review_manager.dataset.load_records_dict()
         shutil.rmtree(temp_path)
-        return records_to_import
+        return records
 
-    def run_search(self, rerun: bool) -> None:
+    def _save_field_dict(self, *, input_dict: dict, input_key: str) -> list:
+        list_to_return = []
+        assert input_key in [Fields.MD_PROV, Fields.D_PROV]
+        if input_key == Fields.MD_PROV:
+            for key, value in input_dict.items():
+                if isinstance(value, dict):
+                    formated_node = ",".join(
+                        sorted(e for e in value["note"].split(",") if "" != e)
+                    )
+                    list_to_return.append(f"{key}:{value['source']};{formated_node};")
+
+        elif input_key == Fields.D_PROV:
+            for key, value in input_dict.items():
+                if isinstance(value, dict):
+                    list_to_return.append(f"{key}:{value['source']};{value['note']};")
+
+        return list_to_return
+
+    def _get_stringified_record(self, *, record: dict) -> dict:
+        data_copy = deepcopy(record)
+
+        def list_to_str(*, val: list) -> str:
+            return ("\n" + " " * 36).join([f.rstrip() for f in val])
+
+        for key in [Fields.ORIGIN]:
+            if key in data_copy:
+                if key in [Fields.ORIGIN]:
+                    data_copy[key] = sorted(list(set(data_copy[key])))
+                for ind, val in enumerate(data_copy[key]):
+                    if len(val) > 0:
+                        if val[-1] != ";":
+                            data_copy[key][ind] = val + ";"
+                data_copy[key] = list_to_str(val=data_copy[key])
+
+        for key in [Fields.MD_PROV, Fields.D_PROV]:
+            if key in data_copy:
+                if isinstance(data_copy[key], dict):
+                    data_copy[key] = self._save_field_dict(
+                        input_dict=data_copy[key], input_key=key
+                    )
+                if isinstance(data_copy[key], list):
+                    data_copy[key] = list_to_str(val=data_copy[key])
+
+        return data_copy
+
+    def search(self, rerun: bool) -> None:
         """Run a search of a CoLRev project"""
 
         # pylint: disable=too-many-locals
@@ -134,7 +181,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
 
         self._validate_source()
 
-        colrev_project_search_feed = self.search_source.get_feed(
+        colrev_project_search_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -157,14 +204,13 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         ]
 
         self.review_manager.logger.info("Importing selected records")
-        records = self.review_manager.dataset.load_records_dict()
         for record_to_import in tqdm(list(records_to_import.values())):
             if "condition" in self.search_source.search_parameters["scope"]:
                 res = []
                 try:
-                    stringified_copy = colrev.record.Record(
-                        data=record_to_import
-                    ).get_data(stringify=True)
+                    stringified_copy = self._get_stringified_record(
+                        record=record_to_import
+                    )
                     stringified_copy = {k: str(v) for k, v in stringified_copy.items()}
                     # pylint: disable=possibly-unused-variable
                     rec_df = pd.DataFrame.from_records([stringified_copy])
@@ -190,7 +236,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             #     )
 
             #     pdf_get_operation.import_pdf(
-            #         record=colrev.record.Record(data=record_to_import)
+            #         record=colrev.record.record.Record(record_to_import)
             #     )
 
             record_to_import["colrev_project_identifier"] = (
@@ -201,25 +247,23 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             }
 
             try:
-                colrev_project_search_feed.set_id(record_dict=record_to_import)
                 colrev_project_search_feed.add_record(
-                    record=colrev.record.Record(data=record_to_import),
+                    record=colrev.record.record.Record(record_to_import),
                 )
 
             except colrev_exceptions.NotFeedIdentifiableException:
                 print("not identifiable")
                 continue
 
-        colrev_project_search_feed.print_post_run_search_infos(records=records)
-        colrev_project_search_feed.save_feed_file()
+        colrev_project_search_feed.save()
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -237,16 +281,15 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
-
             for record_id in records:
                 records[record_id] = {
                     k: v
                     for k, v in records[record_id].items()
-                    if k not in [Fields.STATUS, Fields.MD_PROV]
+                    if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
                 }
 
             return records
@@ -254,8 +297,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for CoLRev projects"""
 
         return record

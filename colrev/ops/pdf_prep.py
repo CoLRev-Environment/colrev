@@ -11,14 +11,18 @@ from pathlib import Path
 import requests
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
 import colrev.ops.built_in.pdf_prep.grobid_tei
-import colrev.record
+import colrev.process.operation
+import colrev.record.record_pdf
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import RecordState
 
 
-class PDFPrep(colrev.operation.Operation):
+class PDFPrep(colrev.process.operation.Operation):
     """Prepare PDFs"""
 
     to_prepare: int
@@ -36,7 +40,7 @@ class PDFPrep(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.pdf_prep,
+            operations_type=OperationsType.pdf_prep,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
@@ -49,15 +53,14 @@ class PDFPrep(colrev.operation.Operation):
         self.pdf_qm = self.review_manager.get_pdf_qm()
 
     def _complete_successful_pdf_prep(
-        self, *, record: colrev.record.Record, original_filename: str
+        self, *, record: colrev.record.record.Record, original_filename: str
     ) -> None:
-        record.data.update(colrev_status=colrev.record.RecordState.pdf_prepared)
+        # pylint: disable=colrev-direct-status-assign
+        record.data.update(colrev_status=RecordState.pdf_prepared)
         pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         if pdf_path.suffix == ".pdf":
             try:
-                record.data.update(
-                    colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=pdf_path)
-                )
+                record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path))
             except colrev_exceptions.ServiceNotAvailableException:
                 self.review_manager.logger.error(
                     "Cannot create pdf-hash (Docker service not available)"
@@ -101,7 +104,8 @@ class PDFPrep(colrev.operation.Operation):
             if not self.review_manager.verbose_mode:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
-                    for fpath in self.review_manager.pdf_dir.glob("*.pdf"):
+                    pdf_dir = self.review_manager.get_path(Filepaths.PDF_DIR)
+                    for fpath in pdf_dir.glob("*.pdf"):
                         if (
                             record.data[Fields.ID] in str(fpath)
                             and fpath != target_fname
@@ -115,7 +119,7 @@ class PDFPrep(colrev.operation.Operation):
         record_dict = item["record"]
 
         if (
-            colrev.record.RecordState.pdf_imported != record_dict[Fields.STATUS]
+            RecordState.pdf_imported != record_dict[Fields.STATUS]
             or Fields.FILE not in record_dict
         ):
             return record_dict
@@ -130,7 +134,7 @@ class PDFPrep(colrev.operation.Operation):
             )
             return record_dict
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.record_pdf.PDFRecord(record_dict)
         if record_dict[Fields.FILE].endswith(".pdf"):
             record.set_text_from_pdf()
         original_filename = record_dict[Fields.FILE]
@@ -174,13 +178,10 @@ class PDFPrep(colrev.operation.Operation):
                     f"Error for {record.data[Fields.ID]} "  # type: ignore
                     f"(in {endpoint.settings.endpoint} : {err})"  # type: ignore
                 )
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_needs_manual_preparation
-                )
+                record.set_status(RecordState.pdf_needs_manual_preparation)
 
             failed = (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                == record.data[Fields.STATUS]
+                RecordState.pdf_needs_manual_preparation == record.data[Fields.STATUS]
             )
 
             if failed:
@@ -203,9 +204,7 @@ class PDFPrep(colrev.operation.Operation):
             f"Completed PDF prep of {record_dict[Fields.ID]}"
         )
 
-        successfully_prepared = (
-            colrev.record.RecordState.pdf_prepared == record.data[Fields.STATUS]
-        )
+        successfully_prepared = RecordState.pdf_prepared == record.data[Fields.STATUS]
 
         if successfully_prepared:
             self.review_manager.logger.info(
@@ -224,7 +223,8 @@ class PDFPrep(colrev.operation.Operation):
                 record=record, original_filename=original_filename
             )
 
-        record.cleanup_pdf_processing_fields()
+        record.data.pop(Fields.TEXT_FROM_PDF, None)
+        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
         return record.get_data()
 
@@ -237,12 +237,12 @@ class PDFPrep(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.pdf_imported == x[Fields.STATUS]
+                if RecordState.pdf_imported == x[Fields.STATUS]
             ]
         )
 
         items = self.review_manager.dataset.read_next_record(
-            conditions=[{Fields.STATUS: colrev.record.RecordState.pdf_imported}],
+            conditions=[{Fields.STATUS: RecordState.pdf_imported}],
         )
         self.to_prepare = nr_tasks
 
@@ -263,24 +263,24 @@ class PDFPrep(colrev.operation.Operation):
     def _set_to_reprocess(self) -> None:
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            if (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                != record_dict["colrev_stauts"]
-            ):
+            if RecordState.pdf_needs_manual_preparation != record_dict["colrev_stauts"]:
                 continue
 
-            record = colrev.record.Record(data=record_dict)
-            record.data.update(colrev_status=colrev.record.RecordState.pdf_imported)
+            record = colrev.record.record_pdf.PDFRecord(record_dict)
+            # pylint: disable=colrev-direct-status-assign
+            record.data.update(colrev_status=RecordState.pdf_imported)
             record.reset_pdf_provenance_notes()
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     # Note : no named arguments (multiprocessing)
     def _update_colrev_pdf_ids(self, record_dict: dict) -> dict:
         if Fields.FILE in record_dict:
             pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
             record_dict.update(
-                colrev_pdf_id=colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
+                colrev_pdf_id=colrev.record.record_pdf.PDFRecord.get_colrev_pdf_id(
+                    pdf_path
+                )
             )
         return record_dict
 
@@ -293,15 +293,15 @@ class PDFPrep(colrev.operation.Operation):
         pool.close()
         pool.join()
         records = {r[Fields.ID]: r for r in records_list}
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(msg="Update colrev_pdf_ids")
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(msg="Update colrev_pdf_ids")
 
     def _print_stats(self, *, pdf_prep_record_list: list) -> None:
         self.pdf_prepared = len(
             [
                 r
                 for r in pdf_prep_record_list
-                if colrev.record.RecordState.pdf_prepared == r[Fields.STATUS]
+                if RecordState.pdf_prepared == r[Fields.STATUS]
             ]
         )
 
@@ -342,14 +342,14 @@ class PDFPrep(colrev.operation.Operation):
         """Setup a custom pdf-prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_scripts/custom_pdf_prep_script.py")
+            file_path=Path("ops/custom_scripts/custom_pdf_prep_script.py")
         )
 
         if filedata:
             with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_pdf_prep_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_pdf_prep_script.py"))
 
         self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints.append(
             {"endpoint": "custom_pdf_prep_script"}
@@ -367,20 +367,20 @@ class PDFPrep(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
             if record_dict[Fields.STATUS] not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 continue
             self.review_manager.logger.info(record_dict[Fields.ID])
             try:
                 endpoint.prep_pdf(
-                    record=colrev.record.Record(data=record_dict),
+                    record=colrev.record.record_pdf.PDFRecord(record_dict),
                     pad=0,
                 )
             except colrev_exceptions.TEIException:
                 self.review_manager.logger.error("Error generating TEI")
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -389,7 +389,10 @@ class PDFPrep(colrev.operation.Operation):
     ) -> None:
         """Prepare PDFs (main entrypoint)"""
 
-        if self.review_manager.in_ci_environment():
+        if (
+            self.review_manager.in_ci_environment()
+            and not self.review_manager.in_test_environment()
+        ):
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep",
                 detailed_trace="pdf-prep not available in ci environment",
@@ -420,7 +423,7 @@ class PDFPrep(colrev.operation.Operation):
 
         package_manager = self.review_manager.get_package_manager()
         self.pdf_prep_package_endpoints = package_manager.load_packages(
-            package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            package_type=PackageEndpointType.pdf_prep,
             selected_packages=self.review_manager.settings.pdf_prep.pdf_prep_package_endpoints,
             operation=self,
             only_ci_supported=self.review_manager.in_ci_environment(),
@@ -435,7 +438,7 @@ class PDFPrep(colrev.operation.Operation):
                 record = item["record"]
                 record = self.prepare_pdf(item)
                 self.review_manager.dataset.save_records_dict(
-                    records={record[Fields.ID]: record}, partial=True
+                    {record[Fields.ID]: record}, partial=True
                 )
 
         else:
@@ -452,15 +455,15 @@ class PDFPrep(colrev.operation.Operation):
             pool.join()
 
             self.review_manager.dataset.save_records_dict(
-                records={r[Fields.ID]: r for r in pdf_prep_record_list}, partial=True
+                {r[Fields.ID]: r for r in pdf_prep_record_list}, partial=True
             )
 
             self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
         # Note: for formatting...
         records = self.review_manager.dataset.load_records_dict()
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(msg="Prepare PDFs")
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(msg="Prepare PDFs")
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed pdf-prep operation{Colors.END}"
         )

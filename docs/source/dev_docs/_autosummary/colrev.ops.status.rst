@@ -21,4 +21,3 @@ colrev.ops.status
       :nosignatures:
 
       Status
-      StatusStats

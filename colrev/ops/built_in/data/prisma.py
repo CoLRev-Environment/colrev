@@ -17,7 +17,8 @@ from docker.errors import DockerException
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
+from colrev.constants import Filepaths
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -36,6 +37,7 @@ class PRISMA(JsonSchemaMixin):
         diagram_path: List[Path] = field(default_factory=lambda: [Path("PRISMA.png")])
 
     settings_class = PRISMASettings
+    PRISMA_IMAGE = "colrev/prisma:latest"
 
     def __init__(
         self,
@@ -57,17 +59,18 @@ class PRISMA(JsonSchemaMixin):
 
         self.settings = self.settings_class.load_settings(data=settings)
 
-        self.csv_path = self.review_manager.output_dir / Path("PRISMA.csv")
+        output_dir = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
+        self.csv_path = output_dir / Path("PRISMA.csv")
 
         self.settings.diagram_path = [
-            self.review_manager.output_dir / path for path in self.settings.diagram_path
+            output_dir / path for path in self.settings.diagram_path
         ]
 
         if not self.review_manager.in_ci_environment():
-            self.prisma_image = "colrev/prisma:latest"
             self.review_manager.environment_manager.build_docker_image(
-                imagename=self.prisma_image
+                imagename=self.PRISMA_IMAGE
             )
+        data_operation.docker_images_to_stop.append(self.PRISMA_IMAGE)
 
     # pylint: disable=unused-argument
     @classmethod
@@ -82,7 +85,9 @@ class PRISMA(JsonSchemaMixin):
         operation.review_manager.settings.data.data_package_endpoints.append(add_source)
 
     def _export_csv(self, silent_mode: bool) -> None:
-        csv_resource_path = Path("template/") / Path("prisma/PRISMA.csv")
+        csv_resource_path = Path("ops/built_in/data/prisma/") / Path(
+            "prisma/PRISMA.csv"
+        )
         self.csv_path.parent.mkdir(exist_ok=True, parents=True)
 
         if self.csv_path.is_file():
@@ -97,9 +102,7 @@ class PRISMA(JsonSchemaMixin):
         prisma_data["ind"] = prisma_data["data"]
         prisma_data.set_index("ind", inplace=True)
         prisma_data.loc["database_results", "n"] = status_stats.overall.md_retrieved
-        prisma_data.loc["duplicates", "n"] = (
-            status_stats.currently.md_duplicates_removed
-        )
+        prisma_data.loc["duplicates", "n"] = status_stats.md_duplicates_removed
         prisma_data.loc["records_screened", "n"] = status_stats.overall.rev_prescreen
         prisma_data.loc["records_excluded", "n"] = (
             status_stats.overall.rev_prescreen_excluded
@@ -162,17 +165,18 @@ class PRISMA(JsonSchemaMixin):
 
     def _call_docker_build_process(self, *, script: str) -> None:
         try:
-            uid = os.stat(self.review_manager.settings_path).st_uid
-            gid = os.stat(self.review_manager.settings_path).st_gid
+            settings_path = self.review_manager.get_path(Filepaths.SETTINGS_FILE)
+            uid = os.stat(settings_path).st_uid
+            gid = os.stat(settings_path).st_gid
             user = f"{uid}:{gid}"
 
             client = docker.from_env()
 
-            msg = f"Running docker container created from image {self.prisma_image}"
+            msg = f"Running docker container created from image {self.PRISMA_IMAGE}"
             self.review_manager.report_logger.info(msg)
 
             client.containers.run(
-                image=self.prisma_image,
+                image=self.PRISMA_IMAGE,
                 command=script,
                 user=user,
                 volumes=[os.getcwd() + ":/data"],

@@ -21,6 +21,7 @@ colrev.ops.data.Data
       ~Data.decorate
       ~Data.get_record_ids_for_synthesis
       ~Data.main
+      ~Data.notify
       ~Data.profile
       ~Data.reading_heuristics
       ~Data.setup_custom_script
@@ -33,5 +34,4 @@ colrev.ops.data.Data
 
    .. autosummary::
 
-      ~Data.force_mode
       ~Data.type

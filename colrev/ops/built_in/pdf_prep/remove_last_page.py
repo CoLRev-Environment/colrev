@@ -12,9 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 
 import colrev.env.package_manager
-import colrev.env.utils
-import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 # pylint: disable=duplicate-code
 
@@ -41,7 +40,7 @@ class PDFLastPage(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record.Record,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the PDF by removing additional materials (if any)"""
@@ -49,8 +48,7 @@ class PDFLastPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        local_index = self.review_manager.get_local_index()
-        lp_path = local_index.local_environment_path / Path(".lastpages")
+        lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
         def _get_last_pages(*, pdf: str) -> typing.List[int]:
@@ -62,10 +60,8 @@ class PDFLastPage(JsonSchemaMixin):
 
             last_page_nr = len(pdf_reader.pages) - 1
 
-            last_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-                pdf_path=Path(pdf),
-                page_nr=last_page_nr + 1,
-                hash_size=16,
+            last_page_average_hash_16 = record.get_pdf_hash(
+                page_nr=last_page_nr + 1, hash_size=16
             )
 
             if last_page_nr == 1:

@@ -27,6 +27,7 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
       ~PDFPrepMan.extract_pages
       ~PDFPrepMan.get_data
       ~PDFPrepMan.main
+      ~PDFPrepMan.notify
       ~PDFPrepMan.pdf_prep_man_stats
       ~PDFPrepMan.pdfs_prepared_manually
       ~PDFPrepMan.set_pdf_man_prepared
@@ -39,5 +40,4 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
 
    .. autosummary::
 
-      ~PDFPrepMan.force_mode
       ~PDFPrepMan.type

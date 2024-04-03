@@ -7,7 +7,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.ops.built_in.search_sources.open_citations_forward_search import (
     OpenCitationsSearchSource,
 )
@@ -31,7 +31,7 @@ class QualitativeSystematicReview(JsonSchemaMixin):
     ci_supported: bool = True
 
     def __init__(
-        self, *, operation: colrev.operation.CheckOperation, settings: dict
+        self, *, operation: colrev.process.operation.CheckOperation, settings: dict
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
 

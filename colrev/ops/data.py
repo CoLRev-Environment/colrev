@@ -7,15 +7,18 @@ from typing import Optional
 
 import pandas as pd
 
-import colrev.operation
 import colrev.ops.built_in.pdf_prep.grobid_tei
-import colrev.record
+import colrev.process.operation
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import RecordState
 
 
-class Data(colrev.operation.Operation):
+class Data(colrev.process.operation.Operation):
     """Class supporting structured and unstructured
     data extraction, analysis and synthesis"""
 
@@ -29,7 +32,7 @@ class Data(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.data,
+            operations_type=OperationsType.data,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
@@ -42,8 +45,8 @@ class Data(colrev.operation.Operation):
             for ID, record in records.items()
             if record[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         ]
 
@@ -133,8 +136,8 @@ class Data(colrev.operation.Operation):
                 for ID, record in records.items()
                 if record[Fields.STATUS]
                 in [
-                    colrev.record.RecordState.rev_synthesized,
-                    colrev.record.RecordState.rev_included,
+                    RecordState.rev_synthesized,
+                    RecordState.rev_included,
                 ]
                 and record.get(Fields.YEAR, FieldValues.UNKNOWN).isdigit()
             ]
@@ -211,13 +214,13 @@ class Data(colrev.operation.Operation):
         """Setup a custom data script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/custom_scripts/custom_data_script.py")
+            file_path=Path("ops/custom_scripts/custom_data_script.py")
         )
         if filedata:
             with open("custom_data_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.review_manager.dataset.add_changes(path=Path("custom_data_script.py"))
+        self.review_manager.dataset.add_changes(Path("custom_data_script.py"))
 
         new_data_endpoint = {"endpoint": "custom_data_script"}
 
@@ -268,10 +271,7 @@ class Data(colrev.operation.Operation):
             individual_status_dict,
         ) in synthesized_record_status_matrix.items():
             if all(x for x in individual_status_dict.values()):
-                if (
-                    records[record_id][Fields.STATUS]
-                    != colrev.record.RecordState.rev_synthesized
-                ):
+                if records[record_id][Fields.STATUS] != RecordState.rev_synthesized:
                     if self.review_manager.verbose_mode:
                         self.review_manager.report_logger.info(
                             f" {record_id}".ljust(self._pad, " ")
@@ -282,22 +282,14 @@ class Data(colrev.operation.Operation):
                             + "set colrev_status to synthesized"
                         )
 
-                if (
-                    colrev.record.RecordState.rev_synthesized
-                    != records[record_id][Fields.STATUS]
-                ):
-                    records[record_id].update(
-                        colrev_status=colrev.record.RecordState.rev_synthesized
-                    )
+                if RecordState.rev_synthesized != records[record_id][Fields.STATUS]:
+                    # pylint: disable=colrev-direct-status-assign
+                    records[record_id].update(colrev_status=RecordState.rev_synthesized)
                     records_changed = True
             else:
-                if (
-                    colrev.record.RecordState.rev_included
-                    != records[record_id][Fields.STATUS]
-                ):
-                    records[record_id].update(
-                        colrev_status=colrev.record.RecordState.rev_included
-                    )
+                if RecordState.rev_included != records[record_id][Fields.STATUS]:
+                    # pylint: disable=colrev-direct-status-assign
+                    records[record_id].update(colrev_status=RecordState.rev_included)
                     records_changed = True
         return records_changed
 
@@ -315,7 +307,7 @@ class Data(colrev.operation.Operation):
         if self.review_manager.in_ci_environment():
             print("\n\n")
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -353,7 +345,7 @@ class Data(colrev.operation.Operation):
                 )
 
             endpoint_dict = self.package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.data,
+                package_type=PackageEndpointType.data,
                 selected_packages=[data_package_endpoint],
                 operation=self,
                 only_ci_supported=self.review_manager.in_ci_environment(),
@@ -385,7 +377,7 @@ class Data(colrev.operation.Operation):
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
         if records_status_changed:
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
 
         self._post_data(silent_mode=silent_mode)
 
@@ -394,6 +386,6 @@ class Data(colrev.operation.Operation):
         )
 
         return {
-            "ask_to_commit": self.review_manager.dataset.has_changes(),
+            "ask_to_commit": self.review_manager.dataset.has_record_changes(),
             "no_endpoints_registered": no_endpoints_registered,
         }

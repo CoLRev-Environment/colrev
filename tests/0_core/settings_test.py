@@ -1,11 +1,21 @@
 #!/usr/bin/env python
 """Test the colrev project settings"""
+import json
 import os
 from dataclasses import asdict
 from pathlib import Path
 
+import pytest
+
 import colrev.env.utils
+import colrev.exceptions as colrev_exceptions
 import colrev.settings
+from colrev.constants import IDPattern
+from colrev.constants import PDFPathType
+from colrev.constants import ScreenCriterionType
+from colrev.constants import SearchType
+
+# flake8: noqa: E501
 
 # expected_printout: in settings-expected-printout.txt
 
@@ -13,9 +23,17 @@ import colrev.settings
 def test_settings_load() -> None:
     """Test the settings_load"""
     settings = colrev.settings.load_settings(
-        settings_path=Path(colrev.__file__).parents[0]
-        / Path("template/init/settings.json")
+        settings_path=Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
     )
+    settings.sources[0].comment = "user comment"
+    settings.screen.criteria = {  # type: ignore
+        "test": colrev.settings.ScreenCriterion(
+            explanation="Explanation of test",
+            comment="",
+            criterion_type=ScreenCriterionType.inclusion_criterion,
+        )
+    }
+    settings.data.data_package_endpoints = [{"endpoint": "colrev.export_data"}]
     expected = {
         "project": {
             "title": "",
@@ -23,7 +41,7 @@ def test_settings_load() -> None:
             "keywords": [],
             "protocol": None,
             "review_type": "literature_review",
-            "id_pattern": colrev.settings.IDPattern.three_authors_year,
+            "id_pattern": IDPattern.three_authors_year,
             "share_stat_req": colrev.settings.ShareStatReq.processed,
             "delay_automated_processing": False,
             "colrev_version": "-",
@@ -33,13 +51,12 @@ def test_settings_load() -> None:
             {
                 "endpoint": "colrev.files_dir",
                 "filename": Path("data/search/files.bib"),
-                "search_type": colrev.settings.SearchType.FILES,
+                "search_type": SearchType.FILES,
                 "search_parameters": {"scope": {"path": "data/pdfs"}},
-                "comment": "",
+                "comment": "user comment",
             }
         ],
         "search": {"retrieve_forthcoming": True},
-        "load": {},
         "prep": {
             "fields_to_keep": [],
             "defects_to_ignore": ["inconsistent-with-url-metadata"],
@@ -80,7 +97,7 @@ def test_settings_load() -> None:
             ],
         },
         "pdf_get": {
-            "pdf_path_type": colrev.settings.PDFPathType.symlink,
+            "pdf_path_type": PDFPathType.symlink,
             "pdf_required_for_screen_and_synthesis": True,
             "defects_to_ignore": [],
             "rename_pdfs": True,
@@ -108,12 +125,20 @@ def test_settings_load() -> None:
         },
         "screen": {
             "explanation": None,
-            "criteria": {},
+            "criteria": {
+                "test": {
+                    "explanation": "Explanation of test",
+                    "comment": "",
+                    "criterion_type": ScreenCriterionType.inclusion_criterion,
+                }
+            },
             "screen_package_endpoints": [{"endpoint": "colrev.colrev_cli_screen"}],
         },
-        "data": {"data_package_endpoints": []},
+        "data": {"data_package_endpoints": [{"endpoint": "colrev.export_data"}]},
     }
     actual = asdict(settings)
+
+    print(settings)
 
     identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
     if not any("true" == os.getenv(x) for x in identifier_list):
@@ -122,298 +147,69 @@ def test_settings_load() -> None:
     assert not settings.is_curated_repo()
 
 
-# def test_settings_schema() -> None:
-#     expected = {
-#         "type": "object",
-#         "required": [
-#             "project",
-#             "sources",
-#             "search",
-#             "load",
-#             "prep",
-#             "dedupe",
-#             "prescreen",
-#             "pdf_get",
-#             "pdf_prep",
-#             "screen",
-#             "data",
-#         ],
-#         "properties": {
-#             "project": {"$ref": "#/definitions/ProjectSettings"},
-#             "sources": {
-#                 "type": "array",
-#                 "items": {"$ref": "#/definitions/SearchSource"},
-#             },
-#             "search": {"$ref": "#/definitions/SearchSettings"},
-#             "load": {"$ref": "#/definitions/LoadSettings"},
-#             "prep": {"$ref": "#/definitions/PrepSettings"},
-#             "dedupe": {"$ref": "#/definitions/DedupeSettings"},
-#             "prescreen": {"$ref": "#/definitions/PrescreenSettings"},
-#             "pdf_get": {"$ref": "#/definitions/PDFGetSettings"},
-#             "pdf_prep": {"$ref": "#/definitions/PDFPrepSettings"},
-#             "screen": {"$ref": "#/definitions/ScreenSettings"},
-#             "data": {"$ref": "#/definitions/DataSettings"},
-#         },
-#         "description": "CoLRev project settings",
-#         "$schema": "http://json-schema.org/draft-06/schema#",
-#         "definitions": {
-#             "ProjectSettings": {
-#                 "type": "object",
-#                 "required": [
-#                     "title",
-#                     "authors",
-#                     "keywords",
-#                     "review_type",
-#                     "id_pattern",
-#                     "share_stat_req",
-#                     "delay_automated_processing",
-#                     "colrev_version",
-#                     "auto_upgrade",
-#                 ],
-#                 "properties": {
-#                     "title": {"type": "string"},
-#                     "authors": {
-#                         "type": "array",
-#                         "items": {"$ref": "#/definitions/Author"},
-#                     },
-#                     "keywords": {"type": "array", "items": {"type": "string"}},
-#                     "protocol": {"$ref": "#/definitions/Protocol"},
-#                     "review_type": {"type": "string"},
-#                     "id_pattern": {
-#                         "type": "string",
-#                         "enum": ["first_author_year", "three_authors_year"],
-#                     },
-#                     "share_stat_req": {
-#                         "type": "string",
-#                         "enum": ["none", "processed", "screened", "completed"],
-#                     },
-#                     "delay_automated_processing": {"type": "boolean"},
-#                     "colrev_version": {"type": "string"},
-#                     "auto_upgrade": {"type": "boolean"},
-#                 },
-#                 "description": "Project settings",
-#             },
-#             "Author": {
-#                 "type": "object",
-#                 "required": ["name", "initials", "email"],
-#                 "properties": {
-#                     "name": {"type": "string"},
-#                     "initials": {"type": "string"},
-#                     "email": {"type": "string"},
-#                     "orcid": {"type": "string"},
-#                     "contributions": {
-#                         "type": "array",
-#                         "items": {"type": "string"},
-#                         "default": [],
-#                     },
-#                     "affiliations": {"type": "string"},
-#                     "funding": {
-#                         "type": "array",
-#                         "items": {"type": "string"},
-#                         "default": [],
-#                     },
-#                     "identifiers": {
-#                         "type": "array",
-#                         "items": {"type": "string"},
-#                         "default": [],
-#                     },
-#                 },
-#                 "description": "Author of the review",
-#             },
-#             "Protocol": {
-#                 "type": "object",
-#                 "required": ["url"],
-#                 "properties": {"url": {"type": "string"}},
-#                 "description": "Review protocol",
-#             },
-#             "SearchSource": {
-#                 "type": "object",
-#                 "required": [
-#                     "endpoint",
-#                     "filename",
-#                     "search_type",
-#                     "search_parameters",
-#                 ],
-#                 "properties": {
-#                     "endpoint": {"type": "string"},
-#                     "filename": {"type": "path"},
-#                     "search_type": {
-#                         "type": "string",
-#                         "enum": [
-#                             "DB",
-#                             "TOC",
-#                             "BACKWARD_SEARCH",
-#                             "FORWARD_SEARCH",
-#                             "PDFS",
-#                             "OTHER",
-#                         ],
-#                     },
-#                     "search_parameters": {"type": "object", "additionalProperties": {}},
-#                     "comment": {"type": "string"},
-#                 },
-#                 "description": "Search source settings",
-#             },
-#             "SearchSettings": {
-#                 "type": "object",
-#                 "required": ["retrieve_forthcoming"],
-#                 "properties": {"retrieve_forthcoming": {"type": "boolean"}},
-#                 "description": "Search settings",
-#             },
-#             "LoadSettings": {
-#                 "type": "object",
-#                 "properties": {},
-#                 "description": "Load settings",
-#             },
-#             "PrepSettings": {
-#                 "type": "object",
-#                 "required": [
-#                     "fields_to_keep",
-#                     "prep_rounds",
-#                     "prep_man_package_endpoints",
-#                 ],
-#                 "properties": {
-#                     "fields_to_keep": {"type": "array", "items": {"type": "string"}},
-#                     "prep_rounds": {
-#                         "type": "array",
-#                         "items": {"$ref": "#/definitions/PrepRound"},
-#                     },
-#                     "prep_man_package_endpoints": {
-#                         "package_endpoint_type": "prep_man",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "Prep settings",
-#             },
-#             "PrepRound": {
-#                 "type": "object",
-#                 "required": ["name", "similarity", "prep_package_endpoints"],
-#                 "properties": {
-#                     "name": {"type": "string"},
-#                     "similarity": {"type": "number"},
-#                     "prep_package_endpoints": {
-#                         "package_endpoint_type": "prep",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "Prep round settings",
-#             },
-#             "DedupeSettings": {
-#                 "type": "object",
-#                 "required": ["same_source_merges", "dedupe_package_endpoints"],
-#                 "properties": {
-#                     "same_source_merges": {
-#                         "type": "string",
-#                         "enum": ["prevent", "warn", "apply"],
-#                     },
-#                     "dedupe_package_endpoints": {
-#                         "package_endpoint_type": "dedupe",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "Dedupe settings",
-#             },
-#             "PrescreenSettings": {
-#                 "type": "object",
-#                 "required": ["explanation", "prescreen_package_endpoints"],
-#                 "properties": {
-#                     "explanation": {"type": "string"},
-#                     "prescreen_package_endpoints": {
-#                         "package_endpoint_type": "prescreen",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "Prescreen settings",
-#             },
-#             "PDFGetSettings": {
-#                 "type": "object",
-#                 "required": [
-#                     "pdf_path_type",
-#                     "pdf_required_for_screen_and_synthesis",
-#                     "rename_pdfs",
-#                     "pdf_get_package_endpoints",
-#                     "pdf_get_man_package_endpoints",
-#                 ],
-#                 "properties": {
-#                     "pdf_path_type": {"type": "string", "enum": ["symlink", "copy"]},
-#                     "pdf_required_for_screen_and_synthesis": {"type": "boolean"},
-#                     "rename_pdfs": {"type": "boolean"},
-#                     "pdf_get_package_endpoints": {
-#                         "package_endpoint_type": "pdf_get",
-#                         "type": "package_endpoint_array",
-#                     },
-#                     "pdf_get_man_package_endpoints": {
-#                         "package_endpoint_type": "pdf_get_man",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "PDF get settings",
-#             },
-#             "PDFPrepSettings": {
-#                 "type": "object",
-#                 "required": [
-#                     "keep_backup_of_pdfs",
-#                     "pdf_prep_package_endpoints",
-#                     "pdf_prep_man_package_endpoints",
-#                 ],
-#                 "properties": {
-#                     "keep_backup_of_pdfs": {"type": "boolean"},
-#                     "pdf_prep_package_endpoints": {
-#                         "package_endpoint_type": "pdf_prep",
-#                         "type": "package_endpoint_array",
-#                     },
-#                     "pdf_prep_man_package_endpoints": {
-#                         "package_endpoint_type": "pdf_prep_man",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "PDF prep settings",
-#             },
-#             "ScreenSettings": {
-#                 "type": "object",
-#                 "required": ["criteria", "screen_package_endpoints"],
-#                 "properties": {
-#                     "explanation": {"type": "string"},
-#                     "criteria": {
-#                         "type": "object",
-#                         "additionalProperties": {
-#                             "$ref": "#/definitions/ScreenCriterion"
-#                         },
-#                     },
-#                     "screen_package_endpoints": {
-#                         "package_endpoint_type": "screen",
-#                         "type": "package_endpoint_array",
-#                     },
-#                 },
-#                 "description": "Screen settings",
-#             },
-#             "ScreenCriterion": {
-#                 "type": "object",
-#                 "required": ["explanation", "criterion_type"],
-#                 "properties": {
-#                     "explanation": {"type": "string"},
-#                     "comment": {"type": "string"},
-#                     "criterion_type": {
-#                         "type": "string",
-#                         "enum": ["inclusion_criterion", "exclusion_criterion"],
-#                     },
-#                 },
-#                 "description": "Screen criterion",
-#             },
-#             "DataSettings": {
-#                 "type": "object",
-#                 "required": ["data_package_endpoints"],
-#                 "properties": {
-#                     "data_package_endpoints": {
-#                         "package_endpoint_type": "data",
-#                         "type": "package_endpoint_array",
-#                     }
-#                 },
-#                 "description": "Data settings",
-#             },
-#         },
-#     }
+def test_search_source_error_wrong_path() -> None:
+    with open(
+        Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
+    ) as file:
+        settings = json.load(file)
+    settings["sources"][0]["filename"] = "other_path"
 
-#     identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
-#     if not any("true" == os.getenv(x) for x in identifier_list):
-#         actual = colrev.settings.Settings.get_settings_schema()
-#         # assert expected == actual
+    with pytest.raises(colrev_exceptions.InvalidSettingsError):
+        colrev.settings._load_settings_from_dict(loaded_dict=settings)
+
+
+def test_search_source_error_duplicate_path() -> None:
+    with open(
+        Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
+    ) as file:
+        settings = json.load(file)
+    settings["sources"].append(settings["sources"][0])
+
+    with pytest.raises(colrev_exceptions.InvalidSettingsError):
+        colrev.settings._load_settings_from_dict(loaded_dict=settings)
+
+
+def test_curated_masterdata() -> None:
+
+    settings = colrev.settings.load_settings(
+        settings_path=Path(colrev.__file__).parents[0] / Path("ops/init/settings.json")
+    )
+
+    settings.data.data_package_endpoints = [
+        {
+            "endpoint": "colrev.colrev_curation",
+            "curation_url": "https://github.com/CoLRev-curations/the-journal-of-strategic-information-systems",
+            "curated_masterdata": True,
+            "masterdata_restrictions": {
+                "1991": {
+                    "ENTRYTYPE": "article",
+                    "volume": True,
+                    "number": True,
+                    "journal": "The Journal of Strategic Information Systems",
+                }
+            },
+            "curated_fields": ["doi", "url", "dblp_key"],
+        }
+    ]
+
+    assert settings.is_curated_masterdata_repo()
+
+
+def test_get_query(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    print(base_repo_review_manager.settings.sources)
+    Path(
+        base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
+    ).write_text("test_query")
+    print(base_repo_review_manager.settings.sources[0].get_query())
+    assert "test_query" == base_repo_review_manager.settings.sources[0].get_query()
+    Path(
+        base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
+    ).unlink()
+    with pytest.raises(FileNotFoundError):
+        base_repo_review_manager.settings.sources[0].get_query()
+
+    base_repo_review_manager.settings.sources[0].search_parameters.pop("query_file")
+    with pytest.raises(KeyError):
+        base_repo_review_manager.settings.sources[0].get_query()

@@ -13,9 +13,10 @@ from dash import html
 from dash import Input
 from dash import Output
 
-import colrev.record
+import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 dash.register_page(__name__)
 
@@ -23,11 +24,7 @@ review_manager = colrev.review_manager.ReviewManager()
 status_operation = review_manager.get_status_operation()
 records = review_manager.dataset.load_records_dict()
 data = pd.DataFrame.from_records(
-    [
-        r
-        for r in records.values()
-        if r[Fields.STATUS] == colrev.record.RecordState.rev_synthesized
-    ]
+    [r for r in records.values() if r[Fields.STATUS] == RecordState.rev_synthesized]
 )
 
 if data.empty:

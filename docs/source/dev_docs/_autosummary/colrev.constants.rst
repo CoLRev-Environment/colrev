@@ -27,5 +27,15 @@ colrev.constants
       FieldSet
       FieldValues
       Fields
-      Operations
+      FileSets
+      Filepaths
+      IDPattern
+      OperationsType
       PDFDefectCodes
+      PDFPathType
+      PackageEndpointType
+      RecordState
+      ScreenCriterionType
+      SearchSourceHeuristicStatus
+      SearchType
+      ShareStatReq

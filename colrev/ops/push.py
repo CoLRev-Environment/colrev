@@ -5,23 +5,26 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import colrev.operation
 import colrev.ops.correct
-import colrev.record
+import colrev.process.operation
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
 
 
-class Push(colrev.operation.Operation):
+class Push(colrev.process.operation.Operation):
     """Push the project and record corrections"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,
@@ -53,7 +56,8 @@ class Push(colrev.operation.Operation):
 
         # group by target-repo to bundle changes in a commit
         change_sets = {}  # type: ignore
-        for correction_path in self.review_manager.corrections_path.glob("*.json"):
+        corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        for correction_path in corrections_path.glob("*.json"):
             with open(correction_path, encoding="utf8") as json_file:
                 output = json.load(json_file)
 
@@ -96,7 +100,7 @@ class Push(colrev.operation.Operation):
 
             # pylint: disable=duplicate-code
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                package_type=PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
             )

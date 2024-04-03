@@ -11,7 +11,6 @@ import sys
 import typing
 from copy import deepcopy
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 
 import dacite
@@ -22,11 +21,15 @@ from m2r import parse_from_file
 from zope.interface.verify import verifyObject
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
-import colrev.record
+import colrev.process.operation
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-ancestors
@@ -35,37 +38,6 @@ from colrev.constants import Fields
 # Inspiration for package descriptions:
 # https://github.com/rstudio/reticulate/blob/
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
-
-
-# pylint: disable=colrev-missed-constant-usage
-class PackageEndpointType(Enum):
-    """An enum for the types of PackageEndpoints"""
-
-    # pylint: disable=C0103
-    review_type = "review_type"
-    """Endpoint for review types"""
-    search_source = "search_source"
-    """Endpoint for search sources"""
-    prep = "prep"
-    """Endpoint for prep"""
-    prep_man = "prep_man"
-    """Endpoint for prep-man"""
-    dedupe = "dedupe"
-    """Endpoint for dedupe"""
-    prescreen = "prescreen"
-    """Endpoint for prescreen"""
-    pdf_get = "pdf_get"
-    """Endpoint for pdf-get"""
-    pdf_get_man = "pdf_get_man"
-    """Endpoint for pdf-get-man"""
-    pdf_prep = "pdf_prep"
-    """Endpoint for pdf-prep"""
-    pdf_prep_man = "pdf_prep_man"
-    """Endpoint for pdf-prep-man"""
-    screen = "screen"
-    """Endpoint for screen"""
-    data = "data"
-    """Endpoint for data"""
 
 
 # pylint: disable=too-few-public-methods
@@ -92,19 +64,6 @@ class ReviewTypePackageEndpointInterface(
         return settings  # pragma: no cover
 
 
-class SearchSourceHeuristicStatus(Enum):
-    """Status of the SearchSource heuristic"""
-
-    # pylint: disable=invalid-name
-    na = "not_applicable"
-    oni = "output_not_identifiable"
-    supported = "supported"
-    todo = "to_be_implemented"
-
-    def __str__(self) -> str:
-        return f"{self.name}"  # pragma: no cover
-
-
 class SearchSourcePackageEndpointInterface(
     GeneralInterface, zope.interface.Interface
 ):  # pylint: disable=inherit-non-class
@@ -114,7 +73,7 @@ class SearchSourcePackageEndpointInterface(
     source_identifier = zope.interface.Attribute(
         """Source identifier for search and provenance
         Retrieved records are identified through the source_identifier
-        when they are added to/updated in the GeneralOriginFeed"""
+        when they are added to/updated in the SearchAPIFeed"""
     )
     search_types = zope.interface.Attribute(
         """SearchTypes associated with the SearchSource"""
@@ -132,7 +91,7 @@ class SearchSourcePackageEndpointInterface(
 
     # pylint: disable=no-self-argument
     def add_endpoint(  # type: ignore
-        operation: colrev.operation.Operation,
+        operation: colrev.process.operation.Operation,
         params: dict,
     ) -> colrev.settings.SearchSource:
         """Add the SearchSource as an endpoint based on a query (passed to colrev search -a)
@@ -141,13 +100,13 @@ class SearchSourcePackageEndpointInterface(
         """
 
     # pylint: disable=no-self-argument
-    def run_search(rerun: bool) -> None:  # type: ignore
+    def search(rerun: bool) -> None:  # type: ignore
         """Run a search of the SearchSource"""
 
     # pylint: disable=no-self-argument
-    def get_masterdata(  # type: ignore
+    def prep_link_md(  # type: ignore
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
     ):
@@ -264,7 +223,7 @@ class PDFPrepPackageEndpointInterface(
     # pylint: disable=unused-argument
     # pylint: disable=no-self-argument
     def prep_pdf(  # type: ignore
-        record: colrev.record.PrepRecord,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,
     ) -> dict:
         """Run the prep-pdf operation"""
@@ -348,16 +307,7 @@ class DefaultSettings(JsonSchemaMixin):
 
         required_fields = [field.name for field in dataclasses.fields(cls)]
         available_fields = list(data.keys())
-
-        converters = {Path: Path}
-        settings = from_dict(
-            data_class=cls,
-            data=data,
-            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
-        )
-
         non_supported_fields = [f for f in available_fields if f not in required_fields]
-
         if non_supported_fields:
             raise colrev_exceptions.ParameterError(
                 parameter="non_supported_fields",
@@ -365,6 +315,12 @@ class DefaultSettings(JsonSchemaMixin):
                 options=[],
             )
 
+        converters = {Path: Path}
+        settings = from_dict(
+            data_class=cls,
+            data=data,
+            config=dacite.Config(type_hooks=converters),  # type: ignore  # noqa
+        )
         return settings
 
 
@@ -376,7 +332,7 @@ class DefaultSourceSettings(colrev.settings.SearchSource, JsonSchemaMixin):
     # pylint: disable=too-many-instance-attributes
     endpoint: str
     filename: Path
-    search_type: colrev.settings.SearchType
+    search_type: SearchType
     search_parameters: dict
     comment: typing.Optional[str]
 
@@ -460,19 +416,19 @@ class PackageManager:
             raise colrev_exceptions.MissingDependencyError(dep="colrev")
         self._colrev_path = Path(colrev_spec.origin).parents[1]
         self._package_endpoints_json_file = self._colrev_path / Path(
-            "colrev/template/package_endpoints.json"
+            "colrev/env/package_endpoints.json"
         )
         self._search_source_types_json_file = self._colrev_path / Path(
-            "colrev/template/search_source_types.json"
+            "colrev/env/search_source_types.json"
         )
 
     def _load_package_endpoints_index(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/package_endpoints.json")
+            file_path=Path("env/package_endpoints.json")
         )
-        if not filedata:
+        if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/package_endpoints.json)"
+                "Package index not available (colrev/env/package_endpoints.json)"
             )
 
         package_dict = json.loads(filedata.decode("utf-8"))
@@ -746,7 +702,7 @@ class PackageManager:
         *,
         package_type: PackageEndpointType,
         selected_packages: list,
-        operation: colrev.operation.Operation,
+        operation: colrev.process.operation.Operation,
         ignore_not_available: bool = False,
         instantiate_objects: bool = True,
         only_ci_supported: bool = False,
@@ -1005,7 +961,7 @@ class PackageManager:
 
     def _extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
         search_source_types: typing.Dict[str, list] = {}
-        for search_source_type in colrev.settings.SearchType:
+        for search_source_type in SearchType:
             if search_source_type.value not in search_source_types:
                 search_source_types[search_source_type.value] = []
             for search_source in package_endpoints_json["search_source"]:
@@ -1025,29 +981,29 @@ class PackageManager:
 
     def _load_packages_json(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/packages.json")
+            file_path=Path("env/packages.json")
         )
         if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/packages.json)"
+                "Package index not available (colrev/env/packages.json)"
             )
         packages = json.loads(filedata.decode("utf-8"))
         return packages
 
     def _load_package_status_json(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("template/package_status.json")
+            file_path=Path("env/package_status.json")
         )
         if not filedata:  # pragma: no cover
             raise colrev_exceptions.CoLRevException(
-                "Package index not available (colrev/template/package_status.json)"
+                "Package index not available (colrev/env/package_status.json)"
             )
         packages = json.loads(filedata.decode("utf-8"))
         return packages
 
     def update_package_list(self) -> None:
-        """Generates the template/package_endpoints.json
-        based on the packages in template/packages.json
+        """Generates the env/package_endpoints.json
+        based on the packages in env/packages.json
         and the endpoints.json files in the top directory of each package."""
 
         os.chdir(self._colrev_path)
@@ -1104,7 +1060,7 @@ class PackageManager:
 
         json_object = json.dumps(package_status, indent=4)
         with open(
-            Path("colrev/template/package_status.json"), "w", encoding="utf-8"
+            Path("colrev/env/package_status.json"), "w", encoding="utf-8"
         ) as file:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
@@ -1115,7 +1071,7 @@ class PackageManager:
     def add_endpoint_for_operation(
         self,
         *,
-        operation: colrev.operation.Operation,
+        operation: colrev.process.operation.Operation,
         package_identifier: str,
         params: str,
         prompt_on_same_source: bool = True,
@@ -1124,56 +1080,56 @@ class PackageManager:
 
         settings = operation.review_manager.settings
         package_type_dict = {
-            colrev.operation.OperationsType.search: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.search_source,
+            OperationsType.search: {
+                "package_type": PackageEndpointType.search_source,
                 "endpoint_location": settings.sources,
             },
-            colrev.operation.OperationsType.prep: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.prep,
+            OperationsType.prep: {
+                "package_type": PackageEndpointType.prep,
                 "endpoint_location": settings.prep.prep_rounds[
                     0
                 ].prep_package_endpoints,
             },
-            colrev.operation.OperationsType.prep_man: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.prep_man,
+            OperationsType.prep_man: {
+                "package_type": PackageEndpointType.prep_man,
                 "endpoint_location": settings.prep.prep_man_package_endpoints,
             },
-            colrev.operation.OperationsType.dedupe: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.dedupe,
+            OperationsType.dedupe: {
+                "package_type": PackageEndpointType.dedupe,
                 "endpoint_location": settings.dedupe.dedupe_package_endpoints,
             },
-            colrev.operation.OperationsType.prescreen: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.prescreen,
+            OperationsType.prescreen: {
+                "package_type": PackageEndpointType.prescreen,
                 "endpoint_location": settings.prescreen.prescreen_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_get: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get,
+            OperationsType.pdf_get: {
+                "package_type": PackageEndpointType.pdf_get,
                 "endpoint_location": settings.pdf_get.pdf_get_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_get_man: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_get_man,
+            OperationsType.pdf_get_man: {
+                "package_type": PackageEndpointType.pdf_get_man,
                 "endpoint_location": settings.pdf_get.pdf_get_man_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_prep: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep,
+            OperationsType.pdf_prep: {
+                "package_type": PackageEndpointType.pdf_prep,
                 "endpoint_location": settings.pdf_prep.pdf_prep_package_endpoints,
             },
-            colrev.operation.OperationsType.pdf_prep_man: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+            OperationsType.pdf_prep_man: {
+                "package_type": PackageEndpointType.pdf_prep_man,
                 "endpoint_location": settings.pdf_prep.pdf_prep_man_package_endpoints,
             },
-            colrev.operation.OperationsType.screen: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.screen,
+            OperationsType.screen: {
+                "package_type": PackageEndpointType.screen,
                 "endpoint_location": settings.screen.screen_package_endpoints,
             },
-            colrev.operation.OperationsType.data: {
-                "package_type": colrev.env.package_manager.PackageEndpointType.data,
+            OperationsType.data: {
+                "package_type": PackageEndpointType.data,
                 "endpoint_location": settings.data.data_package_endpoints,
             },
         }
 
-        package_type = package_type_dict[operation.type]["package_type"]
-        endpoints = package_type_dict[operation.type]["endpoint_location"]
+        package_type = package_type_dict[operation.operations_type]["package_type"]
+        endpoints = package_type_dict[operation.operations_type]["endpoint_location"]
 
         registered_endpoints = [
             e["endpoint"] if isinstance(e, dict) else e.endpoint for e in endpoints  # type: ignore
@@ -1186,7 +1142,8 @@ class PackageManager:
                 return {}
 
         operation.review_manager.logger.info(
-            f"{Colors.GREEN}Add {operation.type} package:{Colors.END} {package_identifier}"
+            f"{Colors.GREEN}Add {operation.operations_type} "
+            f"package:{Colors.END} {package_identifier}"
         )
 
         endpoint_dict = self.load_packages(
@@ -1214,7 +1171,7 @@ class PackageManager:
             operation.review_manager.settings.sources.append(add_source)
             operation.review_manager.save_settings()
             operation.review_manager.dataset.add_changes(
-                path=add_source.filename, ignore_missing=True
+                add_source.filename, ignore_missing=True
             )
             add_package = add_source.to_dict()
 
@@ -1223,7 +1180,7 @@ class PackageManager:
             endpoints.append(add_package)  # type: ignore
 
         operation.review_manager.save_settings()
-        operation.review_manager.create_commit(
-            msg=f"Add {operation.type} {package_identifier}",
+        operation.review_manager.dataset.create_commit(
+            msg=f"Add {operation.operations_type} {package_identifier}",
         )
         return add_package

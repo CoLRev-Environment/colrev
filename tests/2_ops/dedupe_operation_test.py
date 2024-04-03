@@ -2,7 +2,6 @@
 """Tests of the CoLRev dedupe operation"""
 import difflib
 import shutil
-import typing
 from pathlib import Path
 
 import pytest
@@ -15,14 +14,14 @@ def fixture_dedupe_test_setup(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> colrev.review_manager.ReviewManager:
     """Fixture returning the dedupe_test_setup"""
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="prep_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="prep_commit")
 
     helpers.retrieve_test_file(
-        source=Path("dedupe/records.bib"),
+        source=Path("data/dedupe/records.bib"),
         target=Path("data/records.bib"),
     )
-    base_repo_review_manager.dataset.add_changes(path=Path("data/records.bib"))
-    base_repo_review_manager.create_commit(
+    base_repo_review_manager.dataset.add_changes(Path("data/records.bib"))
+    base_repo_review_manager.dataset.create_commit(
         msg="Import dedupe test cases", manual_author=True
     )
 
@@ -47,14 +46,14 @@ def test_dedupe_utilities(  # type: ignore
     assert "Staehr2010" in records.keys()
     assert "Staehr2010a" in records.keys()
 
-    dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
-    dedupe_test_setup.create_commit(
-        msg="Unmerge Staehr2010-Staehr2010a", manual_author=True
+    dedupe_test_setup.dataset.add_changes(Path("data/records.bib"))
+    dedupe_test_setup.dataset.create_commit(
+        msg="Unmerge Staehr2010-Staehr2010a", manual_author=True, skip_hooks=True
     )
     dedupe_operation.merge_records(merge=[["Staehr2010", "Staehr2010a"]])
-    dedupe_test_setup.dataset.add_changes(path=Path("data/records.bib"))
-    dedupe_test_setup.create_commit(
-        msg="Merge Staehr2010-Staehr2010a", manual_author=True
+    dedupe_test_setup.dataset.add_changes(Path("data/records.bib"))
+    dedupe_test_setup.dataset.create_commit(
+        msg="Merge Staehr2010-Staehr2010a", manual_author=True, skip_hooks=True
     )
     records = dedupe_test_setup.dataset.load_records_dict()
     assert "Staehr2010" in records.keys()
@@ -66,7 +65,7 @@ def test_dedupe_utilities(  # type: ignore
     with pytest.raises(AssertionError):
         dedupe_operation.merge_records(merge=[["RandomID1", "RandomID2"]])
 
-    expected_file = Path("dedupe/records_expected.bib")
+    expected_file = Path("data/dedupe/records_expected.bib")
     actual = Path("data/records.bib").read_text(encoding="utf-8")
     if (helpers.test_data_path / expected_file).is_file():
         expected = (helpers.test_data_path / expected_file).read_text(encoding="utf-8")
@@ -107,20 +106,3 @@ def test_dedupe_skip_prescreen(
     dedupe_test_setup.settings.prescreen.prescreen_package_endpoints = []
     dedupe_operation.main()
     # TODO : add testing of results
-
-
-def test_dedupe_get_info(
-    dedupe_test_setup: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test the get_info of dedupe"""
-
-    dedupe_operation = dedupe_test_setup.get_dedupe_operation(
-        notify_state_transition_operation=True
-    )
-    actual = dedupe_operation.get_info()
-    expected: typing.Dict[str, typing.Any] = {
-        "same_source_merges": [],
-        "source_overlaps": [],
-    }
-
-    assert expected == actual

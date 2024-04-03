@@ -6,18 +6,22 @@ import itertools
 import string
 from pathlib import Path
 
-import colrev.constants as c
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
-import colrev.ops.load_utils_formatter
-import colrev.record
+import colrev.loader.load_utils_formatter
+import colrev.process.operation
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import RecordState
+from colrev.constants import SearchType
 
 
-class Load(colrev.operation.Operation):
+class Load(colrev.process.operation.Operation):
     """Load the records"""
 
     def __init__(
@@ -29,14 +33,14 @@ class Load(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.load,
+            operations_type=OperationsType.load,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.quality_model = review_manager.get_qm()
         self.package_manager = self.review_manager.get_package_manager()
 
-        self.load_formatter = colrev.ops.load_utils_formatter.LoadFormatter()
+        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
         if not hide_load_explanation:
             self.review_manager.logger.info("Load")
@@ -79,7 +83,6 @@ class Load(colrev.operation.Operation):
         )
         prior_file_content = ""
         for commit, filecontents in list(revlist):
-            print(prior_file_content)
             if not filecontents.decode("utf-8").startswith(prior_file_content):
                 raise colrev_exceptions.AppendOnlyViolation(
                     f"{file} was changed (commit: {commit})"
@@ -95,22 +98,24 @@ class Load(colrev.operation.Operation):
     def _import_provenance(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> None:
         """Set the provenance for an imported record"""
 
-        def set_initial_import_provenance(*, record: colrev.record.Record) -> None:
+        def set_initial_import_provenance(
+            *, record: colrev.record.record.Record
+        ) -> None:
             # Initialize Fields.MD_PROV
             colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
             for key in sorted(record.data.keys()):
-                if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
+                if key in FieldSet.IDENTIFYING_FIELD_KEYS:
                     if key not in colrev_masterdata_provenance:
                         colrev_masterdata_provenance[key] = {
                             "source": record.data[Fields.ORIGIN][0],
                             "note": "",
                         }
-                elif key not in c.FieldSet.PROVENANCE_KEYS and key not in [
+                elif key not in FieldSet.PROVENANCE_KEYS and key not in [
                     "colrev_source_identifier",
                     Fields.ID,
                     Fields.ENTRYTYPE,
@@ -130,7 +135,7 @@ class Load(colrev.operation.Operation):
     def _import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         # For better readability of the git diff:
         self.load_formatter.run(record=record)
@@ -138,12 +143,12 @@ class Load(colrev.operation.Operation):
         self._import_provenance(record=record)
 
         if record.data[Fields.STATUS] in [
-            colrev.record.RecordState.md_retrieved,
-            colrev.record.RecordState.md_needs_manual_preparation,
+            RecordState.md_retrieved,
+            RecordState.md_needs_manual_preparation,
         ]:
-            record.set_status(target_state=colrev.record.RecordState.md_imported)
+            record.set_status(RecordState.md_imported)
 
-        if record.check_potential_retracts():
+        if record.is_retracted():
             self.review_manager.logger.info(
                 f"{Colors.GREEN}Found paper retract: "
                 f"{record.data['ID']}{Colors.END}"
@@ -151,56 +156,57 @@ class Load(colrev.operation.Operation):
 
         return record.get_data()
 
-    def _prep_records_for_import(
-        self, *, source_settings: colrev.settings.SearchSource, search_records: dict
-    ) -> list:
-        record_list = []
-        origin_prefix = source_settings.get_origin_prefix()
-        for record in search_records.values():
-            for key in c.FieldSet.PROVENANCE_KEYS + [
+    def _validate_source_records(
+        self,
+        source_records_list: list,
+        *,
+        source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+    ) -> None:
+        if len(source_records_list) == 0:
+            raise colrev_exceptions.ImportException(
+                msg=f"{source} has no records to load"
+            )
+        for source_record in source_records_list:
+            if any(" " in x for x in source_record.keys()):
+                raise colrev_exceptions.ImportException(
+                    f"Keys should not contain spaces ({source_record.keys()})"
+                )
+            if not all(
+                x.islower()
+                for x in source_record.keys()
+                if x not in ["ID", "ENTRYTYPE"]
+            ):
+                raise colrev_exceptions.ImportException(
+                    f"Keys should be lower case ({source_record.keys()})"
+                )
+            if any(x == "" for x in source_record.values()):
+                raise colrev_exceptions.ImportException(
+                    f"Values should not be empty ({source_record.values()})"
+                )
+
+            for key in source_record.keys():
+                if "." in key:  # namespaced key
+                    continue
+                if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
+                    raise colrev_exceptions.ImportException(
+                        f"Non-standardized field without namespace ({key})"
+                    )
+
+            for key in FieldSet.PROVENANCE_KEYS + [
                 Fields.SCREENING_CRITERIA,
             ]:
                 if key == Fields.STATUS:
                     continue
-                if key in record:
-                    del record[key]
-
-            record.update(colrev_origin=[f"{origin_prefix}/{record['ID']}"])
-
-            # Drop empty fields
-            record = {k: v for k, v in record.items() if v}
-
-            if source_settings.endpoint == "colrev.local_index":
-                # Note : when importing a record, it always needs to be
-                # deduplicated against the other records in the repository
-                record.update(colrev_status=colrev.record.RecordState.md_prepared)
-                if "curation_ID" in record:
-                    record[Fields.MD_PROV] = {
-                        FieldValues.CURATED: {
-                            "source": record["curation_ID"].split("#")[0],
-                            "note": "",
-                        }
-                    }
-            else:
-                record.update(colrev_status=colrev.record.RecordState.md_retrieved)
-
-            if Fields.DOI in record:
-                formatted_doi = (
-                    record[Fields.DOI]
-                    .lower()
-                    .replace("https://", "http://")
-                    .replace("dx.doi.org", "doi.org")
-                    .replace("http://doi.org/", "")
-                    .upper()
-                )
-                record.update(doi=formatted_doi)
-
-            self.review_manager.logger.debug(
-                f"append record {record[Fields.ID]} "
-                # f"\n{self.review_manager.p_printer.pformat(record)}\n\n"
-            )
-            record_list.append(record)
-        return record_list
+                if (
+                    key == Fields.MD_PROV
+                    and Fields.MD_PROV in source_record
+                    and FieldValues.CURATED in source_record[Fields.MD_PROV]
+                ):
+                    continue
+                if key in source_record:
+                    raise colrev_exceptions.ImportException(
+                        f"Key {key} should not be in imported record"
+                    )
 
     def setup_source_for_load(
         self,
@@ -220,11 +226,18 @@ class Load(colrev.operation.Operation):
             select_new_records: A boolean flag indicating whether to filter out records
                                 that have already been imported. Defaults to True.
         """
-        search_records = source.load(self)  # type: ignore
+        source_records_list = list(source.load(self).values())  # type: ignore
+        self._validate_source_records(source_records_list, source=source)
 
-        source_records_list = self._prep_records_for_import(
-            source_settings=source.search_source, search_records=search_records
-        )
+        origin_prefix = source.search_source.get_origin_prefix()
+        for source_record in source_records_list:
+            record_origin = f"{origin_prefix}/{source_record['ID']}"
+            source_record.update(colrev_origin=[record_origin])
+            colrev.record.record.Record(source_record).set_status(
+                target_state=RecordState.md_retrieved
+            )
+
+        imported_origins = []
         if select_new_records:
             imported_origins = self._get_currently_imported_origin_list()
             source_records_list = [
@@ -232,16 +245,10 @@ class Load(colrev.operation.Operation):
                 for x in source_records_list
                 if x[Fields.ORIGIN][0] not in imported_origins
             ]
-        else:
-            imported_origins = []
 
         source.search_source.setup_for_load(
             source_records_list=source_records_list, imported_origins=imported_origins
         )
-        if len(search_records) == 0:
-            raise colrev_exceptions.ImportException(
-                msg=f"{source} has no records to load"
-            )
 
     def load_source_records(
         self,
@@ -264,10 +271,6 @@ class Load(colrev.operation.Operation):
         records = self.review_manager.dataset.load_records_dict()
 
         for source_record in source.search_source.source_records_list:
-            colrev.record.Record(data=source_record).prefix_non_standardized_field_keys(
-                prefix=source.search_source.endpoint
-            )
-
             source_record = self._import_record(record_dict=source_record)
 
             # Make sure not to replace existing records
@@ -291,7 +294,7 @@ class Load(colrev.operation.Operation):
                 + f"md_retrieved →  {source_record['colrev_status']}{Colors.END}"
             )
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
 
         if source.search_source.to_import == 0:
@@ -316,7 +319,7 @@ class Load(colrev.operation.Operation):
             "New records loaded".ljust(38) + f"{source.search_source.to_import} records"
         )
         self.review_manager.dataset.add_setting_changes()
-        self.review_manager.dataset.add_changes(path=source.search_source.filename)
+        self.review_manager.dataset.add_changes(source.search_source.filename)
 
     def _add_source_to_settings(
         self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
@@ -332,11 +335,9 @@ class Load(colrev.operation.Operation):
         # Add files that were renamed (removed)
         for obj in git_repo.index.diff(None).iter_change_type("D"):
             if source.search_source.filename.stem in obj.b_path:
-                self.review_manager.dataset.add_changes(
-                    path=Path(obj.b_path), remove=True
-                )
+                self.review_manager.dataset.add_changes(Path(obj.b_path), remove=True)
 
-    def load_active_sources(self) -> list:
+    def load_active_sources(self, *, include_md: bool = False) -> list:
         """
         Loads and returns a list of active source endpoints from the settings.
 
@@ -352,14 +353,15 @@ class Load(colrev.operation.Operation):
         sources = []
         for source in sources_settings:
             endpoint_dict = self.package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+                package_type=PackageEndpointType.search_source,
                 selected_packages=[source.get_dict()],
                 operation=self,
             )
             # if source.endpoint.lower() not in endpoint_dict:
             #     raise ...
             endpoint = endpoint_dict[source.endpoint.lower()]
-            if endpoint.search_source.search_type == colrev.settings.SearchType.MD:  # type: ignore
+            s_type = endpoint.search_source.search_type  # type: ignore
+            if s_type == SearchType.MD and not include_md:
                 continue
             sources.append(endpoint)
 
@@ -417,15 +419,15 @@ class Load(colrev.operation.Operation):
         self.review_manager.exact_call = (
             f"{part_exact_call} -s {source.search_source.filename.name}"
         )
-        self.review_manager.create_commit(
-            msg=f"Load {source.search_source.filename.name}",
+        self.review_manager.dataset.create_commit(
+            msg=f"Load {source.search_source.filename.name}", skip_hooks=True
         )
         if stashed:
             git_repo.git.stash("pop")
         if not self.review_manager.high_level_operation:
             print()
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(
         self,
         *,

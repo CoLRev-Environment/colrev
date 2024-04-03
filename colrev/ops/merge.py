@@ -8,15 +8,16 @@ from dictdiffer import diff
 from git.exc import GitCommandError
 
 import colrev.env.utils
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
-
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 
 # pylint: disable=too-few-public-methods
 
 
-class Merge(colrev.operation.Operation):
+class Merge(colrev.process.operation.Operation):
     """Merge branches of CoLRev project"""
 
     def __init__(
@@ -26,7 +27,7 @@ class Merge(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
 
@@ -81,7 +82,7 @@ class Merge(colrev.operation.Operation):
 
         return non_status_changes
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, branch: str) -> None:
         """Merge branches of a CoLRev project (main entrypoint)"""
 
@@ -114,28 +115,28 @@ class Merge(colrev.operation.Operation):
         assert all(len(v) == 3 for k, v in unmerged_blobs.items())
 
         # Ensure the path uses forward slashes, which is compatible with Git's path handling
-        records_file_path = str(
-            self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        ).replace("\\", "/")
-        if records_file_path in unmerged_blobs:
+        if Filepaths.RECORDS_FILE_GIT in unmerged_blobs:
             current_branch_records = {}
             other_branch_records = {}
-            for stage, blob in unmerged_blobs[records_file_path]:
+            for stage, blob in unmerged_blobs[Filepaths.RECORDS_FILE_GIT]:
                 # stage == 1: common ancestor (often md_processed for prescreen)
                 # stage == 2: own branch
                 # stage == 3: other branch
                 if 2 == stage:
-                    current_branch_records = (
-                        self.review_manager.dataset.load_records_dict(
-                            load_str=blob.data_stream.read().decode("utf-8")
-                        )
+
+                    current_branch_records = colrev.loader.load_utils.loads(
+                        load_string=blob.data_stream.read().decode("utf-8"),
+                        implementation="bib",
+                        logger=self.review_manager.logger,
                     )
+
                 elif 3 == stage:
-                    other_branch_records = (
-                        self.review_manager.dataset.load_records_dict(
-                            load_str=blob.data_stream.read().decode("utf-8")
-                        )
+                    other_branch_records = colrev.loader.load_utils.loads(
+                        load_string=blob.data_stream.read().decode("utf-8"),
+                        implementation="bib",
+                        logger=self.review_manager.logger,
                     )
+
         else:
             self.review_manager.logger.info(
                 "No conflicts to reconcile in data/records.bib."
@@ -198,7 +199,7 @@ class Merge(colrev.operation.Operation):
                 print(f"{i}/{nr_to_reconcile}")
                 copied_rec = current_branch_record_dict.copy()
                 copied_rec.pop(Fields.STATUS)
-                print(colrev.record.Record(data=copied_rec).format_bib_style())
+                print(colrev.record.record.Record(copied_rec).format_bib_style())
                 print(
                     f"1 - {current_branch_author} coded on {current_branch}".ljust(
                         40, " "
@@ -222,13 +223,13 @@ class Merge(colrev.operation.Operation):
                         f"{other_branch_record['colrev_status']}"
                     )
                     resolution = other_branch_record[Fields.STATUS]
-                current_branch_record = colrev.record.Record(
+                current_branch_record = colrev.record.record.Record(
                     data=current_branch_record_dict
                 )
-                current_branch_record.set_status(target_state=resolution)
+                current_branch_record.set_status(resolution)
                 print("\n\n\n")
 
-        self.review_manager.dataset.save_records_dict(records=current_branch_records)
+        self.review_manager.dataset.save_records_dict(current_branch_records)
 
         self.review_manager.update_status_yaml(add_to_git=False)
 

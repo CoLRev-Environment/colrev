@@ -17,13 +17,16 @@ import colrev.exceptions as colrev_exceptions
 
 def retrieve_package_file(*, template_file: Path, target: Path) -> None:
     """Retrieve a file from the CoLRev package"""
-    filedata = pkgutil.get_data("colrev", str(template_file))
-    if not filedata:
-        raise colrev_exceptions.RepoSetupError(f"{template_file} not available")
-
-    target.parent.mkdir(exist_ok=True, parents=True)
-    with open(target, "w", encoding="utf8") as file:
-        file.write(filedata.decode("utf-8"))
+    try:
+        filedata = pkgutil.get_data("colrev", str(template_file))
+        if filedata:
+            target.parent.mkdir(exist_ok=True, parents=True)
+            with open(target, "w", encoding="utf8") as file:
+                file.write(filedata.decode("utf-8"))
+            return
+    except FileNotFoundError:
+        pass
+    raise colrev_exceptions.TemplateNotAvailableError(str(template_file))
 
 
 def get_package_file_content(*, file_path: Path) -> typing.Union[bytes, None]:
@@ -52,42 +55,24 @@ def get_template(*, template_path: str) -> Template:
 
 
 def _load_jinja_template(template_path: str) -> str:
-    filedata_b = pkgutil.get_data("colrev", template_path)
-    if filedata_b:
-        filedata = filedata_b.decode("utf-8")
-        filedata = filedata.replace("\n", "")
-        filedata = filedata.replace("<br>", "\n")
-        return filedata
-    raise colrev_exceptions.RepoSetupError(f"{template_path} not available")
+    try:
+        filedata_b = pkgutil.get_data("colrev", template_path)
+        if filedata_b:
+            filedata = filedata_b.decode("utf-8")
+            filedata = filedata.replace("\n", "")
+            filedata = filedata.replace("<br>", "\n")
+            return filedata
+    except FileNotFoundError:
+        pass
+    raise colrev_exceptions.TemplateNotAvailableError(template_path)
 
 
-def remove_accents(*, input_str: str) -> str:
+def remove_accents(input_str: str) -> str:
     """Replace the accents in a string"""
 
-    def rmdiacritics(char: str) -> str:
-        """
-        Return the base character of char, by "removing" any
-        diacritics like accents or curls and strokes and the like.
-        """
-        try:
-            desc = unicodedata.name(char)
-            cutoff = desc.find(" WITH ")
-            if cutoff != -1:
-                desc = desc[:cutoff]
-                char = unicodedata.lookup(desc)
-        except (KeyError, ValueError):
-            pass  # removing "WITH ..." produced an invalid name
-        return char
-
-    try:
-        nfkd_form = unicodedata.normalize("NFKD", input_str)
-        wo_ac_list = [
-            rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
-        ]
-        wo_ac = "".join(wo_ac_list)
-    except ValueError:
-        wo_ac = input_str
-    return wo_ac
+    nfkd_form = unicodedata.normalize("NFKD", input_str)
+    wo_ac_list = [c for c in nfkd_form if not unicodedata.combining(c)]
+    return "".join(wo_ac_list)
 
 
 def percent_upper_chars(input_string: str) -> float:
@@ -106,7 +91,7 @@ def custom_asdict_factory(data) -> dict:  # type: ignore
         if isinstance(obj, float):
             # Save 1.0 as 1 per default to avoid parsing issues
             # e.g., with the web ui
-            if str(obj) == "1.0":
+            if str(obj) == "1.0":  # pragma: no cover
                 return 1
         if isinstance(obj, list):
             if all(isinstance(el, Path) for el in obj):
@@ -120,7 +105,7 @@ def load_complementary_material_keywords() -> list:
     """Load the list of keywords identifying complementary materials"""
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("template/ops/complementary_material_keywords.txt")
+        file_path=Path("env/complementary_material_keywords.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -133,7 +118,7 @@ def load_complementary_material_strings() -> list:
 
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("template/ops/complementary_material_strings.txt")
+        file_path=Path("env/complementary_material_strings.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -146,7 +131,7 @@ def load_complementary_material_prefixes() -> list:
 
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("template/ops/complementary_material_prefixes.txt")
+        file_path=Path("env/complementary_material_prefixes.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -154,30 +139,10 @@ def load_complementary_material_prefixes() -> list:
     return complementary_material_keywords
 
 
-def dict_keys_exists(element: dict, *keys: str) -> bool:
-    """Check if *keys (nested) exists in `element` (dict)."""
-    if len(keys) == 0:
-        raise AttributeError("keys_exists() expects at least two arguments, one given.")
-
-    _element = element
-    for key in keys:
-        try:
-            _element = _element[key]
-        except KeyError:
-            return False
-    return True
-
-
 def get_by_path(root: dict, items: typing.List[str]) -> typing.Any:
     """Access a nested object in root by item sequence."""
 
     return reduce(operator.getitem, items, root)
-
-
-def set_by_path(root: dict, items: typing.List[str], value: typing.Any) -> None:
-    """Set a value in a nested object in root by item sequence."""
-
-    get_by_path(root, items[:-1])[items[-1]] = value
 
 
 def dict_set_nested(root: dict, keys: typing.List[str], value: typing.Any) -> None:

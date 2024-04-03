@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -29,6 +29,11 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
+    requests_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    }
+
     def __init__(
         self,
         *,
@@ -39,7 +44,9 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record by removing URLs with 500 errors"""
 
         session = self.review_manager.get_cached_session()
@@ -49,7 +56,7 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
                 ret = session.request(
                     "GET",
                     record.data[Fields.URL],
-                    headers=self.prep_operation.requests_headers,
+                    headers=self.requests_headers,
                     timeout=60,
                 )
                 if ret.status_code >= 500:
@@ -61,7 +68,7 @@ class RemoveError500URLsPrep(JsonSchemaMixin):
                 ret = session.request(
                     "GET",
                     record.data[Fields.FULLTEXT],
-                    headers=self.prep_operation.requests_headers,
+                    headers=self.requests_headers,
                     timeout=self.prep_operation.timeout,
                 )
                 if ret.status_code >= 500:

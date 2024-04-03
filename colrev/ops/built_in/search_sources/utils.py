@@ -7,6 +7,8 @@ import re
 from copy import deepcopy
 
 import colrev.exceptions as colrev_exceptions
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
@@ -105,9 +107,9 @@ def _flag_retracts(*, record_dict: dict) -> dict:
     if "update-to" in record_dict:
         for update_item in record_dict["update-to"]:
             if update_item["type"] == "retraction":
-                record_dict["warning"] = FieldValues.RETRACTED
+                record_dict[Fields.RETRACTED] = FieldValues.RETRACTED
     if "(retracted)" in record_dict.get(Fields.TITLE, "").lower():
-        record_dict["warning"] = FieldValues.RETRACTED
+        record_dict[Fields.RETRACTED] = FieldValues.RETRACTED
     return record_dict
 
 
@@ -115,7 +117,13 @@ def _format_fields(*, record_dict: dict) -> dict:
     for key, value in record_dict.items():
         record_dict[key] = str(value).replace("{", "").replace("}", "")
         # Note : some dois (and their provenance) contain html entities
-        if key in [Fields.MD_PROV, Fields.D_PROV, Fields.DOI]:
+        if key not in [
+            Fields.AUTHOR,
+            Fields.TITLE,
+            Fields.JOURNAL,
+            Fields.BOOKTITLE,
+            Fields.ABSTRACT,
+        ]:
             continue
         if not isinstance(value, str):
             continue
@@ -175,7 +183,7 @@ def _remove_fields(*, record_dict: dict) -> dict:
     return record_dict
 
 
-def json_to_record(*, item: dict) -> dict:
+def json_to_record(*, item: dict) -> colrev.record.record_prep.PrepRecord:
     """Convert a crossref item to a record dict"""
 
     try:
@@ -189,4 +197,4 @@ def json_to_record(*, item: dict) -> dict:
             f"RecordNotParsableException: {exc}"
         ) from exc
 
-    return record_dict
+    return colrev.record.record_prep.PrepRecord(record_dict)

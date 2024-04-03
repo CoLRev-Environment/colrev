@@ -7,20 +7,22 @@ from typing import TYPE_CHECKING
 
 import dictdiffer
 
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Colors
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import git.objects.commit
 
 
-class Trace(colrev.operation.Operation):
+class Trace(colrev.process.operation.Operation):
     """Trace a record through history"""
 
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
         )
 
     def _lpad_multiline(self, *, s: str, lpad: int) -> str:
@@ -84,26 +86,20 @@ class Trace(colrev.operation.Operation):
         prev_record = record
         return prev_record
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self, *, record_id: str) -> None:
         """Trace a record (main entrypoint)"""
 
         self.review_manager.logger.info(f"Trace record by ID: {record_id}")
+        # Ensure the path uses forward slashes, which is compatible with Git's path handling
 
-        revlist = self.review_manager.dataset.get_repo().iter_commits()
+        revlist = self.review_manager.dataset.get_repo().iter_commits(
+            paths=Filepaths.RECORDS_FILE_GIT
+        )
 
         prev_record: dict = {}
         for commit in reversed(list(revlist)):
-            try:
-                # Ensure the path uses forward slashes, which is compatible with Git's path handling
-                records_file_path = str(
-                    self.review_manager.dataset.RECORDS_FILE_RELATIVE
-                ).replace("\\", "/")
-                filecontents = (commit.tree / records_file_path).data_stream.read()
-
-            except KeyError:
-                continue
-
+            filecontents = (commit.tree / Filepaths.RECORDS_FILE_GIT).data_stream.read()
             commit_message_first_line = str(commit.message).partition("\n")[0]
 
             if self.review_manager.verbose_mode:
@@ -117,8 +113,10 @@ class Trace(colrev.operation.Operation):
                     + f" {commit_message_first_line} (by {commit.author.name})"
                 )
 
-            records_dict = self.review_manager.dataset.load_records_dict(
-                load_str=filecontents.decode("utf-8")
+            records_dict = colrev.loader.load_utils.loads(
+                load_string=filecontents.decode("utf-8"),
+                implementation="bib",
+                logger=self.review_manager.logger,
             )
 
             if record_id not in records_dict:

@@ -9,13 +9,14 @@ from pathlib import Path
 
 import git
 import pytest
-from pybtex.database.input import bibtex
 
 import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
+import colrev.record.record_pdf
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.process.model import ProcessModel
 
 # Note : the following produces different relative paths locally/on github.
 # Path(colrev.__file__).parents[1]
@@ -27,7 +28,7 @@ from colrev.constants import Fields
 class Helpers:
     """Helpers class providing utility functions (e.g., for test-file retrieval)"""
 
-    test_data_path = Path(__file__).parent / Path("data")
+    test_data_path = Path(__file__).parent
 
     @staticmethod
     def retrieve_test_file(*, source: Path, target: Path) -> None:
@@ -45,13 +46,14 @@ class Helpers:
 
     @staticmethod
     def reset_commit(
-        *,
         review_manager: colrev.review_manager.ReviewManager,
+        *,
         commit: str = "",
         commit_sha: str = "",
     ) -> None:
         """Reset to the selected commit"""
         assert commit == "" or commit_sha == ""
+        print(f"Resetting to commit {commit} {commit_sha}")
         os.chdir(str(review_manager.path))
         repo = git.Repo(review_manager.path)
         if commit_sha != "":
@@ -87,9 +89,10 @@ def run_around_tests(  # type: ignore
     print("Post-test teardown: Restore repository state")
     os.chdir(str(base_repo_review_manager.path))
     base_repo_review_manager.load_settings()
+    base_repo_review_manager.notified_next_operation = None
     repo = git.Repo(base_repo_review_manager.path)
     repo.git.clean("-df")
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="data_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="data_commit")
 
 
 @pytest.fixture(scope="session", name="test_local_index_dir")
@@ -109,21 +112,11 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         return_value=("Tester Name", "tester@email.de"),
     )
 
-    session_mocker.patch(
-        "colrev.env.environment_manager.EnvironmentManager.register_repo",
-        return_value=(),
-    )
-
     test_repo_dir = tmp_path_factory.mktemp("base_repo")  # type: ignore
 
     session_mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry_yaml",
-        test_repo_dir / "reg.yaml",
-    )
-    session_mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry",
+        colrev.constants.Filepaths,
+        "REGISTRY_FILE",
         test_repo_dir / "reg.json",
     )
     os.chdir(test_repo_dir)
@@ -134,7 +127,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     )
 
     review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(test_repo_dir), force_mode=True
+        path_str=str(test_repo_dir),
     )
 
     review_manager.get_load_operation()
@@ -145,22 +138,22 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     def load_test_records(test_data_path) -> dict:  # type: ignore
         test_records_dict: typing.Dict[Path, dict] = {}
-        bib_files_to_index = test_data_path / Path("local_index")
+        bib_files_to_index = test_data_path / Path("data/local_index")
         for file_path in bib_files_to_index.glob("**/*"):
             test_records_dict[Path(file_path.name)] = {}
 
         for path in test_records_dict:
-            with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
-                parser = bibtex.Parser()
-                bib_data = parser.parse_string(file.read())
-                test_records_dict[path] = colrev.dataset.Dataset.parse_records_dict(
-                    records_dict=bib_data.entries
-                )
+            test_records_dict[path] = colrev.loader.load_utils.load(
+                filename=bib_files_to_index.joinpath(path),
+                logger=review_manager.logger,
+                unique_id_field="ID",
+            )
+
         return test_records_dict
 
     temp_sqlite = review_manager.path.parent / Path("sqlite_index_test.db")
     with session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     ):
         test_records_dict = load_test_records(helpers.test_data_path)
         local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
@@ -191,15 +184,11 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     dedupe_operation = review_manager.get_dedupe_operation()
     dedupe_operation.review_manager.settings.project.delay_automated_processing = True
     with pytest.raises(colrev_exceptions.NoRecordsError):
-        colrev.record.RecordStateModel.check_operation_precondition(
-            operation=dedupe_operation
-        )
+        ProcessModel.check_operation_precondition(dedupe_operation)
     dedupe_operation.review_manager.settings.project.delay_automated_processing = False
 
     review_manager.settings.prep.prep_rounds[0].prep_package_endpoints = [
         {"endpoint": "colrev.source_specific_prep"},
-        # {"endpoint": "colrev.exclude_non_latin_alphabets"},
-        # {"endpoint": "colrev.exclude_collections"},
     ]
     review_manager.settings.dedupe.dedupe_package_endpoints = [
         {"endpoint": "colrev.dedupe"}
@@ -215,29 +204,31 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
     review_manager.settings.screen.screen_package_endpoints = []
     review_manager.settings.data.data_package_endpoints = []
     review_manager.save_settings()
-    review_manager.create_commit(msg="change settings", manual_author=True)
+
+    review_manager.dataset.create_commit(msg="change settings", manual_author=True)
     review_manager.changed_settings_commit = (
         review_manager.dataset.get_last_commit_sha()
     )
 
     helpers.retrieve_test_file(
-        source=Path("search_files/test_records.bib"),
+        source=Path("data/search_files/test_records.bib"),
         target=Path("data/search/test_records.bib"),
     )
-    review_manager.dataset.add_changes(path=Path("data/search/test_records.bib"))
-    review_manager.create_commit(msg="add test_records.bib", manual_author=True)
+    review_manager.dataset.add_changes(Path("data/search/test_records.bib"))
+    review_manager.dataset.create_commit(msg="add test_records.bib", manual_author=True)
     review_manager.add_test_records_commit = (
         review_manager.dataset.get_last_commit_sha()
     )
 
     search_operation = review_manager.get_search_operation()
-    search_operation.add_most_likely_sources()
+    search_operation.add_most_likely_sources(create_query_files=True)
+
     load_operation = review_manager.get_load_operation()
     load_operation.main(keep_ids=False)
     review_manager.load_commit = review_manager.dataset.get_last_commit_sha()
 
     prep_operation = review_manager.get_prep_operation()
-    prep_operation.main(keep_ids=False)
+    prep_operation.main(keep_ids=True)
     review_manager.prep_commit = review_manager.dataset.get_last_commit_sha()
 
     dedupe_operation = review_manager.get_dedupe_operation(
@@ -266,7 +257,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 
     data_operation = review_manager.get_data_operation()
     data_operation.main()
-    review_manager.create_commit(msg="Data and synthesis", manual_author=True)
+    review_manager.dataset.create_commit(msg="Data and synthesis", manual_author=True)
     review_manager.data_commit = review_manager.dataset.get_last_commit_sha()
 
     return review_manager
@@ -275,16 +266,22 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
 @pytest.fixture(scope="session", name="quality_model")
 def fixture_quality_model(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.qm.quality_model.QualityModel:
+) -> colrev.record.qm.quality_model.QualityModel:
     """Fixture returning the quality model"""
     return base_repo_review_manager.get_qm()
 
 
 @pytest.fixture(scope="session", name="pdf_quality_model")
-def fixture_pdf_quality_model(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> colrev.qm.quality_model.QualityModel:
+def fixture_pdf_quality_model(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> colrev.record.qm.quality_model.QualityModel:
     """Fixture returning the pdf quality model"""
+
+    helpers.retrieve_test_file(
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
+        target=base_repo_review_manager.path
+        / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    )
     return base_repo_review_manager.get_pdf_qm()
 
 
@@ -312,9 +309,9 @@ def fixture_pdedupe_operation(
 
 
 @pytest.fixture
-def record_with_pdf() -> colrev.record.Record:
+def record_with_pdf() -> colrev.record.record.Record:
     """Fixture returning a record containing a file (PDF)"""
-    return colrev.record.Record(
+    return colrev.record.record_pdf.PDFRecord(
         data={
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -330,30 +327,29 @@ def get_local_index_test_records_dict(  # type: ignore
 ) -> dict:
     """Test records dict for local_index"""
     local_index_test_records_dict: typing.Dict[Path, dict] = {}
-    bib_files_to_index = helpers.test_data_path / Path("local_index")
+    bib_files_to_index = helpers.test_data_path / Path("data/local_index")
     for file_path in bib_files_to_index.glob("**/*"):
         local_index_test_records_dict[Path(file_path.name)] = {}
 
     for path in local_index_test_records_dict:
-        with open(bib_files_to_index.joinpath(path), encoding="utf-8") as file:
-            parser = bibtex.Parser()
-            bib_data = parser.parse_string(file.read())
-            loaded_records = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
-            )
-            # Note : we only select one example for the TEI-indexing
-            for loaded_record in loaded_records.values():
-                if Fields.FILE not in loaded_record:
-                    continue
+        loaded_records = colrev.loader.load_utils.load(
+            filename=bib_files_to_index.joinpath(path),
+            unique_id_field="ID",
+        )
 
-                if loaded_record[Fields.ID] != "WagnerLukyanenkoParEtAl2022":
-                    del loaded_record[Fields.FILE]
-                else:
-                    loaded_record[Fields.FILE] = str(
-                        test_local_index_dir / Path(loaded_record[Fields.FILE])
-                    )
+        # Note : we only select one example for the TEI-indexing
+        for loaded_record in loaded_records.values():
+            if Fields.FILE not in loaded_record:
+                continue
 
-            local_index_test_records_dict[path] = loaded_records
+            if loaded_record[Fields.ID] != "WagnerLukyanenkoParEtAl2022":
+                del loaded_record[Fields.FILE]
+            else:
+                loaded_record[Fields.FILE] = str(
+                    test_local_index_dir / Path(loaded_record[Fields.FILE])
+                )
+
+        local_index_test_records_dict[path] = loaded_records
 
     return local_index_test_records_dict
 
@@ -363,20 +359,27 @@ def get_local_index(  # type: ignore
     session_mocker, helpers, local_index_test_records_dict, test_local_index_dir
 ):
     """Test the local_index"""
-    helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.pdf"),
-        target=test_local_index_dir / Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
+    target_pdf_path = test_local_index_dir / Path(
+        "data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"
     )
+    target_pdf_path.parent.mkdir(exist_ok=True, parents=True)
     helpers.retrieve_test_file(
-        source=Path("WagnerLukyanenkoParEtAl2022.tei.xml"),
-        target=test_local_index_dir
-        / Path("data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"),
+        source=Path("data/WagnerLukyanenkoParEtAl2022.pdf"),
+        target=target_pdf_path,
+    )
+    target_tei_path = test_local_index_dir / Path(
+        "data/.tei/WagnerLukyanenkoParEtAl2022.tei.xml"
+    )
+    target_tei_path.parent.mkdir(exist_ok=True, parents=True)
+    helpers.retrieve_test_file(
+        source=Path("data/WagnerLukyanenkoParEtAl2022.tei.xml"),
+        target=target_tei_path,
     )
 
     os.chdir(test_local_index_dir)
     temp_sqlite = test_local_index_dir / Path("sqlite_index_test.db")
     session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     )
     local_index_instance = colrev.env.local_index.LocalIndex(
         index_tei=True, verbose_mode=True
@@ -419,51 +422,18 @@ def script_loc(request) -> Path:  # type: ignore
 def patch_registry(mocker, tmp_path) -> None:  # type: ignore
     """Patch registry path in environment manager"""
     test_json_path = tmp_path / Path("reg.json")
-    test_yaml_path = tmp_path / Path("reg.yaml")
 
     mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry_yaml",
-        test_yaml_path,
-    )
-    mocker.patch.object(
-        colrev.env.environment_manager.EnvironmentManager,
-        "registry",
+        colrev.constants.Filepaths,
+        "REGISTRY_FILE",
         test_json_path,
     )
 
 
-@pytest.fixture(name="search_feed")
-def fixture_search_feed(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> typing.Generator:
-    """General search feed"""
-
-    source = colrev.settings.SearchSource(
-        endpoint="colrev.crossref",
-        filename=Path("data/search/test.bib"),
-        search_type=colrev.settings.SearchType.DB,
-        search_parameters={"query": "query"},
-        comment="",
-    )
-
-    feed = source.get_feed(
-        review_manager=base_repo_review_manager,
-        source_identifier="doi",
-        update_only=True,
-    )
-
-    prev_sources = base_repo_review_manager.settings.sources
-
-    yield feed
-
-    base_repo_review_manager.settings.sources = prev_sources
-
-
 @pytest.fixture(name="v_t_record")
-def fixture_v_t_record() -> colrev.record.Record:
+def fixture_v_t_record() -> colrev.record.record.Record:
     """Record for testing quality defects"""
-    return colrev.record.Record(
+    return colrev.record.record.Record(
         data={
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -479,10 +449,18 @@ def fixture_v_t_record() -> colrev.record.Record:
     )
 
 
+@pytest.fixture(name="v_t_pdf_record")
+def fixture_v_t_pdf_record(
+    v_t_record: colrev.record.record.Record,
+) -> colrev.record.record_pdf.PDFRecord:
+    """Record for testing quality defects"""
+    return colrev.record.record_pdf.PDFRecord(v_t_record.data)
+
+
 @pytest.fixture(name="book_record")
-def fixture_book_record() -> colrev.record.Record:
+def fixture_book_record() -> colrev.record.record.Record:
     """Book record for testing quality defects"""
-    return colrev.record.Record(
+    return colrev.record.record.Record(
         data={
             Fields.ID: "Popper2014",
             Fields.ENTRYTYPE: ENTRYTYPES.BOOK,

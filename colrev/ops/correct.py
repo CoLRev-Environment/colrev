@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 
-import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
+if TYPE_CHECKING:
+    import colrev.review_manager
 
 # pylint: disable=too-few-public-methods
 
@@ -55,8 +58,8 @@ class Corrections:
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         self.review_manager = review_manager
-        self.local_index = self.review_manager.get_local_index()
-        self.resources = self.review_manager.get_resources()
+        self.corrections_path = self.review_manager.get_path(Filepaths.CORRECTIONS_DIR)
+        self.corrections_path.mkdir(exist_ok=True)
 
     def _record_corrected(self, *, prior_r: dict, record_dict: dict) -> bool:
         return not all(
@@ -82,21 +85,10 @@ class Corrections:
         # if Fields.DBLP_KEY in corrected_record:
         #     del corrected_record[Fields.DBLP_KEY]
 
-    def _create_change_item(
-        self,
-        *,
-        original_record: dict,
-        corrected_record: dict,
-    ) -> None:
-        # pylint: disable=too-many-branches
-
-        self._prep_for_change_item_creation(
-            original_record=original_record,
-            corrected_record=corrected_record,
-        )
-
+    def _get_selected_change_items(
+        self, original_record: dict, corrected_record: dict
+    ) -> list:
         changes = diff(original_record, corrected_record)
-
         selected_change_items = []
         for change_item in list(changes):
             change_type, key, val = change_item
@@ -123,6 +115,23 @@ class Corrections:
 
             elif change_type == "change":
                 selected_change_items.append(change_item)
+        return selected_change_items
+
+    def _create_change_item(
+        self,
+        *,
+        original_record: dict,
+        corrected_record: dict,
+    ) -> None:
+
+        self._prep_for_change_item_creation(
+            original_record=original_record,
+            corrected_record=corrected_record,
+        )
+
+        selected_change_items = self._get_selected_change_items(
+            original_record, corrected_record
+        )
 
         if len(selected_change_items) == 0:
             return
@@ -152,29 +161,21 @@ class Corrections:
             #         ]
             #     }
 
-        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
         # cover non-masterdata corrections
         if Fields.MD_PROV not in original_record:
             return
 
         dict_to_save = {
-            # "source_url": original_record[Fields.MD_PROV],
             "original_record": {
                 k: v for k, v in original_record.items() if k not in [Fields.STATUS]
             },
             "changes": selected_change_items,
         }
 
-        filepath = self.review_manager.corrections_path / Path(
-            f"{corrected_record['ID']}.json"
-        )
-        filepath.parent.mkdir(exist_ok=True)
+        filepath = self.corrections_path / Path(f"{corrected_record['ID']}.json")
 
         with open(filepath, "w", encoding="utf8") as corrections_file:
             json.dump(dict_to_save, corrections_file, indent=4)
-
-        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
-        # combine merge-record corrections
 
     def check_corrections_of_records(self) -> None:
         """Check for corrections of records"""
@@ -182,22 +183,11 @@ class Corrections:
         # to test run
         # colrev-hooks-report .report.log
 
-        dataset = self.review_manager.dataset
-
-        if not dataset.records_file.is_file():
-            return
-
         records = self.review_manager.dataset.load_records_dict()
-
         prior_records_dict = next(
-            self.review_manager.dataset.load_records_from_history()
+            self.review_manager.dataset.load_records_from_history(), {}
         )
-        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
-        # The following code should be much simpler...
         for record_dict in records.values():
-            # gh_issue https://github.com/CoLRev-Environment/colrev/issues/63
-            # use origin-indexed dict (discarding changes during merges)
-
             # identify curated records for which essential metadata is changed
             record_prior = [
                 x
@@ -212,12 +202,6 @@ class Corrections:
             for prior_r in record_prior:
                 if self._record_corrected(prior_r=prior_r, record_dict=record_dict):
                     corrected_record = record_dict.copy()
-
-                    # original_record = (
-                    #     self._get_original_record_from_index(prior_r=prior_r)
-                    # )
-                    # if not original_record:
-                    #     continue
 
                     self._create_change_item(
                         original_record=prior_r,

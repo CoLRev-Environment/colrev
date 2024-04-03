@@ -7,6 +7,7 @@ import pytest
 import colrev.ops.built_in.prep.exclude_complementary_materials
 import colrev.ops.prep
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 ECMPrep = (
     colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep
@@ -56,12 +57,12 @@ def test_prep_exclude_complementary_materials(
     expected_outcome: bool,
 ) -> None:
     """Test the exclude_complementary_materials"""
-    record = colrev.record.PrepRecord(data=input_value)
+    record = colrev.record.record_prep.PrepRecord(input_value)
     returned_record = elp_ecm.prepare(record=record)
     actual = returned_record.data
     expected = deepcopy(input_value)
     if expected_outcome == PRESCREEN_EXCLUDED:
-        expected[Fields.STATUS] = colrev.record.RecordState.rev_prescreen_excluded
+        expected[Fields.STATUS] = RecordState.rev_prescreen_excluded
         expected[Fields.PRESCREEN_EXCLUSION] = "complementary material"
 
     assert expected == actual

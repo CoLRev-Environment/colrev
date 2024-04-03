@@ -11,13 +11,12 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.load_utils_ris
-import colrev.ops.search
-import colrev.record
-from colrev.constants import Colors
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
+from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -33,10 +32,10 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "ABI/INFORM (ProQuest)"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
@@ -46,7 +45,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
     db_url = "https://search.proquest.com/abicomplete/advanced"
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
@@ -79,7 +78,7 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.DB:
+        if search_type == SearchType.DB:
             return operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
@@ -87,16 +86,16 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ABI/INFORM"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
             )
 
-    def _remove_duplicates(self, *, records: dict) -> None:
+    def _remove_duplicates(self, records: dict) -> None:
         to_delete = []
         for record in records.values():
             if re.search(r"-\d{1,2}$", record[Fields.ID]):
@@ -108,9 +107,9 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 # Note: between duplicate records,
                 # there are variations in spelling and completeness
                 if (
-                    colrev.record.Record.get_record_similarity(
-                        record_a=colrev.record.Record(data=record),
-                        record_b=colrev.record.Record(data=original_record),
+                    colrev.record.record.Record.get_record_similarity(
+                        record_a=colrev.record.record.Record(record),
+                        record_b=colrev.record.record.Record(original_record),
                     )
                     < 0.9
                 ):
@@ -124,87 +123,134 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
                 self.review_manager.logger.info(f" remove duplicate {rid}")
                 del records[rid]
 
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=records, save_path=self.search_source.filename
-            )
+            write_file(records_dict=records, filename=self.search_source.filename)
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
-    def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
-        references_types = {
-            "JOUR": ENTRYTYPES.ARTICLE,
-            "BOOK": ENTRYTYPES.BOOK,
-            "THES": ENTRYTYPES.PHDTHESIS,
-        }
-        key_map = {
-            ENTRYTYPES.ARTICLE: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "T1": Fields.TITLE,
-                "JF": Fields.JOURNAL,
-                "AB": Fields.ABSTRACT,
-                "VL": Fields.VOLUME,
-                "IS": Fields.NUMBER,
-                "KW": Fields.KEYWORDS,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "SP": Fields.PAGES,
-                "PMID": Fields.PUBMED_ID,
-                "SN": Fields.ISSN,
-                "AN": "accession_number",
-            },
-            ENTRYTYPES.PHDTHESIS: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "T1": Fields.TITLE,
-                "UR": Fields.URL,
-                "PB": Fields.PUBLISHER,
-                "KW": Fields.KEYWORDS,
-                "AN": "accession_number",
-            },
-        }
-        list_fields = {"AU": " and ", "KW": ", "}
-        ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields=list_fields,
-            unique_id_field="accession_number",
-        )
-        records = ris_loader.load_ris_records()
+    def _load_ris(self) -> dict:
 
-        for counter, record_dict in enumerate(records.values()):
-            _id = str(counter + 1).zfill(5)
-            record_dict[Fields.ID] = _id
+        def id_labeler(records: list) -> None:
+            for record_dict in records:
+                record_dict[Fields.ID] = record_dict["AN"]
 
-            if record_dict["TY"] not in references_types:
-                msg = (
-                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-                )
-                if not self.review_manager.force_mode:
-                    raise NotImplementedError(msg)
-                self.review_manager.logger.error(msg)
-                continue
-            entrytype = references_types[record_dict["TY"]]
-            record_dict[Fields.ENTRYTYPE] = entrytype
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["TY"] == "JOUR":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["TY"] == "BOOK":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
+            elif record_dict["TY"] == "THES":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.PHDTHESIS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-            # RIS-keys > standard keys
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "JF": Fields.JOURNAL,
+                    "AB": Fields.ABSTRACT,
+                    "VL": Fields.VOLUME,
+                    "IS": Fields.NUMBER,
+                    "KW": Fields.KEYWORDS,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "SP": Fields.PAGES,
+                    "PMID": Fields.PUBMED_ID,
+                    "SN": Fields.ISSN,
+                    "AN": f"{self.endpoint}.accession_number",
+                    "LA": Fields.LANGUAGE,
+                    "L2": Fields.FULLTEXT,
+                    "UR": Fields.URL,
+                },
+                ENTRYTYPES.PHDTHESIS: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "T1": Fields.TITLE,
+                    "UR": Fields.URL,
+                    "PB": Fields.SCHOOL,
+                    "KW": Fields.KEYWORDS,
+                    "AN": f"{self.endpoint}.accession_number",
+                    "AB": Fields.ABSTRACT,
+                    "LA": Fields.LANGUAGE,
+                    "CY": Fields.ADDRESS,
+                    "L2": Fields.FULLTEXT,
+                    "A3": f"{self.endpoint}.supervisor",
+                },
+            }
+
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                if "T1" in record_dict and "TI" not in record_dict:
+                    record_dict["TI"] = record_dict.pop("T1")
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
             for ris_key in list(record_dict.keys()):
-                if ris_key in ["ENTRYTYPE", "ID", "accession_number"]:
-                    continue
-                if ris_key not in key_map[entrytype]:
-                    del record_dict[ris_key]
-                    # print/notify: ris_key
-                    continue
-                standard_key = key_map[entrytype][ris_key]
-                record_dict[standard_key] = record_dict.pop(ris_key)
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if "SP" in record_dict and "EP" in record_dict:
+                record_dict[Fields.PAGES] = (
+                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+                )
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            keys_to_remove = [
+                "TY",
+                "Y2",
+                "DB",
+                "C1",
+                "T3",
+                "DA",
+                "JF",
+                "L1",
+                "SP",
+                "Y1",
+                "M1",
+                "M3",
+                "N1",
+                "PP",
+                "CY",
+                "SN",
+                "ER",
+                "AN",
+            ]
+
+            for key in keys_to_remove:
+                record_dict.pop(key, None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            id_labeler=id_labeler,
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
 
         return records
 
@@ -212,22 +258,22 @@ class ABIInformProQuestSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
+                unique_id_field="ID",
             )
-            records = bib_loader.load_bib_file()
-
-            self._remove_duplicates(records=records)
+            self._remove_duplicates(records)
             return records
 
         if self.search_source.filename.suffix == ".ris":
-            return self._load_ris(load_operation)
+            return self._load_ris()
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ABI/INFORM (ProQuest)"""
 
         if (

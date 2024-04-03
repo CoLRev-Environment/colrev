@@ -12,9 +12,10 @@ from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-many-arguments
@@ -58,6 +59,19 @@ class CurationDedupe(JsonSchemaMixin):
         self.review_manager = dedupe_operation.review_manager
 
         self.pdf_qm = self.review_manager.get_pdf_qm()
+
+    def _has_overlapping_colrev_id(
+        self,
+        record_a: colrev.record.record.Record,
+        record_b: colrev.record.record.Record,
+    ) -> bool:
+        """Check if a record has an overlapping colrev_id with the other record"""
+        own_colrev_ids = record_a.get_colrev_id()
+        other_colrev_ids = record_b.get_colrev_id()
+        if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
+            if any(cid in own_colrev_ids for cid in other_colrev_ids):
+                return True
+        return False
 
     def _get_similarity(self, *, df_a: pd.Series, df_b: pd.Series) -> float:
         author_similarity = fuzz.ratio(df_a[Fields.AUTHOR], df_b[Fields.AUTHOR]) / 100
@@ -195,7 +209,7 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
                 for co in r[Fields.ORIGIN]
@@ -213,10 +227,10 @@ class CurationDedupe(JsonSchemaMixin):
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
                 and r[Fields.STATUS]
                 not in [
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.rev_prescreen_excluded,
+                    RecordState.md_prepared,
+                    RecordState.md_needs_manual_preparation,
+                    RecordState.md_imported,
+                    RecordState.rev_prescreen_excluded,
                 ]
                 and any(
                     self.settings.selected_source.replace("data/search/", "") in co
@@ -234,7 +248,7 @@ class CurationDedupe(JsonSchemaMixin):
                         source_record_dict.get(k, "NA") == v
                         for k, v in toc_item.items()
                     ):
-                        # Record(data=sr).print_citation_format()
+                        # Record(sr).print_citation_format()
                         print(
                             f"{source_record_dict.get('author', 'NO_AUTHOR')} : "
                             f"{source_record_dict.get('title', 'NO_TITLE')}"
@@ -251,11 +265,11 @@ class CurationDedupe(JsonSchemaMixin):
                             source_record_dict.get(k, "NA") == v
                             for k, v in toc_item.items()
                         ):
-                            source_record = colrev.record.Record(
+                            source_record = colrev.record.record.Record(
                                 data=source_record_dict
                             )
                             source_record.set_status(
-                                target_state=colrev.record.RecordState.md_processed
+                                target_state=RecordState.md_processed
                             )
             else:
                 print(toc_item)
@@ -264,11 +278,11 @@ class CurationDedupe(JsonSchemaMixin):
 
         for record in records.values():
             record.pop(Fields.CONTAINER_TITLE)
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             self.review_manager.logger.info(f"{Colors.GREEN}Commit changes{Colors.END}")
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg=(
                     "Merge duplicate records (set unique records from "
                     f"{self.settings.selected_source} "
@@ -312,7 +326,7 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
                 for co in r[Fields.ORIGIN]
@@ -332,10 +346,10 @@ class CurationDedupe(JsonSchemaMixin):
                 if all(r.get(k, "NA") == v for k, v in toc_item.items())
                 and r[Fields.STATUS]
                 not in [
-                    colrev.record.RecordState.md_imported,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.rev_prescreen_excluded,
+                    RecordState.md_imported,
+                    RecordState.md_needs_manual_preparation,
+                    RecordState.md_prepared,
+                    RecordState.rev_prescreen_excluded,
                 ]
                 and not any(
                     self.settings.selected_source.replace("data/search/", "") in co
@@ -351,10 +365,9 @@ class CurationDedupe(JsonSchemaMixin):
                 # print(new_same_toc_records)
                 for new_same_toc_record in new_same_toc_records:
                     for rec2 in processed_same_toc_records:
-                        overlapping_colrev_ids = colrev.record.Record(
-                            data=new_same_toc_record
-                        ).has_overlapping_colrev_id(
-                            record=colrev.record.Record(data=rec2)
+                        overlapping_colrev_ids = self._has_overlapping_colrev_id(
+                            colrev.record.record.Record(data=new_same_toc_record),
+                            colrev.record.record.Record(rec2),
                         )
                         if overlapping_colrev_ids:
                             decision_list.append(
@@ -375,7 +388,7 @@ class CurationDedupe(JsonSchemaMixin):
         else:  # None of the records is curated
             raise FileNotFoundError
 
-        updated_record = colrev.record.Record(data=updated_record_dict)
+        updated_record = colrev.record.record.Record(updated_record_dict)
         updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
         return updated_record.has_pdf_defects()
 
@@ -406,9 +419,9 @@ class CurationDedupe(JsonSchemaMixin):
         except FileNotFoundError:
             return
 
-        overlapping_colrev_ids = colrev.record.Record(
-            data=rec1
-        ).has_overlapping_colrev_id(record=colrev.record.Record(data=rec2))
+        overlapping_colrev_ids = self._has_overlapping_colrev_id(
+            colrev.record.record.Record(data=rec1), colrev.record.record.Record(rec2)
+        )
         if validated or overlapping_colrev_ids:
             decision_list.append([rec1[Fields.ID], rec2[Fields.ID]])
 
@@ -426,10 +439,10 @@ class CurationDedupe(JsonSchemaMixin):
             if all(r.get(k, "NA") == v for k, v in toc_item.items())
             and r[Fields.STATUS]
             not in [
-                colrev.record.RecordState.md_imported,
-                colrev.record.RecordState.md_needs_manual_preparation,
-                colrev.record.RecordState.md_prepared,
-                colrev.record.RecordState.rev_prescreen_excluded,
+                RecordState.md_imported,
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_prepared,
+                RecordState.rev_prescreen_excluded,
             ]
             and not any(
                 self.settings.selected_source.replace("data/search/", "") in co
@@ -476,7 +489,7 @@ class CurationDedupe(JsonSchemaMixin):
         source_records = [
             r
             for r in records.values()
-            if r[Fields.STATUS] == colrev.record.RecordState.md_prepared
+            if r[Fields.STATUS] == RecordState.md_prepared
             and any(
                 self.settings.selected_source.replace("data/search/", "") in co
                 for co in r[Fields.ORIGIN]
@@ -566,6 +579,6 @@ class CurationDedupe(JsonSchemaMixin):
             id_sets=decision_list,
             preferred_masterdata_sources=preferred_masterdata_sources,
         )
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Merge duplicate records",
         )

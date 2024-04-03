@@ -8,8 +8,9 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -44,18 +45,17 @@ class ConditionalPrescreen(JsonSchemaMixin):
 
         pad = 50
         for record in records.values():
-            if record[Fields.STATUS] != colrev.record.RecordState.md_processed:
+            if record[Fields.STATUS] != RecordState.md_processed:
                 continue
             self.review_manager.report_logger.info(
                 f" {record[Fields.ID]}".ljust(pad, " ")
                 + "Included in prescreen (automatically)"
             )
-            record.update(
-                colrev_status=colrev.record.RecordState.rev_prescreen_included
-            )
+            # pylint: disable=colrev-direct-status-assign
+            record.update(colrev_status=RecordState.rev_prescreen_included)
 
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(
             msg="Pre-screen (include_all)",
             manual_author=False,
         )

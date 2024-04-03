@@ -135,8 +135,7 @@ class XPLORE:
         """set the maximum number of results
         string maximum   Max number of results to return"""
         self.resultSetMax = math.ceil(maximum) if (maximum > 0) else 25
-        if self.resultSetMax > self.resultSetMaxCap:
-            self.resultSetMax = self.resultSetMaxCap
+        self.resultSetMax = min(self.resultSetMax, self.resultSetMaxCap)
 
     def resultsFilter(self, filterParam: str, value: str) -> None:
         """setting a filter on results

@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.web\_of\_science.WebOfScienceSearchSource
       ~WebOfScienceSearchSource.from_dict
       ~WebOfScienceSearchSource.from_json
       ~WebOfScienceSearchSource.from_object
-      ~WebOfScienceSearchSource.get_masterdata
       ~WebOfScienceSearchSource.heuristic
       ~WebOfScienceSearchSource.json_schema
       ~WebOfScienceSearchSource.load
+      ~WebOfScienceSearchSource.prep_link_md
       ~WebOfScienceSearchSource.prepare
       ~WebOfScienceSearchSource.register_field_encoders
-      ~WebOfScienceSearchSource.run_search
+      ~WebOfScienceSearchSource.search
       ~WebOfScienceSearchSource.to_dict
       ~WebOfScienceSearchSource.to_json
 

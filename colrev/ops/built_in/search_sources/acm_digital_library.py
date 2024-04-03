@@ -10,9 +10,10 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
+from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -30,10 +31,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     # Note : the ID contains the doi
     # "https://dl.acm.org/doi/{{ID}}"
     source_identifier = "doi"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "ACM Digital Library"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/"
@@ -42,7 +43,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
     db_url = "https://dl.acm.org/"
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
@@ -72,7 +73,7 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.DB:
+        if search_type == SearchType.DB:
             return operation.add_db_source(
                 search_source_cls=cls,
                 params=params,
@@ -80,10 +81,10 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ACM Digital Library"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             if self.search_source.filename.suffix in [".bib"]:
                 self.operation.run_db_search(  # type: ignore
                     search_source_cls=self.__class__,
@@ -94,13 +95,13 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
             raise NotImplementedError
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -108,10 +109,30 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+
+            def field_mapper(record_dict: dict) -> None:
+                record_dict.pop("url", None)
+                record_dict.pop("publisher", None)
+                record_dict.pop("numpages", None)
+                record_dict.pop("month", None)
+
+                if "issue_date" in record_dict:
+                    record_dict[f"{self.endpoint}.issue_date"] = record_dict.pop(
+                        "issue_date"
+                    )
+                if "location" in record_dict:
+                    record_dict[Fields.ADDRESS] = record_dict.pop("location", None)
+                if "articleno" in record_dict:
+                    record_dict[f"{self.endpoint}.articleno"] = record_dict.pop(
+                        "articleno"
+                    )
+
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                unique_id_field="ID",
+                field_mapper=field_mapper,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
 
             return records
 
@@ -119,14 +140,8 @@ class ACMDigitalLibrarySearchSource(JsonSchemaMixin):
 
     # pylint: disable=colrev-missed-constant-usage
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ACM Digital Library"""
-        record.remove_field(key="url")
-        record.remove_field(key="publisher")
-        record.remove_field(key="numpages")
-        record.remove_field(key="issue_date")
-        record.remove_field(key="address")
-        record.remove_field(key="month")
 
         return record

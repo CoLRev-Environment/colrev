@@ -8,9 +8,7 @@ def test_pdf_prep_man(  # type: ignore
 ) -> None:
     """Test the pdf-prep-man operation"""
 
-    helpers.reset_commit(
-        review_manager=base_repo_review_manager, commit="pdf_prep_commit"
-    )
+    helpers.reset_commit(base_repo_review_manager, commit="pdf_prep_commit")
     pdf_prep_man_operation = base_repo_review_manager.get_pdf_prep_man_operation()
     pdf_prep_man_operation.main()
     pdf_prep_man_operation.pdf_prep_man_stats()

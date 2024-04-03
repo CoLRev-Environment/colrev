@@ -15,7 +15,7 @@ class GrobidService:
     """An environment service for machine readability/annotation (PDF to TEI conversion)"""
 
     GROBID_URL = "http://localhost:8070"
-    GROBID_IMAGE = "lfoppiano/grobid:0.7.3"
+    GROBID_IMAGE = "lfoppiano/grobid:0.8.0"
 
     def __init__(
         self, *, environment_manager: colrev.env.environment_manager.EnvironmentManager
@@ -23,7 +23,7 @@ class GrobidService:
         environment_manager.build_docker_image(imagename=self.GROBID_IMAGE)
         self.start()
         if not self.check_grobid_availability():
-            environment_manager.register_ports(ports=["8070", "8071"])
+            environment_manager.register_ports(["8070", "8071"])
 
     def check_grobid_availability(self, *, wait: bool = True) -> bool:
         """Check whether the GROBID service is available"""

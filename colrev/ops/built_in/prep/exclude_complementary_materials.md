@@ -23,6 +23,6 @@ colrev.exclude_complementary_materials
 
 ## Links to Exclusion Lists
 
-- [Exact Matches](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/ops/complementary_material_strings.txt)
-- [Prefixes](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/ops/complementary_material_prefixes.txt)
-- [Keywords](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/template/ops/complementary_material_keywords.txt)
+- [Exact Matches](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/complementary_material_strings.txt)
+- [Prefixes](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/complementary_material_prefixes.txt)
+- [Keywords](https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/complementary_material_keywords.txt)

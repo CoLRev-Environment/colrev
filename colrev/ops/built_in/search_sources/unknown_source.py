@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 
 import dacite
+import pandas as pd
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
@@ -16,15 +17,16 @@ from rapidfuzz import fuzz
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.load_utils_md
-import colrev.ops.load_utils_ris
-import colrev.ops.search
-import colrev.record
+import colrev.loader.load_utils
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import FieldValues
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -42,15 +44,15 @@ class UnknownSearchSource(JsonSchemaMixin):
 
     source_identifier = "colrev.unknown_source"
     search_types = [
-        colrev.settings.SearchType.DB,
-        colrev.settings.SearchType.OTHER,
-        colrev.settings.SearchType.BACKWARD_SEARCH,
-        colrev.settings.SearchType.FORWARD_SEARCH,
-        colrev.settings.SearchType.TOC,
+        SearchType.DB,
+        SearchType.OTHER,
+        SearchType.BACKWARD_SEARCH,
+        SearchType.FORWARD_SEARCH,
+        SearchType.TOC,
     ]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
+    heuristic_status = SearchSourceHeuristicStatus.na
     short_name = "Unknown Source"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -62,7 +64,7 @@ class UnknownSearchSource(JsonSchemaMixin):
     _padding = 40
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         converters = {Path: Path, Enum: Enum}
         self.search_source = from_dict(
@@ -95,21 +97,21 @@ class UnknownSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Crossref"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__, source=self.search_source
             )
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -128,11 +130,11 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
             self.search_source.filename.rename(new_filename)
             self.review_manager.dataset.add_changes(
-                path=self.search_source.filename, remove=True
+                self.search_source.filename, remove=True
             )
             self.search_source.filename = new_filename
-            self.review_manager.dataset.add_changes(path=new_filename)
-            self.review_manager.create_commit(
+            self.review_manager.dataset.add_changes(new_filename)
+            self.review_manager.dataset.create_commit(
                 msg=f"Rename {self.search_source.filename}"
             )
             return
@@ -147,242 +149,367 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
             self.search_source.filename.rename(new_filename)
             self.review_manager.dataset.add_changes(
-                path=self.search_source.filename, remove=True
+                self.search_source.filename, remove=True
             )
             self.search_source.filename = new_filename
-            self.review_manager.dataset.add_changes(path=new_filename)
-            self.review_manager.create_commit(
+            self.review_manager.dataset.add_changes(new_filename)
+            self.review_manager.dataset.create_commit(
                 msg=f"Rename {self.search_source.filename}"
             )
 
     def _load_ris(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
-        reference_types = {
-            "JOUR": ENTRYTYPES.ARTICLE,
-            "JFULL": ENTRYTYPES.ARTICLE,
-            "ABST": ENTRYTYPES.ARTICLE,
-            "INPR": ENTRYTYPES.ARTICLE,  # inpress
-            "CONF": ENTRYTYPES.INPROCEEDINGS,
-            "CPAPER": ENTRYTYPES.INPROCEEDINGS,
-            "THES": ENTRYTYPES.PHDTHESIS,
-            "REPT": ENTRYTYPES.TECHREPORT,
-            "RPRT": ENTRYTYPES.TECHREPORT,
-            "CHAP": ENTRYTYPES.INBOOK,
-            "BOOK": ENTRYTYPES.BOOK,
-            "NEWS": ENTRYTYPES.MISC,
-            "BLOG": ENTRYTYPES.MISC,
-        }
-        key_map = {
-            ENTRYTYPES.ARTICLE: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "T2": Fields.JOURNAL,
-                "AB": Fields.ABSTRACT,
-                "VL": Fields.VOLUME,
-                "IS": Fields.NUMBER,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "UR": Fields.URL,
-                "fulltext": Fields.FULLTEXT,
-                "PMID": Fields.PUBMED_ID,
-                "KW": Fields.KEYWORDS,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.INPROCEEDINGS: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                # "secondary_title": Fields.BOOKTITLE,
-                "DO": Fields.DOI,
-                "UR": Fields.URL,
-                # "fulltext": Fields.FULLTEXT,
-                "PMID": Fields.PUBMED_ID,
-                "KW": Fields.KEYWORDS,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.INBOOK: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                # "primary_title": Fields.CHAPTER,
-                # "secondary_title": Fields.TITLE,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                # "edition": Fields.EDITION,
-                "UR": Fields.URL,
-                # "fulltext": Fields.FULLTEXT,
-                "KW": Fields.KEYWORDS,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.BOOK: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                # "primary_title": Fields.CHAPTER,
-                # "secondary_title": Fields.TITLE,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                # "edition": Fields.EDITION,
-                "UR": Fields.URL,
-                # "fulltext": Fields.FULLTEXT,
-                "KW": Fields.KEYWORDS,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.PHDTHESIS: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "UR": Fields.URL,
-            },
-            ENTRYTYPES.TECHREPORT: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "UR": Fields.URL,
-                # "fulltext": Fields.FULLTEXT,
-                "KW": Fields.KEYWORDS,
-                "PB": Fields.PUBLISHER,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.MISC: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "UR": Fields.URL,
-                # "fulltext": Fields.FULLTEXT,
-                "KW": Fields.KEYWORDS,
-                "PB": Fields.PUBLISHER,
-                "SP": Fields.PAGES,
-            },
-        }
+        def entrytype_setter(record_dict: dict) -> None:
+            # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
+            reference_types = {
+                "JOUR": ENTRYTYPES.ARTICLE,
+                "JFULL": ENTRYTYPES.ARTICLE,
+                "ABST": ENTRYTYPES.ARTICLE,
+                "INPR": ENTRYTYPES.ARTICLE,  # inpress
+                "CONF": ENTRYTYPES.INPROCEEDINGS,
+                "CPAPER": ENTRYTYPES.INPROCEEDINGS,
+                "THES": ENTRYTYPES.PHDTHESIS,
+                "REPT": ENTRYTYPES.TECHREPORT,
+                "RPRT": ENTRYTYPES.TECHREPORT,
+                "CHAP": ENTRYTYPES.INBOOK,
+                "BOOK": ENTRYTYPES.BOOK,
+                "NEWS": ENTRYTYPES.MISC,
+                "BLOG": ENTRYTYPES.MISC,
+            }
+            if record_dict["TY"] in reference_types:
+                record_dict[Fields.ENTRYTYPE] = reference_types[record_dict["TY"]]
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-        list_fields = {"AU": " and "}
-        ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields=list_fields,
-        )
-        records = ris_loader.load_ris_records()
+        def field_mapper(record_dict: dict) -> None:
+            # Based on https://github.com/aurimasv/translators/wiki/RIS-Tag-Map
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "T2": Fields.JOURNAL,
+                    "AB": Fields.ABSTRACT,
+                    "VL": Fields.VOLUME,
+                    "IS": Fields.NUMBER,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "UR": Fields.URL,
+                    "fulltext": Fields.FULLTEXT,
+                    "PMID": Fields.PUBMED_ID,
+                    "KW": Fields.KEYWORDS,
+                    "SP": Fields.PAGES,
+                },
+                ENTRYTYPES.INPROCEEDINGS: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    # "secondary_title": Fields.BOOKTITLE,
+                    "DO": Fields.DOI,
+                    "UR": Fields.URL,
+                    # "fulltext": Fields.FULLTEXT,
+                    "PMID": Fields.PUBMED_ID,
+                    "KW": Fields.KEYWORDS,
+                    "SP": Fields.PAGES,
+                },
+                ENTRYTYPES.INBOOK: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    # "primary_title": Fields.CHAPTER,
+                    # "secondary_title": Fields.TITLE,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    # "edition": Fields.EDITION,
+                    "UR": Fields.URL,
+                    # "fulltext": Fields.FULLTEXT,
+                    "KW": Fields.KEYWORDS,
+                    "SP": Fields.PAGES,
+                },
+                ENTRYTYPES.BOOK: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    # "primary_title": Fields.CHAPTER,
+                    # "secondary_title": Fields.TITLE,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    # "edition": Fields.EDITION,
+                    "UR": Fields.URL,
+                    # "fulltext": Fields.FULLTEXT,
+                    "KW": Fields.KEYWORDS,
+                    "SP": Fields.PAGES,
+                },
+                ENTRYTYPES.PHDTHESIS: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "UR": Fields.URL,
+                },
+                ENTRYTYPES.TECHREPORT: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "UR": Fields.URL,
+                    # "fulltext": Fields.FULLTEXT,
+                    "KW": Fields.KEYWORDS,
+                    "PB": Fields.PUBLISHER,
+                    "SP": Fields.PAGES,
+                },
+                ENTRYTYPES.MISC: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "UR": Fields.URL,
+                    # "fulltext": Fields.FULLTEXT,
+                    "KW": Fields.KEYWORDS,
+                    "PB": Fields.PUBLISHER,
+                    "SP": Fields.PAGES,
+                },
+            }
 
-        for record_dict in records.values():
-            # pylint: disable=colrev-missed-constant-usage
-            record_dict["ID"] = record_dict["UR"].split("/")[-1]
-            if record_dict["TY"] not in reference_types:
-                msg = (
-                    f"{Colors.RED}TY={record_dict['TY']} not yet supported{Colors.END}"
-                )
-                if not self.review_manager.force_mode:
-                    raise NotImplementedError(msg)
-                self.review_manager.logger.error(msg)
-                continue
-            entrytype = reference_types[record_dict["TY"]]
-            record_dict[Fields.ENTRYTYPE] = entrytype
-
-            # fixes
-            if entrytype == ENTRYTYPES.ARTICLE:
-                if "T1" in record_dict and "TI" not in record_dict:
-                    record_dict["TI"] = record_dict.pop("T1")
-
-            # RIS-keys > standard keys
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
             for ris_key in list(record_dict.keys()):
-                if ris_key in ["ENTRYTYPE", "ID"]:
-                    continue
-                if ris_key not in key_map[entrytype]:
-                    del record_dict[ris_key]
-                    # print/notify: ris_key
-                    continue
-                standard_key = key_map[entrytype][ris_key]
-                record_dict[standard_key] = record_dict.pop(ris_key)
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
 
+            if "SP" in record_dict and "EP" in record_dict:
+                record_dict[Fields.PAGES] = (
+                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+                )
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("TY", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("DB", None)
+            record_dict.pop("C1", None)
+            record_dict.pop("T3", None)
+            record_dict.pop("AD", None)
+            record_dict.pop("CY", None)
+            record_dict.pop("M3", None)
+            record_dict.pop("EP", None)
+            record_dict.pop("ER", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        load_operation.ensure_append_only(file=self.search_source.filename)
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="INCREMENTAL",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
         return records
 
     def _load_bib(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-            load_operation=load_operation, source=self.search_source
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
         )
-        records = bib_loader.load_bib_file()
-
         return records
 
-    def _load_csv(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        table_loader = colrev.ops.load_utils_table.TableLoader(
-            load_operation=load_operation, source=self.search_source
-        )
-        table_entries = table_loader.load_table_entries()
-        records = table_loader.convert_to_records(entries=table_entries)
-        return records
+    # pylint: disable=colrev-missed-constant-usage
+    def _table_drop_fields(self, *, records_dict: dict) -> None:
+        for r_dict in records_dict.values():
+            for key in list(r_dict.keys()):
+                if r_dict[key] in [f"no {key}", "", "nan"]:
+                    del r_dict[key]
+            if (
+                r_dict.get("number_of_cited_references", "NA")
+                == "no Number-of-Cited-References"
+            ):
+                del r_dict["number_of_cited_references"]
+            if "no file" in r_dict.get("file_name", "NA"):
+                del r_dict["file_name"]
 
-    def _load_xlsx(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        excel_loader = colrev.ops.load_utils_table.TableLoader(
-            load_operation=load_operation, source=self.search_source
+            if r_dict.get("cited_by", "NA") in [
+                "no Times-Cited",
+            ]:
+                del r_dict["cited_by"]
+
+            if "author_count" in r_dict:
+                del r_dict["author_count"]
+            if "citation_key" in r_dict:
+                del r_dict["citation_key"]
+
+    def _load_table(self, *, load_operation: colrev.ops.load.Load) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if "type" in record_dict:
+                record_dict[Fields.ENTRYTYPE] = record_dict.pop("type")
+
+            if Fields.ENTRYTYPE not in record_dict:
+                if record_dict.get(Fields.JOURNAL, "") != "":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+                elif record_dict.get(Fields.BOOKTITLE, "") != "":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+                else:
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+                if (
+                    Fields.JOURNAL in record_dict
+                    and Fields.BOOKTITLE not in record_dict
+                ):
+                    record_dict[Fields.BOOKTITLE] = record_dict.pop(Fields.JOURNAL)
+            elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                if (
+                    Fields.BOOKTITLE in record_dict
+                    and Fields.JOURNAL not in record_dict
+                ):
+                    record_dict[Fields.JOURNAL] = record_dict.pop(Fields.BOOKTITLE)
+
+        def field_mapper(record_dict: dict) -> None:
+            record_dict[Fields.TITLE] = record_dict.pop("Title", "")
+            record_dict[Fields.AUTHOR] = record_dict.pop("Authors", "")
+            record_dict[Fields.ABSTRACT] = record_dict.pop("Abstract", "")
+            record_dict[Fields.JOURNAL] = record_dict.pop("Publication", "")
+            record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+
+            record_dict.pop("Category", None)
+            record_dict.pop("Affiliations", None)
+
+            if "issue" in record_dict and Fields.NUMBER not in record_dict:
+                record_dict[Fields.NUMBER] = record_dict.pop("issue")
+                if record_dict[Fields.NUMBER] == "no issue":
+                    del record_dict[Fields.NUMBER]
+
+            if "authors" in record_dict and Fields.AUTHOR not in record_dict:
+                record_dict[Fields.AUTHOR] = record_dict.pop("authors")
+
+            if "publication_year" in record_dict and Fields.YEAR not in record_dict:
+                record_dict[Fields.YEAR] = record_dict.pop("publication_year")
+
+            # Note: this is a simple heuristic:
+            if (
+                "journal/book" in record_dict
+                and Fields.JOURNAL not in record_dict
+                and Fields.DOI in record_dict
+            ):
+                record_dict[Fields.JOURNAL] = record_dict.pop("journal/book")
+
+            if "author" in record_dict and ";" in record_dict["author"]:
+                record_dict["author"] = record_dict["author"].replace("; ", " and ")
+
+            self._table_drop_fields(records_dict=records)
+
+            for key in list(record_dict.keys()):
+                value = record_dict[key]
+                record_dict[key] = str(value)
+                if value == "" or pd.isna(value):
+                    del record_dict[key]
+
+        load_operation.ensure_append_only(file=self.search_source.filename)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="ID",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
         )
-        table_entries = excel_loader.load_table_entries()
-        records = excel_loader.convert_to_records(entries=table_entries)
+
         return records
 
     def _load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        md_loader = colrev.ops.load_utils_md.MarkdownLoader(
-            load_operation=load_operation, source=self.search_source
+        load_operation.ensure_append_only(file=self.search_source.filename)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=load_operation.review_manager.logger,
         )
-        records = md_loader.load()
         return records
 
     def _load_enl(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        enl_mapping = {
-            ENTRYTYPES.ARTICLE: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-            ENTRYTYPES.MISC: {
-                "T": Fields.TITLE,
-                "A": Fields.AUTHOR,
-                "D": Fields.YEAR,
-                "B": Fields.JOURNAL,
-                "V": Fields.VOLUME,
-                "N": Fields.NUMBER,
-                "P": Fields.PAGES,
-                "X": Fields.ABSTRACT,
-                "U": Fields.URL,
-                "8": "date",
-                "0": "type",
-            },
-        }
-
-        entrytype_map = {
-            "Journal Article": ENTRYTYPES.ARTICLE,
-            "Inproceedings": ENTRYTYPES.MISC,
-        }
-
-        list_fields = {"A": " and "}
-        enl_loader = colrev.ops.load_utils_enl.ENLLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields=list_fields,
-        )
-        records = enl_loader.load_enl_entries()
-
-        for record_dict in records.values():
+        def entrytype_setter(record_dict: dict) -> None:
             if "0" not in record_dict:
                 keys_to_check = ["V", "N"]
                 if any(k in record_dict for k in keys_to_check):
-                    record_dict["0"] = "Journal Article"
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
                 else:
-                    record_dict["0"] = "Inproceedings"
-            enl_loader.apply_entrytype_mapping(
-                record_dict=record_dict, entrytype_map=entrytype_map
-            )
-            enl_loader.map_keys(record_dict=record_dict, key_map=enl_mapping)
-            record_dict[Fields.ID] = record_dict[Fields.URL].replace(
-                "https://aisel.aisnet.org/", ""
-            )
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                if record_dict["0"] == "Journal Article":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+                elif record_dict["0"] == "Inproceedings":
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+                else:
+                    record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "T": Fields.TITLE,
+                    "A": Fields.AUTHOR,
+                    "D": Fields.YEAR,
+                    "B": Fields.JOURNAL,
+                    "V": Fields.VOLUME,
+                    "N": Fields.NUMBER,
+                    "P": Fields.PAGES,
+                    "X": Fields.ABSTRACT,
+                    "U": Fields.URL,
+                    "8": "date",
+                    "0": "type",
+                },
+                ENTRYTYPES.INPROCEEDINGS: {
+                    "T": Fields.TITLE,
+                    "A": Fields.AUTHOR,
+                    "D": Fields.YEAR,
+                    "B": Fields.JOURNAL,
+                    "V": Fields.VOLUME,
+                    "N": Fields.NUMBER,
+                    "P": Fields.PAGES,
+                    "X": Fields.ABSTRACT,
+                    "U": Fields.URL,
+                    "8": "date",
+                    "0": "type",
+                },
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("type", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="INCREMENTAL",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
 
         return records
 
@@ -397,9 +524,9 @@ class UnknownSearchSource(JsonSchemaMixin):
         __load_methods = {
             ".ris": self._load_ris,
             ".bib": self._load_bib,
-            ".csv": self._load_csv,
-            ".xls": self._load_xlsx,
-            ".xlsx": self._load_xlsx,
+            ".csv": self._load_table,
+            ".xls": self._load_table,
+            ".xlsx": self._load_table,
             ".md": self._load_md,
             ".enl": self._load_enl,
         }
@@ -407,12 +534,19 @@ class UnknownSearchSource(JsonSchemaMixin):
         if self.search_source.filename.suffix not in __load_methods:
             raise NotImplementedError
 
-        return __load_methods[self.search_source.filename.suffix](
+        records = __load_methods[self.search_source.filename.suffix](
             load_operation=load_operation
         )
+        for record_id in records:
+            records[record_id] = {
+                k: v
+                for k, v in records[record_id].items()
+                if k not in FieldSet.PROVENANCE_KEYS + [Fields.SCREENING_CRITERIA]
+            }
+        return records
 
     def _heuristically_fix_entrytypes(
-        self, *, record: colrev.record.PrepRecord
+        self, *, record: colrev.record.record_prep.PrepRecord
     ) -> None:
         """Prepare the record by heuristically correcting erroneous ENTRYTYPEs"""
 
@@ -494,7 +628,9 @@ class UnknownSearchSource(JsonSchemaMixin):
                 '("thesis" in abstract)'
             )
 
-    def _format_inproceedings(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_inproceedings(
+        self, *, record: colrev.record.record_prep.PrepRecord
+    ) -> None:
         if (
             record.data.get(Fields.BOOKTITLE, FieldValues.UNKNOWN)
             == FieldValues.UNKNOWN
@@ -525,7 +661,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
-    def _format_article(self, record: colrev.record.PrepRecord) -> None:
+    def _format_article(self, record: colrev.record.record_prep.PrepRecord) -> None:
         if (
             record.data.get(Fields.JOURNAL, FieldValues.UNKNOWN) != FieldValues.UNKNOWN
             and len(record.data[Fields.JOURNAL]) > 10
@@ -542,7 +678,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 keep_source_if_equal=True,
             )
 
-    def _format_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _format_fields(self, *, record: colrev.record.record_prep.PrepRecord) -> None:
         """Format fields"""
 
         if record.data.get(Fields.ENTRYTYPE, "") == "inproceedings":
@@ -557,7 +693,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             ):
                 record.update_field(
                     key=Fields.AUTHOR,
-                    value=colrev.record.PrepRecord.format_author_field(
+                    value=colrev.record.record_prep.PrepRecord.format_author_field(
                         input_string=record.data[Fields.AUTHOR]
                     ),
                     source="unkown_source_prep",
@@ -605,7 +741,9 @@ class UnknownSearchSource(JsonSchemaMixin):
             except colrev_exceptions.InvalidLanguageCodeException:
                 del record.data[Fields.LANGUAGE]
 
-    def _remove_redundant_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _remove_redundant_fields(
+        self, *, record: colrev.record.record_prep.PrepRecord
+    ) -> None:
         if (
             record.data[Fields.ENTRYTYPE] == "article"
             and Fields.JOURNAL in record.data
@@ -633,7 +771,9 @@ class UnknownSearchSource(JsonSchemaMixin):
             if similarity_journal_booktitle / 100 > 0.9:
                 record.remove_field(key=Fields.JOURNAL)
 
-    def _impute_missing_fields(self, *, record: colrev.record.PrepRecord) -> None:
+    def _impute_missing_fields(
+        self, *, record: colrev.record.record_prep.PrepRecord
+    ) -> None:
         if "date" in record.data and Fields.YEAR not in record.data:
             year = re.search(r"\d{4}", record.data["date"])
             if year:
@@ -644,23 +784,20 @@ class UnknownSearchSource(JsonSchemaMixin):
                     keep_source_if_equal=True,
                 )
 
-    def _unify_special_characters(self, *, record: colrev.record.PrepRecord) -> None:
+    def _unify_special_characters(
+        self, *, record: colrev.record.record_prep.PrepRecord
+    ) -> None:
         # Remove html entities
         for field in list(record.data.keys()):
-            # Skip dois (and their provenance), which may contain html entities
-            if field in [
-                Fields.MD_PROV,
-                Fields.D_PROV,
-                Fields.DOI,
-            ]:
-                continue
-            if field in [Fields.AUTHOR, Fields.TITLE, Fields.JOURNAL]:
+            if field in [Fields.TITLE, Fields.AUTHOR, Fields.JOURNAL, Fields.BOOKTITLE]:
                 record.data[field] = re.sub(r"\s+", " ", record.data[field])
                 record.data[field] = re.sub(self.HTML_CLEANER, "", record.data[field])
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for unknown sources"""
 
         if not record.has_quality_defects() or record.masterdata_is_curated():

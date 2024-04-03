@@ -21,6 +21,7 @@ colrev.ops.status.Status
       ~Status.decorate
       ~Status.get_analytics
       ~Status.get_review_status_report
+      ~Status.notify
 
 
 
@@ -30,5 +31,4 @@ colrev.ops.status.Status
 
    .. autosummary::
 
-      ~Status.force_mode
       ~Status.type

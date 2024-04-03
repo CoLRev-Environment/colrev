@@ -3,30 +3,31 @@
 import platform
 from pathlib import Path
 
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
     """Print the sample on cli"""
 
-    colrev.operation.CheckOperation(review_manager=review_manager)
+    colrev.process.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
     sample = [
         r
         for r in records.values()
         if r[Fields.STATUS]
         in [
-            colrev.record.RecordState.rev_synthesized,
-            colrev.record.RecordState.rev_included,
+            RecordState.rev_synthesized,
+            RecordState.rev_included,
         ]
     ]
     if 0 == len(sample):
         print("No records included in sample (yet)")
 
     for sample_r in sample:
-        colrev.record.Record(data=sample_r).print_citation_format()
+        colrev.record.record.Record(sample_r).print_citation_format()
 
 
 def print_venv_notes() -> None:

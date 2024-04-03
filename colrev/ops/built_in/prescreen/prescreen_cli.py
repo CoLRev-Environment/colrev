@@ -2,14 +2,16 @@
 """Prescreen based on CLI"""
 from __future__ import annotations
 
+import textwrap
 from dataclasses import dataclass
 
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 
 
@@ -35,6 +37,39 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.prescreen_operation = prescreen_operation
         self.review_manager = prescreen_operation.review_manager
+
+    def _print_prescreen_record(self, record: colrev.record.record.Record) -> None:
+        """Print the record for prescreen operations"""
+
+        ret_str = f"  ID: {record.data['ID']} ({record.data[Fields.ENTRYTYPE]})"
+        ret_str += (
+            f"\n  {Colors.GREEN}{record.data.get(Fields.TITLE, 'no title')}{Colors.END}"
+            f"\n  {record.data.get(Fields.AUTHOR, 'no-author')}"
+        )
+        if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            ret_str += (
+                f"\n  {record.data.get(Fields.JOURNAL, 'no-journal')} "
+                f"({record.data.get(Fields.YEAR, 'no-year')}) "
+                f"{record.data.get(Fields.VOLUME, 'no-volume')}"
+                f"({record.data.get(Fields.NUMBER, '')})"
+            )
+        elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            ret_str += f"\n  {record.data.get(Fields.BOOKTITLE, 'no-booktitle')}"
+        if Fields.ABSTRACT in record.data:
+            lines = textwrap.wrap(
+                record.data[Fields.ABSTRACT], 100, break_long_words=False
+            )
+            if lines:
+                ret_str += f"\n  Abstract: {lines.pop(0)}\n"
+                ret_str += "\n  ".join(lines) + ""
+
+        if Fields.URL in record.data:
+            ret_str += f"\n  url: {record.data[Fields.URL]}"
+
+        if Fields.FILE in record.data:
+            ret_str += f"\n  file: {record.data[Fields.FILE]}"
+
+        print(ret_str)
 
     def _fun_cli_prescreen(
         self,
@@ -70,13 +105,13 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
                 if record_dict[Fields.ID] not in split:
                     continue
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.record.Record(record_dict)
             ret, inclusion_decision_str = "NA", "NA"
             i += 1
 
             print("\n\n")
             print(f"Record {i} (of {stat_len})\n")
-            record.print_prescreen_record()
+            self._print_prescreen_record(record)
 
             while ret not in ["y", "n", "s", "q"]:
                 ret = input(
@@ -136,7 +171,7 @@ class CoLRevCLIPrescreen(JsonSchemaMixin):
         #     if input("Create commit (y/n)?") != "y":
         #         return records
 
-        self.review_manager.create_commit(
+        self.review_manager.dataset.create_commit(
             msg="Pre-screening (manual)", manual_author=True
         )
         return records

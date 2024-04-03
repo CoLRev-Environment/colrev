@@ -8,16 +8,18 @@ from pathlib import Path
 import colrev.constants as c
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
+from colrev.constants import RecordState
+from colrev.constants import SearchType
+from colrev.writer.write_utils import write_file
 
 
-# pylint: disable=too-few-public-methods
-
-
-class Repare(colrev.operation.Operation):
+class Repare(colrev.process.operation.Operation):
     """Repare a CoLRev project"""
 
     def __init__(
@@ -27,7 +29,7 @@ class Repare(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
         # fix file no longer available
@@ -37,7 +39,7 @@ class Repare(colrev.operation.Operation):
         )
 
     def _fix_broken_symlink_based_on_local_index(
-        self, *, record: colrev.record.Record, full_path: Path
+        self, *, record: colrev.record.record.Record, full_path: Path
     ) -> None:
         """Fix broken symlinks based on local_index"""
 
@@ -46,20 +48,18 @@ class Repare(colrev.operation.Operation):
             full_path.unlink()
 
         try:
-            retrieved_record = self.local_index.retrieve(
-                record_dict=record.data, include_file=True
-            )
+            retrieved_record = self.local_index.retrieve(record.data, include_file=True)
 
-            if Fields.FILE in retrieved_record:
+            if Fields.FILE in retrieved_record.data:
                 record.update_field(
                     key=Fields.FILE,
-                    value=str(retrieved_record[Fields.FILE]),
+                    value=str(retrieved_record.data[Fields.FILE]),
                     source="local_index",
                     append_edit=False,
                 )
                 self.pdf_get_operation.import_pdf(record=record)
-                if Fields.FULLTEXT in retrieved_record:
-                    del retrieved_record[Fields.FULLTEXT]
+                if Fields.FULLTEXT in retrieved_record.data:
+                    del retrieved_record.data[Fields.FULLTEXT]
                 self.review_manager.logger.info(
                     f" fix broken symlink: {record.data['ID']}"
                 )
@@ -74,6 +74,7 @@ class Repare(colrev.operation.Operation):
             )
 
     def _fix_files(self, *, records: dict) -> None:
+        # pylint: disable=too-many-branches
         for record_dict in records.values():
             if Fields.FILE not in record_dict:
                 continue
@@ -111,7 +112,7 @@ class Repare(colrev.operation.Operation):
             full_path = self.review_manager.path / Path(record_dict[Fields.FILE])
 
             if not full_path.is_file():
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 self._fix_broken_symlink_based_on_local_index(
                     record=record, full_path=full_path
                 )
@@ -121,16 +122,42 @@ class Repare(colrev.operation.Operation):
 
             record_dict["colrev_status_backup"] = record_dict[Fields.STATUS]
             del record_dict[Fields.FILE]
-            record = colrev.record.Record(data=record_dict)
-            record.set_status(
-                target_state=colrev.record.RecordState.rev_prescreen_included
+            record = colrev.record.record.Record(record_dict)
+            record.set_status(RecordState.rev_prescreen_included)
+
+        file_search_sources = [
+            x
+            for x in self.review_manager.settings.sources
+            if x.search_type == SearchType.FILES
+        ]
+        for search_source in file_search_sources:
+            files_dir_feed = search_source.get_api_feed(
+                review_manager=self.review_manager,
+                source_identifier="UNKNOWN",
+                update_only=True,
             )
+            prefix = search_source.get_origin_prefix()
+            for record_dict in records.values():
+                if Fields.FILE not in record_dict:
+                    continue
+                for origin in record_dict[Fields.ORIGIN]:
+                    if origin.startswith(prefix):
+                        feed_id = origin[len(prefix) + 1 :]
+                        feed_record = files_dir_feed.feed_records[feed_id]
+                        if (
+                            feed_record.get(Fields.FILE, "a")
+                            != record_dict[Fields.FILE]
+                        ):
+                            feed_record[Fields.FILE] = record_dict[Fields.FILE]
+                            files_dir_feed.feed_records[feed_id] = feed_record
+
+            files_dir_feed.save()
 
     def _get_source_feeds(self) -> dict:
         source_feeds = {}
         for source in self.review_manager.settings.sources:
             source_feeds[str(source.filename).replace("data/search/", "")] = (
-                source.get_feed(
+                source.get_api_feed(
                     review_manager=self.review_manager,
                     source_identifier="NA",
                     update_only=False,
@@ -139,7 +166,7 @@ class Repare(colrev.operation.Operation):
         return source_feeds
 
     # pylint: disable=too-many-branches
-    def _remove_fields(self, *, record: colrev.record.Record) -> None:
+    def _remove_fields(self, *, record: colrev.record.record.Record) -> None:
         if "pdf_hash" in record.data:
             record.data[Fields.PDF_ID] = record.data["pdf_hash"]
             del record.data["pdf_hash"]
@@ -174,7 +201,7 @@ class Repare(colrev.operation.Operation):
                 del record.data[Fields.MD_PROV][FieldValues.CURATED]
 
     def _set_data_provenance_field(
-        self, *, record: colrev.record.Record, key: str, source_feeds: dict
+        self, *, record: colrev.record.record.Record, key: str, source_feeds: dict
     ) -> None:
         if key in record.data[Fields.D_PROV]:
             if not any(
@@ -212,7 +239,12 @@ class Repare(colrev.operation.Operation):
             prov_details["source"] = record.data[Fields.ORIGIN][0]
 
     def _add_missing_masterdata_provenance(
-        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+        self,
+        *,
+        record: colrev.record.record.Record,
+        key: str,
+        value: str,
+        source_feeds: dict,
     ) -> None:
         options = {}
         for origin in record.data[Fields.ORIGIN]:
@@ -253,7 +285,12 @@ class Repare(colrev.operation.Operation):
         record.add_masterdata_provenance(key=key, source=source_value, note="")
 
     def _set_non_curated_masterdata_provenance_field(
-        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+        self,
+        *,
+        record: colrev.record.record.Record,
+        key: str,
+        value: str,
+        source_feeds: dict,
     ) -> None:
         if key in record.data[Fields.MD_PROV]:
             if not any(
@@ -273,7 +310,12 @@ class Repare(colrev.operation.Operation):
             prov_details["source"] = record.data[Fields.ORIGIN][0]
 
     def _set_provenance_field(
-        self, *, record: colrev.record.Record, key: str, value: str, source_feeds: dict
+        self,
+        *,
+        record: colrev.record.record.Record,
+        key: str,
+        value: str,
+        source_feeds: dict,
     ) -> None:
         if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
             if FieldValues.CURATED in record.data[Fields.MD_PROV]:
@@ -288,13 +330,9 @@ class Repare(colrev.operation.Operation):
             )
 
     def _set_provenance(
-        self, *, record: colrev.record.Record, source_feeds: dict
+        self, *, record: colrev.record.record.Record, source_feeds: dict
     ) -> None:
-        if Fields.D_PROV not in record.data:
-            record.data[Fields.D_PROV] = {}
-        if Fields.MD_PROV not in record.data:
-            record.data[Fields.MD_PROV] = {}
-
+        record.align_provenance()
         for key, value in record.data.items():
             if key in [
                 Fields.STATUS,
@@ -316,7 +354,7 @@ class Repare(colrev.operation.Operation):
     def _fix_provenance(self, *, records: dict) -> None:
         source_feeds = self._get_source_feeds()
         for record_dict in records.values():
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.record.Record(record_dict)
             self._remove_fields(record=record)
             self._set_provenance(record=record, source_feeds=source_feeds)
 
@@ -325,17 +363,20 @@ class Repare(colrev.operation.Operation):
         for search_source in self.review_manager.settings.sources:
             if search_source.endpoint != "colrev.local_index":
                 continue
-            curation_recs = self.review_manager.dataset.load_records_dict(
-                file_path=search_source.filename
+
+            curation_recs = colrev.loader.load_utils.load(
+                filename=search_source.filename,
+                logger=self.review_manager.logger,
             )
+
             for record_id in list(curation_recs.keys()):
-                if "curation_ID" not in curation_recs[record_id]:
+                if Fields.CURATION_ID not in curation_recs[record_id]:
                     try:
-                        retrieved_record_dict = local_index.retrieve(
-                            record_dict=curation_recs[record_id], include_file=False
+                        retrieved_record = local_index.retrieve(
+                            curation_recs[record_id], include_file=False
                         )
-                        del retrieved_record_dict[Fields.STATUS]
-                        curation_recs[record_id] = retrieved_record_dict
+                        del retrieved_record.data[Fields.STATUS]
+                        curation_recs[record_id] = retrieved_record.data
                     except colrev_exceptions.RecordNotInIndexException:
                         main_record_origin = (
                             search_source.get_origin_prefix() + "/" + record_id
@@ -356,15 +397,13 @@ class Repare(colrev.operation.Operation):
                             )
                         del curation_recs[record_id]
 
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=curation_recs, save_path=search_source.filename
-            )
-            self.review_manager.dataset.add_changes(path=search_source.filename)
+            write_file(records_dict=curation_recs, filename=search_source.filename)
+            self.review_manager.dataset.add_changes(search_source.filename)
 
     def _update_field_names(self, *, records: dict) -> None:
         for record_dict in records.values():
             # TBD: which parts are in upgrade/repare and which parts are in prepare??
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.record.Record(record_dict)
             if Fields.FULLTEXT in record_dict.get("link", ""):
                 record.rename_field(key="link", new_key=Fields.FULLTEXT)
             if (
@@ -383,7 +422,7 @@ class Repare(colrev.operation.Operation):
             ) and record.data.get("link", "").endswith("Accept=text/xml"):
                 record.remove_field(key="link")
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Repare a CoLRev project (main entrypoint)"""
 
@@ -399,16 +438,19 @@ class Repare(colrev.operation.Operation):
 
             separated_records = {}  # type: ignore
             with open(
-                self.review_manager.dataset.records_file, encoding="utf-8"
+                self.review_manager.get_path(Filepaths.RECORDS_FILE), encoding="utf-8"
             ) as file:
                 record_str = ""
                 line = file.readline()
 
                 while line:
                     if line == "\n":
-                        records = self.review_manager.dataset.load_records_dict(
-                            load_str=record_str
+                        records = colrev.loader.load_utils.loads(
+                            load_string=record_str,
+                            implementation="bib",
+                            logger=self.review_manager.logger,
                         )
+
                         if len(records) != 1:
                             print(record_str)
                         else:
@@ -416,9 +458,9 @@ class Repare(colrev.operation.Operation):
                         record_str = ""
                     record_str += line
                     line = file.readline()
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=separated_records, save_path=Path("extracted.bib")
-            )
+
+            write_file(records_dict=separated_records, filename=Path("extracted.bib"))
+
             try:
                 records = self.review_manager.dataset.load_records_dict()
             except AttributeError:
@@ -429,11 +471,11 @@ class Repare(colrev.operation.Operation):
         # removing specific fields
         # for record_dict in records.values():
         #     if "colrev_status_backup" in record_dict:
-        #         colrev.record.Record(data=record_dict).remove_field(
+        #         colrev.record.record.Record(record_dict).remove_field(
         #             key="colrev_status_backup"
         #         )
         #     if "colrev_local_index" in record_dict:
-        #         colrev.record.Record(data=record_dict).remove_field(
+        #         colrev.record.record.Record(record_dict).remove_field(
         #             key="colrev_local_index"
         #         )
 
@@ -443,4 +485,4 @@ class Repare(colrev.operation.Operation):
 
         self._fix_files(records=records)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)

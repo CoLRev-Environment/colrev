@@ -6,14 +6,14 @@ import typing
 from pathlib import Path
 
 import pybtex.errors
-from pybtex.database.input import bibtex
 
 import colrev.constants as c
 import colrev.dataset
 import colrev.env.local_index
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.writer.write_utils import write_file
 
 
 class Sync:
@@ -22,7 +22,7 @@ class Sync:
     cited_papers: list
 
     def __init__(self) -> None:
-        self.records_to_import: typing.List[colrev.record.Record] = []
+        self.records_to_import: typing.List[colrev.record.record.Record] = []
         self.non_unique_for_import: typing.List[typing.Dict] = []
 
         self.logger = self._setup_logger(level=logging.DEBUG)
@@ -134,11 +134,11 @@ class Sync:
         self.logger.info("References in bib: %s", len(ids_in_bib))
 
         if src.suffix == ".bib":
-            parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(src))
-            refs_in_src = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
+            refs_in_src = colrev.loader.load_utils.load(
+                filename=src,
+                logger=self.logger,
             )
+
         else:
             print("Format not supported")
             return
@@ -150,7 +150,7 @@ class Sync:
                 print(f"{citation_key} not in {src}")
                 continue
             self.records_to_import.append(
-                colrev.record.Record(data=refs_in_src[citation_key])
+                colrev.record.record.Record(refs_in_src[citation_key])
             )
 
     def get_cited_papers(self) -> None:
@@ -170,9 +170,7 @@ class Sync:
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            returned_records = local_index.search(
-                query=f"citation_key='{citation_key}'"
-            )
+            returned_records = local_index.search(f"citation_key='{citation_key}'")
 
             if 0 == len(returned_records):
                 self.logger.info("Not found: %s", citation_key)
@@ -192,10 +190,10 @@ class Sync:
         pybtex.errors.set_strict_mode(False)
 
         if Path("references.bib").is_file():
-            parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(Path("references.bib")))
-            records = colrev.dataset.Dataset.parse_records_dict(
-                records_dict=bib_data.entries
+
+            records = colrev.loader.load_utils.load(
+                filename=Path("references.bib"),
+                logger=self.logger,
             )
 
         else:
@@ -203,77 +201,12 @@ class Sync:
 
         return list(records.keys())
 
-    def add_to_records_to_import(self, *, record: colrev.record.Record) -> None:
+    def add_to_records_to_import(self, *, record: colrev.record.record.Record) -> None:
         """Add a record to the records_to_import list"""
         if record.data[Fields.ID] not in [
             r.data[Fields.ID] for r in self.records_to_import
         ]:
             self.records_to_import.append(record)
-
-    def _save_to_bib(self, *, records: dict, save_path: Path) -> None:
-        # pylint: disable=duplicate-code
-
-        def parse_bibtex_str(*, recs_dict_in: dict) -> str:
-            def format_field(field: str, value: str) -> str:
-                padd = " " * max(0, 28 - len(field))
-                return f",\n   {field} {padd} = {{{value}}}"
-
-            bibtex_str = ""
-
-            first = True
-            for record_id, record_dict in recs_dict_in.items():
-                # Note : temporarily
-                # (to prevent pandoc fails, which does not support "." in fiel names)
-                record_dict = {k: v for k, v in record_dict.items() if "." not in k}
-
-                if not first:
-                    bibtex_str += "\n"
-                first = False
-
-                bibtex_str += f"@{record_dict['ENTRYTYPE']}{{{record_id}"
-
-                field_order = [
-                    Fields.DOI,
-                    Fields.DBLP_KEY,
-                    Fields.SEMANTIC_SCHOLAR_ID,
-                    Fields.WEB_OF_SCIENCE_ID,
-                    Fields.AUTHOR,
-                    Fields.BOOKTITLE,
-                    Fields.JOURNAL,
-                    Fields.TITLE,
-                    Fields.YEAR,
-                    Fields.VOLUME,
-                    Fields.NUMBER,
-                    Fields.PAGES,
-                    Fields.EDITOR,
-                ]
-
-                for ordered_field in field_order:
-                    if ordered_field in record_dict:
-                        if record_dict[ordered_field] == "":
-                            continue
-                        if isinstance(record_dict[ordered_field], (list, dict)):
-                            continue
-                        bibtex_str += format_field(
-                            ordered_field, record_dict[ordered_field]
-                        )
-
-                for key, value in record_dict.items():
-                    if key in field_order + [Fields.ID, Fields.ENTRYTYPE]:
-                        continue
-                    if isinstance(key, (list, dict)):
-                        continue
-
-                    bibtex_str += format_field(key, value)
-
-                bibtex_str += ",\n}\n"
-
-            return bibtex_str
-
-        bibtex_str = parse_bibtex_str(recs_dict_in=records)
-
-        with open(save_path, "w", encoding="utf-8") as out:
-            out.write(bibtex_str)
 
     def add_paper(self, add: str) -> None:
         """Add a paper to the bibliography"""
@@ -283,9 +216,9 @@ class Sync:
         def parse_record_str(add: str) -> list:
             # DOI: from crossref
             if add.startswith("10."):
-                returned_records = local_index.search(query=f"doi='{add}'")
+                returned_records = local_index.search(f"doi='{add}'")
             else:
-                returned_records = local_index.search(query=f"title LIKE '{add}'")
+                returned_records = local_index.search(f"title LIKE '{add}'")
 
             return returned_records
 
@@ -333,23 +266,25 @@ class Sync:
         if not references_file.is_file():
             records = []
         else:
-            parser = bibtex.Parser()
-            bib_data = parser.parse_file(str(references_file))
-            records = list(
-                colrev.dataset.Dataset.parse_records_dict(
-                    records_dict=bib_data.entries
-                ).values()
+
+            records_dict = colrev.loader.load_utils.load(
+                filename=references_file,
+                logger=self.logger,
             )
+            records = list(records_dict.values())
 
         available_ids = [r[Fields.ID] for r in records]
         added = []
         for record_to_import in self.records_to_import:
             if record_to_import.data[Fields.ID] not in available_ids:
-                record_to_import = colrev.record.Record(
+                record_to_import = colrev.record.record.Record(
                     data={
                         k: v
                         for k, v in record_to_import.data.items()
-                        if k not in c.FieldSet.PROVENANCE_KEYS
+                        if k
+                        not in c.FieldSet.PROVENANCE_KEYS
+                        + [Fields.SCREENING_CRITERIA, Fields.PRESCREEN_EXCLUSION]
+                        and "." not in k
                     }
                 )
                 records.append(record_to_import.get_data())
@@ -373,4 +308,4 @@ class Sync:
 
         records_dict = {r[Fields.ID]: r for r in records}
 
-        self._save_to_bib(records=records_dict, save_path=references_file)
+        write_file(records_dict=records_dict, filename=references_file)

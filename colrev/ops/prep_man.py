@@ -10,12 +10,16 @@ from tqdm import tqdm
 
 import colrev.env.language_service
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
-import colrev.record
+import colrev.process.operation
+import colrev.record.record_prep
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import RecordState
 
 
-class PrepMan(colrev.operation.Operation):
+class PrepMan(colrev.process.operation.Operation):
     """Prepare records manually (metadata)"""
 
     def __init__(
@@ -26,11 +30,14 @@ class PrepMan(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.prep_man,
+            operations_type=OperationsType.prep_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
         self.verbose = True
+        self.lang_prep_csv_path = self.review_manager.get_path(
+            Filepaths.PREP_DIR
+        ) / Path("missing_lang_recs_df.csv")
 
     def _get_crosstab_df(self) -> pd.DataFrame:
         # pylint: disable=too-many-branches
@@ -43,7 +50,7 @@ class PrepMan(colrev.operation.Operation):
         overall_types: dict = {Fields.ENTRYTYPE: {}}
         prep_man_hints, origins, crosstab = [], [], []
         for record_dict in records.values():
-            if colrev.record.RecordState.md_imported != record_dict[Fields.STATUS]:
+            if RecordState.md_imported != record_dict[Fields.STATUS]:
                 if record_dict[Fields.ENTRYTYPE] in overall_types[Fields.ENTRYTYPE]:
                     overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = (
                         overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]]
@@ -52,10 +59,7 @@ class PrepMan(colrev.operation.Operation):
                 else:
                     overall_types[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
-            if (
-                colrev.record.RecordState.md_needs_manual_preparation
-                != record_dict[Fields.STATUS]
-            ):
+            if RecordState.md_needs_manual_preparation != record_dict[Fields.STATUS]:
                 continue
 
             if record_dict[Fields.ENTRYTYPE] in stats[Fields.ENTRYTYPE]:
@@ -66,7 +70,7 @@ class PrepMan(colrev.operation.Operation):
                 stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
             if Fields.MD_PROV in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record_prep.PrepRecord(record_dict)
                 prov_d = record.data[Fields.MD_PROV]
                 hints = []
                 for key, value in prov_d.items():
@@ -94,88 +98,89 @@ class PrepMan(colrev.operation.Operation):
 
         return pd.DataFrame(crosstab, columns=[Fields.ORIGIN, "hint"])
 
+    def _export_prep_man_langs(self, records: dict) -> None:
+        language_service = colrev.env.language_service.LanguageService()
+
+        missing_lang_recs = []
+        self.review_manager.logger.info(
+            "Calculate most likely languages for records without language field"
+        )
+        for record in tqdm(records.values()):
+            if Fields.TITLE not in record:
+                continue
+            if Fields.LANGUAGE not in record:
+                confidence_values = language_service.compute_language_confidence_values(
+                    text=record[Fields.TITLE]
+                )
+                predicted_language, conf = confidence_values.pop(0)
+
+                lang_rec = {
+                    Fields.ID: record[Fields.ID],
+                    Fields.TITLE: record[Fields.TITLE],
+                    "most_likely_language": predicted_language,
+                    "confidence": conf,
+                }
+                missing_lang_recs.append(lang_rec)
+
+        missing_lang_recs_df = pd.DataFrame(missing_lang_recs)
+        missing_lang_recs_df.to_csv(
+            self.lang_prep_csv_path, index=False, quoting=csv.QUOTE_ALL
+        )
+        self.review_manager.logger.info(f"Exported table to {self.lang_prep_csv_path}")
+        self.review_manager.logger.info(
+            "Update the language column and rerun colrev prep-man -l"
+        )
+
+    def _import_prep_man_langs(self, records: dict) -> None:
+        self.review_manager.logger.info(
+            f"Import language fields from {self.lang_prep_csv_path}"
+        )
+        languages_df = pd.read_csv(self.lang_prep_csv_path)
+        language_records = languages_df.to_dict("records")
+        for language_record in language_records:
+            if language_record["most_likely_language"] == "":
+                continue
+            if language_record[Fields.ID] not in records:
+                # warn
+                continue
+            record_dict = records[language_record[Fields.ID]]
+            record = colrev.record.record_prep.PrepRecord(record_dict)
+            record.update_field(
+                key=Fields.LANGUAGE,
+                value=language_record["most_likely_language"],
+                source="LanguageDetector/Manual",
+                note="",
+            )
+
+            if "language of title not in [eng]" == record.data.get(
+                Fields.PRESCREEN_EXCLUSION, ""
+            ):
+                record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
+                record.remove_masterdata_provenance_note(
+                    key=Fields.TITLE, note="language-not-found"
+                )
+                if (
+                    record.data[Fields.STATUS]
+                    == RecordState.md_needs_manual_preparation
+                ):
+                    # by resetting to md_imported,
+                    # the prescreen-exclusion based on languages will be reapplied.
+                    record.set_status(RecordState.md_imported)
+
+        self.review_manager.dataset.save_records_dict(records)
+
     def prep_man_langs(self) -> None:
         """Add missing language fields based on spreadsheets"""
 
-        lang_prep_csv_path = self.review_manager.prep_dir / Path(
-            "missing_lang_recs_df.csv"
-        )
-        lang_prep_csv_path.parent.mkdir(exist_ok=True, parents=True)
+        self.lang_prep_csv_path.parent.mkdir(exist_ok=True, parents=True)
 
         records = self.review_manager.dataset.load_records_dict()
 
-        if not lang_prep_csv_path.is_file():
-            language_service = colrev.env.language_service.LanguageService()
-
-            missing_lang_recs = []
-            self.review_manager.logger.info(
-                "Calculate most likely languages for records without language field"
-            )
-            for record in tqdm(records.values()):
-                if Fields.TITLE not in record:
-                    continue
-                if Fields.LANGUAGE not in record:
-                    confidence_values = (
-                        language_service.compute_language_confidence_values(
-                            text=record[Fields.TITLE]
-                        )
-                    )
-                    predicted_language, conf = confidence_values.pop(0)
-
-                    lang_rec = {
-                        Fields.ID: record[Fields.ID],
-                        Fields.TITLE: record[Fields.TITLE],
-                        "most_likely_language": predicted_language,
-                        "confidence": conf,
-                    }
-                    missing_lang_recs.append(lang_rec)
-
-            missing_lang_recs_df = pd.DataFrame(missing_lang_recs)
-            missing_lang_recs_df.to_csv(
-                lang_prep_csv_path, index=False, quoting=csv.QUOTE_ALL
-            )
-            self.review_manager.logger.info(f"Exported table to {lang_prep_csv_path}")
-            self.review_manager.logger.info(
-                "Update the language column and rerun colrev prep-man -l"
-            )
+        if not self.lang_prep_csv_path.is_file():
+            self._export_prep_man_langs(records)
 
         else:
-            self.review_manager.logger.info(
-                f"Import language fields from {lang_prep_csv_path}"
-            )
-            languages_df = pd.read_csv(lang_prep_csv_path)
-            language_records = languages_df.to_dict("records")
-            for language_record in language_records:
-                if language_record["most_likely_language"] == "":
-                    continue
-                if language_record[Fields.ID] not in records:
-                    # warn
-                    continue
-                record_dict = records[language_record[Fields.ID]]
-                record = colrev.record.Record(data=record_dict)
-                record.update_field(
-                    key=Fields.LANGUAGE,
-                    value=language_record["most_likely_language"],
-                    source="LanguageDetector/Manual",
-                    note="",
-                )
-                if "language of title not in [eng]" == record.data.get(
-                    Fields.PRESCREEN_EXCLUSION, ""
-                ):
-                    record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
-                    if Fields.TITLE in record.data[Fields.MD_PROV]:
-                        record.data[Fields.MD_PROV][Fields.TITLE]["note"] = ""
-                    if (
-                        record.data[Fields.STATUS]
-                        == colrev.record.RecordState.md_needs_manual_preparation
-                    ):
-                        # by resetting to md_imported,
-                        # the prescreen-exclusion based on languages will be reapplied.
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_imported
-                        )
-
-            self.review_manager.dataset.save_records_dict(records=records)
+            self._import_prep_man_langs(records)
 
     def prep_man_stats(self) -> None:
         """Print statistics on prep_man"""
@@ -217,8 +222,7 @@ class PrepMan(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.md_needs_manual_preparation
-                == x[Fields.STATUS]
+                if RecordState.md_needs_manual_preparation == x[Fields.STATUS]
             ]
         )
 
@@ -227,9 +231,7 @@ class PrepMan(colrev.operation.Operation):
         pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 35)
 
         items = self.review_manager.dataset.read_next_record(
-            conditions=[
-                {Fields.STATUS: colrev.record.RecordState.md_needs_manual_preparation}
-            ]
+            conditions=[{Fields.STATUS: RecordState.md_needs_manual_preparation}]
         )
 
         md_prep_man_data = {
@@ -246,25 +248,28 @@ class PrepMan(colrev.operation.Operation):
     def set_data(self, *, record_dict: dict) -> None:
         """Set data in the prep_man operation"""
 
-        record = colrev.record.PrepRecord(data=record_dict)
+        record = colrev.record.record_prep.PrepRecord(record_dict)
         record.set_masterdata_complete(
             source="prep_man",
             masterdata_repository=self.review_manager.settings.is_curated_repo(),
         )
         record.set_masterdata_consistent()
         # record.set_fields_complete()
-        record.set_status(target_state=colrev.record.RecordState.md_prepared)
+        record.set_status(RecordState.md_prepared)
         record_dict = record.get_data()
 
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Manually prepare records (main entrypoint)"""
 
-        if self.review_manager.in_ci_environment():
+        if (
+            self.review_manager.in_ci_environment()
+            and not self.review_manager.in_test_environment()
+        ):
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev prep-man",
                 detailed_trace="prep-man not available in ci environment",
@@ -278,7 +283,7 @@ class PrepMan(colrev.operation.Operation):
             prep_man_package_endpoint
         ) in self.review_manager.settings.prep.prep_man_package_endpoints:
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.prep_man,
+                package_type=PackageEndpointType.prep_man,
                 selected_packages=self.review_manager.settings.prep.prep_man_package_endpoints,
                 operation=self,
             )

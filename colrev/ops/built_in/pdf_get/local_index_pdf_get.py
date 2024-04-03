@@ -11,12 +11,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
-
-
 # pylint: disable=too-few-public-methods
 
 
@@ -43,36 +41,36 @@ class LocalIndexPDFGet(JsonSchemaMixin):
         self.pdf_get_operation = pdf_get_operation
         self.review_manager = pdf_get_operation.review_manager
 
-    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get PDFs from the local-index"""
 
         local_index = self.review_manager.get_local_index()
 
         try:
-            retrieved_record = local_index.retrieve(
-                record_dict=record.data, include_file=True
-            )
+            retrieved_record = local_index.retrieve(record.data, include_file=True)
         except colrev_exceptions.RecordNotInIndexException:
             return record
 
-        if Fields.FILE in retrieved_record:
+        if Fields.FILE in retrieved_record.data:
             record.update_field(
                 key=Fields.FILE,
-                value=str(retrieved_record[Fields.FILE]),
+                value=str(retrieved_record.data[Fields.FILE]),
                 source="local_index",
             )
             self.pdf_get_operation.import_pdf(record=record)
-            if Fields.FULLTEXT in retrieved_record:
+            if Fields.FULLTEXT in retrieved_record.data:
                 try:
                     record.get_tei_filename().write_text(
-                        retrieved_record[Fields.FULLTEXT]
+                        retrieved_record.data[Fields.FULLTEXT]
                     )
                 except FileNotFoundError:
                     pass
-                del retrieved_record[Fields.FULLTEXT]
+                del retrieved_record.data[Fields.FULLTEXT]
             else:
                 tei_ext_path = Path(
-                    retrieved_record[Fields.FILE]
+                    retrieved_record.data[Fields.FILE]
                     .replace("pdfs/", ".tei/")
                     .replace(".pdf", ".tei.xml")
                 )

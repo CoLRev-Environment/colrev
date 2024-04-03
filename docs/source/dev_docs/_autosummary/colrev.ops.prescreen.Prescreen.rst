@@ -27,6 +27,7 @@ colrev.ops.prescreen.Prescreen
       ~Prescreen.include_all_in_prescreen
       ~Prescreen.include_records
       ~Prescreen.main
+      ~Prescreen.notify
       ~Prescreen.prescreen
       ~Prescreen.setup_custom_script
 
@@ -38,5 +39,4 @@ colrev.ops.prescreen.Prescreen
 
    .. autosummary::
 
-      ~Prescreen.force_mode
       ~Prescreen.type

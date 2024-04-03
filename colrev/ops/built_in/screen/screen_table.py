@@ -13,9 +13,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.screen.utils as util_cli_screen
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -50,7 +51,7 @@ class TableScreen(JsonSchemaMixin):
         tbl = []
         for record in records.values():
             if record[Fields.STATUS] not in [
-                colrev.record.RecordState.pdf_prepared,
+                RecordState.pdf_prepared,
             ]:
                 continue
 
@@ -60,15 +61,15 @@ class TableScreen(JsonSchemaMixin):
 
             inclusion_2 = "NA"
 
-            if colrev.record.RecordState.pdf_prepared == record[Fields.STATUS]:
+            if RecordState.pdf_prepared == record[Fields.STATUS]:
                 inclusion_2 = "TODO"
             elif self.export_todos_only:
                 continue
-            if colrev.record.RecordState.rev_excluded == record[Fields.STATUS]:
+            if RecordState.rev_excluded == record[Fields.STATUS]:
                 inclusion_2 = "out"
             if record[Fields.STATUS] in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 inclusion_2 = "in"
 
@@ -171,16 +172,12 @@ class TableScreen(JsonSchemaMixin):
         for screened_record in screened_records:
             if screened_record.get(Fields.ID, "") in records:
                 record_dict = records[screened_record.get(Fields.ID, "")]
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 if "screen_inclusion" in screened_record:
                     if screened_record["screen_inclusion"] == "in":
-                        record.set_status(
-                            target_state=colrev.record.RecordState.rev_included
-                        )
+                        record.set_status(RecordState.rev_included)
                     elif screened_record["screen_inclusion"] == "out":
-                        record.set_status(
-                            target_state=colrev.record.RecordState.rev_excluded
-                        )
+                        record.set_status(RecordState.rev_excluded)
                     else:
                         print(
                             f"Invalid choice: {screened_record['screen_inclusion']} "
@@ -199,15 +196,11 @@ class TableScreen(JsonSchemaMixin):
                 screening_criteria_field = screening_criteria_field.rstrip(";")
                 record.data[Fields.SCREENING_CRITERIA] = screening_criteria_field
                 if "=out" in screening_criteria_field:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_excluded
-                    )
+                    record.set_status(RecordState.rev_excluded)
                 else:
-                    record.set_status(
-                        target_state=colrev.record.RecordState.rev_included
-                    )
+                    record.set_status(RecordState.rev_included)
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
     def run_screen(self, records: dict, split: list) -> dict:
         """Screen records based on screening tables"""
@@ -218,7 +211,9 @@ class TableScreen(JsonSchemaMixin):
         if input("import screen table [y,n]?") == "y":
             self.import_table(records)
 
-        if self.review_manager.dataset.has_changes():
+        if self.review_manager.dataset.has_record_changes():
             if input("create commit [y,n]?") == "y":
-                self.review_manager.create_commit(msg="Screen", manual_author=True)
+                self.review_manager.dataset.create_commit(
+                    msg="Screen", manual_author=True
+                )
         return records

@@ -20,7 +20,9 @@ colrev.ops.distribute.Distribute
       ~Distribute.conclude
       ~Distribute.decorate
       ~Distribute.get_environment_registry
+      ~Distribute.get_next_id
       ~Distribute.main
+      ~Distribute.notify
 
 
 
@@ -30,5 +32,4 @@ colrev.ops.distribute.Distribute
 
    .. autosummary::
 
-      ~Distribute.force_mode
       ~Distribute.type

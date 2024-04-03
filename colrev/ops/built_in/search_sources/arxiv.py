@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -17,11 +16,11 @@ from dacite import from_dict
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
-
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -37,10 +36,10 @@ class ArXivSource:
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.arxiv"
     source_identifier = "arxivid"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     api_search_supported = True
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "arXiv"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -52,7 +51,7 @@ class ArXivSource:
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -74,7 +73,7 @@ class ArXivSource:
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.arxiv",
                     filename=self._arxiv_md_filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters={},
                     comment="",
                 )
@@ -118,7 +117,7 @@ class ArXivSource:
                 add_source = colrev.settings.SearchSource(
                     endpoint="colrev.arxiv",
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters={"query": query},
                     comment="",
                 )
@@ -151,7 +150,7 @@ class ArXivSource:
         )
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the ArXiv API"""
 
@@ -225,18 +224,16 @@ class ArXivSource:
 
     #     return retrieved_record
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata fromArXiv based on similarity with the record provided"""
-
         # https://info.arxiv.org/help/api/user-manual.html#_query_interface
         # id_list
-
         return record
 
     # pylint: disable=too-many-branches
@@ -317,7 +314,7 @@ class ArXivSource:
     def _run_parameter_search(
         self,
         *,
-        arxiv_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        arxiv_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         if rerun:
@@ -325,58 +322,31 @@ class ArXivSource:
                 "Performing a search of the full history (may take time)"
             )
 
-        records = self.review_manager.dataset.load_records_dict()
         try:
             for record_dict in self._get_arxiv_query_return():
-                # Note : discard "empty" records
-                if "" == record_dict.get(Fields.AUTHOR, "") and "" == record_dict.get(
-                    Fields.TITLE, ""
-                ):
-                    self.review_manager.logger.warning(f"Skipped record: {record_dict}")
-                    continue
                 try:
-                    arxiv_feed.set_id(record_dict=record_dict)
+                    # Note : discard "empty" records
+                    if "" == record_dict.get(
+                        Fields.AUTHOR, ""
+                    ) and "" == record_dict.get(Fields.TITLE, ""):
+                        self.review_manager.logger.warning(
+                            f"Skipped record: {record_dict}"
+                        )
+                        continue
+
+                    prep_record = colrev.record.record_prep.PrepRecord(record_dict)
+
+                    added = arxiv_feed.add_update_record(prep_record)
+
+                    # Note : only retrieve/update the latest deposits (unless in rerun mode)
+                    if not added and not rerun:
+                        # problem: some publishers don't necessarily
+                        # deposit papers chronologically
+                        break
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
-                prev_record_dict_version = {}
-                if record_dict[Fields.ID] in arxiv_feed.feed_records:
-                    prev_record_dict_version = deepcopy(
-                        arxiv_feed.feed_records[record_dict[Fields.ID]]
-                    )
-
-                prep_record = colrev.record.PrepRecord(data=record_dict)
-
-                if Fields.D_PROV in prep_record.data:
-                    del prep_record.data[Fields.D_PROV]
-
-                added = arxiv_feed.add_record(record=prep_record)
-
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + prep_record.data["arxivid"]
-                    )
-                    arxiv_feed.nr_added += 1
-                else:
-                    changed = self.operation.update_existing_record(  # type: ignore
-                        records=records,
-                        record_dict=prep_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-                    if changed:
-                        arxiv_feed.nr_changed += 1
-
-                # Note : only retrieve/update the latest deposits (unless in rerun mode)
-                if not added and not rerun:
-                    # problem: some publishers don't necessarily
-                    # deposit papers chronologically
-                    break
-
-            arxiv_feed.print_post_run_search_infos(records=records)
-            arxiv_feed.save_feed_file()
-            self.review_manager.dataset.save_records_dict(records=records)
+            arxiv_feed.save()
 
         except requests.exceptions.JSONDecodeError as exc:
             # watch github issue:
@@ -392,12 +362,12 @@ class ArXivSource:
     # def _run_md_search_update(
     #     self,
     #     *,
-    #     arxiv_feed: colrev.ops.search.GeneralOriginFeed,
+    #     arxiv_feed: colrev.ops.search.SearchAPIFeed,
     # ) -> None:
     #     records = self.review_manager.dataset.load_records_dict()
 
     #     for feed_record_dict in arxiv_feed.feed_records.values():
-    #         feed_record = colrev.record.Record(data=feed_record_dict)
+    #         feed_record = colrev.record.record.Record(feed_record_dict)
 
     #         try:
     #             retrieved_record = self._arxiv_query_id(
@@ -407,50 +377,45 @@ class ArXivSource:
     #             if retrieved_record["arxivid"] != feed_record.data["arxivid"]:
     #                 continue
 
-    #             arxiv_feed.set_id(record_dict=retrieved_record)
-    #         except (
-    #             colrev_exceptions.RecordNotFoundInPrepSourceException,
-    #             colrev_exceptions.NotFeedIdentifiableException,
-    #         ):
-    #             continue
-
-    #         prev_record_dict_version = {}
-    #         if retrieved_record[Fields.ID] in arxiv_feed.feed_records:
-    #             prev_record_dict_version = arxiv_feed.feed_records[
-    #                 retrieved_record[Fields.ID]
-    #             ]
-
-    #         arxiv_feed.add_record(record=colrev.record.Record(data=retrieved_record))
+    # prev_record_dict_version = (
+    #     dblp_feed.get_prev_feed_record(
+    #         retrieved_record=feed_record
+    #     )
+    # )
+    #         retrieved_record = colrev.record.record.Record(retrieved_record)
+    #         arxiv_feed.add_update_record(retrieved_record)
 
     #         changed = self.operation.update_existing_record(
     #             records=records,
     #             record_dict=retrieved_record,
     #             prev_record_dict_version=prev_record_dict_version,
     #             source=self.search_source,
-    #             update_time_variant_fields=True,
     #         )
     #         if changed:
     #             arxiv_feed.nr_changed += 1
+    #         except (
+    #             colrev_exceptions.RecordNotFoundInPrepSourceException,
+    #             colrev_exceptions.NotFeedIdentifiableException,
+    #         ):
+    #             continue
 
-    #     arxiv_feed.save_feed_file()
-    #     arxiv_feed.print_post_run_search_infos(records=records)
-    #     self.review_manager.dataset.save_records_dict(records=records)
+    #     arxiv_feed.save()
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ArXiv"""
 
-        arxiv_feed = self.search_source.get_feed(
+        arxiv_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        # if self.search_source.search_type == colrev.settings.SearchType.MD:
+        # if self.search_source.search_type == SearchType.MD:
         #     self._run_md_search_update(
         #         arxiv_feed=arxiv_feed,
         #     )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_parameter_search(
                 arxiv_feed=arxiv_feed,
                 rerun=rerun,
@@ -461,11 +426,10 @@ class ArXivSource:
 
         # for API-based searches
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
-
             for record in records.values():
                 record["institution"] = "ArXiv"
             return records
@@ -482,13 +446,15 @@ class ArXivSource:
         return records
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ArXiv"""
 
         if Fields.AUTHOR in record.data:
-            record.data[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
-                input_string=record.data[Fields.AUTHOR]
+            record.data[Fields.AUTHOR] = (
+                colrev.record.record_prep.PrepRecord.format_author_field(
+                    input_string=record.data[Fields.AUTHOR]
+                )
             )
 
         return record

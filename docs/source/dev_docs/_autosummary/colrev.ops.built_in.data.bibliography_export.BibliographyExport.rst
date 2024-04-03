@@ -25,6 +25,8 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
       ~BibliographyExport.get_advice
       ~BibliographyExport.json_schema
       ~BibliographyExport.register_field_encoders
+      ~BibliographyExport.start_zotero
+      ~BibliographyExport.stop_zotero
       ~BibliographyExport.to_dict
       ~BibliographyExport.to_json
       ~BibliographyExport.update_data
@@ -40,5 +42,6 @@ colrev.ops.built\_in.data.bibliography\_export.BibliographyExport
 
       ~BibliographyExport.PYBTEX_FORMATS
       ~BibliographyExport.ZOTERO_FORMATS
+      ~BibliographyExport.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
       ~BibliographyExport.ci_supported
       ~BibliographyExport.settings

@@ -15,10 +15,12 @@ from pyalex import Works
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
 from colrev.constants import FieldValues
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -35,10 +37,10 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     endpoint = "colrev.open_alex"
     source_identifier = "openalex_id"
     # "https://api.crossref.org/works/{{doi}}"
-    search_types = [colrev.settings.SearchType.API, colrev.settings.SearchType.MD]
+    search_types = [SearchType.API, SearchType.MD]
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/open_alex.md"
@@ -49,7 +51,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -73,7 +75,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.open_alex",
                 filename=self._open_alex_md_filename,
-                search_type=colrev.settings.SearchType.MD,
+                search_type=SearchType.MD,
                 search_parameters={},
                 comment="",
             )
@@ -85,7 +87,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         _, pyalex.config.email = self.review_manager.get_committer()
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the OpenAlex API"""
 
@@ -97,14 +99,14 @@ class OpenAlexSearchSource(JsonSchemaMixin):
                 continue
             if author["author"].get("display_name", None) is None:
                 continue
-            author_string = colrev.record.PrepRecord.format_author_field(
+            author_string = colrev.record.record_prep.PrepRecord.format_author_field(
                 input_string=author["author"]["display_name"]
             )
             author_list.append(author_string)
 
         record_dict[Fields.AUTHOR] = " and ".join(author_list)
 
-    def _parse_item_to_record(self, *, item: dict) -> colrev.record.Record:
+    def _parse_item_to_record(self, *, item: dict) -> colrev.record.record.Record:
         def set_entrytype(*, record_dict: dict, item: dict) -> None:
             # pylint: disable=colrev-missed-constant-usage
             if "title" in record_dict and record_dict["title"] is None:
@@ -165,12 +167,12 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record_dict[Fields.PAGES] += "--" + item["biblio"]["last_page"]
 
         self._set_author_from_item(record_dict=record_dict, item=item)
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.record.Record(record_dict)
 
         self._fix_errors(record=record)
         return record
 
-    def _fix_errors(self, *, record: colrev.record.Record) -> None:
+    def _fix_errors(self, *, record: colrev.record.record.Record) -> None:
         if "PubMed" == record.data.get(Fields.JOURNAL, ""):
             record.remove_field(key=Fields.JOURNAL)
         try:
@@ -179,8 +181,8 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             record.remove_field(key=Fields.LANGUAGE)
 
     def _get_masterdata_record(
-        self, *, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self, *, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         try:
             retrieved_record = self._parse_item_to_record(
                 item=Works()[record.data["colrev.open_alex.id"]]
@@ -189,24 +191,24 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             self.open_alex_lock.acquire(timeout=120)
 
             # Note : need to reload file because the object is not shared between processes
-            open_alex_feed = self.search_source.get_feed(
+            open_alex_feed = self.search_source.get_api_feed(
                 review_manager=self.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
+                prep_mode=True,
             )
 
-            open_alex_feed.set_id(record_dict=retrieved_record.data)
-            open_alex_feed.add_record(record=retrieved_record)
+            open_alex_feed.add_update_record(retrieved_record)
             record.change_entrytype(
                 new_entrytype=retrieved_record.data[Fields.ENTRYTYPE],
                 qm=self.review_manager.get_qm(),
             )
 
             record.merge(
-                merging_record=retrieved_record,
+                retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            open_alex_feed.save_feed_file()
+            open_alex_feed.save()
         except (
             colrev_exceptions.InvalidMerge,
             colrev_exceptions.RecordNotParsableException,
@@ -223,13 +225,13 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 30,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from OpenAlex based on similarity with the record provided"""
 
         if "colrev.open_alex.id" not in record.data:
@@ -244,24 +246,24 @@ class OpenAlexSearchSource(JsonSchemaMixin):
 
         return record
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of OpenAlex"""
 
         # https://docs.openalex.org/api-entities/works
 
-        # crossref_feed = self.search_source.get_feed(
+        # crossref_feed = self.search_source.get_api_feed(
         #     review_manager=search_operation.review_manager,
         #     source_identifier=self.source_identifier,
         #     update_only=(not rerun),
         # )
 
         # try:
-        #     if self.search_source.search_type == colrev.settings.SearchType.MD:
+        #     if self.search_source.search_type == SearchType.MD:
         #         self._run_md_search_update(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
         #         )
-        #     elif self.search_source.search_type == colrev.settings.SearchType.API:
+        #     elif self.search_source.search_type == SearchType.API:
         #         self._run_parameter_search(
         #             search_operation=search_operation,
         #             crossref_feed=crossref_feed,
@@ -281,7 +283,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         #         self._availability_exception_message
         #     )
 
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
+        # if self.search_source.search_type == SearchType.DB:
         #     if self.review_manager.in_ci_environment():
         #         raise colrev_exceptions.SearchNotAutomated(
         #             "DB search for OpenAlex not automated."
@@ -313,17 +315,17 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenAlex"""
 
         return record

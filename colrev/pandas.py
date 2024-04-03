@@ -15,6 +15,7 @@ from bib_dedupe.bib_dedupe import prep
 
 import colrev.review_manager
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 def load_df(
@@ -41,7 +42,7 @@ def load_df(
         raise NotImplementedError
 
     review_manager = colrev.review_manager.ReviewManager(path_str=project_path)
-    colrev.operation.CheckOperation(review_manager=review_manager)
+    colrev.process.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
     loaded_df = pd.DataFrame.from_dict(records, orient="index")
     return loaded_df
@@ -92,13 +93,14 @@ def load_resolved_papers(other_project_path: str) -> pd.DataFrame:
     other_review_manager = colrev.review_manager.ReviewManager(
         path_str=other_project_path, force_mode=True
     )
-    colrev.operation.CheckOperation(review_manager=other_review_manager)
+    colrev.process.operation.CheckOperation(other_review_manager)
+    # pylint: disable=colrev-records-variable-naming-convention
     other_records = other_review_manager.dataset.load_records_dict()
     project_path = str(Path.cwd())
     review_manager = colrev.review_manager.ReviewManager(
         path_str=project_path, force_mode=True
     )
-    colrev.operation.CheckOperation(review_manager=review_manager)
+    colrev.process.operation.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
 
     # identify duplicates with dedupe
@@ -181,7 +183,7 @@ def add_from_tei(
             return record[Fields.ABSTRACT]
 
         try:
-            tei_filename = colrev.record.Record(data=record).get_tei_filename()
+            tei_filename = colrev.record.record.Record(record).get_tei_filename()
             tei = review_manager.get_tei(tei_path=tei_filename)
             return tei.get_abstract()
         except FileNotFoundError:
@@ -191,7 +193,7 @@ def add_from_tei(
         if Fields.KEYWORDS in record and not pd.isnull(record[Fields.KEYWORDS]):
             return record[Fields.KEYWORDS]
         try:
-            tei_filename = colrev.record.Record(data=record).get_tei_filename()
+            tei_filename = colrev.record.record.Record(record).get_tei_filename()
             tei = review_manager.get_tei(tei_path=tei_filename)
             return ", ".join(tei.get_paper_keywords())
         except FileNotFoundError:
@@ -228,8 +230,8 @@ def extract_pdfs_for_data_extraction(
     directory_path.mkdir(parents=True, exist_ok=True)
     for _, record in records_df.iterrows():
         if record[Fields.STATUS] not in [
-            colrev.record.RecordState.rev_included,
-            colrev.record.RecordState.rev_synthesized,
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
         ]:
             continue
         if Fields.FILE in record and not pd.isnull(record[Fields.FILE]):
@@ -265,4 +267,4 @@ def save(records_df: pd.DataFrame) -> None:
             if pd.isnull(record[key]) or record[key] == "":
                 records[rec_id].pop(key)
 
-    review_manager.dataset.save_records_dict(records=records)
+    review_manager.dataset.save_records_dict(records)

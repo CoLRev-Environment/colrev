@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.files\_dir.FilesSearchSource
       ~FilesSearchSource.from_dict
       ~FilesSearchSource.from_json
       ~FilesSearchSource.from_object
-      ~FilesSearchSource.get_masterdata
       ~FilesSearchSource.heuristic
       ~FilesSearchSource.json_schema
       ~FilesSearchSource.load
+      ~FilesSearchSource.prep_link_md
       ~FilesSearchSource.prepare
       ~FilesSearchSource.register_field_encoders
-      ~FilesSearchSource.run_search
+      ~FilesSearchSource.search
       ~FilesSearchSource.to_dict
       ~FilesSearchSource.to_json
 

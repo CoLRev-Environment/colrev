@@ -129,7 +129,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 DB searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -143,7 +143,7 @@ DB searches
 API searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -157,7 +157,7 @@ API searches
 TOC searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -171,7 +171,7 @@ TOC searches
 BACKWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -185,7 +185,7 @@ BACKWARD_SEARCH searches
 FORWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -199,7 +199,7 @@ FORWARD_SEARCH searches
 FILES searches
 -------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -214,7 +214,7 @@ FILES searches
 OTHER searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -229,7 +229,7 @@ OTHER searches
 MD searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/template/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],

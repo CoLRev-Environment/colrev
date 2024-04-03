@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -36,8 +36,8 @@ class AddJournalRanking(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record.PrepRecord,
-    ) -> colrev.record.Record:
+        record: colrev.record.record_prep.PrepRecord,
+    ) -> colrev.record.record.Record:
         """Add Journalranking to Metadata"""
 
         if record.data.get(Fields.JOURNAL, "") == "":

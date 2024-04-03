@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.dblp as dblp_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -55,12 +55,14 @@ class DBLPMetadataPrep(JsonSchemaMixin):
         ]
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the Crossref API"""
         self.dblp_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record by retrieving its metadata from DBLP"""
 
         if any(
@@ -71,8 +73,6 @@ class DBLPMetadataPrep(JsonSchemaMixin):
             # Already linked to a dblp record
             return record
 
-        self.dblp_source.get_masterdata(
-            prep_operation=self.prep_operation, record=record
-        )
+        self.dblp_source.prep_link_md(prep_operation=self.prep_operation, record=record)
 
         return record

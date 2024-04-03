@@ -9,19 +9,16 @@ from typing import Optional
 
 import docker
 import git
-import pandas as pd
 import yaml
 from docker.errors import DockerException
-from git.exc import InvalidGitRepositoryError
-from yaml import safe_load
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
-import colrev.record
+import colrev.process.operation
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-from colrev.env.utils import dict_keys_exists
+from colrev.constants import Filepaths
 from colrev.env.utils import dict_set_nested
 from colrev.env.utils import get_by_path
 
@@ -29,19 +26,13 @@ from colrev.env.utils import get_by_path
 class EnvironmentManager:
     """The EnvironmentManager manages environment resources and services"""
 
-    colrev_path = Path.home().joinpath("colrev")
-    cache_path = colrev_path / Path("prep_requests_cache")
-    REGISTRY_RELATIVE = Path("registry.json")
-    registry = colrev_path.joinpath(REGISTRY_RELATIVE)
-    REGISTRY_RELATIVE_YAML = Path("registry.yaml")
-    registry_yaml = colrev_path.joinpath(REGISTRY_RELATIVE_YAML)
     load_yaml = False
 
     def __init__(self) -> None:
         self.environment_registry = self.load_environment_registry()
         self._registered_ports: typing.List[str] = []
 
-    def register_ports(self, *, ports: typing.List[str]) -> None:
+    def register_ports(self, ports: typing.List[str]) -> None:
         """Register a localhost port to avoid conflicts"""
         for port_to_register in ports:
             if port_to_register in self._registered_ports:
@@ -52,40 +43,23 @@ class EnvironmentManager:
 
     def load_environment_registry(self) -> dict:
         """Load the local registry"""
-        environment_registry_path = self.registry
-        environment_registry_path_yaml = self.registry_yaml
         environment_registry = {}
-        if environment_registry_path.is_file():
+        if Filepaths.REGISTRY_FILE.is_file():
             self.load_yaml = False
-            with open(environment_registry_path, encoding="utf8") as file:
+            with open(Filepaths.REGISTRY_FILE, encoding="utf8") as file:
                 environment_registry = json.load(fp=file)
             # assert "local_index" in environment_registry
             # assert "packages" in environment_registry
-        elif environment_registry_path_yaml.is_file():
-            self.load_yaml = True
-            backup_file = Path(str(environment_registry_path_yaml) + ".bk")
-            print(
-                f"Found a yaml file, converting to json, it will be backed up as {backup_file}"
-            )
-            with open(environment_registry_path_yaml, encoding="utf8") as file:
-                environment_registry_df = pd.json_normalize(safe_load(file))
-                repos = environment_registry_df.to_dict("records")
-                environment_registry = {
-                    "local_index": {
-                        "repos": repos,
-                    },
-                    "packages": {},
-                }
-                self.save_environment_registry(updated_registry=environment_registry)
-                environment_registry_path_yaml.rename(backup_file)
+
         return environment_registry
 
     def local_repos(self) -> list:
         """gets local repos from local index"""
         self.environment_registry = self.load_environment_registry()
-        if "local_index" not in self.environment_registry:
-            return []
-        if "repos" not in self.environment_registry["local_index"]:
+        if (
+            "local_index" not in self.environment_registry
+            or "repos" not in self.environment_registry["local_index"]
+        ):
             return []
         return self.environment_registry["local_index"]["repos"]
 
@@ -100,16 +74,17 @@ class EnvironmentManager:
                 result[key] = str(value)  # type: ignore
         return result
 
-    def save_environment_registry(self, *, updated_registry: dict) -> None:
+    def save_environment_registry(self, updated_registry: dict) -> None:
         """Save the local registry"""
-        self.registry.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(self.registry, "w", encoding="utf8") as file:
+        Filepaths.REGISTRY_FILE.parents[0].mkdir(parents=True, exist_ok=True)
+        with open(Filepaths.REGISTRY_FILE, "w", encoding="utf8") as file:
             json.dump(
                 dict(self._cast_values_to_str(updated_registry)), indent=4, fp=file
             )
 
-    def register_repo(self, *, path_to_register: Path) -> None:
+    def register_repo(self, path_to_register: Path) -> None:
         """Register a repository"""
+        path_to_register = path_to_register.resolve().absolute()
         self.environment_registry = self.load_environment_registry()
 
         if "local_index" not in self.environment_registry:
@@ -121,10 +96,10 @@ class EnvironmentManager:
 
         if registered_paths:
             if str(path_to_register) in registered_paths:
-                # print(f"Warning: Path already registered: {path_to_register}")
+                print(f"Warning: Path already registered: {path_to_register}")
                 return
         else:
-            print(f"Creating {self.registry}")
+            print(f"Register {path_to_register} in {Filepaths.REGISTRY_FILE}")
 
         new_record = {
             "repo_name": path_to_register.stem,
@@ -134,13 +109,13 @@ class EnvironmentManager:
         try:
             remote_urls = list(git_repo.remote("origin").urls)
             new_record["repo_source_url"] = remote_urls[0]
-        except (ValueError, IndexError):
+        except (ValueError, IndexError):  # pragma: no cover
             for remote in git_repo.remotes:
                 if remote.url:
                     new_record["repo_source_url"] = remote.url
                     break
         self.environment_registry["local_index"]["repos"].append(new_record)
-        self.save_environment_registry(updated_registry=self.environment_registry)
+        self.save_environment_registry(self.environment_registry)
         print(f"Registered path ({path_to_register})")
 
     def get_name_mail_from_git(self) -> typing.Tuple[str, str]:  # pragma: no cover
@@ -158,7 +133,7 @@ class EnvironmentManager:
 
     @classmethod
     def build_docker_image(
-        cls, *, imagename: str, image_path: Optional[Path] = None
+        cls, *, imagename: str, dockerfile: Optional[Path] = None
     ) -> None:
         """Build a docker image"""
 
@@ -167,38 +142,34 @@ class EnvironmentManager:
             repo_tags = [t for image in client.images.list() for t in image.tags]
 
             if imagename not in repo_tags:
-                if image_path:
-                    assert colrev.review_manager.__file__
-                    colrev_path = Path("")
-                    if colrev.review_manager.__file__:
-                        colrev_path = Path(colrev.review_manager.__file__).parents[0]
+                if dockerfile:
                     print(f"Building {imagename} Docker image ...")
-                    context_path = colrev_path / image_path
+                    dockerfile.resolve()
                     client.images.build(
-                        path=str(context_path), tag=f"{imagename}:latest"
+                        path=str(dockerfile.parent).replace("\\", "/"),
+                        tag=f"{imagename}:latest",
                     )
 
                 else:
                     print(f"Pulling {imagename} Docker image...")
                     client.images.pull(imagename)
-        except DockerException as exc:
+        except DockerException as exc:  # pragma: no cover
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="docker",
                 detailed_trace=f"Docker service not available ({exc}). "
                 + "Please install/start Docker.",
             ) from exc
 
-    def check_git_installed(self) -> None:
+    def check_git_installed(self) -> None:  # pragma: no cover
         """Check whether git is installed"""
 
         try:
             git_instance = git.Git()
             _ = git_instance.version()
-        except Exception as exc:  # pylint: disable=broad-except
+        except git.GitCommandNotFound as exc:
             print(exc)
-            # raise colrev_exceptions.MissingDependencyError("git") from exc
 
-    def check_docker_installed(self) -> None:
+    def check_docker_installed(self) -> None:  # pragma: no cover
         """Check whether Docker is installed"""
 
         try:
@@ -213,32 +184,18 @@ class EnvironmentManager:
                 )
             raise colrev_exceptions.MissingDependencyError("Docker")
 
-    def _get_status(
-        self, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> dict:
+    def _get_status(self, review_manager: colrev.review_manager.ReviewManager) -> dict:
         status_dict = {}
-        with open(review_manager.status, encoding="utf8") as stream:
+        status_yml = review_manager.get_path(Filepaths.STATUS_FILE)
+        with open(status_yml, encoding="utf8") as stream:
             try:
                 status_dict = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
+            except yaml.YAMLError as exc:  # pragma: no cover
                 print(exc)
         return status_dict
 
     def get_environment_details(self) -> dict:
         """Get the environment details"""
-
-        # def get_last_modified() -> str:
-
-        #     list_of_files = local_index.opensearch_index.glob(
-        #         "**/*"
-        #     )  # * means all if need specific format then *.csv
-        #     latest_file = max(list_of_files, key=os.path.getmtime)
-        #     last_mod = datetime.fromtimestamp(latest_file.lstat().st_mtime)
-        #     return last_mod.strftime("%Y-%m-%d %H:%M")
-
-        local_index = colrev.env.local_index.LocalIndex(
-            index_tei=True, verbose_mode=True
-        )
 
         environment_details = {}
         size = 0
@@ -246,23 +203,14 @@ class EnvironmentManager:
         status = "TODO"
 
         size = 0
-        # try:
-        #     size = local_index.open_search.cat.count(
-        #         index=local_index.RECORD_INDEX, params={"format": "json"}
-        #     )[0]["count"]
-        #     last_modified = get_last_modified()
-        #     status = "up"
-        # except (NotFoundError, IndexError):
-        #     status = "down"
-
         environment_details["index"] = {
             "size": size,
             "last_modified": last_modified,
-            "path": str(local_index.local_environment_path),
+            "path": str(Filepaths.LOCAL_ENVIRONMENT_DIR),
             "status": status,
         }
 
-        environment_stats = self.get_environment_stats()
+        environment_stats = self._get_environment_stats()
 
         environment_details["local_repos"] = {
             "repos": environment_stats["repos"],
@@ -270,7 +218,7 @@ class EnvironmentManager:
         }
         return environment_details
 
-    def get_environment_stats(self) -> dict:
+    def _get_environment_stats(self) -> dict:
         """Get the environment stats"""
 
         local_repos = self.local_repos()
@@ -281,23 +229,20 @@ class EnvironmentManager:
                 cp_review_manager = colrev.review_manager.ReviewManager(
                     path_str=repo["repo_source_path"]
                 )
-                check_operation = colrev.operation.CheckOperation(
+                check_operation = colrev.process.operation.CheckOperation(
                     review_manager=cp_review_manager
                 )
-                repo_stat = self._get_status(review_manager=cp_review_manager)
+                repo_stat = self._get_status(cp_review_manager)
                 repo["size"] = repo_stat["overall"]["md_processed"]
+                repo["progress"] = -1
                 if repo_stat["atomic_steps"] != 0:
                     repo["progress"] = round(
                         repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
                         2,
                     )
-                else:
-                    repo["progress"] = -1
 
                 git_repo = check_operation.review_manager.dataset.get_repo()
-                repo["remote"] = any(
-                    "remote" in x and x["remote"] for x in git_repo.remotes
-                )
+                repo["remote"] = bool(git_repo.remotes)
                 repo["behind_remote"] = (
                     check_operation.review_manager.dataset.behind_remote()
                 )
@@ -305,8 +250,8 @@ class EnvironmentManager:
                 repos.append(repo)
             except (
                 colrev_exceptions.CoLRevException,
-                InvalidGitRepositoryError,
-            ):
+                git.InvalidGitRepositoryError,
+            ):  # pragma: no cover
                 broken_links.append(repo)
         return {"repos": repos, "broken_links": broken_links}
 
@@ -345,21 +290,36 @@ class EnvironmentManager:
                             if booktitle != FieldValues.UNKNOWN:
                                 outlets.append(booktitle)
 
-                    if len(set(outlets)) > 1:
+                    if len(set(outlets)) > 1:  # pragma: no cover
                         raise colrev_exceptions.CuratedOutletNotUnique(
                             "Error: Duplicate outlets in curated_metadata of "
                             f"{repo_source_path} : {','.join(list(set(outlets)))}"
                         )
-            except FileNotFoundError as exc:
+            except FileNotFoundError as exc:  # pragma: no cover
                 print(exc)
 
         return curated_outlets
+
+    def _dict_keys_exists(self, element: dict, *keys: str) -> bool:
+        """Check if *keys (nested) exists in `element` (dict)."""
+        if len(keys) < 2:
+            raise AttributeError(
+                "keys_exists() expects at least two arguments, one given."
+            )
+
+        _element = element
+        for key in keys:
+            try:
+                _element = _element[key]
+            except KeyError:
+                return False
+        return True
 
     def get_settings_by_key(self, key: str) -> str | None:
         """Loads setting by the given key"""
         environment_registry = self.load_environment_registry()
         keys = key.split(".")
-        if dict_keys_exists(environment_registry, *keys):
+        if self._dict_keys_exists(environment_registry, *keys):
             return get_by_path(environment_registry, keys)
         return None
 
@@ -372,4 +332,4 @@ class EnvironmentManager:
             raise colrev_exceptions.PackageSettingMustStartWithPackagesException(key)
         self.environment_registry = self.load_environment_registry()
         dict_set_nested(self.environment_registry, keys, value)
-        self.save_environment_registry(updated_registry=self.environment_registry)
+        self.save_environment_registry(self.environment_registry)

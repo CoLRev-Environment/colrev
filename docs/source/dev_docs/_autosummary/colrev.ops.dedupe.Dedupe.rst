@@ -27,6 +27,7 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.main
       ~Dedupe.merge_based_on_global_ids
       ~Dedupe.merge_records
+      ~Dedupe.notify
       ~Dedupe.unmerge_records
 
 
@@ -43,5 +44,4 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.PREVENTED_SAME_SOURCE_MERGE_FILE
       ~Dedupe.SAME_SOURCE_MERGE_FILE
       ~Dedupe.debug
-      ~Dedupe.force_mode
       ~Dedupe.type

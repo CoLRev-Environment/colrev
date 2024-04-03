@@ -38,4 +38,5 @@ colrev.ops.built\_in.data.prisma.PRISMA
 
    .. autosummary::
 
+      ~PRISMA.PRISMA_IMAGE
       ~PRISMA.ci_supported

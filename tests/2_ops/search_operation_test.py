@@ -8,6 +8,8 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 import colrev.settings
+from colrev.constants import PackageEndpointType
+from colrev.constants import SearchType
 
 
 @patch("colrev.review_manager.ReviewManager.in_ci_environment")
@@ -26,7 +28,7 @@ def test_search_selection(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
     """Test the search selection"""
-    helpers.reset_commit(review_manager=base_repo_review_manager, commit="load_commit")
+    helpers.reset_commit(base_repo_review_manager, commit="load_commit")
 
     search_operation = base_repo_review_manager.get_search_operation()
 
@@ -48,7 +50,7 @@ def test_search_add_source(  # type: ignore
     add_source = colrev.settings.SearchSource(
         endpoint="colrev.crossref",
         filename=Path("data/search/crossref_search.bib"),
-        search_type=colrev.settings.SearchType.DB,
+        search_type=SearchType.DB,
         search_parameters={"query": "test"},
         comment="",
     )
@@ -56,7 +58,7 @@ def test_search_add_source(  # type: ignore
     package_manager = search_operation.review_manager.get_package_manager()
 
     search_source = package_manager.load_packages(
-        package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+        package_type=PackageEndpointType.search_source,
         selected_packages=[{"endpoint": add_source.endpoint}],
         operation=search_operation,
         instantiate_objects=False,
@@ -90,13 +92,13 @@ def test_search_get_unique_filename(
 #     """Test the search.remove_forthcoming()"""
 
 #     helpers.reset_commit(
-#         review_manager=base_repo_review_manager, commit="changed_settings_commit"
+#         base_repo_review_manager, commit="changed_settings_commit"
 #     )
 
 #     print(Path.cwd())  # To facilitate debugging
 
 #     helpers.retrieve_test_file(
-#         source=Path("search_files/crossref_feed.bib"),
+#         source=Path("data/search_files/crossref_feed.bib"),
 #         target=Path("data/search/crossref_issn=1234-5678.bib"),
 #     )
 
@@ -106,7 +108,7 @@ def test_search_get_unique_filename(
 #     package_manager = search_operation.review_manager.get_package_manager()
 
 #     search_source = package_manager.load_packages(
-#         package_type=colrev.env.package_manager.PackageEndpointType.search_source,
+#         package_type=PackageEndpointType.search_source,
 #         selected_packages=[{"endpoint": "colrev.crossref"}],
 #         operation=search_operation,
 #         instantiate_objects=False,

@@ -32,10 +32,7 @@ colrev.settings
       Author
       DataSettings
       DedupeSettings
-      IDPattern
-      LoadSettings
       PDFGetSettings
-      PDFPathType
       PDFPrepSettings
       PrepRound
       PrepSettings
@@ -43,10 +40,7 @@ colrev.settings
       ProjectSettings
       Protocol
       ScreenCriterion
-      ScreenCriterionType
       ScreenSettings
       SearchSettings
       SearchSource
-      SearchType
       Settings
-      ShareStatReq

@@ -20,6 +20,7 @@ colrev.ops.trace.Trace
       ~Trace.conclude
       ~Trace.decorate
       ~Trace.main
+      ~Trace.notify
 
 
 
@@ -29,5 +30,4 @@ colrev.ops.trace.Trace
 
    .. autosummary::
 
-      ~Trace.force_mode
       ~Trace.type

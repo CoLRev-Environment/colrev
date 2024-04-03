@@ -21,6 +21,7 @@ colrev.ops.upgrade.Upgrade
       ~Upgrade.decorate
       ~Upgrade.load_records_dict
       ~Upgrade.main
+      ~Upgrade.notify
       ~Upgrade.save_records_dict
 
 
@@ -32,5 +33,4 @@ colrev.ops.upgrade.Upgrade
    .. autosummary::
 
       ~Upgrade.repo
-      ~Upgrade.force_mode
       ~Upgrade.type

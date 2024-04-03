@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 import re
-import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import pandas as pd
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_table
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -35,10 +36,10 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     endpoint = "colrev.springer_link"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "url"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Springer Link"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -47,7 +48,7 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
     db_url = "https://link.springer.com/"
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
@@ -82,10 +83,10 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of SpringerLink"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
@@ -94,84 +95,43 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
-    def load(self, load_operation: colrev.ops.load.Load) -> dict:
-        """Load the records from the SearchSource file"""
+    def _load_csv(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["Content Type"] == "Article":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["Content Type"] == "Book":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.BOOK
+            elif record_dict["Content Type"] == "Chapter":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INBOOK
+            else:
+                record_dict[Fields.ENTRYTYPE] = "misc"
 
-        if self.search_source.filename.suffix == ".csv":
-            table_loader = colrev.ops.load_utils_table.TableLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                unique_id_field="item_doi",
-            )
-            table_entries = table_loader.load_table_entries()
-            records = table_loader.convert_to_records(entries=table_entries)
-            self._load_fixes(records=records)
-            return records
-
-        raise NotImplementedError
-
-    def _load_fixes(
-        self,
-        records: typing.Dict,
-    ) -> None:
-        """Load fixes for Springer Link"""
-
-        # pylint: disable=too-many-branches
-
-        for record_dict in records.values():
-            if "item_title" in record_dict:
-                record_dict[Fields.TITLE] = record_dict["item_title"]
-                del record_dict["item_title"]
-
-            if record_dict.get("book_series_title", "") == "nan":
-                del record_dict["book_series_title"]
-
-            if "content_type" in record_dict:
-                record = colrev.record.Record(data=record_dict)
-                if record_dict["content_type"] == "Article":
-                    if "publication_title" in record_dict:
-                        record_dict[Fields.JOURNAL] = record_dict["publication_title"]
-                        del record_dict["publication_title"]
-                    record.change_entrytype(
-                        new_entrytype="article", qm=self.quality_model
-                    )
-
-                if record_dict["content_type"] == "Book":
-                    if "publication_title" in record_dict:
-                        record_dict[Fields.SERIES] = record_dict["publication_title"]
-                        del record_dict["publication_title"]
-                    record.change_entrytype(new_entrytype="book", qm=self.quality_model)
-
-                if record_dict["content_type"] == "Chapter":
-                    record_dict[Fields.CHAPTER] = record_dict[Fields.TITLE]
-                    if "publication_title" in record_dict:
-                        record_dict[Fields.TITLE] = record_dict["publication_title"]
-                        del record_dict["publication_title"]
-                    record.change_entrytype(
-                        new_entrytype="inbook", qm=self.quality_model
-                    )
-
-                del record_dict["content_type"]
-
-            if "item_doi" in record_dict:
-                record_dict[Fields.DOI] = record_dict["item_doi"]
-                del record_dict["item_doi"]
-            if "journal_volume" in record_dict:
-                record_dict[Fields.VOLUME] = record_dict["journal_volume"]
-                del record_dict["journal_volume"]
-            if "journal_issue" in record_dict:
-                record_dict[Fields.NUMBER] = record_dict["journal_issue"]
-                del record_dict["journal_issue"]
+        def field_mapper(record_dict: dict) -> None:
+            record_dict[Fields.TITLE] = record_dict.pop("Item Title", "")
+            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+                record_dict[Fields.JOURNAL] = record_dict.pop("Publication Title", "")
+            elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
+                record_dict[Fields.BOOKTITLE] = record_dict.pop("Book Series Title", "")
+            elif record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.INBOOK:
+                record_dict[Fields.CHAPTER] = record_dict.pop("Item Title", "")
+                record_dict[Fields.TITLE] = record_dict.pop("Publication Title", "")
+            record_dict[Fields.VOLUME] = record_dict.pop("Journal Volume", "")
+            record_dict[Fields.NUMBER] = record_dict.pop("Journal Issue", "")
+            record_dict[Fields.DOI] = record_dict.pop("Item DOI", "")
+            record_dict[Fields.AUTHOR] = record_dict.pop("Authors", "")
+            record_dict[Fields.YEAR] = record_dict.pop("Publication Year", "")
+            record_dict[Fields.URL] = record_dict.pop("URL", "")
+            record_dict.pop("Content Type", None)
 
             # Fix authors
             # pylint: disable=colrev-missed-constant-usage
@@ -183,9 +143,32 @@ class SpringerLinkSearchSource(JsonSchemaMixin):
                     record_dict["author"],
                 )
 
+            for key in list(record_dict.keys()):
+                value = record_dict[key]
+                record_dict[key] = str(value)
+                if value == "" or pd.isna(value):
+                    del record_dict[key]
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="Item DOI",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+        return records
+
+    def load(self, load_operation: colrev.ops.load.Load) -> dict:
+        """Load the records from the SearchSource file"""
+
+        if self.search_source.filename.suffix == ".csv":
+            return self._load_csv()
+
+        raise NotImplementedError
+
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for Springer Link"""
 
         return record

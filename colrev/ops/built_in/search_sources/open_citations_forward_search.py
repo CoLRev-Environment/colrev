@@ -15,9 +15,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -35,10 +37,10 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
-    search_types = [colrev.settings.SearchType.FORWARD_SEARCH]
+    search_types = [SearchType.FORWARD_SEARCH]
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "OpenCitations forward search"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -46,7 +48,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
@@ -65,7 +67,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         return colrev.settings.SearchSource(
             endpoint="colrev.open_citations_forward_search",
             filename=Path("data/search/forward_search.bib"),
-            search_type=colrev.settings.SearchType.FORWARD_SEARCH,
+            search_type=SearchType.FORWARD_SEARCH,
             search_parameters={
                 "scope": {Fields.STATUS: "rev_included|rev_synthesized"}
             },
@@ -79,7 +81,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        assert source.search_type == colrev.settings.SearchType.FORWARD_SEARCH
+        assert source.search_type == SearchType.FORWARD_SEARCH
 
         if "scope" not in source.search_parameters:
             raise colrev_exceptions.InvalidQueryException(
@@ -107,8 +109,8 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             == "rev_included|rev_synthesized"
             and record[Fields.STATUS]
             not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         ):
             return False
@@ -141,7 +143,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
 
         return forward_citations
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a forward search based on OpenCitations"""
 
         # pylint: disable=too-many-branches
@@ -154,7 +156,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             print("No records imported. Cannot run forward search yet.")
             return
 
-        forward_search_feed = self.search_source.get_feed(
+        forward_search_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -171,43 +173,23 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
             new_records = self._get_forward_search_records(record_dict=record)
 
             for new_record in new_records:
-                new_record["fwsearch_ref"] = (
-                    record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
-                )
-                new_record["cites_IDs"] = record[Fields.ID]
-
                 try:
-                    forward_search_feed.set_id(record_dict=new_record)
+                    new_record["fwsearch_ref"] = (
+                        record[Fields.ID] + "_forward_search_" + new_record[Fields.ID]
+                    )
+                    new_record["cites_IDs"] = record[Fields.ID]
+                    retrieved_record = colrev.record.record.Record(new_record)
+
+                    forward_search_feed.add_update_record(
+                        retrieved_record=retrieved_record
+                    )
                 except colrev_exceptions.NotFeedIdentifiableException:
                     continue
 
-                prev_record_dict_version = {}
-                if new_record[Fields.ID] in forward_search_feed.feed_records:
-                    prev_record_dict_version = forward_search_feed.feed_records[
-                        new_record[Fields.ID]
-                    ]
+        forward_search_feed.save()
 
-                added = forward_search_feed.add_record(
-                    record=colrev.record.Record(data=new_record),
-                )
-
-                if added:
-                    pass
-                elif rerun:
-                    # Note : only re-index/update
-                    forward_search_feed.update_existing_record(
-                        records=records,
-                        record_dict=new_record,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-
-        forward_search_feed.save_feed_file()
-        forward_search_feed.print_post_run_search_infos(records=records)
-
-        if self.review_manager.dataset.has_changes():
-            self.review_manager.create_commit(
+        if self.review_manager.dataset.has_record_changes():
+            self.review_manager.dataset.create_commit(
                 msg="Forward search", script_call="colrev search"
             )
 
@@ -230,13 +212,13 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         add_source = cls.get_default_source()
         return add_source
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -244,16 +226,16 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for forward searches (OpenCitations)"""
         return record

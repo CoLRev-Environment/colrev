@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.abi\_inform\_proquest.ABIInformProQuestSear
       ~ABIInformProQuestSearchSource.from_dict
       ~ABIInformProQuestSearchSource.from_json
       ~ABIInformProQuestSearchSource.from_object
-      ~ABIInformProQuestSearchSource.get_masterdata
       ~ABIInformProQuestSearchSource.heuristic
       ~ABIInformProQuestSearchSource.json_schema
       ~ABIInformProQuestSearchSource.load
+      ~ABIInformProQuestSearchSource.prep_link_md
       ~ABIInformProQuestSearchSource.prepare
       ~ABIInformProQuestSearchSource.register_field_encoders
-      ~ABIInformProQuestSearchSource.run_search
+      ~ABIInformProQuestSearchSource.search
       ~ABIInformProQuestSearchSource.to_dict
       ~ABIInformProQuestSearchSource.to_json
 

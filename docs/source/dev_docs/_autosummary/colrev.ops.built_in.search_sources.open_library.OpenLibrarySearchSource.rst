@@ -23,13 +23,13 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.from_dict
       ~OpenLibrarySearchSource.from_json
       ~OpenLibrarySearchSource.from_object
-      ~OpenLibrarySearchSource.get_masterdata
       ~OpenLibrarySearchSource.heuristic
       ~OpenLibrarySearchSource.json_schema
       ~OpenLibrarySearchSource.load
+      ~OpenLibrarySearchSource.prep_link_md
       ~OpenLibrarySearchSource.prepare
       ~OpenLibrarySearchSource.register_field_encoders
-      ~OpenLibrarySearchSource.run_search
+      ~OpenLibrarySearchSource.search
       ~OpenLibrarySearchSource.to_dict
       ~OpenLibrarySearchSource.to_json
 
@@ -45,6 +45,7 @@ colrev.ops.built\_in.search\_sources.open\_library.OpenLibrarySearchSource
       ~OpenLibrarySearchSource.docs_link
       ~OpenLibrarySearchSource.endpoint
       ~OpenLibrarySearchSource.heuristic_status
+      ~OpenLibrarySearchSource.requests_headers
       ~OpenLibrarySearchSource.search_types
       ~OpenLibrarySearchSource.short_name
       ~OpenLibrarySearchSource.source_identifier

@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.from_dict
       ~UnknownSearchSource.from_json
       ~UnknownSearchSource.from_object
-      ~UnknownSearchSource.get_masterdata
       ~UnknownSearchSource.heuristic
       ~UnknownSearchSource.json_schema
       ~UnknownSearchSource.load
+      ~UnknownSearchSource.prep_link_md
       ~UnknownSearchSource.prepare
       ~UnknownSearchSource.register_field_encoders
-      ~UnknownSearchSource.run_search
+      ~UnknownSearchSource.search
       ~UnknownSearchSource.to_dict
       ~UnknownSearchSource.to_json
 

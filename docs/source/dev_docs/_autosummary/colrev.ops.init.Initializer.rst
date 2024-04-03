@@ -25,4 +25,4 @@ colrev.ops.init.Initializer
 
    .. autosummary::
 
-      ~Initializer.share_stat_req_options
+      ~Initializer.review_manager

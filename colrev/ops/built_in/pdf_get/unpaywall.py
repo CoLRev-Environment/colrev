@@ -14,7 +14,7 @@ from pdfminer.high_level import extract_text
 from pdfminer.pdftypes import PDFException
 
 import colrev.env.package_manager
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=duplicate-code
@@ -103,7 +103,9 @@ class Unpaywall(JsonSchemaMixin):
         except (PDFException, TypeError):
             return False
 
-    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get PDFs from unpaywall"""
 
         if Fields.DOI not in record.data:

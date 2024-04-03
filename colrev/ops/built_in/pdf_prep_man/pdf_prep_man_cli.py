@@ -6,6 +6,7 @@ import os
 import platform
 import re
 import subprocess
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,9 +16,12 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -45,7 +49,9 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         self.review_manager = pdf_prep_man_operation.review_manager
         self.pdf_prep_man_operation = pdf_prep_man_operation
 
-    def _update_metadata(self, *, record: colrev.record.Record) -> colrev.record.Record:
+    def _update_metadata(
+        self, *, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         questions = [
             inquirer.List(
                 "field",
@@ -170,7 +176,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         self,
         *,
         filepath: Path,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
     ) -> None:
         if not self._is_inside_wsl():
             self._open_pdf(filepath=filepath)
@@ -218,9 +224,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             elif user_selection == "No (delete)":
                 record.remove_field(key=Fields.FILE)
                 record.remove_field(key=Fields.PDF_ID)
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_needs_manual_retrieval
-                )
+                record.set_status(RecordState.pdf_needs_manual_retrieval)
                 if filepath.is_file():
                     filepath.unlink()
                 return
@@ -229,6 +233,61 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
             elif user_selection == "Quit":
                 raise QuitPressedException()
+
+    def _print_pdf_prep_man(self, record: colrev.record.record.Record) -> None:
+        """Print the record for pdf-prep-man operations"""
+        # pylint: disable=too-many-branches
+        ret_str = ""
+        if Fields.FILE in record.data:
+            ret_str += (
+                f"\nfile: {Colors.ORANGE}{record.data[Fields.FILE]}{Colors.END}\n\n"
+            )
+
+        pdf_prep_note = record.get_field_provenance(key=Fields.FILE)
+
+        if "author_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += f"{Colors.RED}{record.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
+        else:
+            ret_str += f"{Colors.GREEN}{record.data.get(Fields.AUTHOR, 'no-author')}{Colors.END}\n"
+
+        if "title_not_in_first_pages" in pdf_prep_note["note"]:
+            ret_str += (
+                f"{Colors.RED}{record.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
+            )
+        else:
+            ret_str += f"{Colors.GREEN}{record.data.get(Fields.TITLE, 'no title')}{Colors.END}\n"
+
+        if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            ret_str += (
+                f"{record.data.get(Fields.JOURNAL, 'no-journal')} "
+                f"({record.data.get(Fields.YEAR, 'no-year')}) "
+                f"{record.data.get(Fields.VOLUME, 'no-volume')}"
+                f"({record.data.get(Fields.NUMBER, '')})"
+            )
+            if Fields.PAGES in record.data:
+                if "nr_pages_not_matching" in pdf_prep_note["note"]:
+                    ret_str += (
+                        f", {Colors.RED}pp.{record.data[Fields.PAGES]}{Colors.END}\n"
+                    )
+                else:
+                    ret_str += (
+                        f", pp.{Colors.GREEN}{record.data[Fields.PAGES]}{Colors.END}\n"
+                    )
+            else:
+                ret_str += "\n"
+        elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
+            ret_str += f"{record.data.get(Fields.BOOKTITLE, 'no-booktitle')}\n"
+        if Fields.ABSTRACT in record.data:
+            lines = textwrap.wrap(
+                record.data[Fields.ABSTRACT], 100, break_long_words=False
+            )
+            ret_str += f"\nAbstract: {lines.pop(0)}\n"
+            ret_str += "\n".join(lines) + "\n"
+
+        if Fields.URL in record.data:
+            ret_str += f"\nurl: {record.data[Fields.URL]}\n"
+
+        print(ret_str)
 
     def _man_pdf_prep_item_init(
         self,
@@ -245,16 +304,13 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         # to do : if authors mismatch: color those that do/do not match
         print(stat)
-        record = colrev.record.Record(data=item)
+        record = colrev.record.record.Record(item)
         file_provenance = record.get_field_provenance(key=Fields.FILE)
 
-        record.print_pdf_prep_man()
+        self._print_pdf_prep_man(record)
         record_dict = records[item[Fields.ID]]
-        record = colrev.record.Record(data=record_dict)
-        if (
-            colrev.record.RecordState.pdf_needs_manual_preparation
-            != record_dict[Fields.STATUS]
-        ):
+        record = colrev.record.record.Record(record_dict)
+        if RecordState.pdf_needs_manual_preparation != record_dict[Fields.STATUS]:
             return record_dict
 
         print(
@@ -264,7 +320,10 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
 
         filepath = self.review_manager.path / Path(record_dict[Fields.FILE])
         if not filepath.is_file():
-            filepath = self.review_manager.pdf_dir / f"{record_dict['ID']}.pdf"
+            filepath = (
+                self.review_manager.get_path(Filepaths.PDF_DIR)
+                / f"{record_dict['ID']}.pdf"
+            )
         if not filepath.is_file():
             input(
                 f"{Colors.ORANGE}Warning: PDF file for record {record_dict['ID']} not found. "
@@ -273,9 +332,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             return records
 
         try:
-            record.data.update(
-                colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=filepath)
-            )
+            record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(filepath))
         except colrev_exceptions.InvalidPDFException:
             pass
 
@@ -288,7 +345,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
         else:
             print(f"File does not exist ({record.data[Fields.ID]})")
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return records
 
@@ -313,11 +370,11 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
             except QuitPressedException:
                 break
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         if self.pdf_prep_man_operation.pdfs_prepared_manually():
             if input("Create commit (y/n)?") == "y":
-                self.review_manager.create_commit(
+                self.review_manager.dataset.create_commit(
                     msg="Prepare PDFs manually",
                     manual_author=True,
                 )

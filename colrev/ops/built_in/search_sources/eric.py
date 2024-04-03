@@ -15,12 +15,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_nbib
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -36,11 +35,11 @@ class ERICSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     endpoint = "colrev.eric"
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/eric.md"
@@ -86,7 +85,7 @@ class ERICSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -99,7 +98,7 @@ class ERICSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,
                 filename=Path("data/search/eric.bib"),
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=SearchType.OTHER,
                 search_parameters={},
                 comment="",
             )
@@ -165,7 +164,7 @@ class ERICSearchSource(JsonSchemaMixin):
             add_source = colrev.settings.SearchSource(
                 endpoint=cls.endpoint,
                 filename=filename,
-                search_type=colrev.settings.SearchType.DB,
+                search_type=SearchType.DB,
                 search_parameters={"query": search, "start": start, "rows": rows},
                 comment="",
             )
@@ -175,7 +174,7 @@ class ERICSearchSource(JsonSchemaMixin):
             f"Cannot add ERIC endpoint with query {params}"
         )
 
-    def get_query_return(self) -> typing.Iterator[colrev.record.Record]:
+    def get_query_return(self) -> typing.Iterator[colrev.record.record.Record]:
         """Get the records from a query"""
         full_url = self._build_search_url()
 
@@ -196,38 +195,23 @@ class ERICSearchSource(JsonSchemaMixin):
             yield record
 
     def _run_api_search(
-        self, *, eric_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+        self, *, eric_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
-        records = self.review_manager.dataset.load_records_dict()
         for record in self.get_query_return():
-            prev_record_dict_version: dict = {}
-            added = eric_feed.add_record(record=record)
+            eric_feed.add_update_record(record)
 
-            if added:
-                self.review_manager.logger.info(" retrieve " + record.data[Fields.ID])
-            else:
-                eric_feed.update_existing_record(
-                    records=records,
-                    record_dict=record.data,
-                    prev_record_dict_version=prev_record_dict_version,
-                    source=self.search_source,
-                    update_time_variant_fields=rerun,
-                )
+        eric_feed.save()
 
-        eric_feed.print_post_run_search_infos(records=records)
-        eric_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
-
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of ERIC"""
 
-        eric_feed = self.search_source.get_feed(
+        eric_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(eric_feed=eric_feed, rerun=rerun)
         else:
             raise NotImplementedError
@@ -241,7 +225,7 @@ class ERICSearchSource(JsonSchemaMixin):
         rows_param = params.get("rows", "2000")
         return f"{url}?search={query}&format={format_param}&start={start_param}&rows={rows_param}"
 
-    def _create_record(self, doc: dict) -> colrev.record.Record:
+    def _create_record(self, doc: dict) -> colrev.record.record.Record:
         # pylint: disable=too-many-branches
         record_dict = {Fields.ID: doc["id"]}
         record_dict[Fields.ENTRYTYPE] = "other"
@@ -280,7 +264,7 @@ class ERICSearchSource(JsonSchemaMixin):
             # pylint: disable=colrev-missed-constant-usage
             record_dict[Fields.YEAR] = str(record_dict["year"])
 
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.record.Record(record_dict)
         if Fields.LANGUAGE in record.data:
             try:
                 record.data[Fields.LANGUAGE] = record.data[Fields.LANGUAGE][0]
@@ -289,70 +273,99 @@ class ERICSearchSource(JsonSchemaMixin):
                 del record.data[Fields.LANGUAGE]
         return record
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
+    def _load_nbib(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if "Journal Articles" in record_dict["PT"]:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "TI": Fields.TITLE,
+                    "AU": Fields.AUTHOR,
+                    "DP": Fields.YEAR,
+                    "JT": Fields.JOURNAL,
+                    "VI": Fields.VOLUME,
+                    "IP": Fields.NUMBER,
+                    "PG": Fields.PAGES,
+                    "AB": Fields.ABSTRACT,
+                    "AID": Fields.DOI,
+                    "ISSN": Fields.ISSN,
+                    "OID": f"{self.endpoint}.eric_id",
+                    "OT": Fields.KEYWORDS,
+                    "LA": Fields.LANGUAGE,
+                    "PT": "type",
+                    "LID": f"{self.endpoint}.eric_url",
+                }
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("type", None)
+            record_dict.pop("OWN", None)
+            record_dict.pop("SO", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="OID",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
-        nbib_mapping = {
-            ENTRYTYPES.ARTICLE: {
-                "TI": Fields.TITLE,
-                "AU": Fields.AUTHOR,
-                "DP": Fields.YEAR,
-                "JT": Fields.JOURNAL,
-                "VI": Fields.VOLUME,
-                "IP": Fields.NUMBER,
-                "PG": Fields.PAGES,
-                "AB": Fields.ABSTRACT,
-                "AID": Fields.DOI,
-                "ISSN": Fields.ISSN,
-                "OID": "eric_id",
-                "OT": Fields.KEYWORDS,
-                "LA": Fields.LANGUAGE,
-                "PT": "type",
-            }
-        }
-
-        entrytype_map = {
-            "Journal Articles, Reports - Research": ENTRYTYPES.ARTICLE,
-        }
 
         if self.search_source.filename.suffix == ".nbib":
-            nbib_loader = colrev.ops.load_utils_nbib.NBIBLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                list_fields={"AU": " and ", "OT": ", ", "PT": ", "},
-                unique_id_field="eric_id",
-            )
-            records = nbib_loader.load_nbib_entries()
-
-            for record_dict in records.values():
-                nbib_loader.apply_entrytype_mapping(
-                    record_dict=record_dict, entrytype_map=entrytype_map
-                )
-                nbib_loader.map_keys(record_dict=record_dict, key_map=nbib_mapping)
-
-            return records
+            return self._load_nbib()
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for ERIC"""
 
         if Fields.ISSN in record.data:

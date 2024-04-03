@@ -10,21 +10,25 @@ from importlib.metadata import version
 from pathlib import Path
 
 import git
-from pybtex.database.input import bibtex
+import pandas as pd
 from tqdm import tqdm
+from yaml import safe_load
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
+import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
+from colrev.constants import RecordState
+from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-few-public-methods
 
 
-class Upgrade(colrev.operation.Operation):
+class Upgrade(colrev.process.operation.Operation):
     """Upgrade a CoLRev project"""
 
     repo: git.Repo
@@ -38,7 +42,7 @@ class Upgrade(colrev.operation.Operation):
         review_manager.force_mode = True
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.check,
+            operations_type=OperationsType.check,
             notify_state_transition_operation=False,
         )
         review_manager.force_mode = prev_force_mode
@@ -52,9 +56,10 @@ class Upgrade(colrev.operation.Operation):
             self.repo.index.add([str(target)])
 
     def _load_settings_dict(self) -> dict:
-        if not self.review_manager.settings_path.is_file():
+        settings_path = self.review_manager.get_path(Filepaths.SETTINGS_FILE)
+        if not settings_path.is_file():
             raise colrev_exceptions.CoLRevException()
-        with open(self.review_manager.settings_path, encoding="utf-8") as file:
+        with open(settings_path, encoding="utf-8") as file:
             settings = json.load(file)
         return settings
 
@@ -70,21 +75,21 @@ class Upgrade(colrev.operation.Operation):
         Returns:
             dict: The loaded records dictionary.
         """
-        parser = bibtex.Parser()
-        bib_data = parser.parse_file("data/records.bib")
-        records = colrev.dataset.Dataset.parse_records_dict(
-            records_dict=bib_data.entries
+        records = colrev.loader.load_utils.load(
+            filename=Path("data/records.bib"),
+            logger=self.review_manager.logger,
         )
+
         return records
 
-    def save_records_dict(self, *, records: dict) -> None:
+    def save_records_dict(self, records: dict) -> None:
         """
         Save the records dictionary to a file and add it to the repository index.
 
         Args:
             records (dict): The records dictionary to save.
         """
-        bibtex_str = colrev.dataset.Dataset.parse_bibtex_str(recs_dict_in=records)
+        bibtex_str = to_string(records_dict=records, implementation="bib")
         with open("data/records.bib", "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
         self.repo.index.add(["data/records.bib"])
@@ -104,8 +109,7 @@ class Upgrade(colrev.operation.Operation):
 
         settings_version = CoLRevVersion(settings_version_str)
         # Start with the first step if the version is older:
-        if settings_version < CoLRevVersion("0.7.0"):
-            settings_version = CoLRevVersion("0.7.0")
+        settings_version = max(settings_version, CoLRevVersion("0.7.0"))
         installed_colrev_version = CoLRevVersion(version("colrev"))
 
         # version: indicates from which version on the migration should be applied
@@ -183,6 +187,12 @@ class Upgrade(colrev.operation.Operation):
                 "script": self._migrate_0_11_0,
                 "released": True,
             },
+            {
+                "version": CoLRevVersion("0.11.0"),
+                "target_version": CoLRevVersion("0.12.0"),
+                "script": self._migrate_0_12_0,
+                "released": False,
+            },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")
         print(f"settings_version: {settings_version}")
@@ -228,7 +238,7 @@ class Upgrade(colrev.operation.Operation):
             if not migrator["released"]:
                 msg += " (pre-release)"
             review_manager = colrev.review_manager.ReviewManager()
-            review_manager.create_commit(
+            review_manager.dataset.create_commit(
                 msg=msg,
             )
 
@@ -298,21 +308,21 @@ class Upgrade(colrev.operation.Operation):
         if "colrev/curated_metadata" in str(self.review_manager.path):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update_curation.yml"),
+                template_file=Path("ops/init/colrev_update_curation.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
         else:
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update.yml"),
+                template_file=Path("ops/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
 
         Path(".github/workflows/pre-commit.yml").unlink(missing_ok=True)
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("template/init/pre-commit.yml"),
+            template_file=Path("ops/init/pre-commit.yml"),
             target=Path(".github/workflows/pre-commit.yml"),
         )
         self.repo.index.add([".github/workflows/pre-commit.yml"])
@@ -323,14 +333,14 @@ class Upgrade(colrev.operation.Operation):
         if "colrev/curated_metadata" in str(self.review_manager.path):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update_curation.yml"),
+                template_file=Path("ops/init/colrev_update_curation.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
         else:
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update.yml"),
+                template_file=Path("ops/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
@@ -353,11 +363,11 @@ class Upgrade(colrev.operation.Operation):
                 continue
 
             pdf_path = Path(record_dict["file"])
-            colrev_pdf_id = colrev.record.Record.get_colrev_pdf_id(pdf_path=pdf_path)
+            colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(pdf_path)
             # pylint: disable=colrev-missed-constant-usage
             record_dict["colrev_pdf_id"] = colrev_pdf_id
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return self.repo.is_dirty()
 
@@ -414,14 +424,14 @@ class Upgrade(colrev.operation.Operation):
                 if "tei_id" in record_dict[Fields.D_PROV]:
                     del record_dict[Fields.D_PROV]["tei_id"]
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.record.Record(record_dict)
             prior_state = record.data[Fields.STATUS]
             record.run_quality_model(qm=quality_model)
-            if prior_state == colrev.record.RecordState.rev_prescreen_excluded:
+            if prior_state == RecordState.rev_prescreen_excluded:
                 record.data[  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS
-                ] = colrev.record.RecordState.rev_prescreen_excluded
-        self.review_manager.dataset.save_records_dict(records=records)
+                ] = RecordState.rev_prescreen_excluded
+        self.review_manager.dataset.save_records_dict(records)
         return self.repo.is_dirty()
 
     def _migrate_0_8_4(self) -> bool:
@@ -434,7 +444,7 @@ class Upgrade(colrev.operation.Operation):
             if FieldValues.CURATED not in record[Fields.MD_PROV]:
                 record[Fields.MD_PROV][Fields.EDITOR] = ed_val
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
 
         return self.repo.is_dirty()
 
@@ -463,49 +473,49 @@ class Upgrade(colrev.operation.Operation):
         records = self.load_records_dict()
         for record_dict in records.values():
             if "pubmedid" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="pubmedid", new_key="colrev.pubmed.pubmedid")
 
             if "pii" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="pii", new_key="colrev.pubmed.pii")
 
             if "pmc" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="pmc", new_key="colrev.pubmed.pmc")
 
             if "label_included" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="label_included",
                     new_key="colrev.synergy_datasets.label_included",
                 )
             if "method" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="method", new_key="colrev.synergy_datasets.method"
                 )
 
             if "dblp_key" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="dblp_key", new_key=Fields.DBLP_KEY)
             if "wos_accession_number" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="wos_accession_number",
                     new_key=Fields.WEB_OF_SCIENCE_ID,
                 )
             if "sem_scholar_id" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(
                     key="sem_scholar_id", new_key=Fields.SEMANTIC_SCHOLAR_ID
                 )
 
             if "openalex_id" in record_dict:
-                record = colrev.record.Record(data=record_dict)
+                record = colrev.record.record.Record(record_dict)
                 record.rename_field(key="openalex_id", new_key="colrev.open_alex.id")
 
-        self.save_records_dict(records=records)
+        self.save_records_dict(records)
 
         return self.repo.is_dirty()
 
@@ -601,7 +611,7 @@ class Upgrade(colrev.operation.Operation):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
                 template_file=Path(
-                    "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                    "ops/built_in/review_type/curated_masterdata/curations_github_colrev_update.yml"
                 ),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
@@ -609,7 +619,7 @@ class Upgrade(colrev.operation.Operation):
         else:
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
-                template_file=Path("template/init/colrev_update.yml"),
+                template_file=Path("ops/init/colrev_update.yml"),
                 target=Path(".github/workflows/colrev_update.yml"),
             )
             self.repo.index.add([".github/workflows/colrev_update.yml"])
@@ -634,7 +644,46 @@ class Upgrade(colrev.operation.Operation):
                     record_dict[Fields.MD_PROV][key]["note"] = value["note"].replace(
                         "not-missing", "IGNORE:missing"
                     )
-        self.save_records_dict(records=records)
+        self.save_records_dict(records)
+
+        return self.repo.is_dirty()
+
+    def _migrate_0_12_0(self) -> bool:
+        registry_yaml = Filepaths.LOCAL_ENVIRONMENT_DIR.joinpath(Path("registry.yaml"))
+
+        def _cast_values_to_str(data) -> dict:  # type: ignore
+            result = {}
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    result[key] = _cast_values_to_str(value)
+                elif isinstance(value, list):
+                    result[key] = [_cast_values_to_str(v) for v in value]  # type: ignore
+                else:
+                    result[key] = str(value)  # type: ignore
+            return result
+
+        if registry_yaml.is_file():
+            backup_file = Path(str(registry_yaml) + ".bk")
+            print(
+                f"Found a yaml file, converting to json, it will be backed up as {backup_file}"
+            )
+            with open(registry_yaml, encoding="utf8") as file:
+                environment_registry_df = pd.json_normalize(safe_load(file))
+                repos = environment_registry_df.to_dict("records")
+                environment_registry = {
+                    "local_index": {
+                        "repos": repos,
+                    },
+                    "packages": {},
+                }
+                Filepaths.REGISTRY_FILE.parents[0].mkdir(parents=True, exist_ok=True)
+                with open(Filepaths.REGISTRY_FILE, "w", encoding="utf8") as file:
+                    json.dump(
+                        dict(_cast_values_to_str(environment_registry)),
+                        indent=4,
+                        fp=file,
+                    )
+                registry_yaml.rename(backup_file)
 
         return self.repo.is_dirty()
 

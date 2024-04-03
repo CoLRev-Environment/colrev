@@ -15,8 +15,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 
 @zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
@@ -98,20 +100,16 @@ class ColrevCuration(JsonSchemaMixin):
             r_status = str(record_dict[Fields.STATUS])
             if r_status == "rev_prescreen_excluded":
                 continue
-            if record_dict[
-                Fields.STATUS
-            ] in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_processed
+            if record_dict[Fields.STATUS] in RecordState.get_post_x_states(
+                state=RecordState.md_processed
             ):
-                r_status = str(colrev.record.RecordState.md_processed)
-            elif record_dict[
-                Fields.STATUS
-            ] in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.pdf_prepared
+                r_status = str(RecordState.md_processed)
+            elif record_dict[Fields.STATUS] in RecordState.get_post_x_states(
+                state=RecordState.pdf_prepared
             ):
-                r_status = str(colrev.record.RecordState.pdf_prepared)
+                r_status = str(RecordState.pdf_prepared)
             else:
-                r_status = str(colrev.record.RecordState.md_imported)
+                r_status = str(RecordState.md_imported)
 
             if Fields.JOURNAL in record_dict:
                 key = (
@@ -205,7 +203,7 @@ class ColrevCuration(JsonSchemaMixin):
         markdown_output: str,
     ) -> None:
         table_summary_tag = "<!-- TABLE_SUMMARY -->"
-        readme_path = self.review_manager.readme
+        readme_path = self.review_manager.get_path(Filepaths.README_FILE)
         with open(readme_path, "r+b") as file:
             appended = False
             seekpos = file.tell()
@@ -261,18 +259,14 @@ class ColrevCuration(JsonSchemaMixin):
         stats = self._get_stats(records=records, sources=sources)
         markdown_output = self._get_stats_markdown_table(stats=stats, sources=sources)
         self._update_table_in_readme(markdown_output=markdown_output)
-        self.review_manager.dataset.add_changes(
-            path=self.review_manager.README_RELATIVE
-        )
+        self.review_manager.dataset.add_changes(Filepaths.README_FILE)
 
     def _source_comparison(self, *, silent_mode: bool) -> None:
         """Exports a table to support analyses of records that are not
         in all sources (for curated repositories)"""
-
-        self.review_manager.dedupe_dir.mkdir(exist_ok=True, parents=True)
-        source_comparison_xlsx = self.review_manager.dedupe_dir / Path(
-            "source_comparison.xlsx"
-        )
+        dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)
+        dedupe_dir.mkdir(exist_ok=True, parents=True)
+        source_comparison_xlsx = dedupe_dir / Path("source_comparison.xlsx")
 
         source_filenames = [
             str(x.filename) for x in self.review_manager.settings.sources
@@ -357,18 +351,13 @@ class ColrevCuration(JsonSchemaMixin):
         non_identifiable_records = []
         for record_dict in records.values():
             try:
-                if record_dict[
-                    Fields.STATUS
-                ] not in colrev.record.RecordState.get_post_x_states(
-                    state=colrev.record.RecordState.md_prepared
+                if record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
+                    state=RecordState.md_prepared
                 ):
                     continue
-                if (
-                    record_dict[Fields.STATUS]
-                    == colrev.record.RecordState.rev_prescreen_excluded
-                ):
+                if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
                     continue
-                cid = colrev.record.Record(data=record_dict).create_colrev_id(
+                cid = colrev.record.record.Record(record_dict).create_colrev_id(
                     assume_complete=True
                 )
                 if cid in identical_colrev_ids:

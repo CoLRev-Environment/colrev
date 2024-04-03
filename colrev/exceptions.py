@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 from colrev.constants import Colors
 from colrev.constants import Fields
 
-if TYPE_CHECKING:
-    import colrev.record
+if TYPE_CHECKING:  # pragma: no cover
+    import colrev.record.record
 
 
 class CoLRevException(Exception):
@@ -68,19 +68,6 @@ class RepoSetupError(CoLRevException):
                 f"are available at\n{self.lr_docs}"
             )
 
-        super().__init__(self.message)
-
-
-class BrokenFilesError(CoLRevException):
-    """
-    Project files are broken (e.g., the main records.bib).
-    """
-
-    def __init__(self, msg: str) -> None:
-        self.message = (
-            f"Detected broken files ({msg}). To fix use\n     "
-            f"{Colors.ORANGE}colrev repare{Colors.END}"
-        )
         super().__init__(self.message)
 
 
@@ -185,6 +172,16 @@ class DirtyRepoAfterProcessingError(CoLRevException):
 
     def __init__(self, msg: str) -> None:
         self.message = msg
+        super().__init__(self.message)
+
+
+class GitNotAvailableError(CoLRevException):
+    """
+    Git is currently not available.
+    """
+
+    def __init__(self) -> None:
+        self.message = "Git is currently not available (remove .git/index.lock exists)."
         super().__init__(self.message)
 
 
@@ -359,13 +356,6 @@ class RecordNotParsableException(CoLRevException):
         super().__init__(self.message)
 
 
-class NoSearchFeedRegistered(CoLRevException):
-    """No search feed endpoints registered in settings.json"""
-
-    def __init__(self) -> None:
-        super().__init__("No search feed endpoints registered in settings.json")
-
-
 class NotFeedIdentifiableException(CoLRevException):
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
@@ -382,22 +372,19 @@ class SearchSourceException(CoLRevException):
         super().__init__(self.message)
 
 
+class RecordNotFoundException(CoLRevException):
+    """Record not found in the main records file."""
+
+    def __init__(self, msg: str) -> None:
+        self.message = msg
+        super().__init__(self.message)
+
+
 # Load
 
 
 class ImportException(CoLRevException):
     """An error occured in the import functions."""
-
-    def __init__(
-        self,
-        msg: str,
-    ) -> None:
-        self.message = msg
-        super().__init__(self.message)
-
-
-class SourceHeuristicsException(CoLRevException):
-    """An error occured in the SearchSource heuristics."""
 
     def __init__(
         self,
@@ -436,10 +423,6 @@ class RecordNotFoundInPrepSourceException(CoLRevException):
         super().__init__(self.message)
 
 
-class PreparationBreak(CoLRevException):
-    """Event interrupting the preparation."""
-
-
 # Dedupe
 
 
@@ -455,7 +438,9 @@ class InvalidMerge(DedupeError):
     """An invalid merge was attempted (rule-based)"""
 
     def __init__(
-        self, record_a: colrev.record.Record, record_b: colrev.record.Record
+        self,
+        record_a: colrev.record.record.Record,
+        record_b: colrev.record.record.Record,
     ) -> None:
         id_a = record_a.data.get(Fields.ID, "no-id")
         id_b = record_b.data.get(Fields.ID, "no-id")
@@ -472,14 +457,6 @@ class DataException(CoLRevException):
     def __init__(self, *, msg: str) -> None:
         self.message = msg
         super().__init__("DataException: " + self.message)
-
-
-class NoPaperEndpointRegistered(CoLRevException):
-    """No paper endpoint registered in settings.json"""
-
-    def __init__(self) -> None:
-        self.message = "No paper endpoint registered in settings.json"
-        super().__init__(self.message)
 
 
 # Push
@@ -627,14 +604,6 @@ class InvalidLanguageCodeException(CoLRevException):
         super().__init__(f"Invalid language codes: {', '.join(invalid_language_codes)}")
 
 
-class InvalidRegistryKeyException(CoLRevException):
-    """Invalid registry key provided"""
-
-    def __init__(self, invalid_key: str) -> None:
-        self.invalid_key = invalid_key
-        super().__init__(f"Invalid Registry Key: {invalid_key}")
-
-
 class PackageSettingMustStartWithPackagesException(CoLRevException):
     """package settings must start with `packages` key"""
 
@@ -643,3 +612,11 @@ class PackageSettingMustStartWithPackagesException(CoLRevException):
         super().__init__(
             f"Package settings must start with `packages` key. {invalid_key}"
         )
+
+
+class TemplateNotAvailableError(CoLRevException):
+    """The requested template is not available."""
+
+    def __init__(self, template_path: str) -> None:
+        self.message = f"Template not available: {template_path}"
+        super().__init__(self.message)

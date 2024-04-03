@@ -1,0 +1,3 @@
+"PMID","Title","Authors","Citation","First Author","Journal/Book","Publication Year","Create Date","PMCID","NIHMS ID","DOI","number_of_cited_references","file_name","author_count","citation_key","cited_by","issue","journal","booktitle"
+"11223344","Paper title","Smith A, Walter B","Nature. 2021 Dec 21;1(2):10-11. doi: 10.1111/nature1111.","Smith A","Nature","2021","2021/12/21","PMC1122334",,"10.1111/nature1111","no Number-of-Cited-References","no file",2,"test","no Times-Cited","no issue","MISQ",
+"11223345","Paper title","Smith A, Walter B","Nature. 2021 Dec 21;1(2):10-11. doi: 10.1111/nature1111.","Smith A","Nature","2021","2021/12/21","PMC1122334",,"10.1111/nature1111","no Number-of-Cited-References","no file",2,"test","no Times-Cited","no issue",,"ICIS"

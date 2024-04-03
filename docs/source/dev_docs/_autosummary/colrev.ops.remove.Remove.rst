@@ -19,6 +19,7 @@ colrev.ops.remove.Remove
       ~Remove.check_precondition
       ~Remove.conclude
       ~Remove.decorate
+      ~Remove.notify
       ~Remove.remove_records
 
 
@@ -29,5 +30,4 @@ colrev.ops.remove.Remove
 
    .. autosummary::
 
-      ~Remove.force_mode
       ~Remove.type

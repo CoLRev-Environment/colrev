@@ -37,4 +37,5 @@ colrev.ops.built\_in.prep.citeas\_prep.CiteAsPrep
 
       ~CiteAsPrep.always_apply_changes
       ~CiteAsPrep.ci_supported
+      ~CiteAsPrep.requests_headers
       ~CiteAsPrep.source_correction_hint

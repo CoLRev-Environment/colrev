@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 import typing
 from dataclasses import dataclass
-from multiprocessing import Lock
 from pathlib import Path
 
 import requests
@@ -20,15 +19,17 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref
 import colrev.ops.built_in.search_sources.pdf_backward_search as bws
-import colrev.ops.built_in.search_sources.website as website_connector
-import colrev.ops.load_utils_bib
-import colrev.ops.search
-import colrev.qm.checkers.missing_field
-import colrev.qm.colrev_pdf_id
-import colrev.record
+import colrev.record.qm.checkers.missing_field
+import colrev.record.record
+import colrev.record.record_pdf
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
+from colrev.writer.write_utils import write_file
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -46,10 +47,10 @@ class FilesSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
-    search_types = [colrev.settings.SearchType.FILES]
+    search_types = [SearchType.FILES]
 
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Files directory"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -60,7 +61,7 @@ class FilesSearchSource(JsonSchemaMixin):
     _batch_size = 20
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.review_manager = source_operation.review_manager
         self.source_operation = source_operation
@@ -99,10 +100,6 @@ class FilesSearchSource(JsonSchemaMixin):
         self._etiquette = self.crossref_connector.get_etiquette(
             review_manager=self.review_manager
         )
-        self.url_connector = website_connector.WebsiteConnector(
-            review_manager=self.review_manager
-        )
-        self.zotero_lock = Lock()
 
     def _update_if_pdf_renamed(
         self,
@@ -128,8 +125,8 @@ class FilesSearchSource(JsonSchemaMixin):
                 potential_pdfs = file_path.glob("*.pdf")
 
                 for potential_pdf in potential_pdfs:
-                    cpid_potential_pdf = colrev.record.Record.get_colrev_pdf_id(
-                        pdf_path=potential_pdf,
+                    cpid_potential_pdf = colrev.record.record.Record.get_colrev_pdf_id(
+                        potential_pdf,
                     )
 
                     if cpid == cpid_potential_pdf:
@@ -150,10 +147,11 @@ class FilesSearchSource(JsonSchemaMixin):
         if not self.search_source.filename.is_file():
             return
 
-        with open(self.search_source.filename, encoding="utf8") as target_db:
-            search_rd = self.review_manager.dataset.load_records_dict(
-                load_str=target_db.read()
-            )
+        search_rd = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+        )
 
         records = self.review_manager.dataset.load_records_dict()
 
@@ -182,9 +180,8 @@ class FilesSearchSource(JsonSchemaMixin):
         }
 
         if len(search_rd.values()) != 0:
-            self.review_manager.dataset.save_records_dict_to_file(
-                records=search_rd, save_path=self.search_source.filename
-            )
+
+            write_file(records_dict=search_rd, filename=self.search_source.filename)
 
         if records:
             for record_dict in records.values():
@@ -198,7 +195,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 )
                 print(" " + "\n ".join(files_removed))
             records = {k: v for k, v in records.items() if v[Fields.ORIGIN]}
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
 
     def _update_fields_based_on_pdf_dirs(
         self, *, record_dict: dict, params: dict
@@ -279,9 +276,7 @@ class FilesSearchSource(JsonSchemaMixin):
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
     def _get_record_from_pdf_grobid(self, *, record_dict: dict) -> dict:
-        if colrev.record.RecordState.md_prepared == record_dict.get(
-            Fields.STATUS, "NA"
-        ):
+        if RecordState.md_prepared == record_dict.get(Fields.STATUS, "NA"):
             return record_dict
 
         pdf_path = self.review_manager.path / Path(record_dict[Fields.FILE])
@@ -323,7 +318,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = colrev.record.Record(data=record_dict)
+                    record = colrev.record.record_pdf.PDFRecord(record_dict)
                     record.set_text_from_pdf()
                     record_dict = record.get_data()
                     if Fields.TEXT_FROM_PDF in record_dict:
@@ -346,8 +341,6 @@ class FilesSearchSource(JsonSchemaMixin):
                         del record_dict[Fields.TEXT_FROM_PDF]
                     # else:
                     #     print(f'text extraction error in {record_dict[Fields.ID]}')
-                    if Fields.PAGES_IN_FILE in record_dict:
-                        del record_dict[Fields.PAGES_IN_FILE]
 
                 record_dict = {k: v for k, v in record_dict.items() if v is not None}
                 record_dict = {k: v for k, v in record_dict.items() if v != "NA"}
@@ -392,7 +385,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"Validate SearchSource {source.filename}")
 
-        assert source.search_type == colrev.settings.SearchType.FILES
+        assert source.search_type == SearchType.FILES
 
         if "subdir_pattern" in source.search_parameters:
             if source.search_parameters["subdir_pattern"] != [
@@ -421,6 +414,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
     def _add_md_string(self, *, record_dict: dict) -> dict:
+        # To identify potential duplicates
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return record_dict
 
@@ -440,13 +434,13 @@ class FilesSearchSource(JsonSchemaMixin):
         record_dict["md_string"] = str(fsize) + md_string
         return record_dict
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
@@ -454,7 +448,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self,
         *,
         file_path: Path,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -478,7 +472,7 @@ class FilesSearchSource(JsonSchemaMixin):
         self,
         *,
         file_path: Path,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -507,14 +501,14 @@ class FilesSearchSource(JsonSchemaMixin):
         try:
             if not self.review_manager.settings.is_curated_masterdata_repo():
                 # retrieve_based_on_colrev_pdf_id
-                colrev_pdf_id = colrev.qm.colrev_pdf_id.get_pdf_hash(
-                    pdf_path=Path(file_path),
-                    page_nr=1,
-                    hash_size=32,
+
+                colrev_pdf_id = colrev.record.record.Record.get_colrev_pdf_id(
+                    pdf_path=Path(file_path)
                 )
-                new_record = local_index.retrieve_based_on_colrev_pdf_id(
-                    colrev_pdf_id="cpid1:" + colrev_pdf_id
+                new_record_object = local_index.retrieve_based_on_colrev_pdf_id(
+                    colrev_pdf_id=colrev_pdf_id
                 )
+                new_record = new_record_object.data
                 new_record[Fields.FILE] = str(file_path)
                 # Note : an alternative to replacing all data with the curated version
                 # is to just add the curation_ID
@@ -545,18 +539,14 @@ class FilesSearchSource(JsonSchemaMixin):
                 f"{new_record['file']} {Colors.END} "
                 f"({','.join([r['file'] for r in potential_duplicates])})"
             )
-        else:
-            try:
-                files_dir_feed.set_id(record_dict=new_record)
-            except colrev_exceptions.NotFeedIdentifiableException:
-                pass
+
         return new_record
 
     def _index_mp4(
         self,
         *,
         file_path: Path,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         linked_file_paths: list,
         local_index: colrev.env.local_index.LocalIndex,
     ) -> dict:
@@ -585,13 +575,12 @@ class FilesSearchSource(JsonSchemaMixin):
     def _run_dir_search(
         self,
         *,
-        records: dict,
-        files_dir_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        files_dir_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         local_index: colrev.env.local_index.LocalIndex,
         linked_file_paths: list,
-        rerun: bool,
     ) -> None:
-        for file_batch in self._get_file_batches():
+        file_batches = self._get_file_batches()
+        for i, file_batch in enumerate(file_batches):
             for record in files_dir_feed.feed_records.values():
                 record = self._add_md_string(record_dict=record)
 
@@ -605,46 +594,31 @@ class FilesSearchSource(JsonSchemaMixin):
                 if new_record == {}:
                     continue
 
-                prev_record_dict_version = files_dir_feed.feed_records.get(
-                    new_record[Fields.ID], {}
+                self._add_doi_from_pdf_if_not_available(new_record)
+                retrieved_record = colrev.record.record.Record(new_record)
+                files_dir_feed.add_update_record(
+                    retrieved_record=retrieved_record,
                 )
-
-                added = files_dir_feed.add_record(
-                    record=colrev.record.Record(data=new_record),
-                )
-                if added:
-                    self._add_doi_from_pdf_if_not_available(record_dict=new_record)
-
-                elif self.review_manager.force_mode:
-                    # Note : only re-index/update
-                    files_dir_feed.update_existing_record(
-                        records=records,
-                        record_dict=new_record,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
 
             for record in files_dir_feed.feed_records.values():
                 record.pop("md_string")
 
-            files_dir_feed.save_feed_file()
+            last_round = i == len(file_batches) - 1
+            files_dir_feed.save(skip_print=not last_round)
 
-        files_dir_feed.print_post_run_search_infos(records=records)
-
-    def _add_doi_from_pdf_if_not_available(self, *, record_dict: dict) -> None:
+    def _add_doi_from_pdf_if_not_available(self, record_dict: dict) -> None:
         if Path(record_dict[Fields.FILE]).suffix != ".pdf":
             return
-        if Fields.DOI in record_dict:
-            return
-        record = colrev.record.Record(data=record_dict)
-        record.set_text_from_pdf()
-        res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
-        if res:
-            record.data[Fields.DOI] = res[0].upper()
-        del record.data[Fields.TEXT_FROM_PDF]
+        record = colrev.record.record_pdf.PDFRecord(record_dict)
+        if Fields.DOI not in record_dict:
+            record.set_text_from_pdf()
+            res = re.findall(self._doi_regex, record.data[Fields.TEXT_FROM_PDF])
+            if res:
+                record.data[Fields.DOI] = res[0].upper()
+        record.data.pop(Fields.TEXT_FROM_PDF, None)
+        record.data.pop(Fields.NR_PAGES_IN_FILE, None)
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of a Files directory"""
 
         self._validate_source()
@@ -668,7 +642,7 @@ class FilesSearchSource(JsonSchemaMixin):
         local_index = self.review_manager.get_local_index()
 
         records = self.review_manager.dataset.load_records_dict()
-        files_dir_feed = self.search_source.get_feed(
+        files_dir_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -679,11 +653,9 @@ class FilesSearchSource(JsonSchemaMixin):
         ]
 
         self._run_dir_search(
-            records=records,
             files_dir_feed=files_dir_feed,
             linked_file_paths=linked_file_paths,
             local_index=local_index,
-            rerun=rerun,
         )
 
     @classmethod
@@ -713,7 +685,7 @@ class FilesSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.files_dir",
             filename=filename,
-            search_type=colrev.settings.SearchType.FILES,
+            search_type=SearchType.FILES,
             search_parameters={"scope": {"path": "data/pdfs"}},
             comment="",
         )
@@ -727,8 +699,8 @@ class FilesSearchSource(JsonSchemaMixin):
                 doi=record_dict[Fields.DOI], etiquette=self._etiquette
             )
             if (
-                colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=colrev.record.Record(data=record_dict),
+                colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
+                    record_original=colrev.record.record.Record(record_dict),
                     retrieved_record_original=retrieved_record,
                     same_record_type_required=True,
                 )
@@ -754,10 +726,17 @@ class FilesSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+
+            def field_mapper(record_dict: dict) -> None:
+                if "note" in record_dict:
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                unique_id_field="ID",
+                field_mapper=field_mapper,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
 
             for record_dict in records.values():
                 if Fields.GROBID_VERSION in record_dict:
@@ -775,7 +754,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def _fix_special_chars(self, *, record: colrev.record.Record) -> None:
+    def _fix_special_chars(self, *, record: colrev.record.record.Record) -> None:
         # We may also apply the following upon loading tei content
         if Fields.TITLE in record.data:
             record.data[Fields.TITLE] = (
@@ -803,7 +782,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 .replace("a ˜", "ã")
             )
 
-    def _fix_title_suffix(self, *, record: colrev.record.Record) -> None:
+    def _fix_title_suffix(self, *, record: colrev.record.record.Record) -> None:
         if Fields.TITLE not in record.data:
             return
         if record.data[Fields.TITLE].endswith("Formula 1"):
@@ -813,7 +792,7 @@ class FilesSearchSource(JsonSchemaMixin):
         if record.data.get(Fields.TITLE, "").endswith(" 1"):
             record.data[Fields.TITLE] = record.data[Fields.TITLE][:-2]
 
-    def _fix_special_outlets(self, *, record: colrev.record.Record) -> None:
+    def _fix_special_outlets(self, *, record: colrev.record.record.Record) -> None:
         # Erroneous suffixes in IS conferences
         if record.data.get(Fields.BOOKTITLE, "") in [
             "Americas Conference on Information Systems",
@@ -836,31 +815,14 @@ class FilesSearchSource(JsonSchemaMixin):
         # elif ...
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for files"""
 
         if Fields.FILE not in record.data:
             return record
-
-        if Path(record.data[Fields.FILE]).suffix == ".mp4":
-            if Fields.URL in record.data:
-                self.zotero_lock = Lock()
-                url_record = record.copy_prep_rec()
-                self.url_connector.retrieve_md_from_website(record=url_record)
-                if url_record.data.get(Fields.AUTHOR, "") != "":
-                    record.update_field(
-                        key=Fields.AUTHOR,
-                        value=url_record.data[Fields.AUTHOR],
-                        source="website",
-                    )
-                if url_record.data.get(Fields.TITLE, "") != "":
-                    record.update_field(
-                        key=Fields.TITLE,
-                        value=url_record.data[Fields.TITLE],
-                        source="website",
-                    )
-                self.zotero_lock.release()
 
         if Path(record.data[Fields.FILE]).suffix == ".pdf":
             record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
@@ -881,16 +843,12 @@ class FilesSearchSource(JsonSchemaMixin):
                 == record.data.get(Fields.JOURNAL, "no_journal").lower()
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
+                record.set_status(RecordState.md_needs_manual_preparation)
             if record.data.get(Fields.TITLE, "no_title").lower() == record.data.get(
                 Fields.BOOKTITLE, "no_booktitle"
             ):
                 record.remove_field(key=Fields.TITLE, source="files_dir_prepare")
-                record.set_status(
-                    target_state=colrev.record.RecordState.md_needs_manual_preparation
-                )
+                record.set_status(RecordState.md_needs_manual_preparation)
             self._fix_title_suffix(record=record)
             self._fix_special_chars(record=record)
             self._fix_special_outlets(record=record)

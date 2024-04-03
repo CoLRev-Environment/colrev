@@ -16,9 +16,11 @@ from git.exc import GitCommandError
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 
 # an option: https://pypi.org/project/csv-schema/
@@ -85,7 +87,8 @@ Example 2:
             settings["data_path_relative"] = Path("data.csv")
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.data_path = self.review_manager.data_dir / self.settings.data_path_relative
+        data_dir = self.review_manager.get_path(Filepaths.DATA_DIR)
+        self.data_path = data_dir / self.settings.data_path_relative
         self.review_manager = self.review_manager
 
     # pylint: disable=unused-argument
@@ -125,8 +128,8 @@ Example 2:
                     msg=f"{data_id} in {self.settings.data_path_relative} not in records"
                 )
             if records[data_id][Fields.STATUS] not in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]:
                 raise colrev_exceptions.DataException(
                     msg=f"{data_id} in {self.settings.data_path_relative} "
@@ -244,7 +247,7 @@ Example 2:
             synthesized_record_status_matrix=synthesized_record_status_matrix,
         )
 
-        self.review_manager.dataset.add_changes(path=self.settings.data_path_relative)
+        self.review_manager.dataset.add_changes(self.settings.data_path_relative)
 
     def update_record_status_matrix(
         self,

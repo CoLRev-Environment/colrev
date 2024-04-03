@@ -12,9 +12,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-many-arguments
@@ -40,8 +42,8 @@ class CurationMissingDedupe(JsonSchemaMixin):
         self.review_manager = dedupe_operation.review_manager
         self.dedupe_operation = dedupe_operation
 
-        self._post_md_prepared_states = colrev.record.RecordState.get_post_x_states(
-            state=colrev.record.RecordState.md_processed
+        self._post_md_prepared_states = RecordState.get_post_x_states(
+            state=RecordState.md_processed
         )
 
     def _create_dedupe_source_stats(self) -> None:
@@ -62,9 +64,9 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 if any(source_origin in co for co in r[Fields.ORIGIN])
                 and r[Fields.STATUS]
                 in [
-                    colrev.record.RecordState.md_prepared,
-                    colrev.record.RecordState.md_needs_manual_preparation,
-                    colrev.record.RecordState.md_imported,
+                    RecordState.md_prepared,
+                    RecordState.md_needs_manual_preparation,
+                    RecordState.md_imported,
                 ]
             ]
             records_df = pd.DataFrame.from_records(list(selected_records))
@@ -114,16 +116,14 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
 
     def _get_same_toc_recs(
-        self, *, record: colrev.record.Record, records: dict
+        self, *, record: colrev.record.record.Record, records: dict
     ) -> list:
         if self.review_manager.force_mode:
             if record.data[Fields.STATUS] in self._post_md_prepared_states:
                 return []
         else:
             # only dedupe md_prepared records
-            if record.data[Fields.STATUS] not in [
-                colrev.record.RecordState.md_prepared
-            ]:
+            if record.data[Fields.STATUS] not in [RecordState.md_prepared]:
                 return []
         if record.data.get(Fields.TITLE, "") == "":
             return []
@@ -136,7 +136,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         same_toc_recs = []
         for record_candidate in records.values():
             try:
-                candidate_toc_key = colrev.record.Record(
+                candidate_toc_key = colrev.record.record.Record(
                     data=record_candidate
                 ).get_toc_key()
             except colrev_exceptions.NotTOCIdentifiableException:
@@ -146,20 +146,22 @@ class CurationMissingDedupe(JsonSchemaMixin):
             if record_candidate[Fields.ID] == record.data[Fields.ID]:
                 continue
             if record_candidate[Fields.STATUS] in [
-                colrev.record.RecordState.md_prepared,
-                colrev.record.RecordState.md_needs_manual_preparation,
-                colrev.record.RecordState.md_imported,
+                RecordState.md_prepared,
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_imported,
             ]:
                 continue
             same_toc_recs.append(record_candidate)
         return same_toc_recs
 
     def _print_same_toc_recs(
-        self, *, same_toc_recs: list, record: colrev.record.Record
+        self, *, same_toc_recs: list, record: colrev.record.record.Record
     ) -> list:
         for same_toc_rec in same_toc_recs:
-            same_toc_rec["similarity"] = colrev.record.PrepRecord.get_record_similarity(
-                record_a=colrev.record.Record(data=same_toc_rec), record_b=record
+            same_toc_rec["similarity"] = (
+                colrev.record.record_prep.PrepRecord.get_record_similarity(
+                    colrev.record.record.Record(same_toc_rec), record
+                )
             )
 
         same_toc_recs = sorted(
@@ -200,7 +202,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
                 [
                     x
                     for x in records.values()
-                    if x[Fields.STATUS] in [colrev.record.RecordState.md_prepared]
+                    if x[Fields.STATUS] in [RecordState.md_prepared]
                 ]
             )
         return nr_recs_to_merge
@@ -218,7 +220,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         }
 
         for record_dict in records.values():
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.record.Record(record_dict)
 
             same_toc_recs = self._get_same_toc_recs(record=record, records=records)
 
@@ -318,15 +320,15 @@ class CurationMissingDedupe(JsonSchemaMixin):
             records = self.review_manager.dataset.load_records_dict()
             for record_id, record_dict in records.items():
                 if record_id in ret["records_to_prepare"]:
-                    record = colrev.record.Record(data=record_dict)
+                    record = colrev.record.record.Record(record_dict)
                     record.set_status(
-                        target_state=colrev.record.RecordState.md_needs_manual_preparation
+                        target_state=RecordState.md_needs_manual_preparation
                     )
 
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
 
         if len(ret["decision_list"]) > 0 or len(ret["records_to_prepare"]) > 0:
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Merge duplicate records",
             )
 
@@ -335,19 +337,17 @@ class CurationMissingDedupe(JsonSchemaMixin):
             for record_id, record_dict in records.items():
                 if record_id in ret["add_records_to_md_processed_list"]:
                     if record_dict[Fields.STATUS] in [
-                        colrev.record.RecordState.md_prepared,
-                        colrev.record.RecordState.md_needs_manual_preparation,
-                        colrev.record.RecordState.md_imported,
+                        RecordState.md_prepared,
+                        RecordState.md_needs_manual_preparation,
+                        RecordState.md_imported,
                     ]:
-                        record = colrev.record.Record(data=record_dict)
-                        record.set_status(
-                            target_state=colrev.record.RecordState.md_processed
-                        )
+                        record = colrev.record.record.Record(record_dict)
+                        record.set_status(RecordState.md_processed)
 
-            self.review_manager.dataset.save_records_dict(records=records)
+            self.review_manager.dataset.save_records_dict(records)
             input("Edit records (if any), add to git, and press Enter")
 
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg="Add non-duplicate records",
             )
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -23,13 +22,14 @@ from rapidfuzz import fuzz
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
-
+from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=duplicate-code
 # pylint: disable=unused-argument
@@ -45,14 +45,14 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     # settings_class = colrev.env.package_manager.DefaultSourceSettings
     source_identifier = Fields.EUROPE_PMC_ID
     search_types = [
-        colrev.settings.SearchType.API,
-        colrev.settings.SearchType.DB,
-        colrev.settings.SearchType.MD,
+        SearchType.API,
+        SearchType.DB,
+        SearchType.MD,
     ]
     endpoint = "colrev.europe_pmc"
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Europe PMC"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -69,7 +69,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
         # pylint: disable=too-many-instance-attributes
         endpoint: str
         filename: Path
-        search_type: colrev.settings.SearchType
+        search_type: SearchType
         search_parameters: dict
         comment: typing.Optional[str]
 
@@ -85,7 +85,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -107,7 +107,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint=self.endpoint,
                     filename=self._europe_pmc_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -128,7 +128,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
     # pylint: disable=colrev-missed-constant-usage
     @classmethod
-    def _europe_pmc_xml_to_record(cls, *, item: Element) -> colrev.record.PrepRecord:
+    def _europe_pmc_xml_to_record(
+        cls, *, item: Element
+    ) -> colrev.record.record_prep.PrepRecord:
         retrieved_record_dict: dict = {Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE}
         retrieved_record_dict[Fields.AUTHOR] = cls._get_string_from_item(
             item=item, key="authorString"
@@ -177,15 +179,15 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             if k not in ["epmc_id", "epmc_source"] and v != ""
         }
 
-        record = colrev.record.PrepRecord(data=retrieved_record_dict)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record_dict)
         return record
 
     @classmethod
     def _get_similarity(
         cls,
         *,
-        record: colrev.record.Record,
-        retrieved_record: colrev.record.Record,
+        record: colrev.record.record.Record,
+        retrieved_record: colrev.record.record.Record,
     ) -> float:
         title_similarity = fuzz.partial_ratio(
             retrieved_record.data[Fields.TITLE].lower(),
@@ -225,7 +227,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def _europe_pmc_query(
         self,
         *,
-        record_input: colrev.record.Record,
+        record_input: colrev.record.record.Record,
         most_similar_only: bool = True,
         timeout: int = 60,
     ) -> list:
@@ -282,17 +284,17 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             ) from exc
 
         if most_similar_only:
-            record_list = [colrev.record.PrepRecord(data=most_similar_record)]
+            record_list = [colrev.record.record_prep.PrepRecord(most_similar_record)]
 
         return record_list
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,  # pylint: disable=unused-argument
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from Europe PMC based on similarity with the record provided"""
 
         # pylint: disable=too-many-branches
@@ -318,29 +320,32 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 if 0 == len(retrieved_record.data):
                     return record
 
-                similarity = colrev.record.PrepRecord.get_retrieval_similarity(
-                    record_original=record, retrieved_record_original=retrieved_record
+                similarity = (
+                    colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
+                        record_original=record,
+                        retrieved_record_original=retrieved_record,
+                    )
                 )
 
                 if similarity > prep_operation.retrieval_similarity:
                     self.europe_pmc_lock.acquire(timeout=60)
 
                     # Note : need to reload file because the object is not shared between processes
-                    europe_pmc_feed = self.search_source.get_feed(
+                    europe_pmc_feed = self.search_source.get_api_feed(
                         review_manager=prep_operation.review_manager,
                         source_identifier=self.source_identifier,
                         update_only=False,
+                        prep_mode=True,
                     )
-
                     try:
-                        europe_pmc_feed.set_id(record_dict=retrieved_record.data)
+                        europe_pmc_feed.add_update_record(
+                            retrieved_record=retrieved_record
+                        )
                     except colrev_exceptions.NotFeedIdentifiableException:
                         return record
 
-                    europe_pmc_feed.add_record(record=retrieved_record)
-
                     record.merge(
-                        merging_record=retrieved_record,
+                        retrieved_record,
                         default_source=retrieved_record.data[Fields.ORIGIN][0],
                     )
 
@@ -348,11 +353,9 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         source=retrieved_record.data[Fields.ORIGIN][0],
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
-                    record.set_status(
-                        target_state=colrev.record.RecordState.md_prepared
-                    )
+                    record.set_status(RecordState.md_prepared)
 
-                    europe_pmc_feed.save_feed_file()
+                    europe_pmc_feed.save()
                     self.europe_pmc_lock.release()
                     return record
 
@@ -377,25 +380,25 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         self.review_manager.logger.debug(f"SearchSource {source.filename} validated")
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Europe PMC"""
 
         self._validate_source()
         # https://europepmc.org/RestfulWebService
 
-        europe_pmc_feed = self.search_source.get_feed(
+        europe_pmc_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(
                 europe_pmc_feed=europe_pmc_feed,
                 rerun=rerun,
             )
 
-        elif self.search_source.search_type == colrev.settings.SearchType.DB:
+        elif self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
@@ -413,7 +416,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
     def _run_api_search(
         self,
         *,
-        europe_pmc_feed: colrev.ops.search_feed.GeneralOriginFeed,
+        europe_pmc_feed: colrev.ops.search_api_feed.SearchAPIFeed,
         rerun: bool,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -432,8 +435,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
             headers = {"user-agent": f"{__name__} (mailto:{email})"}
             session = self.review_manager.get_cached_session()
 
-            records = self.review_manager.dataset.load_records_dict()
-
             while url != "END":
                 self.review_manager.logger.debug(url)
                 ret = session.request("GET", url, headers=headers, timeout=60)
@@ -450,13 +451,6 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 for result_item in result_list.findall("result"):
                     retrieved_record = self._europe_pmc_xml_to_record(item=result_item)
 
-                    prev_record_dict_version = {}
-                    if retrieved_record.data[Fields.ID] in europe_pmc_feed.feed_records:
-                        prev_record_dict_version = deepcopy(
-                            europe_pmc_feed.feed_records[
-                                retrieved_record.data[Fields.ID]
-                            ]
-                        )
                     if Fields.TITLE not in retrieved_record.data:
                         self.review_manager.logger.warning(
                             f"Skipped record: {retrieved_record.data}"
@@ -469,30 +463,13 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                         masterdata_repository=self.review_manager.settings.is_curated_repo(),
                     )
 
-                    europe_pmc_feed.set_id(record_dict=retrieved_record.data)
-                    added = europe_pmc_feed.add_record(record=retrieved_record)
-
-                    if added:
-                        self.review_manager.logger.info(
-                            " retrieve europe_pmc_id="
-                            + retrieved_record.data[Fields.EUROPE_PMC_ID]
-                        )
-                    else:
-                        europe_pmc_feed.update_existing_record(
-                            records=records,
-                            record_dict=retrieved_record.data,
-                            prev_record_dict_version=prev_record_dict_version,
-                            source=self.search_source,
-                            update_time_variant_fields=rerun,
-                        )
+                    europe_pmc_feed.add_update_record(retrieved_record)
 
                 url = "END"
                 next_page_url_node = root.find("nextPageUrl")
                 if next_page_url_node is not None:
                     if next_page_url_node.text is not None:
                         url = next_page_url_node.text
-
-            europe_pmc_feed.print_post_run_search_infos(records=records)
 
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             pass
@@ -502,7 +479,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 "(possibly caused by concurrent operations)"
             ) from exc
         finally:
-            europe_pmc_feed.save_feed_file()
+            europe_pmc_feed.save()
 
     @classmethod
     def heuristic(cls, filename: Path, data: str) -> dict:
@@ -541,7 +518,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.DB,
+                    search_type=SearchType.DB,
                     search_parameters={"query": query},
                     comment="",
                 )
@@ -549,21 +526,31 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
+    def _load_bib(self) -> dict:
+        def field_mapper(record_dict: dict) -> None:
+            for key in list(record_dict.keys()):
+                if key not in ["ID", "ENTRYTYPE"]:
+                    record_dict[key.lower()] = record_dict.pop(key)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+            field_mapper=field_mapper,
+        )
+        return records
+
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = bib_loader.load_bib_file()
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for Europe PMC"""
         record.data[Fields.AUTHOR].rstrip(".")
         record.data[Fields.TITLE].rstrip(".")

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing
-from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
@@ -22,18 +21,19 @@ import colrev.env.environment_manager
 import colrev.env.language_service
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
 import colrev.ops.built_in.search_sources.semanticscholar_utils as connector_utils
 import colrev.ops.load
-import colrev.ops.load_utils_bib
-import colrev.record
+import colrev.process.operation
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 from colrev.ops.built_in.search_sources.semanticscholar_ui import SemanticScholarUI
 
 if TYPE_CHECKING:  # pragma: no cover
-    import colrev.ops.search
+
     import colrev.ops.prep
 
 
@@ -61,8 +61,8 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
         + "colrev/ops/built_in/search_sources/semanticscholar.md"
     )
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
-    search_types = [colrev.settings.SearchType.API]
+    heuristic_status = SearchSourceHeuristicStatus.oni
+    search_types = [SearchType.API]
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     short_name = "S2"
     source_identifier = Fields.SEMANTIC_SCHOLAR_ID
@@ -82,7 +82,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -95,14 +95,14 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint="colrev.semanticscholar",
                 filename=self._s2_filename,
-                search_type=colrev.settings.SearchType.API,
+                search_type=SearchType.API,
                 search_parameters={},
                 comment="",
             )
             self.s2_lock = Lock()
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check the availability of the Semantic Scholar API"""
 
@@ -122,13 +122,13 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
                 assert returned_record[Fields.TITLE] == test_record[Fields.TITLE]
                 assert returned_record[Fields.URL] == test_record[Fields.URL]
             else:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException(
                         self._availability_exception_message
                     )
         except (requests.exceptions.RequestException, IndexError) as exc:
             print(exc)
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     self._availability_exception_message
                 ) from exc
@@ -280,7 +280,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
 
         return api_key
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of Semantic Scholar"""
 
         # get the api key
@@ -291,7 +291,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self._s2 = SemanticScholar()
 
         # load file because the object is not shared between processes
-        s2_feed = self.search_source.get_feed(
+        s2_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
@@ -301,7 +301,6 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             self.review_manager.logger.info(
                 "Performing a search of the full history (may take time)"
             )
-        records = self.review_manager.dataset.load_records_dict()
         try:
             params = self.search_source.search_parameters
             search_subject = params.get("search_subject")
@@ -329,45 +328,9 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             for item in _search_return:
                 retrieved_record_dict = connector_utils.s2_dict_to_record(item=item)
 
-                s2_feed.set_id(record_dict=retrieved_record_dict)
-                prev_record_dict_version = {}
+                retrieved_record = colrev.record.record.Record(retrieved_record_dict)
+                s2_feed.add_update_record(retrieved_record)
 
-                if (
-                    retrieved_record_dict[self.source_identifier]
-                    in s2_feed.feed_records
-                ):
-                    prev_record_dict_version = deepcopy(
-                        s2_feed.feed_records[
-                            retrieved_record_dict[self.source_identifier]
-                        ]
-                    )
-
-                retrieved_record_dict[self.source_identifier] = retrieved_record_dict[
-                    self.source_identifier
-                ]
-                retrieved_record = colrev.record.Record(data=retrieved_record_dict)
-
-                added = s2_feed.add_record(record=retrieved_record)
-
-                if added:
-                    if self._s2_UI.search_subject == "author":
-                        self.review_manager.logger.info(
-                            "retrieve "
-                            + retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID]
-                        )
-                    else:
-                        self.review_manager.logger.info(
-                            "retrieve "
-                            + retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID]
-                        )
-                else:
-                    s2_feed.update_existing_record(
-                        records=records,
-                        record_dict=retrieved_record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
         except (
             colrev_exceptions.RecordNotParsableException,
             colrev_exceptions.NotFeedIdentifiableException,
@@ -377,9 +340,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
             )
             print(exc)
 
-        s2_feed.print_post_run_search_infos(records=records)
-        s2_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        s2_feed.save()
 
     @classmethod
     def add_endpoint(
@@ -421,22 +382,21 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         add_source = colrev.settings.SearchSource(
             endpoint="colrev.semanticscholar",
             filename=filename,
-            search_type=colrev.settings.SearchType.API,
+            search_type=SearchType.API,
             search_parameters=search_params,
             comment="",
         )
         return add_source
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 30,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve master data from Semantic Scholar"""
         # Not yet implemented
-
         return record
 
     @classmethod
@@ -453,18 +413,19 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
         # Not yet implemented
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
-
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.PrepRecord, source: colrev.settings.SearchSource
-    ) -> colrev.record.PrepRecord:
+        self,
+        record: colrev.record.record_prep.PrepRecord,
+        source: colrev.settings.SearchSource,
+    ) -> colrev.record.record_prep.PrepRecord:
         """Source-specific preparation for Semantic Scholar"""
         # Not yet implemented
         return record

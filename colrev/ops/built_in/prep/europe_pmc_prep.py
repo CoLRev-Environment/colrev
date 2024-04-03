@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.europe_pmc as europe_pmc_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 
 
 # pylint: disable=too-few-public-methods
@@ -42,14 +42,16 @@ class EuropePMCMetadataPrep(JsonSchemaMixin):
         self.prep_operation = prep_operation
         self.review_manager = prep_operation.review_manager
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on Europe PMC metadata"""
 
         # pylint: disable=invalid-name
         EuropePMCSearchSource = europe_pmc_connector.EuropePMCSearchSource(
             source_operation=self.prep_operation
         )
-        EuropePMCSearchSource.get_masterdata(
+        EuropePMCSearchSource.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

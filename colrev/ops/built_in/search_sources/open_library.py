@@ -14,10 +14,11 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.load_utils_bib
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
-
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -38,10 +39,10 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     endpoint = "colrev.open_library"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "isbn"
-    search_types = [colrev.settings.SearchType.MD]
+    search_types = [SearchType.MD]
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.na
+    heuristic_status = SearchSourceHeuristicStatus.na
     short_name = "OpenLibrary"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -49,10 +50,15 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     )
     _open_library_md_filename = Path("data/search/md_open_library.bib")
 
+    requests_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    }
+
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -75,7 +81,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
                 self.search_source = colrev.settings.SearchSource(
                     endpoint="colrev.open_library",
                     filename=self._open_library_md_filename,
-                    search_type=colrev.settings.SearchType.MD,
+                    search_type=SearchType.MD,
                     search_parameters={},
                     comment="",
                 )
@@ -85,7 +91,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         self.origin_prefix = self.search_source.get_origin_prefix()
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check the status (availability) of the OpenLibrary API"""
 
@@ -99,20 +105,16 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         }
         try:
             url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
-            requests_headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
-            }
             ret = requests.get(
                 url,
-                headers=requests_headers,
+                headers=self.requests_headers,
                 timeout=30,
             )
             if ret.status_code != 200:
-                if not source_operation.force_mode:
+                if not self.review_manager.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException as exc:
-            if not source_operation.force_mode:
+            if not self.review_manager.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "OPENLIBRARY"
                 ) from exc
@@ -121,13 +123,15 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
     @classmethod
     def _open_library_json_to_record(
         cls, *, item: dict, url: str
-    ) -> colrev.record.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         retrieved_record: dict = {}
 
         if "author_name" in item:
             authors_string = " and ".join(
                 [
-                    colrev.record.PrepRecord.format_author_field(input_string=author)
+                    colrev.record.record_prep.PrepRecord.format_author_field(
+                        input_string=author
+                    )
                     for author in item["author_name"]
                 ]
             )
@@ -148,13 +152,16 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         if Fields.ISBN in item:
             retrieved_record[Fields.ISBN] = str(item["isbn"][0])
 
-        record = colrev.record.PrepRecord(data=retrieved_record)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record)
         record.add_provenance_all(source=url)
         return record
 
     def _get_record_from_open_library(
-        self, *, prep_operation: colrev.ops.prep.Prep, record: colrev.record.Record
-    ) -> colrev.record.Record:
+        self,
+        *,
+        prep_operation: colrev.ops.prep.Prep,
+        record: colrev.record.record.Record,
+    ) -> colrev.record.record.Record:
         session = prep_operation.review_manager.get_cached_session()
 
         url = "NA"
@@ -164,7 +171,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = session.request(
                 "GET",
                 url,
-                headers=prep_operation.requests_headers,
+                headers=self.requests_headers,
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
@@ -211,7 +218,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             ret = session.request(
                 "GET",
                 url,
-                headers=prep_operation.requests_headers,
+                headers=self.requests_headers,
                 timeout=prep_operation.timeout,
             )
             ret.raise_for_status()
@@ -252,22 +259,22 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         """Add SearchSource as an endpoint (based on query provided to colrev search -a )"""
         raise NotImplementedError
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of OpenLibrary"""
 
-        # if self.search_source.search_type == colrev.settings.SearchType.DB:
+        # if self.search_source.search_type == SearchType.DB:
         #     if self.review_manager.in_ci_environment():
         #         raise colrev_exceptions.SearchNotAutomated(
         #             "DB search for OpenLibrary not automated."
         #         )
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve masterdata from OpenLibrary based on similarity with the record provided"""
 
         if any(self.origin_prefix in o for o in record.data[Fields.ORIGIN]):
@@ -280,21 +287,20 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             )
 
             self.open_library_lock.acquire(timeout=60)
-            open_library_feed = self.search_source.get_feed(
+            open_library_feed = self.search_source.get_api_feed(
                 review_manager=prep_operation.review_manager,
                 source_identifier=self.source_identifier,
                 update_only=False,
+                prep_mode=True,
             )
 
-            open_library_feed.set_id(record_dict=retrieved_record.data)
-
-            open_library_feed.add_record(record=retrieved_record)
+            open_library_feed.add_update_record(retrieved_record)
 
             record.merge(
-                merging_record=retrieved_record,
+                retrieved_record,
                 default_source=retrieved_record.data[Fields.ORIGIN][0],
             )
-            open_library_feed.save_feed_file()
+            open_library_feed.save()
             self.open_library_lock.release()
 
         except (
@@ -314,17 +320,17 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                logger=self.review_manager.logger,
             )
-            records = bib_loader.load_bib_file()
             return records
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for OpenLibrary"""
 
         return record

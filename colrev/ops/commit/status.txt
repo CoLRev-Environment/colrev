@@ -1,0 +1,63 @@
+Status<br>
+    {{ GREEN }}
+init 
+{{ END }}
+<br>
+
+    {% if status_stats.get_active_metadata_operation_info() == "" and status_stats.overall.md_retrieved > 0 %}{{ GREEN }}{% else %}{{ ORANGE }}{% endif %}
+retrieve 
+{{ END }}
+{{ "{:>10}".format(status_stats.overall.md_processed) }} retrieved     
+
+{% if status_stats.get_active_metadata_operation_info() != "" %}{{ ORANGE }}{{ status_stats.get_active_metadata_operation_info() }}{{ END }} {% endif %}
+
+{% if status_stats.overall.md_prepared > 0 %}
+[{% if status_stats.perc_curated < 30 %}only {{ RED }}
+{% elif status_stats.perc_curated < 60 %}{{ ORANGE }}
+{% else %}{{ GREEN }}{% endif %}
+{{ status_stats.nr_curated_records }}{{ END }} quality-curated]
+{% endif %}
+<br>
+
+    {% if status_stats.currently.md_processed > 0 %}{{ ORANGE }}{% elif status_stats.overall.md_processed > 0 %}{{ GREEN }}{% endif %}
+prescreen
+{% if status_stats.currently.md_processed > 0 or status_stats.overall.md_processed > 0 %}{{ END }}{% endif %}
+{{ "{:>10}".format(status_stats.overall.rev_prescreen_included) }} included      
+
+{% if status_stats.currently.md_processed > 0 %}{{ ORANGE }}{{ status_stats.currently.md_processed }} to prescreen{{ END }} {% endif %}
+
+{% if status_stats.currently.rev_prescreen_excluded > 0 %}[
+{{ status_stats.currently.rev_prescreen_excluded }} prescreen excluded]{% endif %}
+<br>
+
+    {% if status_stats.overall.rev_prescreen_included == 0 %}{% elif status_stats.overall.rev_prescreen_included > 0 and status_stats.currently.rev_prescreen_included == 0 and status_stats.currently.pdf_imported == 0 and status_stats.currently.pdf_needs_manual_retrieval == 0 and status_stats.currently.pdf_needs_manual_preparation == 0  %}{{ GREEN }}{% else %}{{ ORANGE }}{% endif %}
+pdfs     
+{% if status_stats.overall.rev_prescreen_included == 0 %}{% elif status_stats.overall.rev_prescreen_included > 0 and status_stats.currently.rev_prescreen_included == 0 and status_stats.currently.pdf_imported == 0 and status_stats.currently.pdf_needs_manual_retrieval == 0 and status_stats.currently.pdf_needs_manual_preparation == 0  %}{{ END }}{% else %}{{ END }}{% endif %}
+{{ "{:>10}".format(status_stats.overall.pdf_prepared) }} retrieved     
+
+{% if status_stats.get_active_pdf_operation_info() != "" %}{{ ORANGE }}{{ status_stats.get_active_pdf_operation_info() }}{{ END }} {% endif %}
+
+{% if status_stats.currently.pdf_not_available > 0 %}[
+{{ status_stats.currently.pdf_not_available }} not available]{% endif %}
+<br>
+
+    {% if status_stats.currently.pdf_prepared > 0 %}{{ ORANGE }}{% elif status_stats.overall.pdf_prepared > 0 %}{{ GREEN }}{% endif %}
+screen   
+{% if status_stats.currently.pdf_prepared > 0 or status_stats.overall.pdf_prepared > 0 %}{{ END }}{% endif %}
+{{ "{:>10}".format(status_stats.overall.rev_included) }} included      
+
+{% if status_stats.currently.pdf_prepared > 0 %}{{ ORANGE }}{{ status_stats.currently.pdf_prepared }} to screen{{ END }} {% endif %}
+
+{% if status_stats.currently.rev_excluded > 0 %}[
+{{ status_stats.currently.rev_excluded }} excluded]{% endif %}
+<br>
+
+    {% if status_stats.currently.rev_included > 0 %}{{ ORANGE }}{% elif status_stats.overall.rev_included > 0 %}{{ GREEN }}{% endif %}
+data     
+{% if status_stats.currently.rev_included > 0 or status_stats.overall.rev_included > 0 %}{{ END }}{% endif %}
+{{ "{:>10}".format(status_stats.overall.rev_synthesized) }} synthesized   
+
+{% if status_stats.currently.rev_included > 0 %}{{ ORANGE }}{{ status_stats.currently.rev_included }} to synthesize{{ END }} {% endif %}
+{% if status_stats.completeness_condition %}[completed]{{ END }} {% endif %}
+
+<br>

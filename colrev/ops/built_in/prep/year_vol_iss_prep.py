@@ -12,8 +12,9 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.crossref as crossref_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
 
@@ -56,8 +57,8 @@ class YearVolIssPrep(JsonSchemaMixin):
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
             # pylint: disable=duplicate-code
-            if record[Fields.STATUS] not in colrev.record.RecordState.get_post_x_states(
-                state=colrev.record.RecordState.md_processed
+            if record[Fields.STATUS] not in RecordState.get_post_x_states(
+                state=RecordState.md_processed
             ):
                 continue
             if not record.get(Fields.YEAR, "NA").isdigit():
@@ -89,10 +90,10 @@ class YearVolIssPrep(JsonSchemaMixin):
 
         return vol_nr_dict
 
-    def _get_year_from_toc(self, *, record: colrev.record.Record) -> None:
+    def _get_year_from_toc(self, *, record: colrev.record.record.Record) -> None:
         # TBD: maybe extract the following three lines as a separate script...
         try:
-            year = self.local_index.get_year_from_toc(record_dict=record.get_data())
+            year = self.local_index.get_year_from_toc(record.get_data())
             record.update_field(
                 key=Fields.YEAR,
                 value=year,
@@ -103,7 +104,9 @@ class YearVolIssPrep(JsonSchemaMixin):
         except colrev_exceptions.TOCNotAvailableException:
             pass
 
-    def _get_year_from_vol_nr_dict(self, *, record: colrev.record.Record) -> None:
+    def _get_year_from_vol_nr_dict(
+        self, *, record: colrev.record.record.Record
+    ) -> None:
         if Fields.JOURNAL not in record.data or Fields.VOLUME not in record.data:
             return
 
@@ -149,7 +152,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                 )
                 record.run_quality_model(qm=self.quality_model)
 
-    def _get_year_from_crossref(self, *, record: colrev.record.Record) -> None:
+    def _get_year_from_crossref(self, *, record: colrev.record.record.Record) -> None:
         try:
             crossref_source = crossref_connector.CrossrefSearchSource(
                 source_operation=self.prep_operation
@@ -198,7 +201,9 @@ class YearVolIssPrep(JsonSchemaMixin):
         except requests.exceptions.RequestException:
             pass
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on year-volume-issue dependency"""
 
         if (

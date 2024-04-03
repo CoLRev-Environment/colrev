@@ -35,4 +35,5 @@ colrev.ops.built\_in.pdf\_prep.ocrmypdf.OCRMyPDF
 
    .. autosummary::
 
+      ~OCRMyPDF.OCRMYPDF_IMAGE
       ~OCRMyPDF.ci_supported

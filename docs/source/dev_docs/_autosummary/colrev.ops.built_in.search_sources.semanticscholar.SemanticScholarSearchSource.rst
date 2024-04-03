@@ -24,15 +24,15 @@ colrev.ops.built\_in.search\_sources.semanticscholar.SemanticScholarSearchSource
       ~SemanticScholarSearchSource.from_dict
       ~SemanticScholarSearchSource.from_json
       ~SemanticScholarSearchSource.from_object
-      ~SemanticScholarSearchSource.get_masterdata
       ~SemanticScholarSearchSource.heuristic
       ~SemanticScholarSearchSource.json_schema
       ~SemanticScholarSearchSource.keyword_search
       ~SemanticScholarSearchSource.load
       ~SemanticScholarSearchSource.paper_search
+      ~SemanticScholarSearchSource.prep_link_md
       ~SemanticScholarSearchSource.prepare
       ~SemanticScholarSearchSource.register_field_encoders
-      ~SemanticScholarSearchSource.run_search
+      ~SemanticScholarSearchSource.search
       ~SemanticScholarSearchSource.to_dict
       ~SemanticScholarSearchSource.to_json
 

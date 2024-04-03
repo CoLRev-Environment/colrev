@@ -12,8 +12,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 from colrev.constants import PDFDefectCodes
 
 
@@ -28,6 +29,7 @@ class OCRMyPDF(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
+    OCRMYPDF_IMAGE = "jbarlow83/ocrmypdf:latest"
 
     def __init__(
         self,
@@ -39,21 +41,23 @@ class OCRMyPDF(JsonSchemaMixin):
         self.review_manager = pdf_prep_operation.review_manager
 
         if not self.review_manager.in_ci_environment():
-            self.ocrmypdf_image = "jbarlow83/ocrmypdf:latest"
             self.review_manager.environment_manager.build_docker_image(
-                imagename=self.ocrmypdf_image
+                imagename=self.OCRMYPDF_IMAGE
             )
+        pdf_prep_operation.docker_images_to_stop.append(self.OCRMYPDF_IMAGE)
 
     def _apply_ocr(
         self,
         *,
-        record: colrev.record.Record,
-    ) -> colrev.record.Record:
+        record: colrev.record.record_pdf.PDFRecord,
+    ) -> colrev.record.record_pdf.PDFRecord:
         pdf_path = self.review_manager.path / Path(record.data[Fields.FILE])
         non_ocred_filename = Path(str(pdf_path).replace(".pdf", "_no_ocr.pdf"))
         pdf_path.rename(non_ocred_filename)
         orig_path = (
-            pdf_path.parents[0] if pdf_path.is_file() else self.review_manager.pdf_dir
+            pdf_path.parents[0]
+            if pdf_path.is_file()
+            else self.review_manager.get_path(Filepaths.PDF_DIR)
         )
 
         # options = ""
@@ -70,7 +74,7 @@ class OCRMyPDF(JsonSchemaMixin):
 
         client = docker.from_env(timeout=120)
         client.containers.run(
-            image=self.ocrmypdf_image,
+            image=self.OCRMYPDF_IMAGE,
             command=args,
             auto_remove=True,
             user=f"{os.geteuid()}:{os.getegid()}",
@@ -85,7 +89,7 @@ class OCRMyPDF(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record.Record,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the PDF by applying OCR"""

@@ -13,10 +13,11 @@ from inquirer import prompt
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.screen.utils as util_cli_screen
-import colrev.record
+import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import ScreenCriterionType
 
 
 @zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
@@ -54,7 +55,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         ) in self.review_manager.settings.screen.criteria.items():
             color = Colors.GREEN
             if (
-                colrev.settings.ScreenCriterionType.exclusion_criterion
+                ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
                 color = Colors.RED
@@ -67,7 +68,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
                 print(f"   {criterion_settings.comment}")
 
     def _screen_with_criteria_print_overall_decision(
-        self, *, record: colrev.record.Record, screen_inclusion: bool
+        self, *, record: colrev.record.record.Record, screen_inclusion: bool
     ) -> None:
         if screen_inclusion:
             print(
@@ -83,14 +84,14 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def _screen_record_with_criteria(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         abstract_from_tei: bool,
     ) -> str:
         choices = []
         for criterion_name, criterion_settings in self.screening_criteria.items():
             color = Colors.GREEN
             if (
-                colrev.settings.ScreenCriterionType.exclusion_criterion
+                ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
                 color = Colors.RED
@@ -147,7 +148,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
     def _screen_record_without_criteria(
         self,
         *,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         abstract_from_tei: bool,
     ) -> str:
         quit_pressed = False
@@ -191,7 +192,7 @@ class CoLRevCLIScreen(JsonSchemaMixin):
         *,
         record_dict: dict,
     ) -> str:
-        record = colrev.record.Record(data=record_dict)
+        record = colrev.record.record.Record(record_dict)
         abstract_from_tei = False
         if (
             Fields.ABSTRACT not in record.data
@@ -271,7 +272,9 @@ class CoLRevCLIScreen(JsonSchemaMixin):
             if input("Create commit (y/n)?") != "y":
                 return records
 
-        self.review_manager.create_commit(msg="Screening (manual)", manual_author=True)
+        self.review_manager.dataset.create_commit(
+            msg="Screening (manual)", manual_author=True
+        )
         return records
 
     def run_screen(self, records: dict, split: list) -> dict:

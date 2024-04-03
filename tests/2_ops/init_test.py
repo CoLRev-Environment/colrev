@@ -7,17 +7,18 @@ import pytest
 
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
+from colrev.constants import Filepaths
 
 
 def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
     """Test repo init error (non-empty dir)"""
 
     review_manager = colrev.review_manager.ReviewManager(
-        path_str=str(tmp_path), force_mode=True
+        path_str=str(tmp_path), force_mode=True, navigate_to_home_dir=False
     )
     review_manager.settings = colrev.settings.load_settings(
-        settings_path=helpers.test_data_path.parents[1]
-        / Path("colrev/template/init/settings.json")
+        settings_path=helpers.test_data_path.parents[0]
+        / Path("colrev/ops/init/settings.json")
     )
 
     with pytest.raises(colrev_exceptions.RepoInitError):
@@ -45,9 +46,7 @@ def test_repo_init_errors(tmp_path, helpers) -> None:  # type: ignore
 def test_non_empty_dir_error_init(tmp_path) -> None:  # type: ignore
     """Test repo init error (non-empty dir)"""
     # A .report.log file that should be removed
-    (tmp_path / colrev.review_manager.ReviewManager.REPORT_RELATIVE).write_text(
-        "test", encoding="utf-8"
-    )
+    (tmp_path / Filepaths.REPORT_FILE).write_text("test", encoding="utf-8")
     (tmp_path / Path("test.txt")).write_text("test", encoding="utf-8")
     with pytest.raises(colrev_exceptions.NonEmptyDirectoryError):
         colrev.review_manager.get_init_operation(
@@ -67,8 +66,8 @@ def local_pdf_collection(helpers, tmp_path_factory):  # type: ignore
         path_str=str(test_repo_dir), force_mode=True
     )
     review_manager.settings = colrev.settings.load_settings(
-        settings_path=helpers.test_data_path.parents[1]
-        / Path("colrev/template/init/settings.json")
+        settings_path=helpers.test_data_path.parents[0]
+        / Path("colrev/ops/init/settings.json")
     )
 
     review_manager = colrev.review_manager.get_init_operation(

@@ -21,3 +21,14 @@ colrev.ops.prep
       :nosignatures:
 
       Prep
+
+
+
+
+
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+
+      PreparationBreak

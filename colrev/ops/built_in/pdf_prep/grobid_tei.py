@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -43,7 +43,7 @@ class GROBIDTEI(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record.Record,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the analysis of PDFs by creating a TEI (based on GROBID)"""

@@ -10,8 +10,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import RecordState
 
 
 # pylint: disable=too-few-public-methods
@@ -59,7 +60,7 @@ class CurationPrep(JsonSchemaMixin):
         return curation_restrictions
 
     def _get_applicable_curation_restrictions(
-        self, *, record: colrev.record.Record
+        self, *, record: colrev.record.record.Record
     ) -> dict:
         """Get the applicable curation restrictions"""
 
@@ -81,7 +82,9 @@ class CurationPrep(JsonSchemaMixin):
         ]
         return applicable_curation_restrictions
 
-    def apply_curation_restrictions(self, *, record: colrev.record.Record) -> None:
+    def apply_curation_restrictions(
+        self, *, record: colrev.record.record.Record
+    ) -> None:
         """Apply the curation restrictions"""
         applicable_curation_restrictions = self._get_applicable_curation_restrictions(
             record=record
@@ -135,14 +138,11 @@ class CurationPrep(JsonSchemaMixin):
 
     def prepare(
         self,
-        record: colrev.record.PrepRecord,
-    ) -> colrev.record.Record:
+        record: colrev.record.record_prep.PrepRecord,
+    ) -> colrev.record.record.Record:
         """Prepare records in a CoLRev curation"""
 
-        if (
-            record.data[Fields.STATUS]
-            == colrev.record.RecordState.rev_prescreen_excluded
-        ):
+        if record.data[Fields.STATUS] == RecordState.rev_prescreen_excluded:
             return record
 
         self.apply_curation_restrictions(record=record)

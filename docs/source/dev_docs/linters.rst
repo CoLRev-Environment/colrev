@@ -6,7 +6,7 @@ CoLRev includes custom plugins for pylint, which is useful to write high-qualiy 
 If the linters emit error messages for code that is correct, you can ignore the messages for a particular line of code::
 
    # pylint: disable=colrev-direct-status-assign
-   record_dict["colrev_status"] = colrev.record.Record.md_prepared
+   record_dict["colrev_status"] = colrev.record.record.Record.md_prepared
 
 
 colrev-direct-status-assign
@@ -16,13 +16,13 @@ The `colrev_status` should not be assigned directly using the `record_dict` dict
 
 **Problematic code**::
 
-   record_dict["colrev_status"] = colrev.record.Record.md_prepared
+   record_dict["colrev_status"] = colrev.record.record.Record.md_prepared
 
 
 **Correct code**::
 
-   record = colrev.record.Record(data=record_dict)
-   record.set_statue(target_state = colrev.record.Record.md_prepared)
+   record = colrev.record.record.Record(record_dict)
+   record.set_statue(target_state = colrev.record.record.Record.md_prepared)
 
 
 

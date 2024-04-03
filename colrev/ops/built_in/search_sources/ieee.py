@@ -6,18 +6,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+import pandas as pd
 import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.ieee_api
-import colrev.ops.load_utils_ris
 import colrev.ops.prep
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -34,11 +36,11 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"
-    search_types = [colrev.settings.SearchType.API]
+    search_types = [SearchType.API]
     endpoint = "colrev.ieee"
 
     ci_supported: bool = True
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
     short_name = "IEEE Xplore"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -97,7 +99,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
     def __init__(
         self,
         *,
-        source_operation: colrev.operation.Operation,
+        source_operation: colrev.process.operation.Operation,
         settings: Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
@@ -110,7 +112,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             self.search_source = colrev.settings.SearchSource(
                 endpoint=self.endpoint,
                 filename=Path("data/search/ieee.bib"),
-                search_type=colrev.settings.SearchType.OTHER,
+                search_type=SearchType.OTHER,
                 search_parameters={},
                 comment="",
             )
@@ -141,7 +143,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             search_types=cls.search_types, params=params
         )
 
-        if search_type == colrev.settings.SearchType.API:
+        if search_type == SearchType.API:
             if len(params) == 0:
                 add_source = operation.add_api_source(endpoint=cls.endpoint)
                 return add_source
@@ -174,29 +176,29 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 add_source = colrev.settings.SearchSource(
                     endpoint=cls.endpoint,
                     filename=filename,
-                    search_type=colrev.settings.SearchType.API,
+                    search_type=SearchType.API,
                     search_parameters=search_parameters,
                     comment="",
                 )
                 return add_source
 
-        # if search_type == colrev.settings.SearchType.API:
+        # if search_type == SearchType.API:
 
         raise NotImplementedError
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of IEEEXplore"""
 
-        ieee_feed = self.search_source.get_feed(
+        ieee_feed = self.search_source.get_api_feed(
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
         )
 
-        if self.search_source.search_type == colrev.settings.SearchType.API:
+        if self.search_source.search_type == SearchType.API:
             self._run_api_search(ieee_feed=ieee_feed, rerun=rerun)
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
@@ -243,44 +245,25 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         return query
 
     def _run_api_search(
-        self, ieee_feed: colrev.ops.search_feed.GeneralOriginFeed, rerun: bool
+        self, ieee_feed: colrev.ops.search_api_feed.SearchAPIFeed, rerun: bool
     ) -> None:
         query = self._run_api_query()
         query.startRecord = 1
         response = query.callAPI()
         while "articles" in response:
-            records = self.review_manager.dataset.load_records_dict()
             articles = response["articles"]
 
             for article in articles:
-                prev_record_dict_version: dict = {}
-                record_dict = self._create_record_dict(article)
-                record = colrev.record.Record(data=record_dict)
-                added = ieee_feed.add_record(record=record)
 
-                if added:
-                    self.review_manager.logger.info(
-                        " retrieve " + record.data[Fields.ID]
-                    )
-                else:
-                    changed = ieee_feed.update_existing_record(
-                        records=records,
-                        record_dict=record.data,
-                        prev_record_dict_version=prev_record_dict_version,
-                        source=self.search_source,
-                        update_time_variant_fields=rerun,
-                    )
-                    if changed:
-                        self.review_manager.logger.info(
-                            " update " + record.data[Fields.ID]
-                        )
+                record_dict = self._create_record_dict(article)
+                record = colrev.record.record.Record(record_dict)
+
+                ieee_feed.add_update_record(record)
 
             query.startRecord += 200
             response = query.callAPI()
 
-        ieee_feed.print_post_run_search_infos(records=records)
-        ieee_feed.save_feed_file()
-        self.review_manager.dataset.save_records_dict(records=records)
+        ieee_feed.save()
 
     def _update_special_case_fields(self, *, record_dict: dict, article: dict) -> None:
         if "start_page" in article:
@@ -292,8 +275,10 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             author_list = []
             for author in article["authors"]["authors"]:
                 author_list.append(author["full_name"])
-            record_dict[Fields.AUTHOR] = colrev.record.PrepRecord.format_author_field(
-                input_string=" and ".join(author_list)
+            record_dict[Fields.AUTHOR] = (
+                colrev.record.record_prep.PrepRecord.format_author_field(
+                    input_string=" and ".join(author_list)
+                )
             )
 
         if (
@@ -332,89 +317,140 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
 
         return record_dict
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
 
     def _load_ris(self, load_operation: colrev.ops.load.Load) -> dict:
-        entrytype_map = {
-            "JOUR": ENTRYTYPES.ARTICLE,
-            "CONF": ENTRYTYPES.INPROCEEDINGS,
-        }
-        key_map = {
-            ENTRYTYPES.ARTICLE: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "T2": Fields.JOURNAL,
-                "AB": Fields.ABSTRACT,
-                "VL": Fields.VOLUME,
-                "IS": Fields.NUMBER,
-                "DO": Fields.DOI,
-                "PB": Fields.PUBLISHER,
-                "UR": Fields.URL,
-                "SP": Fields.PAGES,
-            },
-            ENTRYTYPES.INPROCEEDINGS: {
-                "PY": Fields.YEAR,
-                "AU": Fields.AUTHOR,
-                "TI": Fields.TITLE,
-                "T2": Fields.BOOKTITLE,
-                "DO": Fields.DOI,
-                "SP": Fields.PAGES,
-            },
-        }
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["TY"] == "JOUR":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["TY"] == "CONF":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
 
-        ris_loader = colrev.ops.load_utils_ris.RISLoader(
-            load_operation=load_operation,
-            source=self.search_source,
-            list_fields={"AU": " and "},
+        def field_mapper(record_dict: dict) -> None:
+
+            key_maps = {
+                ENTRYTYPES.ARTICLE: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "T2": Fields.JOURNAL,
+                    "AB": Fields.ABSTRACT,
+                    "VL": Fields.VOLUME,
+                    "IS": Fields.NUMBER,
+                    "DO": Fields.DOI,
+                    "PB": Fields.PUBLISHER,
+                    "UR": Fields.URL,
+                    "SN": Fields.ISSN,
+                },
+                ENTRYTYPES.INPROCEEDINGS: {
+                    "PY": Fields.YEAR,
+                    "AU": Fields.AUTHOR,
+                    "TI": Fields.TITLE,
+                    "T2": Fields.BOOKTITLE,
+                    "DO": Fields.DOI,
+                    "SN": Fields.ISSN,
+                },
+            }
+
+            key_map = key_maps[record_dict[Fields.ENTRYTYPE]]
+            for ris_key in list(record_dict.keys()):
+                if ris_key in key_map:
+                    standard_key = key_map[ris_key]
+                    record_dict[standard_key] = record_dict.pop(ris_key)
+
+            if "SP" in record_dict and "EP" in record_dict:
+                record_dict[Fields.PAGES] = (
+                    f"{record_dict.pop('SP')}--{record_dict.pop('EP')}"
+                )
+
+            if Fields.AUTHOR in record_dict and isinstance(
+                record_dict[Fields.AUTHOR], list
+            ):
+                record_dict[Fields.AUTHOR] = " and ".join(record_dict[Fields.AUTHOR])
+            if Fields.EDITOR in record_dict and isinstance(
+                record_dict[Fields.EDITOR], list
+            ):
+                record_dict[Fields.EDITOR] = " and ".join(record_dict[Fields.EDITOR])
+            if Fields.KEYWORDS in record_dict and isinstance(
+                record_dict[Fields.KEYWORDS], list
+            ):
+                record_dict[Fields.KEYWORDS] = ", ".join(record_dict[Fields.KEYWORDS])
+
+            record_dict.pop("TY", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("DB", None)
+            record_dict.pop("C1", None)
+            record_dict.pop("T3", None)
+            record_dict.pop("AD", None)
+            record_dict.pop("CY", None)
+            record_dict.pop("M3", None)
+            record_dict.pop("EP", None)
+            record_dict.pop("Y1", None)
+            record_dict.pop("Y2", None)
+            record_dict.pop("JA", None)
+            record_dict.pop("JO", None)
+            record_dict.pop("VO", None)
+            record_dict.pop("VL", None)
+            record_dict.pop("IS", None)
+            record_dict.pop("ER", None)
+
+            for key, value in record_dict.items():
+                record_dict[key] = str(value)
+
+        load_operation.ensure_append_only(file=self.search_source.filename)
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="INCREMENTAL",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
         )
-        records = ris_loader.load_ris_records()
-
-        for record_dict in records.values():
-            ris_loader.apply_entrytype_mapping(
-                record_dict=record_dict, entrytype_map=entrytype_map
-            )
-
-            # fixes
-            if record_dict[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-                if "T1" in record_dict and "TI" not in record_dict:
-                    record_dict["TI"] = record_dict.pop("T1")
-
-            ris_loader.map_keys(record_dict=record_dict, key_map=key_map)
 
         return records
 
-    def _fix_csv_records(self, *, records: dict) -> None:
-        for record in records.values():
-            record[Fields.FULLTEXT] = record.pop("pdf_link")
-            if "article_citation_count" in record:
-                record[Fields.CITED_BY] = record.pop("article_citation_count")
-            if "author_keywords" in record:
-                record[Fields.KEYWORDS] = record.pop("author_keywords")
-            record[Fields.TITLE] = record.pop("document_title")
-            if "start_page" in record and "end_page" in record:
-                record[Fields.PAGES] = record["start_page"] + "--" + record["end_page"]
-                del record["start_page"]
-                del record["end_page"]
-            if "isbns" in record:
-                record[Fields.ISBN] = record.pop("isbns")
-            if record["document_identifier"] == "IEEE Conferences":
-                record[Fields.ENTRYTYPE] = "inproceedings"
-                record[Fields.BOOKTITLE] = record.pop("publication_title")
-            elif record["document_identifier"] == "IEEE Journals":
-                record[Fields.ENTRYTYPE] = "article"
-                record[Fields.JOURNAL] = record.pop("publication_title")
-            elif record["document_identifier"] == "IEEE Standards":
-                record[Fields.ENTRYTYPE] = "techreport"
-                record["key"] = record.pop("publication_title")
+    def _load_csv(self) -> dict:
+        def entrytype_setter(record_dict: dict) -> None:
+            if record_dict["Category"] == "Magazine":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
+            elif record_dict["Category"] == "Conference Publication":
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
+            else:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+        def field_mapper(record_dict: dict) -> None:
+            record_dict[Fields.TITLE] = record_dict.pop("Title", "")
+            record_dict[Fields.AUTHOR] = record_dict.pop("Authors", "")
+            record_dict[Fields.ABSTRACT] = record_dict.pop("Abstract", "")
+            record_dict[Fields.JOURNAL] = record_dict.pop("Publication", "")
+            record_dict[Fields.DOI] = record_dict.pop("DOI", "")
+
+            record_dict.pop("Category", None)
+            record_dict.pop("Affiliations", None)
+
+            for key in list(record_dict.keys()):
+                value = record_dict[key]
+                record_dict[key] = str(value)
+                if value == "" or pd.isna(value):
+                    del record_dict[key]
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            unique_id_field="DOI",
+            entrytype_setter=entrytype_setter,
+            field_mapper=field_mapper,
+            logger=self.review_manager.logger,
+        )
+        return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
@@ -423,31 +459,19 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             return self._load_ris(load_operation)
 
         if self.search_source.filename.suffix == ".csv":
-            table_loader = colrev.ops.load_utils_table.TableLoader(
-                load_operation=load_operation,
-                source=self.search_source,
-                unique_id_field="accession_number",
-            )
-            table_entries = table_loader.load_table_entries()
-            for entry_id, entry in table_entries.items():
-                table_entries[entry_id]["accession_number"] = entry["pdf_link"].split(
-                    "="
-                )[-1]
-            records = table_loader.convert_to_records(entries=table_entries)
-            self._fix_csv_records(records=records)
-            return records
+            return self._load_csv()
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for IEEEXplore"""
 
         if source.filename.suffix == ".csv":
             if Fields.AUTHOR in record.data:
                 record.data[Fields.AUTHOR] = (
-                    colrev.record.PrepRecord.format_author_field(
+                    colrev.record.record_prep.PrepRecord.format_author_field(
                         input_string=record.data[Fields.AUTHOR]
                     )
                 )

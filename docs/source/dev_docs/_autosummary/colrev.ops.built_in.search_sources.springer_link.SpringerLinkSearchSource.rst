@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.springer\_link.SpringerLinkSearchSource
       ~SpringerLinkSearchSource.from_dict
       ~SpringerLinkSearchSource.from_json
       ~SpringerLinkSearchSource.from_object
-      ~SpringerLinkSearchSource.get_masterdata
       ~SpringerLinkSearchSource.heuristic
       ~SpringerLinkSearchSource.json_schema
       ~SpringerLinkSearchSource.load
+      ~SpringerLinkSearchSource.prep_link_md
       ~SpringerLinkSearchSource.prepare
       ~SpringerLinkSearchSource.register_field_encoders
-      ~SpringerLinkSearchSource.run_search
+      ~SpringerLinkSearchSource.search
       ~SpringerLinkSearchSource.to_dict
       ~SpringerLinkSearchSource.to_json
 

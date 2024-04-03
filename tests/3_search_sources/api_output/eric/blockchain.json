@@ -1,0 +1,23 @@
+{
+    "response":{"numFound":56,"start":0,"numFoundExact":true,"docs":[
+        {
+          "id":"EJ1286736",
+          "title":"Competition-Based Learning of Blockchain Programming",
+          "author":["Çulha, Davut"],
+          "description":"Blockchain, which is a disruptive technology, affects many technologies, and it will affect many other technologies. Main property of blockchain technologies is assuring trust without central authorization. This is achieved through immutable data and decentralization. Moreover, blockchain is founded on the principles of cryptography, which provides the required infrastructure for the trust. First application of the blockchain technologies is Bitcoin cryptocurrency. After the birth of Bitcoin, cryptocurrencies began to change financial systems. Learning of blockchain is difficult because blockchain and its related technologies are strange for most of the people. In order to figure out blockchain technologies, the concepts like cryptography, cryptocurrency, immutable data and decentralization should have been understood. Therefore, blockchain and its related technologies should be learned through efficient learning mechanisms. Project-based learning, team-based learning, active learning and competition-based learning can be used for efficient teaching of blockchain. Competition-based learning has been used in many areas successfully for years. Smart contract development is the programming part of blockchain technologies. In this paper, competition-based learning is applied to blockchain programming to increase learning efficiency. In addition, a methodology is presented to apply competition-based learning to blockchain programming.",
+          "subject":["Competition",
+            "Teaching Methods",
+            "Programming",
+            "Technology",
+            "Monetary Systems",
+            "Foreign Countries",
+            "Instructional Effectiveness",
+            "Cooperative Learning"],
+          "publicationtype":["Journal Articles",
+            "Reports - Descriptive"],
+          "publicationdateyear":2021,
+          "language":["English"],
+          "issn":["EISSN-2618-6586"],
+          "publisher":"Journal of Educational Technology and Online Learning. Necatibey Faculty of Education, Balikesir University, Balikesir, 10100, Turkey. Web site: dergipark.org.tr/en/pub/jetol",
+          "peerreviewed":"T"}]
+    }}

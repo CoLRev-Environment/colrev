@@ -11,10 +11,10 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.ops.load_utils_bib
-import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import SearchType
 
 # pylint: disable=unused-argument
 # pylint: disable=duplicate-code
@@ -30,9 +30,9 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     settings_class = colrev.env.package_manager.DefaultSourceSettings
     endpoint = "colrev.taylor_and_francis"
     source_identifier = "{{doi}}"
-    search_types = [colrev.settings.SearchType.DB]
+    search_types = [SearchType.DB]
     ci_supported: bool = False
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.supported
+    heuristic_status = SearchSourceHeuristicStatus.supported
     short_name = "Taylor and Francis"
     docs_link = (
         "https://github.com/CoLRev-Environment/colrev/blob/main/"
@@ -40,7 +40,7 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
     )
 
     def __init__(
-        self, *, source_operation: colrev.operation.Operation, settings: dict
+        self, *, source_operation: colrev.process.operation.Operation, settings: dict
     ) -> None:
         self.search_source = from_dict(data_class=self.settings_class, data=settings)
         self.review_manager = source_operation.review_manager
@@ -71,10 +71,10 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
             params=params,
         )
 
-    def run_search(self, rerun: bool) -> None:
+    def search(self, rerun: bool) -> None:
         """Run a search of TaylorAndFrancis"""
 
-        if self.search_source.search_type == colrev.settings.SearchType.DB:
+        if self.search_source.search_type == SearchType.DB:
             self.source_operation.run_db_search(  # type: ignore
                 search_source_cls=self.__class__,
                 source=self.search_source,
@@ -83,31 +83,46 @@ class TaylorAndFrancisSearchSource(JsonSchemaMixin):
 
         raise NotImplementedError
 
-    def get_masterdata(
+    def prep_link_md(
         self,
         prep_operation: colrev.ops.prep.Prep,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         save_feed: bool = True,
         timeout: int = 10,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Not implemented"""
         return record
+
+    def _load_bib(self) -> dict:
+        def field_mapper(record_dict: dict) -> None:
+            if "note" in record_dict:
+                record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+            if "eprint" in record_dict:
+                record_dict[f"{self.endpoint}.eprint"] = record_dict.pop("eprint")
+
+            for key in list(record_dict.keys()):
+                if key not in ["ID", "ENTRYTYPE"]:
+                    record_dict[key.lower()] = record_dict.pop(key)
+
+        records = colrev.loader.load_utils.load(
+            filename=self.search_source.filename,
+            logger=self.review_manager.logger,
+            unique_id_field="ID",
+            field_mapper=field_mapper,
+        )
+        return records
 
     def load(self, load_operation: colrev.ops.load.Load) -> dict:
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
-            bib_loader = colrev.ops.load_utils_bib.BIBLoader(
-                load_operation=load_operation, source=self.search_source
-            )
-            records = bib_loader.load_bib_file(check_bib_file=False)
-            return records
+            return self._load_bib()
 
         raise NotImplementedError
 
     def prepare(
-        self, record: colrev.record.Record, source: colrev.settings.SearchSource
-    ) -> colrev.record.Record:
+        self, record: colrev.record.record.Record, source: colrev.settings.SearchSource
+    ) -> colrev.record.record.Record:
         """Source-specific preparation for Taylor and Francis"""
 
         # remove eprint and URL fields (they only have dois...)

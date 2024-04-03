@@ -10,7 +10,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.ops.built_in.search_sources.open_alex as open_alex_connector
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -54,12 +54,14 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
         ]
 
     def check_availability(
-        self, *, source_operation: colrev.operation.Operation
+        self, *, source_operation: colrev.process.operation.Operation
     ) -> None:
         """Check status (availability) of the OpenAlex API"""
         self.open_alex_source.check_availability(source_operation=source_operation)
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare a record based on OpenAlex metadata"""
 
         if any(
@@ -70,7 +72,7 @@ class OpenAlexMetadataPrep(JsonSchemaMixin):
             # Already linked to an OpenAlex record
             return record
 
-        self.open_alex_source.get_masterdata(
+        self.open_alex_source.prep_link_md(
             prep_operation=self.prep_operation, record=record
         )
         return record

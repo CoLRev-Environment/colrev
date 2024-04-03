@@ -4,21 +4,28 @@ from __future__ import annotations
 
 import copy
 import json
+import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
 import click
+import docker
 import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
+from docker.errors import DockerException
 
 import colrev.constants as c
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
+from colrev.writer.write_utils import to_string
+from colrev.writer.write_utils import write_file
 
 
 @dataclass
@@ -65,6 +72,11 @@ class BibliographyExport(JsonSchemaMixin):
 
     settings_class = BibliographyExportSettings
 
+    # https://github.com/zotero/translators/
+    # https://www.zotero.org/support/dev/translators
+    # https://github.com/zotero/translation-server/blob/master/src/formats.js
+    ZOTERO_TRANSLATION_SERVER_IMAGE_NAME = "zotero/translation-server:2.0.4"
+
     def __init__(
         self,
         *,
@@ -80,10 +92,17 @@ class BibliographyExport(JsonSchemaMixin):
             settings["version"] = "0.1"
 
         self.settings = self.settings_class.load_settings(data=settings)
-        self.endpoint_path = self.review_manager.output_dir
+        self.endpoint_path = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
 
         if not self.review_manager.in_ci_environment():
-            self.review_manager.get_zotero_translation_service()
+            environment_manager = self.review_manager.get_environment_manager()
+            environment_manager.build_docker_image(
+                imagename=self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
+            )
+
+        data_operation.docker_images_to_stop.append(
+            self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
+        )
 
     def _pybtex_conversion(self, *, selected_records: dict) -> None:
         self.review_manager.logger.info(f"Export {self.settings.bib_format.name}")
@@ -97,11 +116,10 @@ class BibliographyExport(JsonSchemaMixin):
         elif self.settings.bib_format is BibFormats.citavi:
             export_filepath = self.endpoint_path / Path("citavi.bib")
 
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=selected_records, save_path=export_filepath
-        )
-        self.review_manager.dataset.add_changes(path=export_filepath)
-        self.review_manager.create_commit(
+        write_file(records_dict=selected_records, filename=export_filepath)
+
+        self.review_manager.dataset.add_changes(export_filepath)
+        self.review_manager.dataset.create_commit(
             msg=f"Create {self.settings.bib_format.name} bibliography",
         )
 
@@ -128,14 +146,9 @@ class BibliographyExport(JsonSchemaMixin):
             )
             return
 
-        content = self.review_manager.dataset.parse_bibtex_str(
-            recs_dict_in=selected_records
-        )
+        content = to_string(records_dict=selected_records, implementation="bib")
 
-        zotero_translation_service = (
-            self.review_manager.get_zotero_translation_service()
-        )
-        zotero_translation_service.start()
+        self.start_zotero()
 
         headers = {"Content-type": "text/plain"}
         ret = requests.post(
@@ -161,9 +174,9 @@ class BibliographyExport(JsonSchemaMixin):
             # overwrite the file if it exists
             with open(export_filepath, "w", encoding="utf-8") as export_file:
                 export_file.write(export.content.decode("utf-8"))
-            self.review_manager.dataset.add_changes(path=export_filepath)
+            self.review_manager.dataset.add_changes(export_filepath)
 
-            self.review_manager.create_commit(
+            self.review_manager.dataset.create_commit(
                 msg=f"Create {self.settings.bib_format.name} bibliography",
             )
 
@@ -209,8 +222,8 @@ class BibliographyExport(JsonSchemaMixin):
             for ID, r in records.items()
             if r[Fields.STATUS]
             in [
-                colrev.record.RecordState.rev_included,
-                colrev.record.RecordState.rev_synthesized,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
             ]
         }
         selected_records = copy.deepcopy(selected_records_original)
@@ -260,3 +273,57 @@ class BibliographyExport(JsonSchemaMixin):
             "detailed_msg": "TODO",
         }
         return advice
+
+    def stop_zotero(self) -> None:
+        """Stop the zotero translation service"""
+
+        try:
+            client = docker.from_env()
+            for container in client.containers.list():
+                if self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME in str(container.image):
+                    container.stop_zotero()
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=exc
+            ) from exc
+
+    def start_zotero(self) -> None:
+        """Start the zotero translation service"""
+
+        # pylint: disable=duplicate-code
+
+        try:
+            self.stop_zotero()
+
+            client = docker.from_env()
+            _ = client.containers.run(
+                self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME,
+                ports={"1969/tcp": ("127.0.0.1", 1969)},
+                auto_remove=True,
+                detach=True,
+            )
+
+            tries = 0
+            while tries < 10:
+                try:
+                    headers = {"Content-type": "text/plain"}
+                    requests.post(
+                        "http://127.0.0.1:1969/import",
+                        headers=headers,
+                        data=b"%T Paper title\n\n",
+                        timeout=10,
+                    )
+
+                except requests.ConnectionError:
+                    time.sleep(5)
+                    continue
+                return
+
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=""
+            )
+
+        except DockerException as exc:
+            raise colrev_exceptions.ServiceNotAvailableException(
+                dep="Zotero (Docker)", detailed_trace=exc
+            ) from exc

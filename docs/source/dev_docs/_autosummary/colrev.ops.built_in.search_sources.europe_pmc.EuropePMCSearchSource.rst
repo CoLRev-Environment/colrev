@@ -22,13 +22,13 @@ colrev.ops.built\_in.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.from_dict
       ~EuropePMCSearchSource.from_json
       ~EuropePMCSearchSource.from_object
-      ~EuropePMCSearchSource.get_masterdata
       ~EuropePMCSearchSource.heuristic
       ~EuropePMCSearchSource.json_schema
       ~EuropePMCSearchSource.load
+      ~EuropePMCSearchSource.prep_link_md
       ~EuropePMCSearchSource.prepare
       ~EuropePMCSearchSource.register_field_encoders
-      ~EuropePMCSearchSource.run_search
+      ~EuropePMCSearchSource.search
       ~EuropePMCSearchSource.to_dict
       ~EuropePMCSearchSource.to_json
 

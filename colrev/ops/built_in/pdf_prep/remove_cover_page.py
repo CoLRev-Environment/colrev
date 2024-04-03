@@ -12,10 +12,8 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 
 import colrev.env.package_manager
-import colrev.env.utils
-import colrev.qm.colrev_pdf_id
-import colrev.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
 
 # pylint: disable=duplicate-code
 
@@ -112,22 +110,20 @@ class PDFCoverPage(JsonSchemaMixin):
                 ):
                     coverpages.append(1)
 
-    def _get_coverpages(self, *, pdf: str) -> typing.List[int]:
+    def _get_coverpages(
+        self, record: colrev.record.record_pdf.PDFRecord
+    ) -> typing.List[int]:
         coverpages: typing.List[int] = []
 
         try:
-            pdf_reader = PdfFileReader(str(pdf), strict=False)
+            pdf_reader = PdfFileReader(str(record.data[Fields.FILE]), strict=False)
         except ValueError:
             return coverpages
 
         if len(pdf_reader.pages) == 1:
             return coverpages
 
-        first_page_average_hash_16 = colrev.qm.colrev_pdf_id.get_pdf_hash(
-            pdf_path=Path(pdf),
-            page_nr=1,
-            hash_size=16,
-        )
+        first_page_average_hash_16 = record.get_pdf_hash(page_nr=1, hash_size=16)
 
         # Note : to generate hashes from a directory containing single-page PDFs:
         # colrev pdf-prep --get_hashes path
@@ -167,7 +163,7 @@ class PDFCoverPage(JsonSchemaMixin):
 
     def prep_pdf(
         self,
-        record: colrev.record.Record,
+        record: colrev.record.record_pdf.PDFRecord,
         pad: int,  # pylint: disable=unused-argument
     ) -> dict:
         """Prepare the PDF by removing coverpages (if any)"""
@@ -175,11 +171,10 @@ class PDFCoverPage(JsonSchemaMixin):
         if not record.data[Fields.FILE].endswith(".pdf"):
             return record.data
 
-        local_index = self.review_manager.get_local_index()
-        cp_path = local_index.local_environment_path / Path(".coverpages")
+        cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
-        coverpages = self._get_coverpages(pdf=record.data[Fields.FILE])
+        coverpages = self._get_coverpages(record)
         if not coverpages:
             return record.data
         if coverpages:

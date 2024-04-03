@@ -12,10 +12,11 @@ from bs4 import BeautifulSoup
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.built_in.search_sources.utils as connector_utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
-
+from colrev.constants import RecordState
+from colrev.constants import SearchSourceHeuristicStatus
 
 # Note: not (yet) implemented as a full search_source
 # (including SearchSourcePackageEndpointInterface, packages_endpoints.json)
@@ -26,16 +27,16 @@ from colrev.constants import FieldValues
 class DOIConnector:
     """Connector for the DOI.org API"""
 
-    heuristic_status = colrev.env.package_manager.SearchSourceHeuristicStatus.oni
+    heuristic_status = SearchSourceHeuristicStatus.oni
 
     @classmethod
     def retrieve_doi_metadata(
         cls,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        record: colrev.record.PrepRecord,
+        record: colrev.record.record_prep.PrepRecord,
         timeout: int = 60,
-    ) -> colrev.record.Record:
+    ) -> colrev.record.record.Record:
         """Retrieve the metadata from DOI.org based on a record (similarity)"""
 
         if Fields.DOI not in record.data:
@@ -69,16 +70,15 @@ class DOIConnector:
 
             retrieved_json = json.loads(ret.text)
             language_service = colrev.env.language_service.LanguageService()
-            retrieved_record_dict = connector_utils.json_to_record(item=retrieved_json)
             language_service.unify_to_iso_639_3_language_codes(record=record)
-            retrieved_record = colrev.record.PrepRecord(data=retrieved_record_dict)
+            retrieved_record = connector_utils.json_to_record(item=retrieved_json)
             retrieved_record.add_provenance_all(source=url)
-            record.merge(merging_record=retrieved_record, default_source=url)
+            record.merge(retrieved_record, default_source=url)
             record.set_masterdata_complete(
                 source=url,
                 masterdata_repository=review_manager.settings.is_curated_repo(),
             )
-            record.set_status(target_state=colrev.record.RecordState.md_prepared)
+            record.set_status(RecordState.md_prepared)
             if FieldValues.RETRACTED in record.data.get("warning", ""):
                 record.prescreen_exclude(reason=FieldValues.RETRACTED)
                 record.remove_field(key="warning")
@@ -99,7 +99,7 @@ class DOIConnector:
         cls,
         *,
         review_manager: colrev.review_manager.ReviewManager,
-        record: colrev.record.Record,
+        record: colrev.record.record.Record,
         timeout: int = 30,
     ) -> None:
         """Get the website link from DOI resolution API"""

@@ -12,9 +12,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.search_sources
-import colrev.record
+import colrev.record.record
+import colrev.record.record_prep
 from colrev.constants import Fields
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -30,6 +30,11 @@ class CiteAsPrep(JsonSchemaMixin):
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
     ci_supported: bool = True
+
+    requests_headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    }
 
     def __init__(
         self,
@@ -48,7 +53,7 @@ class CiteAsPrep(JsonSchemaMixin):
 
     def _cite_as_json_to_record(
         self, *, json_str: str, url: str
-    ) -> colrev.record.PrepRecord:
+    ) -> colrev.record.record_prep.PrepRecord:
         retrieved_record: dict = {}
         data = json.loads(json_str)
 
@@ -76,11 +81,13 @@ class CiteAsPrep(JsonSchemaMixin):
         if "DOI" in data["metadata"]:
             retrieved_record.update(doi=data["metadata"]["DOI"])
 
-        record = colrev.record.PrepRecord(data=retrieved_record)
+        record = colrev.record.record_prep.PrepRecord(retrieved_record)
         record.add_provenance_all(source=url)
         return record
 
-    def prepare(self, record: colrev.record.PrepRecord) -> colrev.record.Record:
+    def prepare(
+        self, record: colrev.record.record_prep.PrepRecord
+    ) -> colrev.record.record.Record:
         """Prepare the record based on citeas"""
 
         if record.data.get(Fields.ENTRYTYPE, "NA") not in ["misc", "software"]:
@@ -96,20 +103,20 @@ class CiteAsPrep(JsonSchemaMixin):
             ret = self.session.request(
                 "GET",
                 url,
-                headers=self.prep_operation.requests_headers,
+                headers=self.requests_headers,
                 timeout=self.prep_operation.timeout,
             )
             ret.raise_for_status()
 
             retrieved_record = self._cite_as_json_to_record(json_str=ret.text, url=url)
 
-            similarity = colrev.record.PrepRecord.get_retrieval_similarity(
+            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
                 record_original=retrieved_record,
                 retrieved_record_original=retrieved_record,
                 same_record_type_required=self.same_record_type_required,
             )
             if similarity > self.prep_operation.retrieval_similarity:
-                record.merge(merging_record=retrieved_record, default_source=url)
+                record.merge(retrieved_record, default_source=url)
 
         except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             pass

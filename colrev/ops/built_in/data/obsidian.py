@@ -11,7 +11,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
 import colrev.env.utils
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -104,7 +104,7 @@ class Obsidian(JsonSchemaMixin):
         try:
             tei_file = (
                 self.review_manager.path
-                / colrev.record.Record(data=record_dict).get_tei_filename()
+                / colrev.record.record.Record(record_dict).get_tei_filename()
             )
 
             if tei_file.is_file():
@@ -204,7 +204,7 @@ class Obsidian(JsonSchemaMixin):
         # later : export to csl-json (based on bibliography_export)
         # (absolute PDF paths, read-only/hidden/gitignored, no provenance fields)
 
-        # self.review_manager.dataset.add_changes(path=self.OBSIDIAN_INBOX_PATH_RELATIVE)
+        # self.review_manager.dataset.add_changes(self.OBSIDIAN_INBOX_PATH_RELATIVE)
 
     def update_data(
         self,

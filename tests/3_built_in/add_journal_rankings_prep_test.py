@@ -22,7 +22,7 @@ def elp(  # type: ignore
         "sqlite_index_test.db"
     )
     with session_mocker.patch.object(
-        colrev.env.local_index.LocalIndex, "SQLITE_PATH", temp_sqlite
+        colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     ):
         local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
     local_index.load_journal_rankings()
@@ -53,7 +53,7 @@ def test_prep_exclude_languages(
     expected: dict,
 ) -> None:
     """Test the add_journal_ranking"""
-    record = colrev.record.PrepRecord(data=input_value)
+    record = colrev.record.record_prep.PrepRecord(input_value)
     returned_record = ajr_instance.prepare(record=record)
     actual = returned_record.data
     assert expected == actual

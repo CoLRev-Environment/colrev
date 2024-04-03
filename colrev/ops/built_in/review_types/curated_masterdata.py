@@ -9,7 +9,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.ops.search
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -27,7 +27,7 @@ class CuratedMasterdata(JsonSchemaMixin):
     ci_supported: bool = True
 
     def __init__(
-        self, *, operation: colrev.operation.CheckOperation, settings: dict
+        self, *, operation: colrev.process.operation.CheckOperation, settings: dict
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = operation.review_manager
@@ -42,12 +42,14 @@ class CuratedMasterdata(JsonSchemaMixin):
 
         # replace readme
         colrev.env.utils.retrieve_package_file(
-            template_file=Path("template/review_type/curated_masterdata/readme.md"),
+            template_file=Path(
+                "ops/built_in/review_types/curated_masterdata/readme.md"
+            ),
             target=Path("readme.md"),
         )
         colrev.env.utils.retrieve_package_file(
             template_file=Path(
-                "template/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                "ops/built_in/review_types/curated_masterdata/curations_github_colrev_update.yml"
             ),
             target=Path(".github/workflows/colrev_update.yml"),
         )

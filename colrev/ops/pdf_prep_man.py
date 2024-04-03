@@ -10,12 +10,17 @@ from PyPDF2 import PdfFileWriter
 from PyPDF2.errors import PdfReadError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.operation
-import colrev.record
+import colrev.process.operation
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import OperationsType
+from colrev.constants import PackageEndpointType
+from colrev.constants import RecordState
+from colrev.writer.write_utils import write_file
 
 
-class PDFPrepMan(colrev.operation.Operation):
+class PDFPrepMan(colrev.process.operation.Operation):
     """Prepare PDFs manually"""
 
     def __init__(
@@ -26,7 +31,7 @@ class PDFPrepMan(colrev.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=colrev.operation.OperationsType.pdf_prep_man,
+            operations_type=OperationsType.pdf_prep_man,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 
@@ -37,16 +42,11 @@ class PDFPrepMan(colrev.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
         for record_dict in records.values():
-            if (
-                record_dict[Fields.STATUS]
-                == colrev.record.RecordState.pdf_needs_manual_preparation
-            ):
-                record = colrev.record.Record(data=record_dict)
-                record.set_status(
-                    target_state=colrev.record.RecordState.pdf_not_available
-                )
-        self.review_manager.dataset.save_records_dict(records=records)
-        self.review_manager.create_commit(
+            if record_dict[Fields.STATUS] == RecordState.pdf_needs_manual_preparation:
+                record = colrev.record.record.Record(record_dict)
+                record.set_status(RecordState.pdf_not_available)
+        self.review_manager.dataset.save_records_dict(records)
+        self.review_manager.dataset.create_commit(
             msg="Discard man-prep PDFs", manual_author=True
         )
 
@@ -62,8 +62,7 @@ class PDFPrepMan(colrev.operation.Operation):
             [
                 x
                 for x in record_header_list
-                if colrev.record.RecordState.pdf_needs_manual_preparation
-                == x[Fields.STATUS]
+                if RecordState.pdf_needs_manual_preparation == x[Fields.STATUS]
             ]
         )
         pad = 0
@@ -71,9 +70,7 @@ class PDFPrepMan(colrev.operation.Operation):
             pad = min((max(len(x[Fields.ID]) for x in record_header_list) + 2), 40)
 
         items = self.review_manager.dataset.read_next_record(
-            conditions=[
-                {Fields.STATUS: colrev.record.RecordState.pdf_needs_manual_preparation}
-            ]
+            conditions=[{Fields.STATUS: RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": pad, "items": items}
         self.review_manager.logger.debug(
@@ -83,15 +80,13 @@ class PDFPrepMan(colrev.operation.Operation):
 
     def pdfs_prepared_manually(self) -> bool:
         """Check whether PDFs were prepared manually"""
-        return self.review_manager.dataset.has_changes()
+        return self.review_manager.dataset.has_record_changes()
 
     def pdf_prep_man_stats(self) -> None:
         """Determine PDF prep man statistics"""
         # pylint: disable=duplicate-code
 
-        self.review_manager.logger.info(
-            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
-        )
+        self.review_manager.logger.info(f"Load {Filepaths.RECORDS_FILE}")
         records = self.review_manager.dataset.load_records_dict()
 
         self.review_manager.logger.info("Calculate statistics")
@@ -100,10 +95,7 @@ class PDFPrepMan(colrev.operation.Operation):
         prep_man_hints = []
         crosstab = []
         for record_dict in records.values():
-            if (
-                colrev.record.RecordState.pdf_needs_manual_preparation
-                != record_dict[Fields.STATUS]
-            ):
+            if RecordState.pdf_needs_manual_preparation != record_dict[Fields.STATUS]:
                 continue
 
             if record_dict[Fields.ENTRYTYPE] in stats[Fields.ENTRYTYPE]:
@@ -113,7 +105,7 @@ class PDFPrepMan(colrev.operation.Operation):
             else:
                 stats[Fields.ENTRYTYPE][record_dict[Fields.ENTRYTYPE]] = 1
 
-            record = colrev.record.Record(data=record_dict)
+            record = colrev.record.record.Record(record_dict)
             prov_d = record.data[Fields.D_PROV]
 
             if Fields.FILE in prov_d:
@@ -162,20 +154,16 @@ class PDFPrepMan(colrev.operation.Operation):
             print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
             return
 
-        self.review_manager.logger.info(
-            f"Load {self.review_manager.dataset.RECORDS_FILE_RELATIVE}"
-        )
+        self.review_manager.logger.info(f"Load {Filepaths.RECORDS_FILE}")
         records = self.review_manager.dataset.load_records_dict()
 
         records = {
             record[Fields.ID]: record
             for record in records.values()
-            if colrev.record.RecordState.pdf_needs_manual_preparation
-            == record[Fields.STATUS]
+            if RecordState.pdf_needs_manual_preparation == record[Fields.STATUS]
         }
-        self.review_manager.dataset.save_records_dict_to_file(
-            records=records, save_path=prep_bib_path
-        )
+
+        write_file(records_dict=records, filename=prep_bib_path)
 
         bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
@@ -212,11 +200,10 @@ class PDFPrepMan(colrev.operation.Operation):
         if Path("data/pdf-prep-records.bib").is_file():
             self.review_manager.logger.info("Load prep-records.bib")
 
-            with open("data/pdf-prep-records.bib", encoding="utf8") as target_db:
-                records_changed_dict = self.review_manager.dataset.load_records_dict(
-                    load_str=target_db.read()
-                )
-                records_changed = list(records_changed_dict.values())
+            records_changed = colrev.loader.load_utils.load(
+                filename=Path("data/pdf-prep-records.bib"),
+                logger=self.review_manager.logger,
+            )
 
         records = self.review_manager.dataset.load_records_dict()
         for record in records.values():
@@ -237,14 +224,13 @@ class PDFPrepMan(colrev.operation.Operation):
                     if value == "":
                         del record[key]
 
-        self.review_manager.dataset.save_records_dict(records=records)
+        self.review_manager.dataset.save_records_dict(records)
         self.review_manager.check_repo()
 
     def extract_coverpage(self, *, filepath: Path) -> None:
         """Extract coverpage from PDF"""
 
-        local_index = self.review_manager.get_local_index()
-        cp_path = local_index.local_environment_path / Path(".coverpages")
+        cp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         try:
@@ -264,8 +250,7 @@ class PDFPrepMan(colrev.operation.Operation):
     def extract_lastpage(self, *, filepath: Path) -> None:
         """Extract last page from PDF"""
 
-        local_index = self.review_manager.get_local_index()
-        lp_path = local_index.local_environment_path / Path(".lastpages")
+        lp_path = Filepaths.LOCAL_ENVIRONMENT_DIR / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
         try:
@@ -301,31 +286,32 @@ class PDFPrepMan(colrev.operation.Operation):
         except PdfReadError as exc:
             raise colrev_exceptions.InvalidPDFException(filepath) from exc
 
-    def set_pdf_man_prepared(self, *, record: colrev.record.Record) -> None:
+    def set_pdf_man_prepared(self, *, record: colrev.record.record.Record) -> None:
         """Set the PDF to manually prepared"""
 
-        record.set_status(target_state=colrev.record.RecordState.pdf_prepared)
+        record.set_status(RecordState.pdf_prepared)
         record.reset_pdf_provenance_notes()
 
         pdf_path = Path(self.review_manager.path / Path(record.data[Fields.FILE]))
         prev_cpid = record.data.get("colrev_pdf_id", "NA")
-        record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path=pdf_path))
+        record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path))
         if prev_cpid != record.data.get("colrev_pdf_id", "NA"):
             record.add_data_provenance(key=Fields.FILE, source="manual")
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(
-            records={record_dict[Fields.ID]: record_dict}, partial=True
+            {record_dict[Fields.ID]: record_dict}, partial=True
         )
-        self.review_manager.dataset.add_changes(
-            path=self.review_manager.dataset.RECORDS_FILE_RELATIVE
-        )
+        self.review_manager.dataset.add_changes(Filepaths.RECORDS_FILE)
 
-    @colrev.operation.Operation.decorate()
+    @colrev.process.operation.Operation.decorate()
     def main(self) -> None:
         """Prepare PDFs manually (main entrypoint)"""
 
-        if self.review_manager.in_ci_environment():
+        if (
+            self.review_manager.in_ci_environment()
+            and not self.review_manager.in_test_environment()
+        ):
             raise colrev_exceptions.ServiceNotAvailableException(
                 dep="colrev pdf-prep-man",
                 detailed_trace="pdf-prep-man not available in ci environment",
@@ -340,7 +326,7 @@ class PDFPrepMan(colrev.operation.Operation):
         )
         for pdf_prep_man_package_endpoint in pdf_prep_man_package_endpoints:
             endpoint_dict = package_manager.load_packages(
-                package_type=colrev.env.package_manager.PackageEndpointType.pdf_prep_man,
+                package_type=PackageEndpointType.pdf_prep_man,
                 selected_packages=pdf_prep_man_package_endpoints,
                 operation=self,
             )

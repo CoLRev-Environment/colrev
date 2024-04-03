@@ -15,12 +15,12 @@ from docker.errors import DockerException
 
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
-import colrev.record
+import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import Filepaths
+from colrev.constants import RecordState
 
 # pylint: disable=duplicate-code
-
-
 # pylint: disable=too-few-public-methods
 
 
@@ -31,6 +31,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
     settings_class = colrev.env.package_manager.DefaultSettings
     ci_supported: bool = False
+    CHROME_BROWSERLESS_IMAGE = "browserless/chrome:latest"
 
     def __init__(
         self,
@@ -39,12 +40,12 @@ class WebsiteScreenshot(JsonSchemaMixin):
         settings: dict,
     ) -> None:
         self.settings = self.settings_class.load_settings(data=settings)
-        self.chrome_browserless_image = "browserless/chrome:latest"
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
         self.review_manager.environment_manager.build_docker_image(
-            imagename=self.chrome_browserless_image
+            imagename=self.CHROME_BROWSERLESS_IMAGE
         )
+        pdf_get_operation.docker_images_to_stop.append(self.CHROME_BROWSERLESS_IMAGE)
 
     def _start_screenshot_service(self) -> None:
         """Start the screenshot service"""
@@ -54,7 +55,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
         if self.screenshot_service_available():
             return
 
-        self.review_manager.environment_manager.register_ports(ports=["3000"])
+        self.review_manager.environment_manager.register_ports(["3000"])
 
         try:
             client = docker.from_env()
@@ -62,9 +63,9 @@ class WebsiteScreenshot(JsonSchemaMixin):
             running_containers = [
                 str(container.image) for container in client.containers.list()
             ]
-            if self.chrome_browserless_image not in running_containers:
+            if self.CHROME_BROWSERLESS_IMAGE not in running_containers:
                 client.containers.run(
-                    self.chrome_browserless_image,
+                    self.CHROME_BROWSERLESS_IMAGE,
                     ports={"3000/tcp": ("127.0.0.1", 3000)},
                     auto_remove=True,
                     detach=True,
@@ -104,8 +105,8 @@ class WebsiteScreenshot(JsonSchemaMixin):
         return False
 
     def _add_screenshot(
-        self, *, record: colrev.record.Record, pdf_filepath: Path
-    ) -> colrev.record.Record:
+        self, *, record: colrev.record.record.Record, pdf_filepath: Path
+    ) -> colrev.record.record.Record:
         """Add a PDF screenshot to the record"""
 
         if Fields.URL not in record.data:
@@ -133,9 +134,8 @@ class WebsiteScreenshot(JsonSchemaMixin):
                 value=str(pdf_filepath),
                 source="chrome (browserless) screenshot",
             )
-            record.data.update(
-                colrev_status=colrev.record.RecordState.rev_prescreen_included
-            )
+            # pylint: disable=colrev-direct-status-assign
+            record.data.update(colrev_status=RecordState.rev_prescreen_included)
             record.update_field(
                 key="urldate", value=urldate, source="chrome (browserless) screenshot"
             )
@@ -148,7 +148,9 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
         return record
 
-    def get_pdf(self, record: colrev.record.Record) -> colrev.record.Record:
+    def get_pdf(
+        self, record: colrev.record.record.Record
+    ) -> colrev.record.record.Record:
         """Get a PDF of the website (screenshot)"""
 
         if record.data[Fields.ENTRYTYPE] != "online":
@@ -156,7 +158,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
 
         self._start_screenshot_service()
 
-        pdf_filepath = self.review_manager.PDF_DIR_RELATIVE / Path(
+        pdf_filepath = self.review_manager.get_path(Filepaths.PDF_DIR) / Path(
             f"{record.data['ID']}.pdf"
         )
         record = self._add_screenshot(record=record, pdf_filepath=pdf_filepath)

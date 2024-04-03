@@ -2,6 +2,76 @@
 """Constants for CoLRev"""
 # pylint: disable=too-few-public-methods
 # pylint: disable=colrev-missed-constant-usage
+import typing
+from enum import Enum
+from pathlib import Path
+
+
+class Filepaths:
+    """Filepaths for CoLRev"""
+
+    # Project-specific paths
+    # To get absolute paths, use review_manager.get_path(Filepaths.SEARCH_DIR)
+    SEARCH_DIR = Path("data/search")
+    PREP_DIR = Path("data/prep")
+    DEDUPE_DIR = Path("data/dedupe")
+    PRESCREEN_DIR = Path("data/prescreen")
+    PDF_DIR = Path("data/pdfs")
+    SCREEN_DIR = Path("data/screen")
+    DATA_DIR = Path("data/data")
+
+    CORRECTIONS_DIR = Path(".corrections")
+    OUTPUT_DIR = Path("output")
+
+    RECORDS_FILE = Path("data/records.bib")
+    SETTINGS_FILE = Path("settings.json")
+    STATUS_FILE = Path("status.yaml")
+    README_FILE = Path("readme.md")
+    REPORT_FILE = Path(".report.log")
+    GIT_IGNORE_FILE = Path(".gitignore")
+
+    # Ensure the path uses forward slashes, which is compatible with Git's path handling
+    RECORDS_FILE_GIT = str(RECORDS_FILE).replace("\\", "/")
+
+    # Environment-specific paths
+    LOCAL_ENVIRONMENT_DIR = Path.home().joinpath("colrev")
+    LOCAL_INDEX_SQLITE_FILE = LOCAL_ENVIRONMENT_DIR / Path("sqlite_index.db")
+    TEI_INDEX_DIR = LOCAL_ENVIRONMENT_DIR / Path(".tei_index/")
+
+    REGISTRY_FILE = LOCAL_ENVIRONMENT_DIR.joinpath(Path("registry.json"))
+
+    PREP_REQUESTS_CACHE_FILE = LOCAL_ENVIRONMENT_DIR / Path("prep_requests_cache")
+
+
+class FileSets:
+    """File sets for CoLRev"""
+
+    DEFAULT_GIT_IGNORE_ITEMS = [
+        ".history",
+        ".colrev",
+        "__pycache__",
+        "*.bib.sav",
+        "venv",
+        str(Filepaths.CORRECTIONS_DIR),
+        str(Filepaths.REPORT_FILE),
+        str(Filepaths.OUTPUT_DIR),
+        str(Filepaths.PDF_DIR),
+        str(Filepaths.DEDUPE_DIR),
+        str(Filepaths.PREP_DIR),
+        "data/pdf_get_man/missing_pdf_files.csv",
+        "data/.tei/",
+        "data/prep_man/records_prep_man.bib",
+        "data/data/sample_references.bib",
+    ]
+    DEPRECATED_GIT_IGNORE_ITEMS = [
+        "missing_pdf_files.csv",
+        "manual_cleansing_statistics.csv",
+        ".references_learned_settings",
+        "pdfs",
+        ".tei",
+        "data.csv",
+        "requests_cache.sqlite",
+    ]
 
 
 class ENTRYTYPES:
@@ -24,6 +94,27 @@ class ENTRYTYPES:
     SOFTWARE = "software"
     ONLINE = "online"
     CONFERENCE = "conference"
+
+    @classmethod
+    def get_all(cls) -> list:
+        """Get all ENTRYTYPES"""
+        return [
+            cls.ARTICLE,
+            cls.INPROCEEDINGS,
+            cls.BOOK,
+            cls.INBOOK,
+            cls.PROCEEDINGS,
+            cls.INCOLLECTION,
+            cls.PHDTHESIS,
+            cls.MASTERSTHESIS,
+            cls.BACHELORTHESIS,
+            cls.TECHREPORT,
+            cls.UNPUBLISHED,
+            cls.MISC,
+            cls.SOFTWARE,
+            cls.ONLINE,
+            cls.CONFERENCE,
+        ]
 
 
 class Fields:
@@ -71,13 +162,14 @@ class Fields:
 
     SCREENING_CRITERIA = "screening_criteria"
     PRESCREEN_EXCLUSION = "prescreen_exclusion"
+    RETRACTED = "retracted"
 
     # References and citations
     # First-level references (backward) and citations (forward) can be stored in the record.
 
     # CITED_BY refers to forward citations
     # (as extracted from GoogleScholar cited_by for example)
-    # TODO : rename to NR_CITED_BY and use CITED_BY for a list of citing papers?
+    # Note : rename to CITED_BY_COUNT and use CITED_BY for a list of citing papers?
     CITED_BY = "cited_by"
 
     # REFERENCES is a list containing a dictionary for each reference in the bibliography
@@ -88,9 +180,10 @@ class Fields:
     NR_INTEXT_CITATIONS = "nr_intext_citations"
 
     TEXT_FROM_PDF = "text_from_pdf"
-    PAGES_IN_FILE = "pages_in_file"
+    NR_PAGES_IN_FILE = "nr_pages_in_file"
 
     COLREV_ID = "colrev_id"
+    CURATION_ID = "curation_ID"
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"
     LOCAL_CURATED_METADATA = "local_curated_metadata"
     GROBID_VERSION = "grobid-version"
@@ -150,11 +243,147 @@ class FieldSet:
             Fields.SERIES,
             Fields.LANGUAGE,
             Fields.DATE,
+            Fields.SCHOOL,
+            Fields.ADDRESS,
+            Fields.RETRACTED,
         ]
     )
     """Standardized field keys"""
 
     TIME_VARIANT_FIELDS = [Fields.CITED_BY]
+
+
+class RecordState(Enum):
+    """The possible RecordStates stored in the colrev_status field
+    (corresponding to the ProcessModel)"""
+
+    # pylint: disable=invalid-name
+
+    # without the md_retrieved state, we could not display the load transition
+    md_retrieved = 1
+    """Record is retrieved and stored in the ./search directory"""
+    md_imported = 2
+    """Record is imported into the RECORDS_FILE"""
+    md_needs_manual_preparation = 3
+    """Record requires manual preparation
+    (colrev_masterdata_provenance provides hints)"""
+    md_prepared = 4
+    """Record is prepared (no missing or incomplete fields, inconsistencies checked)"""
+    md_processed = 5
+    """Record has been checked for duplicate associations
+    with any record in RecordState md_processed or later"""
+    rev_prescreen_excluded = 6
+    """Record was excluded in the prescreen (based on titles/abstracts)"""
+    rev_prescreen_included = 7
+    """Record was included in the prescreen (based on titles/abstracts)"""
+    pdf_needs_manual_retrieval = 8
+    """Record marked for manual PDF retrieval"""
+    pdf_imported = 9
+    """PDF imported and marked for preparation"""
+    pdf_not_available = 10
+    """PDF is not available"""
+    pdf_needs_manual_preparation = 11
+    """PDF marked for manual preparation"""
+    pdf_prepared = 12
+    """PDF prepared"""
+    rev_excluded = 13
+    """Record excluded in screen (full-text)"""
+    rev_included = 14
+    """Record included in screen (full-text)"""
+    rev_synthesized = 15
+    """Record synthesized"""
+    # Note : TBD: rev_coded
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+    def __lt__(self, other) -> bool:  # type: ignore
+        if self.__class__ == RecordState and other.__class__ == RecordState:
+            return self.value < other.value
+        raise NotImplementedError
+
+    @classmethod
+    def get_non_processed_states(cls) -> list:
+        """Get the states that correspond to not-yet-processed"""
+        return [
+            RecordState.md_retrieved,
+            RecordState.md_imported,
+            RecordState.md_prepared,
+            RecordState.md_needs_manual_preparation,
+        ]
+
+    @classmethod
+    def get_post_x_states(cls, *, state: "RecordState") -> typing.Set["RecordState"]:
+        """Get the states after state x (passed as a parameter)"""
+        # pylint: disable=too-many-return-statements
+        if state == RecordState.md_prepared:
+            return {
+                RecordState.md_prepared,
+                RecordState.md_processed,
+                RecordState.rev_prescreen_included,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+        if state == RecordState.md_processed:
+            return {
+                RecordState.md_processed,
+                RecordState.rev_prescreen_included,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+        if state == RecordState.rev_prescreen_included:
+            return {
+                RecordState.rev_prescreen_included,
+                RecordState.rev_prescreen_excluded,
+                RecordState.pdf_needs_manual_retrieval,
+                RecordState.pdf_imported,
+                RecordState.pdf_not_available,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+        if state == RecordState.pdf_imported:
+            return {
+                RecordState.pdf_imported,
+                RecordState.pdf_needs_manual_preparation,
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+        if state == RecordState.pdf_prepared:
+            return {
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+        if state == RecordState.rev_included:
+            return {
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            }
+        if state == RecordState.rev_synthesized:
+            return {RecordState.rev_synthesized}
+
+        raise ValueError(f"state {state}")
 
 
 class FieldValues:
@@ -184,7 +413,6 @@ class DefectCodes:
     INCOMPLETE_FIELD = "incomplete-field"
     INCONSISTENT_CONTENT = "inconsistent-content"
     INCONSISTENT_WITH_DOI_METADATA = "inconsistent-with-doi-metadata"
-    INCONSISTENT_WITH_URL_METADATA = "inconsistent-with-url-metadata"
     ISBN_NOT_MATCHING_PATTERN = "isbn-not-matching-pattern"
     LANGUAGE_FORMAT_ERROR = "language-format-error"
     LANGUAGE_UNKNOWN = "language-unknown"
@@ -210,21 +438,165 @@ class PDFDefectCodes:
     LAST_PAGE_APPENDED = "last-page-appended"
 
 
-class Operations:
-    """Constant operation strings"""
+class OperationsType(Enum):
+    """Operation types correspond to the main state transitions (see ProcessModel)"""
 
-    SEARCH = "search"
-    LOAD = "load"
-    PREP = "prep"
-    PREP_MAN = "prep_man"
-    DEDUPE = "dedupe"
-    PRESCREEN = "prescreen"
-    PDF_GET = "pdf_get"
-    PDF_GET_MAN = "pdf_get_man"
-    PDF_PREP = "pdf_prep"
-    PDF_PREP_MAN = "pdf_prep_man"
-    SCREEN = "screen"
-    DATA = "data"
+    # pylint: disable=invalid-name
+
+    search = "search"
+    load = "load"
+    prep = "prep"
+    prep_man = "prep_man"
+    dedupe = "dedupe"
+    prescreen = "prescreen"
+    pdf_get = "pdf_get"
+    pdf_get_man = "pdf_get_man"
+    pdf_prep = "pdf_prep"
+    pdf_prep_man = "pdf_prep_man"
+    screen = "screen"
+    data = "data"
+
+    format = "format"
+    check = "check"
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+    @classmethod
+    def get_manual_extra_operations(cls) -> list:
+        """Get the manual operations that require extra manual steps"""
+        return [
+            OperationsType.pdf_prep_man,
+            OperationsType.pdf_get_man,
+            OperationsType.prep_man,
+        ]
+
+
+class IDPattern(Enum):
+    """The pattern for generating record IDs"""
+
+    # pylint: disable=invalid-name
+    first_author_year = "first_author_year"
+    three_authors_year = "three_authors_year"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
+class SearchType(Enum):
+    """Type of search source"""
+
+    API = "API"  # Keyword-searches
+    DB = "DB"  # search-results-file with search query
+    TOC = "TOC"
+    BACKWARD_SEARCH = "BACKWARD_SEARCH"
+    FORWARD_SEARCH = "FORWARD_SEARCH"
+    FILES = "FILES"  # Replaces PDFS
+    OTHER = "OTHER"
+    MD = "MD"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+
+class SearchSourceHeuristicStatus(Enum):
+    """Status of the SearchSource heuristic"""
+
+    # pylint: disable=invalid-name
+    na = "not_applicable"
+    oni = "output_not_identifiable"
+    supported = "supported"
+    todo = "to_be_implemented"
+
+    def __str__(self) -> str:
+        return f"{self.name}"  # pragma: no cover
+
+
+class PDFPathType(Enum):
+    """Policy for handling PDFs (create symlinks or copy files)"""
+
+    # pylint: disable=invalid-name
+    symlink = "symlink"
+    copy = "copy"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
+class ScreenCriterionType(Enum):
+    """Type of screening criterion"""
+
+    # pylint: disable=invalid-name
+    inclusion_criterion = "inclusion_criterion"
+    exclusion_criterion = "exclusion_criterion"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ShareStatReq(Enum):
+    """Record status requirements for sharing"""
+
+    # pylint: disable=invalid-name
+    none = "none"
+    processed = "processed"
+    screened = "screened"
+    completed = "completed"
+
+    @classmethod
+    def get_options(cls) -> typing.List[str]:
+        """Get the options"""
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
+# pylint: disable=colrev-missed-constant-usage
+class PackageEndpointType(Enum):
+    """An enum for the types of PackageEndpoints"""
+
+    # pylint: disable=C0103
+    review_type = "review_type"
+    """Endpoint for review types"""
+    search_source = "search_source"
+    """Endpoint for search sources"""
+    prep = "prep"
+    """Endpoint for prep"""
+    prep_man = "prep_man"
+    """Endpoint for prep-man"""
+    dedupe = "dedupe"
+    """Endpoint for dedupe"""
+    prescreen = "prescreen"
+    """Endpoint for prescreen"""
+    pdf_get = "pdf_get"
+    """Endpoint for pdf-get"""
+    pdf_get_man = "pdf_get_man"
+    """Endpoint for pdf-get-man"""
+    pdf_prep = "pdf_prep"
+    """Endpoint for pdf-prep"""
+    pdf_prep_man = "pdf_prep_man"
+    """Endpoint for pdf-prep-man"""
+    screen = "screen"
+    """Endpoint for screen"""
+    data = "data"
+    """Endpoint for data"""
 
 
 class ExitCodes:
