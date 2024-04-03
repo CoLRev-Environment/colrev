@@ -1,4 +1,4 @@
-﻿colrev.ops.prep.Prep
+colrev.ops.prep.Prep
 ====================
 
 .. currentmodule:: colrev.ops.prep

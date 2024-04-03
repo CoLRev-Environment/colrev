@@ -1,4 +1,4 @@
-﻿colrev.ops.pdf\_get.PDFGet
+colrev.ops.pdf\_get.PDFGet
 ==========================
 
 .. currentmodule:: colrev.ops.pdf_get
