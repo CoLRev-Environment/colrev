@@ -29,6 +29,7 @@ colrev.ops
    colrev.ops.advisor
    colrev.ops.checker
    colrev.ops.clone
+   colrev.ops.colrev_pandas
    colrev.ops.commit
    colrev.ops.correct
    colrev.ops.data

@@ -26,7 +26,6 @@
    :template: custom-module-template.rst
    :recursive:
 
-   colrev.colrev_pandas
    colrev.constants
    colrev.dataset
    colrev.env
