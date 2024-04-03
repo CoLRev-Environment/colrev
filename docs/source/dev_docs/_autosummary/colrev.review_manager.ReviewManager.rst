@@ -53,7 +53,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_review_types
       ~ReviewManager.get_screen_operation
       ~ReviewManager.get_search_operation
-      ~ReviewManager.get_search_sources
       ~ReviewManager.get_status_operation
       ~ReviewManager.get_status_stats
       ~ReviewManager.get_sync_operation
