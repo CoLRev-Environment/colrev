@@ -33,6 +33,8 @@ class Upgrade(colrev.process.operation.Operation):
 
     repo: git.Repo
 
+    type = OperationsType.check
+
     def __init__(
         self,
         *,
@@ -42,7 +44,7 @@ class Upgrade(colrev.process.operation.Operation):
         review_manager.force_mode = True
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
             notify_state_transition_operation=False,
         )
         review_manager.force_mode = prev_force_mode

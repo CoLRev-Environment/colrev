@@ -3,6 +3,7 @@
 import platform
 from pathlib import Path
 
+import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields

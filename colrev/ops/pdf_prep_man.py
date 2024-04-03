@@ -23,6 +23,8 @@ from colrev.writer.write_utils import write_file
 class PDFPrepMan(colrev.process.operation.Operation):
     """Prepare PDFs manually"""
 
+    type = OperationsType.pdf_prep_man
+
     def __init__(
         self,
         *,
@@ -31,7 +33,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.pdf_prep_man,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

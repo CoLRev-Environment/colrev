@@ -1,4 +1,4 @@
-colrev.ops.prep.Prep
+﻿colrev.ops.prep.Prep
 ====================
 
 .. currentmodule:: colrev.ops.prep
@@ -39,8 +39,8 @@ colrev.ops.prep.Prep
       ~Prep.pad
       ~Prep.polish
       ~Prep.timeout
+      ~Prep.type
       ~Prep.retrieval_similarity
       ~Prep.first_round
       ~Prep.last_round
       ~Prep.prep_package_endpoints
-      ~Prep.type

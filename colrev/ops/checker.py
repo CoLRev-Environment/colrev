@@ -33,7 +33,6 @@ class Checker:
         review_manager: colrev.review_manager.ReviewManager,
     ) -> None:
         self.review_manager = review_manager
-
         self.review_manager.notified_next_operation = OperationsType.check
 
     def get_colrev_versions(self) -> list[str]:

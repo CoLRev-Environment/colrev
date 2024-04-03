@@ -20,6 +20,8 @@ from colrev.constants import RecordState
 class Prescreen(colrev.process.operation.Operation):
     """Prescreen records (based on metadata)"""
 
+    type = OperationsType.prescreen
+
     def __init__(
         self,
         *,
@@ -28,7 +30,7 @@ class Prescreen(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.prescreen,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

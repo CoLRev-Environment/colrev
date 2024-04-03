@@ -15,6 +15,8 @@ from colrev.writer.write_utils import write_file
 class Remove(colrev.process.operation.Operation):
     """Remove records, ... from CoLRev projects."""
 
+    type = OperationsType.check
+
     def __init__(
         self,
         *,
@@ -22,7 +24,7 @@ class Remove(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
             notify_state_transition_operation=False,
         )
 

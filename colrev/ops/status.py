@@ -17,10 +17,12 @@ from colrev.constants import OperationsType
 class Status(colrev.process.operation.Operation):
     """Determine the status of the project"""
 
+    type = OperationsType.check
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
         )
 
     def get_analytics(self) -> dict:

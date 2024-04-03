@@ -17,11 +17,13 @@ from colrev.writer.write_utils import write_file
 class Distribute(colrev.process.operation.Operation):
     """Distribute records to other local CoLRev projects"""
 
+    type = OperationsType.check
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         # pylint: disable=duplicate-code
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.check,
+            operations_type=self.type,
             notify_state_transition_operation=False,
         )
         self.review_manager = review_manager

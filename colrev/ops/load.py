@@ -24,6 +24,8 @@ from colrev.constants import SearchType
 class Load(colrev.process.operation.Operation):
     """Load the records"""
 
+    type = OperationsType.load
+
     def __init__(
         self,
         *,
@@ -33,7 +35,7 @@ class Load(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.load,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

@@ -75,6 +75,8 @@ class Prep(colrev.process.operation.Operation):
     _cpu = 1
     _prep_commit_id = "HEAD"
 
+    type = OperationsType.prep
+
     def __init__(
         self,
         *,
@@ -84,7 +86,7 @@ class Prep(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.prep,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.notify_state_transition_operation = notify_state_transition_operation

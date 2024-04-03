@@ -1,4 +1,4 @@
-colrev.ops.pdf\_prep.PDFPrep
+﻿colrev.ops.pdf\_prep.PDFPrep
 ============================
 
 .. currentmodule:: colrev.ops.pdf_prep
@@ -34,8 +34,8 @@ colrev.ops.pdf\_prep.PDFPrep
 
    .. autosummary::
 
+      ~PDFPrep.type
       ~PDFPrep.to_prepare
       ~PDFPrep.pdf_prepared
       ~PDFPrep.not_prepared
       ~PDFPrep.pdf_prep_package_endpoints
-      ~PDFPrep.type

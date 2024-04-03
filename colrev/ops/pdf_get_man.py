@@ -25,6 +25,8 @@ class PDFGetMan(colrev.process.operation.Operation):
     pdf_get_man_package_endpoints: dict[str, typing.Any]
     MISSING_PDF_FILES_RELATIVE = Path("data/pdf_get_man/missing_pdf_files.csv")
 
+    type = OperationsType.pdf_get_man
+
     def __init__(
         self,
         *,
@@ -33,7 +35,7 @@ class PDFGetMan(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.pdf_get_man,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
 

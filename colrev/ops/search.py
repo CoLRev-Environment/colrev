@@ -24,6 +24,8 @@ from colrev.writer.write_utils import write_file
 class Search(colrev.process.operation.Operation):
     """Search for new records"""
 
+    type = OperationsType.search
+
     def __init__(
         self,
         *,
@@ -32,7 +34,7 @@ class Search(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.search,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.review_manager = review_manager

@@ -1,4 +1,4 @@
-colrev.ops.upgrade.Upgrade
+﻿colrev.ops.upgrade.Upgrade
 ==========================
 
 .. currentmodule:: colrev.ops.upgrade
@@ -32,5 +32,5 @@ colrev.ops.upgrade.Upgrade
 
    .. autosummary::
 
-      ~Upgrade.repo
       ~Upgrade.type
+      ~Upgrade.repo

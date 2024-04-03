@@ -40,6 +40,7 @@ class Dedupe(colrev.process.operation.Operation):
     PREVENTED_SAME_SOURCE_MERGE_FILE = Path("prevented_same_source_merges.txt")
 
     debug = False
+    type = OperationsType.dedupe
 
     def __init__(
         self,
@@ -49,7 +50,7 @@ class Dedupe(colrev.process.operation.Operation):
     ) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.dedupe,
+            operations_type=self.type,
             notify_state_transition_operation=notify_state_transition_operation,
         )
         self.dedupe_dir = self.review_manager.get_path(Filepaths.DEDUPE_DIR)

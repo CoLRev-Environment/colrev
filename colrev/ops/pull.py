@@ -15,10 +15,12 @@ CHANGE_COUNTER = None
 class Pull(colrev.process.operation.Operation):
     """Pull the project and records"""
 
+    type = OperationsType.format
+
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         super().__init__(
             review_manager=review_manager,
-            operations_type=OperationsType.format,
+            operations_type=self.type,
         )
 
     @colrev.process.operation.Operation.decorate()

@@ -1,4 +1,4 @@
-colrev.ops.pdf\_get\_man.PDFGetMan
+﻿colrev.ops.pdf\_get\_man.PDFGetMan
 ==================================
 
 .. currentmodule:: colrev.ops.pdf_get_man
@@ -37,5 +37,5 @@ colrev.ops.pdf\_get\_man.PDFGetMan
    .. autosummary::
 
       ~PDFGetMan.MISSING_PDF_FILES_RELATIVE
-      ~PDFGetMan.pdf_get_man_package_endpoints
       ~PDFGetMan.type
+      ~PDFGetMan.pdf_get_man_package_endpoints
