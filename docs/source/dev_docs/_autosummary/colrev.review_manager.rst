@@ -9,14 +9,6 @@ colrev.review\_manager
 
 
 
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-      :nosignatures:
-
-      get_init_operation
-
 
 
 

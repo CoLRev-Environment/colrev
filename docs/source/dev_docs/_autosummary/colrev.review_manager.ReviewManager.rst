@@ -22,7 +22,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_advisor
       ~ReviewManager.get_cached_session
       ~ReviewManager.get_checker
-      ~ReviewManager.get_clone_operation
       ~ReviewManager.get_colrev_versions
       ~ReviewManager.get_committer
       ~ReviewManager.get_completeness_condition
@@ -33,7 +32,6 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_environment_manager
       ~ReviewManager.get_grobid_service
       ~ReviewManager.get_load_operation
-      ~ReviewManager.get_local_index
       ~ReviewManager.get_loggers_by_debug_mode
       ~ReviewManager.get_merge_operation
       ~ReviewManager.get_package_manager
