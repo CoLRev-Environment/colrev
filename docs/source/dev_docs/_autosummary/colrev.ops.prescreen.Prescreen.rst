@@ -39,4 +39,4 @@ colrev.ops.prescreen.Prescreen
 
    .. autosummary::
 
-      ~Prescreen.type
+      ~Prescreen.operations_type

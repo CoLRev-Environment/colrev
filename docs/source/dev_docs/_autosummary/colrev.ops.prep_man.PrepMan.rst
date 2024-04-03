@@ -34,4 +34,4 @@ colrev.ops.prep\_man.PrepMan
 
    .. autosummary::
 
-      ~PrepMan.type
+      ~PrepMan.operations_type

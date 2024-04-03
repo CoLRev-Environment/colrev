@@ -16,7 +16,6 @@ colrev.loader.bib.BIBLoader
    .. autosummary::
       :nosignatures:
 
-      ~BIBLoader.get_nr_in_bib
       ~BIBLoader.get_nr_records
       ~BIBLoader.get_record_header_items
       ~BIBLoader.load

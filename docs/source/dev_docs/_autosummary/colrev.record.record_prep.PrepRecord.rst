@@ -56,7 +56,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.is_retracted
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
-      ~PrepRecord.prefix_non_standardized_field_keys
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
       ~PrepRecord.remove_data_provenance_note

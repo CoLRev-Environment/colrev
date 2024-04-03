@@ -30,4 +30,4 @@ colrev.ops.push.Push
 
    .. autosummary::
 
-      ~Push.type
+      ~Push.operations_type

@@ -44,4 +44,4 @@ colrev.ops.dedupe.Dedupe
       ~Dedupe.PREVENTED_SAME_SOURCE_MERGE_FILE
       ~Dedupe.SAME_SOURCE_MERGE_FILE
       ~Dedupe.debug
-      ~Dedupe.type
+      ~Dedupe.operations_type

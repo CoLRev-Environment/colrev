@@ -29,4 +29,4 @@ colrev.process.operation.Operation
 
    .. autosummary::
 
-      ~Operation.type
+      ~Operation.operations_type

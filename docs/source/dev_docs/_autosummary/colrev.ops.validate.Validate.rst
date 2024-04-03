@@ -31,4 +31,4 @@ colrev.ops.validate.Validate
 
    .. autosummary::
 
-      ~Validate.type
+      ~Validate.operations_type

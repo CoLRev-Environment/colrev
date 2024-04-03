@@ -42,4 +42,4 @@ colrev.ops.pdf\_get.PDFGet
       ~PDFGet.to_retrieve
       ~PDFGet.retrieved
       ~PDFGet.not_retrieved
-      ~PDFGet.type
+      ~PDFGet.operations_type

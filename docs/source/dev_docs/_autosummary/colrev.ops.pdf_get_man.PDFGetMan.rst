@@ -38,4 +38,4 @@ colrev.ops.pdf\_get\_man.PDFGetMan
 
       ~PDFGetMan.MISSING_PDF_FILES_RELATIVE
       ~PDFGetMan.pdf_get_man_package_endpoints
-      ~PDFGetMan.type
+      ~PDFGetMan.operations_type

@@ -33,4 +33,4 @@ colrev.ops.upgrade.Upgrade
    .. autosummary::
 
       ~Upgrade.repo
-      ~Upgrade.type
+      ~Upgrade.operations_type

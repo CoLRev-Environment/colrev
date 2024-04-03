@@ -30,4 +30,4 @@ colrev.ops.merge.Merge
 
    .. autosummary::
 
-      ~Merge.type
+      ~Merge.operations_type
