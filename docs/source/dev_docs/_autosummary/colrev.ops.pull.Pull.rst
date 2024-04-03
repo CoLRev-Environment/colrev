@@ -30,4 +30,4 @@ colrev.ops.pull.Pull
 
    .. autosummary::
 
-      ~Pull.type
+      ~Pull.operations_type

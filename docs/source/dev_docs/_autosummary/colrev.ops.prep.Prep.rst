@@ -43,4 +43,4 @@ colrev.ops.prep.Prep
       ~Prep.first_round
       ~Prep.last_round
       ~Prep.prep_package_endpoints
-      ~Prep.type
+      ~Prep.operations_type

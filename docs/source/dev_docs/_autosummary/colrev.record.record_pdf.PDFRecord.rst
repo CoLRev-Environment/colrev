@@ -54,7 +54,6 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.is_retracted
       ~PDFRecord.masterdata_is_curated
       ~PDFRecord.merge
-      ~PDFRecord.prefix_non_standardized_field_keys
       ~PDFRecord.prescreen_exclude
       ~PDFRecord.print_citation_format
       ~PDFRecord.remove_data_provenance_note

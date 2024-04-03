@@ -34,4 +34,4 @@ colrev.ops.load.Load
 
    .. autosummary::
 
-      ~Load.type
+      ~Load.operations_type

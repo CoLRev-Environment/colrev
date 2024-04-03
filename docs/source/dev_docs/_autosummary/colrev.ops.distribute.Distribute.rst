@@ -32,4 +32,4 @@ colrev.ops.distribute.Distribute
 
    .. autosummary::
 
-      ~Distribute.type
+      ~Distribute.operations_type
