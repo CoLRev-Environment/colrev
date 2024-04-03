@@ -5,10 +5,10 @@ import os
 from collections import namedtuple
 from pathlib import Path
 
-import docker
 import git
 import pytest
 
+import colrev.env.docker_manager
 import colrev.env.environment_manager
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
@@ -274,37 +274,3 @@ def test_repo_registry(tmp_path) -> None:  # type: ignore
     # Test if the repo is already registered
     env_man.register_repo(path_to_register=tmp_path)
     assert len(env_man.environment_registry["local_index"]["repos"]) == 1
-
-
-def test_build_docker_image(tmp_path) -> None:  # type: ignore
-    def remove_docker_image(image_name: str) -> None:
-        client = docker.from_env()
-        try:
-            client.images.remove(image_name)
-            print(f"Image '{image_name}' removed successfully.")
-        except docker.errors.ImageNotFound:
-            print(f"Image '{image_name}' not found.")
-
-    env_man = colrev.env.environment_manager.EnvironmentManager()
-    env_man.build_docker_image(imagename="hello-world")
-    remove_docker_image("hello-world")
-
-    # Docker not available on Windows (GH-Actions)
-    if not continue_test():
-        return
-
-    # Create a simple Dockerfile
-    dockerfile_content = """
-    FROM python:3.9
-    WORKDIR /app
-    COPY . /app
-    """
-
-    # Save the Dockerfile
-    dockerfile_path = tmp_path / Path("Dockerfile")
-    with open(dockerfile_path, "w") as file:
-        file.write(dockerfile_content)
-
-    # Build the Docker image
-    env_man.build_docker_image(imagename="test-image", dockerfile=dockerfile_path)
-    remove_docker_image("test-image")

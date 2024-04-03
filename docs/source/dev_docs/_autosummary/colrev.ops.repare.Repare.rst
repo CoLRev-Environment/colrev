@@ -30,4 +30,4 @@ colrev.ops.repare.Repare
 
    .. autosummary::
 
-      ~Repare.operations_type
+      ~Repare.type

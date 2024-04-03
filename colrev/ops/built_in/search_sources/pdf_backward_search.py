@@ -443,10 +443,6 @@ class BackwardSearchSource(JsonSchemaMixin):
                 retrieved_record=new_record,
             )
 
-        pdf_backward_search_feed.print_post_run_search_infos(
-            records=records,
-        )
-
         self._complement_with_open_citations_data(
             pdf_backward_search_feed=pdf_backward_search_feed, records=records
         )

@@ -245,7 +245,7 @@ def test_get_transitioned_records(  # type: ignore
             "origin": "test_records.bib/Srivastava2015",
             "source": RecordState.md_prepared,
             "dest": RecordState.md_processed,
-            "operations_type": OperationsType.dedupe,
+            "type": OperationsType.dedupe,
         }
     ]
     operation_in_progress = status_stats.get_operation_in_progress(
@@ -266,6 +266,6 @@ def test_get_transitioned_records(  # type: ignore
             "origin": "test_records.bib/Srivastava2015",
             "source": RecordState.md_prepared,
             "dest": RecordState.rev_included,
-            "operations_type": "invalid_transition",
+            "type": "invalid_transition",
         }
     ]

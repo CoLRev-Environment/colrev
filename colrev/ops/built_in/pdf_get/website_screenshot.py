@@ -13,6 +13,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
+import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
@@ -42,7 +43,7 @@ class WebsiteScreenshot(JsonSchemaMixin):
         self.settings = self.settings_class.load_settings(data=settings)
         self.review_manager = pdf_get_operation.review_manager
         self.pdf_get_operation = pdf_get_operation
-        self.review_manager.environment_manager.build_docker_image(
+        colrev.env.docker_manager.DockerManager.build_docker_image(
             imagename=self.CHROME_BROWSERLESS_IMAGE
         )
         pdf_get_operation.docker_images_to_stop.append(self.CHROME_BROWSERLESS_IMAGE)

@@ -34,4 +34,4 @@ colrev.ops.data.Data
 
    .. autosummary::
 
-      ~Data.operations_type
+      ~Data.type

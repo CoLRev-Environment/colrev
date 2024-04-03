@@ -247,8 +247,8 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             }
 
             try:
-                colrev_project_search_feed.add_record(
-                    record=colrev.record.record.Record(record_to_import),
+                colrev_project_search_feed.add_update_record(
+                    retrieved_record=colrev.record.record.Record(record_to_import),
                 )
 
             except colrev_exceptions.NotFeedIdentifiableException:

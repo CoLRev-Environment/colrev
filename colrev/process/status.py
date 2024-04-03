@@ -234,10 +234,10 @@ class StatusStats:
                 len(operations_type) == 0
                 and transitioned_record["source"] != transitioned_record["dest"]
             ):
-                transitioned_record["operations_type"] = "invalid_transition"
+                transitioned_record["type"] = "invalid_transition"
 
             if len(operations_type) > 0:
-                transitioned_record["operations_type"] = operations_type[0]
+                transitioned_record["type"] = operations_type[0]
 
             transitioned_records.append(transitioned_record)
 
@@ -289,7 +289,7 @@ class StatusStats:
     def get_operation_in_progress(self, *, transitioned_records: list) -> set:
         """Get the operation currently in progress"""
 
-        return {x["operations_type"] for x in transitioned_records}
+        return {x["type"] for x in transitioned_records}
 
 
 @dataclass

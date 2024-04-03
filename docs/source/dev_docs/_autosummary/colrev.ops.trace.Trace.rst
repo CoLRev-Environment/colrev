@@ -30,4 +30,4 @@ colrev.ops.trace.Trace
 
    .. autosummary::
 
-      ~Trace.operations_type
+      ~Trace.type

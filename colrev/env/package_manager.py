@@ -1128,8 +1128,8 @@ class PackageManager:
             },
         }
 
-        package_type = package_type_dict[operation.operations_type]["package_type"]
-        endpoints = package_type_dict[operation.operations_type]["endpoint_location"]
+        package_type = package_type_dict[operation.type]["package_type"]
+        endpoints = package_type_dict[operation.type]["endpoint_location"]
 
         registered_endpoints = [
             e["endpoint"] if isinstance(e, dict) else e.endpoint for e in endpoints  # type: ignore
@@ -1142,7 +1142,7 @@ class PackageManager:
                 return {}
 
         operation.review_manager.logger.info(
-            f"{Colors.GREEN}Add {operation.operations_type} "
+            f"{Colors.GREEN}Add {operation.type} "
             f"package:{Colors.END} {package_identifier}"
         )
 
@@ -1181,6 +1181,6 @@ class PackageManager:
 
         operation.review_manager.save_settings()
         operation.review_manager.dataset.create_commit(
-            msg=f"Add {operation.operations_type} {package_identifier}",
+            msg=f"Add {operation.type} {package_identifier}",
         )
         return add_package

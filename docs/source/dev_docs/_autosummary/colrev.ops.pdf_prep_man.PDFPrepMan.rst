@@ -40,4 +40,4 @@ colrev.ops.pdf\_prep\_man.PDFPrepMan
 
    .. autosummary::
 
-      ~PDFPrepMan.operations_type
+      ~PDFPrepMan.type

@@ -131,17 +131,17 @@ SearchSource methods
    * - Format
      - Utility
    * - BibTeX
-     - :doc:`colrev.ops.load_utils_bib </dev_docs/_autosummary/colrev.ops.load_utils_bib>`
+     - :doc:`colrev.load_utils.bib </dev_docs/_autosummary/colrev.load_utils.bib>`
    * - CSV/XLSX
-     - :doc:`colrev.ops.load_utils_table </dev_docs/_autosummary/colrev.ops.load_utils_table>`
+     - :doc:`colrev.load_utils.table </dev_docs/_autosummary/colrev.load_utils.table>`
    * - ENL
-     - :doc:`colrev.ops.load_utils_enl </dev_docs/_autosummary/colrev.ops.load_utils_enl>`
+     - :doc:`colrev.load_utils.enl </dev_docs/_autosummary/colrev.load_utils.enl>`
    * - Markdown (reference section as unstructured text)
-     - :doc:`colrev.ops.load_utils_md </dev_docs/_autosummary/colrev.ops.load_utils_md>`
+     - :doc:`colrev.load_utils.md </dev_docs/_autosummary/colrev.load_utils.md>`
    * - NBIB
-     - :doc:`colrev.ops.load_utils_nbib </dev_docs/_autosummary/colrev.ops.load_utils_nbib>`
+     - :doc:`colrev.load_utils.nbib </dev_docs/_autosummary/colrev.load_utils.nbib>`
    * - RIS
-     - :doc:`colrev.ops.load_utils_ris </dev_docs/_autosummary/colrev.ops.load_utils_ris>`
+     - :doc:`colrev.load_utils.ris </dev_docs/_autosummary/colrev.load_utils.ris>`
 
 **TODO : implement load_utils for csl/xml/json...**
 

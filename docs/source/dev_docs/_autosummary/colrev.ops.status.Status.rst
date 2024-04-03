@@ -31,4 +31,4 @@ colrev.ops.status.Status
 
    .. autosummary::
 
-      ~Status.operations_type
+      ~Status.type

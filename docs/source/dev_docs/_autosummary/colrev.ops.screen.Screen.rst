@@ -40,4 +40,4 @@ colrev.ops.screen.Screen
 
    .. autosummary::
 
-      ~Screen.operations_type
+      ~Screen.type

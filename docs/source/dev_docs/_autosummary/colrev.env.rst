@@ -26,6 +26,7 @@ colrev.env
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.env.docker_manager
    colrev.env.environment_manager
    colrev.env.grobid_service
    colrev.env.language_service
