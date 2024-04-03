@@ -7,6 +7,7 @@ import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import RecordState
+import colrev.process.operation
 
 
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:

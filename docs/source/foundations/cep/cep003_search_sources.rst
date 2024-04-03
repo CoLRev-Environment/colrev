@@ -131,19 +131,19 @@ SearchSource methods
    * - Format
      - Utility
    * - BibTeX
-     - :doc:`colrev.load_utils.bib </dev_docs/_autosummary/colrev.load_utils.bib>`
+     - :doc:`colrev.loader.bib </dev_docs/_autosummary/colrev.loader.bib>`
    * - CSV/XLSX
-     - :doc:`colrev.load_utils.table </dev_docs/_autosummary/colrev.load_utils.table>`
+     - :doc:`colrev.loader.table </dev_docs/_autosummary/colrev.loader.table>`
    * - ENL
-     - :doc:`colrev.load_utils.enl </dev_docs/_autosummary/colrev.load_utils.enl>`
+     - :doc:`colrev.loader.enl </dev_docs/_autosummary/colrev.loader.enl>`
    * - Markdown (reference section as unstructured text)
-     - :doc:`colrev.load_utils.md </dev_docs/_autosummary/colrev.load_utils.md>`
+     - :doc:`colrev.loader.md </dev_docs/_autosummary/colrev.loader.md>`
    * - NBIB
-     - :doc:`colrev.load_utils.nbib </dev_docs/_autosummary/colrev.load_utils.nbib>`
+     - :doc:`colrev.loader.nbib </dev_docs/_autosummary/colrev.loader.nbib>`
    * - RIS
-     - :doc:`colrev.load_utils.ris </dev_docs/_autosummary/colrev.load_utils.ris>`
+     - :doc:`colrev.loader.ris </dev_docs/_autosummary/colrev.loader.ris>`
 
-**TODO : implement load_utils for csl/xml/json...**
+**TODO : implement loader for csl/xml/json...**
 
 **prep**
 
