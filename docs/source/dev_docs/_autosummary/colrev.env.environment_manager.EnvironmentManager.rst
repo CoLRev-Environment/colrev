@@ -16,8 +16,6 @@ colrev.env.environment\_manager.EnvironmentManager
    .. autosummary::
       :nosignatures:
 
-      ~EnvironmentManager.build_docker_image
-      ~EnvironmentManager.check_docker_installed
       ~EnvironmentManager.check_git_installed
       ~EnvironmentManager.get_curated_outlets
       ~EnvironmentManager.get_environment_details

@@ -18,6 +18,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
+import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -117,7 +118,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
         if not self.review_manager.in_ci_environment():
             self.pandoc_image = "pandoc/latex:3.1"
-            self.review_manager.environment_manager.build_docker_image(
+            colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.pandoc_image
             )
 

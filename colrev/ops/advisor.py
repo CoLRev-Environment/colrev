@@ -278,7 +278,7 @@ class Advisor:
                             "priority": "yes",
                         }
                     )
-                if transitioned_record["operations_type"] == "invalid_transition":
+                if transitioned_record["type"] == "invalid_transition":
                     msg = (
                         f"Resolve invalid transition ({transitioned_record['ID']}): "
                         + f"{transitioned_record['source']} to "

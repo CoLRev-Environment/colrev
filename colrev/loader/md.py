@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 
 import requests
 
+import colrev.env.grobid_service
 import colrev.loader.bib
 import colrev.loader.loader
-import colrev.review_manager
 from colrev.constants import Fields
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -61,7 +61,7 @@ class MarkdownLoader(colrev.loader.loader.Loader):
 
         self.logger.info("Running GROBID to parse structured reference data")
 
-        grobid_service = colrev.review_manager.ReviewManager.get_grobid_service()
+        grobid_service = colrev.env.grobid_service.GrobidService()
 
         grobid_service.check_grobid_availability()
         with open(self.filename, encoding="utf8") as file:

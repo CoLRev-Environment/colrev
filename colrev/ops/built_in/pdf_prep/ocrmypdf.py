@@ -10,13 +10,13 @@ import docker
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
+import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import PDFDefectCodes
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -41,7 +41,7 @@ class OCRMyPDF(JsonSchemaMixin):
         self.review_manager = pdf_prep_operation.review_manager
 
         if not self.review_manager.in_ci_environment():
-            self.review_manager.environment_manager.build_docker_image(
+            colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.OCRMYPDF_IMAGE
             )
         pdf_prep_operation.docker_images_to_stop.append(self.OCRMYPDF_IMAGE)

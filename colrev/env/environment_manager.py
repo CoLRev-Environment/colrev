@@ -5,17 +5,13 @@ from __future__ import annotations
 import json
 import typing
 from pathlib import Path
-from typing import Optional
 
-import docker
 import git
 import yaml
-from docker.errors import DockerException
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
-from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
@@ -131,35 +127,6 @@ class EnvironmentManager:
             ) from exc
         return global_conf_details
 
-    @classmethod
-    def build_docker_image(
-        cls, *, imagename: str, dockerfile: Optional[Path] = None
-    ) -> None:
-        """Build a docker image"""
-
-        try:
-            client = docker.from_env()
-            repo_tags = [t for image in client.images.list() for t in image.tags]
-
-            if imagename not in repo_tags:
-                if dockerfile:
-                    print(f"Building {imagename} Docker image ...")
-                    dockerfile.resolve()
-                    client.images.build(
-                        path=str(dockerfile.parent).replace("\\", "/"),
-                        tag=f"{imagename}:latest",
-                    )
-
-                else:
-                    print(f"Pulling {imagename} Docker image...")
-                    client.images.pull(imagename)
-        except DockerException as exc:  # pragma: no cover
-            raise colrev_exceptions.ServiceNotAvailableException(
-                dep="docker",
-                detailed_trace=f"Docker service not available ({exc}). "
-                + "Please install/start Docker.",
-            ) from exc
-
     def check_git_installed(self) -> None:  # pragma: no cover
         """Check whether git is installed"""
 
@@ -168,21 +135,6 @@ class EnvironmentManager:
             _ = git_instance.version()
         except git.GitCommandNotFound as exc:
             print(exc)
-
-    def check_docker_installed(self) -> None:  # pragma: no cover
-        """Check whether Docker is installed"""
-
-        try:
-            client = docker.from_env()
-            _ = client.version()
-        except docker.errors.DockerException as exc:
-            if "PermissionError" in exc.args[0]:
-                raise colrev_exceptions.DependencyConfigurationError(
-                    "Docker: Permission error. Run "
-                    f"{Colors.ORANGE}sudo gpasswd -a $USER docker && "
-                    f"newgrp docker{Colors.END}"
-                )
-            raise colrev_exceptions.MissingDependencyError("Docker")
 
     def _get_status(self, review_manager: colrev.review_manager.ReviewManager) -> dict:
         status_dict = {}

@@ -247,7 +247,7 @@ class ColrevProjectSearchSource(JsonSchemaMixin):
             }
 
             try:
-                colrev_project_search_feed.add_record(
+                colrev_project_search_feed.add_update_record(
                     record=colrev.record.record.Record(record_to_import),
                 )
 

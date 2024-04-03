@@ -9,6 +9,7 @@ from dacite import from_dict
 
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
+import colrev.record.record
 from colrev.constants import Fields
 
 
@@ -27,7 +28,9 @@ class CustomSearch:
         source_operation: colrev.ops.search.Search,
         settings: dict,
     ) -> None:
-        self.search_source = from_dict(data_class=self.settings_class, data=settings)
+        self.search_source: colrev.settings.SearchSource = from_dict(
+            data_class=self.settings_class, data=settings
+        )
         self.review_manager = source_operation.review_manager
 
     def search(self, rerun: bool) -> None:
@@ -37,7 +40,6 @@ class CustomSearch:
             review_manager=self.review_manager,
             source_identifier=self.source_identifier,
             update_only=(not rerun),
-            update_time_variant_fields=rerun,
         )
         retrieved_record = {
             Fields.ID: "ID00001",
@@ -48,7 +50,7 @@ class CustomSearch:
             Fields.YEAR: "2020",
         }
 
-        feed.add_update_record(retrieved_record)
+        feed.add_update_record(colrev.record.record.Record(retrieved_record))
         feed.save()
 
     @classmethod

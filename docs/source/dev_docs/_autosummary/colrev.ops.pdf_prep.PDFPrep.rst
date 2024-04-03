@@ -38,4 +38,4 @@ colrev.ops.pdf\_prep.PDFPrep
       ~PDFPrep.pdf_prepared
       ~PDFPrep.not_prepared
       ~PDFPrep.pdf_prep_package_endpoints
-      ~PDFPrep.operations_type
+      ~PDFPrep.type

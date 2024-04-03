@@ -17,6 +17,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
 import colrev.constants as c
+import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -95,8 +96,7 @@ class BibliographyExport(JsonSchemaMixin):
         self.endpoint_path = self.review_manager.get_path(Filepaths.OUTPUT_DIR)
 
         if not self.review_manager.in_ci_environment():
-            environment_manager = self.review_manager.get_environment_manager()
-            environment_manager.build_docker_image(
+            colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.ZOTERO_TRANSLATION_SERVER_IMAGE_NAME
             )
 

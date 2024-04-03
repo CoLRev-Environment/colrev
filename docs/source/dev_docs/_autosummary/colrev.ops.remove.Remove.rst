@@ -30,4 +30,4 @@ colrev.ops.remove.Remove
 
    .. autosummary::
 
-      ~Remove.operations_type
+      ~Remove.type

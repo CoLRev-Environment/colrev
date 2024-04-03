@@ -16,6 +16,7 @@ from subprocess import STDOUT  # nosec
 import git
 
 import colrev.dataset
+import colrev.env.docker_manager
 import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -25,7 +26,6 @@ from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import PackageEndpointType
-
 
 # pylint: disable=too-few-public-methods
 
@@ -153,7 +153,7 @@ class Initializer:
         environment_manager.get_name_mail_from_git()
 
         try:
-            environment_manager.check_docker_installed()
+            colrev.env.docker_manager.DockerManager.check_docker_installed()
         except colrev_exceptions.MissingDependencyError as exc:  # pragma: no cover
             if not self.no_docker:
                 raise colrev_exceptions.CoLRevException(

@@ -14,6 +14,7 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
+import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -67,7 +68,7 @@ class PRISMA(JsonSchemaMixin):
         ]
 
         if not self.review_manager.in_ci_environment():
-            self.review_manager.environment_manager.build_docker_image(
+            colrev.env.docker_manager.DockerManager.build_docker_image(
                 imagename=self.PRISMA_IMAGE
             )
         data_operation.docker_images_to_stop.append(self.PRISMA_IMAGE)

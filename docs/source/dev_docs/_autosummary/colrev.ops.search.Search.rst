@@ -40,4 +40,4 @@ colrev.ops.search.Search
 
    .. autosummary::
 
-      ~Search.operations_type
+      ~Search.type
