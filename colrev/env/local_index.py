@@ -371,6 +371,7 @@ class LocalIndex:
                             index_name=self.RECORD_INDEX,
                             key=Fields.COLREV_ID,
                             value=item["colrev_id"],
+                            cursor=cur,
                         )
                         stored_colrev_id = colrev.record.record.Record(
                             data=stored_record
@@ -1147,10 +1148,20 @@ class LocalIndex:
         except AttributeError as exc:
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
-    def _get_item_from_index(self, *, index_name: str, key: str, value: str) -> dict:
+    def _get_item_from_index(
+        self,
+        *,
+        index_name: str,
+        key: str,
+        value: str,
+        cursor: typing.Optional[sqlite3.Cursor] = None,
+    ) -> dict:
         try:
-            self.thread_lock.acquire(timeout=60)
-            cur = self._get_sqlite_cursor()
+            if cursor is None:
+                self.thread_lock.acquire(timeout=60)
+                cur = self._get_sqlite_cursor()
+            else:
+                cur = cursor
 
             # in the following, collisions should be handled.
             # paper_hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
@@ -1158,8 +1169,10 @@ class LocalIndex:
             # paper_hash = self._increment_hash(paper_hash=paper_hash)
 
             cur.execute(self.SELECT_KEY_QUERIES[(index_name, key)], (value,))
+
             selected_row = cur.fetchone()
-            self.thread_lock.release()
+            if cursor is None:
+                self.thread_lock.release()
 
             if not selected_row:
                 raise colrev_exceptions.RecordNotInIndexException()
@@ -1170,22 +1183,23 @@ class LocalIndex:
             else:
                 retrieved_record = selected_row
 
-            if key == Fields.COLREV_ID:
-                if (
+            if (
+                key != Fields.COLREV_ID
+                and (key not in retrieved_record or value != retrieved_record[key])
+            ) or (
+                key == Fields.COLREV_ID
+                and (
                     value
                     != colrev.record.record.Record(retrieved_record).create_colrev_id()
-                ):
-                    raise colrev_exceptions.RecordNotInIndexException()
-            else:
-                if key not in retrieved_record:
-                    raise colrev_exceptions.RecordNotInIndexException()
+                )
+            ):
+                raise colrev_exceptions.RecordNotInIndexException()
 
-                if value != retrieved_record[key]:
-                    raise colrev_exceptions.RecordNotInIndexException()
             return retrieved_record
 
         except sqlite3.OperationalError as exc:  # pragma: no cover
-            self.thread_lock.release()
+            if cursor is None:
+                self.thread_lock.release()
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
     def retrieve_based_on_colrev_pdf_id(

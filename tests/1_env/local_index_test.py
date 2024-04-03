@@ -109,6 +109,7 @@ def test_search(local_index) -> None:  # type: ignore
                     Fields.DOI: {"note": "", "source": "CROSSREF.bib/000516"},
                     Fields.URL: {"note": "", "source": "DBLP.bib/000528"},
                     Fields.CURATION_ID: {"note": "", "source": "manual"},
+                    "literature_review": {"note": "", "source": "CURATED:gh..."},
                     Fields.LANGUAGE: {"note": "", "source": "manual"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
@@ -116,7 +117,7 @@ def test_search(local_index) -> None:  # type: ignore
                 "curation_ID": "gh...#AlaviLeidner2001",
                 Fields.DOI: "10.2307/3250961",
                 Fields.JOURNAL: "MIS Quarterly",
-                # TODO : should expect literature_review = True (layered field?!)
+                "literature_review": "yes",
                 Fields.LANGUAGE: "eng",
                 Fields.NUMBER: "1",
                 Fields.TITLE: "Review: Knowledge Management and Knowledge Management Systems: Conceptual Foundations and Research Issues",
