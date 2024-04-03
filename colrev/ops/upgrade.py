@@ -613,7 +613,7 @@ class Upgrade(colrev.process.operation.Operation):
             Path(".github/workflows/colrev_update.yml").unlink(missing_ok=True)
             colrev.env.utils.retrieve_package_file(
                 template_file=Path(
-                    "ops/built_in/review_type/curated_masterdata/curations_github_colrev_update.yml"
+                    "packages/review_type/curated_masterdata/curations_github_colrev_update.yml"
                 ),
                 target=Path(".github/workflows/colrev_update.yml"),
             )

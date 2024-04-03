@@ -47,7 +47,6 @@ def test_checks(  # type: ignore
         )
         assert expected == actual
 
-    base_repo_review_manager.get_search_sources()
     search_sources = base_repo_review_manager.settings.sources
     actual = [asdict(s) for s in search_sources]  # type: ignore
 

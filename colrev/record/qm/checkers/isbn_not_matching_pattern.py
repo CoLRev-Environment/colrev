@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
-import colrev.record.qm.quality_model
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
+
+if TYPE_CHECKING:  # pragma: no cover
+    import colrev.record.qm.quality_model
 
 # pylint: disable=too-few-public-methods
 

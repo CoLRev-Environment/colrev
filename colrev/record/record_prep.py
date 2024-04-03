@@ -9,7 +9,7 @@ from nameparser import HumanName
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.prep.utils as prep_utils
+import colrev.packages.prep.utils as prep_utils
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues

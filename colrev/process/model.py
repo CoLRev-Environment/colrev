@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process.operation
 from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
+
+if TYPE_CHECKING:
+    import colrev.process.operation
 
 
 class ProcessModel:

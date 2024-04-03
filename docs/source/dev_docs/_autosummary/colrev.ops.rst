@@ -27,12 +27,10 @@ colrev.ops
    :recursive:
 
    colrev.ops.advisor
-   colrev.ops.built_in
    colrev.ops.checker
    colrev.ops.clone
    colrev.ops.commit
    colrev.ops.correct
-   colrev.ops.dashboard
    colrev.ops.data
    colrev.ops.dedupe
    colrev.ops.distribute

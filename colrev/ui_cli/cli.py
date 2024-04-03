@@ -328,7 +328,6 @@ def status(
         print(exc)
 
 
-# add dashboard operation
 @main.command(help_priority=100)
 @click.option(
     "-v",
@@ -343,10 +342,10 @@ def dashboard(
     verbose: bool,
 ) -> None:
     """Allows to track project progress through dashboard"""
-    import colrev.ops.dashboard
+    import colrev.ui_web.dashboard
 
     try:
-        colrev.ops.dashboard.main()
+        colrev.ui_web.dashboard.main()
     except colrev_exceptions.NoRecordsError:
         print("No records imported yet.")
     except colrev_exceptions.CoLRevException as exc:

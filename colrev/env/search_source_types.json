@@ -2,7 +2,7 @@
     "API": [
         {
             "package_endpoint_identifier": "colrev.ais_library",
-            "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.aisel.AISeLibrarySearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </resources/package_index/colrev.ais_library>`)",
@@ -15,7 +15,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.arxiv",
-            "endpoint": "colrev.ops.built_in.search_sources.arxiv.ArXivSource",
+            "endpoint": "colrev.packages.search_sources.arxiv.ArXivSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "SearchSource for arXiv (:doc:`instructions </resources/package_index/colrev.arxiv>`)",
@@ -26,7 +26,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.colrev_project",
-            "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
+            "endpoint": "colrev.packages.search_sources.colrev_project.ColrevProjectSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "CoLRev projects (:doc:`instructions </resources/package_index/colrev.colrev_project>`)",
@@ -37,7 +37,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.crossref",
-            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
+            "endpoint": "colrev.packages.search_sources.crossref.CrossrefSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </resources/package_index/colrev.crossref>`)",
@@ -50,7 +50,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dblp",
-            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "endpoint": "colrev.packages.search_sources.dblp.DBLPSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "DBLP API (:doc:`instructions </resources/package_index/colrev.dblp>`)",
@@ -63,7 +63,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.eric",
-            "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
+            "endpoint": "colrev.packages.search_sources.eric.ERICSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "ERIC API (:doc:`instructions </resources/package_index/colrev.eric>`)",
@@ -74,7 +74,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
-            "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
+            "endpoint": "colrev.packages.search_sources.europe_pmc.EuropePMCSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Europe PMC (:doc:`instructions </resources/package_index/colrev.europe_pmc>`)",
@@ -87,7 +87,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ieee",
-            "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource",
+            "endpoint": "colrev.packages.search_sources.ieee.IEEEXploreSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "IEEEXplore (:doc:`instructions </resources/package_index/colrev.ieee>`)",
@@ -98,7 +98,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
-            "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
+            "endpoint": "colrev.packages.search_sources.local_index.LocalIndexSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "LocalIndex (:doc:`instructions </resources/package_index/colrev.local_index>`)",
@@ -110,7 +110,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource",
+            "endpoint": "colrev.packages.search_sources.open_alex.OpenAlexSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "OpenAlex API (:doc:`instructions </resources/package_index/colrev.open_alex>`)",
@@ -122,7 +122,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.pubmed",
-            "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
+            "endpoint": "colrev.packages.search_sources.pubmed.PubMedSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </resources/package_index/colrev.pubmed>`)",
@@ -135,7 +135,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
-            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar.SemanticScholarSearchSource",
+            "endpoint": "colrev.packages.search_sources.semanticscholar.SemanticScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Semantic Scholar API Search Source (:doc:`instructions </resources/package_index/colrev.semanticscholar>`)",
@@ -146,7 +146,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.synergy_datasets",
-            "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
+            "endpoint": "colrev.packages.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "SYNERGY-datasets (:doc:`instructions </resources/package_index/colrev.synergy_datasets>`)",
@@ -159,7 +159,7 @@
     "DB": [
         {
             "package_endpoint_identifier": "colrev.abi_inform_proquest",
-            "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource",
+            "endpoint": "colrev.packages.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "ABI/INFORM (ProQuest) (:doc:`instructions </resources/package_index/colrev.abi_inform_proquest>`)",
@@ -170,7 +170,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.acm_digital_library",
-            "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "ACM digital Library (:doc:`instructions </resources/package_index/colrev.acm_digital_library>`)",
@@ -181,7 +181,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ais_library",
-            "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.aisel.AISeLibrarySearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </resources/package_index/colrev.ais_library>`)",
@@ -194,7 +194,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ebsco_host",
-            "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource",
+            "endpoint": "colrev.packages.search_sources.ebsco_host.EbscoHostSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "EBSCOHost (:doc:`instructions </resources/package_index/colrev.ebsco_host>`)",
@@ -205,7 +205,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
-            "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
+            "endpoint": "colrev.packages.search_sources.europe_pmc.EuropePMCSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Europe PMC (:doc:`instructions </resources/package_index/colrev.europe_pmc>`)",
@@ -218,7 +218,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.google_scholar",
-            "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
+            "endpoint": "colrev.packages.search_sources.google_scholar.GoogleScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "GoogleScholar (:doc:`instructions </resources/package_index/colrev.google_scholar>`)",
@@ -229,7 +229,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.jstor",
-            "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource",
+            "endpoint": "colrev.packages.search_sources.jstor.JSTORSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "JSTOR (:doc:`instructions </resources/package_index/colrev.jstor>`)",
@@ -240,7 +240,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.psycinfo",
-            "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource",
+            "endpoint": "colrev.packages.search_sources.psycinfo.PsycINFOSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </resources/package_index/colrev.psycinfo>`)",
@@ -251,7 +251,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.pubmed",
-            "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
+            "endpoint": "colrev.packages.search_sources.pubmed.PubMedSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </resources/package_index/colrev.pubmed>`)",
@@ -264,7 +264,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scopus",
-            "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
+            "endpoint": "colrev.packages.search_sources.scopus.ScopusSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Scopus (:doc:`instructions </resources/package_index/colrev.scopus>`)",
@@ -275,7 +275,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.springer_link",
-            "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource",
+            "endpoint": "colrev.packages.search_sources.springer_link.SpringerLinkSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Springer Link (:doc:`instructions </resources/package_index/colrev.springer_link>`)",
@@ -286,7 +286,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.taylor_and_francis",
-            "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource",
+            "endpoint": "colrev.packages.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Taylor and Francis (:doc:`instructions </resources/package_index/colrev.taylor_and_francis>`)",
@@ -297,7 +297,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.trid",
-            "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation",
+            "endpoint": "colrev.packages.search_sources.trid.TransportResearchInternationalDocumentation",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Transport Research International Documentation (:doc:`instructions </resources/package_index/colrev.trid>`)",
@@ -308,7 +308,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.unknown_source",
-            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "endpoint": "colrev.packages.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Unknown SearchSource (:doc:`instructions </resources/package_index/colrev.unknown_source>`)",
@@ -323,7 +323,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.web_of_science",
-            "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
+            "endpoint": "colrev.packages.search_sources.web_of_science.WebOfScienceSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Web of Science (:doc:`instructions </resources/package_index/colrev.web_of_science>`)",
@@ -334,7 +334,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.wiley",
-            "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.wiley.WileyOnlineLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Wiley (:doc:`instructions </resources/package_index/colrev.wiley>`)",
@@ -347,7 +347,7 @@
     "TOC": [
         {
             "package_endpoint_identifier": "colrev.ais_library",
-            "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.aisel.AISeLibrarySearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </resources/package_index/colrev.ais_library>`)",
@@ -360,7 +360,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.crossref",
-            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
+            "endpoint": "colrev.packages.search_sources.crossref.CrossrefSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </resources/package_index/colrev.crossref>`)",
@@ -373,7 +373,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dblp",
-            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "endpoint": "colrev.packages.search_sources.dblp.DBLPSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "DBLP API (:doc:`instructions </resources/package_index/colrev.dblp>`)",
@@ -386,7 +386,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.unknown_source",
-            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "endpoint": "colrev.packages.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Unknown SearchSource (:doc:`instructions </resources/package_index/colrev.unknown_source>`)",
@@ -403,7 +403,7 @@
     "BACKWARD_SEARCH": [
         {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
-            "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
+            "endpoint": "colrev.packages.search_sources.pdf_backward_search.BackwardSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </resources/package_index/colrev.pdf_backward_search>`)",
@@ -414,7 +414,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.unknown_source",
-            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "endpoint": "colrev.packages.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Unknown SearchSource (:doc:`instructions </resources/package_index/colrev.unknown_source>`)",
@@ -431,7 +431,7 @@
     "FORWARD_SEARCH": [
         {
             "package_endpoint_identifier": "colrev.open_citations_forward_search",
-            "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
+            "endpoint": "colrev.packages.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Forward search based on OpenCitations (:doc:`instructions </resources/package_index/colrev.open_citations_forward_search>`)",
@@ -442,7 +442,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.unknown_source",
-            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "endpoint": "colrev.packages.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Unknown SearchSource (:doc:`instructions </resources/package_index/colrev.unknown_source>`)",
@@ -459,7 +459,7 @@
     "FILES": [
         {
             "package_endpoint_identifier": "colrev.files_dir",
-            "endpoint": "colrev.ops.built_in.search_sources.files_dir.FilesSearchSource",
+            "endpoint": "colrev.packages.search_sources.files_dir.FilesSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Files directories (PDFs based on GROBID) (:doc:`instructions </resources/package_index/colrev.files_dir>`)",
@@ -472,7 +472,7 @@
     "OTHER": [
         {
             "package_endpoint_identifier": "colrev.unknown_source",
-            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "endpoint": "colrev.packages.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Unknown SearchSource (:doc:`instructions </resources/package_index/colrev.unknown_source>`)",
@@ -489,7 +489,7 @@
     "MD": [
         {
             "package_endpoint_identifier": "colrev.crossref",
-            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
+            "endpoint": "colrev.packages.search_sources.crossref.CrossrefSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </resources/package_index/colrev.crossref>`)",
@@ -502,7 +502,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dblp",
-            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "endpoint": "colrev.packages.search_sources.dblp.DBLPSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "DBLP API (:doc:`instructions </resources/package_index/colrev.dblp>`)",
@@ -515,7 +515,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
-            "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
+            "endpoint": "colrev.packages.search_sources.europe_pmc.EuropePMCSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Europe PMC (:doc:`instructions </resources/package_index/colrev.europe_pmc>`)",
@@ -528,7 +528,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
-            "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
+            "endpoint": "colrev.packages.search_sources.local_index.LocalIndexSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "LocalIndex (:doc:`instructions </resources/package_index/colrev.local_index>`)",
@@ -540,7 +540,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource",
+            "endpoint": "colrev.packages.search_sources.open_alex.OpenAlexSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "OpenAlex API (:doc:`instructions </resources/package_index/colrev.open_alex>`)",
@@ -552,7 +552,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_library",
-            "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.open_library.OpenLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "OpenLibrary API (:doc:`instructions </resources/package_index/colrev.open_library>`)",
@@ -563,7 +563,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.pubmed",
-            "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
+            "endpoint": "colrev.packages.search_sources.pubmed.PubMedSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </resources/package_index/colrev.pubmed>`)",

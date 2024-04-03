@@ -35,9 +35,11 @@
    colrev.loader
    colrev.logger
    colrev.ops
+   colrev.packages
    colrev.process
    colrev.record
    colrev.review_manager
    colrev.settings
    colrev.ui_cli
+   colrev.ui_web
    colrev.writer

@@ -2,7 +2,7 @@
     "review_type": [
         {
             "package_endpoint_identifier": "colrev.blank",
-            "endpoint": "colrev.ops.built_in.review_types.blank.BlankReview",
+            "endpoint": "colrev.packages.review_types.blank.BlankReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Blank review (:doc:`instructions </resources/package_index/colrev.blank>`)",
@@ -10,7 +10,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.conceptual_review",
-            "endpoint": "colrev.ops.built_in.review_types.conceptual_review.ConceptualReview",
+            "endpoint": "colrev.packages.review_types.conceptual_review.ConceptualReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Conceptual review (:doc:`instructions </resources/package_index/colrev.conceptual_review>`)",
@@ -18,7 +18,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.critical_review",
-            "endpoint": "colrev.ops.built_in.review_types.critical_review.CriticalReview",
+            "endpoint": "colrev.packages.review_types.critical_review.CriticalReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Critical review (:doc:`instructions </resources/package_index/colrev.critical_review>`)",
@@ -26,7 +26,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.curated_masterdata",
-            "endpoint": "colrev.ops.built_in.review_types.curated_masterdata.CuratedMasterdata",
+            "endpoint": "colrev.packages.review_types.curated_masterdata.CuratedMasterdata",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Curated masterdata (:doc:`instructions </resources/package_index/colrev.curated_masterdata>`)",
@@ -34,7 +34,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.descriptive_review",
-            "endpoint": "colrev.ops.built_in.review_types.descriptive_review.DescriptiveReview",
+            "endpoint": "colrev.packages.review_types.descriptive_review.DescriptiveReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Descriptive review (:doc:`instructions </resources/package_index/colrev.descriptive_review>`)",
@@ -42,7 +42,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.literature_review",
-            "endpoint": "colrev.ops.built_in.review_types.literature_review.LiteratureReview",
+            "endpoint": "colrev.packages.review_types.literature_review.LiteratureReview",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Literature review (simple) (:doc:`instructions </resources/package_index/colrev.literature_review>`)",
@@ -50,7 +50,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.meta_analysis",
-            "endpoint": "colrev.ops.built_in.review_types.meta_analysis.MetaAnalysis",
+            "endpoint": "colrev.packages.review_types.meta_analysis.MetaAnalysis",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Meta-analysis (:doc:`instructions </resources/package_index/colrev.meta_analysis>`)",
@@ -58,7 +58,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.narrative_review",
-            "endpoint": "colrev.ops.built_in.review_types.narrative_review.NarrativeReview",
+            "endpoint": "colrev.packages.review_types.narrative_review.NarrativeReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Narrative review (:doc:`instructions </resources/package_index/colrev.narrative_review>`)",
@@ -66,7 +66,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.qualitative_systematic_review",
-            "endpoint": "colrev.ops.built_in.review_types.qualitative_systematic_review.QualitativeSystematicReview",
+            "endpoint": "colrev.packages.review_types.qualitative_systematic_review.QualitativeSystematicReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Qualitative systematic review (:doc:`instructions </resources/package_index/colrev.qualitative_systematic_review>`)",
@@ -74,7 +74,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scientometric",
-            "endpoint": "colrev.ops.built_in.review_types.scientometric.ScientometricReview",
+            "endpoint": "colrev.packages.review_types.scientometric.ScientometricReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Scientometric study (:doc:`instructions </resources/package_index/colrev.scientometric>`)",
@@ -82,7 +82,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scoping_review",
-            "endpoint": "colrev.ops.built_in.review_types.scoping_review.ScopingReview",
+            "endpoint": "colrev.packages.review_types.scoping_review.ScopingReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Scoping review (:doc:`instructions </resources/package_index/colrev.scoping_review>`)",
@@ -90,7 +90,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.theoretical_review",
-            "endpoint": "colrev.ops.built_in.review_types.theoretical_review.TheoreticalReview",
+            "endpoint": "colrev.packages.review_types.theoretical_review.TheoreticalReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Theoretical review (:doc:`instructions </resources/package_index/colrev.theoretical_review>`)",
@@ -98,7 +98,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.umbrella",
-            "endpoint": "colrev.ops.built_in.review_types.umbrella_review.UmbrellaReview",
+            "endpoint": "colrev.packages.review_types.umbrella_review.UmbrellaReview",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Umbrella review (:doc:`instructions </resources/package_index/colrev.umbrella>`)",
@@ -108,7 +108,7 @@
     "search_source": [
         {
             "package_endpoint_identifier": "colrev.abi_inform_proquest",
-            "endpoint": "colrev.ops.built_in.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource",
+            "endpoint": "colrev.packages.search_sources.abi_inform_proquest.ABIInformProQuestSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "ABI/INFORM (ProQuest) (:doc:`instructions </resources/package_index/colrev.abi_inform_proquest>`)",
@@ -119,7 +119,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.acm_digital_library",
-            "endpoint": "colrev.ops.built_in.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.acm_digital_library.ACMDigitalLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "ACM digital Library (:doc:`instructions </resources/package_index/colrev.acm_digital_library>`)",
@@ -130,7 +130,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ais_library",
-            "endpoint": "colrev.ops.built_in.search_sources.aisel.AISeLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.aisel.AISeLibrarySearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "AIS electronic Library (AISeL) (:doc:`instructions </resources/package_index/colrev.ais_library>`)",
@@ -143,7 +143,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.arxiv",
-            "endpoint": "colrev.ops.built_in.search_sources.arxiv.ArXivSource",
+            "endpoint": "colrev.packages.search_sources.arxiv.ArXivSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "SearchSource for arXiv (:doc:`instructions </resources/package_index/colrev.arxiv>`)",
@@ -154,7 +154,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.colrev_project",
-            "endpoint": "colrev.ops.built_in.search_sources.colrev_project.ColrevProjectSearchSource",
+            "endpoint": "colrev.packages.search_sources.colrev_project.ColrevProjectSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "CoLRev projects (:doc:`instructions </resources/package_index/colrev.colrev_project>`)",
@@ -165,7 +165,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.crossref",
-            "endpoint": "colrev.ops.built_in.search_sources.crossref.CrossrefSearchSource",
+            "endpoint": "colrev.packages.search_sources.crossref.CrossrefSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Crossref API (:doc:`instructions </resources/package_index/colrev.crossref>`)",
@@ -178,7 +178,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dblp",
-            "endpoint": "colrev.ops.built_in.search_sources.dblp.DBLPSearchSource",
+            "endpoint": "colrev.packages.search_sources.dblp.DBLPSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "DBLP API (:doc:`instructions </resources/package_index/colrev.dblp>`)",
@@ -191,7 +191,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ebsco_host",
-            "endpoint": "colrev.ops.built_in.search_sources.ebsco_host.EbscoHostSearchSource",
+            "endpoint": "colrev.packages.search_sources.ebsco_host.EbscoHostSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "EBSCOHost (:doc:`instructions </resources/package_index/colrev.ebsco_host>`)",
@@ -202,7 +202,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.eric",
-            "endpoint": "colrev.ops.built_in.search_sources.eric.ERICSearchSource",
+            "endpoint": "colrev.packages.search_sources.eric.ERICSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "ERIC API (:doc:`instructions </resources/package_index/colrev.eric>`)",
@@ -213,7 +213,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
-            "endpoint": "colrev.ops.built_in.search_sources.europe_pmc.EuropePMCSearchSource",
+            "endpoint": "colrev.packages.search_sources.europe_pmc.EuropePMCSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Europe PMC (:doc:`instructions </resources/package_index/colrev.europe_pmc>`)",
@@ -226,7 +226,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.files_dir",
-            "endpoint": "colrev.ops.built_in.search_sources.files_dir.FilesSearchSource",
+            "endpoint": "colrev.packages.search_sources.files_dir.FilesSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Files directories (PDFs based on GROBID) (:doc:`instructions </resources/package_index/colrev.files_dir>`)",
@@ -237,7 +237,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.google_scholar",
-            "endpoint": "colrev.ops.built_in.search_sources.google_scholar.GoogleScholarSearchSource",
+            "endpoint": "colrev.packages.search_sources.google_scholar.GoogleScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "GoogleScholar (:doc:`instructions </resources/package_index/colrev.google_scholar>`)",
@@ -248,7 +248,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ieee",
-            "endpoint": "colrev.ops.built_in.search_sources.ieee.IEEEXploreSearchSource",
+            "endpoint": "colrev.packages.search_sources.ieee.IEEEXploreSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "IEEEXplore (:doc:`instructions </resources/package_index/colrev.ieee>`)",
@@ -259,7 +259,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.jstor",
-            "endpoint": "colrev.ops.built_in.search_sources.jstor.JSTORSearchSource",
+            "endpoint": "colrev.packages.search_sources.jstor.JSTORSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "JSTOR (:doc:`instructions </resources/package_index/colrev.jstor>`)",
@@ -270,7 +270,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
-            "endpoint": "colrev.ops.built_in.search_sources.local_index.LocalIndexSearchSource",
+            "endpoint": "colrev.packages.search_sources.local_index.LocalIndexSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "LocalIndex (:doc:`instructions </resources/package_index/colrev.local_index>`)",
@@ -282,7 +282,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "endpoint": "colrev.ops.built_in.search_sources.open_alex.OpenAlexSearchSource",
+            "endpoint": "colrev.packages.search_sources.open_alex.OpenAlexSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "OpenAlex API (:doc:`instructions </resources/package_index/colrev.open_alex>`)",
@@ -294,7 +294,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_citations_forward_search",
-            "endpoint": "colrev.ops.built_in.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
+            "endpoint": "colrev.packages.search_sources.open_citations_forward_search.OpenCitationsSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Forward search based on OpenCitations (:doc:`instructions </resources/package_index/colrev.open_citations_forward_search>`)",
@@ -305,7 +305,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_library",
-            "endpoint": "colrev.ops.built_in.search_sources.open_library.OpenLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.open_library.OpenLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "OpenLibrary API (:doc:`instructions </resources/package_index/colrev.open_library>`)",
@@ -316,7 +316,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.pdf_backward_search",
-            "endpoint": "colrev.ops.built_in.search_sources.pdf_backward_search.BackwardSearchSource",
+            "endpoint": "colrev.packages.search_sources.pdf_backward_search.BackwardSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Backward search extracting references from PDFs using GROBID (:doc:`instructions </resources/package_index/colrev.pdf_backward_search>`)",
@@ -327,7 +327,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.psycinfo",
-            "endpoint": "colrev.ops.built_in.search_sources.psycinfo.PsycINFOSearchSource",
+            "endpoint": "colrev.packages.search_sources.psycinfo.PsycINFOSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "PsycINFO (:doc:`instructions </resources/package_index/colrev.psycinfo>`)",
@@ -338,7 +338,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.pubmed",
-            "endpoint": "colrev.ops.built_in.search_sources.pubmed.PubMedSearchSource",
+            "endpoint": "colrev.packages.search_sources.pubmed.PubMedSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Pubmed (:doc:`instructions </resources/package_index/colrev.pubmed>`)",
@@ -351,7 +351,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scopus",
-            "endpoint": "colrev.ops.built_in.search_sources.scopus.ScopusSearchSource",
+            "endpoint": "colrev.packages.search_sources.scopus.ScopusSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Scopus (:doc:`instructions </resources/package_index/colrev.scopus>`)",
@@ -362,7 +362,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.semanticscholar",
-            "endpoint": "colrev.ops.built_in.search_sources.semanticscholar.SemanticScholarSearchSource",
+            "endpoint": "colrev.packages.search_sources.semanticscholar.SemanticScholarSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Semantic Scholar API Search Source (:doc:`instructions </resources/package_index/colrev.semanticscholar>`)",
@@ -373,7 +373,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.springer_link",
-            "endpoint": "colrev.ops.built_in.search_sources.springer_link.SpringerLinkSearchSource",
+            "endpoint": "colrev.packages.search_sources.springer_link.SpringerLinkSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Springer Link (:doc:`instructions </resources/package_index/colrev.springer_link>`)",
@@ -384,7 +384,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.synergy_datasets",
-            "endpoint": "colrev.ops.built_in.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
+            "endpoint": "colrev.packages.search_sources.synergy_datasets.SYNERGYDatasetsSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "SYNERGY-datasets (:doc:`instructions </resources/package_index/colrev.synergy_datasets>`)",
@@ -395,7 +395,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.taylor_and_francis",
-            "endpoint": "colrev.ops.built_in.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource",
+            "endpoint": "colrev.packages.search_sources.taylor_and_francis.TaylorAndFrancisSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Taylor and Francis (:doc:`instructions </resources/package_index/colrev.taylor_and_francis>`)",
@@ -406,7 +406,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.trid",
-            "endpoint": "colrev.ops.built_in.search_sources.trid.TransportResearchInternationalDocumentation",
+            "endpoint": "colrev.packages.search_sources.trid.TransportResearchInternationalDocumentation",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Transport Research International Documentation (:doc:`instructions </resources/package_index/colrev.trid>`)",
@@ -417,7 +417,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.unknown_source",
-            "endpoint": "colrev.ops.built_in.search_sources.unknown_source.UnknownSearchSource",
+            "endpoint": "colrev.packages.search_sources.unknown_source.UnknownSearchSource",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Unknown SearchSource (:doc:`instructions </resources/package_index/colrev.unknown_source>`)",
@@ -432,7 +432,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.web_of_science",
-            "endpoint": "colrev.ops.built_in.search_sources.web_of_science.WebOfScienceSearchSource",
+            "endpoint": "colrev.packages.search_sources.web_of_science.WebOfScienceSearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Web of Science (:doc:`instructions </resources/package_index/colrev.web_of_science>`)",
@@ -443,7 +443,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.wiley",
-            "endpoint": "colrev.ops.built_in.search_sources.wiley.WileyOnlineLibrarySearchSource",
+            "endpoint": "colrev.packages.search_sources.wiley.WileyOnlineLibrarySearchSource",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Wiley (:doc:`instructions </resources/package_index/colrev.wiley>`)",
@@ -456,7 +456,7 @@
     "prep": [
         {
             "package_endpoint_identifier": "colrev.add_journal_ranking",
-            "endpoint": "colrev.ops.built_in.prep.add_journal_ranking.AddJournalRanking",
+            "endpoint": "colrev.packages.prep.add_journal_ranking.AddJournalRanking",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Class for add _journal_ranking (:doc:`instructions </resources/package_index/colrev.add_journal_ranking>`)",
@@ -464,7 +464,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.colrev_curation",
-            "endpoint": "colrev.ops.built_in.prep.curation_prep.CurationPrep",
+            "endpoint": "colrev.packages.prep.curation_prep.CurationPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Preparation of curations (:doc:`instructions </resources/package_index/colrev.colrev_curation>`)",
@@ -472,7 +472,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.crossref",
-            "endpoint": "colrev.ops.built_in.prep.crossref_metadata_prep.CrossrefMetadataPrep",
+            "endpoint": "colrev.packages.prep.crossref_metadata_prep.CrossrefMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on crossref.org metadata (:doc:`instructions </resources/package_index/colrev.crossref>`)",
@@ -480,7 +480,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dblp",
-            "endpoint": "colrev.ops.built_in.prep.dblp_metadata_prep.DBLPMetadataPrep",
+            "endpoint": "colrev.packages.prep.dblp_metadata_prep.DBLPMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on dblp.org metadata (:doc:`instructions </resources/package_index/colrev.dblp>`)",
@@ -488,7 +488,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.europe_pmc",
-            "endpoint": "colrev.ops.built_in.prep.europe_pmc_prep.EuropePMCMetadataPrep",
+            "endpoint": "colrev.packages.prep.europe_pmc_prep.EuropePMCMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on Europe PCM metadata (:doc:`instructions </resources/package_index/colrev.europe_pmc>`)",
@@ -496,7 +496,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.exclude_collections",
-            "endpoint": "colrev.ops.built_in.prep.exclude_collections.ExcludeCollectionsPrep",
+            "endpoint": "colrev.packages.prep.exclude_collections.ExcludeCollectionsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records by excluding collection entries (e.g., proceedings) (:doc:`instructions </resources/package_index/colrev.exclude_collections>`)",
@@ -504,7 +504,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.exclude_complementary_materials",
-            "endpoint": "colrev.ops.built_in.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep",
+            "endpoint": "colrev.packages.prep.exclude_complementary_materials.ExcludeComplementaryMaterialsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records by excluding complementary materials (:doc:`instructions </resources/package_index/colrev.exclude_complementary_materials>`)",
@@ -512,7 +512,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.exclude_languages",
-            "endpoint": "colrev.ops.built_in.prep.exclude_languages.ExcludeLanguagesPrep",
+            "endpoint": "colrev.packages.prep.exclude_languages.ExcludeLanguagesPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records by excluding ones that are not in the languages_to_include (:doc:`instructions </resources/package_index/colrev.exclude_languages>`)",
@@ -520,7 +520,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.exclude_non_latin_alphabets",
-            "endpoint": "colrev.ops.built_in.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep",
+            "endpoint": "colrev.packages.prep.exclude_non_latin_alphabets.ExcludeNonLatinAlphabetsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records by excluding ones that have a non-latin alphabet (:doc:`instructions </resources/package_index/colrev.exclude_non_latin_alphabets>`)",
@@ -528,7 +528,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.general_polish",
-            "endpoint": "colrev.ops.built_in.prep.general_polish.GeneralPolishPrep",
+            "endpoint": "colrev.packages.prep.general_polish.GeneralPolishPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records by applying polishing rules (:doc:`instructions </resources/package_index/colrev.general_polish>`)",
@@ -536,7 +536,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.get_doi_from_sem_scholar",
-            "endpoint": "colrev.ops.built_in.prep.semantic_scholar_prep.SemanticScholarPrep",
+            "endpoint": "colrev.packages.prep.semantic_scholar_prep.SemanticScholarPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on SemanticScholar metadata (:doc:`instructions </resources/package_index/colrev.get_doi_from_sem_scholar>`)",
@@ -544,7 +544,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.get_doi_from_urls",
-            "endpoint": "colrev.ops.built_in.prep.doi_from_urls_prep.DOIFromURLsPrep",
+            "endpoint": "colrev.packages.prep.doi_from_urls_prep.DOIFromURLsPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records by retrieving its DOI from the website (URL) (:doc:`instructions </resources/package_index/colrev.get_doi_from_urls>`)",
@@ -552,7 +552,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.get_masterdata_from_citeas",
-            "endpoint": "colrev.ops.built_in.prep.citeas_prep.CiteAsPrep",
+            "endpoint": "colrev.packages.prep.citeas_prep.CiteAsPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on citeas.org metadata (:doc:`instructions </resources/package_index/colrev.get_masterdata_from_citeas>`)",
@@ -560,7 +560,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.get_masterdata_from_doi",
-            "endpoint": "colrev.ops.built_in.prep.doi_metadata_prep.DOIMetadataPrep",
+            "endpoint": "colrev.packages.prep.doi_metadata_prep.DOIMetadataPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on doi.org metadata (:doc:`instructions </resources/package_index/colrev.get_masterdata_from_doi>`)",
@@ -568,7 +568,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.get_year_from_vol_iss_jour",
-            "endpoint": "colrev.ops.built_in.prep.year_vol_iss_prep.YearVolIssPrep",
+            "endpoint": "colrev.packages.prep.year_vol_iss_prep.YearVolIssPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on year-volume-issue dependency (:doc:`instructions </resources/package_index/colrev.get_year_from_vol_iss_jour>`)",
@@ -576,7 +576,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
-            "endpoint": "colrev.ops.built_in.prep.local_index_prep.LocalIndexPrep",
+            "endpoint": "colrev.packages.prep.local_index_prep.LocalIndexPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on LocalIndex metadata (:doc:`instructions </resources/package_index/colrev.local_index>`)",
@@ -584,7 +584,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_alex",
-            "endpoint": "colrev.ops.built_in.prep.open_alex_metadata_prep.OpenAlexMetadataPrep",
+            "endpoint": "colrev.packages.prep.open_alex_metadata_prep.OpenAlexMetadataPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Prepares records based on OpenAlex metadata (:doc:`instructions </resources/package_index/colrev.open_alex>`)",
@@ -592,7 +592,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.open_library",
-            "endpoint": "colrev.ops.built_in.prep.open_library_prep.OpenLibraryMetadataPrep",
+            "endpoint": "colrev.packages.prep.open_library_prep.OpenLibraryMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on openlibrary.org metadata (:doc:`instructions </resources/package_index/colrev.open_library>`)",
@@ -600,7 +600,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.pubmed",
-            "endpoint": "colrev.ops.built_in.prep.pubmed_metadata_prep.PubmedMetadataPrep",
+            "endpoint": "colrev.packages.prep.pubmed_metadata_prep.PubmedMetadataPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on Pubmed metadata (:doc:`instructions </resources/package_index/colrev.pubmed>`)",
@@ -608,7 +608,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_broken_ids",
-            "endpoint": "colrev.ops.built_in.prep.remove_broken_ids.RemoveBrokenIDPrep",
+            "endpoint": "colrev.packages.prep.remove_broken_ids.RemoveBrokenIDPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records by removing invalid IDs DOIs/ISBNs (:doc:`instructions </resources/package_index/colrev.remove_broken_ids>`)",
@@ -616,7 +616,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_urls_with_500_errors",
-            "endpoint": "colrev.ops.built_in.prep.remove_error500_urls.RemoveError500URLsPrep",
+            "endpoint": "colrev.packages.prep.remove_error500_urls.RemoveError500URLsPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records by removing urls that are not available (:doc:`instructions </resources/package_index/colrev.remove_urls_with_500_errors>`)",
@@ -624,7 +624,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.source_specific_prep",
-            "endpoint": "colrev.ops.built_in.prep.source_specific_prep.SourceSpecificPrep",
+            "endpoint": "colrev.packages.prep.source_specific_prep.SourceSpecificPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepares records based on the prepare scripts specified by the SearchSource (:doc:`instructions </resources/package_index/colrev.source_specific_prep>`)",
@@ -634,7 +634,7 @@
     "prep_man": [
         {
             "package_endpoint_identifier": "colrev.export_man_prep",
-            "endpoint": "colrev.ops.built_in.prep_man.prep_man_export.ExportManPrep",
+            "endpoint": "colrev.packages.prep_man.prep_man_export.ExportManPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Manual preparation based on exported and imported metadata (and PDFs if any) (:doc:`instructions </resources/package_index/colrev.export_man_prep>`)",
@@ -642,7 +642,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.prep_man_curation_jupyter",
-            "endpoint": "colrev.ops.built_in.prep_man.curation_jupyter_prep_man.CurationJupyterNotebookManPrep",
+            "endpoint": "colrev.packages.prep_man.curation_jupyter_prep_man.CurationJupyterNotebookManPrep",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Manual preparation based on a Jupyter Notebook (:doc:`instructions </resources/package_index/colrev.prep_man_curation_jupyter>`)",
@@ -652,7 +652,7 @@
     "dedupe": [
         {
             "package_endpoint_identifier": "colrev.curation_full_outlet_dedupe",
-            "endpoint": "colrev.ops.built_in.dedupe.curation_dedupe.CurationDedupe",
+            "endpoint": "colrev.packages.dedupe.curation_dedupe.CurationDedupe",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Deduplication endpoint for curations with full journals/proceedings (:doc:`instructions </resources/package_index/colrev.curation_full_outlet_dedupe>`)",
@@ -660,7 +660,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.curation_missing_dedupe",
-            "endpoint": "colrev.ops.built_in.dedupe.curation_missing_dedupe.CurationMissingDedupe",
+            "endpoint": "colrev.packages.dedupe.curation_missing_dedupe.CurationMissingDedupe",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Deduplication of remaining records in a curated metadata repository (:doc:`instructions </resources/package_index/colrev.curation_missing_dedupe>`)",
@@ -668,7 +668,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.dedupe",
-            "endpoint": "colrev.ops.built_in.dedupe.dedupe.Dedupe",
+            "endpoint": "colrev.packages.dedupe.dedupe.Dedupe",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Default deduplication (:doc:`instructions </resources/package_index/colrev.dedupe>`)",
@@ -678,7 +678,7 @@
     "prescreen": [
         {
             "package_endpoint_identifier": "colrev.colrev_cli_prescreen",
-            "endpoint": "colrev.ops.built_in.prescreen.prescreen_cli.CoLRevCLIPrescreen",
+            "endpoint": "colrev.packages.prescreen.prescreen_cli.CoLRevCLIPrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "CLI-based prescreen (:doc:`instructions </resources/package_index/colrev.colrev_cli_prescreen>`)",
@@ -686,7 +686,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.conditional_prescreen",
-            "endpoint": "colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen",
+            "endpoint": "colrev.packages.prescreen.conditional_prescreen.ConditionalPrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Conditional prescreen (currently: include all) (:doc:`instructions </resources/package_index/colrev.conditional_prescreen>`)",
@@ -694,7 +694,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.prescreen_table",
-            "endpoint": "colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen",
+            "endpoint": "colrev.packages.prescreen.prescreen_table.TablePrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Table-based prescreen (exported and imported) (:doc:`instructions </resources/package_index/colrev.prescreen_table>`)",
@@ -702,7 +702,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.scope_prescreen",
-            "endpoint": "colrev.ops.built_in.prescreen.scope_prescreen.ScopePrescreen",
+            "endpoint": "colrev.packages.prescreen.scope_prescreen.ScopePrescreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Rule-based prescreen (scope) (:doc:`instructions </resources/package_index/colrev.scope_prescreen>`)",
@@ -720,7 +720,7 @@
     "pdf_get": [
         {
             "package_endpoint_identifier": "colrev.download_from_website",
-            "endpoint": "colrev.ops.built_in.pdf_get.download_from_website.WebsiteDownload",
+            "endpoint": "colrev.packages.pdf_get.download_from_website.WebsiteDownload",
             "status": "RED",
             "status_linked": "RED",
             "short_description": "Get PDFs from the website (:doc:`instructions </resources/package_index/colrev.download_from_website>`)",
@@ -728,7 +728,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.local_index",
-            "endpoint": "colrev.ops.built_in.pdf_get.local_index_pdf_get.LocalIndexPDFGet",
+            "endpoint": "colrev.packages.pdf_get.local_index_pdf_get.LocalIndexPDFGet",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Get PDFs from LocalIndex (:doc:`instructions </resources/package_index/colrev.local_index>`)",
@@ -736,7 +736,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.unpaywall",
-            "endpoint": "colrev.ops.built_in.pdf_get.unpaywall.Unpaywall",
+            "endpoint": "colrev.packages.pdf_get.unpaywall.Unpaywall",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Get PDFs from unpaywall.org (:doc:`instructions </resources/package_index/colrev.unpaywall>`)",
@@ -744,7 +744,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.website_screenshot",
-            "endpoint": "colrev.ops.built_in.pdf_get.website_screenshot.WebsiteScreenshot",
+            "endpoint": "colrev.packages.pdf_get.website_screenshot.WebsiteScreenshot",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Get PDFs from website screenshot (for \"online\" ENTRYTYPES) (:doc:`instructions </resources/package_index/colrev.website_screenshot>`)",
@@ -754,7 +754,7 @@
     "pdf_get_man": [
         {
             "package_endpoint_identifier": "colrev.colrev_cli_pdf_get_man",
-            "endpoint": "colrev.ops.built_in.pdf_get_man.pdf_get_man_cli.CoLRevCLIPDFGetMan",
+            "endpoint": "colrev.packages.pdf_get_man.pdf_get_man_cli.CoLRevCLIPDFGetMan",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Get PDFs manually based on a CLI (:doc:`instructions </resources/package_index/colrev.colrev_cli_pdf_get_man>`)",
@@ -764,7 +764,7 @@
     "pdf_prep": [
         {
             "package_endpoint_identifier": "colrev.grobid_tei",
-            "endpoint": "colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI",
+            "endpoint": "colrev.packages.pdf_prep.grobid_tei.GROBIDTEI",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by creating an annotated TEI document (:doc:`instructions </resources/package_index/colrev.grobid_tei>`)",
@@ -772,7 +772,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.ocrmypdf",
-            "endpoint": "colrev.ops.built_in.pdf_prep.ocrmypdf.OCRMyPDF",
+            "endpoint": "colrev.packages.pdf_prep.ocrmypdf.OCRMyPDF",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by applying OCR based on OCRmyPDF (:doc:`instructions </resources/package_index/colrev.ocrmypdf>`)",
@@ -780,7 +780,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_coverpage",
-            "endpoint": "colrev.ops.built_in.pdf_prep.remove_cover_page.PDFCoverPage",
+            "endpoint": "colrev.packages.pdf_prep.remove_cover_page.PDFCoverPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by removing unnecessary cover pages (e.g. researchgate, publishers) (:doc:`instructions </resources/package_index/colrev.remove_coverpage>`)",
@@ -788,7 +788,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.remove_last_page",
-            "endpoint": "colrev.ops.built_in.pdf_prep.remove_last_page.PDFLastPage",
+            "endpoint": "colrev.packages.pdf_prep.remove_last_page.PDFLastPage",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Prepare PDFs by removing unnecessary last pages (e.g. copyright notices, cited-by infos) (:doc:`instructions </resources/package_index/colrev.remove_last_page>`)",
@@ -798,7 +798,7 @@
     "pdf_prep_man": [
         {
             "package_endpoint_identifier": "colrev.colrev_cli_pdf_prep_man",
-            "endpoint": "colrev.ops.built_in.pdf_prep_man.pdf_prep_man_cli.CoLRevCLIPDFManPrep",
+            "endpoint": "colrev.packages.pdf_prep_man.pdf_prep_man_cli.CoLRevCLIPDFManPrep",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Manually prepare PDFs based on a CLI (not yet implemented) (:doc:`instructions </resources/package_index/colrev.colrev_cli_pdf_prep_man>`)",
@@ -808,7 +808,7 @@
     "screen": [
         {
             "package_endpoint_identifier": "colrev.colrev_cli_screen",
-            "endpoint": "colrev.ops.built_in.screen.screen_cli.CoLRevCLIScreen",
+            "endpoint": "colrev.packages.screen.screen_cli.CoLRevCLIScreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Screen documents using a CLI (:doc:`instructions </resources/package_index/colrev.colrev_cli_screen>`)",
@@ -816,7 +816,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.screen_table",
-            "endpoint": "colrev.ops.built_in.screen.screen_table.TableScreen",
+            "endpoint": "colrev.packages.screen.screen_table.TableScreen",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Screen documents using tables (exported and imported) (:doc:`instructions </resources/package_index/colrev.screen_table>`)",
@@ -826,7 +826,7 @@
     "data": [
         {
             "package_endpoint_identifier": "colrev.bibliography_export",
-            "endpoint": "colrev.ops.built_in.data.bibliography_export.BibliographyExport",
+            "endpoint": "colrev.packages.data.bibliography_export.BibliographyExport",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Export the sample references in Endpoint format (:doc:`instructions </resources/package_index/colrev.bibliography_export>`)",
@@ -834,7 +834,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.colrev_curation",
-            "endpoint": "colrev.ops.built_in.data.colrev_curation.ColrevCuration",
+            "endpoint": "colrev.packages.data.colrev_curation.ColrevCuration",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "CoLRev Curation (:doc:`instructions </resources/package_index/colrev.colrev_curation>`)",
@@ -842,7 +842,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.github_pages",
-            "endpoint": "colrev.ops.built_in.data.github_pages.GithubPages",
+            "endpoint": "colrev.packages.data.github_pages.GithubPages",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Export the literature review into a Github Page (:doc:`instructions </resources/package_index/colrev.github_pages>`)",
@@ -850,7 +850,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.obsidian",
-            "endpoint": "colrev.ops.built_in.data.obsidian.Obsidian",
+            "endpoint": "colrev.packages.data.obsidian.Obsidian",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Export the sample into an Obsidian database (:doc:`instructions </resources/package_index/colrev.obsidian>`)",
@@ -858,7 +858,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.paper_md",
-            "endpoint": "colrev.ops.built_in.data.paper_md.PaperMarkdown",
+            "endpoint": "colrev.packages.data.paper_md.PaperMarkdown",
             "status": "|MATURING|",
             "status_linked": "|MATURING|",
             "short_description": "Synthesize the literature in a markdown paper (:doc:`instructions </resources/package_index/colrev.paper_md>`)",
@@ -866,7 +866,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.prisma",
-            "endpoint": "colrev.ops.built_in.data.prisma.PRISMA",
+            "endpoint": "colrev.packages.data.prisma.PRISMA",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Create a PRISMA diagram (:doc:`instructions </resources/package_index/colrev.prisma>`)",
@@ -874,7 +874,7 @@
         },
         {
             "package_endpoint_identifier": "colrev.structured",
-            "endpoint": "colrev.ops.built_in.data.structured.StructuredData",
+            "endpoint": "colrev.packages.data.structured.StructuredData",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
             "short_description": "Summarize the literature in a structured data extraction (a table) (:doc:`instructions </resources/package_index/colrev.structured>`)",

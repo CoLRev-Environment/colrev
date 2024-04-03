@@ -120,7 +120,7 @@ disable = ["R0801"]
 
 [tool.coverage.report]
 omit = [
-    "colrev/ops/built_in/*", # omit reference implementation
+    "colrev/packages/*", # omit reference implementation
     "/usr/*", # omit everything in /usr
     "*crossrefapi/crossref/*",
     "colrev/env/grobid_service.py",
@@ -131,7 +131,7 @@ omit = [
 
 [tool.coverage.run]
 omit = [
-    "colrev/ops/built_in/*", # omit reference implementation
+    "colrev/packages/*", # omit reference implementation
     "/usr/*", # omit everything in /usr
     "*crossrefapi/crossref/*",
     "colrev/env/grobid_service.py",

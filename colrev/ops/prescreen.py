@@ -6,8 +6,8 @@ import math
 from pathlib import Path
 
 import colrev.exceptions as colrev_exceptions
-import colrev.ops.built_in.prescreen.conditional_prescreen
-import colrev.ops.built_in.prescreen.prescreen_table
+import colrev.packages.prescreen.conditional_prescreen
+import colrev.packages.prescreen.prescreen_table
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -39,7 +39,7 @@ class Prescreen(colrev.process.operation.Operation):
     def export_table(self, *, export_table_format: str = "csv") -> None:
         """Export a table with records to prescreen"""
 
-        endpoint = colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen(
+        endpoint = colrev.packages.prescreen.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "export_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -52,7 +52,7 @@ class Prescreen(colrev.process.operation.Operation):
     def import_table(self, *, import_table_path: str) -> None:
         """Import a table with prescreened records"""
 
-        endpoint = colrev.ops.built_in.prescreen.prescreen_table.TablePrescreen(
+        endpoint = colrev.packages.prescreen.prescreen_table.TablePrescreen(
             prescreen_operation=self, settings={"endpoint": "import_table"}
         )
         records = self.review_manager.dataset.load_records_dict()
@@ -97,10 +97,8 @@ class Prescreen(colrev.process.operation.Operation):
             if RecordState.md_processed == r[Fields.STATUS]
         ]
 
-        endpoint = (
-            colrev.ops.built_in.prescreen.conditional_prescreen.ConditionalPrescreen(
-                prescreen_operation=self, settings={"endpoint": "include_all"}
-            )
+        endpoint = colrev.packages.prescreen.conditional_prescreen.ConditionalPrescreen(
+            prescreen_operation=self, settings={"endpoint": "include_all"}
         )
         endpoint.run_prescreen(records, [])
         self._print_stats(selected_record_ids=selected_record_ids)

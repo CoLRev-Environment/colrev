@@ -7,7 +7,7 @@ from typing import Optional
 
 import pandas as pd
 
-import colrev.ops.built_in.pdf_prep.grobid_tei
+import colrev.packages.pdf_prep.grobid_tei
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -70,7 +70,7 @@ class Data(colrev.process.operation.Operation):
                 }
             )
 
-        tei_path = colrev.ops.built_in.pdf_prep.grobid_tei.GROBIDTEI.TEI_PATH_RELATIVE
+        tei_path = colrev.packages.pdf_prep.grobid_tei.GROBIDTEI.TEI_PATH_RELATIVE
         required_records_ids = self.get_record_ids_for_synthesis(records)
 
         missing = []

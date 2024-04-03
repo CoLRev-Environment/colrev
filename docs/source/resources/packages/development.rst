@@ -128,7 +128,7 @@ Built-in packages development process
 --------------------------------------
 
 * Same with external package development process, clone and install forked version. But now the work will be done directly inside CoLRev.
-* Built-in packages should be placed under ``colrev/ops/built_in/<operation>`` directory, ``<operation>`` is the directory of the operation it's extending, e.g.: ``colrev/ops/built_in/prescreen/asreview.py``
+* Built-in packages should be placed under ``colrev/packages/<operation>`` directory, ``<operation>`` is the directory of the operation it's extending, e.g.: ``colrev/packages/prescreen/asreview.py``
 * Add the package information in ``colrev/env/package_endpoints.json``, e.g.:
 
   .. code-block:: json
@@ -136,10 +136,10 @@ Built-in packages development process
     "prescreen": [
         {
             "package_endpoint_identifier": "colrev.asreview_prescreen",
-            "endpoint": "colrev.ops.built_in.prescreen.asreview.ASReviewPrescreen",
+            "endpoint": "colrev.packages.prescreen.asreview.ASReviewPrescreen",
             "status": "|EXPERIMENTAL|",
             "status_linked": "|EXPERIMENTAL|",
-            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/asreview.md>`_)",
+            "short_description": "ASReview-based prescreen (`instructions <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/prescreen/asreview.md>`_)",
             "ci_supported": false
         },
 

@@ -30,4 +30,4 @@ journal_ranking = {Predatory Journal: Do not include!},
 
 The journal ranking will also be used in the colrev prescreen method and allows the user to decide if the record should be marked as 'rev_prescreen_excluded' or 'rev_prescreen_included'.
 
-For further information see `scope_prescreen <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/prescreen/scope_prescreen.md>`_.
+For further information see `scope_prescreen <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/prescreen/scope_prescreen.md>`_.

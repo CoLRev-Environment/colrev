@@ -1001,7 +1001,7 @@ def test_inconsistent_with_doi_metadata(
         InconsistentWithDOIMetadataChecker,
     )
 
-    import colrev.ops.built_in.search_sources.crossref as crossref_connector
+    import colrev.packages.search_sources.crossref as crossref_connector
 
     @classmethod  # type: ignore
     def patched_query_doi(cls, *, doi, etiquette):  # type: ignore

@@ -767,14 +767,14 @@ class PackageManager:
         packages_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/resources/package_index"
         )
-        local_built_in_path = Path(__file__).parent.parent / Path("ops/built_in")
+        local_built_in_path = Path(__file__).parent.parent / Path("packages")
 
         if (
-            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in/"
+            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/"
             in docs_link
         ):
             docs_link = docs_link.replace(
-                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/ops/built_in",
+                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages",
                 str(local_built_in_path),
             )
             output = parse_from_file(docs_link)

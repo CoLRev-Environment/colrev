@@ -604,15 +604,6 @@ class ReviewManager:
 
         return colrev.ops.pull.Pull(review_manager=self)
 
-    def get_search_sources(
-        self,
-    ) -> colrev.ops.search_sources.SearchSources:  # pragma: no cover
-        """Get a SearchSources object"""
-
-        import colrev.ops.search_sources
-
-        return colrev.ops.search_sources.SearchSources(review_manager=self)
-
     def get_review_types(
         self, *, review_type: str
     ) -> colrev.ops.review_types.ReviewTypes:  # pragma: no cover
