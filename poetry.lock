@@ -141,21 +141,26 @@ name = "bib-dedupe"
 version = "0.7.0"
 description = "Identify and merge duplicates in bibliographic records"
 optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "bib_dedupe-0.7.0-py3-none-any.whl", hash = "sha256:caa39cfa6eea0985e40f39d9e2cb3b56bc36d1420259261c164428aa8b97839b"},
-    {file = "bib_dedupe-0.7.0.tar.gz", hash = "sha256:ed07cf320c52f6a18f4b2823c9a3abbd4e04c7aca684ec6ed2ab16f762fdfb67"},
-]
+python-versions = "^3.8"
+files = []
+develop = false
 
 [package.dependencies]
-number-parser = ">=0.3.2,<0.4.0"
-numpy = ">=1.19.5,<2.0.0"
-rapidfuzz = ">=3.5.2,<4.0.0"
-tqdm = ">=4.66.1,<5.0.0"
+number-parser = "^0.3.2"
+numpy = "^1.19.5"
+rapidfuzz = "^3.5.2"
+setuptools = "^69.1.1"
+tqdm = "^4.66.1"
 
 [package.extras]
 dev = ["coverage[toml] (>=7.3.2,<8.0.0)", "pylint (==3.0.1)", "pytest (>=7.2.1,<8.0.0)"]
 with-data = ["asreview (>=1.5,<2.0)", "notebook (>=6.4.11,<7.0.0)", "pandas (>=1.3.4,<2.0.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/CoLRev-Environment/bib-dedupe"
+reference = "HEAD"
+resolved_reference = "e9e0ac238738fbf90d3d4156ff656dcfde7e0cd8"
 
 [[package]]
 name = "blessed"
@@ -3565,4 +3570,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "6dbaf37bb8738e346cbc1445fbca0dba34e9ed0ad7e1bda9c0e901c33c7d0da3"
+content-hash = "50f0f547883c85fd71e05e4295200a48c6f156fb75bbcd908175e9d212b4115f"
