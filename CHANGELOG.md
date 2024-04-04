@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
+<!--
 ## Unreleased
 
 ### Added
@@ -14,6 +15,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Removed
 
 ### Fixed
+-->
+
+## 0.12.0 - 2024-04-04
+
+### Added
+
+- Add linter `colrev_records_variable_naming_convention`
+- Test coverage increased from 71% to 80%
+
+### Changed
+
+- Split `records`, `dataset`, created `records` package.
+- Extracted `process` as a separate package.
+- Implemented loaders as a separate package, created a standard interface. SearchSources now create the specific mapping of IDs, entrytypes and fields.
+- Moved field standardization from `load` to SearchSources.
+- Extended use of constants
+- SearchSourceInterface: renamed `run_search` to `search`, prefer `prep_link_md` over `get_masterdata`
+- Renamed and refactored `GeneralOriginFeed` to `SearchAPIFeed`
+- Pass record objects instead of dicts (in `local_index` in particular)
+- Replaced unnecessary keyword arguments by positional arguments
+- Moved `zotero_translation_service` to `bibliography_export` package
+- Consolidated code for reference parsing in `tei_parser`
+- Upgraded Grobid to 0.8.0
+
+### Removed
+
+- Removed dead code
+- Dropped `INCONSISTENT_WITH_DOI_METADATA`
+- `transitions` dependency
+
+### Fixed
+
+- Do not require review_manager for `colrev env -i`
+- Fixed `status_stats`, including special cases.
+- Repository registration: resolve() and absolute() path
 
 ## 0.11.0 - 2024-02-17
 

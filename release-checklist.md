@@ -12,12 +12,13 @@ For all releases:
 - Run [poetry update on GitHub](https://github.com/CoLRev-Environment/colrev/actions/workflows/poetry_update.yml).
 - Change released to `True` for the migration script in `ops/upgrade.py`, add a new migration script.
 - Update `settings.py - _add_missing_attributes()` to prevent exceptions.
-- Update version in `tests/2_ops/check_test.py`
+- Update version in `tests/0_core/review_manager_test.py`
 - Run `colrev env --update_package_list`.
 - Collect release notes and update the `CHANGELOG.md`.
 - Update **version** and **date**  and date in `CITATION.cff`.
 - Update version in `SECURITY.md`.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
+- Check: `pyproject.toml` cannot have direct depdencies (Github)
 - Commit the changes (`release 0.10.0`).
 - Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
 - Run `git tag -s $VERSION` (format: "0.9.1").

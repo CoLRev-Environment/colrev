@@ -193,7 +193,7 @@ class Upgrade(colrev.process.operation.Operation):
                 "version": CoLRevVersion("0.11.0"),
                 "target_version": CoLRevVersion("0.12.0"),
                 "script": self._migrate_0_12_0,
-                "released": False,
+                "released": True,
             },
         ]
         print(f"installed_colrev_version: {installed_colrev_version}")

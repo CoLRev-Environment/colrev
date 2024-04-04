@@ -204,7 +204,7 @@ def get_nr_records(  # type: ignore
     """Get the number of records in a file"""
 
     if not filename.exists():
-        raise colrev_exceptions.ImportException(f"File not found: {filename.name}")
+        return 0
 
     if filename.suffix == ".bib":
         parser = colrev.loader.bib.BIBLoader  # type: ignore
