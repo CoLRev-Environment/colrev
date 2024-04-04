@@ -1,4 +1,4 @@
-﻿colrev.record.record\_prep
+colrev.record.record\_prep
 ==========================
 
 .. automodule:: colrev.record.record_prep
