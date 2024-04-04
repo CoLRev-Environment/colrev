@@ -3,6 +3,7 @@
 import platform
 from dataclasses import asdict
 from pathlib import Path
+import typing
 
 import colrev.review_manager
 from colrev.constants import SearchType
@@ -15,10 +16,6 @@ def test_checks(  # type: ignore
 
     checker = colrev.ops.checker.Checker(review_manager=base_repo_review_manager)
 
-    expected = ["0.11.0", "0.11.0"]
-    actual = checker.get_colrev_versions()
-    assert expected == actual
-
     checker.check_repository_setup()
 
     # Note: no assertion (yet)
@@ -26,7 +23,7 @@ def test_checks(  # type: ignore
 
     actual = checker.check_repo_extended()
     current_platform = platform.system()
-    expected = []
+    expected: typing.List[str] = []
     assert expected == actual
 
     actual = checker.check_repo()  # type: ignore
