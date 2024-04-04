@@ -51,7 +51,7 @@ dictdiffer = "^0.9.0"
 imagehash = "^4.3.1"
 rapidfuzz = "^3.5.2"
 levenshtein = "^0.21.0" # faster implementation of levenshtein distance
-bib-dedupe = "^0.7.0"
+bib-dedupe = { git = "https://github.com/CoLRev-Environment/bib-dedupe" } # until next release
 daff = "^1.3.46"
 docker = "6.0.0"
 lxml = "^4.9.1"
