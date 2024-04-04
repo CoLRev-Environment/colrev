@@ -16,7 +16,7 @@ CEP001: CoLRev Framework
 Table of contents
 ------------------------------
 
-:any:`abstract`
+:any:`summary`
 
 :any:`area_methods`
 
@@ -46,7 +46,7 @@ Table of contents
 
 ..  Note : this page should mirror the areas of innovation (first page)
 
-.. _abstract:
+.. _summary:
 
 Abstract
 ------------------------------

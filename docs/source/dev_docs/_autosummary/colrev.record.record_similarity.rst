@@ -1,4 +1,4 @@
-colrev.record.record\_similarity
+﻿colrev.record.record\_similarity
 ================================
 
 .. automodule:: colrev.record.record_similarity

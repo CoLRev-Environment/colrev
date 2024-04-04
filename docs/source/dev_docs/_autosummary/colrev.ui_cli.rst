@@ -1,4 +1,4 @@
-colrev.ui\_cli
+﻿colrev.ui\_cli
 ==============
 
 .. automodule:: colrev.ui_cli

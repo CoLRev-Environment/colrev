@@ -5,9 +5,6 @@ NOTE: VirtualBox does not have official support for macOS with Apple Silicon M1/
 
 **It is recommended to create a backup of your machine (using Time Machine) before setting up virtualBox.**
 
-A fully installed VirtualBox image is available `here <https://gigamove.rwth-aachen.de/en/download/a0dc5c130b24636165a5772921ebff40>`__.
-If the link has expired, please contact `Gerit Wagner <mailto:gerit.wagner@uni-bamberg.de>`__.
-
 -  VirtualBox for macOS/Intel hosts: `Version 7.0.12 <https://www.virtualbox.org/wiki/Downloads>`__ (no unattended installation)
 -  Distro ISO: `Ubuntu 22.04.3 LTS <https://ubuntu.com/download/desktop>`__
 

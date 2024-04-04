@@ -17,7 +17,7 @@ Search available curations on `GitHub <https://github.com/topics/colrev-curation
       colrev env --install https://github.com/u_name/repo_name
       colrev env --index
 
-See :doc:`reuse of community-curated data </foundations/cep/cep_1_framework>` for details.
+See :doc:`reuse of community-curated data </foundations/cep/cep001_framework>` for details.
 
 ..    This may become a separate chapter:
       Local review environments

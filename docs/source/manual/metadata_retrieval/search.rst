@@ -12,7 +12,7 @@ colrev search
    :target: https://colrev.readthedocs.io/en/latest/dev_docs/dev_status.html
 
 In the ``colrev search`` operation, the SearchSource is added to the project settings, and record metadata are retrieved.
-SearchSources keep track of the associated queries, as well as the search results files in the `data/search` directory (see :doc:`SearchSources </foundations/cep/cep_3_search_sources>`).
+SearchSources keep track of the associated queries, as well as the search results files in the `data/search` directory (see :doc:`SearchSources </foundations/cep/cep003_search_sources>`).
 Two steps are necessary to add a SearchSource and run a search:
 
 .. code-block:: bash
@@ -41,6 +41,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 |          | - Add search results to data/search                                                                    |                     |           |
 |          | - Add query to data/search                                                                             |                     |           |
 |          | - Run colrev load (a heuristic method automatically identifies the database)                           |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of DB searches <db searches>`                                                       |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | API      | Automated API search:                                                                                  | Automated           | Mandatory |
@@ -48,6 +49,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 |          | - Run colrev -a colrev.XXX to interactively add the SearchSource including the query                   |                     |           |
 |          | - Run colrev search to automatically retrieve records based on query                                   |                     |           |
 |          | - Run colrev search again for new search iterations and updates of record metadata                     |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of API searches <api searches>`                                                     |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | BACKWARD | Backward citation search:                                                                              | Automated or manual | Optional  |
@@ -55,6 +57,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 |          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
 |          | - Run colrev search to execute backward search                                                         |                     |           |
 |          | - Manual addition of search results is possible                                                        |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of BACKWARD searches <backward searches>`                                           |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | FORWARD  | Forward citation search:                                                                               | Automated or manual | Optional  |
@@ -62,12 +65,14 @@ The development of additional SearchSources is tracked in the `SearchSource road
 |          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
 |          | - Run colrev search to execute forward search                                                          |                     |           |
 |          | - Manual addition of search results is possible                                                        |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of FORWARD searches <forward searches>`                                             |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | TOC      | Table-of-content search:                                                                               | Automated or manual | Mandatory |
 |          |                                                                                                        |                     |           |
 |          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters                  |                     |           |
 |          | - Run colrev search to retrieve all records from the selected journal(s) or conference(s)              |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of TOC searches <toc searches>`                                                     |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | OTHER    | Non-systematic lookup searches or complementary searches:                                              | Manual              | Optional  |
@@ -75,18 +80,21 @@ The development of additional SearchSources is tracked in the `SearchSource road
 |          | - Papers suggested by colleagues, or serendipituous look-up searches                                   |                     |           |
 |          | - Add search results to data/search                                                                    |                     |           |
 |          | - Run colrev load                                                                                      |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of OTHER searches <other searches>`                                                 |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | FILES    | Extraction of metadata from files:                                                                     | Automated           | Optional  |
 |          |                                                                                                        |                     |           |
 |          | - Run colrev -a colrev.XXX to interactively add the SearchSource including parameters (if any)         |                     |           |
 |          | - Metadata is extracted from files (e.g., PDFs) in a selected directory (see colrev.files_dir)         |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of FILES searches <file searches>`                                                  |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 | MD       | Metadata SearchSource:                                                                                 | Automated           | NA        |
 |          |                                                                                                        |                     |           |
 |          | - Record metadata are retrieved to **amend existing records** as part of the prep operation            |                     |           |
 |          | - No additional records are added                                                                      |                     |           |
+|          |                                                                                                        |                     |           |
 |          | See :ref:`overview of MD searches <md searches>`                                                       |                     |           |
 +----------+--------------------------------------------------------------------------------------------------------+---------------------+-----------+
 

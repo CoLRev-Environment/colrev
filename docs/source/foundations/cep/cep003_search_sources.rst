@@ -15,14 +15,14 @@ Table of contents
 ------------------------------
 
 - :any:`summary`
-- :any:`data`
+- :any:`search_source_data`
 - :any:`methods`
 - :any:`documentation`
 - :any:`tests`
 - :any:`maturity`
 - :any:`roadmap`
 
-.. _abstract:
+.. _summary:
 
 Abstract
 ------------------------------
@@ -40,7 +40,7 @@ Knowing the source matters because many aspects are source-specific, including:
 
 SearchSource packages (classes): instances and methods
 
-.. _data:
+.. _search_source_data:
 
 SearchSource data
 ------------------------------

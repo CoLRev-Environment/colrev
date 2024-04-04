@@ -57,7 +57,7 @@ Like all other operations, it also offers the possibility to display more detail
 CoLRev operation
 -------------------------------
 
-The methodological steps of the literature review are completed through the CoLRev operations (as illustrated :doc:`earlier </manual/operation>`).
+The methodological steps of the literature review are completed through the CoLRev operations (as illustrated :doc:`earlier </manual/operations>`).
 Once completed, operations can create new commits (versions).
 Detailed information on the steps and operations are provided on the following pages.
 
