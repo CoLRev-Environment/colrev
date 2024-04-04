@@ -275,8 +275,23 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
+
+            def field_mapper(record_dict: dict) -> None:
+                if "link" in record_dict:
+                    if "url" in record_dict:
+                        del record_dict["link"]
+                    else:
+                        record_dict[Fields.URL] = record_dict.pop("link")
+                for key in list(record_dict.keys()):
+                    if key not in FieldSet.STANDARDIZED_FIELD_KEYS:
+                        self.review_manager.logger.warning(
+                            f"Field {key} not in standard field set"
+                        )
+                        del record_dict[key]
+
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
+                field_mapper=field_mapper,
                 logger=self.review_manager.logger,
             )
             for record_id in records:

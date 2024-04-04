@@ -246,6 +246,12 @@ class FieldSet:
             Fields.SCHOOL,
             Fields.ADDRESS,
             Fields.RETRACTED,
+            Fields.CURATION_ID,
+            Fields.DBLP_KEY,
+            Fields.SEMANTIC_SCHOLAR_ID,
+            Fields.WEB_OF_SCIENCE_ID,
+            Fields.PUBMED_ID,
+            Fields.PMCID,
         ]
     )
     """Standardized field keys"""

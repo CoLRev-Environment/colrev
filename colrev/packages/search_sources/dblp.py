@@ -588,6 +588,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     record_dict[f"{self.endpoint}.bibsource"] = record_dict.pop(
                         "bibsource"
                     )
+                record_dict[Fields.DBLP_KEY] = record_dict.pop("dblp_key")
 
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,

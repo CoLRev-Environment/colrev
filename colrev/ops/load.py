@@ -176,7 +176,7 @@ class Load(colrev.process.operation.Operation):
             if not all(
                 x.islower()
                 for x in source_record.keys()
-                if x not in ["ID", "ENTRYTYPE"]
+                if x not in [Fields.ID, Fields.ENTRYTYPE, Fields.CURATION_ID]
             ):
                 raise colrev_exceptions.ImportException(
                     f"Keys should be lower case ({source_record.keys()})"
