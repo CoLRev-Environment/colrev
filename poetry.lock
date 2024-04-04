@@ -3375,24 +3375,6 @@ slack = ["slack-sdk"]
 telegram = ["requests"]
 
 [[package]]
-name = "transitions"
-version = "0.8.11"
-description = "A lightweight, object-oriented Python state machine implementation with many extensions."
-optional = false
-python-versions = "*"
-files = [
-    {file = "transitions-0.8.11-py2.py3-none-any.whl", hash = "sha256:9525dd9b708b0a54bb4562a06a483d237e75c94547ba9831c81c6872d0ea1522"},
-    {file = "transitions-0.8.11.tar.gz", hash = "sha256:7b20d32906ea4d60ee6f6c1f5dc9c9f178802425c5b155213eb0f25c277f04e4"},
-]
-
-[package.dependencies]
-six = "*"
-
-[package.extras]
-diagrams = ["pygraphviz"]
-test = ["pytest"]
-
-[[package]]
 name = "types-click"
 version = "7.1.8"
 description = "Typing stubs for click"
@@ -3583,4 +3565,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "96aed237730950aec0686deebe122604d534077f03f7d8230d985c297b3e39ce"
+content-hash = "6dbaf37bb8738e346cbc1445fbca0dba34e9ed0ad7e1bda9c0e901c33c7d0da3"
