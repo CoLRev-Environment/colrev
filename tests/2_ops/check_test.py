@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Tests of the CoLRev checks"""
 import platform
+import typing
 from dataclasses import asdict
 from pathlib import Path
-import typing
 
 import colrev.review_manager
 from colrev.constants import SearchType
