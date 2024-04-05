@@ -16,13 +16,11 @@ import requests_cache
 import yaml
 
 import colrev.dataset
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
 import colrev.ops.checker
 import colrev.process.operation
 import colrev.record.qm.quality_model
-import colrev.record.record
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Filepaths
@@ -32,11 +30,11 @@ from colrev.constants import OperationsType
 class ReviewManager:
     """Class for managing individual CoLRev review project (repositories)"""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-statements
-    # pylint: disable=too-many-public-methods
     # pylint: disable=import-outside-toplevel
     # pylint: disable=redefined-outer-name
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-arguments
 
     notified_next_operation = None
     """ReviewManager was notified for the upcoming process and
@@ -50,7 +48,6 @@ class ReviewManager:
 
     shell_mode = False
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,

@@ -427,14 +427,14 @@ class Prep(colrev.process.operation.Operation):
                 record.update_by_record(preparation_record)
 
         # Note: run_quality_model sets to md_needs_manual_preparation
-        record.run_quality_model(qm=self.quality_model, set_prepared=not self.polish)
+        record.run_quality_model(self.quality_model, set_prepared=not self.polish)
 
         if not self.review_manager.verbose_mode:
             self._print_post_package_prep_info(
                 record=record, item=item, prior_state=prior_state
             )
 
-    def _save_to_temp(self, *, record: colrev.record.record_prep.PrepRecord) -> None:
+    def _save_to_temp(self, record: colrev.record.record_prep.PrepRecord) -> None:
         rec_str = to_string(
             records_dict={record.data[Fields.ID]: record.get_data()},
             implementation="bib",
@@ -448,7 +448,7 @@ class Prep(colrev.process.operation.Operation):
         except ValueError:
             pass
 
-    def _complete_resumed_operation(self, *, prepared_records: list) -> None:
+    def _complete_resumed_operation(self, prepared_records: list) -> None:
         if self.temp_records.is_file():
             temp_recs = colrev.loader.load_utils.load(
                 filename=self.temp_records,
@@ -532,7 +532,7 @@ class Prep(colrev.process.operation.Operation):
             new_entrytype=record.data[Fields.ENTRYTYPE], qm=self.quality_model
         )
         preparation_record.run_quality_model(
-            qm=self.quality_model, set_prepared=not self.polish
+            self.quality_model, set_prepared=not self.polish
         )
 
         for prep_round_package_endpoint in deepcopy(
@@ -560,7 +560,7 @@ class Prep(colrev.process.operation.Operation):
             prior_state=prior_state,
         )
 
-        self._save_to_temp(record=record)
+        self._save_to_temp(record)
 
         return record.get_data()
 
@@ -904,7 +904,7 @@ class Prep(colrev.process.operation.Operation):
                     + f"Change score: {round(change, 2)}"
                 )
 
-    def _log_details(self, *, prepared_records: list) -> None:
+    def _log_details(self, prepared_records: list) -> None:
         nr_curated_recs = len(
             [
                 r
@@ -1021,7 +1021,7 @@ class Prep(colrev.process.operation.Operation):
         return ram_reavy
 
     def _get_prep_pool(
-        self, *, prep_round: colrev.settings.PrepRound
+        self, prep_round: colrev.settings.PrepRound
     ) -> mp.pool.ThreadPool:
         if self._prep_packages_ram_heavy(prep_round=prep_round):
             pool = Pool(mp.cpu_count() // 2)
@@ -1051,7 +1051,7 @@ class Prep(colrev.process.operation.Operation):
                 {r[Fields.ID]: r for r in prepared_records}, partial=True
             )
 
-            self._log_details(prepared_records=prepared_records)
+            self._log_details(prepared_records)
 
             self.review_manager.dataset.create_commit(
                 msg=f"Prepare records ({prep_round.name})",
@@ -1124,12 +1124,12 @@ class Prep(colrev.process.operation.Operation):
                         record = self.prepare(item)
                         prepared_records.append(record)
                 else:
-                    pool = self._get_prep_pool(prep_round=prep_round)
+                    pool = self._get_prep_pool(prep_round)
                     prepared_records = pool.map(self.prepare, preparation_data)
                     pool.close()
                     pool.join()
 
-                self._complete_resumed_operation(prepared_records=prepared_records)
+                self._complete_resumed_operation(prepared_records)
 
                 self._create_prep_commit(
                     previous_preparation_data=previous_preparation_data,

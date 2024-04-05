@@ -84,3 +84,11 @@ def test_format_records_file(
 ) -> None:
     # TODO : modify before
     base_repo_review_manager.format_records_file()
+
+
+def test_sharing(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+    ret = base_repo_review_manager.sharing()
+    assert not ret["status"]
+    assert "Project not yet shared" in ret["msg"]

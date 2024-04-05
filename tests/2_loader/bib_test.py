@@ -101,3 +101,13 @@ def test_load(tmp_path, helpers) -> None:  # type: ignore
         Path("data/search/bib_data.bib")
     )
     assert 5 == nr_records
+
+    # if the file does not (yet) exist
+    nr_records = colrev.loader.load_utils.get_nr_records(
+        Path("data/search/bib_data2.bib")
+    )
+    assert 0 == nr_records
+
+    Path("data/search/bib_data2.unkonwn").write_text("This is not a bib file.")
+    with pytest.raises(NotImplementedError):
+        colrev.loader.load_utils.get_nr_records(Path("data/search/bib_data2.unkonwn"))

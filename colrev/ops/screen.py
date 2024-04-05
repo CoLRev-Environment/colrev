@@ -48,7 +48,7 @@ class Screen(colrev.process.operation.Operation):
             return True
         return False
 
-    def _include_all_in_screen_precondition(self, *, records: dict) -> bool:
+    def _include_all_in_screen_precondition(self, records: dict) -> bool:
         if not [
             r for r in records.values() if r[Fields.STATUS] == RecordState.pdf_prepared
         ]:
@@ -75,7 +75,7 @@ class Screen(colrev.process.operation.Operation):
 
         records = self.review_manager.dataset.load_records_dict()
 
-        if not self._include_all_in_screen_precondition(records=records):
+        if not self._include_all_in_screen_precondition(records):
             return
 
         selected_record_ids = [
@@ -106,7 +106,7 @@ class Screen(colrev.process.operation.Operation):
             )
 
         self.review_manager.dataset.save_records_dict(records)
-        self._print_stats(selected_record_ids=selected_record_ids)
+        self._print_stats(selected_record_ids)
         self.review_manager.dataset.create_commit(
             msg="Screen (include_all)",
             manual_author=False,
@@ -118,7 +118,7 @@ class Screen(colrev.process.operation.Operation):
         return list(self.review_manager.settings.screen.criteria.keys())
 
     def set_screening_criteria(
-        self, *, screening_criteria: dict[str, colrev.settings.ScreenCriterion]
+        self, screening_criteria: dict[str, colrev.settings.ScreenCriterion]
     ) -> None:
         """Set the screening criteria in the settings"""
         self.review_manager.settings.screen.criteria = screening_criteria
@@ -186,7 +186,7 @@ class Screen(colrev.process.operation.Operation):
             msg=f"Add screening criterion: {criterion_name}",
         )
 
-    def delete_criterion(self, *, criterion_to_delete: str) -> None:
+    def delete_criterion(self, criterion_to_delete: str) -> None:
         """Delete a screening criterion from the records and settings"""
         records = self.review_manager.dataset.load_records_dict()
 
@@ -276,7 +276,7 @@ class Screen(colrev.process.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def _screen_include_all(self, *, records: dict) -> None:
+    def _screen_include_all(self, records: dict) -> None:
         self.review_manager.logger.info("Screen: Include all records")
         for record_dict in records.values():
             if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
@@ -288,7 +288,7 @@ class Screen(colrev.process.operation.Operation):
             manual_author=False,
         )
 
-    def _print_stats(self, *, selected_record_ids: list) -> None:
+    def _print_stats(self, selected_record_ids: list) -> None:
         records_headers = self.review_manager.dataset.load_records_dict(
             header_only=True
         )
@@ -379,7 +379,7 @@ class Screen(colrev.process.operation.Operation):
             {record_dict[Fields.ID]: record_dict}, partial=True
         )
 
-    def _auto_include(self, *, records: dict) -> list:
+    def _auto_include(self, records: dict) -> list:
         selected_auto_include_ids = [
             r[Fields.ID]
             for r in records.values()
@@ -432,7 +432,7 @@ class Screen(colrev.process.operation.Operation):
         package_manager = self.review_manager.get_package_manager()
 
         if not self.review_manager.settings.screen.screen_package_endpoints:
-            self._screen_include_all(records=records)
+            self._screen_include_all(records)
             return
 
         for (
@@ -459,7 +459,7 @@ class Screen(colrev.process.operation.Operation):
 
             endpoint = endpoint_dict[screen_package_endpoint["endpoint"]]
 
-            selected_auto_include_ids = self._auto_include(records=records)
+            selected_auto_include_ids = self._auto_include(records)
 
             selected_record_ids = [
                 r[Fields.ID]
@@ -471,9 +471,7 @@ class Screen(colrev.process.operation.Operation):
 
             endpoint.run_screen(records, selected_record_ids)  # type: ignore
 
-            self._print_stats(
-                selected_record_ids=selected_record_ids + selected_auto_include_ids
-            )
+            self._print_stats(selected_record_ids + selected_auto_include_ids)
 
         self.review_manager.logger.info(
             f"{Colors.GREEN}Completed screen operation{Colors.END}"

@@ -14,14 +14,13 @@ import git
 from git import GitCommandError
 from git import InvalidGitRepositoryError
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
 import colrev.process.operation
 import colrev.record.record
+import colrev.record.record_id_setter
 import colrev.record.record_prep
-import colrev.settings
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -30,7 +29,6 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-many-public-methods
-
 
 class Dataset:
     """The CoLRev dataset (records and their history in git)"""
@@ -344,7 +342,7 @@ class Dataset:
                 if record_dict[Fields.STATUS] in [
                     RecordState.md_needs_manual_preparation,
                 ]:
-                    record.run_quality_model(qm=quality_model)
+                    record.run_quality_model(quality_model)
 
                 if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
                     record.reset_pdf_provenance_notes()
@@ -386,11 +384,6 @@ class Dataset:
     ) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
-        # pylint: disable=redefined-outer-name
-        # pylint: disable=import-outside-toplevel
-
-        import colrev.record.record_id_setter
-
         id_setter = colrev.record.record_id_setter.IDSetter(
             review_manager=self.review_manager
         )

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import colrev.process.operation
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import OperationsType
 

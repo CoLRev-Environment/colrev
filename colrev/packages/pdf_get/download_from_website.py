@@ -178,7 +178,7 @@ class WebsiteDownload(JsonSchemaMixin):
         if Fields.URL not in record.data:
             return record
 
-        pdf_filepath = self.pdf_get_operation.get_target_filepath(record=record)
+        pdf_filepath = self.pdf_get_operation.get_target_filepath(record)
 
         try:
             if any(
@@ -199,7 +199,7 @@ class WebsiteDownload(JsonSchemaMixin):
                 record.update_field(
                     key=Fields.FILE, value=str(pdf_filepath), source="website-download"
                 )
-                self.pdf_get_operation.import_pdf(record=record)
+                self.pdf_get_operation.import_pdf(record)
         except requests.RequestException:
             pass
 

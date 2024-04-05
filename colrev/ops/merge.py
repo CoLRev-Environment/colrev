@@ -7,7 +7,6 @@ import copy
 from dictdiffer import diff
 from git.exc import GitCommandError
 
-import colrev.env.utils
 import colrev.process.operation
 from colrev.constants import Colors
 from colrev.constants import Fields

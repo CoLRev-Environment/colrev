@@ -61,7 +61,7 @@ class Prescreen(colrev.process.operation.Operation):
             import_table_path=import_table_path,
         )
 
-    def _include_all_in_prescreen_precondition(self, *, records: dict) -> bool:
+    def _include_all_in_prescreen_precondition(self, records: dict) -> bool:
         if not [
             r for r in records.values() if r[Fields.STATUS] == RecordState.md_processed
         ]:
@@ -88,7 +88,7 @@ class Prescreen(colrev.process.operation.Operation):
             self.review_manager.save_settings()
 
         records = self.review_manager.dataset.load_records_dict()
-        if not self._include_all_in_prescreen_precondition(records=records):
+        if not self._include_all_in_prescreen_precondition(records):
             return
 
         selected_record_ids = [
@@ -209,7 +209,7 @@ class Prescreen(colrev.process.operation.Operation):
         )
         self.review_manager.save_settings()
 
-    def _prescreen_include_all(self, *, records: dict) -> None:
+    def _prescreen_include_all(self, records: dict) -> None:
         # pylint: disable=duplicate-code
         self.review_manager.logger.info("Prescreen-including all records")
         for record_dict in records.values():
@@ -297,7 +297,7 @@ class Prescreen(colrev.process.operation.Operation):
                 {record.data[Fields.ID]: record.get_data()}, partial=True
             )
 
-    def _auto_include(self, *, records: dict) -> list:
+    def _auto_include(self, records: dict) -> list:
         selected_auto_include_ids = [
             r[Fields.ID]
             for r in records.values()
@@ -337,7 +337,7 @@ class Prescreen(colrev.process.operation.Operation):
             self.review_manager.settings.prescreen.prescreen_package_endpoints
         )
         if not prescreen_package_endpoints:
-            self._prescreen_include_all(records=records)
+            self._prescreen_include_all(records)
             return
 
         for prescreen_package_endpoint in prescreen_package_endpoints:
@@ -373,7 +373,7 @@ class Prescreen(colrev.process.operation.Operation):
             ]
             endpoint.run_prescreen(records, split)  # type: ignore
 
-            selected_auto_include_ids = self._auto_include(records=records)
+            selected_auto_include_ids = self._auto_include(records)
 
             self._print_stats(
                 selected_record_ids=selected_record_ids + selected_auto_include_ids

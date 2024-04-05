@@ -14,11 +14,9 @@ from typing import Optional
 import pandas as pd
 from bib_dedupe.bib_dedupe import prep
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 import colrev.record.record
-import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -26,8 +24,6 @@ from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
-
-# pylint: disable=too-many-lines
 
 
 class Dedupe(colrev.process.operation.Operation):

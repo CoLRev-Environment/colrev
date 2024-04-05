@@ -68,6 +68,6 @@ def get_screening_criteria_from_user_input(
             )
             print()
 
-        screen_operation.set_screening_criteria(screening_criteria=screening_criteria)
+        screen_operation.set_screening_criteria(screening_criteria)
 
     return screening_criteria

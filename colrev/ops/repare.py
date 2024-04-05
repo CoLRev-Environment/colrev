@@ -5,12 +5,11 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import colrev.constants as c
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 from colrev.constants import DefectCodes
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
@@ -59,7 +58,7 @@ class Repare(colrev.process.operation.Operation):
                     source="local_index",
                     append_edit=False,
                 )
-                self.pdf_get_operation.import_pdf(record=record)
+                self.pdf_get_operation.import_pdf(record)
                 if Fields.FULLTEXT in retrieved_record.data:
                     del retrieved_record.data[Fields.FULLTEXT]
                 self.review_manager.logger.info(
@@ -75,7 +74,7 @@ class Repare(colrev.process.operation.Operation):
                 f" record not in index: {record.data['ID']}"
             )
 
-    def _fix_files(self, *, records: dict) -> None:
+    def _fix_files(self, records: dict) -> None:
         # pylint: disable=too-many-branches
         for record_dict in records.values():
             if Fields.FILE not in record_dict:
@@ -168,7 +167,7 @@ class Repare(colrev.process.operation.Operation):
         return source_feeds
 
     # pylint: disable=too-many-branches
-    def _remove_fields(self, *, record: colrev.record.record.Record) -> None:
+    def _remove_fields(self, record: colrev.record.record.Record) -> None:
         if "pdf_hash" in record.data:
             record.data[Fields.PDF_ID] = record.data["pdf_hash"]
             del record.data["pdf_hash"]
@@ -319,7 +318,7 @@ class Repare(colrev.process.operation.Operation):
         value: str,
         source_feeds: dict,
     ) -> None:
-        if key in c.FieldSet.IDENTIFYING_FIELD_KEYS:
+        if key in FieldSet.IDENTIFYING_FIELD_KEYS:
             if FieldValues.CURATED in record.data[Fields.MD_PROV]:
                 return
             self._set_non_curated_masterdata_provenance_field(
@@ -353,14 +352,14 @@ class Repare(colrev.process.operation.Operation):
                 record=record, key=key, value=value, source_feeds=source_feeds
             )
 
-    def _fix_provenance(self, *, records: dict) -> None:
+    def _fix_provenance(self, records: dict) -> None:
         source_feeds = self._get_source_feeds()
         for record_dict in records.values():
             record = colrev.record.record.Record(record_dict)
-            self._remove_fields(record=record)
+            self._remove_fields(record)
             self._set_provenance(record=record, source_feeds=source_feeds)
 
-    def _fix_curated_sources(self, *, records: dict) -> None:
+    def _fix_curated_sources(self, records: dict) -> None:
         for search_source in self.review_manager.settings.sources:
             if search_source.endpoint != "colrev.local_index":
                 continue
@@ -401,7 +400,7 @@ class Repare(colrev.process.operation.Operation):
             write_file(records_dict=curation_recs, filename=search_source.filename)
             self.review_manager.dataset.add_changes(search_source.filename)
 
-    def _update_field_names(self, *, records: dict) -> None:
+    def _update_field_names(self, records: dict) -> None:
         for record_dict in records.values():
             # TBD: which parts are in upgrade/repare and which parts are in prepare??
             record = colrev.record.record.Record(record_dict)
@@ -467,7 +466,7 @@ class Repare(colrev.process.operation.Operation):
             except AttributeError:
                 return
 
-        self._fix_curated_sources(records=records)
+        self._fix_curated_sources(records)
 
         # removing specific fields
         # for record_dict in records.values():
@@ -480,10 +479,10 @@ class Repare(colrev.process.operation.Operation):
         #             key="colrev_local_index"
         #         )
 
-        self._update_field_names(records=records)
+        self._update_field_names(records)
 
-        self._fix_provenance(records=records)
+        self._fix_provenance(records)
 
-        self._fix_files(records=records)
+        self._fix_files(records)
 
         self.review_manager.dataset.save_records_dict(records)

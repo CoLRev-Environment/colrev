@@ -66,7 +66,7 @@ class Load(colrev.process.operation.Operation):
         ]
         return imported_origins
 
-    def ensure_append_only(self, *, file: Path) -> None:
+    def ensure_append_only(self, file: Path) -> None:
         """Ensure that the file was only appended to.
 
         This method must be called for all packages that work
@@ -99,14 +99,11 @@ class Load(colrev.process.operation.Operation):
 
     def _import_provenance(
         self,
-        *,
         record: colrev.record.record.Record,
     ) -> None:
         """Set the provenance for an imported record"""
 
-        def set_initial_import_provenance(
-            *, record: colrev.record.record.Record
-        ) -> None:
+        def set_initial_import_provenance(record: colrev.record.record.Record) -> None:
             # Initialize Fields.MD_PROV
             colrev_masterdata_provenance, colrev_data_provenance = {}, {}
 
@@ -131,8 +128,8 @@ class Load(colrev.process.operation.Operation):
             record.data[Fields.MD_PROV] = colrev_masterdata_provenance
 
         if not record.masterdata_is_curated():
-            set_initial_import_provenance(record=record)
-            record.run_quality_model(qm=self.quality_model)
+            set_initial_import_provenance(record)
+            record.run_quality_model(self.quality_model)
 
     def _import_record(self, *, record_dict: dict) -> dict:
         self.review_manager.logger.debug(f"import_record {record_dict[Fields.ID]}: ")
@@ -140,9 +137,9 @@ class Load(colrev.process.operation.Operation):
         record = colrev.record.record.Record(record_dict)
 
         # For better readability of the git diff:
-        self.load_formatter.run(record=record)
+        self.load_formatter.run(record)
 
-        self._import_provenance(record=record)
+        self._import_provenance(record)
 
         if record.data[Fields.STATUS] in [
             RecordState.md_retrieved,
@@ -212,8 +209,8 @@ class Load(colrev.process.operation.Operation):
 
     def setup_source_for_load(
         self,
-        *,
         source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        *,
         select_new_records: bool = True,
     ) -> None:
         """
@@ -254,8 +251,8 @@ class Load(colrev.process.operation.Operation):
 
     def load_source_records(
         self,
-        *,
         source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        *,
         keep_ids: bool,
     ) -> None:
         """
@@ -269,7 +266,7 @@ class Load(colrev.process.operation.Operation):
             source: The search source package endpoint interface from which records are loaded.
             keep_ids: A boolean flag indicating whether to keep the original IDs of the records.
         """
-        self.setup_source_for_load(source=source)
+        self.setup_source_for_load(source)
         records = self.review_manager.dataset.load_records_dict()
 
         for source_record in source.search_source.source_records_list:
@@ -324,7 +321,7 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.dataset.add_changes(source.search_source.filename)
 
     def _add_source_to_settings(
-        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+        self, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
     ) -> None:
         # Add to settings (if new filename)
         if source.search_source.filename in [
@@ -443,9 +440,9 @@ class Load(colrev.process.operation.Operation):
         for source in self.load_active_sources():
             try:
                 self.review_manager.logger.info(f"Load {source.search_source.filename}")
-                self._add_source_to_settings(source=source)
-                self.load_source_records(source=source, keep_ids=keep_ids)
-                self._create_load_commit(source=source)
+                self._add_source_to_settings(source)
+                self.load_source_records(source, keep_ids=keep_ids)
+                self._create_load_commit(source)
 
             except colrev_exceptions.ImportException as exc:
                 print(exc)

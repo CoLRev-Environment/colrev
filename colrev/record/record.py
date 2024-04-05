@@ -351,7 +351,7 @@ class Record:
                 f"No ENTRYTYPE specification ({new_entrytype})"
             )
 
-        self.run_quality_model(qm=qm)
+        self.run_quality_model(qm)
 
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source: str = ""
@@ -871,8 +871,8 @@ class Record:
 
     def run_quality_model(
         self,
-        *,
         qm: colrev.record.qm.quality_model.QualityModel,
+        *,
         set_prepared: bool = False,
     ) -> None:
         """Update the masterdata provenance"""

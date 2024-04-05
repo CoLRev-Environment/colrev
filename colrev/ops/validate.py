@@ -66,7 +66,7 @@ class Validate(colrev.process.operation.Operation):
             return prior_records_dict
         return {}
 
-    def _get_prep_prescreen_exclusions(self, *, records: dict) -> list:
+    def _get_prep_prescreen_exclusions(self, records: dict) -> list:
         self.review_manager.logger.debug("Get prescreen exclusions...")
 
         target_commit = self._get_target_commit(scope="HEAD~1")
@@ -134,22 +134,20 @@ class Validate(colrev.process.operation.Operation):
         load_operation = self.review_manager.get_load_operation()
         origin_records = {}
         for source in load_operation.load_active_sources(include_md=True):
-            load_operation.setup_source_for_load(
-                source=source, select_new_records=False
-            )
+            load_operation.setup_source_for_load(source, select_new_records=False)
             for origin_record in source.search_source.source_records_list:
                 origin_records[origin_record[Fields.ORIGIN][0]] = origin_record
 
         records = self.review_manager.dataset.load_records_dict()
 
         report["prep_prescreen_exclusions"] = self._get_prep_prescreen_exclusions(
-            records=records
+            records
         )
         report["prep"] = self._get_change_diff(
             records=records, origin_records=origin_records
         )
 
-    def _export_merge_candidates_file(self, *, records: list[dict]) -> None:
+    def _export_merge_candidates_file(self, records: list[dict]) -> None:
         merge_candidates_file = Path("data/dedupe/merge_candidates_file.txt")
         merge_candidates_file.parent.mkdir(exist_ok=True, parents=True)
 
@@ -264,7 +262,7 @@ class Validate(colrev.process.operation.Operation):
             else:
                 self.review_manager.logger.info("No merged records")
 
-        self._export_merge_candidates_file(records=records)
+        self._export_merge_candidates_file(records)
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x["change_score"], reverse=True)

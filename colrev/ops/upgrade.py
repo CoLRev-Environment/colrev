@@ -428,7 +428,7 @@ class Upgrade(colrev.process.operation.Operation):
 
             record = colrev.record.record.Record(record_dict)
             prior_state = record.data[Fields.STATUS]
-            record.run_quality_model(qm=quality_model)
+            record.run_quality_model(quality_model)
             if prior_state == RecordState.rev_prescreen_excluded:
                 record.data[  # pylint: disable=colrev-direct-status-assign
                     Fields.STATUS

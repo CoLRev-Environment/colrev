@@ -165,6 +165,6 @@ class WebsiteScreenshot(JsonSchemaMixin):
         record = self._add_screenshot(record=record, pdf_filepath=pdf_filepath)
 
         if Fields.FILE in record.data:
-            self.pdf_get_operation.import_pdf(record=record)
+            self.pdf_get_operation.import_pdf(record)
 
         return record

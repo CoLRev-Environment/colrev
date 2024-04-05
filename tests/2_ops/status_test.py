@@ -70,3 +70,25 @@ def test_status_stats(  # type: ignore
     status_stats = base_repo_review_manager.get_status_stats(records=records)
     print(status_stats)
     assert status_stats.atomic_steps == 9
+
+
+def test_get_review_status_report(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
+) -> None:
+    """Test the prescreen operation"""
+
+    helpers.reset_commit(base_repo_review_manager, commit="dedupe_commit")
+
+    status_operation = base_repo_review_manager.get_status_operation()
+    ret = status_operation.get_review_status_report(colors=True)
+    print(ret)
+    assert (
+        ret
+        == """Status
+    init
+    retrieve          1 retrieved     [only 0 quality-curated]
+    prescreen         0 included      1 to prescreen
+    pdfs              0 retrieved
+    screen            0 included
+    data              0 synthesized"""
+    )

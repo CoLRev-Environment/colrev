@@ -136,7 +136,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                     source="year_vol_iss_prep",
                     note="",
                 )
-                record.run_quality_model(qm=self.quality_model)
+                record.run_quality_model(self.quality_model)
         else:
             if isinstance(
                 self.vol_nr_dict[record.data[Fields.JOURNAL]][
@@ -152,7 +152,7 @@ class YearVolIssPrep(JsonSchemaMixin):
                     source="year_vol_iss_prep",
                     note="",
                 )
-                record.run_quality_model(qm=self.quality_model)
+                record.run_quality_model(self.quality_model)
 
     def _get_year_from_crossref(self, *, record: colrev.record.record.Record) -> None:
         try:
