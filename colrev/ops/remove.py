@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import colrev.env.utils
 import colrev.process.operation
 from colrev.constants import Fields
 from colrev.constants import Filepaths

@@ -407,7 +407,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        load_operation.ensure_append_only(file=self.search_source.filename)
+        load_operation.ensure_append_only(self.search_source.filename)
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="INCREMENTAL",

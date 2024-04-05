@@ -9,7 +9,6 @@ import pandas as pd
 
 import colrev.packages.pdf_prep.grobid_tei
 import colrev.process.operation
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -242,7 +241,7 @@ class Data(colrev.process.operation.Operation):
             )
         self._pad = min((max(len(ID) for ID in list(records.keys()) + [""]) + 2), 35)
 
-    def _get_synthesized_record_status_matrix(self, *, records: dict) -> dict:
+    def _get_synthesized_record_status_matrix(self, records: dict) -> dict:
         included = self.get_record_ids_for_synthesis(records)
 
         # TBD: do we assume that records are not changed by the processes?
@@ -327,7 +326,7 @@ class Data(colrev.process.operation.Operation):
         self._pre_data(records=records, silent_mode=silent_mode)
 
         synthesized_record_status_matrix = self._get_synthesized_record_status_matrix(
-            records=records
+            records
         )
 
         for (

@@ -199,7 +199,6 @@ def loads(  # type: ignore
 
 def get_nr_records(  # type: ignore
     filename: Path,
-    # logger: logging.Logger = logging.getLogger(__name__),
 ) -> int:
     """Get the number of records in a file"""
 

@@ -202,7 +202,7 @@ class Search(colrev.process.operation.Operation):
             source.filename = self.review_manager.path / Path(source.filename)
         return sources_selected
 
-    def remove_forthcoming(self, *, source: colrev.settings.SearchSource) -> None:
+    def _remove_forthcoming(self, source: colrev.settings.SearchSource) -> None:
         """Remove forthcoming papers from a SearchSource"""
 
         if self.review_manager.settings.search.retrieve_forthcoming:
@@ -477,7 +477,7 @@ class Search(colrev.process.operation.Operation):
             if not source.filename.is_file():
                 continue
 
-            self.remove_forthcoming(source=source)
+            self._remove_forthcoming(source)
             self.review_manager.dataset.add_changes(source.filename)
             if not skip_commit:
                 self.review_manager.dataset.create_commit(msg="Run search")

@@ -5,9 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import colrev.ops.correct
 import colrev.process.operation
-import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -40,7 +38,7 @@ class Push(colrev.process.operation.Operation):
             self._push_project()
 
         if records_only:
-            self._push_record_corrections(all_records=all_records)
+            self._push_record_corrections(all_records)
 
     def _push_project(self) -> None:
         git_repo = self.review_manager.dataset.get_repo()
@@ -83,7 +81,7 @@ class Push(colrev.process.operation.Operation):
 
         return change_sets
 
-    def _push_record_corrections(self, *, all_records: bool) -> None:
+    def _push_record_corrections(self, all_records: bool) -> None:
         """Push corrections of records"""
 
         change_sets = self._get_change_sets()

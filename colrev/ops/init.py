@@ -15,12 +15,11 @@ from subprocess import STDOUT  # nosec
 
 import git
 
-import colrev.dataset
 import colrev.env.docker_manager
 import colrev.env.environment_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.review_manager  # pylint: disable=cyclic-import
+import colrev.review_manager
 import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields

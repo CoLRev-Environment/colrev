@@ -13,13 +13,15 @@ import yaml
 from git.exc import InvalidGitRepositoryError
 
 import colrev.exceptions as colrev_exceptions
-import colrev.process.operation
 from colrev.constants import ExitCodes
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 from colrev.process.model import ProcessModel
+
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.review_manager
 
 
 class Checker:
@@ -377,7 +379,6 @@ class Checker:
             if msg not in notifications:
                 notifications.append(msg)
 
-        # self.review_manager.logger.debug("Checking %s", name)
         if filename.endswith(".bib"):
             retrieved_ids = self._retrieve_ids_from_bib(
                 file_path=Path(os.path.join(root, filename))
@@ -635,23 +636,13 @@ class Checker:
         failure_items = []
         for check_script in check_scripts:
             try:
-                # self.review_manager.logger.info(check_script["script"])
                 if not check_script["params"]:
-                    # self.review_manager.logger.debug(
-                    #     "%s() called", check_script["script"].__name__
-                    # )
                     check_script["script"]()
                 else:
-                    # self.review_manager.logger.debug(
-                    #     "%s(params) called", check_script["script"].__name__
-                    # )
                     if isinstance(check_script["params"], list):
                         check_script["script"](*check_script["params"])
                     else:
                         check_script["script"](**check_script["params"])
-                # self.review_manager.logger.debug(
-                #     "%s: passed\n", check_script["script"].__name__
-                # )
             except (
                 colrev_exceptions.MissingDependencyError,
                 colrev_exceptions.GitConflictError,
@@ -738,23 +729,13 @@ class Checker:
         failure_items = []
         for check_script in check_scripts:
             try:
-                # self.review_manager.logger.info(check_script["script"])
                 if not check_script["params"]:
-                    # self.review_manager.logger.debug(
-                    #     "%s() called", check_script["script"].__name__
-                    # )
                     check_script["script"]()
                 else:
-                    # self.review_manager.logger.debug(
-                    #     "%s(params) called", check_script["script"].__name__
-                    # )
                     if isinstance(check_script["params"], list):
                         check_script["script"](*check_script["params"])
                     else:
                         check_script["script"](**check_script["params"])
-                # self.review_manager.logger.debug(
-                #     "%s: passed\n", check_script["script"].__name__
-                # )
             except (
                 colrev_exceptions.MissingDependencyError,
                 colrev_exceptions.GitConflictError,

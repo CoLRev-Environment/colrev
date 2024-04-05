@@ -68,7 +68,7 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
         signed, _ = self.review_manager.get_committer()
 
         template = colrev.env.utils.get_template(
-            template_path="packages/pdf_get_man/pdf_get_man_mail.txt"
+            "packages/pdf_get_man/pdf_get_man_mail.txt"
         )
 
         content = template.render(record=record, author_name=author_name, signed=signed)
@@ -258,16 +258,16 @@ class CoLRevCLIPDFGetMan(JsonSchemaMixin):
 
         records = self.review_manager.dataset.load_records_dict()
         if input("Check existing unlinked PDFs (y/n)?") == "y":
-            records = pdf_get_operation.check_existing_unlinked_pdfs(records=records)
+            records = pdf_get_operation.check_existing_unlinked_pdfs(records)
 
         if input("Get PDF from Downloads folder (y/n)?") == "y":
             self._get_from_downloads_folder = True
 
         for record_dict in records.values():
             record = colrev.record.record.Record(record_dict)
-            pdf_get_operation.link_pdf(record=record).get_data()
+            pdf_get_operation.link_pdf(record).get_data()
 
-        self.pdf_get_man_operation.export_retrieval_table(records=records)
+        self.pdf_get_man_operation.export_retrieval_table(records)
         pdf_get_man_data = self.pdf_get_man_operation.get_data()
         if pdf_get_man_data["nr_tasks"] == 0:
             self.review_manager.logger.info(

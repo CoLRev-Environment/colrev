@@ -44,7 +44,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         )
         self.verbose = True
 
-    def get_pdf_get_man(self, *, records: dict) -> list:
+    def get_pdf_get_man(self, records: dict) -> list:
         """Get the records that are missing a PDF"""
         missing_records = []
         for record in records.values():
@@ -52,10 +52,10 @@ class PDFGetMan(colrev.process.operation.Operation):
                 missing_records.append(record)
         return missing_records
 
-    def export_retrieval_table(self, *, records: dict) -> None:
+    def export_retrieval_table(self, records: dict) -> None:
         """Export a table for manual PDF retrieval"""
 
-        missing_records = self.get_pdf_get_man(records=records)
+        missing_records = self.get_pdf_get_man(records)
 
         if len(missing_records) > 0:
             missing_records_df = pd.DataFrame.from_records(missing_records)

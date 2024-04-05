@@ -111,7 +111,7 @@ class Unpaywall(JsonSchemaMixin):
         if Fields.DOI not in record.data:
             return record
 
-        pdf_filepath = self.pdf_get_operation.get_target_filepath(record=record)
+        pdf_filepath = self.pdf_get_operation.get_target_filepath(record)
 
         url = self._unpaywall(doi=record.data[Fields.DOI])
         if url == "NA":
@@ -145,7 +145,7 @@ class Unpaywall(JsonSchemaMixin):
                     record.update_field(
                         key=Fields.FILE, value=str(pdf_filepath), source=source
                     )
-                    self.pdf_get_operation.import_pdf(record=record)
+                    self.pdf_get_operation.import_pdf(record)
 
                 else:
                     os.remove(pdf_filepath)

@@ -62,7 +62,7 @@ class LocalIndexPDFGet(JsonSchemaMixin):
                 value=str(retrieved_record.data[Fields.FILE]),
                 source="local_index",
             )
-            self.pdf_get_operation.import_pdf(record=record)
+            self.pdf_get_operation.import_pdf(record)
             if Fields.FULLTEXT in retrieved_record.data:
                 try:
                     record.get_tei_filename().write_text(

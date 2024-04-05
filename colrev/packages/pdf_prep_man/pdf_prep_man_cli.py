@@ -219,7 +219,7 @@ class CoLRevCLIPDFManPrep(JsonSchemaMixin):
                     filepath=filepath,
                 )
             elif user_selection == "Yes":
-                self.pdf_prep_man_operation.set_pdf_man_prepared(record=record)
+                self.pdf_prep_man_operation.set_pdf_man_prepared(record)
                 return
             elif user_selection == "No (delete)":
                 record.remove_field(key=Fields.FILE)

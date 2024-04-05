@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pybtex.errors
 
-import colrev.constants as c
 import colrev.dataset
 import colrev.env.local_index
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.writer.write_utils import write_file
 
 
@@ -201,7 +201,7 @@ class Sync:
 
         return list(records.keys())
 
-    def add_to_records_to_import(self, *, record: colrev.record.record.Record) -> None:
+    def add_to_records_to_import(self, record: colrev.record.record.Record) -> None:
         """Add a record to the records_to_import list"""
         if record.data[Fields.ID] not in [
             r.data[Fields.ID] for r in self.records_to_import
@@ -282,7 +282,7 @@ class Sync:
                         k: v
                         for k, v in record_to_import.data.items()
                         if k
-                        not in c.FieldSet.PROVENANCE_KEYS
+                        not in FieldSet.PROVENANCE_KEYS
                         + [Fields.SCREENING_CRITERIA, Fields.PRESCREEN_EXCLUSION]
                         and "." not in k
                     }

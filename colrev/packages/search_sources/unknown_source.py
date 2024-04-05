@@ -303,7 +303,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             for key, value in record_dict.items():
                 record_dict[key] = str(value)
 
-        load_operation.ensure_append_only(file=self.search_source.filename)
+        load_operation.ensure_append_only(self.search_source.filename)
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
             unique_id_field="INCREMENTAL",
@@ -411,7 +411,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 if value == "" or pd.isna(value):
                     del record_dict[key]
 
-        load_operation.ensure_append_only(file=self.search_source.filename)
+        load_operation.ensure_append_only(self.search_source.filename)
 
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,
@@ -424,7 +424,7 @@ class UnknownSearchSource(JsonSchemaMixin):
         return records
 
     def _load_md(self, *, load_operation: colrev.ops.load.Load) -> dict:
-        load_operation.ensure_append_only(file=self.search_source.filename)
+        load_operation.ensure_append_only(self.search_source.filename)
 
         records = colrev.loader.load_utils.load(
             filename=self.search_source.filename,

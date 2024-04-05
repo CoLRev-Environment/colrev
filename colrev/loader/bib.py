@@ -360,7 +360,7 @@ class BIBLoader(colrev.loader.loader.Loader):
             Fields.SCREENING_CRITERIA: "NA",
             Fields.MD_PROV: "NA",
         }
-        number_required_header_items = len(default)
+        # number_required_header_items = len(default)
 
         record_header_item = default.copy()
         item_count, item_string, record_header_items = (
@@ -376,11 +376,11 @@ class BIBLoader(colrev.loader.loader.Loader):
             if line[:1] == "%" or line == "\n":
                 continue
 
-            if item_count > number_required_header_items or "}" == line:
-                record_header_items.append(record_header_item)
-                record_header_item = default.copy()
-                item_count = 0
-                continue
+            # if item_count > number_required_header_items or "}" == line:
+            #     record_header_items.append(record_header_item)
+            #     record_header_item = default.copy()
+            #     item_count = 0
+            #     continue
 
             if "@" in line[:2] and record_header_item[Fields.ID] != "NA":
                 record_header_items.append(record_header_item)
@@ -390,12 +390,12 @@ class BIBLoader(colrev.loader.loader.Loader):
             item_string += line
             if "}," in line or "@" in line[:2]:
                 key, value = self._parse_k_v(item_string)
-                if key == Fields.MD_PROV:
-                    if value == "NA":
-                        value = {}
-                if value == "NA":
-                    item_string = ""
-                    continue
+                # if key == Fields.MD_PROV:
+                #     if value == "NA":
+                #         value = {}
+                # if value == "NA":
+                #     item_string = ""
+                #     continue
                 item_string = ""
                 if key in record_header_item:
                     item_count += 1

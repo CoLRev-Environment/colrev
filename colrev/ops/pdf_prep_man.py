@@ -288,7 +288,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         except PdfReadError as exc:
             raise colrev_exceptions.InvalidPDFException(filepath) from exc
 
-    def set_pdf_man_prepared(self, *, record: colrev.record.record.Record) -> None:
+    def set_pdf_man_prepared(self, record: colrev.record.record.Record) -> None:
         """Set the PDF to manually prepared"""
 
         record.set_status(RecordState.pdf_prepared)

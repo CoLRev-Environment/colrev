@@ -51,8 +51,8 @@ class Commit:
         self.review_manager = review_manager
         self.msg = msg
         self.manual_author = manual_author
-        self.script_name = self._parse_script_name(script_name=script_name)
-        self.saved_args = self._parse_saved_args(saved_args=saved_args)
+        self.script_name = self._parse_script_name(script_name)
+        self.saved_args = self._parse_saved_args(saved_args)
         self.skip_hooks = skip_hooks
 
         self._temp_path.mkdir(exist_ok=True, parents=True)
@@ -60,7 +60,7 @@ class Commit:
         self._set_versions()
         self._set_script_information(script_name)
 
-    def _parse_script_name(self, *, script_name: str) -> str:
+    def _parse_script_name(self, script_name: str) -> str:
         if script_name == "MANUAL":
             script_name = "Commit created manually or by external script"
         elif " " in script_name:
@@ -69,7 +69,7 @@ class Commit:
             )
         return script_name
 
-    def _parse_saved_args(self, *, saved_args: Optional[dict] = None) -> str:
+    def _parse_saved_args(self, saved_args: Optional[dict] = None) -> str:
         saved_args_str = ""
         if saved_args is not None:
             for key, value in saved_args.items():
@@ -126,16 +126,12 @@ class Commit:
         return report
 
     def _get_commit_report_header(self) -> str:
-        template = colrev.env.utils.get_template(
-            template_path="ops/commit/commit_report_header.txt"
-        )
+        template = colrev.env.utils.get_template("ops/commit/commit_report_header.txt")
         content = template.render(commit_details=self)
         return content
 
     def _get_commit_report_details(self) -> str:
-        template = colrev.env.utils.get_template(
-            template_path="ops/commit/commit_report_details.txt"
-        )
+        template = colrev.env.utils.get_template("ops/commit/commit_report_details.txt")
         content = template.render(commit_details=self)
         return content
 
@@ -156,7 +152,7 @@ class Commit:
             ) as temp:
                 with open(report_path, "r+b") as file:
                     shutil.copyfileobj(file, temp)  # type: ignore
-            # self.report_path.rename(temp.name)
+
             with open(temp.name, encoding="utf8") as reader, open(
                 report_path, "w", encoding="utf8"
             ) as writer:

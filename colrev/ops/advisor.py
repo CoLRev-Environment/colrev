@@ -11,12 +11,15 @@ import git
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
-import colrev.record.record
+import colrev.process.operation
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
 from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
+
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.review_manager
 
 
 class Advisor:
@@ -45,9 +48,10 @@ class Advisor:
     ) -> None:
         self.review_manager = review_manager
         self.status_stats = review_manager.get_status_stats()
+        self.environment_manager = self.review_manager.get_environment_manager()
 
     def _append_merge_conflict_warning(
-        self, *, collaboration_instructions: dict, git_repo: git.Repo
+        self, collaboration_instructions: dict, *, git_repo: git.Repo
     ) -> None:
         found_a_conflict = False
         unmerged_blobs = git_repo.index.unmerged_blobs()
@@ -67,7 +71,7 @@ class Advisor:
             collaboration_instructions["items"].append(item)
 
     def _notify_non_staged_files(
-        self, *, collaboration_instructions: dict, git_repo: git.Repo
+        self, collaboration_instructions: dict, *, git_repo: git.Repo
     ) -> None:
         # Notify when changes in bib files are not staged
         # (this may raise unexpected errors)
@@ -86,7 +90,6 @@ class Advisor:
 
     def _add_sharing_notifications(
         self,
-        *,
         collaboration_instructions: dict,
     ) -> None:
         # pylint: disable=too-many-branches
@@ -152,18 +155,7 @@ class Advisor:
         # a PRE_SCREEN or INCLUSION_SCREEN is needed
         # pylint: disable=too-many-boolean-expressions
         if share_stat_req == "SCREENED":
-            if (
-                0 == self.status_stats.currently.md_retrieved
-                and 0 == self.status_stats.currently.md_imported
-                and 0 == self.status_stats.currently.md_needs_manual_preparation
-                and 0 == self.status_stats.currently.md_prepared
-                and 0 == self.status_stats.currently.md_processed
-                and 0 == self.status_stats.currently.rev_prescreen_included
-                and 0 == self.status_stats.currently.pdf_needs_manual_retrieval
-                and 0 == self.status_stats.currently.pdf_imported
-                and 0 == self.status_stats.currently.pdf_needs_manual_preparation
-                and 0 == self.status_stats.currently.pdf_prepared
-            ):
+            if self.status_stats.completeness_condition:
                 collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
@@ -222,21 +214,17 @@ class Advisor:
             collaboration_instructions["items"].append(item)
 
         self._append_merge_conflict_warning(
-            collaboration_instructions=collaboration_instructions, git_repo=git_repo
+            collaboration_instructions, git_repo=git_repo
         )
         if len(collaboration_instructions["items"]) > 0:
             # Don't append any other instructions.
             # Resolving the merge conflict is always prio 1
             return collaboration_instructions
 
-        self._notify_non_staged_files(
-            collaboration_instructions=collaboration_instructions, git_repo=git_repo
-        )
+        self._notify_non_staged_files(collaboration_instructions, git_repo=git_repo)
 
         if remote_connected:
-            self._add_sharing_notifications(
-                collaboration_instructions=collaboration_instructions,
-            )
+            self._add_sharing_notifications(collaboration_instructions)
 
         if 0 == len(collaboration_instructions["items"]):
             item = {
@@ -260,8 +248,7 @@ class Advisor:
                 review_instructions.append(instruction)
 
     def _append_operation_in_progress_instructions(
-        self,
-        review_instructions: list,
+        self, review_instructions: list
     ) -> None:
         # If changes in RECORDS_FILE are staged, we need to detect the process type
         if self.review_manager.dataset.records_changed():
@@ -311,16 +298,11 @@ class Advisor:
                     + f"({', '.join(in_progress_processes)}). Complete one "
                     + "(save and revert the other) and commit before continuing!\n"
                     + f"  Records: {rec_str}",
-                    # "cmd": f"colrev {in_progress_processes}",
                     "priority": "yes",
                 }
                 review_instructions.append(instruction)
 
-    def _append_initial_operations(
-        self,
-        *,
-        review_instructions: list,
-    ) -> bool:
+    def _append_initial_operations(self, review_instructions: list) -> bool:
         search_dir = self.review_manager.get_path(Filepaths.SEARCH_DIR)
         if not Path(search_dir).iterdir():
             instruction = {
@@ -351,13 +333,9 @@ class Advisor:
                 return True
         return False
 
-    def _append_active_operations(
-        self,
-        *,
-        review_instructions: list,
-    ) -> None:
-        active_operations = self.status_stats.get_active_operations()
+    def _append_active_operations(self, review_instructions: list) -> None:
 
+        active_operations = self.status_stats.get_active_operations()
         priority_processing_operations = self.status_stats.get_priority_operations()
 
         for active_operation in active_operations:
@@ -377,9 +355,6 @@ class Advisor:
                     "cmd": f"colrev {str(active_operation).replace('_', '-')}",
                 }
             if active_operation in priority_processing_operations:
-                # keylist = [list(x.keys()) for x in review_instructions]
-                # keys = [item for sublist in keylist for item in sublist]
-                # if "priority" not in keys:
                 instruction["priority"] = "yes"
             else:
                 if (
@@ -392,7 +367,7 @@ class Advisor:
             ]:
                 review_instructions.append(instruction)
 
-    def _append_data_operation_advice(self, *, review_instructions: list) -> None:
+    def _append_data_operation_advice(self, review_instructions: list) -> None:
         if (
             len(review_instructions) == 1
             or self.review_manager.verbose_mode
@@ -406,8 +381,6 @@ class Advisor:
                     if item.get("cmd") == "colrev data":
                         review_instructions.remove(item)
                         break
-
-                # review_instructions.pop(0)
 
                 package_manager = self.review_manager.get_package_manager()
                 check_operation = colrev.process.operation.CheckOperation(
@@ -433,39 +406,23 @@ class Advisor:
         self,
         review_instructions: list,
     ) -> None:
-        if self._append_initial_operations(review_instructions=review_instructions):
+        if self._append_initial_operations(review_instructions):
             return
 
-        self._append_active_operations(
-            review_instructions=review_instructions,
-        )
-
-        self._append_data_operation_advice(review_instructions=review_instructions)
+        self._append_active_operations(review_instructions)
+        self._append_data_operation_advice(review_instructions)
 
     def _get_missing_files(self) -> list:
-        # excluding pdf_not_available
-        file_required_status = [
-            RecordState.pdf_imported,
-            RecordState.pdf_needs_manual_preparation,
-            RecordState.pdf_prepared,
-            RecordState.rev_excluded,
-            RecordState.rev_included,
-            RecordState.rev_synthesized,
-        ]
-        missing_files = []
-        for record_dict in self.status_stats.records.values():
+        return [
+            record_dict[Fields.ID]
+            for record_dict in self.status_stats.records.values()
             if (
-                record_dict[Fields.STATUS] in file_required_status
+                record_dict[Fields.STATUS] in RecordState.get_states_requiring_file()
                 and Fields.FILE not in record_dict
-            ):
-                missing_files.append(record_dict[Fields.ID])
+            )
+        ]
 
-        return missing_files
-
-    def _append_pdf_issue_instructions(
-        self,
-        review_instructions: list,
-    ) -> None:
+    def _append_pdf_issue_instructions(self, review_instructions: list) -> None:
         # Check pdf files
         if self.review_manager.settings.pdf_get.pdf_required_for_screen_and_synthesis:
             missing_files = self._get_missing_files()
@@ -528,36 +485,31 @@ class Advisor:
                 }
                 review_instructions.append(instruction)
 
-    def get_review_instructions(self) -> list:
-        """Get instructions related to the review (operations)"""
-        review_instructions: typing.List[typing.Dict] = []
-        self._append_initial_load_instruction(review_instructions)
-        self._append_operation_in_progress_instructions(review_instructions)
-        self._append_next_operation_instructions(review_instructions)
-        self._append_pdf_issue_instructions(review_instructions)
-        self._append_iteration_completed_instructions(review_instructions)
-        return review_instructions
-
     # Note : no named arguments for multiprocessing
     def _append_registered_repo_instructions(self, registered_path: Path) -> dict:
         instruction = {}
 
+        def pull_condition(nr_commits_behind: int, nr_commits_ahead: int) -> bool:
+            # behind_remote and not remote_ahead
+            return nr_commits_behind > 0 and not nr_commits_ahead > 0
+
+        def pull_rebase_condition(
+            nr_commits_behind: int, nr_commits_ahead: int
+        ) -> bool:
+            # behind_remote and remote_ahead
+            return nr_commits_behind > 0 and nr_commits_ahead > 0
+
         try:
             # Note : registered_path are other repositories (don't load from dataset.get_repo())
             git_repo = git.Repo(registered_path)
-
             # https://github.com/gitpython-developers/GitPython/issues/652#issuecomment-610511311
             origin = git_repo.remotes.origin
 
-            if not origin.exists():
-                raise AttributeError
-
-            if git_repo.active_branch.tracking_branch() is None:
+            if not origin.exists() or git_repo.active_branch.tracking_branch() is None:
                 raise AttributeError
 
             branch_name = str(git_repo.active_branch)
             tracking_branch_name = str(git_repo.active_branch.tracking_branch())
-            # self.review_manager.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
             commits_behind = git_repo.iter_commits(behind_operation)
@@ -567,14 +519,6 @@ class Advisor:
             commits_ahead = git_repo.iter_commits(ahead_operation)
             nr_commits_ahead = sum(1 for c in commits_ahead)
 
-            def pull_condition() -> bool:
-                # behind_remote and not remote_ahead
-                return nr_commits_behind > 0 and not nr_commits_ahead > 0
-
-            def pull_rebase_condition() -> bool:
-                # behind_remote and remote_ahead
-                return nr_commits_behind > 0 and nr_commits_ahead > 0
-
             # Note: do not use named arguments (multiprocessing)
             if not Path(registered_path).is_dir():
                 instruction = {
@@ -583,14 +527,14 @@ class Advisor:
                 }
 
             elif "curated_metadata" in str(registered_path):
-                if pull_condition():
+                if pull_condition(nr_commits_behind, nr_commits_ahead):
                     instruction = {
                         "msg": "Updates available for curated repo "
                         f"({registered_path}).",
                         "cmd": "colrev env --pull",
                     }
 
-                elif pull_rebase_condition():
+                elif pull_rebase_condition(nr_commits_behind, nr_commits_ahead):
                     instruction = {
                         "msg": "Local/remote branch diverged for curated repo "
                         f"({registered_path}).",
@@ -601,15 +545,7 @@ class Advisor:
             pass
         return instruction
 
-    def _append_download_outlets_instruction(
-        self,
-        environment_manager: colrev.env.environment_manager.EnvironmentManager,
-        environment_instructions: list,
-    ) -> None:
-        """Get instructions related to downloading outlets (resources)"""
-
-        # pylint: disable=too-many-locals
-
+    def _extract_outlet_count(self) -> typing.Tuple[list, list]:
         with open(
             self.review_manager.get_path(Filepaths.RECORDS_FILE), encoding="utf8"
         ) as file:
@@ -625,6 +561,17 @@ class Advisor:
         outlet_counter: typing.List[typing.Tuple[str, int]] = [
             (j, x) for j, x in Counter(outlets).most_common(10) if x > 5
         ]
+
+        return outlets, outlet_counter
+
+    def _append_download_outlets_instruction(
+        self,
+        environment_instructions: list,
+    ) -> None:
+        """Get instructions related to downloading outlets (resources)"""
+
+        outlets, outlet_counter = self._extract_outlet_count()
+
         selected = []
         cumulative = 0.0
         for candidate, freq in outlet_counter:
@@ -633,7 +580,7 @@ class Advisor:
             if cumulative > 0.7:
                 break
         if len(selected) > 0:
-            curated_outlets = environment_manager.get_curated_outlets()
+            curated_outlets = self.environment_manager.get_curated_outlets()
             selected_journals = [
                 (candidate, freq)
                 for candidate, freq in selected
@@ -660,16 +607,11 @@ class Advisor:
     def _get_environment_instructions(self) -> list:
         """Get instructions related to the CoLRev environment"""
 
-        environment_manager = self.review_manager.get_environment_manager()
-
         environment_instructions: list[dict] = []
         if self.status_stats.currently.md_imported > 10:
-            self._append_download_outlets_instruction(
-                environment_manager=environment_manager,
-                environment_instructions=environment_instructions,
-            )
+            self._append_download_outlets_instruction(environment_instructions)
 
-        local_repos = environment_manager.local_repos()
+        local_repos = self.environment_manager.local_repos()
         registered_paths = [Path(x["repo_source_path"]) for x in local_repos]
         # Note : we can use many parallel processes
         # because __append_registered_repo_instructions mainly waits for the network
@@ -691,6 +633,33 @@ class Advisor:
 
         return environment_instructions
 
+    def get_review_instructions(self) -> list:
+        """Get instructions related to the review (operations)"""
+        review_instructions: typing.List[typing.Dict] = []
+        self._append_initial_load_instruction(review_instructions)
+        self._append_operation_in_progress_instructions(review_instructions)
+        self._append_next_operation_instructions(review_instructions)
+        self._append_pdf_issue_instructions(review_instructions)
+        self._append_iteration_completed_instructions(review_instructions)
+        return review_instructions
+
+    def get_sharing_instructions(self) -> dict:
+        """Get instructions related to sharing the project"""
+
+        collaboration_instructions = self._get_collaboration_instructions()
+        return {
+            "msg": "\n ".join(
+                [
+                    x["level"] + x["title"] + x.get("msg", "")
+                    for x in collaboration_instructions["items"]
+                ]
+            ),
+            "status": not all(
+                x["level"] in ["SUCCESS", "WARNING"]
+                for x in collaboration_instructions["items"]
+            ),
+        }
+
     def get_instructions(self) -> dict:
         """Get all instructions on the project"""
 
@@ -705,21 +674,3 @@ class Advisor:
                     if "cmd" in item:
                         item["cmd"] = item["cmd"].replace("colrev ", "")
         return instructions
-
-    def get_sharing_instructions(self) -> dict:
-        """Get instructions related to sharing the project"""
-
-        collaboration_instructions = self._get_collaboration_instructions()
-
-        status_code = not all(
-            x["level"] in ["SUCCESS", "WARNING"]
-            for x in collaboration_instructions["items"]
-        )
-
-        msgs = "\n ".join(
-            [
-                x["level"] + x["title"] + x.get("msg", "")
-                for x in collaboration_instructions["items"]
-            ]
-        )
-        return {"msg": msgs, "status": status_code}

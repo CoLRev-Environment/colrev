@@ -124,7 +124,7 @@ class LoadFormatter:
                 record.data[Fields.URL].find("login?url=https") + 10 :
             ]
 
-    def run(self, *, record: colrev.record.record.Record) -> None:
+    def run(self, record: colrev.record.record.Record) -> None:
         """Run the load formatter"""
 
         self._apply_strict_requirements(record=record)

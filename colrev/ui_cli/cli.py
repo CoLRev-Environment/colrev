@@ -1300,7 +1300,7 @@ def screen(
         )
         return
     if delete_criterion:
-        screen_operation.delete_criterion(criterion_to_delete=delete_criterion)
+        screen_operation.delete_criterion(delete_criterion)
         return
     if create_split:
         splits = screen_operation.create_screen_split(create_split=create_split)
@@ -1829,7 +1829,7 @@ def _delete_first_pages_cli(
                 )
                 pdf_prep_man_operation.extract_coverpage(filepath=pdf_path)
                 pdf_prep_man_operation.set_pdf_man_prepared(
-                    record=colrev.record.record.Record(record_dict)
+                    colrev.record.record.Record(record_dict)
                 )
             else:
                 print("no file in record")
@@ -2624,7 +2624,7 @@ def sync(
                 v_2 = val[1].format_bib_style()
 
                 if v_1.lower() == v_2.lower():
-                    sync_operation.add_to_records_to_import(record=val[0])
+                    sync_operation.add_to_records_to_import(val[0])
                     continue
                 print("\n")
                 print(f"1: {v_1}")
@@ -2634,10 +2634,10 @@ def sync(
                 print("      " + val[1].data.get("source_url", ""))
                 user_selection = input("Import version 1 or 2 (or skip)?")
                 if user_selection == "1":
-                    sync_operation.add_to_records_to_import(record=val[0])
+                    sync_operation.add_to_records_to_import(val[0])
                     continue
                 if user_selection == "2":
-                    sync_operation.add_to_records_to_import(record=val[1])
+                    sync_operation.add_to_records_to_import(val[1])
                     continue
 
     sync_operation.add_to_bib()
@@ -2751,7 +2751,7 @@ def push(
 
 
 def _validate_show(ctx: click.core.Context, param: str, value: str) -> None:
-    if value not in ["sample", "settings", "prisma", "venv"]:
+    if value not in ["sample", "settings", "venv"]:
         raise click.BadParameter("Invalid argument")
 
 
@@ -2798,11 +2798,6 @@ def show(  # type: ignore
 
     elif keyword == "settings":
         print(f"Settings:\n{review_manager.settings}")
-
-    elif keyword == "prisma":
-        status_operation = review_manager.get_status_operation()
-        stats_report = status_operation.get_review_status_report()
-        print(stats_report)
 
     elif keyword == "cmd_history":
         cmds = []

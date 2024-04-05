@@ -10,7 +10,7 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.process.operation
 
 

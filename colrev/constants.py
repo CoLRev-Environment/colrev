@@ -309,6 +309,18 @@ class RecordState(Enum):
         raise NotImplementedError
 
     @classmethod
+    def get_states_requiring_file(cls) -> list:
+        """Get the states that require a file"""
+        return [
+            RecordState.pdf_imported,
+            RecordState.pdf_needs_manual_preparation,
+            RecordState.pdf_prepared,
+            RecordState.rev_excluded,
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
+        ]
+
+    @classmethod
     def get_non_processed_states(cls) -> list:
         """Get the states that correspond to not-yet-processed"""
         return [

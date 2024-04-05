@@ -115,7 +115,7 @@ class Operation:
                 changed_files, ",".join(ignored_file_list)
             )
 
-        return True
+        return True  # pragma: no cover
 
     def check_precondition(self) -> None:
         """Check the operation precondition"""
@@ -132,7 +132,7 @@ class Operation:
             )
             self._check_model_precondition()
 
-        elif self.type == OperationsType.prep_man:
+        elif self.type == OperationsType.prep_man:  # pragma: no cover
             self._require_clean_repo_general(ignored_files=[Filepaths.RECORDS_FILE_GIT])
             self._check_model_precondition()
 
