@@ -389,7 +389,7 @@ class CurationDedupe(JsonSchemaMixin):
             raise FileNotFoundError
 
         updated_record = colrev.record.record.Record(updated_record_dict)
-        updated_record.run_pdf_quality_model(pdf_qm=self.pdf_qm)
+        updated_record.run_pdf_quality_model(self.pdf_qm)
         return updated_record.has_pdf_defects()
 
     def _process_pdf_tuple(

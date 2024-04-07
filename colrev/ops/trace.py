@@ -27,9 +27,14 @@ class Trace(colrev.process.operation.Operation):
             operations_type=self.type,
         )
 
-    def _lpad_multiline(self, *, s: str, lpad: int) -> str:
+    def _print_diff(self, *, diff: dict, color: str, lpad: int = 5) -> None:
+        s = self.review_manager.p_printer.pformat(diff)
         lines = s.splitlines()
-        return "\n".join(["".join([" " * lpad]) + line for line in lines])
+        print(
+            color
+            + "\n".join(["".join([" " * lpad]) + line for line in lines])
+            + Colors.END
+        )
 
     def _print_record_changes(
         self,
@@ -44,7 +49,7 @@ class Trace(colrev.process.operation.Operation):
         diffs = list(dictdiffer.diff(prev_record, record))
 
         if len(diffs) > 0:
-            if not self.review_manager.verbose_mode:
+            if not self.review_manager.verbose_mode:  # pragma: no cover
                 commit_message_first_line = str(commit.message).partition("\n")[0]
                 print(
                     "\n\n"
@@ -58,32 +63,11 @@ class Trace(colrev.process.operation.Operation):
 
             for diff in diffs:
                 if diff[0] == "add":
-                    print(
-                        Colors.GREEN
-                        + self._lpad_multiline(
-                            s=self.review_manager.p_printer.pformat(diff),
-                            lpad=5,
-                        )
-                        + Colors.END
-                    )
+                    self._print_diff(diff=diff, color=Colors.GREEN)
                 if diff[0] == "change":
-                    print(
-                        Colors.ORANGE
-                        + self._lpad_multiline(
-                            s=self.review_manager.p_printer.pformat(diff),
-                            lpad=5,
-                        )
-                        + Colors.END
-                    )
-                if diff[0] == "delete":
-                    print(
-                        Colors.RED
-                        + self._lpad_multiline(
-                            s=self.review_manager.p_printer.pformat(diff),
-                            lpad=5,
-                        )
-                        + Colors.END
-                    )
+                    self._print_diff(diff=diff, color=Colors.ORANGE)
+                if diff[0] == "delete":  # pragma: no cover
+                    self._print_diff(diff=diff, color=Colors.RED)
 
         prev_record = record
         return prev_record

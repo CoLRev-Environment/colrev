@@ -195,7 +195,7 @@ class PDFPrep(colrev.process.operation.Operation):
             # if failed:
             #     break
 
-        record.run_pdf_quality_model(pdf_qm=self.pdf_qm, set_prepared=True)
+        record.run_pdf_quality_model(self.pdf_qm, set_prepared=True)
 
         # Each pdf_prep_package_endpoint can create a new file
         # previous/temporary pdfs are deleted when the process is successful

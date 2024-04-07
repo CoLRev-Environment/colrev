@@ -11,6 +11,7 @@ import git
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
+import colrev.ops.check
 import colrev.process.operation
 from colrev.constants import Fields
 from colrev.constants import FieldValues
@@ -383,9 +384,7 @@ class Advisor:
                         break
 
                 package_manager = self.review_manager.get_package_manager()
-                check_operation = colrev.process.operation.CheckOperation(
-                    review_manager=self.review_manager
-                )
+                check_operation = colrev.ops.check.CheckOperation(self.review_manager)
                 for (
                     data_package_endpoint
                 ) in self.review_manager.settings.data.data_package_endpoints:

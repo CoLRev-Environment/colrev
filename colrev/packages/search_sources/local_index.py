@@ -19,6 +19,7 @@ from dataclasses_jsonschema import JsonSchemaMixin
 import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -878,9 +879,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         check_review_manager = self.review_manager.get_connecting_review_manager(
             path_str=source_url
         )
-        check_operation = colrev.process.operation.CheckOperation(
-            review_manager=check_review_manager
-        )
+        check_operation = colrev.ops.check.CheckOperation(check_review_manager)
 
         if check_review_manager.dataset.behind_remote():
             git_repo = check_review_manager.dataset.get_repo()

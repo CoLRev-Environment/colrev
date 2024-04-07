@@ -857,8 +857,8 @@ class Record:
 
     def run_pdf_quality_model(
         self,
-        *,
         pdf_qm: colrev.record.qm.quality_model.QualityModel,
+        *,
         set_prepared: bool = False,
     ) -> None:
         """Run the PDF quality model"""

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Tests of the CoLRev status operation"""
+import colrev.ops.check
 import colrev.review_manager
 
 
@@ -64,7 +65,7 @@ def test_get_analytics(  # type: ignore
 def test_status_stats(  # type: ignore
     base_repo_review_manager: colrev.review_manager.ReviewManager, helpers
 ) -> None:
-    colrev.process.operation.CheckOperation(base_repo_review_manager)
+    colrev.ops.check.CheckOperation(base_repo_review_manager)
 
     records = base_repo_review_manager.dataset.load_records_dict()
     status_stats = base_repo_review_manager.get_status_stats(records=records)

@@ -889,14 +889,6 @@ def test_get_tei_filename() -> None:
     assert expected == actual
 
 
-def test_get_record_similarity() -> None:
-    """Test record.get_record_similarity()"""
-
-    expected = 0.8541
-    actual = colrev.record.record.Record.get_record_similarity(record_a=r1, record_b=r2)
-    assert expected == actual
-
-
 def test_merge_select_non_all_caps() -> None:
     """Test record.merge() - all-caps cases"""
     # Select title-case (not all-caps title) and full author name
@@ -1172,16 +1164,6 @@ def test_format_author_field(input_string: str, expected: str) -> None:
     assert expected == actual
 
 
-def test_get_retrieval_similarity() -> None:
-    """Test record.get_retrieval_similarity()"""
-
-    expected = 0.9333
-    actual = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-        record_original=r1, retrieved_record_original=r2
-    )
-    assert expected == actual
-
-
 @pytest.mark.parametrize(
     "input_text, expected, case",
     [
@@ -1267,3 +1249,51 @@ def test_unify_pages_field() -> None:
 
     prep_rec.data[Fields.PAGES] = ["1", "2"]
     prep_rec.unify_pages_field()
+
+
+def test_get_retrieval_similarity() -> None:
+    """Test record.get_retrieval_similarity()"""
+
+    actual = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
+        record_original=r1, retrieved_record_original=r2
+    )
+    expected = 0.9417
+    assert expected == actual
+
+
+def test_get_record_similarity() -> None:
+    """Test record.get_record_similarity()"""
+
+    v1 = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_prepared,
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+    }
+    v2 = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_prepared,
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, A",
+        Fields.JOURNAL: "MISQ",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+    }
+
+    r1 = colrev.record.record.Record(v1)
+    r2 = colrev.record.record.Record(v2)
+
+    actual = colrev.record.record.Record.get_record_similarity(record_a=r1, record_b=r2)
+    expected = 0.8724
+    assert expected == actual

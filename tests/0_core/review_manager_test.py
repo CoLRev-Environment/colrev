@@ -11,6 +11,11 @@ import colrev.review_manager
 # flake8: noqa: E501
 
 
+def test_debug_mode() -> None:
+
+    colrev.review_manager.ReviewManager(debug_mode=True)
+
+
 def test_invalid_git_repository_error(
     tmp_path: pytest.TempPathFactory,
 ) -> None:
@@ -77,13 +82,6 @@ def test_update_config(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     base_repo_review_manager.update_config()
-
-
-def test_format_records_file(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    # TODO : modify before
-    base_repo_review_manager.format_records_file()
 
 
 def test_sharing(

@@ -151,7 +151,7 @@ def test_get_format_report(
     records = base_repo_review_manager.dataset.load_records_dict()
     base_repo_review_manager.dataset.save_records_dict(records)
     # Test for None status
-    report = base_repo_review_manager.dataset.get_format_report()
+    report = base_repo_review_manager.dataset.format_records_file()
 
     # Assert for None status
     assert (
@@ -161,27 +161,101 @@ def test_get_format_report(
         report["msg"] == "Everything ok."
     ), "Format report message did not match expected for None status"
 
-    # # Setup for md_needs_manual_preparation status
-    # record_dict[Fields.STATUS] = RecordState.md_needs_manual_preparation
-    # base_repo_review_manager.dataset.save_records_dict({"TestRecord": record_dict})
+    records = {
+        "SrivastavaShainesh2015": {
+            "ID": "SrivastavaShainesh2015",
+            "ENTRYTYPE": "article",
+            "colrev_origin": ["test_records.bib/Srivastava2015"],
+            "colrev_status": RecordState.md_needs_manual_preparation,
+            "colrev_masterdata_provenance": {
+                "author": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "journal": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "number": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "pages": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "title": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "volume": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "year": {"source": "test_records.bib/Srivastava2015", "note": ""},
+            },
+            "colrev_data_provenance": {
+                "language": {"source": "test_records.bib/Srivastava2015", "note": ""}
+            },
+            "journal": "MIS Quarterly",
+            "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+            "year": "2015",
+            "volume": "39",
+            "number": "1",
+            "pages": "245--267",
+            "language": "eng",
+            "author": "Srivastava, Shirish C. and Shainesh, G.",
+        }
+    }
+    base_repo_review_manager.dataset.save_records_dict(records)
+    report = base_repo_review_manager.dataset.format_records_file()
+    records = base_repo_review_manager.dataset.load_records_dict()
 
-    # # Test for md_needs_manual_preparation status
-    # report = base_repo_review_manager.dataset.get_format_report()
+    assert records == {
+        "SrivastavaShainesh2015": {
+            "ID": "SrivastavaShainesh2015",
+            "ENTRYTYPE": "article",
+            "colrev_origin": ["test_records.bib/Srivastava2015"],
+            "colrev_status": RecordState.md_prepared,
+            "colrev_masterdata_provenance": {
+                "author": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "journal": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "number": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "pages": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "title": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "volume": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "year": {"source": "test_records.bib/Srivastava2015", "note": ""},
+            },
+            "colrev_data_provenance": {
+                "language": {"source": "test_records.bib/Srivastava2015", "note": ""}
+            },
+            "journal": "MIS Quarterly",
+            "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+            "year": "2015",
+            "volume": "39",
+            "number": "1",
+            "pages": "245--267",
+            "language": "eng",
+            "author": "Srivastava, Shirish C. and Shainesh, G.",
+        }
+    }
 
-    # # Assert for md_needs_manual_preparation status
-    # assert report["status"] == ExitCodes.SUCCESS, "Format report status did not match expected for md_needs_manual_preparation status"
-    # assert report["msg"] == "Everything ok.", "Format report message did not match expected for md_needs_manual_preparation status"
-
-    # # Setup for pdf_prepared status
-    # record_dict[Fields.STATUS] = RecordState.pdf_prepared
-    # base_repo_review_manager.dataset.save_records_dict({"TestRecord": record_dict})
-
-    # # Test for pdf_prepared status
-    # report = base_repo_review_manager.dataset.get_format_report()
-
-    # # Assert for pdf_prepared status
-    # assert report["status"] == ExitCodes.SUCCESS, "Format report status did not match expected for pdf_prepared status"
-    # assert report["msg"] == "Everything ok.", "Format report message did not match expected for pdf_prepared status"
+    records = {
+        "SrivastavaShainesh2015": {
+            "ID": "SrivastavaShainesh2015",
+            "ENTRYTYPE": "article",
+            "colrev_origin": ["test_records.bib/Srivastava2015"],
+            "colrev_masterdata_provenance": {
+                "author": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "journal": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "number": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "pages": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "title": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "volume": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "year": {"source": "test_records.bib/Srivastava2015", "note": ""},
+            },
+            "colrev_data_provenance": {
+                "language": {"source": "test_records.bib/Srivastava2015", "note": ""}
+            },
+            "journal": "MIS Quarterly",
+            "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+            "year": "2015",
+            "volume": "39",
+            "number": "1",
+            "pages": "245--267",
+            "language": "eng",
+            "author": "Srivastava, Shirish C. and Shainesh, G.",
+        }
+    }
+    base_repo_review_manager.dataset.save_records_dict(records)
+    report = base_repo_review_manager.dataset.format_records_file()
+    print(report)
+    assert report == {
+        "status": 1,
+        "msg": " no status field in record (SrivastavaShainesh2015)",
+    }
 
 
 def test_get_commit_message(

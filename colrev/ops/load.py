@@ -161,11 +161,16 @@ class Load(colrev.process.operation.Operation):
         *,
         source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
     ) -> None:
+        # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
             raise colrev_exceptions.ImportException(
                 msg=f"{source} has no records to load"
             )
         for source_record in source_records_list:
+            if not all(x in source_record for x in [Fields.ID, Fields.ENTRYTYPE]):
+                raise colrev_exceptions.ImportException(
+                    f"Record should have keys {Fields.ID} and {Fields.ENTRYTYPE}"
+                )
             if any(" " in x for x in source_record.keys()):
                 raise colrev_exceptions.ImportException(
                     f"Keys should not contain spaces ({source_record.keys()})"

@@ -17,6 +17,7 @@ from git import InvalidGitRepositoryError
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
 import colrev.loader.load_utils
+import colrev.ops.check
 import colrev.process.operation
 import colrev.record.record
 import colrev.record.record_id_setter
@@ -29,6 +30,7 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-many-public-methods
+
 
 class Dataset:
     """The CoLRev dataset (records and their history in git)"""
@@ -316,52 +318,41 @@ class Dataset:
                 records_list.append(record)
         yield from records_list
 
-    def get_format_report(self) -> dict:
-        """Get format report"""
+    def format_records_file(self) -> dict:
+        """Format the records file (Entrypoint for pre-commit hooks)"""
 
-        if not self.records_file.is_file():
+        if not self.records_file.is_file() or not self.records_changed():
             return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 
-        if not self.records_changed() and not self.review_manager.force_mode:
-            return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
+        colrev.ops.check.CheckOperation(self.review_manager)  # to notify
+        quality_model = self.review_manager.get_qm()
+        records = self.load_records_dict()
+        for record_dict in records.values():
+            if Fields.STATUS not in record_dict:
+                return {
+                    "status": ExitCodes.FAIL,
+                    "msg": f" no status field in record ({record_dict[Fields.ID]})",
+                }
 
-        try:
-            colrev.process.operation.CheckOperation(
-                review_manager=self.review_manager
-            )  # to notify
-            quality_model = self.review_manager.get_qm()
-            records = self.load_records_dict()
-            for record_dict in records.values():
-                if Fields.STATUS not in record_dict:
-                    print(
-                        f"Error: no status field in record ({record_dict[Fields.ID]})"
-                    )
-                    continue
+            record = colrev.record.record_prep.PrepRecord(record_dict)
+            if record_dict[Fields.STATUS] in [
+                RecordState.md_needs_manual_preparation,
+            ]:
+                record.run_quality_model(quality_model, set_prepared=True)
 
-                record = colrev.record.record_prep.PrepRecord(record_dict)
-                if record_dict[Fields.STATUS] in [
-                    RecordState.md_needs_manual_preparation,
-                ]:
-                    record.run_quality_model(quality_model)
+            if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
+                record.reset_pdf_provenance_notes()
 
-                if record_dict[Fields.STATUS] == RecordState.pdf_prepared:
-                    record.reset_pdf_provenance_notes()
-
-            self.save_records_dict(records)
-            changed = Filepaths.RECORDS_FILE in [
-                r.a_path for r in self._git_repo.index.diff(None)
-            ]
-            self.review_manager.update_status_yaml()
-            self.review_manager.load_settings()
-            self.review_manager.save_settings()
-        except (
-            colrev_exceptions.UnstagedGitChangesError,
-            colrev_exceptions.StatusFieldValueError,
-        ) as exc:
-            return {"status": ExitCodes.FAIL, "msg": f"{type(exc).__name__}: {exc}"}
+        self.save_records_dict(records)
+        changed = Filepaths.RECORDS_FILE in [
+            r.a_path for r in self._git_repo.index.diff(None)
+        ]
+        self.review_manager.update_status_yaml()
+        self.review_manager.load_settings()
+        self.review_manager.save_settings()
 
         if changed:
-            return {"status": ExitCodes.FAIL, "msg": "records file formatted"}
+            return {"status": ExitCodes.FAIL, "msg": "Records formatted"}
 
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}
 

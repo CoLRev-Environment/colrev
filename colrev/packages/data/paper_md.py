@@ -22,6 +22,7 @@ import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -369,9 +370,7 @@ class PaperMarkdown(JsonSchemaMixin):
         review_type = self.review_manager.settings.project.review_type
 
         package_manager = self.review_manager.get_package_manager()
-        check_operation = colrev.process.operation.CheckOperation(
-            review_manager=self.review_manager
-        )
+        check_operation = colrev.ops.check.CheckOperation(self.review_manager)
 
         review_type_endpoint = package_manager.load_packages(
             package_type=PackageEndpointType.review_type,

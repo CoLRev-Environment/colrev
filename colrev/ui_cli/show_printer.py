@@ -3,6 +3,7 @@
 import platform
 from pathlib import Path
 
+import colrev.ops.check
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Colors
@@ -13,7 +14,7 @@ from colrev.constants import RecordState
 def print_sample(review_manager: colrev.review_manager.ReviewManager) -> None:
     """Print the sample on cli"""
 
-    colrev.process.operation.CheckOperation(review_manager)
+    colrev.ops.check.CheckOperation(review_manager)
     records = review_manager.dataset.load_records_dict()
     sample = [
         r

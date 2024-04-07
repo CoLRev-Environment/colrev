@@ -21,6 +21,7 @@ import pandas as pd
 import colrev.env.local_index
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 import colrev.record.record
 import colrev.review_manager
 import colrev.ui_cli.cli_status_printer
@@ -2801,7 +2802,7 @@ def show(  # type: ignore
 
     elif keyword == "cmd_history":
         cmds = []
-        colrev.process.operation.CheckOperation(review_manager)
+        colrev.ops.check.CheckOperation(review_manager)
         revlist = review_manager.dataset.get_repo().iter_commits()
 
         for commit in reversed(list(revlist)):
@@ -3058,7 +3059,7 @@ def merge(
     )
 
     if not branch:
-        colrev.process.operation.CheckOperation(review_manager)
+        colrev.ops.check.CheckOperation(review_manager)
         git_repo = review_manager.dataset.get_repo()
         print(f"possible branches: {','.join([b.name for b in git_repo.heads])}")
         return
@@ -3098,7 +3099,7 @@ def undo(
     )
 
     if selection == "commit":
-        colrev.process.operation.CheckOperation(review_manager)
+        colrev.ops.check.CheckOperation(review_manager)
         git_repo = review_manager.dataset.get_repo()
         git_repo.git.reset("--hard", "HEAD~1")
 

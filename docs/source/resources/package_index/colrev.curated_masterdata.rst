@@ -20,7 +20,7 @@ To create a new masterdata curation, run
 
 .. code-block::
 
-   colrev init --type colrev_built_in.curated_masterdata
+   colrev init --type colrev.curated_masterdata
    # add crossref
    colrev search -a "crossref:jissn=123456"
    # add further sources (like DBLP)

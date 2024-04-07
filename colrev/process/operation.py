@@ -166,18 +166,3 @@ class Operation:
             self.check_precondition()
         if hasattr(self.review_manager, "dataset"):
             self.review_manager.dataset.reset_log_if_no_changes()
-
-
-class CheckOperation(Operation):
-    """A dummy operation that is not expected to introduce changes"""
-
-    # pylint: disable=too-few-public-methods
-
-    type = OperationsType.check
-
-    def __init__(self, review_manager: colrev.review_manager.ReviewManager) -> None:
-        super().__init__(
-            review_manager=review_manager,
-            operations_type=self.type,
-            notify_state_transition_operation=False,
-        )

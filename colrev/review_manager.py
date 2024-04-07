@@ -18,6 +18,7 @@ import yaml
 import colrev.dataset
 import colrev.exceptions as colrev_exceptions
 import colrev.logger
+import colrev.ops.check
 import colrev.ops.checker
 import colrev.process.operation
 import colrev.record.qm.quality_model
@@ -85,7 +86,7 @@ class ReviewManager:
                 self.get_path(Filepaths.PDF_DIR).mkdir(parents=True, exist_ok=True)
                 self.get_path(Filepaths.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-            report_logger, logger = self.get_loggers_by_debug_mode()
+            report_logger, logger = self.get_loggers()
             self.report_logger = report_logger
             self.logger = logger
 
@@ -93,7 +94,7 @@ class ReviewManager:
 
             self.p_printer = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             # run update before settings/data (which may require changes/fail without update)
-            if not skip_upgrade:
+            if not skip_upgrade:  # pragma: no cover
                 self._check_update()
             self.settings = self.load_settings()
             self.dataset = colrev.dataset.Dataset(review_manager=self)
@@ -101,7 +102,7 @@ class ReviewManager:
         except Exception as exc:  # pylint: disable=broad-except
 
             if (self.path / Path(".git")).is_dir():
-                if git.Repo().active_branch.name == "gh-pages":
+                if git.Repo().active_branch.name == "gh-pages":  # pragma: no cover
                     raise colrev_exceptions.RepoSetupError(
                         msg="Currently on gh-pages branch. Switch to main: "
                         + f"{Colors.ORANGE}git switch main{Colors.END}"
@@ -110,7 +111,7 @@ class ReviewManager:
             if not force_mode:
                 raise exc
             if debug_mode:
-                self.logger.debug(exc)
+                self.logger.debug(exc)  # pragma: no cover
 
     def get_path(self, filename: Path) -> Path:
         """Get the absolute path"""
@@ -132,11 +133,11 @@ class ReviewManager:
         self.debug_mode = debug_mode
         self.high_level_operation = high_level_operation
         self.exact_call = exact_call
-        report_logger, logger = self.get_loggers_by_debug_mode()
+        report_logger, logger = self.get_loggers()
         self.report_logger = report_logger
         self.logger = logger
 
-    def get_loggers_by_debug_mode(self) -> typing.Tuple[logging.Logger, logging.Logger]:
+    def get_loggers(self) -> typing.Tuple[logging.Logger, logging.Logger]:
         """return loggers"""
         if self.debug_mode:
             return colrev.logger.setup_report_logger(
@@ -225,25 +226,25 @@ class ReviewManager:
         with open(msg_file, "w", encoding="utf8") as file:
             file.write(available_contents)
             # Don't append if it's already there
-            update = False
-            if "Command" not in available_contents:
-                update = True
-            if "Properties" in available_contents:
-                update = False
-            if update:
-                commit = colrev.ops.commit.Commit(
-                    review_manager=self,
-                    msg=available_contents,
-                    manual_author=True,
-                    script_name="MANUAL",
-                )
-                commit.update_report(msg_file=msg_file)
+            # update = False
+            # if "Command" not in available_contents:
+            #     update = True
+            # if "Properties" in available_contents:
+            #     update = False
+            # if update:
+            commit = colrev.ops.commit.Commit(
+                review_manager=self,
+                msg=available_contents,
+                manual_author=True,
+                script_name="MANUAL",
+            )
+            commit.update_report(msg_file=msg_file)
 
         if (
             not self.settings.is_curated_masterdata_repo()
             and self.dataset.records_changed()
-        ):
-            colrev.process.operation.CheckOperation(self)  # to notify
+        ):  # pragma: no cover
+            colrev.ops.check.CheckOperation(self)  # to notify
             corrections_operation = colrev.ops.correct.Corrections(review_manager=self)
             corrections_operation.check_corrections_of_records()
 
@@ -256,11 +257,6 @@ class ReviewManager:
         advisor = self.get_advisor()
         sharing_advice = advisor.get_sharing_instructions()
         return sharing_advice
-
-    def format_records_file(self) -> dict:
-        """Format the records file (Entrypoint for pre-commit hooks)"""
-
-        return self.dataset.get_format_report()
 
     def update_status_yaml(
         self, *, add_to_git: bool = True, records: Optional[dict] = None
@@ -335,7 +331,7 @@ class ReviewManager:
 
         import colrev.process.status
 
-        colrev.process.operation.CheckOperation(self)
+        colrev.ops.check.CheckOperation(self)
 
         if records is None:
             records = self.dataset.load_records_dict()

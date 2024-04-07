@@ -10,6 +10,7 @@ import git
 import yaml
 
 import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
@@ -181,9 +182,7 @@ class EnvironmentManager:
                 cp_review_manager = colrev.review_manager.ReviewManager(
                     path_str=repo["repo_source_path"]
                 )
-                check_operation = colrev.process.operation.CheckOperation(
-                    review_manager=cp_review_manager
-                )
+                check_operation = colrev.ops.check.CheckOperation(cp_review_manager)
                 repo_stat = self._get_status(cp_review_manager)
                 repo["size"] = repo_stat["overall"]["md_processed"]
                 repo["progress"] = -1

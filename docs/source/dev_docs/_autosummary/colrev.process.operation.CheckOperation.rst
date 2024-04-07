@@ -1,4 +1,4 @@
-colrev.process.operation.CheckOperation
+colrev.ops.check.CheckOperation
 =======================================
 
 .. currentmodule:: colrev.process.operation

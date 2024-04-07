@@ -61,6 +61,8 @@ The endpoint can be any :doc:`SearchSource package </resources/package_index>`.
 
 The **search_type** can be DB, API, BACKWARD, FORWARD, TOC, OTHER, FILES, or MD. (TBD: duplicate documentation from retrieval/search?)
 
+**TODO/TBD: update based on search-query**
+
 **Search parameters** are stored in the `SearchSource.search_parameters` field and standardized as follows::
 
     "query": {
@@ -121,7 +123,7 @@ SearchSource methods
 **load**
 
 - Transition from md_retrieved to md_imported
-- the `load` method can read different file formats and fix formatting errors specific to the search source
+- The `load` utilities can read different file formats and fix formatting errors specific to the search source
 - Original field names should be mapped in the SearchSource (not the load utility)
 
 .. list-table:: Load utilities
@@ -145,6 +147,8 @@ SearchSource methods
 
 **TODO : implement loader for csl/xml/json...**
 
+- The `load` method also checks whether field names were mapped to the standardized field names (in `constants`)
+
 **prep**
 
 - Transition from md_imported to md_prepared/md_needs_manual_preparation/rev_prescreen_excluded
@@ -152,6 +156,29 @@ SearchSource methods
 - the `get_masterdata` method can be used in the prep operation to link records from the search source to existing records in the dataset
 
 .. _documentation:
+
+SearchTypes
+--------------------------
+
+API searches
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Search results are retrieved and stored using functionality provided by `SearchAPIFeed`.
+Currently, results are stored in BibTeX format.
+The `load` operation must ensure that field names are mapped to standard namespaces.
+
+Rationale:
+
+- Independent of retrieval format (JSON/XML/...)
+- Methods available to add and update records
+
+Alternative (currently discussed): Storing raw data from the API (JSON/XML/...)
+
+- Separate implementations would be needed for JSON/XML/...
+- Records should be sorted in "oldest first" order to maintain a transparent and readable history
+- Storing raw data would make it easier to identify schema changes
+- Multiple files would be retrieved for a SearchSource, potentially requiring sub-folders
+
 
 Documentation
 ------------------------------

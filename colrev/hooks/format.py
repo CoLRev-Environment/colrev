@@ -7,7 +7,7 @@ def main() -> int:
     """Main entrypoint for the formating"""
 
     review_manager = colrev.review_manager.ReviewManager()
-    ret = review_manager.format_records_file()
+    ret = review_manager.dataset.format_records_file()
 
     print(ret["msg"])
 

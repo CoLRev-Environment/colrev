@@ -9,7 +9,7 @@ from rapidfuzz import fuzz
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 
@@ -84,112 +84,99 @@ def get_record_similarity(
 
 def _get_similarity_detailed(record_a: dict, record_b: dict) -> float:
     """Determine the detailed similarities between records"""
-    try:
-        author_similarity = (
-            fuzz.ratio(record_a[Fields.AUTHOR], record_b[Fields.AUTHOR]) / 100
-        )
+    author_similarity = (
+        fuzz.ratio(record_a.get(Fields.AUTHOR, ""), record_b.get(Fields.AUTHOR, ""))
+        / 100
+    )
 
-        title_similarity = (
+    title_similarity = (
+        fuzz.ratio(
+            record_a.get(Fields.TITLE, "").lower().replace(":", "").replace("-", ""),
+            record_b.get(Fields.TITLE, "").lower().replace(":", "").replace("-", ""),
+        )
+        / 100
+    )
+
+    # partial ratio (catching 2010-10 or 2001-2002)
+    year_similarity = (
+        fuzz.ratio(
+            str(record_a.get(Fields.YEAR, "")), str(record_b.get(Fields.YEAR, ""))
+        )
+        / 100
+    )
+
+    outlet_similarity = 0.0
+    if record_b.get(Fields.CONTAINER_TITLE, "") and record_a.get(
+        Fields.CONTAINER_TITLE, ""
+    ):
+        outlet_similarity = (
             fuzz.ratio(
-                record_a[Fields.TITLE].lower().replace(":", "").replace("-", ""),
-                record_b[Fields.TITLE].lower().replace(":", "").replace("-", ""),
+                record_a.get(Fields.CONTAINER_TITLE, ""),
+                record_b.get(Fields.CONTAINER_TITLE, ""),
             )
             / 100
         )
 
-        # partial ratio (catching 2010-10 or 2001-2002)
-        year_similarity = (
-            fuzz.ratio(str(record_a[Fields.YEAR]), str(record_b[Fields.YEAR])) / 100
+    if record_a.get(Fields.JOURNAL, "") not in [
+        "",
+        FieldValues.UNKNOWN,
+    ] and record_b.get(Fields.JOURNAL, "") not in ["", FieldValues.UNKNOWN]:
+        # Note: for journals papers, we expect more details
+        volume_similarity = (
+            1
+            if (record_a.get(Fields.VOLUME, "") == record_b.get(Fields.VOLUME, ""))
+            else 0
         )
 
-        outlet_similarity = 0.0
-        if record_b[Fields.CONTAINER_TITLE] and record_a[Fields.CONTAINER_TITLE]:
-            outlet_similarity = (
-                fuzz.ratio(
-                    record_a[Fields.CONTAINER_TITLE],
-                    record_b[Fields.CONTAINER_TITLE],
-                )
-                / 100
-            )
+        number_similarity = (
+            1
+            if (record_a.get(Fields.NUMBER, "") == record_b.get(Fields.NUMBER, ""))
+            else 0
+        )
 
-        if str(record_a[Fields.JOURNAL]) != "nan":
-            # Note: for journals papers, we expect more details
-            volume_similarity = (
-                1 if (record_a[Fields.VOLUME] == record_b[Fields.VOLUME]) else 0
-            )
-
-            number_similarity = (
-                1 if (record_a[Fields.NUMBER] == record_b[Fields.NUMBER]) else 0
-            )
-
-            # Put more weight on other fields if the title is very common
-            # ie., non-distinctive
-            # The list is based on a large export of distinct papers, tabulated
-            # according to titles and sorted by frequency
-            if [record_a[Fields.TITLE], record_b[Fields.TITLE]] in [
-                ["editorial", "editorial"],
-                ["editorial introduction", "editorial introduction"],
-                ["editorial notes", "editorial notes"],
-                ["editor's comments", "editor's comments"],
-                ["book reviews", "book reviews"],
-                ["editorial note", "editorial note"],
-                ["reviewer ackowledgment", "reviewer ackowledgment"],
-            ]:
-                weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
-            else:
-                weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
-
-            # sim_names = [
-            #     Fields.AUTHOR,
-            #     Fields.TITLE,
-            #     Fields.YEAR,
-            #     "outlet",
-            #     Fields.VOLUME,
-            #     Fields.NUMBER,
-            # ]
-            similarities = [
-                author_similarity,
-                title_similarity,
-                year_similarity,
-                outlet_similarity,
-                volume_similarity,
-                number_similarity,
+        # Put more weight on other fields if the title is very common
+        # ie., non-distinctive
+        # The list is based on a large export of distinct papers, tabulated
+        # according to titles and sorted by frequency
+        if all(
+            title
+            in [
+                "editorial",
+                "editorial introduction",
+                "editorial notes",
+                "editor's comments",
+                "book reviews",
+                "editorial note",
+                "reviewer ackowledgment",
             ]
-
+            for title in [
+                record_a.get(Fields.TITLE, "").lower(),
+                record_b.get(Fields.TITLE, "").lower(),
+            ]
+        ):
+            weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
         else:
-            weights = [0.15, 0.75, 0.05, 0.05]
-            # sim_names = [
-            #     Fields.AUTHOR,
-            #     Fields.TITLE,
-            #     Fields.YEAR,
-            #     "outlet",
-            # ]
-            similarities = [
-                author_similarity,
-                title_similarity,
-                year_similarity,
-                outlet_similarity,
-            ]
+            weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
 
-        weighted_average = sum(
-            similarities[g] * weights[g] for g in range(len(similarities))
-        )
+        similarities = [
+            author_similarity,
+            title_similarity,
+            year_similarity,
+            outlet_similarity,
+            volume_similarity,
+            number_similarity,
+        ]
 
-        # details = (
-        #     "["
-        #     + ",".join([sim_names[g] for g in range(len(similarities))])
-        #     + "]"
-        #     + "*weights_vecor^T = "
-        #     + "["
-        #     + ",".join([str(similarities[g]) for g in range(len(similarities))])
-        #     + "]*"
-        #     + "["
-        #     + ",".join([str(weights[g]) for g in range(len(similarities))])
-        #     + "]^T"
-        # )
-        # print(details)
-        similarity_score = round(weighted_average, 4)
-    except AttributeError:
-        similarity_score = 0
+    else:
+        weights = [0.15, 0.75, 0.05, 0.05]
+        similarities = [
+            author_similarity,
+            title_similarity,
+            year_similarity,
+            outlet_similarity,
+        ]
 
-    return similarity_score
+    weighted_average = sum(
+        similarities[g] * weights[g] for g in range(len(similarities))
+    )
+    return round(weighted_average, 4)

@@ -214,7 +214,7 @@ class PDFGet(colrev.process.operation.Operation):
                 break
 
         if Fields.FILE in record.data:
-            record.run_pdf_quality_model(pdf_qm=self.pdf_qm, set_prepared=True)
+            record.run_pdf_quality_model(self.pdf_qm, set_prepared=True)
         else:
             record.set_status(RecordState.pdf_needs_manual_retrieval)
 
