@@ -312,12 +312,7 @@ class Load(colrev.process.operation.Operation):
             # Set IDs based on local_index
             # (the same records are more likely to have the same ID on the same machine)
             self.review_manager.logger.debug("Set IDs")
-            records = self.review_manager.dataset.set_ids(
-                records=records,
-                selected_ids=[
-                    r[Fields.ID] for r in source.search_source.source_records_list
-                ],
-            )
+            records = self.review_manager.dataset.set_ids()
 
         self.review_manager.logger.info(
             "New records loaded".ljust(38) + f"{source.search_source.to_import} records"

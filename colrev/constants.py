@@ -411,6 +411,7 @@ class FieldValues:
     FORTHCOMING = "forthcoming"
     RETRACTED = "retracted"
     CURATED = "CURATED"
+    ANONYMOUS = "Anonymous"
 
 
 class DefectCodes:

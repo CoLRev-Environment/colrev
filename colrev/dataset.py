@@ -370,11 +370,10 @@ class Dataset:
 
         return False
 
-    def set_ids(
-        self, *, records: Optional[dict] = None, selected_ids: Optional[list] = None
-    ) -> dict:
+    def set_ids(self, selected_ids: Optional[list] = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
+        records = self.load_records_dict()
         id_setter = colrev.record.record_id_setter.IDSetter(
             review_manager=self.review_manager
         )
@@ -382,6 +381,8 @@ class Dataset:
             records=records,
             selected_ids=selected_ids,
         )
+        self.save_records_dict(records)
+        self.add_changes(Filepaths.RECORDS_FILE)
         return updated_records
 
     # GIT operations -----------------------------------------------

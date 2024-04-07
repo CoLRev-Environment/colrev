@@ -58,6 +58,7 @@ def test_load_records_from_history(  # type: ignore
             commit_sha=last_commit_sha
         )
     )
+
     # Check if the loaded records match the new record added
     assert len(records_from_history) == 3, "Expected three records from history"
     assert (

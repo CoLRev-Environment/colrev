@@ -654,13 +654,6 @@ def load(
     help="Polish record metadata (includes records in md_processed or beyond).",
 )
 @click.option(
-    "-sid",
-    "--set_ids",
-    is_flag=True,
-    default=False,
-    help="Set IDs (regenerate)",
-)
-@click.option(
     "-d",
     "--debug",
     type=str,
@@ -713,7 +706,6 @@ def prep(
     params: str,
     keep_ids: bool,
     polish: bool,
-    set_ids: bool,
     debug: str,
     debug_file: Path,
     cpu: int,
@@ -734,9 +726,6 @@ def prep(
         )
         prep_operation = review_manager.get_prep_operation()
 
-        if set_ids:
-            prep_operation.set_ids()
-            return
         if debug or debug_file:
             prep_operation.main(
                 keep_ids=keep_ids, debug_ids=debug, debug_file=debug_file

@@ -26,7 +26,7 @@ class PrepRecord(colrev.record.record.Record):
     """The PrepRecord class provides a range of convenience functions for record preparation"""
 
     @classmethod
-    def format_author_field(cls, *, input_string: str) -> str:
+    def format_author_field(cls, input_string: str) -> str:
         """Format the author field (recognizing first/last names based on HumanName parser)"""
 
         def mostly_upper_case(input_string: str) -> bool:

@@ -722,7 +722,7 @@ class PubMedSearchSource(JsonSchemaMixin):
         if Fields.AUTHOR in record.data:
             record.data[Fields.AUTHOR] = (
                 colrev.record.record_prep.PrepRecord.format_author_field(
-                    input_string=record.data[Fields.AUTHOR]
+                    record.data[Fields.AUTHOR]
                 )
             )
 

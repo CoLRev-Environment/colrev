@@ -56,7 +56,7 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 [author["name"] for author in item["authors"] if "name" in author]
             )
             authors_string = colrev.record.record_prep.PrepRecord.format_author_field(
-                input_string=authors_string
+                authors_string
             )
             retrieved_record.update(author=authors_string)
         if Fields.ABSTRACT in item:

@@ -129,9 +129,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
         if "author_name" in item:
             authors_string = " and ".join(
                 [
-                    colrev.record.record_prep.PrepRecord.format_author_field(
-                        input_string=author
-                    )
+                    colrev.record.record_prep.PrepRecord.format_author_field(author)
                     for author in item["author_name"]
                 ]
             )

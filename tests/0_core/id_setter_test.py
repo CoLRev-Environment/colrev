@@ -37,7 +37,7 @@ def test_id_generation_first_author_year(  # type: ignore
     id_setter = colrev.record.record_id_setter.IDSetter(
         review_manager=base_repo_review_manager
     )
-    temp_id = id_setter._generate_temp_id(record_dict)
+    temp_id = id_setter._generate_id(record_dict)
 
     assert (
         temp_id == expected_id
@@ -73,7 +73,7 @@ def test_id_generation_three_authors_year(  # type: ignore
     id_setter = colrev.record.record_id_setter.IDSetter(
         review_manager=base_repo_review_manager
     )
-    temp_id = id_setter._generate_temp_id(record_dict)
+    temp_id = id_setter._generate_id(record_dict)
 
     assert (
         temp_id == expected_id

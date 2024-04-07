@@ -17,7 +17,7 @@ import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields
-from colrev.constants import Filepaths
+from colrev.constants import FieldValues
 from colrev.constants import IDPattern
 from colrev.constants import RecordState
 
@@ -30,68 +30,58 @@ class IDSetter:
     def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
         self.review_manager = review_manager
         self.local_index = colrev.env.local_index.LocalIndex()
+        self.id_pattern = self.review_manager.settings.project.id_pattern
 
-    def _generate_temp_id(self, record_dict: dict) -> str:
-        # pylint: disable=too-many-branches
+    def _get_author_last_names(self, record_dict: dict) -> list:
+        if record_dict.get(Fields.AUTHOR, record_dict.get(Fields.EDITOR, "")) != "":
+            authors_string = record_dict.get(
+                Fields.AUTHOR, record_dict.get(Fields.EDITOR, FieldValues.ANONYMOUS)
+            )
+            authors = colrev.record.record_prep.PrepRecord.format_author_field(
+                authors_string
+            ).split(" and ")
+        else:
+            authors = [FieldValues.ANONYMOUS]
 
-        try:
-            retrieved_record = self.local_index.retrieve(record_dict)
-            temp_id = retrieved_record.data[Fields.ID]
-
-            # Do not use IDs from local_index for curated_metadata repositories
-            if self.review_manager.settings.is_curated_masterdata_repo():
-                raise colrev_exceptions.RecordNotInIndexException()
-
-        except (
-            colrev_exceptions.RecordNotInIndexException,
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-        ):
-            if record_dict.get(Fields.AUTHOR, record_dict.get(Fields.EDITOR, "")) != "":
-                authors_string = record_dict.get(
-                    Fields.AUTHOR, record_dict.get(Fields.EDITOR, "Anonymous")
-                )
-                authors = colrev.record.record_prep.PrepRecord.format_author_field(
-                    input_string=authors_string
-                ).split(" and ")
+        # Use family names
+        for i, author in enumerate(authors):
+            if "," in author:
+                authors[i] = author.split(",", maxsplit=1)[0]
             else:
-                authors = ["Anonymous"]
+                authors[i] = author.split(" ", maxsplit=1)[0]
 
-            # Use family names
-            for author in authors:
-                if "," in author:
-                    author = author.split(",", maxsplit=1)[0]
-                else:
-                    author = author.split(" ", maxsplit=1)[0]
+        return authors
 
-            id_pattern = self.review_manager.settings.project.id_pattern
-            if IDPattern.first_author_year == id_pattern:
-                first_author = authors[0].split(",")[0].replace(" ", "")
-                temp_id = f'{first_author}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
-            elif IDPattern.three_authors_year == id_pattern:
-                temp_id = ""
-                indices = len(authors)
-                if len(authors) > 3:
-                    indices = 3
-                for ind in range(0, indices):
-                    temp_id = temp_id + f'{authors[ind].split(",")[0].replace(" ", "")}'
-                if len(authors) > 3:
-                    temp_id = temp_id + "EtAl"
-                temp_id = temp_id + str(record_dict.get(Fields.YEAR, "NoYear"))
+    def _generate_id_from_pattern(self, record_dict: dict) -> str:
+        authors = self._get_author_last_names(record_dict)
 
-            if temp_id.isupper():
-                temp_id = temp_id.capitalize()
-            # Replace special characters
-            # (because IDs may be used as file names)
-            temp_id = colrev.env.utils.remove_accents(temp_id)
-            temp_id = re.sub(r"\(.*\)", "", temp_id)
-            temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
+        if IDPattern.first_author_year == self.id_pattern:
+            temp_id = f'{authors[0]}{str(record_dict.get(Fields.YEAR, "NoYear"))}'
+        elif IDPattern.three_authors_year == self.id_pattern:
+            temp_id = ""
+            indices = len(authors)
+            if len(authors) > 3:
+                indices = 3
+            for ind in range(0, indices):
+                temp_id = temp_id + f"{authors[ind]}"
+            if len(authors) > 3:
+                temp_id = temp_id + "EtAl"
+            temp_id = temp_id + str(record_dict.get(Fields.YEAR, "NoYear"))
 
+        # Replace special characters
+        # (because IDs may be used as file names)
+        temp_id = colrev.env.utils.remove_accents(temp_id)
+        temp_id = temp_id.replace(" ", "")
+        temp_id = re.sub(r"\(.*\)", "", temp_id)
+        temp_id = re.sub("[^0-9a-zA-Z ]+", "", temp_id)
+        if temp_id.isupper():  # pragma: no cover
+            temp_id = temp_id.capitalize()
         return temp_id
 
-    def _generate_next_unique_id(
+    def _make_id_unique(
         self,
-        *,
         temp_id: str,
+        *,
         existing_ids: list,
     ) -> str:
         """Get the next unique ID"""
@@ -116,80 +106,91 @@ class IDSetter:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
-        # Only change IDs that are before md_processed
-        if record_dict[Fields.STATUS] in RecordState.get_post_x_states(
-            state=RecordState.md_processed
+        try:
+            retrieved_record = self.local_index.retrieve(record_dict)
+            # Do not use IDs from local_index for curated_metadata repositories
+            if (
+                self.review_manager.settings.is_curated_masterdata_repo()
+            ):  # pragma: no cover
+                raise colrev_exceptions.RecordNotInIndexException()
+            temp_id = retrieved_record.data[Fields.ID]  # pragma: no cover
+        except (
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
-            raise colrev_exceptions.PropagatedIDChange([record_dict[Fields.ID]])
-        # Alternatively, we could change IDs except for those
-        # that have been propagated to the
-        # screen or data will not be replaced
-        # (this would break the chain of evidence)
-
-        temp_id = self._generate_temp_id(record_dict)
+            temp_id = self._generate_id_from_pattern(record_dict)
 
         if existing_ids:
-            temp_id = self._generate_next_unique_id(
-                temp_id=temp_id,
+            temp_id = self._make_id_unique(
+                temp_id,
                 existing_ids=existing_ids,
             )
 
         return temp_id
 
-    def set_ids(
-        self, *, records: Optional[dict] = None, selected_ids: Optional[list] = None
-    ) -> dict:
+    def set_ids(self, records: dict, *, selected_ids: Optional[list] = None) -> dict:
         """Set the IDs for the records in the dataset"""
-
-        if records is None:
-            records = {}
-
-        if len(records) == 0:
-            records = self.review_manager.dataset.load_records_dict()
 
         id_list = list(records.keys())
 
         for record_id in tqdm(list(records.keys())):
-            try:
-                record_dict = records[record_id]
-                if selected_ids is not None:
-                    if record_id not in selected_ids:
-                        continue
-                if record_dict[Fields.STATUS] not in [
-                    RecordState.md_imported,
-                    RecordState.md_prepared,
-                ]:
+            record_dict = records[record_id]
+            if selected_ids is not None:
+                if record_id not in selected_ids:  # pragma: no cover
                     continue
-                old_id = record_id
+            if record_dict[Fields.STATUS] not in [
+                RecordState.md_imported,
+                RecordState.md_prepared,
+            ]:
+                continue
+            old_id = record_id
 
-                temp_stat = record_dict[Fields.STATUS]
-                if selected_ids:
-                    record = colrev.record.record.Record(record_dict)
-                    record.set_status(RecordState.md_prepared)
+            temp_stat = record_dict[Fields.STATUS]
+            if selected_ids:
+                record = colrev.record.record.Record(record_dict)
+                record.set_status(RecordState.md_prepared)
+
+            new_id = old_id
+            # Only change IDs that are before md_processed
+            if record_dict[Fields.STATUS] not in RecordState.get_post_x_states(
+                state=RecordState.md_processed
+            ):
                 new_id = self._generate_id(
                     record_dict,
                     existing_ids=[x for x in id_list if x != record_id],
                 )
-                if selected_ids:
-                    record = colrev.record.record.Record(record_dict)
-                    record.set_status(temp_stat)
 
-                id_list.append(new_id)
-                if old_id != new_id:
-                    # We need to insert the a new element into records
-                    # to make sure that the IDs are actually saved
-                    record_dict.update(ID=new_id)
-                    records[new_id] = record_dict
-                    del records[old_id]
-                    self.review_manager.report_logger.info(
-                        f"set_ids({old_id}) to {new_id}"
-                    )
-                    if old_id in id_list:
-                        id_list.remove(old_id)
-            except colrev_exceptions.PropagatedIDChange as exc:
-                print(exc)
+            if selected_ids:
+                record = colrev.record.record.Record(record_dict)
+                record.set_status(temp_stat)
 
-        self.review_manager.dataset.save_records_dict(records)
-        self.review_manager.dataset.add_changes(Filepaths.RECORDS_FILE)
+            self._update_id(
+                records,
+                id_list=id_list,
+                record_dict=record_dict,
+                old_id=old_id,
+                new_id=new_id,
+            )
 
         return records
+
+    # pylint: disable=too-many-arguments
+    def _update_id(
+        self,
+        records: dict,
+        *,
+        id_list: list,
+        record_dict: dict,
+        old_id: str,
+        new_id: str,
+    ) -> None:
+        id_list.append(new_id)
+        if old_id != new_id:
+            # We need to insert the a new element into records
+            # to make sure that the IDs are actually saved
+            record_dict.update(ID=new_id)
+            records[new_id] = record_dict
+            del records[old_id]
+            self.review_manager.report_logger.info(f"set_ids({old_id}) to {new_id}")
+            if old_id in id_list:
+                id_list.remove(old_id)

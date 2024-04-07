@@ -100,7 +100,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             if author["author"].get("display_name", None) is None:
                 continue
             author_string = colrev.record.record_prep.PrepRecord.format_author_field(
-                input_string=author["author"]["display_name"]
+                author["author"]["display_name"]
             )
             author_list.append(author_string)
 

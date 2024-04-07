@@ -277,7 +277,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
                 author_list.append(author["full_name"])
             record_dict[Fields.AUTHOR] = (
                 colrev.record.record_prep.PrepRecord.format_author_field(
-                    input_string=" and ".join(author_list)
+                    " and ".join(author_list)
                 )
             )
 
@@ -472,7 +472,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
             if Fields.AUTHOR in record.data:
                 record.data[Fields.AUTHOR] = (
                     colrev.record.record_prep.PrepRecord.format_author_field(
-                        input_string=record.data[Fields.AUTHOR]
+                        record.data[Fields.AUTHOR]
                     )
                 )
             return record

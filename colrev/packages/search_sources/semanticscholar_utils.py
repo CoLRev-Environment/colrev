@@ -72,9 +72,7 @@ def _assign_authors(*, record_dict: dict) -> None:
         author["name"] for author in record_dict.get("authors", []) if "name" in author
     ]
     record_dict[Fields.AUTHOR] = (
-        colrev.record.record_prep.PrepRecord.format_author_field(
-            input_string=" and ".join(authors)
-        )
+        colrev.record.record_prep.PrepRecord.format_author_field(" and ".join(authors))
     )
 
 

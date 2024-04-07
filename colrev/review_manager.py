@@ -335,7 +335,6 @@ class ReviewManager:
 
         if records is None:
             records = self.dataset.load_records_dict()
-
         return colrev.process.status.StatusStats(review_manager=self, records=records)
 
     def get_completeness_condition(self) -> bool:

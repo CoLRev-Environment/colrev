@@ -1158,9 +1158,7 @@ def test_prescreen_exclude() -> None:
 def test_format_author_field(input_string: str, expected: str) -> None:
     """Test record.format_author_field()"""
 
-    actual = colrev.record.record_prep.PrepRecord.format_author_field(
-        input_string=input_string
-    )
+    actual = colrev.record.record_prep.PrepRecord.format_author_field(input_string)
     assert expected == actual
 
 

@@ -126,12 +126,7 @@ class LoadFormatter:
                 record.data[field] = self._unescape_latex(input_str=record.data[field])
             record.data[field] = self._unescape_html(input_str=record.data[field])
 
-            record.data[field] = (
-                record.data[field]
-                .replace("\n", " ")
-                .rstrip()
-                .lstrip()
-            )
+            record.data[field] = record.data[field].replace("\n", " ").rstrip().lstrip()
 
     def _standardize_field_values(self, *, record: colrev.record.record.Record) -> None:
         if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:

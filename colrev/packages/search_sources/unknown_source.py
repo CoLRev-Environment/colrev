@@ -694,7 +694,7 @@ class UnknownSearchSource(JsonSchemaMixin):
                 record.update_field(
                     key=Fields.AUTHOR,
                     value=colrev.record.record_prep.PrepRecord.format_author_field(
-                        input_string=record.data[Fields.AUTHOR]
+                        record.data[Fields.AUTHOR]
                     ),
                     source="unkown_source_prep",
                     keep_source_if_equal=True,

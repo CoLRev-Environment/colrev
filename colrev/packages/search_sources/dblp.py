@@ -258,7 +258,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     author_string = " and ".join(authors)
                 author_string = (
                     colrev.record.record_prep.PrepRecord.format_author_field(
-                        input_string=author_string
+                        author_string
                     )
                 )
                 item[Fields.AUTHOR] = author_string

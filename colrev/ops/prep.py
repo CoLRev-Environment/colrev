@@ -568,7 +568,7 @@ class Prep(colrev.process.operation.Operation):
         """Set IDs (regenerate). In force-mode, all IDs are regenerated and PDFs are renamed"""
         self.review_manager.logger.info("Set IDs")
         records = self.review_manager.dataset.load_records_dict()
-        self.review_manager.dataset.set_ids(records=records)
+        records = self.review_manager.dataset.set_ids()
         for record_dict in records.values():
             if Fields.FILE not in record_dict:
                 continue
