@@ -309,37 +309,3 @@ class PrepRecord(colrev.record.record.Record):
                 self.data[Fields.PAGES] = (
                     f"{from_page}--{from_page[:-len(to_page)]}{to_page}"
                 )
-
-    def fix_name_particles(self) -> None:
-        """Fix the name particles in the author field"""
-        if Fields.AUTHOR not in self.data:
-            return
-        names = self.data[Fields.AUTHOR].split(" and ")
-        for ind, name in enumerate(names):
-            for prefix in [
-                "van den",
-                "von den",
-                "van der",
-                "von der",
-                "vom",
-                "van",
-                "von",
-            ]:
-                if name.startswith(f"{prefix} "):
-                    if "," in name:
-                        name = "{" + name.replace(", ", "}, ")
-                    else:
-                        name = "{" + name + "}"
-                if name.endswith(f" {prefix}"):
-                    if "," in name:
-                        name = (
-                            "{"
-                            + prefix
-                            + " "
-                            + name[: -len(prefix)].replace(", ", "}, ")
-                        )
-                    else:
-                        name = "{" + prefix + " " + name[: -len(prefix)] + "}"
-
-                names[ind] = name
-        self.data[Fields.AUTHOR] = " and ".join(names)

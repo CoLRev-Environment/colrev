@@ -20,19 +20,24 @@ class LoadFormatter:
     # Based on
     # https://en.wikibooks.org/wiki/LaTeX/Special_Characters
     _LATEX_SPECIAL_CHAR_MAPPING = {
-        '\\"u': "ü",
-        "\\&": "&",
-        '\\"o': "ö",
         '\\"a': "ä",
+        '\\"o': "ö",
+        '\\"u': "ü",
         '\\"A': "Ä",
         '\\"O': "Ö",
         '\\"U': "Ü",
+        "\\&": "&",
         "\\textendash": "–",
         "\\textemdash": "—",
         "\\~a": "ã",
         "\\'o": "ó",
         "\\emph": "",
         "\\textit": "",
+        "\\'e": "é",
+        "\\`e": "è",
+        '"a': "ä",
+        '"o': "ö",
+        '"u': "ü",
     }
 
     _FIELDS_TO_PROCESS = [
@@ -55,6 +60,38 @@ class LoadFormatter:
     def _apply_strict_requirements(
         self, *, record: colrev.record.record.Record
     ) -> None:
+        # Fix the name particles in the author field
+        if Fields.AUTHOR in record.data:
+            names = record.data[Fields.AUTHOR].split(" and ")
+            for ind, name in enumerate(names):
+                for prefix in [
+                    "van den",
+                    "von den",
+                    "van der",
+                    "von der",
+                    "vom",
+                    "van",
+                    "von",
+                ]:
+                    if name.startswith(f"{prefix} "):
+                        if "," in name:
+                            name = "{" + name.replace(", ", "}, ")
+                        else:
+                            name = "{" + name + "}"
+                    if name.endswith(f" {prefix}"):
+                        if "," in name:
+                            name = (
+                                "{"
+                                + prefix
+                                + " "
+                                + name[: -len(prefix)].replace(", ", "}, ")
+                            )
+                        else:
+                            name = "{" + prefix + " " + name[: -len(prefix)] + "}"
+
+                    names[ind] = name
+            record.data[Fields.AUTHOR] = " and ".join(names)
+
         if Fields.DOI in record.data:
             record.data[Fields.DOI] = (
                 record.data[Fields.DOI]
@@ -71,6 +108,7 @@ class LoadFormatter:
 
     def _unescape_latex(self, *, input_str: str) -> str:
         for latex_char, repl_char in self._LATEX_SPECIAL_CHAR_MAPPING.items():
+            input_str = input_str.replace(f"{{{latex_char}}}", repl_char)
             input_str = input_str.replace(latex_char, repl_char)
         return input_str
 
@@ -93,8 +131,6 @@ class LoadFormatter:
                 .replace("\n", " ")
                 .rstrip()
                 .lstrip()
-                .replace("{", "")
-                .replace("}", "")
             )
 
     def _standardize_field_values(self, *, record: colrev.record.record.Record) -> None:

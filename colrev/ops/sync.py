@@ -9,10 +9,12 @@ import pybtex.errors
 
 import colrev.dataset
 import colrev.env.local_index
+import colrev.loader.load_utils_formatter
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
+from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
@@ -27,6 +29,7 @@ class Sync:
 
         self.logger = self._setup_logger(level=logging.DEBUG)
         self.paper_md = self._get_md_file()
+        self.load_formatter = colrev.loader.load_utils_formatter.LoadFormatter()
 
     def add_hook(self) -> None:
         """Add a pre-commit hook for colrev sync"""
@@ -301,6 +304,12 @@ class Sync:
             self.logger.info(
                 "%s Loaded %s papers%s", Colors.GREEN, len(added), Colors.END
             )
+
+        for record_dict in records:
+            record = colrev.record.record.Record(record_dict)
+            record.set_status(RecordState.md_retrieved)  # rev_synthesized
+            self.load_formatter.run(record)
+            del record.data[Fields.STATUS]
 
         # records_dict = {
         #     r[Fields.ID]: r for r in records if r[Fields.ID] in self.cited_papers

@@ -1038,7 +1038,4 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 source=source_item[0],
                 masterdata_repository=self.review_manager.settings.is_curated_repo(),
             )
-
-        record.fix_name_particles()
-
         return record

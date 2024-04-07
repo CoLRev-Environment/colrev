@@ -135,7 +135,4 @@ class EbscoHostSearchSource(JsonSchemaMixin):
 
         if record.data.get(Fields.PAGES) == "N.PAG -- N.PAG":
             record.data[Fields.PAGES] = FieldValues.UNKNOWN
-
-        record.fix_name_particles()
-
         return record

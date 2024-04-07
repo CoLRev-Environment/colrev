@@ -571,7 +571,4 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
         self._unify_container_titles(record=record)
         self._format_fields(record=record)
         self._exclude_complementary_material(record=record)
-
-        record.fix_name_particles()
-
         return record

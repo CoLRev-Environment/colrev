@@ -60,7 +60,7 @@ def test_prep_validation(
                         }
                     },
                     "journal": "MIS Quarterly",
-                    "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+                    "title": "Bridging the service divide through digitally enabled service innovations: {E}vidence from {I}ndian healthcare service providers",
                     "year": "2015",
                     "volume": "39",
                     "number": "1",
@@ -68,7 +68,7 @@ def test_prep_validation(
                     "language": "eng",
                     "author": "Srivastava, Shirish C. and Shainesh, G.",
                 },
-                "change_score_max": 0.010204081632652962,
+                "change_score_max": 0.0,
                 "origins": [
                     {
                         "ID": "Srivastava2015",
@@ -83,7 +83,7 @@ def test_prep_validation(
                         "author": "Srivastava, Shirish C. and Shainesh, G.",
                         "colrev_origin": ["test_records.bib/Srivastava2015"],
                         "colrev_status": RecordState.md_retrieved,
-                        "change_score": 0.010204081632652962,
+                        "change_score": 0.0,
                     }
                 ],
             }
