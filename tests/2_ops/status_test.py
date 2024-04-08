@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Tests of the CoLRev status operation"""
+from pathlib import Path
+
 import colrev.ops.check
 import colrev.review_manager
 
@@ -82,14 +84,7 @@ def test_get_review_status_report(  # type: ignore
 
     status_operation = base_repo_review_manager.get_status_operation()
     ret = status_operation.get_review_status_report(colors=True)
-    print(ret)
-    assert (
-        ret
-        == """Status
-    init
-    retrieve          1 retrieved     [only 0 quality-curated]
-    prescreen         0 included      1 to prescreen
-    pdfs              0 retrieved
-    screen            0 included
-    data              0 synthesized"""
+    expected = helpers.retrieve_test_file_content(
+        source=Path("data/status_report_expected.txt")
     )
+    assert ret == expected

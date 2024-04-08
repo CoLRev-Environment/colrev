@@ -60,6 +60,7 @@ def _load_jinja_template(template_path: str) -> str:
         if filedata_b:
             filedata = filedata_b.decode("utf-8")
             filedata = filedata.replace("\n", "")
+            filedata = filedata.replace("\r", "")
             filedata = filedata.replace("<br>", "\n")
             return filedata
     except FileNotFoundError:
