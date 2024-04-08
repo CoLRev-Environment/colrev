@@ -14,7 +14,7 @@ class LoadFormatterTests(unittest.TestCase):
         record = Record(
             data={
                 Fields.STATUS: RecordState.md_retrieved,
-                "author": "John Doe",
+                "author": "van der Aalst, Wil and Brocke, Jan vom and van Wee and Dis van",
                 "title": "My Title \\textendash With special chars &amp; symbols",
                 "ID": "123",
                 "year": "2020.0",
@@ -27,7 +27,10 @@ class LoadFormatterTests(unittest.TestCase):
 
         self.load_formatter.run(record=record)
 
-        self.assertEqual(record.data["author"], "John Doe")
+        self.assertEqual(
+            record.data["author"],
+            "{van der Aalst}, Wil and {vom Brocke}, Jan and {van Wee} and {van Dis}",
+        )
         self.assertEqual(
             record.data["title"], "My Title – With special chars & symbols"
         )

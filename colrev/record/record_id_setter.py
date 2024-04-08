@@ -146,7 +146,7 @@ class IDSetter:
             if selected_ids is not None:
                 if record_id not in selected_ids:  # pragma: no cover
                     continue
-            if record_dict[Fields.STATUS] not in [
+            elif record_dict[Fields.STATUS] not in [
                 RecordState.md_imported,
                 RecordState.md_prepared,
             ]:

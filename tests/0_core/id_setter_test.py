@@ -3,7 +3,9 @@
 import pytest
 
 import colrev.review_manager
+from colrev.constants import Fields
 from colrev.constants import IDPattern
+from colrev.constants import RecordState
 
 # flake8: noqa: E501
 
@@ -80,3 +82,30 @@ def test_id_generation_three_authors_year(  # type: ignore
     assert (
         temp_id == expected_id
     ), "ID generation with author failed for three_authors_year pattern"
+
+
+def test_id_generation_selected(  # type: ignore
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+    helpers,
+) -> None:
+    """Test the id generation process for the three_authors_year ID pattern."""
+
+    record_dict = {
+        "0001": {
+            "ID": "0001",
+            "author": "Wagner, G and Lukyanenko, R and Paré, G",
+            "year": "2022",
+            Fields.STATUS: RecordState.rev_synthesized,
+        }
+    }
+
+    id_setter = colrev.record.record_id_setter.IDSetter(
+        id_pattern=IDPattern.three_authors_year,
+        skip_local_index=True,
+        logger=base_repo_review_manager.report_logger,
+    )
+    actual = id_setter.set_ids(record_dict)
+    assert "0001" in actual  # because status is post-md-processed
+
+    actual = id_setter.set_ids(record_dict, selected_ids=["0001"])
+    assert "WagnerLukyanenkoPare2022" in actual

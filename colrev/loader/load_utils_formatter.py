@@ -84,10 +84,12 @@ class LoadFormatter:
                                 "{"
                                 + prefix
                                 + " "
-                                + name[: -len(prefix)].replace(", ", "}, ")
+                                + name[: -len(prefix)].rstrip().replace(", ", "}, ")
                             )
                         else:
-                            name = "{" + prefix + " " + name[: -len(prefix)] + "}"
+                            name = (
+                                "{" + prefix + " " + name[: -len(prefix)].rstrip() + "}"
+                            )
 
                     names[ind] = name
             record.data[Fields.AUTHOR] = " and ".join(names)
