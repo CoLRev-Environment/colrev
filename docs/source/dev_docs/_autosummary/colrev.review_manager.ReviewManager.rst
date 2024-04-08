@@ -18,7 +18,6 @@ colrev.review\_manager.ReviewManager
 
       ~ReviewManager.check_repo
       ~ReviewManager.check_repository_setup
-      ~ReviewManager.format_records_file
       ~ReviewManager.get_advisor
       ~ReviewManager.get_cached_session
       ~ReviewManager.get_checker
@@ -32,7 +31,7 @@ colrev.review\_manager.ReviewManager
       ~ReviewManager.get_environment_manager
       ~ReviewManager.get_grobid_service
       ~ReviewManager.get_load_operation
-      ~ReviewManager.get_loggers_by_debug_mode
+      ~ReviewManager.get_loggers
       ~ReviewManager.get_merge_operation
       ~ReviewManager.get_package_manager
       ~ReviewManager.get_path

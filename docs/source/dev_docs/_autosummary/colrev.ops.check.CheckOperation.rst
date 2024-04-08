@@ -1,7 +1,7 @@
 colrev.ops.check.CheckOperation
-=======================================
+===============================
 
-.. currentmodule:: colrev.process.operation
+.. currentmodule:: colrev.ops.check
 
 .. autoclass:: CheckOperation
    :members:

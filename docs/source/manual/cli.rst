@@ -1,4 +1,4 @@
-CLI reference
+Command-line Interface
 ========================================
 ..
    DO NOT DELETE THIS FILE! It contains the all-important `.. autosummary::` directive with `:recursive:` option, without

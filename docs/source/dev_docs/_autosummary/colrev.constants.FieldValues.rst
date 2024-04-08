@@ -25,6 +25,7 @@ colrev.constants.FieldValues
 
    .. autosummary::
 
+      ~FieldValues.ANONYMOUS
       ~FieldValues.CURATED
       ~FieldValues.FORTHCOMING
       ~FieldValues.RETRACTED

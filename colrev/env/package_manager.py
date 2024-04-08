@@ -765,7 +765,7 @@ class PackageManager:
     def _import_package_docs(self, docs_link: str, identifier: str) -> str:
 
         packages_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/resources/package_index"
+            "docs/source/manual/packages"
         )
         local_built_in_path = Path(__file__).parent.parent / Path("packages")
 
@@ -797,7 +797,7 @@ class PackageManager:
 
     def _write_docs_for_index(self, docs_for_index: dict) -> None:
         packages_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/resources/package_index.rst"
+            "docs/source/manual/packages.rst"
         )
         packages_index_path_content = packages_index_path.read_text(encoding="utf-8")
         new_doc = []
@@ -837,7 +837,7 @@ class PackageManager:
                 if doc_item == "NotImplemented":
                     print(doc_item["path"])
                     continue
-                new_doc.append(f"   package_index/{doc_item['path']}")
+                new_doc.append(f"   packages/{doc_item['path']}")
 
         with open(packages_index_path, "w", encoding="utf-8") as file:
             for line in new_doc:
@@ -945,7 +945,7 @@ class PackageManager:
                 # Note: link format for the sphinx docs
                 endpoint_item["short_description"] = (
                     endpoint_item["short_description"]
-                    + " (:doc:`instructions </resources/package_index/"
+                    + " (:doc:`instructions </manual/packages/"
                     + f"{endpoint_item['package_endpoint_identifier']}>`)"
                 )
                 if endpoint_type == "search_source":

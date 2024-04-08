@@ -27,6 +27,7 @@ colrev.ops
    :recursive:
 
    colrev.ops.advisor
+   colrev.ops.check
    colrev.ops.checker
    colrev.ops.clone
    colrev.ops.colrev_pandas

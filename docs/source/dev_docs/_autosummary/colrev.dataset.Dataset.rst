@@ -21,9 +21,9 @@ colrev.dataset.Dataset
       ~Dataset.behind_remote
       ~Dataset.create_commit
       ~Dataset.file_in_history
+      ~Dataset.format_records_file
       ~Dataset.get_commit_message
       ~Dataset.get_committed_origin_state_dict
-      ~Dataset.get_format_report
       ~Dataset.get_last_commit_sha
       ~Dataset.get_origin_state_dict
       ~Dataset.get_remote_url

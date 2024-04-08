@@ -1,4 +1,4 @@
-Quality model
+Metadata quality model
 ==================================
 
 The quality model specifies the necessary checks when a records should transition to ``md_prepared``. The functionality fixing errors is organized in the `prep` package endpoints.

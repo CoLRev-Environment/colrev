@@ -1,7 +1,7 @@
-colrev.process.operation
-========================
+colrev.ops.check
+================
 
-.. automodule:: colrev.process.operation
+.. automodule:: colrev.ops.check
 
 
 
@@ -20,4 +20,4 @@ colrev.process.operation
       :template: custom-class-template.rst
       :nosignatures:
 
-      Operation
+      CheckOperation

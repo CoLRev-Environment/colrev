@@ -90,22 +90,10 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    manual/pdf_retrieval
    manual/pdf_screen
    manual/data
-   manual/collaboration
    manual/cli
-   manual/credits
-
-.. toctree::
-   :hidden:
-   :caption: Additional resources
-   :maxdepth: 1
-
-   resources/quality_model
-   resources/pdf_quality_model
-   resources/packages
-   resources/package_index
-   resources/curation
-   resources/reference_manager
-   resources/help
+   manual/collaboration
+   manual/packages
+   manual/appendix
 
 .. toctree::
    :hidden:
@@ -113,10 +101,10 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    dev_docs/setup
-   dev_docs/linters
    dev_docs/api
    dev_docs/packages
    dev_docs/dev_status
+   dev_docs/linters
    Github repository <https://github.com/CoLRev-Environment/colrev>
    PyPI <https://pypi.org/project/colrev/>
 
@@ -126,4 +114,5 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
    :maxdepth: 1
 
    foundations/cep
+   foundations/credits
    foundations/about

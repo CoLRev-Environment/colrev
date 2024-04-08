@@ -16,6 +16,7 @@ colrev.constants.RecordState
    .. autosummary::
       :nosignatures:
 
+      ~RecordState.get_states_requiring_file
       ~RecordState.get_non_processed_states
       ~RecordState.get_post_x_states
 

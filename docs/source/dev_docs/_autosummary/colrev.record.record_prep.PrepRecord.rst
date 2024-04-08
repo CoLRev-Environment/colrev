@@ -29,7 +29,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.copy_prep_rec
       ~PrepRecord.create_colrev_id
       ~PrepRecord.defects
-      ~PrepRecord.fix_name_particles
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
       ~PrepRecord.format_if_mostly_upper
