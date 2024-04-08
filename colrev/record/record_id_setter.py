@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import logging
 import re
 import string
 from typing import Optional
@@ -27,10 +28,19 @@ from colrev.constants import RecordState
 class IDSetter:
     """The IDSetter class"""
 
-    def __init__(self, *, review_manager: colrev.review_manager.ReviewManager) -> None:
-        self.review_manager = review_manager
-        self.local_index = colrev.env.local_index.LocalIndex()
-        self.id_pattern = self.review_manager.settings.project.id_pattern
+    def __init__(
+        self,
+        *,
+        id_pattern: IDPattern,
+        skip_local_index: bool = False,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> None:
+
+        self.id_pattern = id_pattern
+        self.skip_local_index = skip_local_index
+        if not self.skip_local_index:
+            self.local_index = colrev.env.local_index.LocalIndex()
+        self.logger = logger
 
     def _get_author_last_names(self, record_dict: dict) -> list:
         if record_dict.get(Fields.AUTHOR, record_dict.get(Fields.EDITOR, "")) != "":
@@ -106,19 +116,17 @@ class IDSetter:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
-        try:
-            retrieved_record = self.local_index.retrieve(record_dict)
-            # Do not use IDs from local_index for curated_metadata repositories
-            if (
-                self.review_manager.settings.is_curated_masterdata_repo()
-            ):  # pragma: no cover
-                raise colrev_exceptions.RecordNotInIndexException()
-            temp_id = retrieved_record.data[Fields.ID]  # pragma: no cover
-        except (
-            colrev_exceptions.RecordNotInIndexException,
-            colrev_exceptions.NotEnoughDataToIdentifyException,
-        ):
+        if self.skip_local_index:
             temp_id = self._generate_id_from_pattern(record_dict)
+        else:
+            try:
+                retrieved_record = self.local_index.retrieve(record_dict)
+                temp_id = retrieved_record.data[Fields.ID]  # pragma: no cover
+            except (
+                colrev_exceptions.RecordNotInIndexException,
+                colrev_exceptions.NotEnoughDataToIdentifyException,
+            ):
+                temp_id = self._generate_id_from_pattern(record_dict)
 
         if existing_ids:
             temp_id = self._make_id_unique(
@@ -191,6 +199,6 @@ class IDSetter:
             record_dict.update(ID=new_id)
             records[new_id] = record_dict
             del records[old_id]
-            self.review_manager.report_logger.info(f"set_ids({old_id}) to {new_id}")
+            self.logger.info(f"set_ids({old_id}) to {new_id}")
             if old_id in id_list:
                 id_list.remove(old_id)

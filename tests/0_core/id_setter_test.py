@@ -33,9 +33,10 @@ def test_id_generation_first_author_year(  # type: ignore
 ) -> None:
     """Test the id generation process for the first_author_year ID pattern."""
 
-    base_repo_review_manager.settings.project.id_pattern = IDPattern.first_author_year
     id_setter = colrev.record.record_id_setter.IDSetter(
-        review_manager=base_repo_review_manager
+        id_pattern=IDPattern.first_author_year,
+        skip_local_index=False,
+        logger=base_repo_review_manager.report_logger,
     )
     temp_id = id_setter._generate_id(record_dict)
 
@@ -69,9 +70,10 @@ def test_id_generation_three_authors_year(  # type: ignore
 ) -> None:
     """Test the id generation process for the three_authors_year ID pattern."""
 
-    base_repo_review_manager.settings.project.id_pattern = IDPattern.three_authors_year
     id_setter = colrev.record.record_id_setter.IDSetter(
-        review_manager=base_repo_review_manager
+        id_pattern=IDPattern.three_authors_year,
+        skip_local_index=True,
+        logger=base_repo_review_manager.report_logger,
     )
     temp_id = id_setter._generate_id(record_dict)
 

@@ -373,10 +373,12 @@ class Dataset:
     def set_ids(self, selected_ids: Optional[list] = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
-        records = self.load_records_dict()
         id_setter = colrev.record.record_id_setter.IDSetter(
-            review_manager=self.review_manager
+            id_pattern=self.review_manager.settings.project.id_pattern,
+            skip_local_index=self.review_manager.settings.is_curated_masterdata_repo(),
+            logger=self.review_manager.report_logger,
         )
+        records = self.load_records_dict()
         updated_records = id_setter.set_ids(
             records=records,
             selected_ids=selected_ids,
