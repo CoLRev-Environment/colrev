@@ -208,9 +208,7 @@ class Dataset:
 
         return records_dict
 
-    def save_records_dict_to_file(
-        self, records: dict, *, add_changes: bool = True
-    ) -> None:
+    def save_records_dict_to_file(self, records: dict) -> None:
         """Save the records dict"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
@@ -220,14 +218,9 @@ class Dataset:
         with open(self.records_file, "w", encoding="utf-8") as out:
             out.write(bibtex_str + "\n")
 
-        if not add_changes:
-            return
         self._add_record_changes()
 
-    def _save_record_list_by_id(
-        self, records: dict, *, append_new: bool = False
-    ) -> None:
-        # Note : currently no use case for append_new=True??
+    def _save_record_list_by_id(self, records: dict) -> None:
 
         parsed = to_string(records_dict=records, implementation="bib")
         record_list = [
@@ -277,31 +270,21 @@ class Dataset:
                     line = file.readline()
 
         if len(record_list) > 0:
-            if append_new:
-                with open(self.records_file, "a", encoding="utf8") as m_refs:
-                    for item in record_list:
-                        m_refs.write(item["record"])
-            else:
-                self.review_manager.report_logger.error(
-                    "records not written to file: "
-                    f"{[x[Fields.ID] for x in record_list]}"
-                )
+            with open(self.records_file, "a", encoding="utf8") as m_refs:
+                for item in record_list:
+                    m_refs.write(item["record"])
 
         self._add_record_changes()
 
-    def save_records_dict(
-        self, records: dict, *, partial: bool = False, add_changes: bool = True
-    ) -> None:
+    def save_records_dict(self, records: dict, *, partial: bool = False) -> None:
         """Save the records dict in RECORDS_FILE"""
 
         if partial:
             self._save_record_list_by_id(records)
             return
-        self.save_records_dict_to_file(records, add_changes=add_changes)
+        self.save_records_dict_to_file(records)
 
-    def read_next_record(
-        self, *, conditions: Optional[list] = None
-    ) -> typing.Iterator[dict]:
+    def read_next_record(self, *, conditions: list) -> typing.Iterator[dict]:
         """Read records (Iterator) based on condition"""
 
         # Note : matches conditions connected with 'OR'
@@ -309,13 +292,10 @@ class Dataset:
 
         records_list = []
         for _, record in records.items():
-            if conditions is not None:
-                for condition in conditions:
-                    for key, value in condition.items():
-                        if str(value) == str(record[key]):
-                            records_list.append(record)
-            else:
-                records_list.append(record)
+            for condition in conditions:
+                for key, value in condition.items():
+                    if str(value) == str(record[key]):
+                        records_list.append(record)
         yield from records_list
 
     def format_records_file(self) -> dict:
@@ -351,7 +331,7 @@ class Dataset:
         self.review_manager.load_settings()
         self.review_manager.save_settings()
 
-        if changed:
+        if changed:  # pragma: no cover
             return {"status": ExitCodes.FAIL, "msg": "Records formatted"}
 
         return {"status": ExitCodes.SUCCESS, "msg": "Everything ok."}

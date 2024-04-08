@@ -8,6 +8,7 @@ import pytest
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 from colrev.constants import ExitCodes
+from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 from colrev.constants import RecordState
@@ -222,6 +223,51 @@ def test_get_format_report(
             "author": "Srivastava, Shirish C. and Shainesh, G.",
         }
     }
+
+    with open(Filepaths.RECORDS_FILE, "a", encoding="utf-8") as file:
+        file.write("\n\n")
+
+    report = base_repo_review_manager.dataset.format_records_file()
+    print(report)
+    assert report == {"status": 0, "msg": "Everything ok."}
+
+    records = {
+        "SrivastavaShainesh2015": {
+            "ID": "SrivastavaShainesh2015",
+            "ENTRYTYPE": "article",
+            "colrev_origin": ["test_records.bib/Srivastava2015"],
+            "colrev_status": RecordState.pdf_prepared,
+            "colrev_masterdata_provenance": {
+                "author": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "journal": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "number": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "pages": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "title": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "volume": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "year": {"source": "test_records.bib/Srivastava2015", "note": ""},
+            },
+            "colrev_data_provenance": {
+                "language": {"source": "test_records.bib/Srivastava2015", "note": ""},
+                "file": {
+                    "source": "test_records.bib/Srivastava2015",
+                    "note": "author-not-in-pdf",
+                },
+            },
+            "journal": "MIS Quarterly",
+            "title": "Bridging the service divide through digitally enabled service innovations: Evidence from Indian healthcare service providers",
+            "year": "2015",
+            "volume": "39",
+            "number": "1",
+            "pages": "245--267",
+            "file": "test.pdf",
+            "language": "eng",
+            "author": "Srivastava, Shirish C. and Shainesh, G.",
+        }
+    }
+    base_repo_review_manager.dataset.save_records_dict(records)
+    report = base_repo_review_manager.dataset.format_records_file()
+    records = base_repo_review_manager.dataset.load_records_dict()
+    assert records["SrivastavaShainesh2015"][Fields.D_PROV]["file"]["note"] == ""
 
     records = {
         "SrivastavaShainesh2015": {
@@ -542,6 +588,13 @@ def test_add_changes(
     assert (
         new_file_path.name in base_repo_review_manager.dataset._git_repo.git.ls_files()
     ), "add_changes failed to add the new file to the repository."
+
+    with pytest.raises(FileNotFoundError):
+        base_repo_review_manager.dataset.add_changes(Path("non_existsnt.file"))
+
+    base_repo_review_manager.dataset.add_changes(
+        Path("non_existsnt.file"), ignore_missing=True
+    )
 
 
 def test_add_changes_remove(
