@@ -101,7 +101,7 @@ class Screen(colrev.process.operation.Operation):
                 record_dict.update(
                     screening_criteria=";".join([e + "=in" for e in screening_criteria])
                 )
-            colrev.record.record.Record(data=record_dict).set_status(
+            colrev.record.record.Record(record_dict).set_status(
                 RecordState.rev_included
             )
 

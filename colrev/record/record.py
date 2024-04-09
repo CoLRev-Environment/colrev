@@ -193,6 +193,12 @@ class Record:
                 colrev_id = self.data[Fields.COLREV_ID]
         return [c for c in colrev_id if len(c) > 20]
 
+    def _require_prov(self) -> None:
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
+
     # pylint: disable=too-many-arguments
     def update_field(
         self,
@@ -234,9 +240,8 @@ class Record:
         value = self.data[key]
         self.data[new_key] = value
 
+        self._require_prov()
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if Fields.MD_PROV not in self.data:
-                self.data[Fields.MD_PROV] = {}
             if key in self.data[Fields.MD_PROV]:
                 value_provenance = self.data[Fields.MD_PROV][key]
                 if "source" in value_provenance:
@@ -248,8 +253,6 @@ class Record:
                 }
             self.data[Fields.MD_PROV][new_key] = value_provenance
         else:
-            if Fields.D_PROV not in self.data:
-                self.data[Fields.D_PROV] = {}
             if key in self.data[Fields.D_PROV]:
                 value_provenance = self.data[Fields.D_PROV][key]
                 if "source" in value_provenance:
@@ -262,10 +265,7 @@ class Record:
 
     def align_provenance(self) -> None:
         """Remove unnecessary provenance information and add missing provenance information"""
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
-        if Fields.D_PROV not in self.data:
-            self.data[Fields.D_PROV] = {}
+        self._require_prov()
         for key in list(self.data[Fields.MD_PROV].keys()):
             if (
                 key not in self.data
@@ -354,9 +354,7 @@ class Record:
         if key in self.data:
             del self.data[key]
 
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
-
+        self._require_prov()
         if not_missing_note and key in FieldSet.IDENTIFYING_FIELD_KEYS:
             # Example: journal without number
             # we should keep that information that a particular masterdata
@@ -380,8 +378,7 @@ class Record:
         if self.masterdata_is_curated() or masterdata_repository:
             return
 
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
+        self._require_prov()
         md_p_dict = self.data[Fields.MD_PROV]
 
         for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
@@ -428,8 +425,7 @@ class Record:
 
     def set_masterdata_consistent(self) -> None:
         """Set the masterdata to consistent"""
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
+        self._require_prov()
         md_p_dict = self.data[Fields.MD_PROV]
 
         for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
@@ -532,8 +528,7 @@ class Record:
 
     def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
         """Add a masterdata provenance note (based on a key)"""
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
+        self._require_prov()
         if key in self.data.get(Fields.MD_PROV, {}):
             if "" == self.data[Fields.MD_PROV][key]["note"] or "" == note:
                 self.data[Fields.MD_PROV][key]["note"] = note
@@ -556,8 +551,8 @@ class Record:
 
     def add_data_provenance_note(self, *, key: str, note: str) -> None:
         """Add a data provenance note (based on a key)"""
-        if Fields.D_PROV not in self.data:
-            self.data[Fields.D_PROV] = {}
+        self._require_prov()
+
         if key in self.data[Fields.D_PROV]:
             if self.data[Fields.D_PROV][key]["note"] == "":
                 self.data[Fields.D_PROV][key]["note"] = note
@@ -584,8 +579,7 @@ class Record:
         self, *, key: str, source: str, note: str = ""
     ) -> None:
         """Add a masterdata provenance, including source and note (based on a key)"""
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
+        self._require_prov()
         md_p_dict = self.data[Fields.MD_PROV]
 
         if key in md_p_dict:
@@ -604,10 +598,7 @@ class Record:
 
     def add_provenance_all(self, *, source: str) -> None:
         """Add a data provenance (source) to all fields"""
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
-        if Fields.D_PROV not in self.data:
-            self.data[Fields.D_PROV] = {}
+        self._require_prov()
 
         md_p_dict = self.data[Fields.MD_PROV]
         d_p_dict = self.data[Fields.D_PROV]
@@ -622,7 +613,7 @@ class Record:
                 continue
             if (
                 key in FieldSet.IDENTIFYING_FIELD_KEYS
-                and FieldValues.CURATED not in self.data[Fields.MD_PROV]
+                and not self.masterdata_is_curated()
             ):
                 md_p_dict[key] = {"source": source, "note": ""}
             else:
@@ -630,8 +621,7 @@ class Record:
 
     def add_data_provenance(self, *, key: str, source: str, note: str = "") -> None:
         """Add a data provenance, including source and note (based on a key)"""
-        if Fields.D_PROV not in self.data:
-            self.data[Fields.D_PROV] = {}
+        self._require_prov()
         md_p_dict = self.data[Fields.D_PROV]
         if key in md_p_dict:
             if note != "":
@@ -669,11 +659,13 @@ class Record:
 
     def defects(self, field: str) -> typing.List[str]:
         """Get a list of defects for a field"""
+        self._require_prov()
+        defects = []
         if field in self.data[Fields.MD_PROV]:
-            return self.data[Fields.MD_PROV][field]["note"].split(",")
+            defects.extend(self.data[Fields.MD_PROV][field]["note"].split(","))
         if field in self.data[Fields.D_PROV]:
-            return self.data[Fields.D_PROV][field]["note"].split(",")
-        return []
+            defects.extend(self.data[Fields.D_PROV][field]["note"].split(","))
+        return defects
 
     def ignore_defect(self, *, field: str, defect: str) -> None:
         """Ignore a defect for a field"""
@@ -870,9 +862,7 @@ class Record:
     ) -> None:
         """Update the masterdata provenance"""
 
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
-
+        self._require_prov()
         self.is_retracted()
 
         if self.masterdata_is_curated():

@@ -32,6 +32,7 @@ def elp(
             {
                 Fields.TITLE: "An Integrated Framework for Understanding Digital Work in Organizations",
                 Fields.LANGUAGE: "eng",
+                Fields.MD_PROV: {},
                 Fields.D_PROV: {
                     Fields.LANGUAGE: {"note": "", "source": "LanguageDetector"}
                 },
@@ -65,6 +66,7 @@ def elp(
             {
                 Fields.TITLE: 'Corrigendum to "Joint collaborative planning as a governance mechanism to strengthen the chain of IT value co-creation" [J. Strategic Inf. Syst. 21(3) (2012) 182-200]',
                 Fields.LANGUAGE: "eng",
+                Fields.MD_PROV: {},
                 Fields.D_PROV: {
                     Fields.LANGUAGE: {"note": "", "source": "LanguageDetector"}
                 },

@@ -1421,6 +1421,7 @@ def test_retracted(
     expected.data[Fields.RETRACTED] = FieldValues.RETRACTED
     expected.data[Fields.STATUS] = RecordState.rev_prescreen_excluded
     expected.data[Fields.MD_PROV] = {}
+    expected.data[Fields.D_PROV] = {}
     # expected = {
     #     "ID": "r1",
     #     "ENTRYTYPE": "article",

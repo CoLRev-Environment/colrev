@@ -198,7 +198,7 @@ class Repare(colrev.process.operation.Operation):
                 del record.data[Fields.MD_PROV][key]
 
         if self.review_manager.settings.is_curated_masterdata_repo():
-            if FieldValues.CURATED in record.data[Fields.MD_PROV]:
+            if record.masterdata_is_curated():
                 del record.data[Fields.MD_PROV][FieldValues.CURATED]
 
     def _set_data_provenance_field(
@@ -319,7 +319,7 @@ class Repare(colrev.process.operation.Operation):
         source_feeds: dict,
     ) -> None:
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if FieldValues.CURATED in record.data[Fields.MD_PROV]:
+            if record.masterdata_is_curated():
                 return
             self._set_non_curated_masterdata_provenance_field(
                 record=record, key=key, value=value, source_feeds=source_feeds

@@ -41,6 +41,7 @@ def elp(  # type: ignore
                 Fields.D_PROV: {
                     "journal_ranking": {"note": "", "source": "add_journal_ranking"}
                 },
+                Fields.MD_PROV: {},
                 Fields.JOURNAL: "MIS Quarterly",
                 "journal_ranking": "Senior Scholar's List of Premier Journals,FT-50",
             },

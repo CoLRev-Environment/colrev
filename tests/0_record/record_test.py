@@ -16,7 +16,7 @@ from colrev.constants import RecordState
 
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
-
+# flake8: noqa
 
 v1 = {
     Fields.ID: "r1",
@@ -570,9 +570,23 @@ def test_create_colrev_id() -> None:
 def test_get_colrev_id() -> None:
     """Test record.get_colrev_id()"""
 
+    # r1_mod = r1.copy()
+    # r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
+    # expected = ["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"]
+    # actual = r1_mod.get_colrev_id()
+    # assert expected == actual
+
+    # Test str colrev_id
     r1_mod = r1.copy()
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = ["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"]
+    r1_mod.data[Fields.COLREV_ID] = "colrev_id1:|a|nature|45|1|2020|rai|editorial"
+    expected = ["colrev_id1:|a|nature|45|1|2020|rai|editorial"]
+    actual = r1_mod.get_colrev_id()
+    assert expected == actual
+
+    # Test list colrev_id
+    r1_mod = r1.copy()
+    r1_mod.data[Fields.COLREV_ID] = ["colrev_id1:|a|nature|45|1|2020|rai|editorial"]
+    expected = ["colrev_id1:|a|nature|45|1|2020|rai|editorial"]
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -1295,3 +1309,80 @@ def test_get_record_similarity() -> None:
     actual = colrev.record.record.Record.get_record_similarity(record_a=r1, record_b=r2)
     expected = 0.8724
     assert expected == actual
+
+
+def test_set_status() -> None:
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.MD_PROV: {
+            Fields.TITLE: {
+                "source": "import.bib/id_0001",
+                "note": DefectCodes.MOSTLY_ALL_CAPS,
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    record.set_status(RecordState.md_prepared)
+    expected = RecordState.md_needs_manual_preparation
+    assert expected == record.data[Fields.STATUS]
+
+
+def test_defects() -> None:
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.MD_PROV: {
+            Fields.TITLE: {
+                "source": "import.bib/id_0001",
+                "note": DefectCodes.MOSTLY_ALL_CAPS,
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    actual = record.defects(Fields.TITLE)
+    assert actual == [DefectCodes.MOSTLY_ALL_CAPS]
+
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.D_PROV: {
+            "literature_review": {
+                "source": "import.bib/id_0001",
+                "note": "custom-defect",
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    actual = record.defects("literature_review")
+    assert actual == ["custom-defect"]

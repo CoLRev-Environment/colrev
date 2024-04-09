@@ -36,6 +36,7 @@ def get_yvip(
             {
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.MD_PROV: {Fields.YEAR: {"note": "", "source": "LocalIndexPrep"}},
+                Fields.D_PROV: {},
                 Fields.JOURNAL: "MIS Quarterly",
                 Fields.YEAR: "2018",
                 Fields.VOLUME: "42",

@@ -14,7 +14,6 @@ import colrev.settings
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
-from colrev.constants import FieldValues
 from colrev.constants import OperationsType
 from colrev.constants import PackageEndpointType
 from colrev.constants import RecordState
@@ -204,7 +203,9 @@ class Load(colrev.process.operation.Operation):
                 if (
                     key == Fields.MD_PROV
                     and Fields.MD_PROV in source_record
-                    and FieldValues.CURATED in source_record[Fields.MD_PROV]
+                    and colrev.record.record.Record(
+                        source_record
+                    ).masterdata_is_curated()
                 ):
                     continue
                 if key in source_record:
