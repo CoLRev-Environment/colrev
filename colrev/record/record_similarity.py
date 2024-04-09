@@ -2,14 +2,14 @@
 """Functionality to determine similarity betwen records."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import typing
 
 from rapidfuzz import fuzz
 
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 

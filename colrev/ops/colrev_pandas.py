@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import os
 import shutil
+import typing
 from pathlib import Path
-from typing import List
-from typing import Optional
 
 import pandas as pd
 from bib_dedupe.bib_dedupe import block
@@ -154,7 +153,7 @@ def add_from_tei(
     records_df: pd.DataFrame,
     *,
     project_path: str = "",
-    fields: Optional[List[str]] = None,
+    fields: typing.Optional[typing.List[str]] = None,
 ) -> None:
     """
     This function adds data from TEI files to the given DataFrame.

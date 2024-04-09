@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 import typing
 from time import sleep
-from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
@@ -13,7 +12,7 @@ import colrev.exceptions as colrev_exceptions
 from colrev.constants import Colors
 from colrev.constants import ExitCodes
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.ops.status
 
 

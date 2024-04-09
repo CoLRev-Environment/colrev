@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
+import typing
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
-from typing import List
 
 import docker
 import pandas as pd
@@ -18,7 +18,6 @@ import colrev.env.docker_manager
 import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
-import colrev.record.record
 from colrev.constants import Filepaths
 
 
@@ -35,7 +34,9 @@ class PRISMA(JsonSchemaMixin):
 
         endpoint: str
         version: str
-        diagram_path: List[Path] = field(default_factory=lambda: [Path("PRISMA.png")])
+        diagram_path: typing.List[Path] = field(
+            default_factory=lambda: [Path("PRISMA.png")]
+        )
 
     settings_class = PRISMASettings
     PRISMA_IMAGE = "colrev/prisma:latest"

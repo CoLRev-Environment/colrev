@@ -1362,6 +1362,7 @@ def test_defects() -> None:
     record = colrev.record.record.Record(record_dict)
     actual = record.defects(Fields.TITLE)
     assert actual == [DefectCodes.MOSTLY_ALL_CAPS]
+    assert record.has_quality_defects(field=Fields.TITLE)
 
     record_dict = {
         Fields.ID: "r1",
@@ -1386,3 +1387,39 @@ def test_defects() -> None:
     record = colrev.record.record.Record(record_dict)
     actual = record.defects("literature_review")
     assert actual == ["custom-defect"]
+    assert record.has_quality_defects(field="literature_review")
+
+
+def test_get_data_provenance_source() -> None:
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.D_PROV: {
+            "custom_field": {
+                "source": "import.bib/id_0001a",
+                "note": DefectCodes.MOSTLY_ALL_CAPS,
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+        "custom_field": "test",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    actual = record.get_data_provenance_source("custom_field")
+    assert actual == "import.bib/id_0001a"
+
+    record.data[Fields.D_PROV] = {}
+    actual = record.get_data_provenance_source("custom_field")
+    assert actual == ""
+
+    del record.data[Fields.D_PROV]
+    actual = record.get_data_provenance_source("custom_field")
+    assert actual == ""

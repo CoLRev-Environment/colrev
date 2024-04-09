@@ -9,7 +9,6 @@ import typing
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional
 
 import git
 import requests_cache
@@ -52,7 +51,7 @@ class ReviewManager:
     def __init__(
         self,
         *,
-        path_str: Optional[str] = None,
+        path_str: typing.Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
         debug_mode: bool = False,
@@ -159,7 +158,7 @@ class ReviewManager:
         """Get the committer name and email"""
         return self.environment_manager.get_name_mail_from_git()
 
-    def _get_project_home_dir(self, *, path_str: Optional[str] = None) -> Path:
+    def _get_project_home_dir(self, *, path_str: typing.Optional[str] = None) -> Path:
         if path_str:
             original_dir = Path(path_str)
         else:
@@ -259,7 +258,7 @@ class ReviewManager:
         return sharing_advice
 
     def update_status_yaml(
-        self, *, add_to_git: bool = True, records: Optional[dict] = None
+        self, *, add_to_git: bool = True, records: typing.Optional[dict] = None
     ) -> None:
         """Update the status.yaml"""
 
@@ -325,7 +324,7 @@ class ReviewManager:
         )
 
     def get_status_stats(
-        self, *, records: Optional[dict] = None
+        self, *, records: typing.Optional[dict] = None
     ) -> colrev.process.status.StatusStats:  # pragma: no cover
         """Get a status stats object"""
 
@@ -365,7 +364,10 @@ class ReviewManager:
         )
 
     def get_tei(
-        self, *, pdf_path: Optional[Path] = None, tei_path: Optional[Path] = None
+        self,
+        *,
+        pdf_path: typing.Optional[Path] = None,
+        tei_path: typing.Optional[Path] = None,
     ) -> colrev.env.tei_parser.TEIParser:  # type: ignore # pragma: no cover
         """Get a tei object"""
 
@@ -609,7 +611,7 @@ class ReviewManager:
     def get_connecting_review_manager(
         self,
         *,
-        path_str: Optional[str] = None,
+        path_str: typing.Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
     ) -> ReviewManager:  # pragma: no cover

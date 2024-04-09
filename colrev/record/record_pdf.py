@@ -6,8 +6,8 @@ import io
 import logging
 import os
 import tempfile
+import typing
 from pathlib import Path
-from typing import Optional
 
 import fitz
 import imagehash
@@ -39,7 +39,7 @@ class PDFRecord(colrev.record.record.Record):
     def extract_text_by_page(
         self,
         *,
-        pages: Optional[list] = None,
+        pages: typing.Optional[list] = None,
     ) -> str:
         """Extract the text from the PDF for a given number of pages"""
         text_list: list = []
@@ -110,7 +110,11 @@ class PDFRecord(colrev.record.record.Record):
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
     def extract_pages(
-        self, *, pages: list, project_path: Path, save_to_path: Optional[Path] = None
+        self,
+        *,
+        pages: list,
+        project_path: Path,
+        save_to_path: typing.Optional[Path] = None,
     ) -> None:  # pragma: no cover
         """Extract pages from the PDF (saveing them to the save_to_path)"""
         pdf_path = project_path / Path(self.data[Fields.FILE])

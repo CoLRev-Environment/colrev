@@ -15,7 +15,6 @@ from multiprocessing import Lock
 from multiprocessing import Value
 from multiprocessing.pool import ThreadPool as Pool
 from pathlib import Path
-from typing import Optional
 
 from requests.exceptions import ConnectionError as requests_ConnectionError
 from requests.exceptions import ReadTimeout
@@ -660,7 +659,7 @@ class Prep(colrev.process.operation.Operation):
         self,
         *,
         prep_round: colrev.settings.PrepRound,
-        debug_file: Optional[Path] = None,
+        debug_file: typing.Optional[Path] = None,
         debug_ids: str,
         polish: bool = False,
     ) -> list:
@@ -781,7 +780,7 @@ class Prep(colrev.process.operation.Operation):
         return prior_records
 
     def _load_prep_data_for_debug(
-        self, *, debug_ids: str, debug_file: Optional[Path] = None
+        self, *, debug_ids: str, debug_file: typing.Optional[Path] = None
     ) -> dict:
         if debug_file:
             records_dict = colrev.loader.load_utils.load(
@@ -1090,7 +1089,7 @@ class Prep(colrev.process.operation.Operation):
         *,
         keep_ids: bool = False,
         debug_ids: str = "NA",
-        debug_file: Optional[Path] = None,
+        debug_file: typing.Optional[Path] = None,
         cpu: int = 4,
         polish: bool = False,
     ) -> None:

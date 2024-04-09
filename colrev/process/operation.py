@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 import typing
-from typing import Any
-from typing import Callable
-from typing import Optional
-from typing import TypeVar
 
 import docker
 import git
@@ -20,7 +16,7 @@ from colrev.process.model import ProcessModel
 if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
-F = TypeVar("F", bound=Callable[..., Any])
+F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
 
 class Operation:
@@ -47,11 +43,11 @@ class Operation:
 
     # pylint: disable=too-many-nested-blocks
     @classmethod
-    def decorate(cls) -> Callable:
+    def decorate(cls) -> typing.Callable:
         """Decorator for operations"""
 
-        def decorator_func(func: F) -> Callable:
-            def wrapper_func(self, *args, **kwargs) -> Any:  # type: ignore
+        def decorator_func(func: F) -> typing.Callable:
+            def wrapper_func(self, *args, **kwargs) -> typing.Any:  # type: ignore
                 # Invoke the wrapped function
                 retval = func(self, *args, **kwargs)
                 # Conclude the operation
@@ -80,7 +76,7 @@ class Operation:
     def _require_clean_repo_general(
         self,
         *,
-        ignored_files: Optional[list] = None,
+        ignored_files: typing.Optional[list] = None,
     ) -> bool:
 
         # Note : not considering untracked files.

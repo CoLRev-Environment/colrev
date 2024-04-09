@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import csv
+import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import zope.interface
@@ -149,7 +149,7 @@ class TableScreen(JsonSchemaMixin):
     def import_table(
         self,
         records: dict,
-        import_table_path: Optional[Path] = None,
+        import_table_path: typing.Optional[Path] = None,
     ) -> None:
         """Import a screening table"""
 

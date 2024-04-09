@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
-from typing import TYPE_CHECKING
+import typing
 
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
@@ -12,7 +11,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     import colrev.record.record
 
 
@@ -103,7 +102,7 @@ def merge(
     merging_record: colrev.record.record.Record,
     *,
     default_source: str,
-    preferred_masterdata_source_prefixes: Optional[list] = None,
+    preferred_masterdata_source_prefixes: typing.Optional[list] = None,
 ) -> None:
     """General-purpose record merging
     for preparation, curated/non-curated records and records with origins

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import typing
 from pathlib import Path
-from typing import Callable
-from typing import Optional
 
 import inquirer
 
@@ -188,7 +186,7 @@ class Search(colrev.process.operation.Operation):
         self.review_manager.dataset.add_changes(source.filename)
 
     def _get_search_sources(
-        self, *, selection_str: Optional[str] = None
+        self, *, selection_str: typing.Optional[str] = None
     ) -> list[colrev.settings.SearchSource]:
         sources_selected = self.sources
         if selection_str and selection_str != "all":
@@ -231,12 +229,12 @@ class Search(colrev.process.operation.Operation):
         write_file(records_dict=records, filename=source.filename)
 
     # pylint: disable=no-self-argument
-    def check_source_selection_exists(var_name: str) -> Callable:  # type: ignore
+    def check_source_selection_exists(var_name: str) -> typing.Callable: # type: ignore
         """Check if the source selection exists"""
 
         # pylint: disable=no-self-argument
-        def check_accepts(func_in: Callable) -> Callable:
-            def new_f(self, *args, **kwds) -> Callable:  # type: ignore
+        def check_accepts(func_in: typing.Callable) -> typing.Callable:
+            def new_f(self, *args, **kwds) -> typing.Callable:  # type: ignore
                 if kwds.get(var_name, None) is None:
                     return func_in(self, *args, **kwds)
                 for search_source in kwds[var_name].split(","):
@@ -432,7 +430,7 @@ class Search(colrev.process.operation.Operation):
     def main(
         self,
         *,
-        selection_str: Optional[str] = None,
+        selection_str: typing.Optional[str] = None,
         rerun: bool,
         skip_commit: bool = False,
     ) -> None:

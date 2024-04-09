@@ -2,8 +2,8 @@
 """Manages Docker"""
 from __future__ import annotations
 
+import typing
 from pathlib import Path
-from typing import Optional
 
 import docker
 from docker.errors import DockerException
@@ -18,7 +18,7 @@ class DockerManager:
 
     @classmethod
     def build_docker_image(
-        cls, *, imagename: str, dockerfile: Optional[Path] = None
+        cls, *, imagename: str, dockerfile: typing.Optional[Path] = None
     ) -> None:
         """Build a docker image"""
 

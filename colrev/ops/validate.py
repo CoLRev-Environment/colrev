@@ -6,7 +6,6 @@ import datetime
 import re
 import typing
 from pathlib import Path
-from typing import Optional
 
 from tqdm import tqdm
 
@@ -316,7 +315,9 @@ class Validate(colrev.process.operation.Operation):
 
         return list(records.values())
 
-    def _load_changed_records(self, *, commit_sha: Optional[str] = None) -> list[dict]:
+    def _load_changed_records(
+        self, *, commit_sha: typing.Optional[str] = None
+    ) -> list[dict]:
         """Load the records that were changed in the target commit"""
         if commit_sha is None:
             self.review_manager.logger.info("Loading data...")

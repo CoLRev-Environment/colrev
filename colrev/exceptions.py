@@ -2,14 +2,13 @@
 """Exceptions of CoLRev."""
 from __future__ import annotations
 
+import typing
 from pathlib import Path
-from typing import Optional
-from typing import TYPE_CHECKING
 
 from colrev.constants import Colors
 from colrev.constants import Fields
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 
@@ -26,7 +25,7 @@ class RepoSetupError(CoLRevException):
 
     lr_docs = "https://colrev.readthedocs.io/en/latest/manual/problem_formulation.html"
 
-    def __init__(self, msg: Optional[str] = None) -> None:
+    def __init__(self, msg: typing.Optional[str] = None) -> None:
         try:
             Path(".report.log").unlink(missing_ok=True)
         except PermissionError:
@@ -269,7 +268,10 @@ class NotEnoughDataToIdentifyException(CoLRevException):
     """The meta-data is not sufficiently complete to identify the record."""
 
     def __init__(
-        self, *, msg: Optional[str] = None, missing_fields: Optional[list] = None
+        self,
+        *,
+        msg: typing.Optional[str] = None,
+        missing_fields: typing.Optional[list] = None,
     ) -> None:
         self.message = msg
         self.missing_fields = missing_fields
@@ -281,7 +283,7 @@ class NotTOCIdentifiableException(CoLRevException):
     Either the table-of-contents key is not implemented or
     the ENTRYTPE is not organized in tables-of-contents (e.g., online)."""
 
-    def __init__(self, msg: Optional[str] = None) -> None:
+    def __init__(self, msg: typing.Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 
@@ -359,7 +361,7 @@ class RecordNotParsableException(CoLRevException):
 class NotFeedIdentifiableException(CoLRevException):
     """The record does not contain the required source_identifier (cannot be added to the feed)."""
 
-    def __init__(self, msg: Optional[str] = None) -> None:
+    def __init__(self, msg: typing.Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 
@@ -465,7 +467,7 @@ class DataException(CoLRevException):
 class RecordNotInRepoException(CoLRevException):
     """The record was not found in the main records."""
 
-    def __init__(self, record_id: Optional[str] = None) -> None:
+    def __init__(self, record_id: typing.Optional[str] = None) -> None:
         if id is not None:
             self.message = f"Record not in index ({record_id})"
         else:
@@ -555,7 +557,7 @@ class TEIException(CoLRevException):
 class RecordNotInIndexException(CoLRevException):
     """The requested record was not found in the LocalIndex."""
 
-    def __init__(self, record_id: Optional[str] = None) -> None:
+    def __init__(self, record_id: typing.Optional[str] = None) -> None:
         if id is not None:
             self.message = f"Record not in index ({record_id})"
         else:
@@ -567,7 +569,9 @@ class RecordNotIndexableException(CoLRevException):
     """The requested record could not be added to the LocalIndex."""
 
     def __init__(
-        self, record_id: Optional[str] = None, missing_key: Optional[str] = None
+        self,
+        record_id: typing.Optional[str] = None,
+        missing_key: typing.Optional[str] = None,
     ) -> None:
         self.missing_key = missing_key
         if missing_key is None:
@@ -582,7 +586,7 @@ class RecordNotIndexableException(CoLRevException):
 class TOCNotAvailableException(CoLRevException):
     """Tables of contents (toc) are not available for the requested item."""
 
-    def __init__(self, msg: Optional[str] = None) -> None:
+    def __init__(self, msg: typing.Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 
@@ -590,7 +594,7 @@ class TOCNotAvailableException(CoLRevException):
 class CuratedOutletNotUnique(CoLRevException):
     """The outlets (journals or conferences) with curated metadata are not unique."""
 
-    def __init__(self, msg: Optional[str] = None) -> None:
+    def __init__(self, msg: typing.Optional[str] = None) -> None:
         self.message = msg
         super().__init__(self.message)
 

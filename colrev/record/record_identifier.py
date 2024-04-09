@@ -6,8 +6,8 @@ import logging
 import os
 import re
 import tempfile
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import fitz
 import imagehash
@@ -23,7 +23,7 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 

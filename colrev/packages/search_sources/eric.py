@@ -6,7 +6,6 @@ import typing
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import requests
 import zope.interface
@@ -86,7 +85,7 @@ class ERICSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: Optional[dict] = None,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:

@@ -6,7 +6,7 @@ import itertools
 import logging
 import re
 import string
-from typing import Optional
+import typing
 
 from tqdm import tqdm
 
@@ -16,7 +16,6 @@ import colrev.loader.bib
 import colrev.loader.load_utils
 import colrev.process.operation
 import colrev.record.record
-import colrev.settings
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import IDPattern
@@ -112,7 +111,7 @@ class IDSetter:
         self,
         record_dict: dict,
         *,
-        existing_ids: Optional[list] = None,
+        existing_ids: typing.Optional[list] = None,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
@@ -136,7 +135,9 @@ class IDSetter:
 
         return temp_id
 
-    def set_ids(self, records: dict, *, selected_ids: Optional[list] = None) -> dict:
+    def set_ids(
+        self, records: dict, *, selected_ids: typing.Optional[list] = None
+    ) -> dict:
         """Set the IDs for the records in the dataset"""
 
         id_list = list(records.keys())

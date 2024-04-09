@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import logging
 import re
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.loader.loader
 
-if TYPE_CHECKING:  # pragma: no cover
-    import typing
-    from typing import Callable
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
@@ -36,9 +33,9 @@ class NBIBLoader(colrev.loader.loader.Loader):
         self,
         *,
         filename: Path,
-        entrytype_setter: Callable,
-        field_mapper: Callable,
-        id_labeler: Callable,
+        entrytype_setter: typing.Callable,
+        field_mapper: typing.Callable,
+        id_labeler: typing.Callable,
         unique_id_field: str = "",
         logger: logging.Logger = logging.getLogger(__name__),
     ):

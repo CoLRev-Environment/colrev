@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
+import typing
 
 import dictdiffer
 
@@ -12,7 +12,7 @@ from colrev.constants import Colors
 from colrev.constants import Filepaths
 from colrev.constants import OperationsType
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import git.objects.commit
 
 

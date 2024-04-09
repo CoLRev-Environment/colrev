@@ -7,9 +7,9 @@ import os
 import shutil
 import sys
 import tempfile
+import typing
 from importlib.metadata import version
 from pathlib import Path
-from typing import Optional
 
 import git
 import gitdb.exc
@@ -45,7 +45,7 @@ class Commit:
         msg: str,
         manual_author: bool,
         script_name: str,
-        saved_args: Optional[dict] = None,
+        saved_args: typing.Optional[dict] = None,
         skip_hooks: bool = False,
     ) -> None:
         self.review_manager = review_manager
@@ -69,7 +69,7 @@ class Commit:
             )
         return script_name
 
-    def _parse_saved_args(self, saved_args: Optional[dict] = None) -> str:
+    def _parse_saved_args(self, saved_args: typing.Optional[dict] = None) -> str:
         saved_args_str = ""
         if saved_args is not None:
             for key, value in saved_args.items():

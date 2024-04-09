@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import io
-from typing import Optional
+import typing
 
 import yaml
 
@@ -76,7 +76,7 @@ class Status(colrev.process.operation.Operation):
         return analytics_dict
 
     def get_review_status_report(
-        self, *, records: Optional[dict] = None, colors: bool = True
+        self, *, records: typing.Optional[dict] = None, colors: bool = True
     ) -> str:
         """Get the review status report"""
 

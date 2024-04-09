@@ -2,9 +2,9 @@
 """SearchSource: IEEEXplore"""
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import zope.interface
@@ -100,7 +100,7 @@ class IEEEXploreSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: Optional[dict] = None,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
 

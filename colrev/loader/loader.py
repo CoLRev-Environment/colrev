@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """Convenience functions to load files (BiBTeX, RIS, CSV, etc.)"""
 import logging
+import typing
 from pathlib import Path
-from typing import Callable
 
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -18,9 +18,9 @@ class Loader:
         self,
         *,
         filename: Path,
-        entrytype_setter: Callable,
-        field_mapper: Callable,
-        id_labeler: Callable,
+        entrytype_setter: typing.Callable,
+        field_mapper: typing.Callable,
+        id_labeler: typing.Callable,
         unique_id_field: str,
         logger: logging.Logger,
     ):

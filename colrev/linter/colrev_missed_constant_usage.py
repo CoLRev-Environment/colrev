@@ -2,7 +2,7 @@
 """Linter for CoLRev - missed constant usage"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import typing
 
 from astroid import Const
 from astroid import nodes
@@ -15,7 +15,7 @@ from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import OperationsType
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
 # Should ensure that constants are used (instead of strings)

@@ -6,12 +6,9 @@ import pprint
 import typing
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional
-from typing import TYPE_CHECKING
 
 import dictdiffer
 
-import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record_identifier
 import colrev.record.record_merger
@@ -24,7 +21,7 @@ from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.record.qm.quality_model
 
@@ -88,40 +85,6 @@ class Record:
         """Update all data of a record object based on another record"""
         self.data = update_record.copy_prep_rec().get_data()
 
-    def get_diff(
-        self, other_record: Record, *, identifying_fields_only: bool = True
-    ) -> list:
-        """Get diff between record objects"""
-
-        # pylint: disable=too-many-branches
-
-        diff = []
-        if identifying_fields_only:
-            for selected_tuple in list(
-                dictdiffer.diff(self.get_data(), other_record.get_data())
-            ):
-                if selected_tuple[0] == "change":
-                    if selected_tuple[1] in FieldSet.IDENTIFYING_FIELD_KEYS:
-                        diff.append(selected_tuple)
-                if selected_tuple[0] == "add":
-                    addition_list: typing.Tuple = ("add", "", [])
-                    for addition_item in selected_tuple[2]:
-                        if addition_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
-                            addition_list[2].append(addition_item)
-                    if addition_list[2]:
-                        diff.append(addition_list)
-                if selected_tuple[0] == "remove":
-                    removal_list: typing.Tuple = ("remove", "", [])
-                    for removal_item in selected_tuple[2]:
-                        if removal_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
-                            removal_list[2].append(removal_item)
-                    if removal_list[2]:
-                        diff.append(removal_list)
-        else:
-            diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
-
-        return diff
-
     def format_bib_style(self) -> str:
         """Simple formatter for bibliography-style output"""
         bib_formatted = (
@@ -149,26 +112,7 @@ class Record:
 
         return self.data
 
-    def set_masterdata_curated(self, source: str) -> None:
-        """Set record masterdata to curated"""
-        self.data[Fields.MD_PROV] = {
-            FieldValues.CURATED: {"source": source, "note": ""}
-        }
-
-    def masterdata_is_curated(self) -> bool:
-        """Check whether the record masterdata is curated"""
-        return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
-
-    def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
-        """Set the record status"""
-
-        if RecordState.md_prepared == target_state and not force:
-            if self.has_quality_defects():
-                target_state = RecordState.md_needs_manual_preparation
-        # pylint: disable=colrev-direct-status-assign
-        self.data[Fields.STATUS] = target_state
-
-    def get_value(self, key: str, *, default: Optional[str] = None) -> str:
+    def get_value(self, key: str, *, default: typing.Optional[str] = None) -> str:
         """Get a record value (based on the key parameter)"""
         if default is not None:
             try:
@@ -178,26 +122,6 @@ class Record:
                 return default
         else:
             return self.data[key]
-
-    def get_colrev_id(self) -> list:
-        """Get the colrev_id of a record"""
-        # Note : do not automatically create colrev_ids
-        # or at least keep in mind that this will not be possible for some records
-        colrev_id = []
-        if Fields.COLREV_ID in self.data:
-            if isinstance(self.data[Fields.COLREV_ID], str):
-                colrev_id = [
-                    cid.lstrip() for cid in self.data[Fields.COLREV_ID].split(";")
-                ]
-            elif isinstance(self.data[Fields.COLREV_ID], list):
-                colrev_id = self.data[Fields.COLREV_ID]
-        return [c for c in colrev_id if len(c) > 20]
-
-    def _require_prov(self) -> None:
-        if Fields.MD_PROV not in self.data:
-            self.data[Fields.MD_PROV] = {}
-        if Fields.D_PROV not in self.data:
-            self.data[Fields.D_PROV] = {}
 
     # pylint: disable=too-many-arguments
     def update_field(
@@ -263,6 +187,36 @@ class Record:
 
         self.remove_field(key=key)
 
+    def remove_field(
+        self, *, key: str, not_missing_note: bool = False, source: str = ""
+    ) -> None:
+        """Remove a field"""
+
+        if key in self.data:
+            del self.data[key]
+
+        self._require_prov()
+        if not_missing_note and key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            # Example: journal without number
+            # we should keep that information that a particular masterdata
+            # field is not required
+            if key not in self.data[Fields.MD_PROV]:
+                self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
+            self.data[Fields.MD_PROV][key]["note"] = f"IGNORE:{DefectCodes.MISSING}"
+            if source != "":
+                self.data[Fields.MD_PROV][key]["source"] = source
+        else:
+            if key in self.data.get(Fields.MD_PROV, {}):
+                del self.data[Fields.MD_PROV][key]
+            if key in self.data.get(Fields.D_PROV, {}):
+                del self.data[Fields.D_PROV][key]
+
+    def _require_prov(self) -> None:
+        if Fields.MD_PROV not in self.data:
+            self.data[Fields.MD_PROV] = {}
+        if Fields.D_PROV not in self.data:
+            self.data[Fields.D_PROV] = {}
+
     def align_provenance(self) -> None:
         """Remove unnecessary provenance information and add missing provenance information"""
         self._require_prov()
@@ -295,178 +249,6 @@ class Record:
                     self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
             elif key not in self.data[Fields.D_PROV]:
                 self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
-
-    # pylint: disable=too-many-branches
-    def change_entrytype(
-        self,
-        new_entrytype: str,
-        *,
-        qm: colrev.record.qm.quality_model.QualityModel,
-    ) -> None:
-        """Change the ENTRYTYPE"""
-        for value in self.data.get(Fields.MD_PROV, {}).values():
-            if any(
-                x in value["note"]
-                for x in [DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, DefectCodes.MISSING]
-            ):
-                value["note"] = ""
-        missing_fields = [k for k, v in self.data.items() if v == FieldValues.UNKNOWN]
-        for missing_field in missing_fields:
-            self.remove_field(key=missing_field)
-
-        self.align_provenance()
-
-        self.data[Fields.ENTRYTYPE] = new_entrytype
-        if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
-            if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
-                self.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
-        elif new_entrytype == ENTRYTYPES.ARTICLE:
-            if Fields.BOOKTITLE in self.data:
-                self.rename_field(key=Fields.BOOKTITLE, new_key=Fields.JOURNAL)
-        elif new_entrytype in [
-            ENTRYTYPES.INBOOK,
-            ENTRYTYPES.BOOK,
-            ENTRYTYPES.INCOLLECTION,
-            ENTRYTYPES.PHDTHESIS,
-            ENTRYTYPES.THESIS,
-            ENTRYTYPES.MASTERSTHESIS,
-            ENTRYTYPES.BACHELORTHESIS,
-            ENTRYTYPES.TECHREPORT,
-            ENTRYTYPES.UNPUBLISHED,
-            ENTRYTYPES.MISC,
-            ENTRYTYPES.SOFTWARE,
-            ENTRYTYPES.ONLINE,
-            ENTRYTYPES.CONFERENCE,
-        ]:
-            pass
-        else:
-            raise colrev_exceptions.MissingRecordQualityRuleSpecification(
-                f"No ENTRYTYPE specification ({new_entrytype})"
-            )
-
-        self.run_quality_model(qm)
-
-    def remove_field(
-        self, *, key: str, not_missing_note: bool = False, source: str = ""
-    ) -> None:
-        """Remove a field"""
-
-        if key in self.data:
-            del self.data[key]
-
-        self._require_prov()
-        if not_missing_note and key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            # Example: journal without number
-            # we should keep that information that a particular masterdata
-            # field is not required
-            if key not in self.data[Fields.MD_PROV]:
-                self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
-            self.data[Fields.MD_PROV][key]["note"] = f"IGNORE:{DefectCodes.MISSING}"
-            if source != "":
-                self.data[Fields.MD_PROV][key]["source"] = source
-        else:
-            if key in self.data.get(Fields.MD_PROV, {}):
-                del self.data[Fields.MD_PROV][key]
-            if key in self.data.get(Fields.D_PROV, {}):
-                del self.data[Fields.D_PROV][key]
-
-    def set_masterdata_complete(
-        self, *, source: str, masterdata_repository: bool, replace_source: bool = True
-    ) -> None:
-        """Set the masterdata to complete"""
-        # pylint: disable=too-many-branches
-        if self.masterdata_is_curated() or masterdata_repository:
-            return
-
-        self._require_prov()
-        md_p_dict = self.data[Fields.MD_PROV]
-
-        for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if identifying_field_key in [Fields.AUTHOR, Fields.TITLE, Fields.YEAR]:
-                continue
-            if self.data.get(identifying_field_key, "NA") == FieldValues.UNKNOWN:
-                del self.data[identifying_field_key]
-            if identifying_field_key in md_p_dict:
-                note = md_p_dict[identifying_field_key]["note"]
-                if (
-                    DefectCodes.MISSING in note
-                    and f"IGNORE:{DefectCodes.MISSING}" not in note
-                ):
-                    md_p_dict[identifying_field_key]["note"] = note.replace(
-                        DefectCodes.MISSING, ""
-                    )
-
-        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            if Fields.VOLUME not in self.data:
-                if Fields.VOLUME in self.data[Fields.MD_PROV]:
-                    self.data[Fields.MD_PROV][Fields.VOLUME][
-                        "note"
-                    ] = f"IGNORE:{DefectCodes.MISSING}"
-                    if replace_source:
-                        self.data[Fields.MD_PROV][Fields.VOLUME]["source"] = source
-                else:
-                    self.data[Fields.MD_PROV][Fields.VOLUME] = {
-                        "source": source,
-                        "note": f"IGNORE:{DefectCodes.MISSING}",
-                    }
-
-            if Fields.NUMBER not in self.data:
-                if Fields.NUMBER in self.data[Fields.MD_PROV]:
-                    self.data[Fields.MD_PROV][Fields.NUMBER][
-                        "note"
-                    ] = f"IGNORE:{DefectCodes.MISSING}"
-                    if replace_source:
-                        self.data[Fields.MD_PROV][Fields.NUMBER]["source"] = source
-                else:
-                    self.data[Fields.MD_PROV][Fields.NUMBER] = {
-                        "source": source,
-                        "note": f"IGNORE:{DefectCodes.MISSING}",
-                    }
-
-    def set_masterdata_consistent(self) -> None:
-        """Set the masterdata to consistent"""
-        self._require_prov()
-        md_p_dict = self.data[Fields.MD_PROV]
-
-        for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if identifying_field_key in md_p_dict:
-                note = md_p_dict[identifying_field_key]["note"]
-                if DefectCodes.INCONSISTENT_WITH_ENTRYTYPE in note:
-                    md_p_dict[identifying_field_key]["note"] = note.replace(
-                        DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, ""
-                    )
-
-    def reset_pdf_provenance_notes(self) -> None:
-        """Reset the PDF (file) provenance notes"""
-        if Fields.D_PROV not in self.data:
-            self.add_data_provenance_note(key=Fields.FILE, note="")
-        else:
-            if Fields.FILE in self.data[Fields.D_PROV]:
-                self.data[Fields.D_PROV][Fields.FILE]["note"] = ""
-            else:
-                self.data[Fields.D_PROV][Fields.FILE] = {
-                    "source": "NA",
-                    "note": "",
-                }
-
-    @classmethod
-    def get_record_change_score(cls, record_a: Record, record_b: Record) -> float:
-        """Determine how much records changed
-
-        This method is less sensitive than get_record_similarity, especially when
-        fields are missing. For example, if the journal field is missing in both
-        records, get_similarity will return a value > 1.0. The get_record_changes
-        will return 0.0 (if all other fields are equal)."""
-
-        return colrev.record.record_similarity.get_record_change_score(
-            record_a, record_b
-        )
-
-    @classmethod
-    def get_record_similarity(cls, record_a: Record, record_b: Record) -> float:
-        """Determine the similarity between two records (their masterdata)"""
-
-        return colrev.record.record_similarity.get_record_similarity(record_a, record_b)
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
@@ -657,6 +439,85 @@ class Record:
 
         return True
 
+    def set_masterdata_complete(
+        self, *, source: str, masterdata_repository: bool, replace_source: bool = True
+    ) -> None:
+        """Set the masterdata to complete"""
+        # pylint: disable=too-many-branches
+        if self.masterdata_is_curated() or masterdata_repository:
+            return
+
+        self._require_prov()
+        md_p_dict = self.data[Fields.MD_PROV]
+
+        for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if identifying_field_key in [Fields.AUTHOR, Fields.TITLE, Fields.YEAR]:
+                continue
+            if self.data.get(identifying_field_key, "NA") == FieldValues.UNKNOWN:
+                del self.data[identifying_field_key]
+            if identifying_field_key in md_p_dict:
+                note = md_p_dict[identifying_field_key]["note"]
+                if (
+                    DefectCodes.MISSING in note
+                    and f"IGNORE:{DefectCodes.MISSING}" not in note
+                ):
+                    md_p_dict[identifying_field_key]["note"] = note.replace(
+                        DefectCodes.MISSING, ""
+                    )
+
+        if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
+            if Fields.VOLUME not in self.data:
+                if Fields.VOLUME in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][Fields.VOLUME][
+                        "note"
+                    ] = f"IGNORE:{DefectCodes.MISSING}"
+                    if replace_source:
+                        self.data[Fields.MD_PROV][Fields.VOLUME]["source"] = source
+                else:
+                    self.data[Fields.MD_PROV][Fields.VOLUME] = {
+                        "source": source,
+                        "note": f"IGNORE:{DefectCodes.MISSING}",
+                    }
+
+            if Fields.NUMBER not in self.data:
+                if Fields.NUMBER in self.data[Fields.MD_PROV]:
+                    self.data[Fields.MD_PROV][Fields.NUMBER][
+                        "note"
+                    ] = f"IGNORE:{DefectCodes.MISSING}"
+                    if replace_source:
+                        self.data[Fields.MD_PROV][Fields.NUMBER]["source"] = source
+                else:
+                    self.data[Fields.MD_PROV][Fields.NUMBER] = {
+                        "source": source,
+                        "note": f"IGNORE:{DefectCodes.MISSING}",
+                    }
+
+    def set_masterdata_consistent(self) -> None:
+        """Set the masterdata to consistent"""
+        self._require_prov()
+        md_p_dict = self.data[Fields.MD_PROV]
+
+        for identifying_field_key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if identifying_field_key in md_p_dict:
+                note = md_p_dict[identifying_field_key]["note"]
+                if DefectCodes.INCONSISTENT_WITH_ENTRYTYPE in note:
+                    md_p_dict[identifying_field_key]["note"] = note.replace(
+                        DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, ""
+                    )
+
+    def reset_pdf_provenance_notes(self) -> None:
+        """Reset the PDF (file) provenance notes"""
+        if Fields.D_PROV not in self.data:
+            self.add_data_provenance_note(key=Fields.FILE, note="")
+        else:
+            if Fields.FILE in self.data[Fields.D_PROV]:
+                self.data[Fields.D_PROV][Fields.FILE]["note"] = ""
+            else:
+                self.data[Fields.D_PROV][Fields.FILE] = {
+                    "source": "NA",
+                    "note": "",
+                }
+
     def defects(self, field: str) -> typing.List[str]:
         """Get a list of defects for a field"""
         self._require_prov()
@@ -734,12 +595,12 @@ class Record:
                 note = self.data[Fields.MD_PROV][field]["note"]
                 notes = note.split(",")
                 notes = [n for n in notes if not n.startswith("IGNORE:")]
-                return len(notes) == 0
+                return len(notes) != 0
             if field in self.data.get(Fields.D_PROV, {}):
                 note = self.data[Fields.D_PROV][field]["note"]
                 notes = note.split(",")
                 notes = [n for n in notes if not n.startswith("IGNORE:")]
-                return len(notes) == 0
+                return len(notes) != 0
             return False
         defect_codes = [
             n
@@ -767,6 +628,16 @@ class Record:
         if self.data[Fields.ENTRYTYPE] == ENTRYTYPES.BOOK:
             return self.data.get(Fields.TITLE, na_string)
         return na_string
+
+    def set_masterdata_curated(self, source: str) -> None:
+        """Set record masterdata to curated"""
+        self.data[Fields.MD_PROV] = {
+            FieldValues.CURATED: {"source": source, "note": ""}
+        }
+
+    def masterdata_is_curated(self) -> bool:
+        """Check whether the record masterdata is curated"""
+        return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
 
     def create_colrev_id(
         self,
@@ -906,12 +777,138 @@ class Record:
             return True
         return False
 
+    # pylint: disable=too-many-branches
+    def change_entrytype(
+        self,
+        new_entrytype: str,
+        *,
+        qm: colrev.record.qm.quality_model.QualityModel,
+    ) -> None:
+        """Change the ENTRYTYPE"""
+        for value in self.data.get(Fields.MD_PROV, {}).values():
+            if any(
+                x in value["note"]
+                for x in [DefectCodes.INCONSISTENT_WITH_ENTRYTYPE, DefectCodes.MISSING]
+            ):
+                value["note"] = ""
+        missing_fields = [k for k, v in self.data.items() if v == FieldValues.UNKNOWN]
+        for missing_field in missing_fields:
+            self.remove_field(key=missing_field)
+
+        self.align_provenance()
+
+        self.data[Fields.ENTRYTYPE] = new_entrytype
+        if new_entrytype in [ENTRYTYPES.INPROCEEDINGS, ENTRYTYPES.PROCEEDINGS]:
+            if Fields.JOURNAL in self.data and Fields.BOOKTITLE not in self.data:
+                self.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
+        elif new_entrytype == ENTRYTYPES.ARTICLE:
+            if Fields.BOOKTITLE in self.data:
+                self.rename_field(key=Fields.BOOKTITLE, new_key=Fields.JOURNAL)
+        elif new_entrytype in [
+            ENTRYTYPES.INBOOK,
+            ENTRYTYPES.BOOK,
+            ENTRYTYPES.INCOLLECTION,
+            ENTRYTYPES.PHDTHESIS,
+            ENTRYTYPES.THESIS,
+            ENTRYTYPES.MASTERSTHESIS,
+            ENTRYTYPES.BACHELORTHESIS,
+            ENTRYTYPES.TECHREPORT,
+            ENTRYTYPES.UNPUBLISHED,
+            ENTRYTYPES.MISC,
+            ENTRYTYPES.SOFTWARE,
+            ENTRYTYPES.ONLINE,
+            ENTRYTYPES.CONFERENCE,
+        ]:
+            pass
+        else:
+            raise colrev_exceptions.MissingRecordQualityRuleSpecification(
+                f"No ENTRYTYPE specification ({new_entrytype})"
+            )
+
+        self.run_quality_model(qm)
+
+    def get_colrev_id(self) -> list:
+        """Get the colrev_id of a record"""
+        # Note : do not automatically create colrev_ids
+        # or at least keep in mind that this will not be possible for some records
+        colrev_id = []
+        if Fields.COLREV_ID in self.data:
+            if isinstance(self.data[Fields.COLREV_ID], str):
+                colrev_id = [
+                    cid.lstrip() for cid in self.data[Fields.COLREV_ID].split(";")
+                ]
+            elif isinstance(self.data[Fields.COLREV_ID], list):
+                colrev_id = self.data[Fields.COLREV_ID]
+        return [c for c in colrev_id if len(c) > 20]
+
+    def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
+        """Set the record status"""
+
+        if RecordState.md_prepared == target_state and not force:
+            if self.has_quality_defects():
+                target_state = RecordState.md_needs_manual_preparation
+        # pylint: disable=colrev-direct-status-assign
+        self.data[Fields.STATUS] = target_state
+
+    def get_diff(
+        self, other_record: Record, *, identifying_fields_only: bool = True
+    ) -> list:
+        """Get diff between record objects"""
+
+        # pylint: disable=too-many-branches
+
+        diff = []
+        if identifying_fields_only:
+            for selected_tuple in list(
+                dictdiffer.diff(self.get_data(), other_record.get_data())
+            ):
+                if selected_tuple[0] == "change":
+                    if selected_tuple[1] in FieldSet.IDENTIFYING_FIELD_KEYS:
+                        diff.append(selected_tuple)
+                if selected_tuple[0] == "add":
+                    addition_list: typing.Tuple = ("add", "", [])
+                    for addition_item in selected_tuple[2]:
+                        if addition_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
+                            addition_list[2].append(addition_item)
+                    if addition_list[2]:
+                        diff.append(addition_list)
+                if selected_tuple[0] == "remove":
+                    removal_list: typing.Tuple = ("remove", "", [])
+                    for removal_item in selected_tuple[2]:
+                        if removal_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
+                            removal_list[2].append(removal_item)
+                    if removal_list[2]:
+                        diff.append(removal_list)
+        else:
+            diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
+
+        return diff
+
+    @classmethod
+    def get_record_change_score(cls, record_a: Record, record_b: Record) -> float:
+        """Determine how much records changed
+
+        This method is less sensitive than get_record_similarity, especially when
+        fields are missing. For example, if the journal field is missing in both
+        records, get_similarity will return a value > 1.0. The get_record_changes
+        will return 0.0 (if all other fields are equal)."""
+
+        return colrev.record.record_similarity.get_record_change_score(
+            record_a, record_b
+        )
+
+    @classmethod
+    def get_record_similarity(cls, record_a: Record, record_b: Record) -> float:
+        """Determine the similarity between two records (their masterdata)"""
+
+        return colrev.record.record_similarity.get_record_similarity(record_a, record_b)
+
     def merge(
         self,
         merging_record: Record,
         *,
         default_source: str,
-        preferred_masterdata_source_prefixes: Optional[list] = None,
+        preferred_masterdata_source_prefixes: typing.Optional[list] = None,
     ) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins

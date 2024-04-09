@@ -2,8 +2,8 @@
 """CoLRev data operation: extract data, analyze, and synthesize."""
 from __future__ import annotations
 
+import typing
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -311,8 +311,8 @@ class Data(colrev.process.operation.Operation):
     def main(
         self,
         *,
-        selection_list: Optional[list] = None,
-        records: Optional[dict] = None,
+        selection_list: typing.Optional[list] = None,
+        records: typing.Optional[dict] = None,
         silent_mode: bool = False,
     ) -> dict:
         """Data operation (main entrypoint)

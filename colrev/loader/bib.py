@@ -8,8 +8,8 @@ import logging
 import os
 import re
 import string
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pybtex.errors
 from pybtex.database import Person
@@ -21,11 +21,6 @@ from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
-
-if TYPE_CHECKING:  # pragma: no cover
-    import typing
-    from typing import Optional
-    from typing import Callable
 
 
 # pylint: disable=too-few-public-methods
@@ -41,9 +36,9 @@ class BIBLoader(colrev.loader.loader.Loader):
         *,
         filename: Path,
         unique_id_field: str = "ID",
-        entrytype_setter: Callable = lambda x: x,
-        field_mapper: Callable = lambda x: x,
-        id_labeler: Callable = lambda x: x,
+        entrytype_setter: typing.Callable = lambda x: x,
+        field_mapper: typing.Callable = lambda x: x,
+        id_labeler: typing.Callable = lambda x: x,
         logger: logging.Logger = logging.getLogger(__name__),
     ):
         super().__init__(
@@ -341,7 +336,7 @@ class BIBLoader(colrev.loader.loader.Loader):
 
     # pylint: disable=too-many-branches
     def _read_record_header_items(
-        self, *, file_object: Optional[typing.TextIO] = None
+        self, *, file_object: typing.Optional[typing.TextIO] = None
     ) -> list:
         # Note : more than 10x faster than the pybtex part of load_records_dict()
 

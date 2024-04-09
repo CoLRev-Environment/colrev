@@ -8,7 +8,6 @@ import webbrowser
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urlparse
 
 import git
@@ -73,7 +72,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: Optional[dict] = None,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:

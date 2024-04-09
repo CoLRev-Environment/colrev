@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import json
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from dictdiffer import diff
 
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 
-if TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     import colrev.review_manager
 
 # pylint: disable=too-few-public-methods

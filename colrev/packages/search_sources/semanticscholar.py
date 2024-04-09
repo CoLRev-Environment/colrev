@@ -6,7 +6,6 @@ import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 import zope.interface
@@ -32,7 +31,7 @@ from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
 from colrev.packages.search_sources.semanticscholar_ui import SemanticScholarUI
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
 
     import colrev.ops.prep
 

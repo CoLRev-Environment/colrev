@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+import typing
 
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Filepaths
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 

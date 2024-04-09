@@ -5,12 +5,12 @@ from __future__ import annotations
 import html
 import json
 import re
+import typing
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
-from typing import Optional
 
 import requests
 import zope.interface
@@ -72,7 +72,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         filename: Path
         search_type: SearchType
         search_parameters: dict
-        comment: Optional[str]
+        comment: typing.Optional[str]
 
         _details = {
             "search_parameters": {
@@ -87,7 +87,7 @@ class DBLPSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: Optional[dict] = None,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:
@@ -290,8 +290,8 @@ class DBLPSearchSource(JsonSchemaMixin):
     def _retrieve_dblp_records(
         self,
         *,
-        query: Optional[str] = None,
-        url: Optional[str] = None,
+        query: typing.Optional[str] = None,
+        url: typing.Optional[str] = None,
     ) -> list:
         """Retrieve records from DBLP based on a query"""
 

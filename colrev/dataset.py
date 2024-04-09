@@ -8,7 +8,6 @@ import time
 import typing
 from pathlib import Path
 from random import randint
-from typing import Optional
 
 import git
 from git import GitCommandError
@@ -350,7 +349,7 @@ class Dataset:
 
         return False
 
-    def set_ids(self, selected_ids: Optional[list] = None) -> dict:
+    def set_ids(self, selected_ids: typing.Optional[list] = None) -> dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         id_setter = colrev.record.record_id_setter.IDSetter(
@@ -462,7 +461,7 @@ class Dataset:
         msg: str,
         manual_author: bool = False,
         script_call: str = "",
-        saved_args: Optional[dict] = None,
+        saved_args: typing.Optional[dict] = None,
         skip_status_yaml: bool = False,
         skip_hooks: bool = True,
     ) -> bool:

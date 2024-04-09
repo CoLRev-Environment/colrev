@@ -7,9 +7,6 @@ import typing
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import Dict
-from typing import List
-from typing import Optional
 
 import pandas as pd
 from bib_dedupe.bib_dedupe import prep
@@ -92,7 +89,7 @@ class Dedupe(colrev.process.operation.Operation):
 
         for node in graph:
             if not visited[node]:
-                component: List[str] = []
+                component: typing.List[str] = []
                 cls._dfs(node, graph, visited, component)
                 components.append(sorted(component))
 
@@ -370,7 +367,7 @@ class Dedupe(colrev.process.operation.Operation):
         *,
         id_sets: list,
         complete_dedupe: bool = False,
-        preferred_masterdata_sources: Optional[list] = None,
+        preferred_masterdata_sources: typing.Optional[list] = None,
     ) -> None:
         """Apply deduplication decisions
 
@@ -486,7 +483,9 @@ class Dedupe(colrev.process.operation.Operation):
         For each record ID, get the origins from the most recent history entry.
         """
 
-        ids_origins: Dict[str, List[str]] = {rid: [] for rid in current_record_ids}
+        ids_origins: typing.Dict[str, typing.List[str]] = {
+            rid: [] for rid in current_record_ids
+        }
         # history = next(self.review_manager.dataset.load_records_from_history(), None)
         # if history:
         #     for rid in ids_origins:

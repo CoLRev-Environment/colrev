@@ -101,8 +101,8 @@ from __future__ import annotations
 
 import logging
 import tempfile
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.bib
@@ -112,8 +112,6 @@ import colrev.loader.nbib
 import colrev.loader.ris
 import colrev.loader.table
 
-if TYPE_CHECKING:  # pragma: no cover
-    from typing import Callable
 
 # pylint: disable=too-many-arguments
 
@@ -121,9 +119,9 @@ if TYPE_CHECKING:  # pragma: no cover
 def load(  # type: ignore
     filename: Path,
     *,
-    entrytype_setter: Callable = lambda x: x,
-    field_mapper: Callable = lambda x: x,
-    id_labeler: Callable = lambda x: x,
+    entrytype_setter: typing.Callable = lambda x: x,
+    field_mapper: typing.Callable = lambda x: x,
+    id_labeler: typing.Callable = lambda x: x,
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
 ) -> dict:
@@ -161,9 +159,9 @@ def loads(  # type: ignore
     load_string: str,
     *,
     implementation: str,
-    entrytype_setter: Callable = lambda x: x,
-    field_mapper: Callable = lambda x: x,
-    id_labeler: Callable = lambda x: x,
+    entrytype_setter: typing.Callable = lambda x: x,
+    field_mapper: typing.Callable = lambda x: x,
+    id_labeler: typing.Callable = lambda x: x,
     unique_id_field: str = "",
     logger: logging.Logger = logging.getLogger(__name__),
 ) -> dict:

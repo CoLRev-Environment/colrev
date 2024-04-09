@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
 
-if TYPE_CHECKING:  # pragma: no cover
-    from typing import Callable
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-arguments
@@ -25,9 +23,9 @@ class TableLoader(colrev.loader.loader.Loader):
         self,
         *,
         filename: Path,
-        entrytype_setter: Callable,
-        field_mapper: Callable,
-        id_labeler: Callable,
+        entrytype_setter: typing.Callable,
+        field_mapper: typing.Callable,
+        id_labeler: typing.Callable,
         unique_id_field: str = "",
         logger: logging.Logger = logging.getLogger(__name__),
     ):

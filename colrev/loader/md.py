@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
+import typing
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests
 
@@ -12,9 +12,6 @@ import colrev.env.grobid_service
 import colrev.loader.bib
 import colrev.loader.loader
 from colrev.constants import Fields
-
-if TYPE_CHECKING:  # pragma: no cover
-    from typing import Callable
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=duplicate-code
@@ -28,9 +25,9 @@ class MarkdownLoader(colrev.loader.loader.Loader):
         self,
         *,
         filename: Path,
-        entrytype_setter: Callable,
-        field_mapper: Callable,
-        id_labeler: Callable,
+        entrytype_setter: typing.Callable,
+        field_mapper: typing.Callable,
+        id_labeler: typing.Callable,
         unique_id_field: str = "",
         logger: logging.Logger = logging.getLogger(__name__),
     ):

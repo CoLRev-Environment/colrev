@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+import typing
 
 from nameparser import HumanName
 
@@ -14,7 +14,7 @@ import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.record.qm.quality_model
 

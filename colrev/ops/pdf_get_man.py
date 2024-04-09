@@ -5,7 +5,6 @@ from __future__ import annotations
 import csv
 import typing
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -131,7 +130,7 @@ class PDFGetMan(colrev.process.operation.Operation):
         self,
         *,
         record: colrev.record.record.Record,
-        filepath: Optional[Path] = None,
+        filepath: typing.Optional[Path] = None,
         PAD: int = 40,
     ) -> None:
         """Record pdf-get-man decision"""

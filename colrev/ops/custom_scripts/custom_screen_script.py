@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
+import typing
 
 import zope.interface
 from dacite import from_dict
@@ -12,7 +12,7 @@ import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.screen.Screen
 
 # pylint: disable=too-few-public-methods

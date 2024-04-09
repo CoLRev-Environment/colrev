@@ -2,7 +2,7 @@
 """Console UI for Semantic Scholar"""
 import datetime
 import re
-from typing import Optional
+import typing
 
 import inquirer
 
@@ -206,7 +206,7 @@ class SemanticScholarUI:
         else:
             self.search_params["open_access_pdf"] = False
 
-    def get_api_key(self, existing_key: Optional[str] = "") -> str:
+    def get_api_key(self, existing_key: typing.Optional[str] = "") -> str:
         """Method to get API key from user input"""
 
         ask_again = True

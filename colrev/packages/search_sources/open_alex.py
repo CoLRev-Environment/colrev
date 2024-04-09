@@ -2,10 +2,10 @@
 """SearchSource: OpenAlex"""
 from __future__ import annotations
 
+import typing
 from dataclasses import dataclass
 from multiprocessing import Lock
 from pathlib import Path
-from typing import Optional
 
 import pyalex
 import requests
@@ -52,7 +52,7 @@ class OpenAlexSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: Optional[dict] = None,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         # Note: not yet implemented

@@ -2,7 +2,7 @@
 """Linter for CoLRev - direct status assignment"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import typing
 
 from astroid import nodes
 from pylint import checkers
@@ -10,7 +10,7 @@ from pylint.checkers.utils import only_required_for_messages
 
 from colrev.constants import Fields
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     from pylint.lint import PyLinter
 
 

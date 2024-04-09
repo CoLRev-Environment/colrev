@@ -11,7 +11,6 @@ from importlib.metadata import version
 from multiprocessing import Lock
 from pathlib import Path
 from sqlite3 import OperationalError
-from typing import Optional
 
 import inquirer
 import requests
@@ -81,7 +80,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
         self,
         *,
         source_operation: colrev.process.operation.Operation,
-        settings: Optional[dict] = None,
+        settings: typing.Optional[dict] = None,
     ) -> None:
         self.review_manager = source_operation.review_manager
         if settings:

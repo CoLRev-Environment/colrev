@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import re
+import typing
 from pathlib import Path
-from typing import Optional
-from typing import TYPE_CHECKING
 
 import requests
 from lxml import etree
@@ -26,7 +25,7 @@ from colrev.constants import RecordState
 # namespaces={"tei": "http://www.tei-c.org/ns/1.0"})
 # etree.tostring(abstract_node[0]).decode("utf-8")
 
-if TYPE_CHECKING:  # pragma: no cover
+if typing.TYPE_CHECKING:  # pragma: no cover
     from xml.etree.ElementTree import Element  # nosec
 
 
@@ -46,8 +45,8 @@ class TEIParser:
         self,
         *,
         environment_manager: colrev.env.environment_manager.EnvironmentManager,
-        pdf_path: Optional[Path] = None,
-        tei_path: Optional[Path] = None,
+        pdf_path: typing.Optional[Path] = None,
+        tei_path: typing.Optional[Path] = None,
     ):
         """Creates a TEI file
         modes of operation:
