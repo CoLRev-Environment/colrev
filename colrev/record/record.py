@@ -34,13 +34,6 @@ if TYPE_CHECKING:  # pragma: no cover
 class Record:
     """The Record class provides a range of basic convenience functions"""
 
-    # Fields that are stored as lists (items separated by newlines)
-    list_fields_keys = [
-        Fields.ORIGIN,
-        # "colrev_pdf_id",
-        # Fields.SCREENING_CRITERIA,
-    ]
-
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict) -> None:

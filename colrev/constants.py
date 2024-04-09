@@ -258,6 +258,9 @@ class FieldSet:
 
     TIME_VARIANT_FIELDS = [Fields.CITED_BY]
 
+    # Fields that are stored as lists (items separated by newlines)
+    LIST_FIELDS = [Fields.ORIGIN]
+
 
 class RecordState(Enum):
     """The possible RecordStates stored in the colrev_status field

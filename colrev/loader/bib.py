@@ -17,8 +17,8 @@ from pybtex.database.input import bibtex
 
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.loader
-import colrev.record.record
 from colrev.constants import Fields
+from colrev.constants import FieldSet
 from colrev.constants import FieldValues
 from colrev.constants import RecordState
 
@@ -235,8 +235,7 @@ class BIBLoader(colrev.loader.loader.Loader):
                                             for el in (v + " ").split("; ")
                                             if "" != el
                                         ]
-                                        if k
-                                        in colrev.record.record.Record.list_fields_keys
+                                        if k in FieldSet.LIST_FIELDS
                                         else (
                                             self._load_field_dict(value=v, field=k)
                                             if k in [Fields.MD_PROV, Fields.D_PROV]
