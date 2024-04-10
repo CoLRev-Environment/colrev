@@ -1,15 +1,15 @@
-from unittest.mock import MagicMock
-
 import pytest
 
+import colrev.exceptions as colrev_exceptions
+import colrev.ops.check
 from colrev.ops.commit import Commit
 
 
 @pytest.fixture(scope="session", name="commit_fixture")
-def get_commit_fixture(tmp_path_factory):  # type: ignore
+def get_commit_fixture(tmp_path_factory, base_repo_review_manager):  # type: ignore
     """Fixture returning the commit object"""
 
-    review_manager = MagicMock()
+    review_manager = base_repo_review_manager
     msg = "Test commit"
     manual_author = False
     script_name = "test_script"
@@ -31,3 +31,30 @@ def test_parse_script_name(tmp_path, commit_fixture):  # type: ignore
     script_name = "colrev cli"
     parsed_script_name = commit_fixture._parse_script_name(script_name=script_name)
     assert parsed_script_name == "colrev"
+
+
+def test_create(commit_fixture, mocker):  # type: ignore
+
+    def patched_has_record_changes() -> bool:
+        return True
+
+    mocker.patch(
+        "colrev.dataset.Dataset.has_record_changes",
+        side_effect=patched_has_record_changes,
+    )
+    colrev.ops.check.CheckOperation(commit_fixture.review_manager)
+    records = commit_fixture.review_manager.dataset.load_records_dict()
+    records["SrivastavaShainesh2015"]["title"] = "test"
+    commit_fixture.review_manager.dataset.save_records_dict(records)
+    commit_fixture.review_manager.force_mode = False
+    commit_fixture.skip_hooks = True
+    with pytest.raises(colrev_exceptions.DirtyRepoAfterProcessingError):
+        commit_fixture.create()
+
+    colrev.ops.check.CheckOperation(commit_fixture.review_manager)
+    records = commit_fixture.review_manager.dataset.load_records_dict()
+    records["SrivastavaShainesh2015"]["title"] = "test2"
+    commit_fixture.review_manager.dataset.save_records_dict(records)
+    commit_fixture.review_manager.force_mode = False
+    commit_fixture.review_manager.force_mode = True
+    commit_fixture.create()
