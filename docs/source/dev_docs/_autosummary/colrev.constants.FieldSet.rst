@@ -27,6 +27,8 @@ colrev.constants.FieldSet
 
       ~FieldSet.IDENTIFYING_FIELD_KEYS
       ~FieldSet.LIST_FIELDS
+      ~FieldSet.MASTERDATA
+      ~FieldSet.NO_PROVENANCE
       ~FieldSet.PROVENANCE_KEYS
       ~FieldSet.STANDARDIZED_FIELD_KEYS
       ~FieldSet.TIME_VARIANT_FIELDS

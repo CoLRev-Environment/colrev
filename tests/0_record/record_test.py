@@ -472,10 +472,7 @@ def test_add_provenance_all() -> None:
     expected = {
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.D_PROV: {
-            Fields.ID: {"source": "import.bib/id_0001", "note": ""},
-            Fields.ORIGIN: {"source": "import.bib/id_0001", "note": ""},
-        },
+        Fields.D_PROV: {},
         Fields.STATUS: RecordState.md_prepared,
         Fields.ORIGIN: ["import.bib/id_0001"],
         Fields.YEAR: "2020",
@@ -494,6 +491,34 @@ def test_add_provenance_all() -> None:
             Fields.NUMBER: {"source": "import.bib/id_0001", "note": ""},
             Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
         },
+    }
+    actual = r1_mod.data
+    assert expected == actual
+
+    # Curated
+    r1_mod = r1.copy()
+    r1_mod.data[Fields.MD_PROV] = {
+        FieldValues.CURATED: {"source": "manual", "note": ""}
+    }
+    r1_mod.data["custom_field"] = "test"
+    r1_mod.add_provenance_all(source="import.bib/id_0001")
+    print(r1_mod.data)
+    expected = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.D_PROV: {},
+        Fields.STATUS: RecordState.md_prepared,
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+        "custom_field": "test",
+        Fields.MD_PROV: {FieldValues.CURATED: {"source": "manual", "note": ""}},
+        Fields.D_PROV: {"custom_field": {"source": "import.bib/id_0001", "note": ""}},
     }
     actual = r1_mod.data
     assert expected == actual
@@ -625,6 +650,10 @@ def test_provenance() -> None:
     actual = r1_mod.data[Fields.D_PROV][Fields.URL]["note"]
     assert expected == actual
 
+    r1_mod.add_field_provenance_note(key=Fields.ID, note="test")  # pass / no changes
+    assert Fields.ID not in r1_mod.data[Fields.MD_PROV]
+    assert Fields.ID not in r1_mod.data[Fields.D_PROV]
+
     r1_mod.add_field_provenance_note(key=Fields.URL, note="1")
     expected = "test,1"
     actual = r1_mod.data[Fields.D_PROV][Fields.URL]["note"]
@@ -651,6 +680,22 @@ def test_provenance() -> None:
 
     r1_mod.add_field_provenance_note(key=Fields.AUTHOR, note="check")
     expected = "test,check"
+    actual = r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"]
+    assert expected == actual
+
+    r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"] = "IGNORE:missing,other"
+    r1_mod.add_field_provenance(key=Fields.AUTHOR, source="manual", note="missing")
+    expected = "other,missing"
+    actual = r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"]
+    assert expected == actual
+
+    r1_mod.add_field_provenance(key=Fields.AUTHOR, source="manual", note="third")
+    expected = "other,missing,third"
+    actual = r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"]
+    assert expected == actual
+
+    r1_mod.add_field_provenance(key=Fields.AUTHOR, source="manual", note="third")
+    expected = "other,missing,third"  # already added
     actual = r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"]
     assert expected == actual
 
@@ -1079,6 +1124,17 @@ def test_get_container_title() -> None:
     r1_mod.data[Fields.ENTRYTYPE] = "inbook"
     r1_mod.data[Fields.BOOKTITLE] = "Book title a"
     expected = "Book title a"
+    actual = r1_mod.get_container_title()
+    assert expected == actual
+
+    del r1_mod.data[Fields.ENTRYTYPE]
+    r1_mod.data[Fields.JOURNAL] = "MIS Quarterly"
+    expected = "MIS Quarterly"
+    actual = r1_mod.get_container_title()
+    assert expected == actual
+
+    r1_mod.data[Fields.ENTRYTYPE] = "unknown"
+    expected = "NA"
     actual = r1_mod.get_container_title()
     assert expected == actual
 

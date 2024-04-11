@@ -44,20 +44,13 @@ class Record:
         return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
-        identifying_keys_order = [Fields.ID, Fields.ENTRYTYPE] + [
-            k for k in FieldSet.IDENTIFYING_FIELD_KEYS if k in self.data
-        ]
-        complementary_keys_order = [
-            k for k, v in self.data.items() if k not in identifying_keys_order
-        ]
-
-        ik_sorted = {k: v for k, v in self.data.items() if k in identifying_keys_order}
-        ck_sorted = {
-            k: v for k, v in self.data.items() if k in complementary_keys_order
-        }
+        ik_order = [Fields.ID, Fields.ENTRYTYPE]
+        ik_order += [k for k in FieldSet.IDENTIFYING_FIELD_KEYS if k in self.data]
+        ck_order = [k for k, v in self.data.items() if k not in ik_order]
+        ik_sorted = {k: v for k, v in self.data.items() if k in ik_order}
+        ck_sorted = {k: v for k, v in self.data.items() if k in ck_order}
         ret_str = self.pp.pformat(ik_sorted)[:-1] + "\n"
         ret_str += self.pp.pformat(ck_sorted)[1:]
-
         return ret_str
 
     def __eq__(self, other: object) -> bool:
@@ -67,9 +60,9 @@ class Record:
         """Print the record as a citation"""
         formatted_ref = (
             f"{self.data.get(Fields.AUTHOR, '')} ({self.data.get(Fields.YEAR, '')}) "
-            + f"{self.data.get(Fields.TITLE, '')}. "
-            + f"{self.data.get(Fields.JOURNAL, '')}{self.data.get(Fields.BOOKTITLE, '')}, "
-            + f"{self.data.get(Fields.VOLUME, '')} ({self.data.get(Fields.NUMBER, '')})"
+            f"{self.data.get(Fields.TITLE, '')}. "
+            f"{self.data.get(Fields.JOURNAL, '')}{self.data.get(Fields.BOOKTITLE, '')}, "
+            f"{self.data.get(Fields.VOLUME, '')} ({self.data.get(Fields.NUMBER, '')})"
         )
         print(formatted_ref)
 
@@ -87,21 +80,15 @@ class Record:
 
     def format_bib_style(self) -> str:
         """Simple formatter for bibliography-style output"""
-        bib_formatted = (
-            self.data.get(Fields.AUTHOR, "")
-            + " ("
-            + self.data.get(Fields.YEAR, "")
-            + ") "
-            + self.data.get(Fields.TITLE, "")
-            + ". "
-            + self.data.get(Fields.JOURNAL, "")
-            + self.data.get(Fields.BOOKTITLE, "")
-            + ", ("
-            + self.data.get(Fields.VOLUME, "")
-            + ") "
-            + self.data.get(Fields.NUMBER, "")
+        return (
+            f"{self.data.get(Fields.AUTHOR, '')} "
+            f"({self.data.get(Fields.YEAR, '')}) "
+            f"{self.data.get(Fields.TITLE, '')}. "
+            f"{self.data.get(Fields.JOURNAL, '')}"
+            f"{self.data.get(Fields.BOOKTITLE, '')}, "
+            f"({self.data.get(Fields.VOLUME, '')}) "
+            f"{self.data.get(Fields.NUMBER, '')}"
         )
-        return bib_formatted
 
     def get_data(self) -> dict:
         """Get the record data"""
@@ -253,59 +240,47 @@ class Record:
     def add_provenance_all(self, *, source: str) -> None:
         """Add a data provenance (source) to all fields"""
         self._require_prov()
-
-        md_p_dict = self.data[Fields.MD_PROV]
-        d_p_dict = self.data[Fields.D_PROV]
         for key in self.data.keys():
-            if key in [
-                Fields.ENTRYTYPE,
-                Fields.D_PROV,
-                Fields.MD_PROV,
-                Fields.STATUS,
-                Fields.COLREV_ID,
-            ]:
+            if key in FieldSet.NO_PROVENANCE:
                 continue
-            if (
-                key in FieldSet.IDENTIFYING_FIELD_KEYS
-                and not self.masterdata_is_curated()
-            ):
-                md_p_dict[key] = {"source": source, "note": ""}
+            if key in FieldSet.MASTERDATA:
+                if self.masterdata_is_curated():
+                    continue
+                self.data[Fields.MD_PROV][key] = {"source": source, "note": ""}
             else:
-                d_p_dict[key] = {"source": source, "note": ""}
+                self.data[Fields.D_PROV][key] = {"source": source, "note": ""}
 
     def add_field_provenance(self, *, key: str, source: str, note: str = "") -> None:
         """Add a field provenance, including source and note (based on a key)"""
+
         if key in FieldSet.NO_PROVENANCE:
             return
-
         self._require_prov()
-        if key in FieldSet.MASTERDATA:
-            md_p_dict = self.data[Fields.MD_PROV]
 
-            if key in md_p_dict:
-                if md_p_dict[key]["note"] == "" or "" == note:
-                    md_p_dict[key]["note"] = note
-                elif (
-                    DefectCodes.MISSING == note
-                    and f"IGNORE:{DefectCodes.MISSING}"
-                    in md_p_dict[key]["note"].split(",")
-                ):
-                    md_p_dict[key]["note"] = DefectCodes.MISSING
-                elif note not in md_p_dict[key]["note"].split(","):
-                    md_p_dict[key]["note"] += f",{note}"
-                md_p_dict[key]["source"] = source
-            else:
-                md_p_dict[key] = {"source": source, "note": f"{note}"}
+        if key in FieldSet.MASTERDATA:
+            prov_dict = self.data[Fields.MD_PROV]
         else:
-            md_p_dict = self.data[Fields.D_PROV]
-            if key in md_p_dict:
-                if note != "":
-                    md_p_dict[key]["note"] += f",{note}"
-                else:
-                    md_p_dict[key]["note"] = ""
-                md_p_dict[key]["source"] = source
-            else:
-                md_p_dict[key] = {"source": source, "note": f"{note}"}
+            prov_dict = self.data[Fields.D_PROV]
+
+        if key not in prov_dict:
+            prov_dict[key] = {"source": source, "note": note}
+            return
+
+        prov_dict[key]["source"] = source
+
+        if prov_dict[key]["note"] == "" or note == "":
+            prov_dict[key]["note"] = note
+            return
+
+        notes = prov_dict[key]["note"].split(",")
+        if f"IGNORE:{note}" in notes:
+            notes.remove(f"IGNORE:{note}")
+            notes.append(note)
+            prov_dict[key]["note"] = ",".join(notes)
+        elif note in notes:
+            return  # already added
+        else:
+            prov_dict[key]["note"] += f",{note}"
 
     def add_field_provenance_note(self, *, key: str, note: str) -> None:
         """Add a field provenance note (based on a key)"""
@@ -314,27 +289,21 @@ class Record:
         self._require_prov()
 
         if key in FieldSet.MASTERDATA:
-            if key in self.data.get(Fields.MD_PROV, {}):
-                if "" == self.data[Fields.MD_PROV][key]["note"] or "" == note:
-                    self.data[Fields.MD_PROV][key]["note"] = note
-                elif note not in self.data[Fields.MD_PROV][key]["note"].split(","):
-                    self.data[Fields.MD_PROV][key]["note"] += f",{note}"
-            else:
-                self.data[Fields.MD_PROV][key] = {
-                    "source": "ORIGINAL",
-                    "note": note,
-                }
+            prov = self.data[Fields.MD_PROV]
         else:
-            if key in self.data[Fields.D_PROV]:
-                if self.data[Fields.D_PROV][key]["note"] == "":
-                    self.data[Fields.D_PROV][key]["note"] = note
-                elif note not in self.data[Fields.D_PROV][key]["note"].split(","):
-                    self.data[Fields.D_PROV][key]["note"] += f",{note}"
-            else:
-                self.data[Fields.D_PROV][key] = {
-                    "source": "ORIGINAL",
-                    "note": note,
-                }
+            prov = self.data[Fields.D_PROV]
+
+        if key not in prov:
+            prov[key] = {
+                "source": "ORIGINAL",
+                "note": note,
+            }
+            return
+
+        if prov[key]["note"] == "":
+            prov[key]["note"] = note
+        elif note not in prov[key]["note"].split(","):
+            prov[key]["note"] += f",{note}"
 
     def get_field_provenance(
         self, *, key: str, default_source: str = "ORIGINAL"
@@ -408,20 +377,10 @@ class Record:
         """Complete provenance information for indexing"""
 
         for key in list(self.data.keys()):
-            if (
-                key
-                in [
-                    Fields.COLREV_ID,
-                    Fields.ENTRYTYPE,
-                    Fields.ID,
-                    Fields.METADATA_SOURCE_REPOSITORY_PATHS,
-                    Fields.LOCAL_CURATED_METADATA,
-                ]
-                + FieldSet.PROVENANCE_KEYS
-            ):
+            if key in FieldSet.NO_PROVENANCE:
                 continue
 
-            if key in FieldSet.IDENTIFYING_FIELD_KEYS:
+            if key in FieldSet.MASTERDATA:
                 if not self.masterdata_is_curated():
                     self.add_field_provenance(key=key, source=source_info, note="")
             else:

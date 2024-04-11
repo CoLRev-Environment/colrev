@@ -18,8 +18,6 @@ colrev.record.record\_prep.PrepRecord
 
       ~PrepRecord.add_field_provenance
       ~PrepRecord.add_field_provenance_note
-      ~PrepRecord.add_field_provenance
-      ~PrepRecord.add_field_provenance_note
       ~PrepRecord.add_provenance_all
       ~PrepRecord.align_provenance
       ~PrepRecord.change_entrytype
@@ -34,8 +32,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.get_colrev_pdf_id
       ~PrepRecord.get_container_title
       ~PrepRecord.get_data
-      ~PrepRecord.get_field_provenance_notes
-      ~PrepRecord.get_field_provenance_source
       ~PrepRecord.get_diff
       ~PrepRecord.get_field_provenance
       ~PrepRecord.get_field_provenance_notes
@@ -55,7 +51,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.merge
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
-      ~PrepRecord.remove_field_provenance_note
       ~PrepRecord.remove_field
       ~PrepRecord.remove_field_provenance_note
       ~PrepRecord.rename_field

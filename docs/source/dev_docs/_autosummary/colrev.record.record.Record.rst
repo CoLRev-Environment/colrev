@@ -18,8 +18,6 @@ colrev.record.record.Record
 
       ~Record.add_field_provenance
       ~Record.add_field_provenance_note
-      ~Record.add_field_provenance
-      ~Record.add_field_provenance_note
       ~Record.add_provenance_all
       ~Record.align_provenance
       ~Record.change_entrytype
@@ -32,8 +30,6 @@ colrev.record.record.Record
       ~Record.get_colrev_pdf_id
       ~Record.get_container_title
       ~Record.get_data
-      ~Record.get_field_provenance_notes
-      ~Record.get_field_provenance_source
       ~Record.get_diff
       ~Record.get_field_provenance
       ~Record.get_field_provenance_notes
@@ -52,7 +48,6 @@ colrev.record.record.Record
       ~Record.merge
       ~Record.prescreen_exclude
       ~Record.print_citation_format
-      ~Record.remove_field_provenance_note
       ~Record.remove_field
       ~Record.remove_field_provenance_note
       ~Record.rename_field

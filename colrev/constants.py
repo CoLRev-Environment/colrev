@@ -272,7 +272,13 @@ class FieldSet:
     LIST_FIELDS = [Fields.ORIGIN]
 
     MASTERDATA = IDENTIFYING_FIELD_KEYS + [FieldValues.CURATED]
-    NO_PROVENANCE = PROVENANCE_KEYS + [Fields.ID, Fields.ENTRYTYPE]
+    NO_PROVENANCE = PROVENANCE_KEYS + [
+        Fields.ID,
+        Fields.ENTRYTYPE,
+        Fields.COLREV_ID,
+        Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+        Fields.LOCAL_CURATED_METADATA,
+    ]
 
 
 class RecordState(Enum):
