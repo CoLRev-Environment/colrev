@@ -22,7 +22,7 @@ class ThesisWithMultipleAuthorsChecker:
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the thesis-with-multiple-authors checks"""
 
-        if record.ignored_defect(field=Fields.AUTHOR, defect=self.msg):
+        if record.ignored_defect(key=Fields.AUTHOR, defect=self.msg):
             return
 
         if self._multiple_authored_thesis(record=record):

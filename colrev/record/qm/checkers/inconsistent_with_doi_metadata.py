@@ -39,7 +39,7 @@ class InconsistentWithDOIMetadataChecker:
         """Run the inconsistent-with-doi-metadata checks"""
 
         if Fields.DOI not in record.data or record.ignored_defect(
-            field=Fields.DOI, defect=self.msg
+            key=Fields.DOI, defect=self.msg
         ):
             return
 

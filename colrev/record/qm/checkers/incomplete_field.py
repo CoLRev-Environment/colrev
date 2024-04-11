@@ -33,7 +33,7 @@ class IncompleteFieldChecker:
             if (
                 self._institutional_author(key=key, record=record)
                 or record.data.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
-                or record.ignored_defect(field=key, defect=self.msg)
+                or record.ignored_defect(key=key, defect=self.msg)
             ):
                 record.remove_field_provenance_note(key=key, note=self.msg)
                 continue

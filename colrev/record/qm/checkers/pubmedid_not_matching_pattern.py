@@ -27,7 +27,7 @@ class PubmedIDPatternChecker:
         """Run the pubmedid-not-matching-pattern checks"""
 
         if Fields.PUBMED_ID not in record.data or record.ignored_defect(
-            field=Fields.PUBMED_ID, defect=self.msg
+            key=Fields.PUBMED_ID, defect=self.msg
         ):
             return
 

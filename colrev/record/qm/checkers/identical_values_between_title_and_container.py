@@ -23,7 +23,7 @@ class IdenticalValuesChecker:
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the identical-values-between-title-and-container checks"""
 
-        if record.ignored_defect(field=Fields.TITLE, defect=self.msg):
+        if record.ignored_defect(key=Fields.TITLE, defect=self.msg):
             return
 
         if self._identical_values_between_title_and_container(record=record):

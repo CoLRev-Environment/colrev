@@ -30,7 +30,7 @@ class NameFormatTitleChecker:
 
         for key in self.fields_to_check:
             if key not in record.data or record.ignored_defect(
-                field=key, defect=self.msg
+                key=key, defect=self.msg
             ):
                 continue
 

@@ -26,7 +26,7 @@ class PageRangeChecker:
 
         if (
             Fields.PAGES not in record.data
-            or record.ignored_defect(field=Fields.PAGES, defect=self.msg)
+            or record.ignored_defect(key=Fields.PAGES, defect=self.msg)
             or not re.match(r"^\d+\-\-\d+$", record.data[Fields.PAGES])
         ):
             return

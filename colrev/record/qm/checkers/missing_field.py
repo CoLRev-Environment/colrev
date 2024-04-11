@@ -93,7 +93,7 @@ class MissingFieldChecker:
             record.data[Fields.ENTRYTYPE]
         ]
         for required_fields_key in required_fields_keys:
-            if record.ignored_defect(field=required_fields_key, defect=self.msg):
+            if record.ignored_defect(key=required_fields_key, defect=self.msg):
                 continue
 
             if self._is_missing(record=record, key=required_fields_key):

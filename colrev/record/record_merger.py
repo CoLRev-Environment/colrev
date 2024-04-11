@@ -198,12 +198,12 @@ def _select_best_author(
     record: colrev.record.record.Record, merging_record: colrev.record.record.Record
 ) -> str:
     if not record.has_quality_defects(
-        field=Fields.AUTHOR
-    ) and merging_record.has_quality_defects(field=Fields.AUTHOR):
+        key=Fields.AUTHOR
+    ) and merging_record.has_quality_defects(key=Fields.AUTHOR):
         return record.data[Fields.AUTHOR]
     if record.has_quality_defects(
-        field=Fields.AUTHOR
-    ) and not merging_record.has_quality_defects(field=Fields.AUTHOR):
+        key=Fields.AUTHOR
+    ) and not merging_record.has_quality_defects(key=Fields.AUTHOR):
         return merging_record.data[Fields.AUTHOR]
 
     if (

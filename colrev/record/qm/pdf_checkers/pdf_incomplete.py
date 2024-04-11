@@ -42,7 +42,7 @@ class PDFIncompletenessChecker:
             Fields.FILE not in record.data
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
             or Fields.PAGES not in record.data
-            or record.ignored_defect(field=Fields.FILE, defect=self.msg)
+            or record.ignored_defect(key=Fields.FILE, defect=self.msg)
         ):
             return
 

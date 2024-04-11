@@ -27,7 +27,7 @@ class YearFormatChecker:
 
         if (
             Fields.YEAR not in record.data
-            or record.ignored_defect(field=Fields.YEAR, defect=self.msg)
+            or record.ignored_defect(key=Fields.YEAR, defect=self.msg)
             or record.data[Fields.YEAR] == FieldValues.UNKNOWN
         ):
             return

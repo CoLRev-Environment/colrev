@@ -201,7 +201,7 @@ class Commit:
                 raise colrev_exceptions.DirtyRepoAfterProcessingError(
                     "A clean repository is expected."
                 )
-            self.review_manager.logger.warn("No clean repository after commit.")
+            self.review_manager.logger.warning("No clean repository after commit.")
 
         return True
 

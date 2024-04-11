@@ -27,7 +27,7 @@ class DOIPatternChecker:
         """Run the doi-not-matching-pattern checks"""
 
         if Fields.DOI not in record.data or record.ignored_defect(
-            field=Fields.DOI, defect=self.msg
+            key=Fields.DOI, defect=self.msg
         ):
             return
 

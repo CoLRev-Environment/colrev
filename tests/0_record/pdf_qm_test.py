@@ -70,7 +70,7 @@ def test_author_not_in_pdf(
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
     )
     v_t_pdf_record.ignore_defect(
-        field=Fields.FILE, defect=PDFDefectCodes.AUTHOR_NOT_IN_PDF
+        key=Fields.FILE, defect=PDFDefectCodes.AUTHOR_NOT_IN_PDF
     )
     author_not_in_pdf_checker.run(record=v_t_pdf_record)
     assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
@@ -136,9 +136,7 @@ def test_no_text_in_pdf(
 
     # Test case 3: Ignoring no text in PDF defect
     v_t_pdf_record.data[Fields.TEXT_FROM_PDF] = ""
-    v_t_pdf_record.ignore_defect(
-        field=Fields.FILE, defect=PDFDefectCodes.NO_TEXT_IN_PDF
-    )
+    v_t_pdf_record.ignore_defect(key=Fields.FILE, defect=PDFDefectCodes.NO_TEXT_IN_PDF)
     no_text_in_pdf_checker.run(record=v_t_pdf_record)
     assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         f"IGNORE:{PDFDefectCodes.NO_TEXT_IN_PDF}"
@@ -189,9 +187,7 @@ def test_pdf_incompleteness(
     # Test case 5: Ignoring pdf incomplete defect
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
     v_t_pdf_record.data[Fields.PAGES] = "1--10"
-    v_t_pdf_record.ignore_defect(
-        field=Fields.FILE, defect=PDFDefectCodes.PDF_INCOMPLETE
-    )
+    v_t_pdf_record.ignore_defect(key=Fields.FILE, defect=PDFDefectCodes.PDF_INCOMPLETE)
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
     assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         f"IGNORE:{PDFDefectCodes.PDF_INCOMPLETE}"

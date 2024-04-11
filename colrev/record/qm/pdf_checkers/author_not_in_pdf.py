@@ -33,7 +33,7 @@ class AuthorNotInPDFChecker:
             or Path(record.data[Fields.FILE]).suffix != ".pdf"
             or Fields.AUTHOR not in record.data
             or record.data[Fields.TEXT_FROM_PDF] == ""
-            or record.ignored_defect(field=Fields.FILE, defect=self.msg)
+            or record.ignored_defect(key=Fields.FILE, defect=self.msg)
         ):
             return
 

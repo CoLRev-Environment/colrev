@@ -1330,7 +1330,7 @@ def test_defects() -> None:
     record = colrev.record.record.Record(record_dict)
     actual = record.defects(Fields.TITLE)
     assert actual == [DefectCodes.MOSTLY_ALL_CAPS]
-    assert record.has_quality_defects(field=Fields.TITLE)
+    assert record.has_quality_defects(key=Fields.TITLE)
 
     record_dict = {
         Fields.ID: "r1",
@@ -1355,7 +1355,7 @@ def test_defects() -> None:
     record = colrev.record.record.Record(record_dict)
     actual = record.defects("literature_review")
     assert actual == ["custom-defect"]
-    assert record.has_quality_defects(field="literature_review")
+    assert record.has_quality_defects(key="literature_review")
 
 
 def test_get_field_provenance_source() -> None:
@@ -1423,3 +1423,43 @@ def test_get_field_provenance_notes() -> None:
     record.data[Fields.D_PROV] = {}
     actual = record.get_field_provenance_notes("custom_field")
     assert actual == []
+
+
+def test_is_retracted() -> None:
+
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.D_PROV: {
+            "custom_field": {
+                "source": "import.bib/id_0001a",
+                "note": DefectCodes.MOSTLY_ALL_CAPS,
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+        Fields.RETRACTED: FieldValues.RETRACTED,
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    assert record.is_retracted()
+
+    del record.data[Fields.RETRACTED]
+    actual = record.is_retracted()
+    assert actual is False
+
+    record.data["colrev.crossref.crossmark"] = "True"
+    assert record.is_retracted()
+
+    record.data["crossmark"] = "True"
+    assert record.is_retracted()
+
+    record.data["warning"] = "Withdrawn (according to DBLP)"
+    assert record.is_retracted()

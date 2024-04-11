@@ -33,7 +33,7 @@ class ISBNPatternChecker:
         """Run the isbn-not-matching-pattern checks"""
 
         if Fields.ISBN not in record.data or record.ignored_defect(
-            field=Fields.ISBN, defect=self.msg
+            key=Fields.ISBN, defect=self.msg
         ):
             return
 

@@ -28,7 +28,7 @@ class NameFormatSeparatorsChecker:
         for key in [Fields.AUTHOR, Fields.EDITOR]:
             if (
                 key not in record.data
-                or record.ignored_defect(field=key, defect=self.msg)
+                or record.ignored_defect(key=key, defect=self.msg)
                 or record.data[key] == FieldValues.UNKNOWN
             ):
                 continue

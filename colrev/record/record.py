@@ -467,26 +467,26 @@ class Record:
                     "note": "",
                 }
 
-    def defects(self, field: str) -> typing.List[str]:
+    def defects(self, key: str) -> typing.List[str]:
         """Get a list of defects for a field"""
         self._require_prov()
         defects = []
-        if field in self.data[Fields.MD_PROV]:
-            defects.extend(self.data[Fields.MD_PROV][field]["note"].split(","))
-        if field in self.data[Fields.D_PROV]:
-            defects.extend(self.data[Fields.D_PROV][field]["note"].split(","))
+        if key in self.data[Fields.MD_PROV]:
+            defects.extend(self.data[Fields.MD_PROV][key]["note"].split(","))
+        if key in self.data[Fields.D_PROV]:
+            defects.extend(self.data[Fields.D_PROV][key]["note"].split(","))
         return defects
 
-    def has_quality_defects(self, *, field: str = "") -> bool:
+    def has_quality_defects(self, *, key: str = "") -> bool:
         """Check whether a record has quality defects"""
-        if field != "":
-            if field in self.data.get(Fields.MD_PROV, {}):
-                note = self.data[Fields.MD_PROV][field]["note"]
+        if key != "":
+            if key in self.data.get(Fields.MD_PROV, {}):
+                note = self.data[Fields.MD_PROV][key]["note"]
                 notes = note.split(",")
                 notes = [n for n in notes if not n.startswith("IGNORE:")]
                 return len(notes) != 0
-            if field in self.data.get(Fields.D_PROV, {}):
-                note = self.data[Fields.D_PROV][field]["note"]
+            if key in self.data.get(Fields.D_PROV, {}):
+                note = self.data[Fields.D_PROV][key]["note"]
                 notes = note.split(",")
                 notes = [n for n in notes if not n.startswith("IGNORE:")]
                 return len(notes) != 0
@@ -510,46 +510,21 @@ class Record:
             ]
         )
 
-    def ignore_defect(self, *, field: str, defect: str) -> None:
+    def ignore_defect(self, *, key: str, defect: str) -> None:
         """Ignore a defect for a field"""
+
         ignore_code = f"IGNORE:{defect}"
+        self.remove_field_provenance_note(key=key, note=defect)
+        self.add_field_provenance_note(key=key, note=ignore_code)
 
-        if field in FieldSet.IDENTIFYING_FIELD_KEYS + [
-            Fields.DOI,
-            Fields.PUBMED_ID,
-            Fields.ISBN,
-        ]:
-            if (
-                Fields.MD_PROV not in self.data
-                or field not in self.data[Fields.MD_PROV]
-            ):
-                self.add_field_provenance_note(key=field, note=ignore_code)
-            else:
-                notes = self.data[Fields.MD_PROV][field]["note"].split(",")
-                if defect in notes:
-                    notes.remove(defect)
-                if ignore_code not in notes:
-                    notes.append(ignore_code)
-                self.data[Fields.MD_PROV][field]["note"] = ",".join(notes)
-        else:
-            if Fields.D_PROV not in self.data or field not in self.data[Fields.D_PROV]:
-                self.add_field_provenance_note(key=field, note=ignore_code)
-            else:
-                notes = self.data[Fields.D_PROV][field]["note"].split(",")
-                if defect in notes:
-                    notes.remove(defect)
-                if ignore_code not in notes:
-                    notes.append(ignore_code)
-                self.data[Fields.D_PROV][field]["note"] = ",".join(notes)
-
-    def ignored_defect(self, *, field: str, defect: str) -> bool:
+    def ignored_defect(self, *, key: str, defect: str) -> bool:
         """Get a list of ignored defects for a record"""
         ignore_code = f"IGNORE:{defect}"
-        if Fields.MD_PROV in self.data and field in self.data[Fields.MD_PROV]:
-            notes = self.data[Fields.MD_PROV][field]["note"].split(",")
+        if Fields.MD_PROV in self.data and key in self.data[Fields.MD_PROV]:
+            notes = self.data[Fields.MD_PROV][key]["note"].split(",")
             return ignore_code in notes
-        if Fields.D_PROV in self.data and field in self.data[Fields.D_PROV]:
-            notes = self.data[Fields.D_PROV][field]["note"].split(",")
+        if Fields.D_PROV in self.data and key in self.data[Fields.D_PROV]:
+            notes = self.data[Fields.D_PROV][key]["note"].split(",")
             return ignore_code in notes
         return False
 
@@ -627,12 +602,13 @@ class Record:
         if (
             FieldValues.RETRACTED not in self.data.get(Fields.PRESCREEN_EXCLUSION, "")
             and FieldValues.RETRACTED == reason
-            and print_warning
         ):
-            print(
-                f"\n{Colors.RED}Paper retracted and prescreen "
-                f"excluded: {self.data['ID']}{Colors.END}\n"
-            )
+            if print_warning:
+                print(
+                    f"\n{Colors.RED}Paper retracted and prescreen "
+                    f"excluded: {self.data['ID']}{Colors.END}\n"
+                )
+        if FieldValues.RETRACTED == reason:
             self.data[Fields.RETRACTED] = FieldValues.RETRACTED
 
         self.data[Fields.PRESCREEN_EXCLUSION] = reason
@@ -701,10 +677,6 @@ class Record:
     def is_retracted(self) -> bool:
         """Check for potential retracts"""
 
-        if Fields.RETRACTED in self.data:
-            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
-            return True
-
         # Legacy
         if (
             self.data.get("crossmark", "") == "True"
@@ -713,11 +685,14 @@ class Record:
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="crossmark")
             self.remove_field(key="colrev.crossref.crossmark")
-            return True
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
             self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             self.remove_field(key="warning")
+
+        if Fields.RETRACTED in self.data:
+            self.prescreen_exclude(reason=FieldValues.RETRACTED, print_warning=True)
             return True
+
         return False
 
     # pylint: disable=too-many-branches

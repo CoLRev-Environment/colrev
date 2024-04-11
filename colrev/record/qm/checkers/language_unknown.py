@@ -26,7 +26,7 @@ class LanguageChecker:
         if record.data.get(
             Fields.TITLE, FieldValues.UNKNOWN
         ) == FieldValues.UNKNOWN or record.ignored_defect(
-            field=Fields.TITLE, defect=self.msg
+            key=Fields.TITLE, defect=self.msg
         ):
             return
 

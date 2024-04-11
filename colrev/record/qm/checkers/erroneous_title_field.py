@@ -23,7 +23,7 @@ class ErroneousTitleFieldChecker:
         """Run the erroneous-title-field checks"""
 
         if Fields.TITLE not in record.data or record.ignored_defect(
-            field=Fields.TITLE, defect=self.msg
+            key=Fields.TITLE, defect=self.msg
         ):
             return
 

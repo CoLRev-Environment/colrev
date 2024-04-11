@@ -27,7 +27,7 @@ class RecordNotInTOCChecker:
         """Run the record-not-in-toc checks"""
 
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
-            if record.ignored_defect(field=Fields.JOURNAL, defect=self.msg):
+            if record.ignored_defect(key=Fields.JOURNAL, defect=self.msg):
                 return
             if not self._is_in_toc(record):
                 record.add_field_provenance_note(key=Fields.JOURNAL, note=self.msg)
@@ -36,7 +36,7 @@ class RecordNotInTOCChecker:
             return
 
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
-            if record.ignored_defect(field=Fields.BOOKTITLE, defect=self.msg):
+            if record.ignored_defect(key=Fields.BOOKTITLE, defect=self.msg):
                 return
             if not self._is_in_toc(record):
                 record.add_field_provenance_note(key=Fields.BOOKTITLE, note=self.msg)
