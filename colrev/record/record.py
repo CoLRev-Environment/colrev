@@ -25,6 +25,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
     import colrev.record.qm.quality_model
 
+
 # pylint: disable=too-many-public-methods
 
 
@@ -54,9 +55,8 @@ class Record:
         ck_sorted = {
             k: v for k, v in self.data.items() if k in complementary_keys_order
         }
-        ret_str = (
-            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
-        )
+        ret_str = self.pp.pformat(ik_sorted)[:-1] + "\n"
+        ret_str += self.pp.pformat(ck_sorted)[1:]
 
         return ret_str
 
@@ -147,14 +147,14 @@ class Record:
                         source = self.data[Fields.MD_PROV][key]["source"] + "|" + source
                     else:
                         source = "original|" + source
-                self.add_masterdata_provenance(key=key, source=source, note=note)
+                self.add_field_provenance(key=key, source=source, note=note)
         else:
             if append_edit and key in self.data:
                 if key in self.data.get(Fields.D_PROV, {}):
                     source = self.data[Fields.D_PROV][key]["source"] + "|" + source
                 else:
                     source = "original|" + source
-            self.add_data_provenance(key=key, source=source, note=note)
+            self.add_field_provenance(key=key, source=source, note=note)
         self.data[key] = value
 
     def rename_field(self, *, key: str, new_key: str) -> None:
@@ -196,7 +196,7 @@ class Record:
             del self.data[key]
 
         self._require_prov()
-        if not_missing_note and key in FieldSet.IDENTIFYING_FIELD_KEYS:
+        if not_missing_note and key in FieldSet.MASTERDATA:
             # Example: journal without number
             # we should keep that information that a particular masterdata
             # field is not required
@@ -224,13 +224,13 @@ class Record:
             if (
                 key not in self.data
                 and key != FieldValues.CURATED
-                and "IGNORE:missing" not in self.get_masterdata_provenance_notes(key)
+                and "IGNORE:missing" not in self.get_field_provenance_notes(key)
             ):
                 del self.data[Fields.MD_PROV][key]
         for key in list(self.data[Fields.D_PROV].keys()):
             if (
                 key not in self.data
-                and "IGNORE:missing" not in self.get_data_provenance_notes(key)
+                and "IGNORE:missing" not in self.get_field_provenance_notes(key)
             ):
                 del self.data[Fields.D_PROV][key]
 
@@ -249,134 +249,6 @@ class Record:
                     self.data[Fields.MD_PROV][key] = {"source": "manual", "note": ""}
             elif key not in self.data[Fields.D_PROV]:
                 self.data[Fields.D_PROV][key] = {"source": "manual", "note": ""}
-
-    def get_field_provenance(
-        self, *, key: str, default_source: str = "ORIGINAL"
-    ) -> dict:
-        """Get the provenance for a selected field (key)"""
-        default_note = ""
-        note = default_note
-        source = default_source
-        if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if Fields.MD_PROV in self.data and key in self.data[Fields.MD_PROV]:
-                if "source" in self.data[Fields.MD_PROV][key]:
-                    source = self.data[Fields.MD_PROV][key]["source"]
-                if "note" in self.data[Fields.MD_PROV][key]:
-                    note = self.data[Fields.MD_PROV][key]["note"]
-        else:
-            if Fields.D_PROV in self.data and key in self.data[Fields.D_PROV]:
-                if "source" in self.data[Fields.D_PROV][key]:
-                    source = self.data[Fields.D_PROV][key]["source"]
-                if "note" in self.data[Fields.D_PROV][key]:
-                    note = self.data[Fields.D_PROV][key]["note"]
-
-        return {"source": source, "note": note}
-
-    def get_masterdata_provenance_notes(self, key: str) -> list:
-        """Get a masterdata provenance note based on a key"""
-        if Fields.MD_PROV not in self.data:
-            return []
-        if key not in self.data[Fields.MD_PROV]:
-            return []
-        notes = self.data[Fields.MD_PROV][key]["note"].split(",")
-        return [note for note in notes if note]
-
-    def get_masterdata_provenance_source(self, key: str) -> str:
-        """Get a masterdata provenance source based on a key"""
-        if Fields.MD_PROV not in self.data:
-            return ""
-        if key not in self.data[Fields.MD_PROV]:
-            return ""
-        return self.data[Fields.MD_PROV][key]["source"]
-
-    def get_data_provenance_source(self, key: str) -> str:
-        """Get a data provenance source based on a key"""
-        if Fields.D_PROV not in self.data:
-            return ""
-        if key not in self.data[Fields.D_PROV]:
-            return ""
-        return self.data[Fields.D_PROV][key]["source"]
-
-    def remove_masterdata_provenance_note(self, *, key: str, note: str) -> None:
-        """Remove a masterdata provenance note"""
-        if Fields.MD_PROV not in self.data:
-            return
-        if key not in self.data[Fields.MD_PROV]:
-            return
-        notes = self.data[Fields.MD_PROV][key]["note"].split(",")
-        if note not in notes:
-            return
-        self.data[Fields.MD_PROV][key]["note"] = ",".join(n for n in notes if n != note)
-
-    def add_masterdata_provenance_note(self, *, key: str, note: str) -> None:
-        """Add a masterdata provenance note (based on a key)"""
-        self._require_prov()
-        if key in self.data.get(Fields.MD_PROV, {}):
-            if "" == self.data[Fields.MD_PROV][key]["note"] or "" == note:
-                self.data[Fields.MD_PROV][key]["note"] = note
-            elif note not in self.data[Fields.MD_PROV][key]["note"].split(","):
-                self.data[Fields.MD_PROV][key]["note"] += f",{note}"
-        else:
-            self.data[Fields.MD_PROV][key] = {
-                "source": "ORIGINAL",
-                "note": note,
-            }
-
-    def get_data_provenance_notes(self, key: str) -> list:
-        """Get a data provenance note based on a key"""
-        if Fields.D_PROV not in self.data:
-            return []
-        if key not in self.data[Fields.D_PROV]:
-            return []
-        notes = self.data[Fields.D_PROV][key]["note"].split(",")
-        return [note.strip() for note in notes if note]
-
-    def add_data_provenance_note(self, *, key: str, note: str) -> None:
-        """Add a data provenance note (based on a key)"""
-        self._require_prov()
-
-        if key in self.data[Fields.D_PROV]:
-            if self.data[Fields.D_PROV][key]["note"] == "":
-                self.data[Fields.D_PROV][key]["note"] = note
-            elif note not in self.data[Fields.D_PROV][key]["note"].split(","):
-                self.data[Fields.D_PROV][key]["note"] += f",{note}"
-        else:
-            self.data[Fields.D_PROV][key] = {
-                "source": "ORIGINAL",
-                "note": note,
-            }
-
-    def remove_data_provenance_note(self, *, key: str, note: str) -> None:
-        """Remove a masterdata provenance note"""
-        if Fields.D_PROV not in self.data:
-            return
-        if key not in self.data[Fields.D_PROV]:
-            return
-        notes = self.data[Fields.D_PROV][key]["note"].split(",")
-        if note not in notes:
-            return
-        self.data[Fields.D_PROV][key]["note"] = ",".join(n for n in notes if n != note)
-
-    def add_masterdata_provenance(
-        self, *, key: str, source: str, note: str = ""
-    ) -> None:
-        """Add a masterdata provenance, including source and note (based on a key)"""
-        self._require_prov()
-        md_p_dict = self.data[Fields.MD_PROV]
-
-        if key in md_p_dict:
-            if md_p_dict[key]["note"] == "" or "" == note:
-                md_p_dict[key]["note"] = note
-            elif (
-                DefectCodes.MISSING == note
-                and f"IGNORE:{DefectCodes.MISSING}" in md_p_dict[key]["note"].split(",")
-            ):
-                md_p_dict[key]["note"] = DefectCodes.MISSING
-            elif note not in md_p_dict[key]["note"].split(","):
-                md_p_dict[key]["note"] += f",{note}"
-            md_p_dict[key]["source"] = source
-        else:
-            md_p_dict[key] = {"source": source, "note": f"{note}"}
 
     def add_provenance_all(self, *, source: str) -> None:
         """Add a data provenance (source) to all fields"""
@@ -401,18 +273,136 @@ class Record:
             else:
                 d_p_dict[key] = {"source": source, "note": ""}
 
-    def add_data_provenance(self, *, key: str, source: str, note: str = "") -> None:
-        """Add a data provenance, including source and note (based on a key)"""
+    def add_field_provenance(self, *, key: str, source: str, note: str = "") -> None:
+        """Add a field provenance, including source and note (based on a key)"""
+        if key in FieldSet.NO_PROVENANCE:
+            return
+
         self._require_prov()
-        md_p_dict = self.data[Fields.D_PROV]
-        if key in md_p_dict:
-            if note != "":
-                md_p_dict[key]["note"] += f",{note}"
+        if key in FieldSet.MASTERDATA:
+            md_p_dict = self.data[Fields.MD_PROV]
+
+            if key in md_p_dict:
+                if md_p_dict[key]["note"] == "" or "" == note:
+                    md_p_dict[key]["note"] = note
+                elif (
+                    DefectCodes.MISSING == note
+                    and f"IGNORE:{DefectCodes.MISSING}"
+                    in md_p_dict[key]["note"].split(",")
+                ):
+                    md_p_dict[key]["note"] = DefectCodes.MISSING
+                elif note not in md_p_dict[key]["note"].split(","):
+                    md_p_dict[key]["note"] += f",{note}"
+                md_p_dict[key]["source"] = source
             else:
-                md_p_dict[key]["note"] = ""
-            md_p_dict[key]["source"] = source
+                md_p_dict[key] = {"source": source, "note": f"{note}"}
         else:
-            md_p_dict[key] = {"source": source, "note": f"{note}"}
+            md_p_dict = self.data[Fields.D_PROV]
+            if key in md_p_dict:
+                if note != "":
+                    md_p_dict[key]["note"] += f",{note}"
+                else:
+                    md_p_dict[key]["note"] = ""
+                md_p_dict[key]["source"] = source
+            else:
+                md_p_dict[key] = {"source": source, "note": f"{note}"}
+
+    def add_field_provenance_note(self, *, key: str, note: str) -> None:
+        """Add a field provenance note (based on a key)"""
+        if key in FieldSet.NO_PROVENANCE:
+            return
+        self._require_prov()
+
+        if key in FieldSet.MASTERDATA:
+            if key in self.data.get(Fields.MD_PROV, {}):
+                if "" == self.data[Fields.MD_PROV][key]["note"] or "" == note:
+                    self.data[Fields.MD_PROV][key]["note"] = note
+                elif note not in self.data[Fields.MD_PROV][key]["note"].split(","):
+                    self.data[Fields.MD_PROV][key]["note"] += f",{note}"
+            else:
+                self.data[Fields.MD_PROV][key] = {
+                    "source": "ORIGINAL",
+                    "note": note,
+                }
+        else:
+            if key in self.data[Fields.D_PROV]:
+                if self.data[Fields.D_PROV][key]["note"] == "":
+                    self.data[Fields.D_PROV][key]["note"] = note
+                elif note not in self.data[Fields.D_PROV][key]["note"].split(","):
+                    self.data[Fields.D_PROV][key]["note"] += f",{note}"
+            else:
+                self.data[Fields.D_PROV][key] = {
+                    "source": "ORIGINAL",
+                    "note": note,
+                }
+
+    def get_field_provenance(
+        self, *, key: str, default_source: str = "ORIGINAL"
+    ) -> dict:
+        """Get the provenance for a selected field (key)"""
+        default_note = ""
+        note = default_note
+        source = default_source
+        if key in FieldSet.MASTERDATA:
+            if Fields.MD_PROV in self.data and key in self.data[Fields.MD_PROV]:
+                if "source" in self.data[Fields.MD_PROV][key]:
+                    source = self.data[Fields.MD_PROV][key]["source"]
+                if "note" in self.data[Fields.MD_PROV][key]:
+                    note = self.data[Fields.MD_PROV][key]["note"]
+        else:
+            if Fields.D_PROV in self.data and key in self.data[Fields.D_PROV]:
+                if "source" in self.data[Fields.D_PROV][key]:
+                    source = self.data[Fields.D_PROV][key]["source"]
+                if "note" in self.data[Fields.D_PROV][key]:
+                    note = self.data[Fields.D_PROV][key]["note"]
+
+        return {"source": source, "note": note}
+
+    def get_field_provenance_notes(self, key: str) -> list:
+        """Get field provenance notes based on a key"""
+        if key in FieldSet.MASTERDATA:
+            if Fields.MD_PROV not in self.data:
+                return []
+            if key not in self.data[Fields.MD_PROV]:
+                return []
+            notes = self.data[Fields.MD_PROV][key]["note"].split(",")
+        else:
+            if Fields.D_PROV not in self.data:
+                return []
+            if key not in self.data[Fields.D_PROV]:
+                return []
+            notes = self.data[Fields.D_PROV][key]["note"].split(",")
+        return [note.strip() for note in notes if note]
+
+    def get_field_provenance_source(self, key: str) -> str:
+        """Get the provenance source for a selected field (key)"""
+        return self.get_field_provenance(key=key)["source"]
+
+    def remove_field_provenance_note(self, *, key: str, note: str) -> None:
+        """Remove field provenance notes based on a key"""
+        if key in FieldSet.MASTERDATA:
+            if Fields.MD_PROV not in self.data:
+                return
+            if key not in self.data[Fields.MD_PROV]:
+                return
+            notes = self.data[Fields.MD_PROV][key]["note"].split(",")
+            if note not in notes:
+                return
+            self.data[Fields.MD_PROV][key]["note"] = ",".join(
+                n for n in notes if n != note
+            )
+
+        else:
+            if Fields.D_PROV not in self.data:
+                return
+            if key not in self.data[Fields.D_PROV]:
+                return
+            notes = self.data[Fields.D_PROV][key]["note"].split(",")
+            if note not in notes:
+                return
+            self.data[Fields.D_PROV][key]["note"] = ",".join(
+                n for n in notes if n != note
+            )
 
     def complete_provenance(self, *, source_info: str) -> bool:
         """Complete provenance information for indexing"""
@@ -433,9 +423,9 @@ class Record:
 
             if key in FieldSet.IDENTIFYING_FIELD_KEYS:
                 if not self.masterdata_is_curated():
-                    self.add_masterdata_provenance(key=key, source=source_info, note="")
+                    self.add_field_provenance(key=key, source=source_info, note="")
             else:
-                self.add_data_provenance(key=key, source=source_info, note="")
+                self.add_field_provenance(key=key, source=source_info, note="")
 
         return True
 
@@ -508,7 +498,7 @@ class Record:
     def reset_pdf_provenance_notes(self) -> None:
         """Reset the PDF (file) provenance notes"""
         if Fields.D_PROV not in self.data:
-            self.add_data_provenance_note(key=Fields.FILE, note="")
+            self.add_field_provenance_note(key=Fields.FILE, note="")
         else:
             if Fields.FILE in self.data[Fields.D_PROV]:
                 self.data[Fields.D_PROV][Fields.FILE]["note"] = ""
@@ -527,66 +517,6 @@ class Record:
         if field in self.data[Fields.D_PROV]:
             defects.extend(self.data[Fields.D_PROV][field]["note"].split(","))
         return defects
-
-    def ignore_defect(self, *, field: str, defect: str) -> None:
-        """Ignore a defect for a field"""
-        ignore_code = f"IGNORE:{defect}"
-
-        if field in FieldSet.IDENTIFYING_FIELD_KEYS + [
-            Fields.DOI,
-            Fields.PUBMED_ID,
-            Fields.ISBN,
-        ]:
-            if (
-                Fields.MD_PROV not in self.data
-                or field not in self.data[Fields.MD_PROV]
-            ):
-                self.add_masterdata_provenance_note(key=field, note=ignore_code)
-            else:
-                notes = self.data[Fields.MD_PROV][field]["note"].split(",")
-                if defect in notes:
-                    notes.remove(defect)
-                if ignore_code not in notes:
-                    notes.append(ignore_code)
-                self.data[Fields.MD_PROV][field]["note"] = ",".join(notes)
-        else:
-            if Fields.D_PROV not in self.data or field not in self.data[Fields.D_PROV]:
-                self.add_data_provenance_note(key=field, note=ignore_code)
-            else:
-                notes = self.data[Fields.D_PROV][field]["note"].split(",")
-                if defect in notes:
-                    notes.remove(defect)
-                if ignore_code not in notes:
-                    notes.append(ignore_code)
-                self.data[Fields.D_PROV][field]["note"] = ",".join(notes)
-
-    def ignored_defect(self, *, field: str, defect: str) -> bool:
-        """Get a list of ignored defects for a record"""
-        ignore_code = f"IGNORE:{defect}"
-        if Fields.MD_PROV in self.data and field in self.data[Fields.MD_PROV]:
-            notes = self.data[Fields.MD_PROV][field]["note"].split(",")
-            return ignore_code in notes
-        if Fields.D_PROV in self.data and field in self.data[Fields.D_PROV]:
-            notes = self.data[Fields.D_PROV][field]["note"].split(",")
-            return ignore_code in notes
-        return False
-
-    def has_pdf_defects(self) -> bool:
-        """Check whether the PDF has quality defects"""
-
-        if (
-            Fields.D_PROV not in self.data
-            or Fields.FILE not in self.data[Fields.D_PROV]
-        ):
-            return False
-
-        return bool(
-            [
-                n
-                for n in self.data[Fields.D_PROV][Fields.FILE]["note"].split(",")
-                if not n.startswith("IGNORE:") and n != ""
-            ]
-        )
 
     def has_quality_defects(self, *, field: str = "") -> bool:
         """Check whether a record has quality defects"""
@@ -609,6 +539,60 @@ class Record:
             if not n.startswith("IGNORE:") and n != ""
         ]
         return bool(defect_codes)
+
+    def has_pdf_defects(self) -> bool:
+        """Check whether the PDF has quality defects"""
+
+        return bool(
+            [
+                n
+                for n in self.get_field_provenance_notes(Fields.FILE)
+                if not n.startswith("IGNORE:") and n != ""
+            ]
+        )
+
+    def ignore_defect(self, *, field: str, defect: str) -> None:
+        """Ignore a defect for a field"""
+        ignore_code = f"IGNORE:{defect}"
+
+        if field in FieldSet.IDENTIFYING_FIELD_KEYS + [
+            Fields.DOI,
+            Fields.PUBMED_ID,
+            Fields.ISBN,
+        ]:
+            if (
+                Fields.MD_PROV not in self.data
+                or field not in self.data[Fields.MD_PROV]
+            ):
+                self.add_field_provenance_note(key=field, note=ignore_code)
+            else:
+                notes = self.data[Fields.MD_PROV][field]["note"].split(",")
+                if defect in notes:
+                    notes.remove(defect)
+                if ignore_code not in notes:
+                    notes.append(ignore_code)
+                self.data[Fields.MD_PROV][field]["note"] = ",".join(notes)
+        else:
+            if Fields.D_PROV not in self.data or field not in self.data[Fields.D_PROV]:
+                self.add_field_provenance_note(key=field, note=ignore_code)
+            else:
+                notes = self.data[Fields.D_PROV][field]["note"].split(",")
+                if defect in notes:
+                    notes.remove(defect)
+                if ignore_code not in notes:
+                    notes.append(ignore_code)
+                self.data[Fields.D_PROV][field]["note"] = ",".join(notes)
+
+    def ignored_defect(self, *, field: str, defect: str) -> bool:
+        """Get a list of ignored defects for a record"""
+        ignore_code = f"IGNORE:{defect}"
+        if Fields.MD_PROV in self.data and field in self.data[Fields.MD_PROV]:
+            notes = self.data[Fields.MD_PROV][field]["note"].split(",")
+            return ignore_code in notes
+        if Fields.D_PROV in self.data and field in self.data[Fields.D_PROV]:
+            notes = self.data[Fields.D_PROV][field]["note"].split(",")
+            return ignore_code in notes
+        return False
 
     def get_container_title(self, *, na_string: str = "NA") -> str:
         """Get the record's container title (journal name, booktitle, etc.)"""
@@ -647,7 +631,7 @@ class Record:
         """Returns the colrev_id of the Record."""
 
         return colrev.record.record_identifier.get_colrev_id(
-            record=self,
+            self,
             assume_complete=assume_complete,
         )
 
@@ -827,20 +811,6 @@ class Record:
 
         self.run_quality_model(qm)
 
-    # def get_colrev_id(self) -> list:
-    #     """Get the colrev_id of a record"""
-    #     # Note : do not automatically create colrev_ids
-    #     # or at least keep in mind that this will not be possible for some records
-    #     colrev_id = []
-    #     if Fields.COLREV_ID in self.data:
-    #         if isinstance(self.data[Fields.COLREV_ID], str):
-    #             colrev_id = [
-    #                 cid.lstrip() for cid in self.data[Fields.COLREV_ID].split(";")
-    #             ]
-    #         elif isinstance(self.data[Fields.COLREV_ID], list):
-    #             colrev_id = self.data[Fields.COLREV_ID]
-    #     return [c for c in colrev_id if len(c) > 20]
-
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""
 
@@ -855,33 +825,30 @@ class Record:
     ) -> list:
         """Get diff between record objects"""
 
-        # pylint: disable=too-many-branches
+        if not identifying_fields_only:
+            return list(dictdiffer.diff(self.get_data(), other_record.get_data()))
 
         diff = []
-        if identifying_fields_only:
-            for selected_tuple in list(
-                dictdiffer.diff(self.get_data(), other_record.get_data())
-            ):
-                if selected_tuple[0] == "change":
-                    if selected_tuple[1] in FieldSet.IDENTIFYING_FIELD_KEYS:
-                        diff.append(selected_tuple)
-                if selected_tuple[0] == "add":
-                    addition_list: typing.Tuple = ("add", "", [])
-                    for addition_item in selected_tuple[2]:
-                        if addition_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
-                            addition_list[2].append(addition_item)
-                    if addition_list[2]:
-                        diff.append(addition_list)
-                if selected_tuple[0] == "remove":
-                    removal_list: typing.Tuple = ("remove", "", [])
-                    for removal_item in selected_tuple[2]:
-                        if removal_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
-                            removal_list[2].append(removal_item)
-                    if removal_list[2]:
-                        diff.append(removal_list)
-        else:
-            diff = list(dictdiffer.diff(self.get_data(), other_record.get_data()))
-
+        for selected_tuple in list(
+            dictdiffer.diff(self.get_data(), other_record.get_data())
+        ):
+            if selected_tuple[0] == "change":
+                if selected_tuple[1] in FieldSet.IDENTIFYING_FIELD_KEYS:
+                    diff.append(selected_tuple)
+            if selected_tuple[0] == "add":
+                addition_list: typing.Tuple = ("add", "", [])
+                for addition_item in selected_tuple[2]:
+                    if addition_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
+                        addition_list[2].append(addition_item)
+                if addition_list[2]:
+                    diff.append(addition_list)
+            if selected_tuple[0] == "remove":
+                removal_list: typing.Tuple = ("remove", "", [])
+                for removal_item in selected_tuple[2]:
+                    if removal_item[0] in FieldSet.IDENTIFYING_FIELD_KEYS:
+                        removal_list[2].append(removal_item)
+                if removal_list[2]:
+                    diff.append(removal_list)
         return diff
 
     @classmethod

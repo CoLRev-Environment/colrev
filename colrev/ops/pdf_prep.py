@@ -169,7 +169,7 @@ class PDFPrep(colrev.process.operation.Operation):
 
                 record.data = endpoint.prep_pdf(record, pad)  # type: ignore
             except colrev_exceptions.PDFHashError:
-                record.add_data_provenance_note(key=Fields.FILE, note="pdf-hash-error")
+                record.add_field_provenance_note(key=Fields.FILE, note="pdf-hash-error")
 
             except (
                 colrev_exceptions.InvalidPDFException,

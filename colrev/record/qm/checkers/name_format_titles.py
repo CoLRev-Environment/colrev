@@ -35,9 +35,9 @@ class NameFormatTitleChecker:
                 continue
 
             if self._title_in_name(name=record.data[key]):
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
     def _title_in_name(self, *, name: str) -> bool:
         name_parts = self._words_rgx.findall(name.lower().replace(".", ""))

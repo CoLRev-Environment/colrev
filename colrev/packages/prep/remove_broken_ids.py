@@ -47,15 +47,13 @@ class RemoveBrokenIDPrep(JsonSchemaMixin):
         if self.prep_operation.polish and not self.review_manager.force_mode:
             return record
 
-        if (
-            DefectCodes.DOI_NOT_MATCHING_PATTERN
-            in record.get_masterdata_provenance_notes(Fields.DOI)
+        if DefectCodes.DOI_NOT_MATCHING_PATTERN in record.get_field_provenance_notes(
+            Fields.DOI
         ):
             record.remove_field(key=Fields.DOI)
 
-        if (
-            DefectCodes.ISBN_NOT_MATCHING_PATTERN
-            in record.get_masterdata_provenance_notes(Fields.ISBN)
+        if DefectCodes.ISBN_NOT_MATCHING_PATTERN in record.get_field_provenance_notes(
+            Fields.ISBN
         ):
             record.remove_field(key=Fields.ISBN)
 

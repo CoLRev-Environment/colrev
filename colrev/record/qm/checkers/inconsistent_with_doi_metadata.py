@@ -43,13 +43,13 @@ class InconsistentWithDOIMetadataChecker:
         ):
             return
 
-        if "md_curated.bib" in record.get_masterdata_provenance_source(Fields.DOI):
+        if "md_curated.bib" in record.get_field_provenance_source(Fields.DOI):
             return
 
         if self._doi_metadata_conflicts(record=record):
-            record.add_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
+            record.add_field_provenance_note(key=Fields.DOI, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key=Fields.DOI, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.DOI, note=self.msg)
 
     def _doi_metadata_conflicts(self, *, record: colrev.record.record.Record) -> bool:
         record_copy = record.copy_prep_rec()

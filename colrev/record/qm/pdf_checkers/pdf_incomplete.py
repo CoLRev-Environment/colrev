@@ -47,9 +47,9 @@ class PDFIncompletenessChecker:
             return
 
         if not self._pages_match_pdf(record=record):
-            record.add_data_provenance_note(key=Fields.FILE, note=self.msg)
+            record.add_field_provenance_note(key=Fields.FILE, note=self.msg)
         else:
-            record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.FILE, note=self.msg)
 
     def _pages_match_pdf(self, *, record: colrev.record.record_pdf.PDFRecord) -> bool:
 

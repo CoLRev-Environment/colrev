@@ -159,7 +159,7 @@ class PDFGetMan(colrev.process.operation.Operation):
             else:
                 record.set_status(RecordState.pdf_prepared)
 
-                record.add_data_provenance(
+                record.add_field_provenance(
                     key=Fields.FILE, source="pdf-get-man", note="not_available"
                 )
 

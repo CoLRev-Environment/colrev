@@ -237,9 +237,7 @@ class ExportManPrep(JsonSchemaMixin):
                 original_record.update_field(
                     key=key, value=value, source="man_prep", append_edit=False
                 )
-                original_record.remove_masterdata_provenance_note(
-                    key=key, note="missing"
-                )
+                original_record.remove_field_provenance_note(key=key, note="missing")
 
         for dropped_key in dropped_keys:
             original_record.remove_field(

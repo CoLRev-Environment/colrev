@@ -397,7 +397,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         prep_operation: colrev.ops.prep.Prep,
     ) -> None:
         try:
-            default_source = retrieved_record.get_masterdata_provenance_source(
+            default_source = retrieved_record.get_field_provenance_source(
                 FieldValues.CURATED
             )
             if default_source == "":
@@ -500,7 +500,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         for item in change_itemsets:
             repo_path = colrev.record.record.Record(
                 item["original_record"]
-            ).get_masterdata_provenance_source(FieldValues.CURATED)
+            ).get_field_provenance_source(FieldValues.CURATED)
             if repo_path != "":
                 assert "#" not in repo_path
                 # otherwise: strip the ID at the end if we add an ID...
@@ -535,7 +535,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         for item in change_itemsets:
             repo_path = colrev.record.record.Record(
                 item["original_record"]
-            ).get_masterdata_provenance_source(FieldValues.CURATED)
+            ).get_field_provenance_source(FieldValues.CURATED)
             assert "#" not in repo_path
 
             if repo_path != local_base_repo:

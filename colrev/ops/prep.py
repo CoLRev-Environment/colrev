@@ -307,11 +307,11 @@ class Prep(colrev.process.operation.Operation):
     ) -> bool:
         """Check whether the break condition for the prep operation is given"""
 
-        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_field_provenance_notes(
             Fields.JOURNAL
         ):
             return True
-        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_field_provenance_notes(
             Fields.BOOKTITLE
         ):
             return True
@@ -333,11 +333,11 @@ class Prep(colrev.process.operation.Operation):
         ]:
             return True
 
-        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_field_provenance_notes(
             Fields.JOURNAL
         ):
             return True
-        if DefectCodes.RECORD_NOT_IN_TOC in record.get_masterdata_provenance_notes(
+        if DefectCodes.RECORD_NOT_IN_TOC in record.get_field_provenance_notes(
             Fields.BOOKTITLE
         ):
             return True

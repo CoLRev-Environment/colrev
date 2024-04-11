@@ -197,6 +197,16 @@ class Fields:
     EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
 
 
+class FieldValues:
+    """Constant field values"""
+
+    UNKNOWN = "UNKNOWN"
+    FORTHCOMING = "forthcoming"
+    RETRACTED = "retracted"
+    CURATED = "CURATED"
+    ANONYMOUS = "Anonymous"
+
+
 class FieldSet:
     """Constant field sets"""
 
@@ -260,6 +270,9 @@ class FieldSet:
 
     # Fields that are stored as lists (items separated by newlines)
     LIST_FIELDS = [Fields.ORIGIN]
+
+    MASTERDATA = IDENTIFYING_FIELD_KEYS + [FieldValues.CURATED]
+    NO_PROVENANCE = PROVENANCE_KEYS + [Fields.ID, Fields.ENTRYTYPE]
 
 
 class RecordState(Enum):
@@ -405,16 +418,6 @@ class RecordState(Enum):
             return {RecordState.rev_synthesized}
 
         raise ValueError(f"state {state}")
-
-
-class FieldValues:
-    """Constant field values"""
-
-    UNKNOWN = "UNKNOWN"
-    FORTHCOMING = "forthcoming"
-    RETRACTED = "retracted"
-    CURATED = "CURATED"
-    ANONYMOUS = "Anonymous"
 
 
 class DefectCodes:

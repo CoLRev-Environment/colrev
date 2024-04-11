@@ -31,7 +31,7 @@ def test_container_title_abbreviated(
     v_t_record.data[Fields.JOURNAL] = "JAMA"
     container_title_abbreviated_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         DefectCodes.CONTAINER_TITLE_ABBREVIATED
     ]
 
@@ -39,7 +39,7 @@ def test_container_title_abbreviated(
     v_t_record.data[Fields.BOOKTITLE] = "Proc."
     container_title_abbreviated_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == [
         DefectCodes.CONTAINER_TITLE_ABBREVIATED
     ]
 
@@ -48,8 +48,8 @@ def test_container_title_abbreviated(
     v_t_record.data[Fields.BOOKTITLE] = "Proceedings of the Conference"
     container_title_abbreviated_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == []
 
     # Test case 4: Ignoring container title abbreviated defect in the journal field
     v_t_record.data[Fields.JOURNAL] = "JAMA"
@@ -58,7 +58,7 @@ def test_container_title_abbreviated(
     )
     container_title_abbreviated_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         f"IGNORE:{DefectCodes.CONTAINER_TITLE_ABBREVIATED}"
     ]
 
@@ -75,8 +75,7 @@ def test_doi_not_matching_pattern(
     # Test case 1: DOI not matching the pattern
     v_t_record.data[Fields.DOI] = "20.1002/invalid_doi"
     doi_pattern_checker.run(record=v_t_record)
-    assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == [
         DefectCodes.DOI_NOT_MATCHING_PATTERN
     ]
 
@@ -85,7 +84,7 @@ def test_doi_not_matching_pattern(
     doi_pattern_checker.run(record=v_t_record)
     print(v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == []
 
     # Test case 3: Ignoring DOI not matching pattern defect
     v_t_record.data[Fields.DOI] = "20.1002/invalid_doi"
@@ -93,7 +92,7 @@ def test_doi_not_matching_pattern(
         field=Fields.DOI, defect=DefectCodes.DOI_NOT_MATCHING_PATTERN
     )
     doi_pattern_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == [
         f"IGNORE:{DefectCodes.DOI_NOT_MATCHING_PATTERN}"
     ]
     assert not v_t_record.has_quality_defects()
@@ -113,7 +112,7 @@ def test_erroneous_symbol_in_field(
     v_t_record.data[Fields.TITLE] = "Title with Erroneous Symbol ™"
     erroneous_symbol_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.ERRONEOUS_SYMBOL_IN_FIELD
     ]
     v_t_record.data[Fields.TITLE] = (
@@ -124,7 +123,7 @@ def test_erroneous_symbol_in_field(
     v_t_record.data[Fields.AUTHOR] = "John Doe"
     erroneous_symbol_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
 
     # Test case 3: Ignoring erroneous symbol defect in the title field
     v_t_record.data[Fields.TITLE] = "Title with Erroneous Symbol ™"
@@ -133,7 +132,7 @@ def test_erroneous_symbol_in_field(
     )
     erroneous_symbol_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.ERRONEOUS_SYMBOL_IN_FIELD}"
     ]
 
@@ -154,7 +153,7 @@ def test_erroneous_term_in_field(
     v_t_record.data[Fields.AUTHOR] = "John Doe from Harvard University"
     erroneous_term_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.ERRONEOUS_TERM_IN_FIELD
     ]
     v_t_record.data[Fields.AUTHOR] = "Wagner, Gerit and Lukyanenko, Roman and Paré, Guy"
@@ -163,7 +162,7 @@ def test_erroneous_term_in_field(
     v_t_record.data[Fields.TITLE] = "A Study on Artificial Intelligence"
     erroneous_term_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case 3: Ignoring erroneous term defect in the author field
     v_t_record.data[Fields.AUTHOR] = "John Doe from Harvard University"
@@ -172,7 +171,7 @@ def test_erroneous_term_in_field(
     )
     erroneous_term_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         f"IGNORE:{DefectCodes.ERRONEOUS_TERM_IN_FIELD}"
     ]
 
@@ -192,7 +191,7 @@ def test_erroneous_title_field(
     v_t_record.data[Fields.TITLE] = "A I S ssociation for nformation ystems"
     erroneous_title_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.ERRONEOUS_TITLE_FIELD
     ]
 
@@ -200,7 +199,7 @@ def test_erroneous_title_field(
     v_t_record.data[Fields.TITLE] = "A Study on Artificial Intelligence"
     erroneous_title_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case 3: Ignoring erroneous title defect
     v_t_record.data[Fields.TITLE] = (
@@ -211,7 +210,7 @@ def test_erroneous_title_field(
     )
     erroneous_title_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.ERRONEOUS_TITLE_FIELD}"
     ]
 
@@ -231,7 +230,7 @@ def test_html_tags_(
     v_t_record.data[Fields.TITLE] = "An overview of &#60;HTML&#62; tags"
     html_tag_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.HTML_TAGS
     ]
 
@@ -239,7 +238,7 @@ def test_html_tags_(
     v_t_record.data[Fields.JOURNAL] = "Journal of &#60;Web&#62; Development"
     html_tag_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         DefectCodes.HTML_TAGS
     ]
 
@@ -248,15 +247,15 @@ def test_html_tags_(
     v_t_record.data[Fields.JOURNAL] = "Journal of Web Development"
     html_tag_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == []
 
     # Test case 4: Ignoring HTML tags defect
     v_t_record.data[Fields.TITLE] = "An overview of &#60;HTML&#62; tags"
     v_t_record.ignore_defect(field=Fields.TITLE, defect=DefectCodes.HTML_TAGS)
     html_tag_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         "IGNORE:html-tags"
     ]
 
@@ -277,7 +276,7 @@ def test_identical_values_between_title_and_container(
     v_t_record.data[Fields.JOURNAL] = "The Great Adventure"
     identical_values_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER
     ]
 
@@ -286,7 +285,7 @@ def test_identical_values_between_title_and_container(
     v_t_record.data[Fields.BOOKTITLE] = "Great Adventure"
     identical_values_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER
     ]
 
@@ -295,7 +294,7 @@ def test_identical_values_between_title_and_container(
     identical_values_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects(), "Defects found for an unknown title"
     assert (
-        v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+        v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
     ), "Provenance notes found for an unknown title"
 
     # Test case 3: No identical values
@@ -304,7 +303,7 @@ def test_identical_values_between_title_and_container(
     del v_t_record.data[Fields.BOOKTITLE]
     identical_values_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case 4: Ignoring identical values defect
     v_t_record.data[Fields.TITLE] = "The Great Adventure"
@@ -315,7 +314,7 @@ def test_identical_values_between_title_and_container(
     )
     identical_values_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.IDENTICAL_VALUES_BETWEEN_TITLE_AND_CONTAINER}"
     ]
 
@@ -333,7 +332,7 @@ def test_incomplete_field(
     v_t_record.data[Fields.TITLE] = "A Study on..."
     incomplete_field_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.INCOMPLETE_FIELD
     ]
 
@@ -341,7 +340,7 @@ def test_incomplete_field(
     v_t_record.data[Fields.AUTHOR] = "Doe, J. and Smith, S. and ..."
     incomplete_field_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.INCOMPLETE_FIELD
     ]
 
@@ -351,22 +350,22 @@ def test_incomplete_field(
     assert (
         v_t_record.has_quality_defects()
     ), "Institutional author considered incomplete"
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
 
     # Test case 3: No incomplete fields
     v_t_record.data[Fields.TITLE] = "A Complete Study"
     v_t_record.data[Fields.AUTHOR] = "Doe, John and Smith, Jane"
     incomplete_field_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
 
     # Test case 4: Ignoring incomplete field defect in the title
     v_t_record.data[Fields.TITLE] = "A Study on..."
     v_t_record.ignore_defect(field=Fields.TITLE, defect=DefectCodes.INCOMPLETE_FIELD)
     incomplete_field_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.INCOMPLETE_FIELD}"
     ]
 
@@ -386,7 +385,7 @@ def test_inconsistent_content(
     v_t_record.data[Fields.JOURNAL] = "Proceedings of the conference on..."
     inconsistent_content_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         DefectCodes.INCONSISTENT_CONTENT
     ]
 
@@ -394,7 +393,7 @@ def test_inconsistent_content(
     v_t_record.data[Fields.BOOKTITLE] = "Journal of Advanced Research"
     inconsistent_content_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == [
         DefectCodes.INCONSISTENT_CONTENT
     ]
 
@@ -403,8 +402,8 @@ def test_inconsistent_content(
     v_t_record.data[Fields.BOOKTITLE] = "Proceedings of the Advanced Research Symposium"
     inconsistent_content_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == []
 
     # Test case 4: Ignoring inconsistent content defect in the journal field
     v_t_record.data[Fields.JOURNAL] = "Proceedings of the conference on..."
@@ -413,7 +412,7 @@ def test_inconsistent_content(
     )
     inconsistent_content_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         f"IGNORE:{DefectCodes.INCONSISTENT_CONTENT}"
     ]
 
@@ -437,10 +436,10 @@ def test_inconsistent_with_entrytype(
     v_t_record.data[Fields.ISBN] = "123-4567890123"
     inconsistent_with_entrytype_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == [
         DefectCodes.INCONSISTENT_WITH_ENTRYTYPE
     ]
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.ISBN) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.ISBN) == [
         DefectCodes.INCONSISTENT_WITH_ENTRYTYPE
     ]
 
@@ -450,8 +449,8 @@ def test_inconsistent_with_entrytype(
     del v_t_record.data[Fields.NUMBER]
     inconsistent_with_entrytype_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.NUMBER) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.NUMBER) == []
 
     # Test case 3: Ignoring inconsistent with entrytype defect in the booktitle field
     v_t_record.data["ENTRYTYPE"] = "article"
@@ -461,7 +460,7 @@ def test_inconsistent_with_entrytype(
         field=Fields.BOOKTITLE, defect=DefectCodes.INCONSISTENT_WITH_ENTRYTYPE
     )
     inconsistent_with_entrytype_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == [
         f"IGNORE:{DefectCodes.INCONSISTENT_WITH_ENTRYTYPE}"
     ]
     print(v_t_record)
@@ -480,8 +479,7 @@ def test_isbn_not_matching_pattern(
     # Test case 1: ISBN not matching pattern
     v_t_record.data[Fields.ISBN] = "ISBN 123-456-789"
     isbn_pattern_checker.run(record=v_t_record)
-    assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.ISBN) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.ISBN) == [
         DefectCodes.ISBN_NOT_MATCHING_PATTERN
     ]
 
@@ -489,7 +487,7 @@ def test_isbn_not_matching_pattern(
     v_t_record.data[Fields.ISBN] = "978-3-16-148410-0"
     isbn_pattern_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.ISBN) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.ISBN) == []
 
     # Test case 3: Ignoring ISBN not matching pattern defect
     v_t_record.data[Fields.ISBN] = "ISBN 123-456-789"
@@ -498,7 +496,7 @@ def test_isbn_not_matching_pattern(
     )
     isbn_pattern_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.ISBN) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.ISBN) == [
         f"IGNORE:{DefectCodes.ISBN_NOT_MATCHING_PATTERN}"
     ]
 
@@ -515,14 +513,14 @@ def test_language_format_error(
     # Test case 1: Language format error
     v_t_record.data[Fields.LANGUAGE] = "engg"
     language_format_checker.run(record=v_t_record)
-    assert v_t_record.get_data_provenance_notes(Fields.LANGUAGE) == [
+    assert v_t_record.get_field_provenance_notes(Fields.LANGUAGE) == [
         DefectCodes.LANGUAGE_FORMAT_ERROR
     ]
 
     # Test case 2: Language format correct
     v_t_record.data[Fields.LANGUAGE] = "eng"
     language_format_checker.run(record=v_t_record)
-    assert v_t_record.get_data_provenance_notes(Fields.LANGUAGE) == []
+    assert v_t_record.get_field_provenance_notes(Fields.LANGUAGE) == []
 
     # Test case 3: Ignoring language format error defect
     v_t_record.data[Fields.LANGUAGE] = "engg"
@@ -531,7 +529,7 @@ def test_language_format_error(
     )
     print(v_t_record)
     language_format_checker.run(record=v_t_record)
-    assert v_t_record.get_data_provenance_notes(Fields.LANGUAGE) == [
+    assert v_t_record.get_field_provenance_notes(Fields.LANGUAGE) == [
         f"IGNORE:{DefectCodes.LANGUAGE_FORMAT_ERROR}"
     ]
 
@@ -548,20 +546,20 @@ def test_language_unknown(
     # Test case 1: Language unknown
     del v_t_record.data[Fields.LANGUAGE]
     language_unknown_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.LANGUAGE_UNKNOWN
     ]
 
     # Test case 2: Language known
     v_t_record.data[Fields.LANGUAGE] = "eng"
     language_unknown_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case 3: Ignoring language unknown defect
     del v_t_record.data[Fields.LANGUAGE]
     v_t_record.ignore_defect(field=Fields.TITLE, defect=DefectCodes.LANGUAGE_UNKNOWN)
     language_unknown_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.LANGUAGE_UNKNOWN}"
     ]
 
@@ -578,14 +576,14 @@ def test_missing_field(
     # Test case 1: Field is missing
     del v_t_record.data[Fields.TITLE]
     missing_field_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.MISSING
     ]
 
     # Test case 2: Field is not missing
     v_t_record.data[Fields.TITLE] = "A Valid Title"
     missing_field_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case: Non-existing entry type
     v_t_record.data["ENTRYTYPE"] = "nonexistent"
@@ -597,7 +595,7 @@ def test_missing_field(
     del v_t_record.data[Fields.TITLE]
     v_t_record.ignore_defect(field=Fields.TITLE, defect=DefectCodes.MISSING)
     missing_field_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.MISSING}"
     ]
 
@@ -615,7 +613,7 @@ def test_mostly_all_caps(
     v_t_record.data[Fields.TITLE] = "THIS IS AN ALL CAPS TITLE"
     mostly_all_caps_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         DefectCodes.MOSTLY_ALL_CAPS
     ]
 
@@ -623,27 +621,27 @@ def test_mostly_all_caps(
     v_t_record.data[Fields.TITLE] = "This is Not an All Caps Title"
     mostly_all_caps_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case: Title is "PLOS ONE" - should be ok
     v_t_record.data[Fields.JOURNAL] = "PLOS ONE"
     mostly_all_caps_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == []
 
     # Test case: Online source with short title in all caps - should be ok
     v_t_record.data["ENTRYTYPE"] = "online"
     v_t_record.data[Fields.TITLE] = "SHORT"
     mostly_all_caps_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == []
 
     # Test case 3: Ignoring mostly all caps defect
     v_t_record.data[Fields.TITLE] = "THIS IS AN ALL CAPS TITLE"
     v_t_record.ignore_defect(field=Fields.TITLE, defect=DefectCodes.MOSTLY_ALL_CAPS)
     mostly_all_caps_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.TITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.MOSTLY_ALL_CAPS}"
     ]
 
@@ -661,7 +659,7 @@ def test_name_abbreviated(
     v_t_record.data[Fields.AUTHOR] = "John Doe et al"
     name_abbreviated_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_ABBREVIATED
     ]
 
@@ -669,7 +667,7 @@ def test_name_abbreviated(
     v_t_record.data[Fields.EDITOR] = "Jane Smith and others"
     name_abbreviated_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == [
         DefectCodes.NAME_ABBREVIATED
     ]
 
@@ -678,15 +676,15 @@ def test_name_abbreviated(
     v_t_record.data[Fields.EDITOR] = "Jane Smith"
     name_abbreviated_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == []
 
     # Test case 4: Ignoring name abbreviated defect in the author field
     v_t_record.data[Fields.AUTHOR] = "John Doe et al"
     v_t_record.ignore_defect(field=Fields.AUTHOR, defect=DefectCodes.NAME_ABBREVIATED)
     name_abbreviated_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         f"IGNORE:{DefectCodes.NAME_ABBREVIATED}"
     ]
 
@@ -706,7 +704,7 @@ def test_name_format_separators(
     v_t_record.data[Fields.AUTHOR] = "Doe, John; Smith, Jane"
     name_format_separators_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_FORMAT_SEPARTORS
     ]
 
@@ -714,7 +712,7 @@ def test_name_format_separators(
     v_t_record.data[Fields.EDITOR] = "Smith, Jane nf Doe, John"
     name_format_separators_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == [
         DefectCodes.NAME_FORMAT_SEPARTORS
     ]
 
@@ -723,27 +721,27 @@ def test_name_format_separators(
     v_t_record.data[Fields.EDITOR] = "Smith, Jane and Doe, John"
     name_format_separators_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == []
 
     # Name format issues due to "I N T R  O D " in the author field
     v_t_record.data[Fields.AUTHOR] = "I N T R O D"
     name_format_separators_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_FORMAT_SEPARTORS
     ]
     assert v_t_record.has_quality_defects()
 
     v_t_record.data[Fields.AUTHOR] = "Tom"
     name_format_separators_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_FORMAT_SEPARTORS
     ]
     assert v_t_record.has_quality_defects()
 
     v_t_record.data[Fields.AUTHOR] = "name, with-no-capitals"
     name_format_separators_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_FORMAT_SEPARTORS
     ]
     assert v_t_record.has_quality_defects()
@@ -755,7 +753,7 @@ def test_name_format_separators(
     )
     name_format_separators_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         f"IGNORE:{DefectCodes.NAME_FORMAT_SEPARTORS}"
     ]
 
@@ -773,7 +771,7 @@ def test_name_format_titles(
     v_t_record.data[Fields.AUTHOR] = "Dr. John Doe"
     name_format_title_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_FORMAT_TITLES
     ]
 
@@ -781,7 +779,7 @@ def test_name_format_titles(
     v_t_record.data[Fields.EDITOR] = "Prof. Jane Smith"
     name_format_title_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == [
         DefectCodes.NAME_FORMAT_TITLES
     ]
 
@@ -790,15 +788,15 @@ def test_name_format_titles(
     v_t_record.data[Fields.EDITOR] = "Jane Smith"
     name_format_title_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == []
 
     # Test case 4: Ignoring name format defect in the author field
     v_t_record.data[Fields.AUTHOR] = "Dr. John Doe"
     v_t_record.ignore_defect(field=Fields.AUTHOR, defect=DefectCodes.NAME_FORMAT_TITLES)
     name_format_title_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         f"IGNORE:{DefectCodes.NAME_FORMAT_TITLES}"
     ]
 
@@ -816,7 +814,7 @@ def test_name_particles(
     v_t_record.data[Fields.AUTHOR] = "Neumann, John von"
     name_particles_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.NAME_PARTICLES
     ]
 
@@ -824,7 +822,7 @@ def test_name_particles(
     v_t_record.data[Fields.EDITOR] = "Beethoven, Ludwig vom"
     name_particles_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == [
         DefectCodes.NAME_PARTICLES
     ]
 
@@ -833,15 +831,15 @@ def test_name_particles(
     v_t_record.data[Fields.EDITOR] = "Jane Smith"
     name_particles_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.EDITOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.EDITOR) == []
 
     # Test case 4: Ignoring name particles defect in the author field
     v_t_record.data[Fields.AUTHOR] = "Neumann, John von"
     v_t_record.ignore_defect(field=Fields.AUTHOR, defect=DefectCodes.NAME_PARTICLES)
     name_particles_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         f"IGNORE:{DefectCodes.NAME_PARTICLES}"
     ]
 
@@ -859,7 +857,7 @@ def test_page_range(
     v_t_record.data[Fields.PAGES] = "123--100"
     page_range_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.PAGES) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.PAGES) == [
         DefectCodes.PAGE_RANGE
     ]
 
@@ -867,14 +865,14 @@ def test_page_range(
     v_t_record.data[Fields.PAGES] = "100--123"
     page_range_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.PAGES) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.PAGES) == []
 
     # Test case 3: Ignoring page range defect
     v_t_record.data[Fields.PAGES] = "123--100"
     v_t_record.ignore_defect(field=Fields.PAGES, defect=DefectCodes.PAGE_RANGE)
     page_range_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.PAGES) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.PAGES) == [
         f"IGNORE:{DefectCodes.PAGE_RANGE}"
     ]
 
@@ -893,8 +891,7 @@ def test_pubmedid_not_matching_pattern(
     # Test case 1: PubmedID not matching the pattern
     v_t_record.data[Fields.PUBMED_ID] = "123456789A"
     pubmedid_pattern_checker.run(record=v_t_record)
-    assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.PUBMED_ID) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.PUBMED_ID) == [
         DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN
     ]
 
@@ -902,7 +899,7 @@ def test_pubmedid_not_matching_pattern(
     v_t_record.data[Fields.PUBMED_ID] = "1234567"
     pubmedid_pattern_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.PUBMED_ID) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.PUBMED_ID) == []
 
     # Test case 3: Ignoring PubmedID pattern defect
     v_t_record.data[Fields.PUBMED_ID] = "123456789A"
@@ -910,7 +907,7 @@ def test_pubmedid_not_matching_pattern(
         field=Fields.PUBMED_ID, defect=DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN
     )
     pubmedid_pattern_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.PUBMED_ID) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.PUBMED_ID) == [
         f"IGNORE:{DefectCodes.PUBMED_ID_NOT_MATCHING_PATTERN}"
     ]
     # TODO : check whether pubmedid shoudl be in masterdata  provenance!??!
@@ -935,7 +932,7 @@ def test_thesis_with_multiple_authors(
     v_t_record.data[Fields.AUTHOR] = "John Doe and Jane Smith"
     thesis_with_multiple_authors_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         DefectCodes.THESIS_WITH_MULTIPLE_AUTHORS
     ]
 
@@ -944,7 +941,7 @@ def test_thesis_with_multiple_authors(
     v_t_record.data[Fields.AUTHOR] = "John Doe"
     thesis_with_multiple_authors_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == []
 
     # Test case 3: Ignoring thesis with multiple authors defect
     v_t_record.data["ENTRYTYPE"] = "thesis"
@@ -954,7 +951,7 @@ def test_thesis_with_multiple_authors(
     )
     thesis_with_multiple_authors_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.AUTHOR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
         f"IGNORE:{DefectCodes.THESIS_WITH_MULTIPLE_AUTHORS}"
     ]
 
@@ -972,13 +969,13 @@ def test_year_format(
     v_t_record.data[Fields.YEAR] = "2021"
     year_format_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.YEAR) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.YEAR) == []
 
     # Test case 2: Year format is incorrect
     v_t_record.data[Fields.YEAR] = "20twentyone"
     year_format_checker.run(record=v_t_record)
     assert v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.YEAR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.YEAR) == [
         DefectCodes.YEAR_FORMAT
     ]
 
@@ -987,7 +984,7 @@ def test_year_format(
     v_t_record.ignore_defect(field=Fields.YEAR, defect=DefectCodes.YEAR_FORMAT)
     year_format_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.YEAR) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.YEAR) == [
         f"IGNORE:{DefectCodes.YEAR_FORMAT}"
     ]
 
@@ -1043,17 +1040,16 @@ def test_inconsistent_with_doi_metadata(
     doi_consistency_checker.run(record=v_t_record)
     v_t_record.data[Fields.DOI] = "10.1177/02683962211048201"
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == []
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == []
 
     # Test case 2: DOI metadata is inconsistent
     v_t_record.data[Fields.DOI] = "10.1177/02683962211048201"
     v_t_record.data[Fields.TITLE] = "Inconsistent"
     v_t_record.data[Fields.AUTHOR] = "Inconsistent"
     doi_consistency_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == [
         DefectCodes.INCONSISTENT_WITH_DOI_METADATA
     ]
-    assert v_t_record.has_quality_defects()
 
     # Test case 9: DOI "RecordNotFoundInPrepSourceException" (exception handled in run())
     v_t_record.data[Fields.DOI] = "RecordNotFoundInPrepSourceException"
@@ -1091,7 +1087,7 @@ def test_inconsistent_with_doi_metadata(
     )
     doi_consistency_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == [
         f"IGNORE:{DefectCodes.INCONSISTENT_WITH_DOI_METADATA}"
     ]
 
@@ -1116,11 +1112,11 @@ def test_inconsistent_with_doi_metadata(
     assert not v_t_record.has_quality_defects()
 
     # Test case 7: DOI metadata conflicts
-    v_t_record.data[Fields.MD_PROV].pop(Fields.DOI, None)
+    v_t_record.data[Fields.D_PROV].pop(Fields.DOI, None)
     v_t_record.data[Fields.TITLE] = "Mismatched Title"
     print(v_t_record.data)
     doi_consistency_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.DOI) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.DOI) == [
         DefectCodes.INCONSISTENT_WITH_DOI_METADATA
     ]
 
@@ -1197,7 +1193,7 @@ def test_record_not_in_toc(
     v_t_record.data[Fields.DOI] = "NOT_IN_TOC"
     v_t_record.data.pop(Fields.MD_PROV, None)
     record_not_in_toc_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         DefectCodes.RECORD_NOT_IN_TOC
     ]
     v_t_record.data[Fields.DOI] = "10.1177/02683962211048201"
@@ -1207,7 +1203,7 @@ def test_record_not_in_toc(
     v_t_record.data[Fields.DOI] = "NOT_IN_TOC"
     v_t_record.data.pop(Fields.MD_PROV, None)
     record_not_in_toc_checker.run(record=v_t_record)
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == [
         DefectCodes.RECORD_NOT_IN_TOC
     ]
 
@@ -1218,7 +1214,7 @@ def test_record_not_in_toc(
     v_t_record.ignore_defect(field=Fields.JOURNAL, defect=DefectCodes.RECORD_NOT_IN_TOC)
     record_not_in_toc_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.JOURNAL) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.JOURNAL) == [
         f"IGNORE:{DefectCodes.RECORD_NOT_IN_TOC}"
     ]
 
@@ -1231,7 +1227,7 @@ def test_record_not_in_toc(
     )
     record_not_in_toc_checker.run(record=v_t_record)
     assert not v_t_record.has_quality_defects()
-    assert v_t_record.get_masterdata_provenance_notes(key=Fields.BOOKTITLE) == [
+    assert v_t_record.get_field_provenance_notes(key=Fields.BOOKTITLE) == [
         f"IGNORE:{DefectCodes.RECORD_NOT_IN_TOC}"
     ]
 

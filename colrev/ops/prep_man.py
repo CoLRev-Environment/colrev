@@ -158,7 +158,7 @@ class PrepMan(colrev.process.operation.Operation):
                 Fields.PRESCREEN_EXCLUSION, ""
             ):
                 record.remove_field(key=Fields.PRESCREEN_EXCLUSION)
-                record.remove_masterdata_provenance_note(
+                record.remove_field_provenance_note(
                     key=Fields.TITLE, note="language-not-found"
                 )
                 if (

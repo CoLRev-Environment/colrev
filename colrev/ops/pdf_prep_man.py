@@ -298,7 +298,7 @@ class PDFPrepMan(colrev.process.operation.Operation):
         prev_cpid = record.data.get("colrev_pdf_id", "NA")
         record.data.update(colrev_pdf_id=record.get_colrev_pdf_id(pdf_path))
         if prev_cpid != record.data.get("colrev_pdf_id", "NA"):
-            record.add_data_provenance(key=Fields.FILE, source="manual")
+            record.add_field_provenance(key=Fields.FILE, source="manual")
 
         record_dict = record.get_data()
         self.review_manager.dataset.save_records_dict(

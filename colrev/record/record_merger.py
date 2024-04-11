@@ -152,7 +152,7 @@ def merge(
         if merging_record.masterdata_is_curated():
             main_record.data[key] = merging_record.data[key]
             if key not in FieldSet.IDENTIFYING_FIELD_KEYS + [Fields.ENTRYTYPE]:
-                main_record.add_data_provenance(key=key, source=source, note=note)
+                main_record.add_field_provenance(key=key, source=source, note=note)
 
         # Do not change if MERGING_RECORD is not curated
         elif (
@@ -354,6 +354,6 @@ def _fuse_best_field(
     ) and FieldValues.UNKNOWN != merging_record.data.get(key, ""):
         main_record.data[key] = merging_record.data[key]
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            main_record.add_masterdata_provenance(key=key, source=source)
+            main_record.add_field_provenance(key=key, source=source)
         else:
-            main_record.add_data_provenance(key=key, source=source)
+            main_record.add_field_provenance(key=key, source=source)

@@ -32,9 +32,9 @@ class NameParticlesChecker:
 
             names = record.data[key].split(" and ")
             if any(self._particle_defect(name=name) for name in names):
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
     def _particle_defect(self, *, name: str) -> bool:
         if name.endswith(" vom") or name.startswith("vom "):

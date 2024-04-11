@@ -81,7 +81,7 @@ class OCRMyPDF(JsonSchemaMixin):
             volumes=[f"{orig_path}:/home/docker"],
         )
 
-        record.add_data_provenance_note(
+        record.add_field_provenance_note(
             key=Fields.FILE, note="pdf_processed with OCRMYPDF"
         )
         record.set_text_from_pdf()

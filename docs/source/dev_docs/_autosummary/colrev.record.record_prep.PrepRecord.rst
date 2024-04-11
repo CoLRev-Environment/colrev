@@ -16,10 +16,10 @@ colrev.record.record\_prep.PrepRecord
    .. autosummary::
       :nosignatures:
 
-      ~PrepRecord.add_data_provenance
-      ~PrepRecord.add_data_provenance_note
-      ~PrepRecord.add_masterdata_provenance
-      ~PrepRecord.add_masterdata_provenance_note
+      ~PrepRecord.add_field_provenance
+      ~PrepRecord.add_field_provenance_note
+      ~PrepRecord.add_field_provenance
+      ~PrepRecord.add_field_provenance_note
       ~PrepRecord.add_provenance_all
       ~PrepRecord.align_provenance
       ~PrepRecord.change_entrytype
@@ -34,12 +34,12 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.get_colrev_pdf_id
       ~PrepRecord.get_container_title
       ~PrepRecord.get_data
-      ~PrepRecord.get_data_provenance_notes
-      ~PrepRecord.get_data_provenance_source
+      ~PrepRecord.get_field_provenance_notes
+      ~PrepRecord.get_field_provenance_source
       ~PrepRecord.get_diff
       ~PrepRecord.get_field_provenance
-      ~PrepRecord.get_masterdata_provenance_notes
-      ~PrepRecord.get_masterdata_provenance_source
+      ~PrepRecord.get_field_provenance_notes
+      ~PrepRecord.get_field_provenance_source
       ~PrepRecord.get_record_change_score
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
@@ -55,9 +55,9 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.merge
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
-      ~PrepRecord.remove_data_provenance_note
+      ~PrepRecord.remove_field_provenance_note
       ~PrepRecord.remove_field
-      ~PrepRecord.remove_masterdata_provenance_note
+      ~PrepRecord.remove_field_provenance_note
       ~PrepRecord.rename_field
       ~PrepRecord.reset_pdf_provenance_notes
       ~PrepRecord.run_pdf_quality_model

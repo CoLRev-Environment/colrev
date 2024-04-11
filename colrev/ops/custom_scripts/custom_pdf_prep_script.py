@@ -39,7 +39,7 @@ class CustomPDFPrep:
         """Prepare the PDF"""
 
         if random.random() < 0.8:  # nosec
-            record.add_data_provenance_note(
+            record.add_field_provenance_note(
                 key=Fields.FILE, note="custom_issue_detected"
             )
             record.set_status(RecordState.pdf_needs_manual_preparation)

@@ -183,7 +183,7 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
 
         if record.data[Fields.AUTHOR] == "[Anonymous]":
             del record.data[Fields.AUTHOR]
-            record.add_masterdata_provenance(
+            record.add_field_provenance(
                 key=Fields.AUTHOR, source="web_of_scienc.prep", note="IGNORE:missing"
             )
 

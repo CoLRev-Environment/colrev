@@ -27,9 +27,9 @@ class IdenticalValuesChecker:
             return
 
         if self._identical_values_between_title_and_container(record=record):
-            record.add_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
+            record.add_field_provenance_note(key=Fields.TITLE, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.TITLE, note=self.msg)
 
     def _identical_values_between_title_and_container(
         self, *, record: colrev.record.record.Record

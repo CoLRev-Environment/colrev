@@ -38,9 +38,9 @@ class AuthorNotInPDFChecker:
             return
 
         if not self._author_in_pdf(record=record):
-            record.add_data_provenance_note(key=Fields.FILE, note=self.msg)
+            record.add_field_provenance_note(key=Fields.FILE, note=self.msg)
         else:
-            record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.FILE, note=self.msg)
 
     def _author_in_pdf(self, *, record: colrev.record.record.Record) -> bool:
         # Many editorials do not have authors in the PDF (or on the last page)

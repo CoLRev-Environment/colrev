@@ -38,9 +38,9 @@ class ISBNPatternChecker:
             return
 
         if not re.match(self._ISBN_REGEX, record.data[Fields.ISBN]):
-            record.add_masterdata_provenance_note(key=Fields.ISBN, note=self.msg)
+            record.add_field_provenance_note(key=Fields.ISBN, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key=Fields.ISBN, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.ISBN, note=self.msg)
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:

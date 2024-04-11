@@ -160,6 +160,29 @@ def test_rename_field() -> None:
     assert "link" not in r2_mod.data
     assert "link" not in r2_mod.data[Fields.D_PROV]
 
+    # Identifying field (missing)
+    r2_mod = r2.copy()
+    del r2_mod.data[Fields.MD_PROV][Fields.JOURNAL]
+    r2_mod.rename_field(key=Fields.JOURNAL, new_key=Fields.BOOKTITLE)
+    expected = "|rename-from:journal"
+    actual = r2_mod.data[Fields.MD_PROV][Fields.BOOKTITLE]["source"]
+    assert expected == actual
+    assert Fields.JOURNAL not in r2_mod.data
+    assert Fields.JOURNAL not in r2_mod.data[Fields.MD_PROV]
+
+    # Non-identifying field (missing)
+    r2_mod = r2.copy()
+    r2_mod.update_field(
+        key="link", value="https://www.test.org", source="import.bib/id_0001"
+    )
+    del r2_mod.data[Fields.D_PROV]["link"]
+    r2_mod.rename_field(key="link", new_key=Fields.URL)
+    expected = "|rename-from:link"
+    actual = r2_mod.data[Fields.D_PROV][Fields.URL]["source"]
+    assert expected == actual
+    assert "link" not in r2_mod.data
+    assert "link" not in r2_mod.data[Fields.D_PROV]
+
 
 def test_remove_field() -> None:
     """Test record.remove_field()"""
@@ -593,7 +616,7 @@ def test_provenance() -> None:
 
     r1_mod = r1.copy()
 
-    r1_mod.add_data_provenance(key=Fields.URL, source="manual", note="test")
+    r1_mod.add_field_provenance(key=Fields.URL, source="manual", note="test")
     expected = "manual"
     actual = r1_mod.data[Fields.D_PROV][Fields.URL]["source"]
     assert expected == actual
@@ -602,16 +625,22 @@ def test_provenance() -> None:
     actual = r1_mod.data[Fields.D_PROV][Fields.URL]["note"]
     assert expected == actual
 
-    r1_mod.add_data_provenance_note(key=Fields.URL, note="1")
+    r1_mod.add_field_provenance_note(key=Fields.URL, note="1")
     expected = "test,1"
     actual = r1_mod.data[Fields.D_PROV][Fields.URL]["note"]
     assert expected == actual
 
-    expected = {"source": "manual", "note": "test,1"}  # type: ignore
-    actual = r1_mod.get_field_provenance(key=Fields.URL)
+    r1_mod.data[Fields.D_PROV][Fields.URL]["note"] = ""
+    r1_mod.add_field_provenance_note(key=Fields.URL, note="1")
+    expected = "1"
+    actual = r1_mod.data[Fields.D_PROV][Fields.URL]["note"]
     assert expected == actual
 
-    r1_mod.add_masterdata_provenance(key=Fields.AUTHOR, source="manual", note="test")
+    # expected = {"source": "manual", "note": "test,1"}  # type: ignore
+    # actual = r1_mod.get_field_provenance(key=Fields.URL)
+    # assert expected == actual
+
+    r1_mod.add_field_provenance(key=Fields.AUTHOR, source="manual", note="test")
     expected = "test"
     actual = r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"]
     assert expected == actual
@@ -620,7 +649,7 @@ def test_provenance() -> None:
     expected = "manual"
     assert expected == actual
 
-    r1_mod.add_masterdata_provenance_note(key=Fields.AUTHOR, note="check")
+    r1_mod.add_field_provenance_note(key=Fields.AUTHOR, note="check")
     expected = "test,check"
     actual = r1_mod.data[Fields.MD_PROV][Fields.AUTHOR]["note"]
     assert expected == actual
@@ -1273,7 +1302,7 @@ def test_defects() -> None:
     assert record.has_quality_defects(field="literature_review")
 
 
-def test_get_data_provenance_source() -> None:
+def test_get_field_provenance_source() -> None:
     record_dict = {
         Fields.ID: "r1",
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
@@ -1296,13 +1325,45 @@ def test_get_data_provenance_source() -> None:
     }
 
     record = colrev.record.record.Record(record_dict)
-    actual = record.get_data_provenance_source("custom_field")
+    actual = record.get_field_provenance_source("custom_field")
     assert actual == "import.bib/id_0001a"
 
     record.data[Fields.D_PROV] = {}
-    actual = record.get_data_provenance_source("custom_field")
-    assert actual == ""
+    actual = record.get_field_provenance_source("custom_field")
+    assert actual == "ORIGINAL"
 
     del record.data[Fields.D_PROV]
-    actual = record.get_data_provenance_source("custom_field")
-    assert actual == ""
+    actual = record.get_field_provenance_source("custom_field")
+    assert actual == "ORIGINAL"
+
+
+def test_get_field_provenance_notes() -> None:
+
+    record_dict = {
+        Fields.ID: "r1",
+        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
+        Fields.STATUS: RecordState.md_retrieved,
+        Fields.D_PROV: {
+            "custom_field": {
+                "source": "import.bib/id_0001a",
+                "note": DefectCodes.MOSTLY_ALL_CAPS,
+            }
+        },
+        Fields.ORIGIN: ["import.bib/id_0001"],
+        Fields.YEAR: "2020",
+        Fields.TITLE: "EDITORIAL",
+        Fields.AUTHOR: "Rai, Arun",
+        Fields.JOURNAL: "MIS Quarterly",
+        Fields.VOLUME: "45",
+        Fields.NUMBER: "1",
+        Fields.PAGES: "1--3",
+        "custom_field": "test",
+    }
+
+    record = colrev.record.record.Record(record_dict)
+    actual = record.get_field_provenance_notes("custom_field")
+    assert actual == [DefectCodes.MOSTLY_ALL_CAPS]
+
+    record.data[Fields.D_PROV] = {}
+    actual = record.get_field_provenance_notes("custom_field")
+    assert actual == []

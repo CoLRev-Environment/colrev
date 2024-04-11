@@ -23,7 +23,7 @@ def test_pdf_qm(  # type: ignore
     v_t_pdf_record.run_pdf_quality_model(pdf_qm=pdf_quality_model)
 
     assert not v_t_pdf_record.has_pdf_defects()
-    assert [] == v_t_pdf_record.get_data_provenance_notes(Fields.FILE)
+    assert [] == v_t_pdf_record.get_field_provenance_notes(Fields.FILE)
 
     v_t_pdf_record.data[Fields.TITLE] = original_title
 
@@ -52,7 +52,7 @@ def test_author_not_in_pdf(
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
     )
     author_not_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.AUTHOR_NOT_IN_PDF
     ]
 
@@ -62,7 +62,7 @@ def test_author_not_in_pdf(
         "Paper title by Smith, John. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
     )
     author_not_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
 
     # Test case 3: Ignoring author not in PDF defect
     v_t_pdf_record.data[Fields.AUTHOR] = "Smith, John"
@@ -73,7 +73,7 @@ def test_author_not_in_pdf(
         field=Fields.FILE, defect=PDFDefectCodes.AUTHOR_NOT_IN_PDF
     )
     author_not_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         f"IGNORE:{PDFDefectCodes.AUTHOR_NOT_IN_PDF}"
     ]
 
@@ -87,7 +87,7 @@ def test_author_not_in_pdf(
         "Editorial: The Importance of AI in Software Development"
     )
     author_not_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
 
 
 def test_title_not_in_pdf(
@@ -105,7 +105,7 @@ def test_title_not_in_pdf(
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
     )
     title_not_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.TITLE_NOT_IN_PDF
     ]
 
@@ -122,7 +122,7 @@ def test_no_text_in_pdf(
     # Test case 1: No text in PDF
     v_t_pdf_record.data[Fields.TEXT_FROM_PDF] = ""
     no_text_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.NO_TEXT_IN_PDF
     ]
 
@@ -132,7 +132,7 @@ def test_no_text_in_pdf(
     )
     v_t_pdf_record.data.pop(Fields.D_PROV, None)
     no_text_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
 
     # Test case 3: Ignoring no text in PDF defect
     v_t_pdf_record.data[Fields.TEXT_FROM_PDF] = ""
@@ -140,7 +140,7 @@ def test_no_text_in_pdf(
         field=Fields.FILE, defect=PDFDefectCodes.NO_TEXT_IN_PDF
     )
     no_text_in_pdf_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         f"IGNORE:{PDFDefectCodes.NO_TEXT_IN_PDF}"
     ]
 
@@ -164,7 +164,7 @@ def test_pdf_incompleteness(
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
     v_t_pdf_record.data[Fields.PAGES] = "1--10"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.PDF_INCOMPLETE
     ]
 
@@ -172,19 +172,19 @@ def test_pdf_incompleteness(
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
     v_t_pdf_record.data[Fields.PAGES] = "209--226"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
 
     # Test case 3: PDF is complete (with roman numbers)
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
     v_t_pdf_record.data[Fields.PAGES] = "IX--XXVI"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
 
     # Test case 4: PDF is complete (S-prefixed numbers)
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
     v_t_pdf_record.data[Fields.PAGES] = "S9--S16"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
 
     # Test case 5: Ignoring pdf incomplete defect
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
@@ -193,7 +193,7 @@ def test_pdf_incompleteness(
         field=Fields.FILE, defect=PDFDefectCodes.PDF_INCOMPLETE
     )
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         f"IGNORE:{PDFDefectCodes.PDF_INCOMPLETE}"
     ]
     v_t_pdf_record.data.pop(Fields.D_PROV, None)
@@ -201,7 +201,7 @@ def test_pdf_incompleteness(
     # Test case 6: Pages do not match PDF
     v_t_pdf_record.data[Fields.PAGES] = "1--10"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.PDF_INCOMPLETE
     ]
 
@@ -210,7 +210,7 @@ def test_pdf_incompleteness(
         "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
     )
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.PDF_INCOMPLETE
     ]
     v_t_pdf_record.data.pop(Fields.D_PROV, None)
@@ -220,7 +220,7 @@ def test_pdf_incompleteness(
     v_t_pdf_record.data[Fields.PAGES] = "209--226"
     v_t_pdf_record.data[Fields.TEXT_FROM_PDF] = "test"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
     v_t_pdf_record.data.pop(Fields.D_PROV, None)
 
     # Test case 9: Longer with appendix and "appendi" in text
@@ -235,7 +235,7 @@ def test_pdf_incompleteness(
     colrev.record.record_pdf.PDFRecord.extract_text_by_page = patched_extract_text_by_page  # type: ignore
 
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == []
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == []
     colrev.record.record_pdf.PDFRecord.extract_text_by_page = original_method  # type: ignore
     v_t_pdf_record.data[Fields.NR_PAGES_IN_FILE] = 18
 
@@ -243,7 +243,7 @@ def test_pdf_incompleteness(
     v_t_pdf_record.data[Fields.FILE] = Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf")
     v_t_pdf_record.data[Fields.PAGES] = "XXVI"
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.PDF_INCOMPLETE
     ]
 
@@ -253,7 +253,7 @@ def test_pdf_incompleteness(
 
     v_t_pdf_record.data.pop(Fields.NR_PAGES_IN_FILE, None)
     pdf_incompleteness_checker.run(record=v_t_pdf_record)
-    assert v_t_pdf_record.get_data_provenance_notes(Fields.FILE) == [
+    assert v_t_pdf_record.get_field_provenance_notes(Fields.FILE) == [
         PDFDefectCodes.PDF_INCOMPLETE
     ]
     v_t_pdf_record.data[Fields.NR_PAGES_IN_FILE] = 18

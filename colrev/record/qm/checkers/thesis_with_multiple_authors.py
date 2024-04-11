@@ -26,9 +26,9 @@ class ThesisWithMultipleAuthorsChecker:
             return
 
         if self._multiple_authored_thesis(record=record):
-            record.add_masterdata_provenance_note(key=Fields.AUTHOR, note=self.msg)
+            record.add_field_provenance_note(key=Fields.AUTHOR, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key=Fields.AUTHOR, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.AUTHOR, note=self.msg)
 
     def _multiple_authored_thesis(self, *, record: colrev.record.record.Record) -> bool:
         if record.data["ENTRYTYPE"] in [

@@ -33,9 +33,9 @@ class TextInPDFChecker:
             return
 
         if not self._text_in_pdf(record=record):
-            record.add_data_provenance_note(key=Fields.FILE, note=self.msg)
+            record.add_field_provenance_note(key=Fields.FILE, note=self.msg)
         else:
-            record.remove_data_provenance_note(key=Fields.FILE, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.FILE, note=self.msg)
 
     def _text_in_pdf(
         self,

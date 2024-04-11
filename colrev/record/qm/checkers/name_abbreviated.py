@@ -35,9 +35,9 @@ class NameAbbreviatedChecker:
                 record.data[key].rstrip(" .").endswith(abbrev)
                 for abbrev in self.abbreviations
             ):
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:

@@ -35,12 +35,12 @@ class IncompleteFieldChecker:
                 or record.data.get(key, FieldValues.UNKNOWN) == FieldValues.UNKNOWN
                 or record.ignored_defect(field=key, defect=self.msg)
             ):
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
                 continue
             if self._incomplete_field(record=record, key=key):
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
     def _incomplete_field(
         self, *, record: colrev.record.record.Record, key: str

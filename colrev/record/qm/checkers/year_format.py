@@ -33,9 +33,9 @@ class YearFormatChecker:
             return
 
         if not re.match(r"^\d{4}$", record.data[Fields.YEAR]):
-            record.add_masterdata_provenance_note(key=Fields.YEAR, note=self.msg)
+            record.add_field_provenance_note(key=Fields.YEAR, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(key=Fields.YEAR, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.YEAR, note=self.msg)
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:

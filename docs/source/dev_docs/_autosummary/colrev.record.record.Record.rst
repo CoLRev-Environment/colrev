@@ -16,10 +16,10 @@ colrev.record.record.Record
    .. autosummary::
       :nosignatures:
 
-      ~Record.add_data_provenance
-      ~Record.add_data_provenance_note
-      ~Record.add_masterdata_provenance
-      ~Record.add_masterdata_provenance_note
+      ~Record.add_field_provenance
+      ~Record.add_field_provenance_note
+      ~Record.add_field_provenance
+      ~Record.add_field_provenance_note
       ~Record.add_provenance_all
       ~Record.align_provenance
       ~Record.change_entrytype
@@ -32,12 +32,12 @@ colrev.record.record.Record
       ~Record.get_colrev_pdf_id
       ~Record.get_container_title
       ~Record.get_data
-      ~Record.get_data_provenance_notes
-      ~Record.get_data_provenance_source
+      ~Record.get_field_provenance_notes
+      ~Record.get_field_provenance_source
       ~Record.get_diff
       ~Record.get_field_provenance
-      ~Record.get_masterdata_provenance_notes
-      ~Record.get_masterdata_provenance_source
+      ~Record.get_field_provenance_notes
+      ~Record.get_field_provenance_source
       ~Record.get_record_change_score
       ~Record.get_record_similarity
       ~Record.get_tei_filename
@@ -52,9 +52,9 @@ colrev.record.record.Record
       ~Record.merge
       ~Record.prescreen_exclude
       ~Record.print_citation_format
-      ~Record.remove_data_provenance_note
+      ~Record.remove_field_provenance_note
       ~Record.remove_field
-      ~Record.remove_masterdata_provenance_note
+      ~Record.remove_field_provenance_note
       ~Record.rename_field
       ~Record.reset_pdf_provenance_notes
       ~Record.run_pdf_quality_model

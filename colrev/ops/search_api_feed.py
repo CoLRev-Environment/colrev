@@ -234,8 +234,8 @@ class SearchAPIFeed:
     def _missing_ignored_field(
         self, main_record: colrev.record.record.Record, key: str
     ) -> bool:
-        source = main_record.get_masterdata_provenance_source(key)
-        notes = main_record.get_masterdata_provenance_notes(key)
+        source = main_record.get_field_provenance_source(key)
+        notes = main_record.get_field_provenance_notes(key)
         if (
             source == "colrev_curation.masterdata_restrictions"
             and f"IGNORE:{DefectCodes.MISSING}" in notes

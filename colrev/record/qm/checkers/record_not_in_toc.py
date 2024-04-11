@@ -30,24 +30,18 @@ class RecordNotInTOCChecker:
             if record.ignored_defect(field=Fields.JOURNAL, defect=self.msg):
                 return
             if not self._is_in_toc(record):
-                record.add_masterdata_provenance_note(key=Fields.JOURNAL, note=self.msg)
+                record.add_field_provenance_note(key=Fields.JOURNAL, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=Fields.JOURNAL, note=self.msg
-                )
+                record.remove_field_provenance_note(key=Fields.JOURNAL, note=self.msg)
             return
 
         if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
             if record.ignored_defect(field=Fields.BOOKTITLE, defect=self.msg):
                 return
             if not self._is_in_toc(record):
-                record.add_masterdata_provenance_note(
-                    key=Fields.BOOKTITLE, note=self.msg
-                )
+                record.add_field_provenance_note(key=Fields.BOOKTITLE, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
-                    key=Fields.BOOKTITLE, note=self.msg
-                )
+                record.remove_field_provenance_note(key=Fields.BOOKTITLE, note=self.msg)
             return
 
     def _is_in_toc(self, record: colrev.record.record.Record) -> bool:

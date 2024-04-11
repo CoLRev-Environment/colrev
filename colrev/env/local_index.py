@@ -262,7 +262,9 @@ class LocalIndex:
         for curated_field in curated_fields:
             if curated_field not in record_dict:
                 continue
-            source = record_dict[Fields.D_PROV][curated_field]["source"]
+            source = colrev.record.record.Record(
+                record_dict
+            ).get_field_provenance_source(curated_field)
             layered_fields.append(
                 {
                     "key": curated_field,
@@ -429,12 +431,10 @@ class LocalIndex:
             layered_fields = json.loads(row["layered_fields"])
             for layered_field in layered_fields:
                 retrieved_record[layered_field["key"]] = layered_field["value"]
-                if Fields.D_PROV not in retrieved_record:
-                    retrieved_record[Fields.D_PROV] = {}
-                retrieved_record[Fields.D_PROV][layered_field["key"]] = {
-                    "source": layered_field["source"],
-                    "note": "",
-                }
+                colrev.record.record.Record(retrieved_record).add_field_provenance(
+                    key=layered_field["key"],
+                    source=layered_field["source"],
+                )
         return retrieved_record
 
     def _retrieve_based_on_colrev_id(
@@ -549,19 +549,15 @@ class LocalIndex:
             if fulltext_backup != "NA":
                 record_dict[Fields.FULLTEXT] = fulltext_backup
         else:
-            record_dict.pop(Fields.FILE, None)
-            if Fields.FILE in record_dict.get(Fields.D_PROV, {}):
-                del record_dict[Fields.D_PROV][Fields.FILE]
-            record_dict.pop("colrev_pdf_id", None)
-            if "colrev_pdf_id" in record_dict.get(Fields.D_PROV, {}):
-                del record_dict[Fields.D_PROV]["colrev_pdf_id"]
+            colrev.record.record.Record(record_dict).remove_field(key=Fields.FILE)
+            colrev.record.record.Record(record_dict).remove_field(key="colrev_pdf_id")
 
         record = colrev.record.record.Record(record_dict)
         record.set_status(RecordState.md_prepared)
 
         if record.masterdata_is_curated():
             identifier_string = (
-                record.get_masterdata_provenance_source(FieldValues.CURATED)
+                record.get_field_provenance_source(FieldValues.CURATED)
                 + "#"
                 + record_dict[Fields.ID]
             )
@@ -670,7 +666,7 @@ class LocalIndex:
         record.align_provenance()
         for key in list(record.data.keys()):
             if not record.masterdata_is_curated():
-                record.add_masterdata_provenance(
+                record.add_field_provenance(
                     key=key, source=record_dict["metadata_source_repository_paths"]
                 )
             elif (
@@ -684,18 +680,10 @@ class LocalIndex:
                     "metadata_source_repository_paths",
                 ]
             ):
-                if key not in record.data.get(Fields.D_PROV, {}):
-                    record.add_data_provenance(
-                        key=key,
-                        source=record_dict["metadata_source_repository_paths"],
-                    )
-                elif (
-                    FieldValues.CURATED not in record.data[Fields.D_PROV][key]["source"]
-                ):
-                    record.add_data_provenance(
-                        key=key,
-                        source=record_dict["metadata_source_repository_paths"],
-                    )
+                record.add_field_provenance(
+                    key=key,
+                    source=record_dict["metadata_source_repository_paths"],
+                )
 
         record_dict = record.get_data()
 
@@ -797,7 +785,7 @@ class LocalIndex:
 
                 if curated_fields:
                     for curated_field in curated_fields:
-                        colrev.record.record.Record(record_dict).add_data_provenance(
+                        colrev.record.record.Record(record_dict).add_field_provenance(
                             key=curated_field, source=f"CURATED:{curation_url}"
                         )
                 if curated_masterdata:

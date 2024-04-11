@@ -34,9 +34,9 @@ class NameFormatSeparatorsChecker:
                 continue
 
             if self._name_separator_error(record=record, key=key):
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
     def _name_separator_error(
         self, *, record: colrev.record.record.Record, key: str

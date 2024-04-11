@@ -101,11 +101,11 @@ class PDFRecord(colrev.record.record.Record):
             self.data[Fields.TEXT_FROM_PDF] = text_from_pdf
 
         except PDFSyntaxError:  # pragma: no cover
-            self.add_data_provenance_note(key=Fields.FILE, note="pdf_reader_error")
+            self.add_field_provenance_note(key=Fields.FILE, note="pdf_reader_error")
             # pylint: disable=colrev-direct-status-assign
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         except PDFTextExtractionNotAllowed:  # pragma: no cover
-            self.add_data_provenance_note(key=Fields.FILE, note="pdf_protected")
+            self.add_field_provenance_note(key=Fields.FILE, note="pdf_protected")
             # pylint: disable=colrev-direct-status-assign
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 

@@ -120,7 +120,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
             "note", ""
         ):
             note = record.data["note"]
-            source_field = record.get_data_provenance_source("note")
+            source_field = record.get_field_provenance_source("note")
             record.rename_field(key="note", new_key=Fields.CITED_BY)
             record.update_field(
                 key=Fields.CITED_BY,

@@ -38,9 +38,9 @@ class MostlyAllCapsFieldChecker:
                 continue
 
             if self._is_mostly_all_caps(record=record, key=key):
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
     def _is_mostly_all_caps(
         self, *, record: colrev.record.record.Record, key: str

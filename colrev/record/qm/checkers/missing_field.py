@@ -102,11 +102,9 @@ class MissingFieldChecker:
                     value=FieldValues.UNKNOWN,
                     source="generic_field_requirements",
                 )
-                record.add_masterdata_provenance_note(
-                    key=required_fields_key, note=self.msg
-                )
+                record.add_field_provenance_note(key=required_fields_key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(
+                record.remove_field_provenance_note(
                     key=required_fields_key, note=self.msg
                 )
 
@@ -128,10 +126,10 @@ class MissingFieldChecker:
             return True
 
         if key == Fields.VOLUME:
-            record.add_masterdata_provenance_note(key=key, note=f"IGNORE:{self.msg}")
+            record.add_field_provenance_note(key=key, note=f"IGNORE:{self.msg}")
             return False
         if key == Fields.NUMBER:
-            record.add_masterdata_provenance_note(key=key, note=f"IGNORE:{self.msg}")
+            record.add_field_provenance_note(key=key, note=f"IGNORE:{self.msg}")
             return False
 
         return True

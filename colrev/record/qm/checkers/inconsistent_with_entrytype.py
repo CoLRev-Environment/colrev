@@ -75,9 +75,9 @@ class InconsistentWithEntrytypeChecker:
             if record.ignored_defect(field=key, defect=self.msg):
                 continue
             if key in inconsistent_fields:
-                record.add_masterdata_provenance_note(key=key, note=self.msg)
+                record.add_field_provenance_note(key=key, note=self.msg)
             else:
-                record.remove_masterdata_provenance_note(key=key, note=self.msg)
+                record.remove_field_provenance_note(key=key, note=self.msg)
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:

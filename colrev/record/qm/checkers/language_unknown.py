@@ -31,10 +31,10 @@ class LanguageChecker:
             return
 
         if self._language_unknown(record=record):
-            record.add_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
+            record.add_field_provenance_note(key=Fields.TITLE, note=self.msg)
 
         else:
-            record.remove_masterdata_provenance_note(key=Fields.TITLE, note=self.msg)
+            record.remove_field_provenance_note(key=Fields.TITLE, note=self.msg)
 
     def _language_unknown(self, *, record: colrev.record.record.Record) -> bool:
         if Fields.LANGUAGE in record.data:

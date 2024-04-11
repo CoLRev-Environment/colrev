@@ -220,16 +220,16 @@ class Repare(colrev.process.operation.Operation):
                 ):
                     continue
                 if key in source_feeds[origin_source][origin_id]:
-                    record.add_data_provenance(key=key, source=origin, note="")
+                    record.add_field_provenance(key=key, source=origin, note="")
         if key == Fields.LANGUAGE:
-            record.add_data_provenance(key=key, source="LanguageDetector", note="")
+            record.add_field_provenance(key=key, source="LanguageDetector", note="")
         if key == "tei_file":
-            record.add_data_provenance(key=key, source="file|grobid", note="")
+            record.add_field_provenance(key=key, source="file|grobid", note="")
         if key == "colrev_pdf_id":
-            record.add_data_provenance(key=key, source="file|pdf_hash", note="")
+            record.add_field_provenance(key=key, source="file|pdf_hash", note="")
 
         if key not in record.data[Fields.D_PROV]:
-            record.add_data_provenance(key=key, source="manual", note="")
+            record.add_field_provenance(key=key, source="manual", note="")
 
         for _, prov_details in record.data[Fields.D_PROV].items():
             if prov_details["source"] in record.data[Fields.ORIGIN] + ["manual"]:
@@ -283,7 +283,7 @@ class Repare(colrev.process.operation.Operation):
                     if source_origin == origin_source:
                         source_value = origin
 
-        record.add_masterdata_provenance(key=key, source=source_value, note="")
+        record.add_field_provenance(key=key, source=source_value, note="")
 
     def _set_non_curated_masterdata_provenance_field(
         self,

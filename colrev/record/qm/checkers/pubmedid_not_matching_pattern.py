@@ -32,11 +32,9 @@ class PubmedIDPatternChecker:
             return
 
         if not re.match(self._PMID_REGEX, record.data[Fields.PUBMED_ID]):
-            record.add_masterdata_provenance_note(key=Fields.PUBMED_ID, note=self.msg)
+            record.add_field_provenance_note(key=Fields.PUBMED_ID, note=self.msg)
         else:
-            record.remove_masterdata_provenance_note(
-                key=Fields.PUBMED_ID, note=self.msg
-            )
+            record.remove_field_provenance_note(key=Fields.PUBMED_ID, note=self.msg)
 
 
 def register(quality_model: colrev.record.qm.quality_model.QualityModel) -> None:
