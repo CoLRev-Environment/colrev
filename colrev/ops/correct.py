@@ -11,7 +11,7 @@ from dictdiffer import diff
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.review_manager
 
 # pylint: disable=too-few-public-methods
@@ -81,9 +81,6 @@ class Corrections:
         for k in keys_to_drop:
             original_record.pop(k, None)
             corrected_record.pop(k, None)
-
-        # if Fields.DBLP_KEY in corrected_record:
-        #     del corrected_record[Fields.DBLP_KEY]
 
     def _get_selected_change_items(
         self, original_record: dict, corrected_record: dict

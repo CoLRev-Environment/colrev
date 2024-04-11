@@ -155,8 +155,8 @@ class SemanticScholarPrep(JsonSchemaMixin):
                     record.remove_field(key=key)
 
             similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record_original=orig_record,
-                retrieved_record_original=retrieved_record,
+                record=orig_record,
+                retrieved_record=retrieved_record,
                 same_record_type_required=same_record_type_required,
             )
             if similarity > self.prep_operation.retrieval_similarity:

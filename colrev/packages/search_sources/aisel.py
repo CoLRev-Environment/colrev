@@ -546,10 +546,10 @@ class AISeLibrarySearchSource(JsonSchemaMixin):
                 source="prep_ais_source",
                 keep_source_if_equal=True,
             )
-        record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
-        record.format_if_mostly_upper(key=Fields.JOURNAL, case=Fields.TITLE)
-        record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
-        record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
+        record.format_if_mostly_upper(Fields.TITLE, case="sentence")
+        record.format_if_mostly_upper(Fields.JOURNAL, case=Fields.TITLE)
+        record.format_if_mostly_upper(Fields.BOOKTITLE, case=Fields.TITLE)
+        record.format_if_mostly_upper(Fields.AUTHOR, case=Fields.TITLE)
 
     def _exclude_complementary_material(
         self, *, record: colrev.record.record.Record

@@ -654,8 +654,8 @@ class DBLPSearchSource(JsonSchemaMixin):
                     return record
 
             similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record_original=record,
-                retrieved_record_original=retrieved_record,
+                record=record,
+                retrieved_record=retrieved_record,
                 same_record_type_required=same_record_type_required,
             )
             if similarity < prep_operation.retrieval_similarity:

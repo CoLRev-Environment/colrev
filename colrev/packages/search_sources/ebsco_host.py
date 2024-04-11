@@ -130,8 +130,8 @@ class EbscoHostSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Source-specific preparation for EBSCOHost"""
 
-        record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
-        record.format_if_mostly_upper(key=Fields.TITLE, case=Fields.TITLE)
+        record.format_if_mostly_upper(Fields.AUTHOR, case=Fields.TITLE)
+        record.format_if_mostly_upper(Fields.TITLE, case=Fields.TITLE)
 
         if record.data.get(Fields.PAGES) == "N.PAG -- N.PAG":
             record.data[Fields.PAGES] = FieldValues.UNKNOWN

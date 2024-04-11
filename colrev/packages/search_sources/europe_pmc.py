@@ -321,8 +321,8 @@ class EuropePMCSearchSource(JsonSchemaMixin):
 
                 similarity = (
                     colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                        record_original=record,
-                        retrieved_record_original=retrieved_record,
+                        record=record,
+                        retrieved_record=retrieved_record,
                     )
                 )
 

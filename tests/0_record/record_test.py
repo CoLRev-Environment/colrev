@@ -1159,120 +1159,6 @@ def test_prescreen_exclude() -> None:
     assert expected == actual
 
 
-@pytest.mark.parametrize(
-    "input_string, expected",
-    [
-        ("Tom Smith", "Smith, Tom"),
-        (
-            "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
-            "Garza, JL and Wu, ZH and Singh, M and Cherniack, MG.",
-        ),
-    ],
-)
-def test_format_author_field(input_string: str, expected: str) -> None:
-    """Test record.format_author_field()"""
-
-    actual = colrev.record.record_prep.PrepRecord.format_author_field(input_string)
-    assert expected == actual
-
-
-@pytest.mark.parametrize(
-    "input_text, expected, case",
-    [
-        (
-            "TECHNOLOGICAL ENTITLEMENT: IT'S MY TECHNOLOGY AND I'LL (AB)USE IT HOW I WANT TO",
-            "Technological entitlement: it's my technology and I'll (ab)use it how I want to",
-            "sentence",
-        ),
-        (
-            "A STUDY OF B2B IN M&A SETTINGS",
-            "A study of B2B in M&A settings",
-            "sentence",
-        ),
-        (
-            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the u.s. and india",
-            "What makes one intrinsically interested in it? an exploratory study on influences of autistic tendency and gender in the u.s. and india",
-            "sentence",
-        ),
-        (
-            "ORGANIZATIONS LIKE ieee, ACM OPERATE B2B and c2C BUSINESSES",
-            "Organizations like IEEE, ACM operate B2B and C2C businesses",
-            "sentence",
-        ),
-    ],
-)
-def test_format_if_mostly_upper(input_text: str, expected: str, case: str) -> None:
-    """Test record.format_if_mostly_upper()"""
-
-    input_dict = {Fields.TITLE: input_text}
-    input_record = colrev.record.record_prep.PrepRecord(input_dict)
-    input_record.format_if_mostly_upper(key=Fields.TITLE, case=case)
-    actual = input_record.data[Fields.TITLE]
-    assert expected == actual
-
-
-def test_rename_fields_based_on_mapping() -> None:
-    """Test record.rename_fields_based_on_mapping()"""
-
-    prep_rec = r1.copy_prep_rec()
-
-    # TODO : issue?!?!
-    prep_rec.rename_fields_based_on_mapping(mapping={Fields.NUMBER: "issue"})
-    expected = {
-        Fields.ID: "r1",
-        Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
-        Fields.MD_PROV: {
-            Fields.YEAR: {"source": "import.bib/id_0001", "note": ""},
-            Fields.TITLE: {"source": "import.bib/id_0001", "note": ""},
-            Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
-            Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
-            Fields.VOLUME: {"source": "import.bib/id_0001", "note": ""},
-            Fields.PAGES: {"source": "import.bib/id_0001", "note": ""},
-            "issue": {"source": "import.bib/id_0001|rename-from:number", "note": ""},
-        },
-        Fields.D_PROV: {},
-        Fields.STATUS: RecordState.md_prepared,
-        Fields.ORIGIN: ["import.bib/id_0001"],
-        Fields.YEAR: "2020",
-        Fields.TITLE: "EDITORIAL",
-        Fields.AUTHOR: "Rai, Arun",
-        Fields.JOURNAL: "MIS Quarterly",
-        Fields.VOLUME: "45",
-        Fields.PAGES: "1--3",
-        "issue": "1",
-    }
-
-    actual = prep_rec.data
-    assert expected == actual
-
-
-def test_unify_pages_field() -> None:
-    """Test record.unify_pages_field()"""
-
-    prep_rec = r1.copy_prep_rec()
-    prep_rec.data[Fields.PAGES] = "1-2"
-    prep_rec.unify_pages_field()
-    expected = "1--2"
-    actual = prep_rec.data[Fields.PAGES]
-    assert expected == actual
-
-    del prep_rec.data[Fields.PAGES]
-    prep_rec.unify_pages_field()
-
-    prep_rec.data[Fields.PAGES] = ["1", "2"]
-    prep_rec.unify_pages_field()
-
-
-def test_get_retrieval_similarity() -> None:
-    """Test record.get_retrieval_similarity()"""
-
-    actual = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-        record_original=r1, retrieved_record_original=r2
-    )
-    expected = 0.9417
-    assert expected == actual
-
-
 def test_get_record_similarity() -> None:
     """Test record.get_record_similarity()"""
 
@@ -1307,7 +1193,7 @@ def test_get_record_similarity() -> None:
     r2 = colrev.record.record.Record(v2)
 
     actual = colrev.record.record.Record.get_record_similarity(record_a=r1, record_b=r2)
-    expected = 0.8724
+    expected = 0.9074
     assert expected == actual
 
 

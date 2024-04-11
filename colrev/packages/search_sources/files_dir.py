@@ -701,8 +701,8 @@ class FilesSearchSource(JsonSchemaMixin):
             )
             if (
                 colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                    record_original=colrev.record.record.Record(record_dict),
-                    retrieved_record_original=retrieved_record,
+                    record=colrev.record.record.Record(record_dict),
+                    retrieved_record=retrieved_record,
                     same_record_type_required=True,
                 )
                 < 0.8
@@ -826,10 +826,10 @@ class FilesSearchSource(JsonSchemaMixin):
             return record
 
         if Path(record.data[Fields.FILE]).suffix == ".pdf":
-            record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
-            record.format_if_mostly_upper(key=Fields.JOURNAL, case=Fields.TITLE)
-            record.format_if_mostly_upper(key=Fields.BOOKTITLE, case=Fields.TITLE)
-            record.format_if_mostly_upper(key=Fields.AUTHOR, case=Fields.TITLE)
+            record.format_if_mostly_upper(Fields.TITLE, case="sentence")
+            record.format_if_mostly_upper(Fields.JOURNAL, case=Fields.TITLE)
+            record.format_if_mostly_upper(Fields.BOOKTITLE, case=Fields.TITLE)
+            record.format_if_mostly_upper(Fields.AUTHOR, case=Fields.TITLE)
 
             if Fields.AUTHOR in record.data:
                 record.data[Fields.AUTHOR] = (

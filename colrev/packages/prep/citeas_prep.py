@@ -110,8 +110,8 @@ class CiteAsPrep(JsonSchemaMixin):
             retrieved_record = self._cite_as_json_to_record(json_str=ret.text, url=url)
 
             similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record_original=retrieved_record,
-                retrieved_record_original=retrieved_record,
+                record=retrieved_record,
+                retrieved_record=retrieved_record,
                 same_record_type_required=self.same_record_type_required,
             )
             if similarity > self.prep_operation.retrieval_similarity:

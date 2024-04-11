@@ -642,7 +642,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             and "inbook" != record.data[Fields.ENTRYTYPE]
         ):
             # pylint: disable=colrev-missed-constant-usage
-            record.format_if_mostly_upper(key=Fields.BOOKTITLE, case="title")
+            record.format_if_mostly_upper(Fields.BOOKTITLE, case="title")
 
             stripped_btitle = re.sub(r"\d{4}", "", record.data[Fields.BOOKTITLE])
             stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
@@ -668,7 +668,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             and FieldValues.UNKNOWN != record.data[Fields.JOURNAL]
         ):
             # pylint: disable=colrev-missed-constant-usage
-            record.format_if_mostly_upper(key=Fields.JOURNAL, case="title")
+            record.format_if_mostly_upper(Fields.JOURNAL, case="title")
 
         if record.data.get(Fields.VOLUME, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
             record.update_field(
@@ -708,7 +708,7 @@ class UnknownSearchSource(JsonSchemaMixin):
             )
 
         if record.data.get(Fields.TITLE, FieldValues.UNKNOWN) != FieldValues.UNKNOWN:
-            record.format_if_mostly_upper(key=Fields.TITLE)
+            record.format_if_mostly_upper(Fields.TITLE)
 
         if Fields.PAGES in record.data:
             record.unify_pages_field()

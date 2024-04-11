@@ -415,7 +415,7 @@ class PubMedSearchSource(JsonSchemaMixin):
             retrieved_record = colrev.record.record.Record(retrieved_record_dict)
 
             similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record_original=record, retrieved_record_original=retrieved_record
+                record=record, retrieved_record=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
             # prep_operation.review_manager.logger.debug(

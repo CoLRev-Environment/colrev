@@ -479,7 +479,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 )
 
             similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record_original=record, retrieved_record_original=retrieved_record
+                record=record, retrieved_record=retrieved_record
             )
             # prep_operation.review_manager.logger.debug("Found matching record")
             # prep_operation.review_manager.logger.debug(
@@ -552,8 +552,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 doi=record.data[Fields.DOI], etiquette=self.etiquette
             )
             similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record_original=record,
-                retrieved_record_original=retrieved_record,
+                record=record,
+                retrieved_record=retrieved_record,
                 same_record_type_required=False,
             )
             if similarity < 0.7:

@@ -198,15 +198,12 @@ def test_curated_masterdata() -> None:
 def test_get_query(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
-    print(base_repo_review_manager.settings.sources)
-    Path(
+    query_file = Path(
         base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
-    ).write_text("test_query")
-    print(base_repo_review_manager.settings.sources[0].get_query())
+    )
+    query_file.write_text("test_query")
     assert "test_query" == base_repo_review_manager.settings.sources[0].get_query()
-    Path(
-        base_repo_review_manager.settings.sources[0].search_parameters["query_file"]
-    ).unlink()
+    query_file.unlink()
     with pytest.raises(FileNotFoundError):
         base_repo_review_manager.settings.sources[0].get_query()
 

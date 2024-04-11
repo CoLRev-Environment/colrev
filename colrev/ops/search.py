@@ -229,7 +229,7 @@ class Search(colrev.process.operation.Operation):
         write_file(records_dict=records, filename=source.filename)
 
     # pylint: disable=no-self-argument
-    def check_source_selection_exists(var_name: str) -> typing.Callable: # type: ignore
+    def check_source_selection_exists(var_name: str) -> typing.Callable:  # type: ignore
         """Check if the source selection exists"""
 
         # pylint: disable=no-self-argument

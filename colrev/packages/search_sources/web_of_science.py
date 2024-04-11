@@ -165,10 +165,10 @@ class WebOfScienceSearchSource(JsonSchemaMixin):
         """Source-specific preparation for Web of Science"""
 
         # pylint: disable=colrev-missed-constant-usage
-        record.format_if_mostly_upper(key=Fields.TITLE, case="sentence")
-        record.format_if_mostly_upper(key=Fields.JOURNAL, case="title")
-        record.format_if_mostly_upper(key=Fields.BOOKTITLE, case="title")
-        record.format_if_mostly_upper(key=Fields.AUTHOR, case="title")
+        record.format_if_mostly_upper(Fields.TITLE, case="sentence")
+        record.format_if_mostly_upper(Fields.JOURNAL, case="title")
+        record.format_if_mostly_upper(Fields.BOOKTITLE, case="title")
+        record.format_if_mostly_upper(Fields.AUTHOR, case="title")
 
         record.remove_field(key="colrev.web_of_science.researcherid-numbers")
         record.remove_field(key="colrev.web_of_science.orcid-numbers")
