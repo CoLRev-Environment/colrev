@@ -162,7 +162,7 @@ class TablePrescreen(JsonSchemaMixin):
         for prescreened_record in prescreened_records:
             if prescreened_record.get(Fields.ID, "") in records:
                 record = colrev.record.record.Record(
-                    data=records[prescreened_record.get(Fields.ID, "")]
+                    records[prescreened_record.get(Fields.ID, "")]
                 )
                 if record.data[Fields.STATUS] in RecordState.get_post_x_states(
                     state=RecordState.rev_prescreen_included

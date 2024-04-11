@@ -67,14 +67,14 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
 
     with pytest.raises(colrev_exceptions.InvalidPDFException):
         colrev.record.record_pdf.PDFRecord(
-            data={"ID": "WagnerLukyanenkoParEtAl2022.pdf"}
+            {"ID": "WagnerLukyanenkoParEtAl2022.pdf"}
         ).get_pdf_hash(page_nr=1)
 
     pdf_path = Path("WagnerLukyanenkoParEtAl2022.pdf")
     pdf_path.touch()
     with pytest.raises(colrev_exceptions.InvalidPDFException):
         colrev.record.record_pdf.PDFRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
+            {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
         ).get_pdf_hash(page_nr=1)
 
     helpers.retrieve_test_file(
@@ -82,14 +82,14 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
         target=pdf_path,
     )
     pdf_hash = colrev.record.record_pdf.PDFRecord(
-        data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
+        {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
     ).get_pdf_hash(page_nr=1)
     assert (
         pdf_hash
         == "87ffff1fffffff1ff47fff7fe0000307e000071fffffff07f1603f0ffd67fffff7ffffffe0000007e0000007e0000007fc6d59b7e3ffffffe03fffffffffffffe1ff0007e0000007e0000007e00080ffe0008007e0000007e0000007e0000007e0008007e000fdffe0008fffe000000ff00087ffffffffffffffffffffffffff"
     )
     pdf_hash = colrev.record.record_pdf.PDFRecord(
-        data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
+        {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
     ).get_pdf_hash(page_nr=1, hash_size=16)
     assert (
         pdf_hash == "fff3c3f3c3b3fff7c27fc001c7ffdfffc001c003c001c001c003c01fffffffff"
@@ -104,7 +104,7 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
 
     with pytest.raises(colrev_exceptions.InvalidPDFException):
         colrev.record.record_pdf.PDFRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
+            {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
         ).get_pdf_hash(page_nr=1)
 
     fitz.open = original_fitz_open
@@ -118,7 +118,7 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
 
     with pytest.raises(colrev_exceptions.PDFHashError):
         colrev.record.record_pdf.PDFRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
+            {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
         ).get_pdf_hash(page_nr=1)
 
     Image.open = original_image_open
@@ -133,7 +133,7 @@ def test_get_pdf_hash(helpers) -> None:  # type: ignore
 
     with pytest.raises(colrev_exceptions.PDFHashError):
         colrev.record.record_pdf.PDFRecord(
-            data={"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
+            {"file": Path("WagnerLukyanenkoParEtAl2022.pdf")}
         ).get_pdf_hash(page_nr=1)
 
     imagehash.average_hash = original_imagehash_averagehash

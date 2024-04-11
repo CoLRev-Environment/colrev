@@ -281,7 +281,7 @@ class Sync:
         for record_to_import in self.records_to_import:
             if record_to_import.data[Fields.ID] not in available_ids:
                 record_to_import = colrev.record.record.Record(
-                    data={
+                    {
                         k: v
                         for k, v in record_to_import.data.items()
                         if k

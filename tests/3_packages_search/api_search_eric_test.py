@@ -40,7 +40,7 @@ def test_eric(  # type: ignore
         source=Path("3_packages_search/api_output/eric/blockchain.json")
     )
     expected_record = colrev.record.record.Record(
-        data={
+        {
             "ENTRYTYPE": "article",
             "ID": "EJ1286736",
             "author": "Çulha, Davut",

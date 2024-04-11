@@ -1461,3 +1461,17 @@ def test_defect_ignore(
     v_t_record.run_quality_model(qm=quality_model, set_prepared=True)
     assert v_t_record.data[Fields.STATUS] == RecordState.md_prepared
     assert not v_t_record.has_quality_defects()
+
+
+def test_run_quality_model_curated(  # type: ignore
+    mocker,
+    v_t_record: colrev.record.record.Record,
+    quality_model: colrev.record.qm.quality_model.QualityModel,
+) -> None:
+    mocker.patch(
+        "colrev.record.record.Record.masterdata_is_curated",
+        return_value=True,
+    )
+    v_t_record.run_quality_model(qm=quality_model, set_prepared=True)
+
+    assert v_t_record.data[Fields.STATUS] == RecordState.md_prepared

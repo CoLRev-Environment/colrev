@@ -499,7 +499,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         base_repos = []
         for item in change_itemsets:
             repo_path = colrev.record.record.Record(
-                data=item["original_record"]
+                item["original_record"]
             ).get_masterdata_provenance_source(FieldValues.CURATED)
             if repo_path != "":
                 assert "#" not in repo_path
@@ -534,7 +534,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
         self.review_manager.logger.info(f"Base repository: {local_base_repo}")
         for item in change_itemsets:
             repo_path = colrev.record.record.Record(
-                data=item["original_record"]
+                item["original_record"]
             ).get_masterdata_provenance_source(FieldValues.CURATED)
             assert "#" not in repo_path
 
@@ -630,10 +630,11 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> dict:
         indexed_record = colrev.record.record.Record(indexed_record_dict)
 
-        if "colrev_id" in indexed_record.data:
-            cid_to_retrieve = indexed_record.get_colrev_id()
-        else:
-            cid_to_retrieve = [indexed_record.create_colrev_id()]
+        # if "colrev_id" in indexed_record.data:
+        #     cid_to_retrieve = indexed_record.get_colrev_id()
+        # else:
+        #     cid_to_retrieve = [indexed_record.get_colrev_id()]
+        cid_to_retrieve = [indexed_record.get_colrev_id()]
 
         record_l = [
             x

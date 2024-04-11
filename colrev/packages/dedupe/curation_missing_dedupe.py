@@ -137,7 +137,7 @@ class CurationMissingDedupe(JsonSchemaMixin):
         for record_candidate in records.values():
             try:
                 candidate_toc_key = colrev.record.record.Record(
-                    data=record_candidate
+                    record_candidate
                 ).get_toc_key()
             except colrev_exceptions.NotTOCIdentifiableException:
                 continue

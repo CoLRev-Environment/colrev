@@ -225,7 +225,7 @@ class Merge(colrev.process.operation.Operation):
                     )
                     resolution = other_branch_record[Fields.STATUS]
                 current_branch_record = colrev.record.record.Record(
-                    data=current_branch_record_dict
+                    current_branch_record_dict
                 )
                 current_branch_record.set_status(resolution)
                 print("\n\n\n")

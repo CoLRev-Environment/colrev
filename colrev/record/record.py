@@ -639,14 +639,14 @@ class Record:
         """Check whether the record masterdata is curated"""
         return FieldValues.CURATED in self.data.get(Fields.MD_PROV, {})
 
-    def create_colrev_id(
+    def get_colrev_id(
         self,
         *,
         assume_complete: bool = False,
     ) -> str:
         """Returns the colrev_id of the Record."""
 
-        return colrev.record.record_identifier.create_colrev_id(
+        return colrev.record.record_identifier.get_colrev_id(
             record=self,
             assume_complete=assume_complete,
         )
@@ -658,7 +658,7 @@ class Record:
     ) -> str:  # pragma: no cover
         """Generate the colrev_pdf_id"""
 
-        return colrev.record.record_identifier.create_colrev_pdf_id(pdf_path=pdf_path)
+        return colrev.record.record_identifier.get_colrev_pdf_id(pdf_path)
 
     def get_toc_key(self) -> str:
         """Get the record's toc-key"""
@@ -827,19 +827,19 @@ class Record:
 
         self.run_quality_model(qm)
 
-    def get_colrev_id(self) -> list:
-        """Get the colrev_id of a record"""
-        # Note : do not automatically create colrev_ids
-        # or at least keep in mind that this will not be possible for some records
-        colrev_id = []
-        if Fields.COLREV_ID in self.data:
-            if isinstance(self.data[Fields.COLREV_ID], str):
-                colrev_id = [
-                    cid.lstrip() for cid in self.data[Fields.COLREV_ID].split(";")
-                ]
-            elif isinstance(self.data[Fields.COLREV_ID], list):
-                colrev_id = self.data[Fields.COLREV_ID]
-        return [c for c in colrev_id if len(c) > 20]
+    # def get_colrev_id(self) -> list:
+    #     """Get the colrev_id of a record"""
+    #     # Note : do not automatically create colrev_ids
+    #     # or at least keep in mind that this will not be possible for some records
+    #     colrev_id = []
+    #     if Fields.COLREV_ID in self.data:
+    #         if isinstance(self.data[Fields.COLREV_ID], str):
+    #             colrev_id = [
+    #                 cid.lstrip() for cid in self.data[Fields.COLREV_ID].split(";")
+    #             ]
+    #         elif isinstance(self.data[Fields.COLREV_ID], list):
+    #             colrev_id = self.data[Fields.COLREV_ID]
+    #     return [c for c in colrev_id if len(c) > 20]
 
     def set_status(self, target_state: RecordState, *, force: bool = False) -> None:
         """Set the record status"""

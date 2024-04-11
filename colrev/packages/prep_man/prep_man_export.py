@@ -334,7 +334,7 @@ class ExportManPrep(JsonSchemaMixin):
                 print(f"ID no longer in records: {record_id}")
                 continue
             original_record = colrev.record.record.Record(
-                data=records[man_prepped_record_dict[Fields.ID]]
+                records[man_prepped_record_dict[Fields.ID]]
             )
             self._import_record(
                 man_prepped_record_dict=man_prepped_record_dict,

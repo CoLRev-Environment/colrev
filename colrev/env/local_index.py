@@ -172,7 +172,7 @@ class LocalIndex:
 
     def _get_record_hash(self, *, record_dict: dict) -> str:
         # Note : may raise NotEnoughDataToIdentifyException
-        string_to_hash = colrev.record.record.Record(record_dict).create_colrev_id()
+        string_to_hash = colrev.record.record.Record(record_dict).get_colrev_id()
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     # def _increment_hash(self, *, paper_hash: str) -> str:
@@ -295,7 +295,7 @@ class LocalIndex:
         ):
             try:
                 toc_key_full = colrev.record.record.Record(
-                    data=internal_record_dict
+                    internal_record_dict
                 ).get_toc_key()
 
                 if self._toc_exists(toc_key_full):
@@ -376,8 +376,8 @@ class LocalIndex:
                             cursor=cur,
                         )
                         stored_colrev_id = colrev.record.record.Record(
-                            data=stored_record
-                        ).create_colrev_id()
+                            stored_record
+                        ).get_colrev_id()
 
                         if stored_colrev_id != item["colrev_id"]:  # pragma: no cover
                             print("Collisions (TODO):")
@@ -497,13 +497,14 @@ class LocalIndex:
                 return self._retrieve_from_github_curation(record_dict=record_dict)
             raise colrev_exceptions.RecordNotInIndexException
 
-        if Fields.COLREV_ID in record.data:
-            cid_to_retrieve = record.get_colrev_id()
-        else:
-            cid_to_retrieve = [record.create_colrev_id(assume_complete=True)]
+        # if Fields.COLREV_ID in record.data:
+        #     cid_to_retrieve = record.get_colrev_id()
+        # else:
+        #     cid_to_retrieve = [record.get_colrev_id(assume_complete=True)]
+        cids_to_retrieve = [record.get_colrev_id()]
 
         retrieved_record = self._retrieve_based_on_colrev_id(
-            cids_to_retrieve=cid_to_retrieve
+            cids_to_retrieve=cids_to_retrieve
         )
         if retrieved_record.data[Fields.ENTRYTYPE] != record.data[Fields.ENTRYTYPE]:
             raise colrev_exceptions.RecordNotInIndexException
@@ -726,7 +727,7 @@ class LocalIndex:
     def _get_index_record(self, record_dict: dict) -> dict:
         try:
             record_dict = self._prepare_record_for_indexing(record_dict)
-            cid_to_index = colrev.record.record.Record(record_dict).create_colrev_id()
+            cid_to_index = colrev.record.record.Record(record_dict).get_colrev_id()
             record_dict[Fields.COLREV_ID] = cid_to_index
             record_dict["citation_key"] = record_dict[Fields.ID]
             record_dict["id"] = self._get_record_hash(record_dict=record_dict)
@@ -758,9 +759,9 @@ class LocalIndex:
             Fields.STATUS
         ] not in RecordState.get_post_x_states(state=RecordState.md_processed)
         try:
-            colrev_id = colrev.record.record.Record(
-                copy_for_toc_index
-            ).create_colrev_id(assume_complete=True)
+            colrev_id = colrev.record.record.Record(copy_for_toc_index).get_colrev_id(
+                assume_complete=True
+            )
         except colrev_exceptions.NotEnoughDataToIdentifyException:
             drop_toc = True
         if drop_toc:
@@ -1081,9 +1082,9 @@ class LocalIndex:
             )
 
             if search_across_tocs:
-                record_colrev_id = record.create_colrev_id(assume_complete=True)
+                record_colrev_id = record.get_colrev_id(assume_complete=True)
             else:
-                record_colrev_id = record.create_colrev_id()
+                record_colrev_id = record.get_colrev_id()
 
             sim_list = []
             for toc_records_colrev_id in toc_items:
@@ -1185,7 +1186,7 @@ class LocalIndex:
                 key == Fields.COLREV_ID
                 and (
                     value
-                    != colrev.record.record.Record(retrieved_record).create_colrev_id()
+                    != colrev.record.record.Record(retrieved_record).get_colrev_id()
                 )
             ):
                 raise colrev_exceptions.RecordNotInIndexException()
@@ -1251,8 +1252,8 @@ class LocalIndex:
                 if Fields.COLREV_ID not in record_dict:
                     try:
                         record_dict[Fields.COLREV_ID] = colrev.record.record.Record(
-                            data=record_dict
-                        ).create_colrev_id()
+                            record_dict
+                        ).get_colrev_id()
                         remove_colrev_id = True
                     except colrev_exceptions.NotEnoughDataToIdentifyException:
                         pass

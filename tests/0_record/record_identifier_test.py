@@ -98,12 +98,12 @@ def test_colrev_id(  # type: ignore
 
     if colrev_id == "NotEnoughDataToIdentifyException":
         with pytest.raises(colrev_exceptions.NotEnoughDataToIdentifyException):
-            colrev.record.record.Record(record_dict).create_colrev_id(
+            colrev.record.record.Record(record_dict).get_colrev_id(
                 assume_complete=False,
             )
         return
 
-    actual = colrev.record.record.Record(record_dict).create_colrev_id(
+    actual = colrev.record.record.Record(record_dict).get_colrev_id(
         assume_complete=False,
     )
     assert actual == colrev_id
@@ -210,6 +210,6 @@ def test_cpid(helpers) -> None:  # type: ignore
         target=pdf_path,
     )
     with pytest.raises(NotImplementedError):
-        colrev.record.record_identifier.create_colrev_pdf_id(
+        colrev.record.record_identifier.get_colrev_pdf_id(
             pdf_path=pdf_path, cpid_version="unknown"
         )

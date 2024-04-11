@@ -38,7 +38,7 @@ def test_pdf_get_import_file(  # type: ignore
     )
     pdf_get_operation.import_pdf(
         record=colrev.record.record.Record(
-            data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
+            {"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
         )
     )
     base_repo_review_manager.settings.pdf_get.pdf_path_type = PDFPathType.copy
@@ -47,7 +47,7 @@ def test_pdf_get_import_file(  # type: ignore
 
     pdf_get_operation.import_pdf(
         record=colrev.record.record.Record(
-            data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
+            {"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
         )
     )
 
@@ -168,7 +168,7 @@ def test_pdf_get_get_target_filepath(  # type: ignore
 #   )
 #   pdf_get_operation.import_pdf(
 #       record=colrev.record.record.Record(
-#           data={"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
+#           {"ID": "SrivastavaShainesh2015", "file": "SrivastavaShainesh2015.pdf"}
 #       )
 #   )
 #   base_repo_review_manager.settings.sources[0] = original_source

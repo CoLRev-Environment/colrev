@@ -313,7 +313,7 @@ def fixture_pdedupe_operation(
 def record_with_pdf() -> colrev.record.record.Record:
     """Fixture returning a record containing a file (PDF)"""
     return colrev.record.record_pdf.PDFRecord(
-        data={
+        {
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.FILE: Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
@@ -435,7 +435,7 @@ def patch_registry(mocker, tmp_path) -> None:  # type: ignore
 def fixture_v_t_record() -> colrev.record.record.Record:
     """Record for testing quality defects"""
     return colrev.record.record.Record(
-        data={
+        {
             Fields.ID: "WagnerLukyanenkoParEtAl2022",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.FILE: Path("data/pdfs/WagnerLukyanenkoParEtAl2022.pdf"),
@@ -462,7 +462,7 @@ def fixture_v_t_pdf_record(
 def fixture_book_record() -> colrev.record.record.Record:
     """Book record for testing quality defects"""
     return colrev.record.record.Record(
-        data={
+        {
             Fields.ID: "Popper2014",
             Fields.ENTRYTYPE: ENTRYTYPES.BOOK,
             Fields.TITLE: "Conjectures and refutations: The growth of scientific knowledge",

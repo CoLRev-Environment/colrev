@@ -26,6 +26,7 @@ colrev.constants.FieldSet
    .. autosummary::
 
       ~FieldSet.IDENTIFYING_FIELD_KEYS
+      ~FieldSet.LIST_FIELDS
       ~FieldSet.PROVENANCE_KEYS
       ~FieldSet.STANDARDIZED_FIELD_KEYS
       ~FieldSet.TIME_VARIANT_FIELDS

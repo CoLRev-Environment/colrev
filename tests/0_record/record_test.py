@@ -505,15 +505,15 @@ def test_get_value() -> None:
     assert expected == actual
 
 
-def test_create_colrev_id() -> None:
-    """Test record.create_colrev_id()"""
+def test_get_colrev_id() -> None:
+    """Test record.get_colrev_id()"""
 
     # Test type: phdthesis
     r1_mod = r1.copy()
     r1_mod.data[Fields.ENTRYTYPE] = "phdthesis"
     r1_mod.data["school"] = "University of Minnesota"
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = ["colrev_id1:|phdthesis|university-of-minnesota|2020|rai|editorial"]
+    r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    expected = "colrev_id1:|phdthesis|university-of-minnesota|2020|rai|editorial"
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -521,8 +521,8 @@ def test_create_colrev_id() -> None:
     r1_mod = r1.copy()
     r1_mod.data[Fields.ENTRYTYPE] = "techreport"
     r1_mod.data["institution"] = "University of Minnesota"
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = ["colrev_id1:|techreport|university-of-minnesota|2020|rai|editorial"]
+    r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    expected = "colrev_id1:|techreport|university-of-minnesota|2020|rai|editorial"
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -530,10 +530,9 @@ def test_create_colrev_id() -> None:
     r1_mod = r1.copy()
     r1_mod.data[Fields.ENTRYTYPE] = ENTRYTYPES.INPROCEEDINGS
     r1_mod.data[Fields.BOOKTITLE] = "International Conference on Information Systems"
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = [
-        "colrev_id1:|p|international-conference-on-information-systems|2020|rai|editorial"
-    ]
+    r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    expected = "colrev_id1:|p|international-conference-on-information-systems|2020|rai|editorial"
+
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -541,10 +540,9 @@ def test_create_colrev_id() -> None:
     r1_mod = r1.copy()
     r1_mod.data[Fields.ENTRYTYPE] = ENTRYTYPES.ARTICLE
     r1_mod.data[Fields.JOURNAL] = "Journal of Management Information Systems"
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = [
-        "colrev_id1:|a|journal-of-management-information-systems|45|1|2020|rai|editorial"
-    ]
+    r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    expected = "colrev_id1:|a|journal-of-management-information-systems|45|1|2020|rai|editorial"
+
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -552,8 +550,8 @@ def test_create_colrev_id() -> None:
     r1_mod = r1.copy()
     r1_mod.data[Fields.ENTRYTYPE] = "monogr"
     r1_mod.data[Fields.SERIES] = "Lecture notes in cs"
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = ["colrev_id1:|monogr|lecture-notes-in-cs|2020|rai|editorial"]
+    r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    expected = "colrev_id1:|monogr|lecture-notes-in-cs|2020|rai|editorial"
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -561,32 +559,31 @@ def test_create_colrev_id() -> None:
     r1_mod = r1.copy()
     r1_mod.data[Fields.ENTRYTYPE] = "online"
     r1_mod.data[Fields.URL] = "www.loc.de/subpage.html"
-    r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    expected = ["colrev_id1:|online|wwwlocde-subpagehtml|2020|rai|editorial"]
+    r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    expected = "colrev_id1:|online|wwwlocde-subpagehtml|2020|rai|editorial"
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
-
-def test_get_colrev_id() -> None:
-    """Test record.get_colrev_id()"""
+    # def test_get_colrev_id() -> None:
+    # """Test record.get_colrev_id()"""
 
     # r1_mod = r1.copy()
-    # r1_mod.data[Fields.COLREV_ID] = r1_mod.create_colrev_id()
-    # expected = ["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"]
+    # r1_mod.data[Fields.COLREV_ID] = r1_mod.get_colrev_id()
+    # expected = "colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"
     # actual = r1_mod.get_colrev_id()
     # assert expected == actual
 
     # Test str colrev_id
     r1_mod = r1.copy()
     r1_mod.data[Fields.COLREV_ID] = "colrev_id1:|a|nature|45|1|2020|rai|editorial"
-    expected = ["colrev_id1:|a|nature|45|1|2020|rai|editorial"]
+    expected = "colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
     # Test list colrev_id
     r1_mod = r1.copy()
-    r1_mod.data[Fields.COLREV_ID] = ["colrev_id1:|a|nature|45|1|2020|rai|editorial"]
-    expected = ["colrev_id1:|a|nature|45|1|2020|rai|editorial"]
+    r1_mod.data[Fields.COLREV_ID] = "colrev_id1:|a|nature|45|1|2020|rai|editorial"
+    expected = "colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"
     actual = r1_mod.get_colrev_id()
     assert expected == actual
 
@@ -992,7 +989,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     )
 
     r1_mod = colrev.record.record.Record(
-        data={
+        {
             Fields.ID: "r1",
             Fields.D_PROV: {},
             Fields.MD_PROV: {Fields.VOLUME: {"source": "source-1", "note": ""}},
@@ -1006,7 +1003,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
         }
     )
     r2_mod = colrev.record.record.Record(
-        data={
+        {
             Fields.ID: "r2",
             Fields.D_PROV: {},
             Fields.MD_PROV: {

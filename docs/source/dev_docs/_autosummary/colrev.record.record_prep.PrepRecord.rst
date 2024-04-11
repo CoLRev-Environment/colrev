@@ -24,10 +24,8 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.align_provenance
       ~PrepRecord.change_entrytype
       ~PrepRecord.complete_provenance
-      ~PrepRecord.container_is_abbreviated
       ~PrepRecord.copy
       ~PrepRecord.copy_prep_rec
-      ~PrepRecord.create_colrev_id
       ~PrepRecord.defects
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
@@ -61,7 +59,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.remove_field
       ~PrepRecord.remove_masterdata_provenance_note
       ~PrepRecord.rename_field
-      ~PrepRecord.rename_fields_based_on_mapping
       ~PrepRecord.reset_pdf_provenance_notes
       ~PrepRecord.run_pdf_quality_model
       ~PrepRecord.run_quality_model
@@ -81,6 +78,5 @@ colrev.record.record\_prep.PrepRecord
 
    .. autosummary::
 
-      ~PrepRecord.list_fields_keys
       ~PrepRecord.pp
       ~PrepRecord.data

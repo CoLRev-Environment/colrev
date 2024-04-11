@@ -28,6 +28,7 @@ import colrev.packages.search_sources.doi_org as doi_connector
 import colrev.packages.search_sources.utils as connector_utils
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldValues

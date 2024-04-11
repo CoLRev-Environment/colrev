@@ -630,7 +630,7 @@ class Dedupe(colrev.process.operation.Operation):
                 try:
                     record[Fields.COLREV_ID] = colrev.record.record.Record(
                         data=record
-                    ).create_colrev_id()
+                    ).get_colrev_id()
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
 

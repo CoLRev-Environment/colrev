@@ -15,10 +15,10 @@ from colrev.constants import RecordState
 # def test_is_duplicate(local_index, local_index_test_records_dict) -> None:  # type: ignore
 #     """Test is_duplicate()"""
 #     record1_colrev_id = colrev.record.record.Record(
-#         data=local_index_test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
+#         local_index_test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
 #     ).get_colrev_id()
 #     record2_colrev_id = colrev.record.record.Record(
-#         data=local_index_test_records_dict[Path("misq.bib")][
+#         local_index_test_records_dict[Path("misq.bib")][
 #             "AbbasiAlbrechtVanceEtAl2012"
 #         ]
 #     ).get_colrev_id()
@@ -71,7 +71,7 @@ def test_search(local_index) -> None:  # type: ignore
 
     expected = [
         colrev.record.record.Record(
-            data={
+            {
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.ID: "AbbasZhouDengEtAl2018",
                 Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
@@ -101,7 +101,7 @@ def test_search(local_index) -> None:  # type: ignore
 
     expected = [
         colrev.record.record.Record(
-            data={
+            {
                 Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.ID: "AlaviLeidner2001",
                 Fields.AUTHOR: "Alavi, Maryam and Leidner, Dorothy E.",
@@ -207,7 +207,7 @@ def test_retrieve_based_on_colrev_pdf_id(local_index) -> None:  # type: ignore
 
     colrev_pdf_id = "cpid2:fffffffffcffffffe007ffffc0020003e0f20007fffffffff000000fff8001fffffc3fffffe007ffffc003fffe00007ffffffffff800001ff800001ff80003fff920725ff800001ff800001ff800001ff84041fff81fffffffffffffe000afffe0018007efff8007e2bd8007efff8007e00fffffffffffffffffffffffffffff"
     expected = colrev.record.record.Record(
-        data={
+        {
             Fields.ID: "AbbasiAlbrechtVanceEtAl2012",
             Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.STATUS: RecordState.md_prepared,

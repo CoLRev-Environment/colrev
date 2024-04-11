@@ -15,6 +15,6 @@ colrev.record.record\_identifier
       :toctree:
       :nosignatures:
 
-      create_colrev_id
-      create_colrev_pdf_id
+      get_colrev_id
+      get_colrev_pdf_id
       get_toc_key

@@ -12,7 +12,7 @@ class LoadFormatterTests(unittest.TestCase):
 
     def test_pre_md_retrieved(self) -> None:
         record = Record(
-            data={
+            {
                 Fields.STATUS: RecordState.md_retrieved,
                 "author": "van der Aalst, Wil and Brocke, Jan vom and van Wee and Dis van",
                 "title": "My Title \\textendash With special chars &amp; symbols",
@@ -43,7 +43,7 @@ class LoadFormatterTests(unittest.TestCase):
 
     def test_post_md_retrieved(self) -> None:
         record = Record(
-            data={
+            {
                 Fields.DOI: "http://dx.doi.org/10.1234",
                 Fields.LANGUAGE: "eng",
                 Fields.STATUS: RecordState.md_processed,

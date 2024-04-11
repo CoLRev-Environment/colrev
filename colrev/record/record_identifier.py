@@ -179,9 +179,7 @@ def _get_colrev_id_from_record(record: colrev.record.record.Record) -> str:
     return srep
 
 
-def create_colrev_id(
-    record: colrev.record.record.Record, *, assume_complete: bool
-) -> str:
+def get_colrev_id(record: colrev.record.record.Record, *, assume_complete: bool) -> str:
     """Create the colrev_id"""
     _check_colrev_id_preconditions(
         record,
@@ -199,7 +197,7 @@ def create_colrev_id(
     return srep
 
 
-def _create_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
+def _get_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
     with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
         file_name = temp_file.name
         try:
@@ -221,7 +219,7 @@ def _create_colrev_pdf_id_cpid2(pdf_path: Path) -> str:
             raise colrev_exceptions.PDFHashError(path=pdf_path) from exc
 
 
-def create_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
+def get_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
     """Get the PDF hash"""
 
     pdf_path = pdf_path.resolve()
@@ -230,7 +228,7 @@ def create_colrev_pdf_id(pdf_path: Path, *, cpid_version: str = "cpid2") -> str:
         raise colrev_exceptions.InvalidPDFException(path=pdf_path)
 
     if cpid_version == "cpid2":
-        return _create_colrev_pdf_id_cpid2(pdf_path)
+        return _get_colrev_pdf_id_cpid2(pdf_path)
 
     raise NotImplementedError
 

@@ -9,6 +9,7 @@ import colrev.record.record_pdf
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
+from colrev.constants import RecordState
 
 
 def test_pdf_qm(  # type: ignore
@@ -256,3 +257,26 @@ def test_pdf_incompleteness(
         PDFDefectCodes.PDF_INCOMPLETE
     ]
     v_t_pdf_record.data[Fields.NR_PAGES_IN_FILE] = 18
+
+
+def test_run_pdf_quality_model(  # type: ignore
+    mocker,
+    v_t_pdf_record,
+    pdf_quality_model: colrev.record.qm.quality_model.QualityModel,
+) -> None:
+
+    mocker.patch(
+        "colrev.record.record.Record.has_pdf_defects",
+        return_value=True,
+    )
+    v_t_pdf_record.run_pdf_quality_model(pdf_quality_model)
+    assert (
+        v_t_pdf_record.data[Fields.STATUS] == RecordState.pdf_needs_manual_preparation
+    )
+
+    mocker.patch(
+        "colrev.record.record.Record.has_pdf_defects",
+        return_value=False,
+    )
+    v_t_pdf_record.run_pdf_quality_model(pdf_quality_model, set_prepared=True)
+    assert v_t_pdf_record.data[Fields.STATUS] == RecordState.pdf_prepared

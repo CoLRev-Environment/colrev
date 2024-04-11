@@ -26,7 +26,6 @@ colrev.record.record.Record
       ~Record.complete_provenance
       ~Record.copy
       ~Record.copy_prep_rec
-      ~Record.create_colrev_id
       ~Record.defects
       ~Record.format_bib_style
       ~Record.get_colrev_id
@@ -75,6 +74,5 @@ colrev.record.record.Record
 
    .. autosummary::
 
-      ~Record.list_fields_keys
       ~Record.pp
       ~Record.data

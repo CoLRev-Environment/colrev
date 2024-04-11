@@ -26,7 +26,6 @@ colrev.record.record\_pdf.PDFRecord
       ~PDFRecord.complete_provenance
       ~PDFRecord.copy
       ~PDFRecord.copy_prep_rec
-      ~PDFRecord.create_colrev_id
       ~PDFRecord.defects
       ~PDFRecord.extract_pages
       ~PDFRecord.extract_text_by_page
@@ -80,6 +79,5 @@ colrev.record.record\_pdf.PDFRecord
 
    .. autosummary::
 
-      ~PDFRecord.list_fields_keys
       ~PDFRecord.pp
       ~PDFRecord.data
