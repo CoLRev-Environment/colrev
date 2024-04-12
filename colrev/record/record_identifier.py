@@ -27,9 +27,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 
-# pylint: disable=duplicate-code
-
-
 def _format_author_field_for_cid(input_string: str) -> str:
     input_string = input_string.replace("\n", " ").replace("'", "")
     names = input_string.replace("; ", " and ").split(" and ")
@@ -41,11 +38,6 @@ def _format_author_field_for_cid(input_string: str) -> str:
                 author_list.append(str(name.rstrip()[:-1]))
         else:
             parsed_name = HumanName(name)
-
-            if parsed_name.last == "" and parsed_name.first != "":
-                author_list.append(parsed_name.first)
-                continue
-
             # Note: do not set parsed_name.string_format as a global constant
             # to preserve consistent creation of identifiers
             parsed_name.string_format = "{last} "
@@ -79,7 +71,7 @@ def _get_container_title(record: colrev.record.record.Record) -> str:
         container_title = record.data[Fields.SERIES]
     elif Fields.URL in record.data:
         container_title = record.data[Fields.URL]
-    else:
+    else:  # pragma: no cover
         raise KeyError
 
     return container_title

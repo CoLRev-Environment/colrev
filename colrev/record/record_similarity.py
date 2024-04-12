@@ -43,17 +43,11 @@ def container_is_abbreviated(record: colrev.record.record.Record) -> bool:
             return True
         if record.data[Fields.CONTAINER_TITLE].isupper():
             return True
-    # if Fields.BOOKTITLE in record.data:
-    #     if record.data[Fields.BOOKTITLE].count(".") > 2:
-    #         return True
-    #     if record.data[Fields.BOOKTITLE].isupper():
-    #         return True
-    # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
     return False
 
 
 def _format_authors_string_for_comparison(record: colrev.record.record.Record) -> None:
-    if Fields.AUTHOR not in record.data:
+    if Fields.AUTHOR not in record.data:  # pragma: no cover
         return
     authors = str(record.data[Fields.AUTHOR]).lower()
     authors = colrev.env.utils.remove_accents(authors)
@@ -82,24 +76,16 @@ def _abbreviate_container_title(
     def abbreviate_container(
         record: colrev.record.record.Record, *, min_len: int
     ) -> None:
-        if Fields.CONTAINER_TITLE in record.data:
-            record.data[Fields.CONTAINER_TITLE] = " ".join(
-                [x[:min_len] for x in record.data[Fields.CONTAINER_TITLE].split(" ")]
-            )
+        abbreviated_container = " ".join(
+            [x[:min_len] for x in record.data[Fields.CONTAINER_TITLE].split(" ")]
+        )
+        record.data[Fields.CONTAINER_TITLE] = abbreviated_container
 
     def get_abbrev_container_min_len(record: colrev.record.record.Record) -> int:
-        min_len = -1
-        if Fields.CONTAINER_TITLE in record.data:
-            min_len = min(
-                len(x)
-                for x in record.data[Fields.CONTAINER_TITLE].replace(".", "").split(" ")
-            )
-        # if Fields.BOOKTITLE in record.data:
-        #     min_len = min(
-        #         len(x)
-        #         for x in record.data[Fields.BOOKTITLE].replace(".", "").split(" ")
-        #     )
-        return min_len
+        return min(
+            len(x)
+            for x in record.data[Fields.CONTAINER_TITLE].replace(".", "").split(" ")
+        )
 
     if Fields.CONTAINER_TITLE not in record.data:
         record.data[Fields.CONTAINER_TITLE] = (
@@ -111,45 +97,6 @@ def _abbreviate_container_title(
     if container_is_abbreviated(record):
         min_len = get_abbrev_container_min_len(record)
         abbreviate_container(record, min_len=min_len)
-
-
-def get_record_similarity(
-    record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
-) -> float:
-    """Determine the similarity between two records (their masterdata)"""
-
-    record_a = record_a.copy()
-    record_b = record_b.copy()
-
-    mandatory_fields = [
-        Fields.TITLE,
-        Fields.AUTHOR,
-        Fields.YEAR,
-        Fields.JOURNAL,
-        Fields.VOLUME,
-        Fields.NUMBER,
-        Fields.PAGES,
-        Fields.BOOKTITLE,
-    ]
-
-    for mandatory_field in mandatory_fields:
-        if (
-            record_a.data.get(mandatory_field, FieldValues.UNKNOWN)
-            == FieldValues.UNKNOWN
-        ):
-            record_a.data[mandatory_field] = ""
-        if (
-            record_b.data.get(mandatory_field, FieldValues.UNKNOWN)
-            == FieldValues.UNKNOWN
-        ):
-            record_b.data[mandatory_field] = ""
-
-    _abbreviate_container_title(record_a)
-    _abbreviate_container_title(record_b)
-    _format_authors_string_for_comparison(record_a)
-    _format_authors_string_for_comparison(record_b)
-
-    return _get_similarity_detailed(record_a.get_data(), record_b.get_data())
 
 
 def _get_similarity_detailed(record_a: dict, record_b: dict) -> float:
@@ -250,3 +197,48 @@ def _get_similarity_detailed(record_a: dict, record_b: dict) -> float:
         similarities[g] * weights[g] for g in range(len(similarities))
     )
     return round(weighted_average, 4)
+
+
+def _ensure_mandatory_fields(
+    record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
+) -> None:
+    mandatory_fields = [
+        Fields.TITLE,
+        Fields.AUTHOR,
+        Fields.YEAR,
+        Fields.JOURNAL,
+        Fields.VOLUME,
+        Fields.NUMBER,
+        Fields.PAGES,
+        Fields.BOOKTITLE,
+    ]
+
+    for mandatory_field in mandatory_fields:
+        if (
+            record_a.data.get(mandatory_field, FieldValues.UNKNOWN)
+            == FieldValues.UNKNOWN
+        ):
+            record_a.data[mandatory_field] = ""
+        if (
+            record_b.data.get(mandatory_field, FieldValues.UNKNOWN)
+            == FieldValues.UNKNOWN
+        ):
+            record_b.data[mandatory_field] = ""
+
+
+def get_record_similarity(
+    record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
+) -> float:
+    """Determine the similarity between two records (their masterdata)"""
+
+    record_a = record_a.copy()
+    record_b = record_b.copy()
+
+    _ensure_mandatory_fields(record_a, record_b)
+
+    _abbreviate_container_title(record_a)
+    _abbreviate_container_title(record_b)
+    _format_authors_string_for_comparison(record_a)
+    _format_authors_string_for_comparison(record_b)
+
+    return _get_similarity_detailed(record_a.get_data(), record_b.get_data())

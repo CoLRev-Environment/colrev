@@ -1071,7 +1071,6 @@ def test_inconsistent_with_doi_metadata(
     v_t_record.data.pop(Fields.JOURNAL, None)
     v_t_record.data[Fields.TITLE] = FieldValues.UNKNOWN
     doi_consistency_checker.run(record=v_t_record)
-    print(v_t_record)
     assert (
         not v_t_record.has_quality_defects()
     ), "Record should not have quality defects when title is unknown and journal is not provided"
@@ -1103,7 +1102,7 @@ def test_inconsistent_with_doi_metadata(
     assert not v_t_record.has_quality_defects()
 
     # Test case 6: DOI metadata from 'md_curated.bib' source
-    v_t_record.data[Fields.MD_PROV] = {
+    v_t_record.data[Fields.D_PROV] = {
         Fields.DOI: {"source": "md_curated.bib", "note": ""}
     }
     doi_consistency_checker.run(record=v_t_record)
