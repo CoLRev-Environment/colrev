@@ -21,6 +21,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -636,9 +637,6 @@ class DBLPSearchSource(JsonSchemaMixin):
             # Already linked to a crossref record
             return record
 
-        same_record_type_required = (
-            self.review_manager.settings.is_curated_masterdata_repo()
-        )
         self._timeout = timeout
 
         try:
@@ -653,12 +651,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 if retrieved_record.data["dblp_key"] != record.data[Fields.DBLP_KEY]:
                     return record
 
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=record,
-                retrieved_record=retrieved_record,
-                same_record_type_required=same_record_type_required,
-            )
-            if similarity < prep_operation.retrieval_similarity:
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
                 return record
 
             try:

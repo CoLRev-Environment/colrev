@@ -197,7 +197,7 @@ def test_retrieve_from_toc(local_index) -> None:  # type: ignore
         Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
         "curation_ID": "gh...#AbbasZhouDengEtAl2018",
     }
-    actual = local_index.retrieve_from_toc(record, similarity_threshold=0.8)
+    actual = local_index.retrieve_from_toc(record)
     expected = colrev.record.record.Record(expected_dict)
     assert expected == actual
 

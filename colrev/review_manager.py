@@ -441,7 +441,6 @@ class ReviewManager:
         self,
         *,
         notify_state_transition_operation: bool = True,
-        retrieval_similarity: float = 1.0,
     ) -> colrev.ops.prep.Prep:  # pragma: no cover
         """Get a prep operation object"""
         import colrev.ops.prep
@@ -449,7 +448,6 @@ class ReviewManager:
         return colrev.ops.prep.Prep(
             review_manager=self,
             notify_state_transition_operation=notify_state_transition_operation,
-            retrieval_similarity=retrieval_similarity,
         )
 
     def get_prep_man_operation(

@@ -16,6 +16,7 @@ from pathlib import Path
 import click
 import click_completion.core
 import click_repl
+import git
 import pandas as pd
 
 import colrev.env.local_index
@@ -2389,21 +2390,24 @@ def env(
     if pull:
         environment_manager = review_manager.get_environment_manager()
         for curated_resource in environment_manager.local_repos():
-            curated_resource_path = curated_resource["source_url"]
-            if "/curated_metadata/" not in curated_resource_path:
-                continue
+            try:
+                curated_resource_path = curated_resource["repo_source_path"]
+                if "/curated_metadata/" not in curated_resource_path:
+                    continue
 
-            review_manager = get_review_manager(
-                ctx,
-                {
-                    "verbose_mode": verbose,
-                    "force_mode": False,
-                    "path_str": curated_resource_path,
-                },
-            )
+                review_manager = get_review_manager(
+                    ctx,
+                    {
+                        "verbose_mode": verbose,
+                        "force_mode": False,
+                        "path_str": curated_resource_path,
+                    },
+                )
 
-            review_manager.dataset.pull_if_repo_clean()
-            print(f"Pulled {curated_resource_path}")
+                review_manager.dataset.pull_if_repo_clean()
+                print(f"Pulled {curated_resource_path}")
+            except git.exc.GitCommandError as exc:
+                print(exc)
         return
 
     if status:

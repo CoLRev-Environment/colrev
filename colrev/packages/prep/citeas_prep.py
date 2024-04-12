@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -109,13 +110,10 @@ class CiteAsPrep(JsonSchemaMixin):
 
             retrieved_record = self._cite_as_json_to_record(json_str=ret.text, url=url)
 
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=retrieved_record,
-                retrieved_record=retrieved_record,
-                same_record_type_required=self.same_record_type_required,
-            )
-            if similarity > self.prep_operation.retrieval_similarity:
-                record.merge(retrieved_record, default_source=url)
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+                return record
+
+            record.merge(retrieved_record, default_source=url)
 
         except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             pass

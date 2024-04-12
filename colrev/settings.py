@@ -220,7 +220,6 @@ class PrepRound(JsonSchemaMixin):
     """Prep round settings"""
 
     name: str
-    similarity: float
     prep_package_endpoints: list
 
     def __str__(self) -> str:

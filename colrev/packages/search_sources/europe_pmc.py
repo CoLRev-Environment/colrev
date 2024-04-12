@@ -23,6 +23,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 import colrev.settings
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -319,44 +320,39 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 if 0 == len(retrieved_record.data):
                     return record
 
-                similarity = (
-                    colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                        record=record,
-                        retrieved_record=retrieved_record,
-                    )
+                if not colrev.record.record_similarity.matches(
+                    record, retrieved_record
+                ):
+                    return record
+
+                self.europe_pmc_lock.acquire(timeout=60)
+
+                # Note : need to reload file because the object is not shared between processes
+                europe_pmc_feed = self.search_source.get_api_feed(
+                    review_manager=prep_operation.review_manager,
+                    source_identifier=self.source_identifier,
+                    update_only=False,
+                    prep_mode=True,
+                )
+                try:
+                    europe_pmc_feed.add_update_record(retrieved_record=retrieved_record)
+                except colrev_exceptions.NotFeedIdentifiableException:
+                    return record
+
+                record.merge(
+                    retrieved_record,
+                    default_source=retrieved_record.data[Fields.ORIGIN][0],
                 )
 
-                if similarity > prep_operation.retrieval_similarity:
-                    self.europe_pmc_lock.acquire(timeout=60)
+                record.set_masterdata_complete(
+                    source=retrieved_record.data[Fields.ORIGIN][0],
+                    masterdata_repository=self.review_manager.settings.is_curated_repo(),
+                )
+                record.set_status(RecordState.md_prepared)
 
-                    # Note : need to reload file because the object is not shared between processes
-                    europe_pmc_feed = self.search_source.get_api_feed(
-                        review_manager=prep_operation.review_manager,
-                        source_identifier=self.source_identifier,
-                        update_only=False,
-                        prep_mode=True,
-                    )
-                    try:
-                        europe_pmc_feed.add_update_record(
-                            retrieved_record=retrieved_record
-                        )
-                    except colrev_exceptions.NotFeedIdentifiableException:
-                        return record
-
-                    record.merge(
-                        retrieved_record,
-                        default_source=retrieved_record.data[Fields.ORIGIN][0],
-                    )
-
-                    record.set_masterdata_complete(
-                        source=retrieved_record.data[Fields.ORIGIN][0],
-                        masterdata_repository=self.review_manager.settings.is_curated_repo(),
-                    )
-                    record.set_status(RecordState.md_prepared)
-
-                    europe_pmc_feed.save()
-                    self.europe_pmc_lock.release()
-                    return record
+                europe_pmc_feed.save()
+                self.europe_pmc_lock.release()
+                return record
 
         except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
             self.europe_pmc_lock.release()

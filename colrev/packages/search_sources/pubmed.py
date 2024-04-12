@@ -24,6 +24,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -414,18 +415,8 @@ class PubMedSearchSource(JsonSchemaMixin):
 
             retrieved_record = colrev.record.record.Record(retrieved_record_dict)
 
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=record, retrieved_record=retrieved_record
-            )
-            # prep_operation.review_manager.logger.debug("Found matching record")
-            # prep_operation.review_manager.logger.debug(
-            #     f"crossref similarity: {similarity} "
-            #     f"(>{prep_operation.retrieval_similarity})"
-            # )
-            self.review_manager.logger.debug(
-                f"pubmed similarity: {similarity} "
-                f"(<{prep_operation.retrieval_similarity})"
-            )
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+                return record
 
             try:
                 self.pubmed_lock.acquire(timeout=60)

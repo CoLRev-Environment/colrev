@@ -339,9 +339,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
     def _retrieve_record_from_local_index(
         self,
-        *,
         record: colrev.record.record.Record,
-        retrieval_similarity: float,
     ) -> colrev.record.record.Record:
         # add colrev_pdf_id
         added_colrev_pdf_id = self._add_cpid(record=record)
@@ -358,7 +356,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                 # Search within the table-of-content in local_index
                 retrieved_record = self.local_index.retrieve_from_toc(
                     record,
-                    similarity_threshold=retrieval_similarity,
                     include_file=False,
                 )
             except colrev_exceptions.RecordNotInTOCException:
@@ -369,7 +366,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
                     # Search across table-of-contents in local_index
                     retrieved_record = self.local_index.retrieve_from_toc(
                         record,
-                        similarity_threshold=retrieval_similarity,
                         include_file=False,
                         search_across_tocs=True,
                     )
@@ -477,10 +473,7 @@ class LocalIndexSearchSource(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Retrieve masterdata from LocalIndex based on similarity with the record provided"""
 
-        retrieved_record = self._retrieve_record_from_local_index(
-            record=record,
-            retrieval_similarity=prep_operation.retrieval_similarity,
-        )
+        retrieved_record = self._retrieve_record_from_local_index(record)
 
         # restriction: if we don't restrict to CURATED,
         # we may have to rethink the LocalIndexSearchFeed.set_ids()

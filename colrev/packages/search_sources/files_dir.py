@@ -24,6 +24,7 @@ import colrev.record.qm.checkers.missing_field
 import colrev.record.record
 import colrev.record.record_pdf
 import colrev.record.record_prep
+import colrev.record.record_similarity
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -699,13 +700,9 @@ class FilesSearchSource(JsonSchemaMixin):
             retrieved_record = self.crossref_connector.query_doi(
                 doi=record_dict[Fields.DOI], etiquette=self._etiquette
             )
-            if (
-                colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                    record=colrev.record.record.Record(record_dict),
-                    retrieved_record=retrieved_record,
-                    same_record_type_required=True,
-                )
-                < 0.8
+
+            if not colrev.record.record_similarity.matches(
+                colrev.record.record.Record(record_dict), retrieved_record
             ):
                 del record_dict[Fields.DOI]
                 return

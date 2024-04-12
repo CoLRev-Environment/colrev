@@ -16,6 +16,7 @@ import colrev.exceptions as colrev_exceptions
 import colrev.packages.search_sources.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -101,12 +102,7 @@ class DOIFromURLsPrep(JsonSchemaMixin):
                 timeout=self.prep_operation.timeout,
             )
 
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=record,
-                retrieved_record=retrieved_record,
-                same_record_type_required=self.same_record_type_required,
-            )
-            if similarity < self.prep_operation.retrieval_similarity:
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
                 return record
 
             record.merge(retrieved_record, default_source=url)

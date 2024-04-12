@@ -47,10 +47,7 @@ class RecordNotInTOCChecker:
     def _is_in_toc(self, record: colrev.record.record.Record) -> bool:
         try:
             # Search within the table-of-content in local_index
-            self.local_index.retrieve_from_toc(
-                record,
-                similarity_threshold=0.9,
-            )
+            self.local_index.retrieve_from_toc(record)
             return True
 
         except colrev.exceptions.RecordNotInIndexException:

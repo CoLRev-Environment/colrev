@@ -445,11 +445,12 @@ class CrossrefSearchSource(JsonSchemaMixin):
         save_feed: bool,
     ) -> colrev.record.record.Record:
         try:
-            if Fields.DOI in record.data:
+            try:
                 retrieved_record = self.query_doi(
                     doi=record.data[Fields.DOI], etiquette=self.etiquette
                 )
-            else:
+            except (colrev_exceptions.RecordNotFoundInPrepSourceException, KeyError):
+
                 retrieved_records = self.crossref_query(
                     record_input=record,
                     jour_vol_iss_list=False,
@@ -471,27 +472,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
                     )
                     retrieved_record = retrieved_records.pop()
 
-            if (
-                0 == len(retrieved_record.data)
-                or Fields.DOI not in retrieved_record.data
-            ):
-                raise colrev_exceptions.RecordNotFoundInPrepSourceException(
-                    msg="Record not found in crossref"
-                )
+            # if (
+            #     0 == len(retrieved_record.data)
+            #     or Fields.DOI not in retrieved_record.data
+            # ):
+            #     raise colrev_exceptions.RecordNotFoundInPrepSourceException(
+            #         msg="Record not found in crossref"
+            #     )
 
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=record, retrieved_record=retrieved_record
-            )
-            # prep_operation.review_manager.logger.debug("Found matching record")
-            # prep_operation.review_manager.logger.debug(
-            #     f"crossref similarity: {similarity} "
-            #     f"(>{prep_operation.retrieval_similarity})"
-            # )
-            self.review_manager.logger.debug(
-                f"crossref similarity: {similarity} "
-                f"(<{prep_operation.retrieval_similarity})"
-            )
-            if similarity < prep_operation.retrieval_similarity:
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
                 return record
 
             try:
@@ -552,19 +541,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
             retrieved_record = self.query_doi(
                 doi=record.data[Fields.DOI], etiquette=self.etiquette
             )
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=record,
-                retrieved_record=retrieved_record,
-                same_record_type_required=False,
-            )
-            if similarity < 0.7:
-                # self.review_manager.logger.error(
-                #     f" mismatching metadata (record/doi-record): {record.data['doi']} "
-                #     + f"(similarity: {similarity})"
-                # )
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
                 record.remove_field(key=Fields.DOI)
-                # record.print_citation_format()
-                # retrieved_record.print_citation_format()
 
         except (
             requests.exceptions.RequestException,
@@ -588,11 +566,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
-
-        if (
-            len(record.data.get(Fields.TITLE, "")) < 35
-            and Fields.DOI not in record.data
-        ):
+        if len(record.data.get(Fields.TITLE, "")) < 5 and Fields.DOI not in record.data:
             return record
 
         if Fields.DOI in record.data:

@@ -18,7 +18,6 @@ import git
 import pandas as pd
 import requests_cache
 from git.exc import GitCommandError
-from rapidfuzz import fuzz
 from tqdm import tqdm
 
 import colrev.constants as c
@@ -1050,7 +1049,6 @@ class LocalIndex:
         self,
         record: colrev.record.record.Record,
         *,
-        similarity_threshold: float,
         include_file: bool = False,
         search_across_tocs: bool = False,
     ) -> colrev.record.record.Record:
@@ -1059,51 +1057,27 @@ class LocalIndex:
         try:
             # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
             # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
-            # try:
             toc_key = record.get_toc_key()
-            # except colrev_exceptions.NotTOCIdentifiableException as exc:
-            #     if not search_across_tocs:
-            #         raise colrev_exceptions.RecordNotInIndexException() from exc
-
             toc_items = self._get_toc_items_for_toc_retrieval(
                 toc_key, search_across_tocs=search_across_tocs
             )
-
-            if search_across_tocs:
-                record_colrev_id = record.get_colrev_id(assume_complete=True)
-            else:
-                record_colrev_id = record.get_colrev_id()
-
-            sim_list = []
             for toc_records_colrev_id in toc_items:
-                # Note : using a simpler similarity measure
-                # because the publication outlet parameters are already identical
-                sim_value = fuzz.ratio(record_colrev_id, toc_records_colrev_id) / 100
-                sim_list.append(sim_value)
-
-            if not sim_list or max(sim_list) < similarity_threshold:
-                raise colrev_exceptions.RecordNotInTOCException(
-                    record_id=record.data[Fields.ID], toc_key=toc_key
+                record_dict = self._get_item_from_index(
+                    index_name=self.RECORD_INDEX,
+                    key=Fields.COLREV_ID,
+                    value=toc_records_colrev_id,
                 )
 
-            if search_across_tocs:
-                if len(list(set(sim_list))) < 2:
-                    raise colrev_exceptions.RecordNotInIndexException()
-                second_highest = list(set(sim_list))[-2]
-                # Require a minimum difference to the next most similar record
-                if (max(sim_list) - second_highest) < 0.2:
-                    raise colrev_exceptions.RecordNotInIndexException()
+                if not colrev.record.record_similarity.matches(
+                    record, colrev.record.record.Record(record_dict)
+                ):
+                    continue
 
-            toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
-
-            record_dict = self._get_item_from_index(
-                index_name=self.RECORD_INDEX,
-                key=Fields.COLREV_ID,
-                value=toc_records_colrev_id,
-            )
-
-            return self._prepare_record_for_return(
-                record_dict, include_file=include_file
+                return self._prepare_record_for_return(
+                    record_dict, include_file=include_file
+                )
+            raise colrev_exceptions.RecordNotInTOCException(
+                record_id=record.data[Fields.ID], toc_key=toc_key
             )
 
         except (

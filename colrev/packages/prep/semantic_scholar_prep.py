@@ -13,6 +13,7 @@ import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
+import colrev.record.record_similarity
 from colrev.constants import Fields
 
 # pylint: disable=too-few-public-methods
@@ -132,9 +133,6 @@ class SemanticScholarPrep(JsonSchemaMixin):
     ) -> colrev.record.record.Record:
         """Prepare a record based on metadata from SemanticScholar"""
 
-        same_record_type_required = (
-            self.review_manager.settings.is_curated_masterdata_repo()
-        )
         try:
             search_api_url = (
                 "https://api.semanticscholar.org/graph/v1/paper/search?query="
@@ -154,29 +152,13 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 if key in orig_record.data:
                     record.remove_field(key=key)
 
-            similarity = colrev.record.record_prep.PrepRecord.get_retrieval_similarity(
-                record=orig_record,
-                retrieved_record=retrieved_record,
-                same_record_type_required=same_record_type_required,
+            if not colrev.record.record_similarity.matches(record, retrieved_record):
+                return record
+
+            record.merge(
+                retrieved_record,
+                default_source=retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID],
             )
-            if similarity > self.prep_operation.retrieval_similarity:
-                # prep_operation.review_manager.logger.debug("Found matching record")
-                # prep_operation.review_manager.logger.debug(
-                #     f"scholar similarity: {similarity} "
-                #     f"(>{prep_operation.retrieval_similarity})"
-                # )
-
-                record.merge(
-                    retrieved_record,
-                    default_source=retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID],
-                )
-
-            else:
-                # prep_operation.review_manager.logger.debug(
-                #     f"scholar similarity: {similarity} "
-                #     f"(<{prep_operation.retrieval_similarity})"
-                # )
-                pass
 
         except (
             requests.exceptions.RequestException,

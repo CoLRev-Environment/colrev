@@ -5,6 +5,10 @@ from __future__ import annotations
 import re
 import typing
 
+import pandas as pd
+from bib_dedupe.bib_dedupe import block
+from bib_dedupe.bib_dedupe import match
+from bib_dedupe.bib_dedupe import prep
 from rapidfuzz import fuzz
 
 import colrev.env.utils
@@ -242,3 +246,24 @@ def get_record_similarity(
     _format_authors_string_for_comparison(record_b)
 
     return _get_similarity_detailed(record_a.get_data(), record_b.get_data())
+
+
+def matches(
+    record_a: colrev.record.record.Record, record_b: colrev.record.record.Record
+) -> bool:
+    """Determine whether two records match (correspond to the same entity)."""
+    record_a_dict = record_a.copy().get_data()
+    record_b_dict = record_b.copy().get_data()
+    record_a_dict[Fields.ID] = "a"
+    record_b_dict[Fields.ID] = "b"
+
+    records_df = pd.DataFrame([record_a_dict, record_b_dict])
+    records_df = prep(records_df, verbosity_level=1, cpu=1)
+    print(records_df)
+    blocked_df = block(records_df, verbosity_level=1, cpu=1)
+    matched_df = match(blocked_df, verbosity_level=1, cpu=1)
+    duplicate_label = matched_df["duplicate_label"]
+    if len(duplicate_label) == 0:  # pragma: no cover
+        return False
+
+    return duplicate_label.iloc[0] == "duplicate"

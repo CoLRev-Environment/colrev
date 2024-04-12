@@ -63,7 +63,6 @@ def test_settings_load() -> None:
             "prep_rounds": [
                 {
                     "name": "prep",
-                    "similarity": 0.8,
                     "prep_package_endpoints": [
                         {"endpoint": "colrev.source_specific_prep"},
                         {"endpoint": "colrev.exclude_non_latin_alphabets"},

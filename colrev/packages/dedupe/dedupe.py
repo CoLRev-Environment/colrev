@@ -105,5 +105,5 @@ class Dedupe(JsonSchemaMixin):
             msg="Merge duplicate records",
         )
 
-        export_maybe(matched_df, records_df)
+        export_maybe(records_df, matched_df=matched_df)
         self._move_maybe_file()

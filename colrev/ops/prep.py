@@ -61,7 +61,6 @@ class Prep(colrev.process.operation.Operation):
     timeout = 30
     max_retries_on_error = 3
     pad: int = 0
-    retrieval_similarity: float
 
     first_round: bool
     last_round: bool
@@ -81,7 +80,6 @@ class Prep(colrev.process.operation.Operation):
         *,
         review_manager: colrev.review_manager.ReviewManager,
         notify_state_transition_operation: bool = True,
-        retrieval_similarity: float = 1.0,
     ) -> None:
         super().__init__(
             review_manager=review_manager,
@@ -94,7 +92,6 @@ class Prep(colrev.process.operation.Operation):
             FIELDS_TO_KEEP + self.review_manager.settings.prep.fields_to_keep
         )
 
-        self.retrieval_similarity = retrieval_similarity
         self.quality_model = review_manager.get_qm()
 
         self._stats: typing.Dict[str, typing.List[timedelta]] = {}
@@ -722,10 +719,6 @@ class Prep(colrev.process.operation.Operation):
                 PREP_COUNTER.value += skipped_items  # type: ignore
 
         if self.debug_mode:
-            self.review_manager.logger.info(
-                "In this round, we set the similarity "
-                f"threshold ({self.retrieval_similarity})"
-            )
             input("Press Enter to continue")
             self.review_manager.logger.info(
                 f"prepare_data: "
@@ -844,11 +837,6 @@ class Prep(colrev.process.operation.Operation):
 
         if len(self.review_manager.settings.prep.prep_rounds) > 1:
             self.review_manager.logger.info(f"Prepare ({prep_round.name})")
-
-        self.retrieval_similarity = prep_round.similarity  # type: ignore
-        self.review_manager.report_logger.debug(
-            f"Set retrieval_similarity={self.retrieval_similarity}"
-        )
 
         package_manager = self.review_manager.get_package_manager()
         self.prep_package_endpoints: dict[str, typing.Any] = (

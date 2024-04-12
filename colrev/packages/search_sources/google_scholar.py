@@ -104,8 +104,18 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
         """Load the records from the SearchSource file"""
 
         if self.search_source.filename.suffix == ".bib":
+
+            def field_mapper(record_dict: dict) -> None:
+                if "related" in record_dict:
+                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
+                if "note" in record_dict:
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                if "type" in record_dict:
+                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
+
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
+                field_mapper=field_mapper,
                 logger=self.review_manager.logger,
             )
             return records
