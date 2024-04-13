@@ -8,6 +8,7 @@
 
 [![DOI](https://zenodo.org/badge/363073613.svg)](https://zenodo.org/badge/latestdoi/363073613)
 [![GitHub release](https://img.shields.io/github/v/release/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
+[![PyPI - Version](https://img.shields.io/pypi/v/colrev?color=blue)](https://pypi.org/project/colrev/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/colrev)
 [![License](https://img.shields.io/github/license/CoLRev-Ecosystem/colrev.svg)](https://github.com/CoLRev-Environment/colrev/releases/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)

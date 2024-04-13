@@ -10,7 +10,7 @@ repository = "https://github.com/CoLRev-Environment/colrev"
 documentation = "https://colrev.readthedocs.io/en/latest/"
 keywords = ["research", "reproducible research", "open science", "literature", "literature review", "systematic review", "systematic literature review"]
 classifiers = [
-   "Development Status :: 3 - Alpha",
+   "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
