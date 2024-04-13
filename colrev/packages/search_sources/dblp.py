@@ -690,10 +690,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                 self.dblp_lock.release()
                 return record
 
-            except (
-                colrev_exceptions.InvalidMerge,
-                colrev_exceptions.NotFeedIdentifiableException,
-            ):
+            except (colrev_exceptions.NotFeedIdentifiableException,):
                 self.dblp_lock.release()
 
         except requests.exceptions.RequestException:

@@ -509,10 +509,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
                 if save_feed:
                     crossref_feed.save()
 
-            except (
-                colrev_exceptions.InvalidMerge,
-                colrev_exceptions.NotFeedIdentifiableException,
-            ):
+            except (colrev_exceptions.NotFeedIdentifiableException,):
                 pass
             finally:
                 try:

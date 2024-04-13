@@ -6,10 +6,6 @@ import typing
 from pathlib import Path
 
 from colrev.constants import Colors
-from colrev.constants import Fields
-
-if typing.TYPE_CHECKING:  # pragma: no cover
-    import colrev.record.record
 
 
 class CoLRevException(Exception):
@@ -433,20 +429,6 @@ class DedupeError(CoLRevException):
 
     def __init__(self, message: str) -> None:
         self.message = message
-        super().__init__(self.message)
-
-
-class InvalidMerge(DedupeError):
-    """An invalid merge was attempted (rule-based)"""
-
-    def __init__(
-        self,
-        record_a: colrev.record.record.Record,
-        record_b: colrev.record.record.Record,
-    ) -> None:
-        id_a = record_a.data.get(Fields.ID, "no-id")
-        id_b = record_b.data.get(Fields.ID, "no-id")
-        self.message = f"attempted merge: {id_a} - {id_b}"
         super().__init__(self.message)
 
 

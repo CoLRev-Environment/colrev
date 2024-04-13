@@ -109,7 +109,6 @@ class DOIFromURLsPrep(JsonSchemaMixin):
 
         except (
             requests.exceptions.RequestException,
-            colrev_exceptions.InvalidMerge,
             colrev_exceptions.RecordNotParsableException,
         ):
             pass

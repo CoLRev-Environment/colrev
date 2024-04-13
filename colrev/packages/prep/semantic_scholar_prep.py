@@ -10,7 +10,6 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
@@ -160,9 +159,6 @@ class SemanticScholarPrep(JsonSchemaMixin):
                 default_source=retrieved_record.data[Fields.SEMANTIC_SCHOLAR_ID],
             )
 
-        except (
-            requests.exceptions.RequestException,
-            colrev_exceptions.InvalidMerge,
-        ):
+        except (requests.exceptions.RequestException,):
             pass
         return record

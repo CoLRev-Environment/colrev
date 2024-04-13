@@ -38,7 +38,6 @@ colrev.record.record\_prep.PrepRecord
       ~PrepRecord.get_field_provenance_source
       ~PrepRecord.get_record_change_score
       ~PrepRecord.get_record_similarity
-      ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_tei_filename
       ~PrepRecord.get_toc_key
       ~PrepRecord.get_value

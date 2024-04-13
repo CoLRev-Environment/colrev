@@ -16,8 +16,8 @@ from pathlib import Path
 import click
 import click_completion.core
 import click_repl
-import git
 import pandas as pd
+from git.exc import GitCommandError
 
 import colrev.env.local_index
 import colrev.env.package_manager
@@ -2406,7 +2406,7 @@ def env(
 
                 review_manager.dataset.pull_if_repo_clean()
                 print(f"Pulled {curated_resource_path}")
-            except git.exc.GitCommandError as exc:
+            except GitCommandError as exc:
                 print(exc)
         return
 

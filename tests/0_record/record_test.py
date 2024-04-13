@@ -1013,47 +1013,6 @@ def test_merge_select_non_all_caps() -> None:
     assert expected == actual
 
 
-def test_merge_except_errata() -> None:
-    """Test record.merge() - errata cases"""
-
-    # Mismatching part suffixes
-    r1_mod = r1.copy()
-    r2_mod = r2.copy()
-    r1_mod.data[Fields.TITLE] = "Editorial - Part 1"
-    r2_mod.data[Fields.TITLE] = "Editorial - Part 2"
-    with pytest.raises(
-        colrev.exceptions.InvalidMerge,
-    ):
-        r2_mod.merge(r1_mod, default_source="test")
-
-    # Mismatching erratum (a-b)
-    r1_mod = r1.copy()
-    r2_mod = r2.copy()
-    r2_mod.data[Fields.TITLE] = "Erratum - Editorial"
-    with pytest.raises(
-        colrev.exceptions.InvalidMerge,
-    ):
-        r1_mod.merge(r2_mod, default_source="test")
-
-    # Mismatching erratum (b-a)
-    r1_mod = r1.copy()
-    r2_mod = r2.copy()
-    r1_mod.data[Fields.TITLE] = "Erratum - Editorial"
-    with pytest.raises(
-        colrev.exceptions.InvalidMerge,
-    ):
-        r2_mod.merge(r1_mod, default_source="test")
-
-    # Mismatching commentary
-    r1_mod = r1.copy()
-    r2_mod = r2.copy()
-    r1_mod.data[Fields.TITLE] = "Editorial - a commentary to the other paper"
-    with pytest.raises(
-        colrev.exceptions.InvalidMerge,
-    ):
-        r2_mod.merge(r1_mod, default_source="test")
-
-
 def test_merge_local_index(mocker) -> None:  # type: ignore
     """Test record.merge() - local-index"""
 

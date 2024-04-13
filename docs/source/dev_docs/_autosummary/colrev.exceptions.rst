@@ -38,7 +38,6 @@ colrev.exceptions
       GitNotAvailableError
       ImportException
       InvalidLanguageCodeException
-      InvalidMerge
       InvalidPDFException
       InvalidQueryException
       InvalidSettingsError

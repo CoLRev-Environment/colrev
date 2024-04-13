@@ -306,10 +306,7 @@ class OpenLibrarySearchSource(JsonSchemaMixin):
             requests.exceptions.RequestException,
         ):
             pass
-        except (
-            colrev_exceptions.InvalidMerge,
-            colrev_exceptions.NotFeedIdentifiableException,
-        ):
+        except (colrev_exceptions.NotFeedIdentifiableException,):
             self.open_library_lock.release()
 
         return record

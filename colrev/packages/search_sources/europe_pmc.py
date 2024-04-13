@@ -354,7 +354,7 @@ class EuropePMCSearchSource(JsonSchemaMixin):
                 self.europe_pmc_lock.release()
                 return record
 
-        except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
+        except requests.exceptions.RequestException:
             self.europe_pmc_lock.release()
 
         return record

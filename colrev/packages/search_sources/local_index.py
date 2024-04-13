@@ -456,9 +456,6 @@ class LocalIndexSearchSource(JsonSchemaMixin):
 
             except OSError:
                 pass
-
-        except (colrev_exceptions.InvalidMerge,):
-            print("invalid-merge")
         except colrev_exceptions.NotFeedIdentifiableException:
             print("not-feed-identifiable")
         finally:

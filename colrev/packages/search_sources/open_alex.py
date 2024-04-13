@@ -210,7 +210,6 @@ class OpenAlexSearchSource(JsonSchemaMixin):
             )
             open_alex_feed.save()
         except (
-            colrev_exceptions.InvalidMerge,
             colrev_exceptions.RecordNotParsableException,
             requests.exceptions.RequestException,
         ):

@@ -40,7 +40,6 @@ colrev.ops.prep.Prep
       ~Prep.polish
       ~Prep.timeout
       ~Prep.type
-      ~Prep.retrieval_similarity
       ~Prep.first_round
       ~Prep.last_round
       ~Prep.prep_package_endpoints

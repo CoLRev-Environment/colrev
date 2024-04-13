@@ -10,7 +10,6 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.package_manager
-import colrev.exceptions as colrev_exceptions
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
@@ -115,7 +114,7 @@ class CiteAsPrep(JsonSchemaMixin):
 
             record.merge(retrieved_record, default_source=url)
 
-        except (requests.exceptions.RequestException, colrev_exceptions.InvalidMerge):
+        except requests.exceptions.RequestException:
             pass
         except UnicodeEncodeError:
             self.review_manager.logger.error(

@@ -86,10 +86,7 @@ class DOIConnector:
             if Fields.TITLE in record.data:
                 record.format_if_mostly_upper(Fields.TITLE, case="sentence")
 
-        except (
-            requests.exceptions.RequestException,
-            colrev_exceptions.InvalidMerge,
-        ) as exc:
+        except (requests.exceptions.RequestException,) as exc:
             print(exc)
 
         return record

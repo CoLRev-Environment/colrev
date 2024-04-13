@@ -449,10 +449,7 @@ class PubMedSearchSource(JsonSchemaMixin):
                     pass
 
                 return record
-            except (
-                colrev_exceptions.InvalidMerge,
-                colrev_exceptions.NotFeedIdentifiableException,
-            ):
+            except (colrev_exceptions.NotFeedIdentifiableException,):
                 try:
                     self.pubmed_lock.release()
                 except ValueError:

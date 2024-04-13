@@ -408,32 +408,29 @@ class Dedupe(colrev.process.operation.Operation):
         for main_record, dupe_record in self._get_records_to_merge(
             records=records, id_sets=id_sets
         ):
-            try:
-                if self._skip_merge_condition(
-                    main_record=main_record, dupe_record=dupe_record
-                ):
-                    continue
-
-                self._notify_on_merge(
-                    main_record=main_record,
-                    dupe_record=dupe_record,
-                )
-
-                self._update_duplicate_id_mappings(
-                    duplicate_id_mappings=duplicate_id_mappings,
-                    main_record=main_record,
-                    dupe_record=dupe_record,
-                )
-                dupe_record.data["MOVED_DUPE_ID"] = main_record.data[Fields.ID]
-                main_record.merge(
-                    dupe_record,
-                    default_source="merged",
-                    preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
-                )
-                removed_duplicates.append(dupe_record.data[Fields.ID])
-
-            except colrev_exceptions.InvalidMerge:
+            if self._skip_merge_condition(
+                main_record=main_record, dupe_record=dupe_record
+            ):
                 continue
+
+            self._notify_on_merge(
+                main_record=main_record,
+                dupe_record=dupe_record,
+            )
+
+            self._update_duplicate_id_mappings(
+                duplicate_id_mappings=duplicate_id_mappings,
+                main_record=main_record,
+                dupe_record=dupe_record,
+            )
+            dupe_record.data["MOVED_DUPE_ID"] = main_record.data[Fields.ID]
+            main_record.merge(
+                dupe_record,
+                default_source="merged",
+                preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
+            )
+            removed_duplicates.append(dupe_record.data[Fields.ID])
+
         set_to_md_processed = self._apply_records_merges(
             records=records,
             removed_duplicates=removed_duplicates,
