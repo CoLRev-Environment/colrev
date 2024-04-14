@@ -513,11 +513,7 @@ class Prep(colrev.process.operation.Operation):
         if self.review_manager.verbose_mode:
             self.review_manager.logger.info(" prep " + record.data[Fields.ID])
 
-        if Fields.D_PROV not in record.data:
-            record.data[Fields.D_PROV] = {}
-        if Fields.MD_PROV not in record.data:
-            record.data[Fields.MD_PROV] = {}
-
+        record.require_prov()
         # preparation_record changes with each endpoint and
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
         preparation_record = record.copy_prep_rec()
