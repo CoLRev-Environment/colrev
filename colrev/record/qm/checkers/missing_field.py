@@ -89,6 +89,10 @@ class MissingFieldChecker:
 
         if record.data[Fields.ENTRYTYPE] not in self.record_field_requirements:
             return
+
+        if record.masterdata_is_curated():  # pragma: no cover
+            return
+
         required_fields_keys = self.record_field_requirements[
             record.data[Fields.ENTRYTYPE]
         ]

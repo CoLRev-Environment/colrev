@@ -6,7 +6,6 @@ from pathlib import Path
 
 import colrev.record.qm.quality_model
 import colrev.record.record_pdf
-import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import PDFDefectCodes
 from colrev.constants import RecordState

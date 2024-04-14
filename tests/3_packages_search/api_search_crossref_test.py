@@ -144,9 +144,7 @@ def test_crossref_query(  # type: ignore
 ) -> None:
     """Test the crossref query_doi()"""
     # note: replace the / in filenames by _
-    etiquette = crossref_search_source.get_etiquette(
-        review_manager=crossref_search_source.review_manager
-    )
+    etiquette = crossref_search_source.get_etiquette()
 
     json_str = helpers.retrieve_test_file_content(
         source=Path(

@@ -46,6 +46,9 @@ class ErroneousTermInFieldChecker:
             ):
                 continue
 
+            if record.masterdata_is_curated():
+                continue
+
             if any(x.lower() in record.data[key].lower() for x in erroneous_term_list):
                 record.add_field_provenance_note(key=key, note=self.msg)
             else:

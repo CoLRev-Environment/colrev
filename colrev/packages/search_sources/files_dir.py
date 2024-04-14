@@ -99,9 +99,7 @@ class FilesSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
-        self._etiquette = self.crossref_connector.get_etiquette(
-            review_manager=self.review_manager
-        )
+        self._etiquette = self.crossref_connector.get_etiquette()
 
     def _update_if_pdf_renamed(
         self,

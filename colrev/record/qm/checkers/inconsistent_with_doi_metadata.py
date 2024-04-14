@@ -31,9 +31,7 @@ class InconsistentWithDOIMetadataChecker:
         self, quality_model: colrev.record.qm.quality_model.QualityModel
     ) -> None:
         self.quality_model = quality_model
-        self._etiquette = crossref_connector.CrossrefSearchSource.get_etiquette(
-            review_manager=quality_model.review_manager
-        )
+        self._etiquette = crossref_connector.CrossrefSearchSource.get_etiquette()
 
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the inconsistent-with-doi-metadata checks"""

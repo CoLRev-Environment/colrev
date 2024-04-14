@@ -29,6 +29,8 @@ class NameParticlesChecker:
                 key=key, defect=self.msg
             ):
                 continue
+            if record.masterdata_is_curated():
+                continue
 
             names = record.data[key].split(" and ")
             if any(self._particle_defect(name=name) for name in names):

@@ -1,9 +1,14 @@
 #! /usr/bin/env python
 """Custom script setup."""
+import typing
 from pathlib import Path
 
 import colrev.env.utils
+import colrev.settings
 from colrev.constants import SearchType
+
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.review_manager
 
 
 def setup_custom_search_script(

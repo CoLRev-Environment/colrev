@@ -26,6 +26,8 @@ class ErroneousTitleFieldChecker:
             key=Fields.TITLE, defect=self.msg
         ):
             return
+        if record.masterdata_is_curated():
+            return
 
         if self._title_has_errors(title=record.data[Fields.TITLE]):
             record.add_field_provenance_note(key=Fields.TITLE, note=self.msg)

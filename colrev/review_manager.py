@@ -312,7 +312,9 @@ class ReviewManager:
     def get_qm(self) -> colrev.record.qm.quality_model.QualityModel:  # pragma: no cover
         """Get the quality model"""
 
-        return colrev.record.qm.quality_model.QualityModel(review_manager=self)
+        return colrev.record.qm.quality_model.QualityModel(
+            defects_to_ignore=self.settings.prep.defects_to_ignore
+        )
 
     def get_pdf_qm(
         self,
@@ -320,7 +322,7 @@ class ReviewManager:
         """Get the PDF quality model"""
 
         return colrev.record.qm.quality_model.QualityModel(
-            review_manager=self, pdf_mode=True
+            defects_to_ignore=self.settings.pdf_get.defects_to_ignore, pdf_mode=True
         )
 
     def get_status_stats(

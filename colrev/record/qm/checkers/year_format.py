@@ -32,6 +32,9 @@ class YearFormatChecker:
         ):
             return
 
+        if record.masterdata_is_curated():
+            return
+
         if not re.match(r"^\d{4}$", record.data[Fields.YEAR]):
             record.add_field_provenance_note(key=Fields.YEAR, note=self.msg)
         else:

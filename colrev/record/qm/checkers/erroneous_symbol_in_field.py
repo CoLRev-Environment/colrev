@@ -35,6 +35,8 @@ class ErroneousSymbolInFieldChecker:
                 key=key, defect=self.msg
             ):
                 continue
+            if record.masterdata_is_curated():
+                continue
 
             if any(x in record.data[key] for x in self.erroneous_symbols):
                 record.add_field_provenance_note(key=key, note=self.msg)

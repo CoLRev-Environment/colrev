@@ -57,9 +57,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
                 source_operation=source_operation
             )
         )
-        self._etiquette = self.crossref_connector.get_etiquette(
-            review_manager=self.review_manager
-        )
+        self._etiquette = self.crossref_connector.get_etiquette()
 
     @classmethod
     def get_default_source(cls) -> colrev.settings.SearchSource:

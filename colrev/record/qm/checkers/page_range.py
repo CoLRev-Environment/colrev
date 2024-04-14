@@ -30,6 +30,8 @@ class PageRangeChecker:
             or not re.match(r"^\d+\-\-\d+$", record.data[Fields.PAGES])
         ):
             return
+        if record.masterdata_is_curated():
+            return
 
         if self._pages_descending(pages=record.data[Fields.PAGES]):
             record.add_field_provenance_note(key=Fields.PAGES, note=self.msg)

@@ -115,7 +115,8 @@ class EnvironmentManager:
         self.save_environment_registry(self.environment_registry)
         print(f"Registered path ({path_to_register})")
 
-    def get_name_mail_from_git(self) -> typing.Tuple[str, str]:  # pragma: no cover
+    @classmethod
+    def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:  # pragma: no cover
         """Get the committer name and email from git (globals)"""
         global_conf_details = ("NA", "NA")
         try:

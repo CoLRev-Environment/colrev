@@ -989,7 +989,7 @@ def test_merge_select_non_all_caps() -> None:
         Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
         Fields.MD_PROV: {
             Fields.YEAR: {"source": "import.bib/id_0001", "note": ""},
-            Fields.TITLE: {"source": "import.bib/id_0001", "note": ""},
+            Fields.TITLE: {"source": "import.bib/id_0001", "note": "language-unknown"},
             Fields.AUTHOR: {"source": "import.bib/id_0001", "note": ""},
             Fields.JOURNAL: {"source": "import.bib/id_0001", "note": ""},
             Fields.VOLUME: {"source": "import.bib/id_0001", "note": ""},
@@ -1024,6 +1024,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     r1_mod = colrev.record.record.Record(
         {
             Fields.ID: "r1",
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.D_PROV: {},
             Fields.MD_PROV: {Fields.VOLUME: {"source": "source-1", "note": ""}},
             Fields.STATUS: RecordState.md_prepared,
@@ -1038,6 +1039,7 @@ def test_merge_local_index(mocker) -> None:  # type: ignore
     r2_mod = colrev.record.record.Record(
         {
             Fields.ID: "r2",
+            Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
             Fields.D_PROV: {},
             Fields.MD_PROV: {
                 Fields.VOLUME: {"source": "source-1", "note": ""},

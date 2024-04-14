@@ -16,6 +16,10 @@ import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 from colrev.constants import Filepaths
 
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.review_manager
+    import colrev.ops.status
+
 
 class Commit:
     """Create commits"""

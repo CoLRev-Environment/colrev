@@ -22,6 +22,7 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
 
+import colrev.env.environment_manager
 import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.packages.search_sources.doi_org as doi_connector
@@ -111,15 +112,15 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         self.language_service = colrev.env.language_service.LanguageService()
 
-        self.etiquette = self.get_etiquette(review_manager=self.review_manager)
+        self.etiquette = self.get_etiquette()
         self.email = self.review_manager.get_committer()
 
     @classmethod
-    def get_etiquette(
-        cls, *, review_manager: colrev.review_manager.ReviewManager
-    ) -> Etiquette:
+    def get_etiquette(cls) -> Etiquette:
         """Get the etiquette for the crossref api"""
-        _, email = review_manager.get_committer()
+        _, email = (
+            colrev.env.environment_manager.EnvironmentManager.get_name_mail_from_git()
+        )
         return Etiquette(
             "CoLRev",
             version("colrev"),

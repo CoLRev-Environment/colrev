@@ -18,12 +18,11 @@ class QualityModel:
     def __init__(
         self,
         *,
-        review_manager: colrev.review_manager.ReviewManager,
+        defects_to_ignore: list[str],
         pdf_mode: bool = False,
     ) -> None:
         self.pdf_mode = pdf_mode
-        self.review_manager = review_manager
-        self.defects_to_ignore = self.review_manager.settings.prep.defects_to_ignore
+        self.defects_to_ignore = defects_to_ignore
         self._register_checkers()
 
     def _register_checkers(self) -> None:

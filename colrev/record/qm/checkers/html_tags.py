@@ -37,6 +37,8 @@ class HTMLTagChecker:
                 key=key, defect=self.msg
             ):
                 continue
+            if record.masterdata_is_curated():
+                continue
             if re.search(r"&#\d+;", record.data[key]):
                 record.add_field_provenance_note(key=key, note=self.msg)
             else:

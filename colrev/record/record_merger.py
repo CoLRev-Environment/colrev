@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing
 
 import colrev.env.utils
+from colrev.constants import DefectCodes
 from colrev.constants import Fields
 from colrev.constants import FieldSet
 from colrev.constants import FieldValues
@@ -13,7 +14,13 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     import colrev.record.record
 
 
-def _get_merging_val(merging_record: colrev.record.record.Record, *, key: str) -> str:
+def _get_merging_triple(
+    merging_record: colrev.record.record.Record, *, key: str, default_source: str
+) -> typing.Tuple[
+    str,
+    str,
+    str,
+]:
     val = merging_record.data.get(key, "")
 
     # do not override provenance, ID, ... fields
@@ -26,9 +33,14 @@ def _get_merging_val(merging_record: colrev.record.record.Record, *, key: str) -
         Fields.ORIGIN,
         "MOVED_DUPE_ID",
     ]:
-        return ""
+        val = ""
 
-    return val
+    field_provenance = merging_record.get_field_provenance(
+        key=key, default_source=default_source
+    )
+    source = field_provenance["source"]
+    note = field_provenance["note"]
+    return val, source, note
 
 
 def _merge_origins(
@@ -67,23 +79,6 @@ def _select_author(
         key=Fields.AUTHOR
     ) and not merging_record.has_quality_defects(key=Fields.AUTHOR):
         return merging_record.data[Fields.AUTHOR]
-
-    if (
-        len(record.data[Fields.AUTHOR]) > 0
-        and len(merging_record.data[Fields.AUTHOR]) > 0
-    ):
-        default_mostly_upper = (
-            colrev.env.utils.percent_upper_chars(record.data[Fields.AUTHOR]) > 0.8
-        )
-        candidate_mostly_upper = (
-            colrev.env.utils.percent_upper_chars(merging_record.data[Fields.AUTHOR])
-            > 0.8
-        )
-
-        # Prefer title case (not all-caps)
-        if default_mostly_upper and not candidate_mostly_upper:
-            return merging_record.data[Fields.AUTHOR]
-
     return record.data[Fields.AUTHOR]
 
 
@@ -159,38 +154,55 @@ def _select_container_title(default: str, candidate: str) -> str:
     return best_journal
 
 
+CUSTOM_FIELD_SELECTORS = {
+    Fields.AUTHOR: _select_author,
+    Fields.PAGES: _select_pages,
+    Fields.TITLE: _select_title,
+    Fields.JOURNAL: _select_journal,
+    Fields.BOOKTITLE: _select_booktitle,
+}
+
+
 def _fuse_fields(
     main_record: colrev.record.record.Record,
     *,
     merging_record: colrev.record.record.Record,
     key: str,
-    val: str,
-    source: str,
 ) -> None:
     # Note : the assumption is that we need masterdata_provenance notes
     # only for authors
 
-    custom_field_selectors = {
-        Fields.AUTHOR: _select_author,
-        Fields.PAGES: _select_pages,
-        Fields.TITLE: _select_title,
-        Fields.JOURNAL: _select_journal,
-        Fields.BOOKTITLE: _select_booktitle,
-    }
+    qm = colrev.record.qm.quality_model.QualityModel(
+        defects_to_ignore=[
+            DefectCodes.MISSING,
+            DefectCodes.RECORD_NOT_IN_TOC,
+            DefectCodes.INCONSISTENT_WITH_DOI_METADATA,
+            DefectCodes.CONTAINER_TITLE_ABBREVIATED,
+            DefectCodes.INCONSISTENT_WITH_DOI_METADATA,
+        ]
+    )
+    qm.run(record=main_record)
+    qm.run(record=merging_record)
 
-    if key in custom_field_selectors:
+    if key in CUSTOM_FIELD_SELECTORS:
         if key in main_record.data:
-            best_value = custom_field_selectors[key](
+            best_value = CUSTOM_FIELD_SELECTORS[key](
                 main_record,
                 merging_record,
             )
             if main_record.data[key] != best_value:
                 main_record.update_field(
-                    key=key, value=best_value, source=source, append_edit=False
+                    key=key,
+                    value=best_value,
+                    source=merging_record.get_field_provenance_source(key),
+                    append_edit=False,
                 )
         else:
             main_record.update_field(
-                key=key, value=val, source=source, append_edit=False
+                key=key,
+                value=merging_record.data[key],
+                source=merging_record.get_field_provenance_source(key),
+                append_edit=False,
             )
 
     elif key == Fields.FILE:
@@ -208,46 +220,41 @@ def _fuse_fields(
             and "https" not in main_record.data[key]
         ):
             main_record.update_field(
-                key=key, value=val, source=source, append_edit=False
+                key=key,
+                value=merging_record.data[key],
+                source=merging_record.get_field_provenance_source(key),
+                append_edit=False,
             )
 
     elif FieldValues.UNKNOWN == main_record.data.get(
         key, ""
     ) and FieldValues.UNKNOWN != merging_record.data.get(key, ""):
-        main_record.data[key] = merging_record.data[key]
-        if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            main_record.add_field_provenance(key=key, source=source)
-        else:
-            main_record.add_field_provenance(key=key, source=source)
+        main_record.update_field(
+            key=key,
+            value=merging_record.data[key],
+            source=merging_record.get_field_provenance_source(key),
+            append_edit=False,
+        )
 
 
-def merge(
-    main_record: colrev.record.record.Record,
+def _merging_record_preferred(
     merging_record: colrev.record.record.Record,
     *,
-    default_source: str,
-    preferred_masterdata_source_prefixes: typing.Optional[list] = None,
-) -> None:
-    """General-purpose record merging
-    for preparation, curated/non-curated records and records with origins
-
-
-    Apply heuristics to create a fusion of the best fields based on
-    quality heuristics"""
-
-    # pylint: disable=too-many-branches
-
+    preferred_masterdata_source_prefixes: list,
+) -> bool:
     merging_record_preferred = False
-    if preferred_masterdata_source_prefixes:
-        if any(
-            any(ps in origin for ps in preferred_masterdata_source_prefixes)
-            for origin in merging_record.data[Fields.ORIGIN]
-        ):
-            merging_record_preferred = True
+    if any(
+        any(ps in origin for ps in preferred_masterdata_source_prefixes)
+        for origin in merging_record.data[Fields.ORIGIN]
+    ):
+        merging_record_preferred = True
+    return merging_record_preferred
 
-    _merge_origins(main_record, merging_record)
-    _merge_status(main_record, merging_record)
 
+def _prep_incoming_masterdata_merge(
+    main_record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
+) -> None:
     if (
         not main_record.masterdata_is_curated()
         and merging_record.masterdata_is_curated()
@@ -260,37 +267,57 @@ def merge(
             if k in FieldSet.IDENTIFYING_FIELD_KEYS and k != Fields.PAGES:
                 del main_record.data[k]
 
+
+def merge(
+    main_record: colrev.record.record.Record,
+    merging_record: colrev.record.record.Record,
+    *,
+    default_source: str,
+    preferred_masterdata_source_prefixes: list,
+) -> None:
+    """General-purpose record merging
+    for preparation, curated/non-curated records and records with origins
+
+
+    Apply heuristics to create a fusion of the best fields based on
+    quality heuristics"""
+
+    merging_record_preferred = _merging_record_preferred(
+        merging_record,
+        preferred_masterdata_source_prefixes=preferred_masterdata_source_prefixes,
+    )
+
+    _merge_origins(main_record, merging_record)
+    _merge_status(main_record, merging_record)
+
+    _prep_incoming_masterdata_merge(main_record, merging_record)
+
     for key in list(merging_record.data.keys()):
-        val = _get_merging_val(merging_record, key=key)
+        val, source, note = _get_merging_triple(
+            merging_record, key=key, default_source=default_source
+        )
         if val == "":
             continue
 
-        field_provenance = merging_record.get_field_provenance(
-            key=key, default_source=default_source
-        )
-        source = field_provenance["source"]
-        note = field_provenance["note"]
-
-        # Always update from curated merging_records
-        if merging_record.masterdata_is_curated():
-            main_record.data[key] = merging_record.data[key]
-            if key not in FieldSet.IDENTIFYING_FIELD_KEYS + [Fields.ENTRYTYPE]:
-                main_record.add_field_provenance(key=key, source=source, note=note)
-
-        # Do not change if MERGING_RECORD is not curated
-        elif (
+        # Do not change if MERGING_RECORD is not curated and main_record is curated
+        if (
             main_record.masterdata_is_curated()
             and not merging_record.masterdata_is_curated()
         ):
             continue
 
+        # Always update from curated merging_records if it is curated
+        if merging_record.masterdata_is_curated():
+            main_record.data[key] = merging_record.data[key]
+            if key not in FieldSet.IDENTIFYING_FIELD_KEYS + [Fields.ENTRYTYPE]:
+                main_record.add_field_provenance(key=key, source=source, note=note)
+
         # Part 1: identifying fields
         if key in FieldSet.IDENTIFYING_FIELD_KEYS:
-            if preferred_masterdata_source_prefixes:
-                if merging_record_preferred:
-                    main_record.update_field(
-                        key=key, value=str(val), source=source, append_edit=False
-                    )
+            if merging_record_preferred:
+                main_record.update_field(
+                    key=key, value=str(val), source=source, append_edit=False
+                )
 
             # Fuse best fields if none is curated
             else:
@@ -298,8 +325,6 @@ def merge(
                     main_record,
                     merging_record=merging_record,
                     key=key,
-                    val=str(val),
-                    source=source,
                 )
 
         # Part 2: other fields

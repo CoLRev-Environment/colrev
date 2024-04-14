@@ -37,6 +37,10 @@ class IncompleteFieldChecker:
             ):
                 record.remove_field_provenance_note(key=key, note=self.msg)
                 continue
+
+            if record.masterdata_is_curated():
+                continue
+
             if self._incomplete_field(record=record, key=key):
                 record.add_field_provenance_note(key=key, note=self.msg)
             else:

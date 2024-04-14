@@ -28,6 +28,8 @@ class ContainerTitleAbbreviatedChecker:
                 key=key, defect=self.msg
             ):
                 continue
+            if record.masterdata_is_curated():  # pragma: no cover
+                continue
 
             if self.__container_title_abbreviated(record=record, key=key):
                 record.add_field_provenance_note(key=key, note=self.msg)

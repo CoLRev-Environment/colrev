@@ -28,6 +28,9 @@ class InconsistentContentChecker:
             ):
                 continue
 
+            if record.masterdata_is_curated():
+                continue
+
             if self._inconsistent_content(record=record, key=key):
                 record.add_field_provenance_note(key=key, note=self.msg)
             else:

@@ -817,6 +817,9 @@ class Record:
         Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
+        if preferred_masterdata_source_prefixes is None:
+            preferred_masterdata_source_prefixes = []
+
         colrev.record.record_merger.merge(
             self,
             merging_record,

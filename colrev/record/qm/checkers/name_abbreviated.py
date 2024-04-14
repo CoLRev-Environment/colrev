@@ -31,6 +31,9 @@ class NameAbbreviatedChecker:
             ):
                 continue
 
+            if record.masterdata_is_curated():
+                continue
+
             if any(
                 record.data[key].rstrip(" .").endswith(abbrev)
                 for abbrev in self.abbreviations

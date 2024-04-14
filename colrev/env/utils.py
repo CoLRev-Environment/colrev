@@ -2,6 +2,7 @@
 """Collection of utility functions"""
 import operator
 import pkgutil
+import re
 import typing
 import unicodedata
 from enum import Enum
@@ -78,6 +79,10 @@ def remove_accents(input_str: str) -> str:
 
 def percent_upper_chars(input_string: str) -> float:
     """Get the percentage of upper-case characters in a string"""
+
+    input_string = re.sub(r"[^a-zA-Z]", "", input_string)
+    if len(input_string) == 0:
+        return 0.0
     return sum(map(str.isupper, input_string)) / len(input_string)
 
 

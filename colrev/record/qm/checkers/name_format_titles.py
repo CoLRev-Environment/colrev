@@ -33,6 +33,8 @@ class NameFormatTitleChecker:
                 key=key, defect=self.msg
             ):
                 continue
+            if record.masterdata_is_curated():
+                continue
 
             if self._title_in_name(name=record.data[key]):
                 record.add_field_provenance_note(key=key, note=self.msg)
