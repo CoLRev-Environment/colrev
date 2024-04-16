@@ -9,22 +9,22 @@ colrev.constants.FieldSet
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~FieldSet.IDENTIFYING_FIELD_KEYS
       ~FieldSet.LIST_FIELDS
       ~FieldSet.MASTERDATA
@@ -32,3 +32,5 @@ colrev.constants.FieldSet
       ~FieldSet.PROVENANCE_KEYS
       ~FieldSet.STANDARDIZED_FIELD_KEYS
       ~FieldSet.TIME_VARIANT_FIELDS
+   
+   

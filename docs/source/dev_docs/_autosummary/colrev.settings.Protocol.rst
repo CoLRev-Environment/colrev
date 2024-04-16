@@ -9,13 +9,13 @@ colrev.settings.Protocol
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Protocol.all_json_schemas
       ~Protocol.field_mapping
       ~Protocol.from_dict
@@ -25,13 +25,15 @@ colrev.settings.Protocol
       ~Protocol.register_field_encoders
       ~Protocol.to_dict
       ~Protocol.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Protocol.url
+   
+   

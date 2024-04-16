@@ -579,7 +579,8 @@ class PDFGet(colrev.process.operation.Operation):
         """Setup a custom pfd-get script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("ops/custom_scripts/custom_pdf_get_script.py")
+            module="colrev.ops",
+            filename=Path("custom_scripts/custom_pdf_get_script.py"),
         )
         if filedata:
             with open("custom_pdf_get_script.py", "w", encoding="utf-8") as file:

@@ -5,14 +5,18 @@ from __future__ import annotations
 import zope.interface
 from dacite import from_dict
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
 import colrev.process.operation
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 class CustomData:
     """Class for custom data scripts"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
         self,

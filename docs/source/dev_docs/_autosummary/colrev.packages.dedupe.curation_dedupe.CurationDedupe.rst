@@ -9,13 +9,13 @@ colrev.packages.dedupe.curation\_dedupe.CurationDedupe
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~CurationDedupe.all_json_schemas
       ~CurationDedupe.field_mapping
       ~CurationDedupe.from_dict
@@ -26,14 +26,16 @@ colrev.packages.dedupe.curation\_dedupe.CurationDedupe
       ~CurationDedupe.run_dedupe
       ~CurationDedupe.to_dict
       ~CurationDedupe.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~CurationDedupe.ci_supported
       ~CurationDedupe.settings
+   
+   

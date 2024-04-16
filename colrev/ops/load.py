@@ -158,7 +158,7 @@ class Load(colrev.process.operation.Operation):
         self,
         source_records_list: list,
         *,
-        source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
     ) -> None:
         # pylint: disable=too-many-branches
         if len(source_records_list) == 0:
@@ -215,7 +215,7 @@ class Load(colrev.process.operation.Operation):
 
     def setup_source_for_load(
         self,
-        source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
         *,
         select_new_records: bool = True,
     ) -> None:
@@ -257,7 +257,7 @@ class Load(colrev.process.operation.Operation):
 
     def load_source_records(
         self,
-        source: colrev.env.package_manager.SearchSourcePackageEndpointInterface,
+        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
         *,
         keep_ids: bool,
     ) -> None:
@@ -322,7 +322,8 @@ class Load(colrev.process.operation.Operation):
         self.review_manager.dataset.add_changes(source.search_source.filename)
 
     def _add_source_to_settings(
-        self, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+        self,
+        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
     ) -> None:
         # Add to settings (if new filename)
         if source.search_source.filename in [
@@ -368,7 +369,9 @@ class Load(colrev.process.operation.Operation):
         return sources
 
     def _validate_load(
-        self, *, source: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+        self,
+        *,
+        source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
     ) -> None:
         imported_origins = self._get_currently_imported_origin_list()
         imported = len(imported_origins) - source.search_source.len_before

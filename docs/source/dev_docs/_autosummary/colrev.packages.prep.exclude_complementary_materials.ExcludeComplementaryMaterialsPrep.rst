@@ -9,13 +9,13 @@ colrev.packages.prep.exclude\_complementary\_materials.ExcludeComplementaryMater
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ExcludeComplementaryMaterialsPrep.all_json_schemas
       ~ExcludeComplementaryMaterialsPrep.field_mapping
       ~ExcludeComplementaryMaterialsPrep.from_dict
@@ -26,16 +26,18 @@ colrev.packages.prep.exclude\_complementary\_materials.ExcludeComplementaryMater
       ~ExcludeComplementaryMaterialsPrep.register_field_encoders
       ~ExcludeComplementaryMaterialsPrep.to_dict
       ~ExcludeComplementaryMaterialsPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ExcludeComplementaryMaterialsPrep.alphabet_detector
       ~ExcludeComplementaryMaterialsPrep.always_apply_changes
       ~ExcludeComplementaryMaterialsPrep.ci_supported
       ~ExcludeComplementaryMaterialsPrep.source_correction_hint
+   
+   

@@ -7,6 +7,8 @@ import random
 import zope.interface
 from dacite import from_dict
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
@@ -16,7 +18,9 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
+)
 class CustomPDFPrep:
     """Class for custom pdf-prep scripts"""
 
@@ -27,7 +31,8 @@ class CustomPDFPrep:
         settings: dict,
     ) -> None:
         self.settings = from_dict(
-            data_class=colrev.env.package_manager.DefaultSettings, data=settings
+            data_class=colrev.package_manager.package_settings.DefaultSettings,
+            data=settings,
         )
 
     def prep_pdf(

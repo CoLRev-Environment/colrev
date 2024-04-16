@@ -10,8 +10,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.language_service
 import colrev.env.local_index
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -24,7 +26,7 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.PrescreenPackageEndpointInterface
+    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
 )
 @dataclass
 class ScopePrescreen(JsonSchemaMixin):
@@ -35,7 +37,7 @@ class ScopePrescreen(JsonSchemaMixin):
 
     @dataclass
     class ScopePrescreenSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Settings for ScopePrescreen"""
 

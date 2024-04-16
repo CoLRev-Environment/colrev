@@ -12,16 +12,20 @@ import pandas as pd
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class ColrevCuration(JsonSchemaMixin):
     """CoLRev Curation"""
@@ -36,7 +40,7 @@ class ColrevCuration(JsonSchemaMixin):
 
     @dataclass
     class ColrevCurationSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Colrev Curation settings"""
 

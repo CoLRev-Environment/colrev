@@ -2,7 +2,7 @@
 """Screening utilities"""
 from __future__ import annotations
 
-import colrev.env.package_manager
+import colrev.package_manager.package_manager
 import colrev.record.record
 import colrev.settings
 from colrev.constants import Fields

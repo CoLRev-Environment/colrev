@@ -19,10 +19,12 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
 import colrev.env.docker_manager
-import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -32,7 +34,9 @@ from colrev.writer.write_utils import write_file
 
 
 # pylint: disable=too-many-instance-attributes
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class PaperMarkdown(JsonSchemaMixin):
     """Synthesize the literature in a markdown paper
@@ -62,7 +66,7 @@ class PaperMarkdown(JsonSchemaMixin):
 
     @dataclass
     class PaperMarkdownSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Paper settings"""
 
@@ -147,7 +151,7 @@ class PaperMarkdown(JsonSchemaMixin):
         template_name = self.data_dir / Path("APA-7.docx")
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("packages/data/paper_md/APA-7.docx")
+            module="colrev.packages", filename=Path("data/paper_md/APA-7.docx")
         )
 
         if filedata:
@@ -504,7 +508,9 @@ class PaperMarkdown(JsonSchemaMixin):
             )
 
     def _append_to_non_sample_references(self, *, filepath: Path) -> None:
-        filedata = colrev.env.utils.get_package_file_content(file_path=filepath)
+        filedata = colrev.env.utils.get_package_file_content(
+            module="colrev.packages", filename=filepath
+        )
 
         if filedata:
 
@@ -561,7 +567,7 @@ class PaperMarkdown(JsonSchemaMixin):
                 if not silent_mode:
                     self.review_manager.logger.info("Add PRISMA diagram to paper")
                 self._append_to_non_sample_references(
-                    filepath=Path("packages/data/prisma/prisma-refs.bib"),
+                    filepath=Path("data/prisma/prisma-refs.bib"),
                 )
 
                 # pylint: disable=consider-using-with
@@ -582,7 +588,8 @@ class PaperMarkdown(JsonSchemaMixin):
                         writer.write(line)
 
                         filedata = colrev.env.utils.get_package_file_content(
-                            file_path=Path("packages/data/prisma/prisma/prisma_text.md")
+                            module="colrev.packages",
+                            filename=Path("data/prisma/prisma/prisma_text.md"),
                         )
                         if filedata:
                             writer.write(filedata.decode("utf-8"))

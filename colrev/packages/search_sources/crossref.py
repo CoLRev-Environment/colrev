@@ -23,8 +23,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
 
 import colrev.env.environment_manager
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.doi_org as doi_connector
 import colrev.packages.search_sources.utils as connector_utils
 import colrev.record.record
@@ -43,7 +45,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class CrossrefSearchSource(JsonSchemaMixin):
@@ -55,7 +57,7 @@ class CrossrefSearchSource(JsonSchemaMixin):
     # https://github.com/CrossRef/rest-api-doc
     _api_url = "https://api.crossref.org/works?"
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.crossref"
     source_identifier = Fields.DOI
     # "https://api.crossref.org/works/{{doi}}"

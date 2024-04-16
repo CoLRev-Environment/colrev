@@ -9,13 +9,13 @@ colrev.packages.search\_sources.unknown\_source.UnknownSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~UnknownSearchSource.add_endpoint
       ~UnknownSearchSource.all_json_schemas
       ~UnknownSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.search
       ~UnknownSearchSource.to_dict
       ~UnknownSearchSource.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~UnknownSearchSource.HTML_CLEANER
       ~UnknownSearchSource.ci_supported
       ~UnknownSearchSource.db_url
@@ -49,3 +49,5 @@ colrev.packages.search\_sources.unknown\_source.UnknownSearchSource
       ~UnknownSearchSource.search_types
       ~UnknownSearchSource.short_name
       ~UnknownSearchSource.source_identifier
+   
+   

@@ -11,7 +11,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -23,7 +25,9 @@ from colrev.constants import RecordState
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DedupePackageEndpointInterface
+)
 @dataclass
 class CurationDedupe(JsonSchemaMixin):
     """Deduplication endpoint for curations with full journals/proceedings
@@ -35,7 +39,7 @@ class CurationDedupe(JsonSchemaMixin):
 
     @dataclass
     class CurationDedupeSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Settings for CurationDedupe"""
 

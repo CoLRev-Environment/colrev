@@ -3,25 +3,25 @@ colrev.exceptions
 
 .. automodule:: colrev.exceptions
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
+   
+   
    .. rubric:: Exceptions
 
    .. autosummary::
       :toctree:
-
+   
       AppendOnlyViolation
       CleanRepoRequiredError
       CoLRevException
@@ -77,3 +77,8 @@ colrev.exceptions
       TemplateNotAvailableError
       UnstagedGitChangesError
       UnsupportedImportFormatError
+   
+   
+
+
+

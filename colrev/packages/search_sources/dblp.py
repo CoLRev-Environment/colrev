@@ -17,8 +17,10 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 import colrev.record.record_similarity
@@ -35,7 +37,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class DBLPSearchSource(JsonSchemaMixin):

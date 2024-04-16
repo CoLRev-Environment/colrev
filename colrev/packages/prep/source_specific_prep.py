@@ -8,8 +8,10 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.ops.search_sources
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
@@ -19,7 +21,9 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepPackageEndpointInterface
+)
 @dataclass
 class SourceSpecificPrep(JsonSchemaMixin):
     """Prepares records based on the prepare scripts specified by the SearchSource"""
@@ -28,7 +32,7 @@ class SourceSpecificPrep(JsonSchemaMixin):
     ci_supported: bool = True
 
     always_apply_changes = True
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
         self,

@@ -18,9 +18,11 @@ from semanticscholar.PaginatedResults import PaginatedResults
 import colrev.constants
 import colrev.env.environment_manager
 import colrev.env.language_service
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.load
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.semanticscholar_utils as connector_utils
 import colrev.process.operation
 import colrev.record.record
@@ -42,7 +44,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class SemanticScholarSearchSource(JsonSchemaMixin):
@@ -62,7 +64,7 @@ class SemanticScholarSearchSource(JsonSchemaMixin):
     )
     heuristic_status = SearchSourceHeuristicStatus.oni
     search_types = [SearchType.API]
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     short_name = "S2"
     source_identifier = Fields.SEMANTIC_SCHOLAR_ID
 

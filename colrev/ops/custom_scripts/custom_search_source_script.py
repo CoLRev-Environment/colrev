@@ -8,18 +8,20 @@ import zope.interface
 from dacite import from_dict
 
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
 from colrev.constants import Fields
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 class CustomSearch:
     """Class for custom search scripts"""
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = "custom"
 
     def __init__(

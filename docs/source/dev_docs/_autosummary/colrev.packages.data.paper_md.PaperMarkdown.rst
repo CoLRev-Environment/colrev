@@ -9,13 +9,13 @@ colrev.packages.data.paper\_md.PaperMarkdown
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PaperMarkdown.add_endpoint
       ~PaperMarkdown.all_json_schemas
       ~PaperMarkdown.build_paper
@@ -31,16 +31,18 @@ colrev.packages.data.paper\_md.PaperMarkdown
       ~PaperMarkdown.update_data
       ~PaperMarkdown.update_paper
       ~PaperMarkdown.update_record_status_matrix
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PaperMarkdown.NEW_RECORD_SOURCE_TAG
       ~PaperMarkdown.NON_SAMPLE_REFERENCES_RELATIVE
       ~PaperMarkdown.SAMPLE_REFERENCES_RELATIVE
       ~PaperMarkdown.ci_supported
+   
+   

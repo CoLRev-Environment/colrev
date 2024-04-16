@@ -3,21 +3,21 @@ colrev.packages.data
 
 .. automodule:: colrev.packages.data
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -33,3 +33,4 @@ colrev.packages.data
    colrev.packages.data.paper_md
    colrev.packages.data.prisma
    colrev.packages.data.structured
+

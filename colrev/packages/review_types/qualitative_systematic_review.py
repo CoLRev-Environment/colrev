@@ -5,8 +5,10 @@ from dataclasses import dataclass
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.ops.search
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.packages.search_sources.open_citations_forward_search import (
     OpenCitationsSearchSource,
@@ -21,13 +23,13 @@ from colrev.packages.search_sources.pdf_backward_search import (
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.ReviewTypePackageEndpointInterface
+    colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface
 )
 @dataclass
 class QualitativeSystematicReview(JsonSchemaMixin):
     """Qualitative systematic review"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = True
 
     def __init__(

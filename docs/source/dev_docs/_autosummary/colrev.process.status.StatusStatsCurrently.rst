@@ -9,22 +9,22 @@ colrev.process.status.StatusStatsCurrently
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~StatusStatsCurrently.pdf_needs_retrieval
       ~StatusStatsCurrently.non_completed
       ~StatusStatsCurrently.exclusion
@@ -43,3 +43,5 @@ colrev.process.status.StatusStatsCurrently
       ~StatusStatsCurrently.rev_excluded
       ~StatusStatsCurrently.rev_included
       ~StatusStatsCurrently.rev_synthesized
+   
+   

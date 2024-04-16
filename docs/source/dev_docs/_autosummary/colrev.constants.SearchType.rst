@@ -9,23 +9,23 @@ colrev.constants.SearchType
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~SearchType.get_options
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~SearchType.API
       ~SearchType.DB
       ~SearchType.TOC
@@ -34,3 +34,5 @@ colrev.constants.SearchType
       ~SearchType.FILES
       ~SearchType.OTHER
       ~SearchType.MD
+   
+   

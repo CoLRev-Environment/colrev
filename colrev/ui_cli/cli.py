@@ -20,9 +20,9 @@ import pandas as pd
 from git.exc import GitCommandError
 
 import colrev.env.local_index
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.package_manager.package_manager
 import colrev.record.record
 import colrev.review_manager
 import colrev.ui_cli.cli_status_printer
@@ -52,7 +52,7 @@ from colrev.constants import ScreenCriterionType
 
 EXACT_CALL = "colrev " + subprocess.list2cmdline(sys.argv[1:])  # nosec
 
-package_manager = colrev.env.package_manager.PackageManager()
+package_manager = colrev.package_manager.package_manager.PackageManager()
 SHELL_MODE = False
 
 
@@ -2353,13 +2353,13 @@ def env(
     if update_package_list:
         if "y" != input(
             "The following process instantiates objects listed in the "
-            + "colrev/env/package_endpoints.json "
+            + "packages/packages.json "
             + "(including ones that may not be secure).\n"
             + "Please confirm (y) to proceed."
         ):
             return
 
-        package_manager = colrev.env.package_manager.PackageManager()
+        package_manager = colrev.package_manager.package_manager.PackageManager()
         package_manager.update_package_list()
         return
 

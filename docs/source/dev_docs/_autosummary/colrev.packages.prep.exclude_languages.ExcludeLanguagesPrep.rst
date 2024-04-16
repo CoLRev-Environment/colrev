@@ -9,13 +9,13 @@ colrev.packages.prep.exclude\_languages.ExcludeLanguagesPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ExcludeLanguagesPrep.all_json_schemas
       ~ExcludeLanguagesPrep.field_mapping
       ~ExcludeLanguagesPrep.from_dict
@@ -26,15 +26,17 @@ colrev.packages.prep.exclude\_languages.ExcludeLanguagesPrep
       ~ExcludeLanguagesPrep.register_field_encoders
       ~ExcludeLanguagesPrep.to_dict
       ~ExcludeLanguagesPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ExcludeLanguagesPrep.always_apply_changes
       ~ExcludeLanguagesPrep.ci_supported
       ~ExcludeLanguagesPrep.source_correction_hint
+   
+   

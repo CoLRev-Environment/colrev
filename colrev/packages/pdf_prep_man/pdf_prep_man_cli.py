@@ -14,8 +14,10 @@ import inquirer
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import ENTRYTYPES
@@ -23,18 +25,17 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import RecordState
 
-
 # pylint: disable=too-few-public-methods
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.PDFPrepManPackageEndpointInterface
+    colrev.package_manager.interfaces.PDFPrepManPackageEndpointInterface
 )
 @dataclass
 class CoLRevCLIPDFManPrep(JsonSchemaMixin):
     """Manually prepare PDFs based on a CLI (not yet implemented)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
 
     _to_skip: int = 0

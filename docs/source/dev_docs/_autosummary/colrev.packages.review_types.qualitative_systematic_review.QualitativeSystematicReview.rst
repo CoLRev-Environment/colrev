@@ -9,13 +9,13 @@ colrev.packages.review\_types.qualitative\_systematic\_review.QualitativeSystema
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~QualitativeSystematicReview.all_json_schemas
       ~QualitativeSystematicReview.field_mapping
       ~QualitativeSystematicReview.from_dict
@@ -26,13 +26,15 @@ colrev.packages.review\_types.qualitative\_systematic\_review.QualitativeSystema
       ~QualitativeSystematicReview.register_field_encoders
       ~QualitativeSystematicReview.to_dict
       ~QualitativeSystematicReview.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~QualitativeSystematicReview.ci_supported
+   
+   

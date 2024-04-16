@@ -16,9 +16,11 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.env.local_index
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -33,14 +35,14 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class LocalIndexSearchSource(JsonSchemaMixin):
     """LocalIndex"""
 
     # pylint: disable=too-many-instance-attributes
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = Fields.CURATION_ID
     search_types = [SearchType.API, SearchType.MD]
     endpoint = "colrev.local_index"

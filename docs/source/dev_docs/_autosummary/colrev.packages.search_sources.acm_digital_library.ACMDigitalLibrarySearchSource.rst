@@ -9,13 +9,13 @@ colrev.packages.search\_sources.acm\_digital\_library.ACMDigitalLibrarySearchSou
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ACMDigitalLibrarySearchSource.add_endpoint
       ~ACMDigitalLibrarySearchSource.all_json_schemas
       ~ACMDigitalLibrarySearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.acm\_digital\_library.ACMDigitalLibrarySearchSou
       ~ACMDigitalLibrarySearchSource.search
       ~ACMDigitalLibrarySearchSource.to_dict
       ~ACMDigitalLibrarySearchSource.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ACMDigitalLibrarySearchSource.ci_supported
       ~ACMDigitalLibrarySearchSource.db_url
       ~ACMDigitalLibrarySearchSource.docs_link
@@ -48,3 +48,5 @@ colrev.packages.search\_sources.acm\_digital\_library.ACMDigitalLibrarySearchSou
       ~ACMDigitalLibrarySearchSource.search_types
       ~ACMDigitalLibrarySearchSource.short_name
       ~ACMDigitalLibrarySearchSource.source_identifier
+   
+   

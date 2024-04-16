@@ -9,13 +9,13 @@ colrev.packages.prep.citeas\_prep.CiteAsPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~CiteAsPrep.all_json_schemas
       ~CiteAsPrep.field_mapping
       ~CiteAsPrep.from_dict
@@ -26,16 +26,18 @@ colrev.packages.prep.citeas\_prep.CiteAsPrep
       ~CiteAsPrep.register_field_encoders
       ~CiteAsPrep.to_dict
       ~CiteAsPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~CiteAsPrep.always_apply_changes
       ~CiteAsPrep.ci_supported
       ~CiteAsPrep.requests_headers
       ~CiteAsPrep.source_correction_hint
+   
+   

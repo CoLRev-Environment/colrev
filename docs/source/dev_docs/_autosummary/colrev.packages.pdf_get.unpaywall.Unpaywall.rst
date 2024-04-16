@@ -9,13 +9,13 @@ colrev.packages.pdf\_get.unpaywall.Unpaywall
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Unpaywall.all_json_schemas
       ~Unpaywall.field_mapping
       ~Unpaywall.from_dict
@@ -27,14 +27,16 @@ colrev.packages.pdf\_get.unpaywall.Unpaywall
       ~Unpaywall.register_field_encoders
       ~Unpaywall.to_dict
       ~Unpaywall.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Unpaywall.SETTINGS
       ~Unpaywall.ci_supported
+   
+   

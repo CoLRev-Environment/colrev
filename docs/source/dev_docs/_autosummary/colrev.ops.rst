@@ -3,21 +3,21 @@ colrev.ops
 
 .. automodule:: colrev.ops
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -60,3 +60,4 @@ colrev.ops
    colrev.ops.trace
    colrev.ops.upgrade
    colrev.ops.validate
+

@@ -9,13 +9,13 @@ colrev.ops.distribute.Distribute
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Distribute.check_precondition
       ~Distribute.conclude
       ~Distribute.decorate
@@ -23,13 +23,15 @@ colrev.ops.distribute.Distribute
       ~Distribute.get_next_id
       ~Distribute.main
       ~Distribute.notify
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Distribute.type
+   
+   

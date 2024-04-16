@@ -9,13 +9,13 @@ colrev.packages.prep\_man.curation\_jupyter\_prep\_man.CurationJupyterNotebookMa
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~CurationJupyterNotebookManPrep.all_json_schemas
       ~CurationJupyterNotebookManPrep.field_mapping
       ~CurationJupyterNotebookManPrep.from_dict
@@ -26,13 +26,15 @@ colrev.packages.prep\_man.curation\_jupyter\_prep\_man.CurationJupyterNotebookMa
       ~CurationJupyterNotebookManPrep.register_field_encoders
       ~CurationJupyterNotebookManPrep.to_dict
       ~CurationJupyterNotebookManPrep.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~CurationJupyterNotebookManPrep.ci_supported
+   
+   

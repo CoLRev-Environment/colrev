@@ -30,9 +30,11 @@ def retrieve_package_file(*, template_file: Path, target: Path) -> None:
     raise colrev_exceptions.TemplateNotAvailableError(str(template_file))
 
 
-def get_package_file_content(*, file_path: Path) -> typing.Union[bytes, None]:
+def get_package_file_content(
+    *, module: str, filename: Path
+) -> typing.Union[bytes, None]:
     """Get the content of a file in the CoLRev package"""
-    return pkgutil.get_data("colrev", str(file_path))
+    return pkgutil.get_data(module, str(filename))
 
 
 def inplace_change(*, filename: Path, old_string: str, new_string: str) -> None:
@@ -111,7 +113,7 @@ def load_complementary_material_keywords() -> list:
     """Load the list of keywords identifying complementary materials"""
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("env/complementary_material_keywords.txt")
+        module="colrev.env", filename=Path("complementary_material_keywords.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -124,7 +126,7 @@ def load_complementary_material_strings() -> list:
 
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("env/complementary_material_strings.txt")
+        module="colrev.env", filename=Path("complementary_material_strings.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())
@@ -137,7 +139,7 @@ def load_complementary_material_prefixes() -> list:
 
     complementary_material_keywords = []
     filedata = get_package_file_content(
-        file_path=Path("env/complementary_material_prefixes.txt")
+        module="colrev.env", filename=Path("complementary_material_prefixes.txt")
     )
     if filedata:
         complementary_material_keywords = list(filedata.decode("utf-8").splitlines())

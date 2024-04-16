@@ -10,8 +10,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from inquirer import Checkbox
 from inquirer import prompt
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.screen.utils as util_cli_screen
 import colrev.record.record
 import colrev.settings
@@ -20,13 +22,15 @@ from colrev.constants import Fields
 from colrev.constants import ScreenCriterionType
 
 
-@zope.interface.implementer(colrev.env.package_manager.ScreenPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.ScreenPackageEndpointInterface
+)
 @dataclass
 class CoLRevCLIScreen(JsonSchemaMixin):
     """Screen documents using a CLI"""
 
     # pylint: disable=too-many-instance-attributes
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
 
     def __init__(

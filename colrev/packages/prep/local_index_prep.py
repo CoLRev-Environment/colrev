@@ -7,7 +7,9 @@ from dataclasses import dataclass
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.local_index as local_index_connector
 import colrev.record.record
 from colrev.constants import Fields
@@ -18,12 +20,14 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepPackageEndpointInterface
+)
 @dataclass
 class LocalIndexPrep(JsonSchemaMixin):
     """Prepares records based on LocalIndex metadata"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = True
 
     source_correction_hint = (

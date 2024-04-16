@@ -8,20 +8,23 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.env.utils
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
-
 
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepManPackageEndpointInterface
+)
 @dataclass
 class CurationJupyterNotebookManPrep(JsonSchemaMixin):
     """Manual preparation based on a Jupyter Notebook"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
 
     def __init__(

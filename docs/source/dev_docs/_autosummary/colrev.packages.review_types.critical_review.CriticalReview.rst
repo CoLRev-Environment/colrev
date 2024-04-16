@@ -9,13 +9,13 @@ colrev.packages.review\_types.critical\_review.CriticalReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~CriticalReview.all_json_schemas
       ~CriticalReview.field_mapping
       ~CriticalReview.from_dict
@@ -26,13 +26,15 @@ colrev.packages.review\_types.critical\_review.CriticalReview
       ~CriticalReview.register_field_encoders
       ~CriticalReview.to_dict
       ~CriticalReview.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~CriticalReview.ci_supported
+   
+   

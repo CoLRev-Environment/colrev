@@ -13,8 +13,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-import colrev.env.package_manager
 import colrev.env.utils
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import DefectCodes
@@ -29,7 +31,9 @@ from colrev.writer.write_utils import write_file
 # pylint: disable=too-many-instance-attributes
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepManPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepManPackageEndpointInterface
+)
 @dataclass
 class ExportManPrep(JsonSchemaMixin):
     """Manual preparation based on exported and imported metadata (and PDFs if any)"""
@@ -58,7 +62,7 @@ class ExportManPrep(JsonSchemaMixin):
 
     @dataclass
     class ExportManPrepSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Settings for ExportManPrep"""
 

@@ -10,7 +10,9 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
@@ -23,13 +25,13 @@ from colrev.writer.write_utils import write_file
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class ABIInformProQuestSearchSource(JsonSchemaMixin):
     """ABI/INFORM (ProQuest)"""
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.abi_inform_proquest"
     source_identifier = "{{ID}}"
     search_types = [SearchType.DB]

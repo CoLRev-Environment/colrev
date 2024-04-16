@@ -90,7 +90,7 @@ The `colrev_status` field is not changed in the following operations unless new 
 
 The following options for ``prep`` are available:
 
-.. datatemplate:json:: ../../../../colrev/env/package_endpoints.json
+.. datatemplate:json:: ../../../../colrev/packages/package_endpoints.json
 
     {{ make_list_table_from_mappings(
         [("Identifier", "package_endpoint_identifier"), ("Preparation packages", "short_description"), ("Status", "status_linked")],
@@ -100,7 +100,7 @@ The following options for ``prep`` are available:
 
 The following options for ``prep-man`` are available:
 
-.. datatemplate:json:: ../../../../colrev/env/package_endpoints.json
+.. datatemplate:json:: ../../../../colrev/packages/package_endpoints.json
 
 
     {{ make_list_table_from_mappings(

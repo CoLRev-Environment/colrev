@@ -1,41 +1,41 @@
 Package interfaces
 ========================================
 
-.. autointerface:: colrev.env.package_manager.GeneralInterface
+.. autointerface:: colrev.package_manager.interfaces.GeneralInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.ReviewTypePackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.SearchSourcePackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PrepPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PrepPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PrepManPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PrepManPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.DedupePackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.DedupePackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PrescreenPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFGetPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFGetManPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFGetManPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFPrepPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.PDFPrepManPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.PDFPrepManPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.ScreenPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.ScreenPackageEndpointInterface
    :members:
 
-.. autointerface:: colrev.env.package_manager.DataPackageEndpointInterface
+.. autointerface:: colrev.package_manager.interfaces.DataPackageEndpointInterface
    :members:

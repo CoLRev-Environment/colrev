@@ -9,13 +9,13 @@ colrev.packages.pdf\_prep.remove\_cover\_page.PDFCoverPage
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~PDFCoverPage.all_json_schemas
       ~PDFCoverPage.field_mapping
       ~PDFCoverPage.from_dict
@@ -26,13 +26,15 @@ colrev.packages.pdf\_prep.remove\_cover\_page.PDFCoverPage
       ~PDFCoverPage.register_field_encoders
       ~PDFCoverPage.to_dict
       ~PDFCoverPage.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~PDFCoverPage.ci_supported
+   
+   

@@ -16,8 +16,10 @@ from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
 
 import colrev.env.local_index
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.crossref
 import colrev.packages.search_sources.pdf_backward_search as bws
 import colrev.record.qm.checkers.missing_field
@@ -38,7 +40,7 @@ from colrev.writer.write_utils import write_file
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class FilesSearchSource(JsonSchemaMixin):
@@ -46,7 +48,7 @@ class FilesSearchSource(JsonSchemaMixin):
 
     # pylint: disable=too-many-instance-attributes
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.files_dir"
     source_identifier = Fields.FILE
     search_types = [SearchType.FILES]

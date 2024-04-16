@@ -9,13 +9,13 @@ colrev.packages.search\_sources.wiley.WileyOnlineLibrarySearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~WileyOnlineLibrarySearchSource.add_endpoint
       ~WileyOnlineLibrarySearchSource.all_json_schemas
       ~WileyOnlineLibrarySearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.wiley.WileyOnlineLibrarySearchSource
       ~WileyOnlineLibrarySearchSource.search
       ~WileyOnlineLibrarySearchSource.to_dict
       ~WileyOnlineLibrarySearchSource.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~WileyOnlineLibrarySearchSource.ci_supported
       ~WileyOnlineLibrarySearchSource.db_url
       ~WileyOnlineLibrarySearchSource.docs_link
@@ -48,3 +48,5 @@ colrev.packages.search\_sources.wiley.WileyOnlineLibrarySearchSource
       ~WileyOnlineLibrarySearchSource.search_types
       ~WileyOnlineLibrarySearchSource.short_name
       ~WileyOnlineLibrarySearchSource.source_identifier
+   
+   

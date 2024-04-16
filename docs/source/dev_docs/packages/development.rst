@@ -90,7 +90,7 @@ Following steps might be a good starting point.
        ...
 
 * Install the expackagetension ``pip install -e /path/to/colrev_asreview``:
-* Register the package to the cloned CoLRev by editing the ``colrev/env/packages.json`` file e.g.:
+* Register the package to the cloned CoLRev by editing the ``colrev/packages/packages.json`` file e.g.:
 
    ..  code-block:: diff
 
@@ -105,7 +105,7 @@ Following steps might be a good starting point.
        + }
 
 * Commit the changes
-* Run the ``colrev env --update_package_list`` command, which updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/package_endpoints.json>`_, and the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/package_status.json>`_
+* Run the ``colrev env --update_package_list`` command, which updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/packages/packages.json>`_, and the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/package_status.json>`_
 * Continue developing the package
 
 * In case of error, ``package_endpoints.json`` file will be deleted. Fix the error, and restore the file from repo, continue until CoLRev successfully register the package without error
@@ -115,7 +115,7 @@ Following steps might be a good starting point.
    *  Remove any debugging code
    *  Do a pre-commit test
    *  Commit and push the changes to GitHub
-   *  Create a pull request briefly describing the package and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/packages.json>`_.
+   *  Create a pull request briefly describing the package and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/packages.json>`_.
    *  Once the package is approved, it will be available to the users
 
 Built-in packages
@@ -129,7 +129,7 @@ Built-in packages development process
 
 * Same with external package development process, clone and install forked version. But now the work will be done directly inside CoLRev.
 * Built-in packages should be placed under ``colrev/packages/<operation>`` directory, ``<operation>`` is the directory of the operation it's extending, e.g.: ``colrev/packages/prescreen/asreview.py``
-* Add the package information in ``colrev/env/package_endpoints.json``, e.g.:
+* Add the package information in ``packages/packages.json``, e.g.:
 
   .. code-block:: json
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 import zope.interface
 from dacite import from_dict
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
 import colrev.process.operation
 from colrev.constants import Fields
 
@@ -12,13 +14,15 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepPackageEndpointInterface
+)
 class CustomPrep:
     """Class for custom prep scripts"""
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
         self,

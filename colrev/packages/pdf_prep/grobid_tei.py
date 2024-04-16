@@ -8,8 +8,10 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.env.utils
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
@@ -17,12 +19,14 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFPrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface
+)
 @dataclass
 class GROBIDTEI(JsonSchemaMixin):
     """Prepare PDFs by creating an annotated TEI document"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     TEI_PATH_RELATIVE = Path("data/.tei/")
     ci_supported: bool = False
 

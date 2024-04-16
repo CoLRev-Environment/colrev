@@ -9,13 +9,13 @@ colrev.packages.data.structured.StructuredData
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~StructuredData.add_endpoint
       ~StructuredData.all_json_schemas
       ~StructuredData.field_mapping
@@ -30,14 +30,16 @@ colrev.packages.data.structured.StructuredData
       ~StructuredData.update_data
       ~StructuredData.update_record_status_matrix
       ~StructuredData.validate_structured_data
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~StructuredData.ci_supported
       ~StructuredData.settings
+   
+   

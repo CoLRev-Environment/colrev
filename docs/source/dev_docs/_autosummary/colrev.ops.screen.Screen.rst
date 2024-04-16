@@ -9,13 +9,13 @@ colrev.ops.screen.Screen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Screen.add_criterion
       ~Screen.check_precondition
       ~Screen.conclude
@@ -31,13 +31,15 @@ colrev.ops.screen.Screen
       ~Screen.set_screening_criteria
       ~Screen.setup_custom_script
       ~Screen.to_screen
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Screen.type
+   
+   

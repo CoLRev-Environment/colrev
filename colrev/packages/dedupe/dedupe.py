@@ -16,7 +16,9 @@ from bib_dedupe.bib_dedupe import import_maybe
 from bib_dedupe.bib_dedupe import match
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -25,14 +27,16 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.DedupePackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DedupePackageEndpointInterface
+)
 @dataclass
 class Dedupe(JsonSchemaMixin):
     """Default deduplication"""
 
     ci_supported: bool = True
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
 
     def __init__(
         self,

@@ -9,13 +9,13 @@ colrev.packages.search\_sources.aisel.AISeLibrarySearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~AISeLibrarySearchSource.add_endpoint
       ~AISeLibrarySearchSource.all_json_schemas
       ~AISeLibrarySearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.aisel.AISeLibrarySearchSource
       ~AISeLibrarySearchSource.search
       ~AISeLibrarySearchSource.to_dict
       ~AISeLibrarySearchSource.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~AISeLibrarySearchSource.ci_supported
       ~AISeLibrarySearchSource.db_url
       ~AISeLibrarySearchSource.docs_link
@@ -48,3 +48,5 @@ colrev.packages.search\_sources.aisel.AISeLibrarySearchSource
       ~AISeLibrarySearchSource.search_types
       ~AISeLibrarySearchSource.short_name
       ~AISeLibrarySearchSource.source_identifier
+   
+   

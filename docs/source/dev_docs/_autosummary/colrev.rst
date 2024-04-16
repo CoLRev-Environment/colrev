@@ -3,21 +3,21 @@
 
 .. automodule:: colrev
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -34,6 +34,7 @@
    colrev.loader
    colrev.logger
    colrev.ops
+   colrev.package_manager
    colrev.packages
    colrev.process
    colrev.record
@@ -42,3 +43,4 @@
    colrev.ui_cli
    colrev.ui_web
    colrev.writer
+

@@ -13,7 +13,9 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from pdfminer.high_level import extract_text
 from pdfminer.pdftypes import PDFException
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
@@ -21,12 +23,14 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
+)
 @dataclass
 class Unpaywall(JsonSchemaMixin):
     """Get PDFs from unpaywall.org"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
 
     SETTINGS = {

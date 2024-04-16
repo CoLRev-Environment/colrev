@@ -15,13 +15,17 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
 import colrev.env.docker_manager
-import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 from colrev.constants import Filepaths
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class PRISMA(JsonSchemaMixin):
     """Create a PRISMA diagram"""
@@ -29,7 +33,9 @@ class PRISMA(JsonSchemaMixin):
     ci_supported: bool = False
 
     @dataclass
-    class PRISMASettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
+    class PRISMASettings(
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+    ):
         """PRISMA settings"""
 
         endpoint: str

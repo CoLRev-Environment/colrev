@@ -9,13 +9,13 @@ colrev.packages.search\_sources.colrev\_project.ColrevProjectSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ColrevProjectSearchSource.add_endpoint
       ~ColrevProjectSearchSource.all_json_schemas
       ~ColrevProjectSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.colrev\_project.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.search
       ~ColrevProjectSearchSource.to_dict
       ~ColrevProjectSearchSource.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ColrevProjectSearchSource.ci_supported
       ~ColrevProjectSearchSource.docs_link
       ~ColrevProjectSearchSource.endpoint
@@ -47,3 +47,5 @@ colrev.packages.search\_sources.colrev\_project.ColrevProjectSearchSource
       ~ColrevProjectSearchSource.search_types
       ~ColrevProjectSearchSource.short_name
       ~ColrevProjectSearchSource.source_identifier
+   
+   

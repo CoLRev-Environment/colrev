@@ -246,7 +246,7 @@ class Upgrade(colrev.process.operation.Operation):
 
     def _print_release_notes(self, *, selected_version: CoLRevVersion) -> None:
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("../CHANGELOG.md")
+            module="colrev", filename=Path("../CHANGELOG.md")
         )
         active, printed = False, False
         if filedata:

@@ -9,13 +9,17 @@ from pathlib import Path
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.env.utils
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class Obsidian(JsonSchemaMixin):
     """Export the sample into an Obsidian database"""
@@ -23,7 +27,9 @@ class Obsidian(JsonSchemaMixin):
     ci_supported: bool = False
 
     @dataclass
-    class ObsidianSettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
+    class ObsidianSettings(
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for Obsidian"""
 
         endpoint: str

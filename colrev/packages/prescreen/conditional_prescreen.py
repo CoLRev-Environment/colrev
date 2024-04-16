@@ -7,7 +7,9 @@ from dataclasses import dataclass
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import RecordState
@@ -18,13 +20,13 @@ from colrev.constants import RecordState
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.PrescreenPackageEndpointInterface
+    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
 )
 @dataclass
 class ConditionalPrescreen(JsonSchemaMixin):
     """Conditional prescreen (currently: include all)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = True
 
     def __init__(

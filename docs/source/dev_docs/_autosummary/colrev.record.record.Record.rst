@@ -9,13 +9,13 @@ colrev.record.record.Record
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Record.add_field_provenance
       ~Record.add_field_provenance_note
       ~Record.add_provenance_all
@@ -51,6 +51,7 @@ colrev.record.record.Record
       ~Record.remove_field
       ~Record.remove_field_provenance_note
       ~Record.rename_field
+      ~Record.require_prov
       ~Record.reset_pdf_provenance_notes
       ~Record.run_pdf_quality_model
       ~Record.run_quality_model
@@ -60,14 +61,16 @@ colrev.record.record.Record
       ~Record.set_status
       ~Record.update_by_record
       ~Record.update_field
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Record.pp
       ~Record.data
+   
+   

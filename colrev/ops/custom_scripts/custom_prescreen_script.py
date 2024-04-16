@@ -7,6 +7,8 @@ import random
 import zope.interface
 from dacite import from_dict
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
 import colrev.process.operation
 import colrev.record.record
 
@@ -15,7 +17,7 @@ import colrev.record.record
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.PrescreenPackageEndpointInterface
+    colrev.package_manager.interfaces.PrescreenPackageEndpointInterface
 )
 class CustomPrescreen:
     """Class for custom prescreen scripts"""
@@ -27,7 +29,8 @@ class CustomPrescreen:
         settings: dict,
     ) -> None:
         self.settings = from_dict(
-            data_class=colrev.env.package_manager.DefaultSettings, data=settings
+            data_class=colrev.package_manager.package_settings.DefaultSettings,
+            data=settings,
         )
 
     def run_prescreen(

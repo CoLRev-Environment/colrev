@@ -831,7 +831,7 @@ class LocalIndex:
         # based on the data (between colrev load and prep)
         masterdata_curations = {}
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("env/masterdata_curations.csv")
+            module="colrev.env", filename=Path("masterdata_curations.csv")
         )
 
         if filedata:

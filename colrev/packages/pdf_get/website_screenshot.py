@@ -14,8 +14,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from docker.errors import DockerException
 
 import colrev.env.docker_manager
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -25,12 +27,14 @@ from colrev.constants import RecordState
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
+)
 @dataclass
 class WebsiteScreenshot(JsonSchemaMixin):
     """Get PDFs from website screenshot (for "online" ENTRYTYPES)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = False
     CHROME_BROWSERLESS_IMAGE = "browserless/chrome:latest"
 

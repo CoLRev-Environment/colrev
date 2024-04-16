@@ -21,8 +21,10 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
 from tqdm import tqdm
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.crossref
 import colrev.record.record
 import colrev.record.record_prep
@@ -37,7 +39,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class BackwardSearchSource(JsonSchemaMixin):
@@ -47,7 +49,7 @@ class BackwardSearchSource(JsonSchemaMixin):
 
     _api_url = "https://opencitations.net/index/coci/api/v1/references/"
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.pdf_backward_search"
     source_identifier = Fields.ID
     search_types = [SearchType.BACKWARD_SEARCH]

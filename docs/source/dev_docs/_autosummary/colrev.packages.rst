@@ -3,21 +3,21 @@ colrev.packages
 
 .. automodule:: colrev.packages
 
+   
+   
+   
 
+   
+   
+   
 
+   
+   
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
+   
+   
+   
 
 
 
@@ -38,3 +38,4 @@ colrev.packages
    colrev.packages.review_types
    colrev.packages.screen
    colrev.packages.search_sources
+

@@ -15,9 +15,11 @@ from dataclasses_jsonschema import JsonSchemaMixin
 from rapidfuzz import fuzz
 
 import colrev.env.language_service
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
 import colrev.loader.load_utils
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 import colrev.record.record_prep
 from colrev.constants import Colors
@@ -33,13 +35,13 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class UnknownSearchSource(JsonSchemaMixin):
     """Unknown SearchSource"""
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.unknown_source"
 
     source_identifier = "colrev.unknown_source"

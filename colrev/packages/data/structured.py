@@ -13,9 +13,11 @@ import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 from git.exc import GitCommandError
 
-import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -33,7 +35,9 @@ class Field(JsonSchemaMixin):
     data_type: str
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class StructuredData(JsonSchemaMixin):
     """Summarize the literature in a structured data extraction (a table)"""
@@ -43,7 +47,7 @@ class StructuredData(JsonSchemaMixin):
 
     @dataclass
     class StructuredDataSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Settings for StructuredData"""
 

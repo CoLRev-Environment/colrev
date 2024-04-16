@@ -9,8 +9,10 @@ import git
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.env.utils
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -18,7 +20,9 @@ from colrev.constants import RecordState
 from colrev.writer.write_utils import write_file
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class GithubPages(JsonSchemaMixin):
     """Export the literature review into a Github Page"""
@@ -28,7 +32,9 @@ class GithubPages(JsonSchemaMixin):
     ci_supported: bool = False
 
     @dataclass
-    class GHPagesSettings(colrev.env.package_manager.DefaultSettings, JsonSchemaMixin):
+    class GHPagesSettings(
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
+    ):
         """Settings for GithubPages"""
 
         endpoint: str

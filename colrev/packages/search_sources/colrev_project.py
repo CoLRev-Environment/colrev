@@ -17,8 +17,10 @@ from git import Repo
 from pandasql.sqldf import PandaSQLException
 from tqdm import tqdm
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -30,13 +32,13 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class ColrevProjectSearchSource(JsonSchemaMixin):
     """CoLRev projects"""
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     source_identifier = "colrev_project_identifier"
     search_types = [SearchType.API]
     endpoint = "colrev.colrev_project"

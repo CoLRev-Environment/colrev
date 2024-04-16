@@ -9,8 +9,8 @@ from urllib.parse import unquote
 import requests
 from bs4 import BeautifulSoup
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.package_manager
 import colrev.packages.search_sources.utils as connector_utils
 import colrev.record.record
 from colrev.constants import Fields

@@ -9,13 +9,13 @@ colrev.settings.ProjectSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ProjectSettings.all_json_schemas
       ~ProjectSettings.field_mapping
       ~ProjectSettings.from_dict
@@ -25,15 +25,15 @@ colrev.settings.ProjectSettings
       ~ProjectSettings.register_field_encoders
       ~ProjectSettings.to_dict
       ~ProjectSettings.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ProjectSettings.title
       ~ProjectSettings.authors
       ~ProjectSettings.keywords
@@ -44,3 +44,5 @@ colrev.settings.ProjectSettings
       ~ProjectSettings.delay_automated_processing
       ~ProjectSettings.colrev_version
       ~ProjectSettings.auto_upgrade
+   
+   

@@ -9,22 +9,22 @@ colrev.process.status.StatusStatsParent
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
+   
+   
+   
 
-
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~StatusStatsParent.md_retrieved
       ~StatusStatsParent.md_imported
       ~StatusStatsParent.md_prepared
@@ -37,3 +37,5 @@ colrev.process.status.StatusStatsParent
       ~StatusStatsParent.rev_excluded
       ~StatusStatsParent.rev_included
       ~StatusStatsParent.rev_synthesized
+   
+   

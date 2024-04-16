@@ -149,7 +149,7 @@ class Prep(colrev.process.operation.Operation):
         *,
         prior: colrev.record.record_prep.PrepRecord,
         preparation_record: colrev.record.record_prep.PrepRecord,
-        prep_package_endpoint: colrev.env.package_manager.PrepPackageEndpointInterface,
+        prep_package_endpoint: colrev.package_manager.interfaces.PrepPackageEndpointInterface,
     ) -> None:
         if not self.debug_mode:
             return
@@ -601,7 +601,7 @@ class Prep(colrev.process.operation.Operation):
         """Setup a custom prep script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("ops/custom_scripts/custom_prep_script.py")
+            module="colrev.ops", filename=Path("custom_scripts/custom_prep_script.py")
         )
         if filedata:
             with open("custom_prep_script.py", "w", encoding="utf-8") as file:

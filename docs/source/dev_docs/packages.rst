@@ -24,12 +24,12 @@ Registered packages are public Python packages that can be installed via PyPI. A
 
 To *register a new package*:
 
-1. Create a pull request briefly describing the package and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/packages.json>`_. If you add an endpoint to CoLRev (built-in), you can skip this step.
+1. Create a pull request briefly describing the package and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/packages.json>`_. If you add an endpoint to CoLRev (built-in), you can skip this step.
 
 To create a new package endpoint:
 
 1. Add the package endpoint to the ``.colrev_endpoints.json`` file in the project.
-2. Run the ``colrev env --update_package_list`` command, which updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/package_endpoints.json>`_, and the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/env/package_status.json>`_. This makes the package available to CoLRev users and in the documentation.
+2. Run the ``colrev env --update_package_list`` command, which updates the `package_endpoints.json <https://github.com/CoLRev-Environment/colrev/blob/main/packages/packages.json>`_, and the `package_status.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/package_status.json>`_. This makes the package available to CoLRev users and in the documentation.
 3. Create a pull request.
 
 **Recommendations**:

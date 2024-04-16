@@ -18,9 +18,11 @@ from docker.errors import DockerException
 
 import colrev.constants as c
 import colrev.env.docker_manager
-import colrev.env.package_manager
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 from colrev.constants import Filepaths
@@ -42,7 +44,9 @@ class BibFormats(Enum):
     rdf_bibliontology = "rdf_bibliontology"
 
 
-@zope.interface.implementer(colrev.env.package_manager.DataPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.DataPackageEndpointInterface
+)
 @dataclass
 class BibliographyExport(JsonSchemaMixin):
     """Export the sample references in Endpoint format"""
@@ -60,7 +64,7 @@ class BibliographyExport(JsonSchemaMixin):
 
     @dataclass
     class BibliographyExportSettings(
-        colrev.env.package_manager.DefaultSettings, JsonSchemaMixin
+        colrev.package_manager.package_settings.DefaultSettings, JsonSchemaMixin
     ):
         """Settings for BibliographyExport"""
 

@@ -9,13 +9,13 @@ colrev.packages.review\_types.literature\_review.LiteratureReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~LiteratureReview.all_json_schemas
       ~LiteratureReview.field_mapping
       ~LiteratureReview.from_dict
@@ -26,13 +26,15 @@ colrev.packages.review\_types.literature\_review.LiteratureReview
       ~LiteratureReview.register_field_encoders
       ~LiteratureReview.to_dict
       ~LiteratureReview.to_json
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~LiteratureReview.ci_supported
+   
+   

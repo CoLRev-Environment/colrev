@@ -8,7 +8,9 @@ import zope.interface
 from alphabet_detector import AlphabetDetector
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Fields
 
@@ -18,13 +20,15 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepPackageEndpointInterface
+)
 @dataclass
 class ExcludeNonLatinAlphabetsPrep(JsonSchemaMixin):
     """Prepares records by excluding ones that have a non-latin alphabet
     (in the title, author, journal, or booktitle field)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = True
 
     source_correction_hint = "check with the developer"

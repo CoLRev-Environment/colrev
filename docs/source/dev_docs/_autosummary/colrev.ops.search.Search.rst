@@ -9,13 +9,13 @@ colrev.ops.search.Search
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~Search.add_api_source
       ~Search.add_db_source
       ~Search.add_most_likely_sources
@@ -30,13 +30,15 @@ colrev.ops.search.Search
       ~Search.notify
       ~Search.run_db_search
       ~Search.select_search_type
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~Search.type
+   
+   

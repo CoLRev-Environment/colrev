@@ -710,11 +710,7 @@
         },
         {
             "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
-            "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen",
-            "status": "|MATURING|",
-            "status_linked": "|MATURING|",
-            "short_description": "ASReview-based prescreen (:doc:`instructions </manual/packages/colrev_asreview.colrev_asreview>`)",
-            "ci_supported": false
+            "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen"
         }
     ],
     "pdf_get": [

@@ -24,7 +24,7 @@ Two steps are necessary to add a SearchSource and run a search:
     colrev search
 
 ..
-    For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/packages.html#colrev.env.package_manager.SearchSourcePackageEndpointInterface.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
+    For search result files, `heuristics <https://colrev.readthedocs.io/en/latest/foundations/packages.html#colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface.heuristic>`_ are used to identify the SearchSource (e.g., GoogleScholar or Web of Science) and users are asked to provide the corresponding search parameters, which are stored in the ``settings.json``.
 
 The following table provides an overview of the different types of SearchSources, linking to the list of SearchSources below.
 The development of additional SearchSources is tracked in the `SearchSource roadmap <https://github.com/CoLRev-Environment/colrev/issues/106>`_).
@@ -137,7 +137,7 @@ The development of additional SearchSources is tracked in the `SearchSource road
 DB searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -151,7 +151,7 @@ DB searches
 API searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -165,7 +165,7 @@ API searches
 TOC searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -179,7 +179,7 @@ TOC searches
 BACKWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -193,7 +193,7 @@ BACKWARD_SEARCH searches
 FORWARD_SEARCH searches
 ----------------------------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -207,7 +207,7 @@ FORWARD_SEARCH searches
 FILES searches
 -------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -222,7 +222,7 @@ FILES searches
 OTHER searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],
@@ -237,7 +237,7 @@ OTHER searches
 MD searches
 --------------------
 
-.. datatemplate:json:: ../../../../colrev/env/search_source_types.json
+.. datatemplate:json:: ../../../../colrev/packages/search_source_types.json
 
     {{ make_list_table_from_mappings(
         [("SearchSource packages", "short_description"), ("Identifier", "package_endpoint_identifier"), ("Status", "status_linked")],

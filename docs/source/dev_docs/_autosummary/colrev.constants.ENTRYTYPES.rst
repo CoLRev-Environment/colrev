@@ -9,23 +9,23 @@ colrev.constants.ENTRYTYPES
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
+   
+   
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-
+   
       ~ENTRYTYPES.get_all
+   
+   
 
-
-
-
-
+   
+   
    .. rubric:: Attributes
 
    .. autosummary::
-
+   
       ~ENTRYTYPES.ARTICLE
       ~ENTRYTYPES.BACHELORTHESIS
       ~ENTRYTYPES.BOOK
@@ -42,3 +42,5 @@ colrev.constants.ENTRYTYPES
       ~ENTRYTYPES.TECHREPORT
       ~ENTRYTYPES.THESIS
       ~ENTRYTYPES.UNPUBLISHED
+   
+   

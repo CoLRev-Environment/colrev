@@ -5,6 +5,8 @@ from __future__ import annotations
 import zope.interface
 from dacite import from_dict
 
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_settings
 import colrev.process.operation
 from colrev.constants import Fields
 
@@ -12,7 +14,9 @@ from colrev.constants import Fields
 # pylint: disable=too-few-public-methods
 
 
-@zope.interface.implementer(colrev.env.package_manager.PDFGetPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PDFGetPackageEndpointInterface
+)
 class CustomPDFGet:
     """Class for custom pdf-get scripts"""
 
@@ -23,7 +27,8 @@ class CustomPDFGet:
         settings: dict,
     ) -> None:
         self.settings = from_dict(
-            data_class=colrev.env.package_manager.DefaultSettings, data=settings
+            data_class=colrev.package_manager.package_settings.DefaultSettings,
+            data=settings,
         )
 
     def get_pdf(

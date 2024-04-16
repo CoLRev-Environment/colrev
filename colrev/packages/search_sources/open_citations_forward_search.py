@@ -12,8 +12,10 @@ import zope.interface
 from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.crossref
 import colrev.record.record
 from colrev.constants import Fields
@@ -26,7 +28,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class OpenCitationsSearchSource(JsonSchemaMixin):
@@ -34,7 +36,7 @@ class OpenCitationsSearchSource(JsonSchemaMixin):
     Scope: all included papers with colrev_status in (rev_included, rev_synthesized)
     """
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.open_citations_forward_search"
     source_identifier = "fwsearch_ref"
     search_types = [SearchType.FORWARD_SEARCH]

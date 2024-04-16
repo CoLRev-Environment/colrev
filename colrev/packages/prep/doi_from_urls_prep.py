@@ -11,8 +11,10 @@ import requests
 import zope.interface
 from dataclasses_jsonschema import JsonSchemaMixin
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.packages.search_sources.doi_org as doi_connector
 import colrev.record.record
 import colrev.record.record_prep
@@ -23,12 +25,14 @@ from colrev.constants import Fields
 # pylint: disable=duplicate-code
 
 
-@zope.interface.implementer(colrev.env.package_manager.PrepPackageEndpointInterface)
+@zope.interface.implementer(
+    colrev.package_manager.interfaces.PrepPackageEndpointInterface
+)
 @dataclass
 class DOIFromURLsPrep(JsonSchemaMixin):
     """Prepares records by retrieving its DOI from the website (URL)"""
 
-    settings_class = colrev.env.package_manager.DefaultSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSettings
     ci_supported: bool = True
 
     source_correction_hint = "check with the developer"

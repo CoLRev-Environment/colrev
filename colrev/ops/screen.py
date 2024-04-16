@@ -262,7 +262,8 @@ class Screen(colrev.process.operation.Operation):
         """Setup a custom screen script"""
 
         filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("ops/custom_scripts/custom_screen_script.py")
+            module="colrev.ops",
+            filename=Path("custom_scripts/custom_screen_script.py"),
         )
 
         if filedata:

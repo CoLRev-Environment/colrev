@@ -230,7 +230,7 @@ class Initializer:
 
         # Note: parse instead of copy to avoid format changes
         settings_filedata = colrev.env.utils.get_package_file_content(
-            file_path=Path("ops/init/settings.json")
+            module="colrev.ops", filename=Path("init/settings.json")
         )
         if settings_filedata:
             settings = json.loads(settings_filedata.decode("utf-8"))

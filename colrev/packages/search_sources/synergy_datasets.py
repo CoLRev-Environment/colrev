@@ -14,8 +14,10 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 from git import Repo
 
-import colrev.env.package_manager
 import colrev.exceptions as colrev_exceptions
+import colrev.package_manager.interfaces
+import colrev.package_manager.package_manager
+import colrev.package_manager.package_settings
 import colrev.record.record
 from colrev.constants import Colors
 from colrev.constants import Fields
@@ -28,7 +30,7 @@ from colrev.constants import SearchType
 
 
 @zope.interface.implementer(
-    colrev.env.package_manager.SearchSourcePackageEndpointInterface
+    colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface
 )
 @dataclass
 class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
@@ -44,7 +46,7 @@ class SYNERGYDatasetsSearchSource(JsonSchemaMixin):
 
     """
 
-    settings_class = colrev.env.package_manager.DefaultSourceSettings
+    settings_class = colrev.package_manager.package_settings.DefaultSourceSettings
     endpoint = "colrev.synergy_datasets"
     # pylint: disable=colrev-missed-constant-usage
     source_identifier = "ID"

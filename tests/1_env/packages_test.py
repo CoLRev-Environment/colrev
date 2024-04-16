@@ -405,4 +405,6 @@ def test_update_package_list(
 def test_load_settings_not_supported() -> None:
     """Test load_settings() with unsupported settings"""
     with pytest.raises(colrev_exceptions.ParameterError):
-        colrev.env.package_manager.DefaultSettings.load_settings(data={"xyz": 123})
+        colrev.package_manager.package_settings.DefaultSettings.load_settings(
+            data={"xyz": 123}
+        )
