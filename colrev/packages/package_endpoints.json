@@ -707,10 +707,6 @@
             "status_linked": "|MATURING|",
             "short_description": "Rule-based prescreen (scope) (:doc:`instructions </manual/packages/colrev.scope_prescreen>`)",
             "ci_supported": true
-        },
-        {
-            "package_endpoint_identifier": "colrev_asreview.colrev_asreview",
-            "endpoint": "colrev_asreview.colrev_asreview.ASReviewPrescreen"
         }
     ],
     "pdf_get": [

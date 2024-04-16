@@ -28,7 +28,6 @@ from colrev.constants import SearchType
 
 # pylint: disable=too-many-ancestors
 
-
 # Inspiration for package descriptions:
 # https://github.com/rstudio/reticulate/blob/
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
@@ -116,6 +115,12 @@ class PackageManager:
         self._search_source_types_json_file = self._colrev_path / Path(
             "colrev/packages/search_source_types.json"
         )
+
+        self.package_endpoints_json: typing.Dict[str, list] = {
+            x.name: [] for x in PACKAGE_TYPE_OVERVIEW
+        }
+        self.docs_for_index: typing.Dict[str, list] = {}
+        self.package_status = self._load_package_status_json()
 
     def _load_package_endpoints_index(self) -> dict:
         filedata = colrev.env.utils.get_package_file_content(
@@ -490,7 +495,7 @@ class PackageManager:
 
         return str(file_path)
 
-    def _write_docs_for_index(self, docs_for_index: dict) -> None:
+    def _write_docs_for_index(self) -> None:
         packages_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/manual/packages.rst"
         )
@@ -527,7 +532,7 @@ class PackageManager:
             new_doc.append("   :maxdepth: 1")
             new_doc.append("")
 
-            doc_items = docs_for_index[endpoint_type]
+            doc_items = self.docs_for_index[endpoint_type]
             for doc_item in sorted(doc_items, key=lambda d: d["identifier"]):
                 if doc_item == "NotImplemented":
                     print(doc_item["path"])
@@ -538,137 +543,142 @@ class PackageManager:
             for line in new_doc:
                 file.write(line + "\n")
 
-    # pylint: disable=too-many-locals
-    # pylint: disable=too-many-arguments
-    def _add_package_endpoints(
+    def _iterate_package_endpoints(
         self,
         *,
         selected_package: str,
-        package_endpoints_json: dict,
         package_endpoints: dict,
-        docs_for_index: dict,
-        package_status: dict,
-    ) -> None:
-        # selected_package = "colrev" or "colrev_asreview"
-        for endpoint_type, endpoint_list in package_endpoints_json.items():
+    ) -> typing.Iterator[typing.Tuple[str, dict]]:
+        for endpoint_type in self.package_endpoints_json:
             if endpoint_type not in package_endpoints["endpoints"]:
                 continue
-
-            print(f" load {endpoint_type}:")
-            for i, endpoint_item in enumerate(
-                package_endpoints["endpoints"][endpoint_type]
-            ):
-                print(f"-  {endpoint_item['package_endpoint_identifier']}")
+            for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
                 if (
                     not endpoint_item["package_endpoint_identifier"].split(".")[0]
                     == selected_package
                 ):
                     continue
-                self.packages[PackageEndpointType[endpoint_type]][
-                    endpoint_item["package_endpoint_identifier"]
-                ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
-                try:
-                    endpoint = self.load_package_endpoint(
-                        package_type=PackageEndpointType[endpoint_type],
-                        package_identifier=endpoint_item["package_endpoint_identifier"],
-                    )
-                except ModuleNotFoundError:
-                    print(
-                        f'Module not found: {endpoint_item["package_endpoint_identifier"]}'
-                    )
-                    continue
+                yield endpoint_type, endpoint_item
 
-                # Add development status information (if available on package_status)
-                e_list = [
-                    x
-                    for x in package_status[endpoint_type]
-                    if x["package_endpoint_identifier"]
-                    == endpoint_item["package_endpoint_identifier"]
-                ]
-                if e_list:
-                    endpoint_item["status"] = e_list[0]["status"]
-                else:
-                    package_status[endpoint_type].append(
-                        {
-                            "package_endpoint_identifier": endpoint_item[
-                                "package_endpoint_identifier"
-                            ],
-                            "status": "RED",
-                        }
-                    )
-                    endpoint_item["status"] = "RED"
+    def _add_package_endpoints(
+        self,
+        *,
+        selected_package: str,
+        package_endpoints: dict,
+    ) -> None:
+        # selected_package = "colrev" or "colrev_asreview"
+        # package_endpoints_json: should be updated based on the package classes etc.
 
-                endpoint_item["status"] = (
-                    endpoint_item["status"]
-                    .replace("STABLE", "|STABLE|")
-                    .replace("MATURING", "|MATURING|")
-                    .replace("EXPERIMENTAL", "|EXPERIMENTAL|")
+        for endpoint_type, endpoint_item in self._iterate_package_endpoints(
+            selected_package=selected_package,
+            package_endpoints=package_endpoints,
+        ):
+            print(f"-  {endpoint_item['package_endpoint_identifier']}")
+            self.packages[PackageEndpointType[endpoint_type]][
+                endpoint_item["package_endpoint_identifier"]
+            ] = {"endpoint": endpoint_item["endpoint"], "installed": True}
+            try:
+                endpoint = self.load_package_endpoint(
+                    package_type=PackageEndpointType[endpoint_type],
+                    package_identifier=endpoint_item["package_endpoint_identifier"],
                 )
-                endpoint_item["status_linked"] = endpoint_item["status"]
-
-                # Generate the contents displayed in the docs (see "datatemplate:json")
-                # load short_description dynamically...
-                short_description = endpoint.__doc__
-                if "\n" in endpoint.__doc__:
-                    short_description = endpoint.__doc__.split("\n")[0]
-                endpoint_item["short_description"] = short_description
-
-                endpoint_item["ci_supported"] = endpoint.ci_supported
-
-                code_link = (
-                    "https://github.com/CoLRev-Environment/colrev/blob/main/"
-                    + endpoint_item["endpoint"].replace(".", "/")
+            except ModuleNotFoundError:
+                print(
+                    f'Module not found: {endpoint_item["package_endpoint_identifier"]}'
                 )
-                # In separate packages, we the main readme.md file should be used
-                code_link = code_link[: code_link.rfind("/")]
-                code_link += ".md"
-                if hasattr(endpoint, "docs_link"):
-                    docs_link = endpoint.docs_link
-                else:
-                    docs_link = code_link
+                continue
 
-                package_index_path = self._import_package_docs(
-                    docs_link, endpoint_item["package_endpoint_identifier"]
-                )
-                if package_index_path == "":
-                    continue
-
-                item = {
-                    "path": package_index_path,
-                    "short_description": endpoint_item["short_description"],
-                    "identifier": endpoint_item["package_endpoint_identifier"],
-                }
-                try:
-                    docs_for_index[endpoint_type].append(item)
-                except KeyError:
-                    docs_for_index[endpoint_type] = [item]
-
-                # Note: link format for the sphinx docs
-                endpoint_item["short_description"] = (
-                    endpoint_item["short_description"]
-                    + " (:doc:`instructions </manual/packages/"
-                    + f"{endpoint_item['package_endpoint_identifier']}>`)"
-                )
-                if endpoint_type == "search_source":
-                    endpoint_item["search_types"] = [
-                        x.value for x in endpoint.search_types
-                    ]
-                print(endpoint_item)
-                print(package_endpoints["endpoints"][endpoint_type][i])
-
-            endpoint_list += [
+            # Add development status information (if available on package_status)
+            e_list = [
                 x
-                for x in package_endpoints["endpoints"][endpoint_type]
-                if x["package_endpoint_identifier"].split(".")[0] == selected_package
+                for x in self.package_status[endpoint_type]
+                if x["package_endpoint_identifier"]
+                == endpoint_item["package_endpoint_identifier"]
             ]
-            package_endpoints_json[endpoint_type] = endpoint_list
+            if e_list:
+                endpoint_item["status"] = e_list[0]["status"]
+            else:
+                self.package_status[endpoint_type].append(
+                    {
+                        "package_endpoint_identifier": endpoint_item[
+                            "package_endpoint_identifier"
+                        ],
+                        "status": "RED",
+                    }
+                )
+                endpoint_item["status"] = "RED"
 
-    def _extract_search_source_types(self, *, package_endpoints_json: dict) -> None:
+            endpoint_item["status"] = (
+                endpoint_item["status"]
+                .replace("STABLE", "|STABLE|")
+                .replace("MATURING", "|MATURING|")
+                .replace("EXPERIMENTAL", "|EXPERIMENTAL|")
+            )
+            endpoint_item["status_linked"] = endpoint_item["status"]
+
+            # Generate the contents displayed in the docs (see "datatemplate:json")
+            # load short_description dynamically...
+            short_description = endpoint.__doc__
+            if "\n" in endpoint.__doc__:
+                short_description = endpoint.__doc__.split("\n")[0]
+            endpoint_item["short_description"] = short_description
+
+            endpoint_item["ci_supported"] = endpoint.ci_supported
+
+            code_link = (
+                "https://github.com/CoLRev-Environment/colrev/blob/main/"
+                + endpoint_item["endpoint"].replace(".", "/")
+            )
+            # In separate packages, we the main readme.md file should be used
+            code_link = code_link[: code_link.rfind("/")]
+            code_link += ".md"
+            if hasattr(endpoint, "docs_link"):
+                docs_link = endpoint.docs_link
+            else:
+                docs_link = code_link
+
+            package_index_path = self._import_package_docs(
+                docs_link, endpoint_item["package_endpoint_identifier"]
+            )
+            if package_index_path == "":
+                continue
+
+            item = {
+                "path": package_index_path,
+                "short_description": endpoint_item["short_description"],
+                "identifier": endpoint_item["package_endpoint_identifier"],
+            }
+            try:
+                self.docs_for_index[endpoint_type].append(item)
+            except KeyError:
+                self.docs_for_index[endpoint_type] = [item]
+
+            # Note: link format for the sphinx docs
+            endpoint_item["short_description"] = (
+                endpoint_item["short_description"]
+                + " (:doc:`instructions </manual/packages/"
+                + f"{endpoint_item['package_endpoint_identifier']}>`)"
+            )
+            if endpoint_type == "search_source":
+                endpoint_item["search_types"] = [x.value for x in endpoint.search_types]
+
+            # Remove and add the endpoint to the package_endpoints_json
+            # we do not use a dict because currently, the docs require
+            # a list of endpoints (to create tables using datatemplate.json)
+            self.package_endpoints_json[endpoint_type] = [
+                x
+                for x in self.package_endpoints_json[endpoint_type]
+                if x["package_endpoint_identifier"]
+                != endpoint_item["package_endpoint_identifier"]
+            ]
+            self.package_endpoints_json[endpoint_type] += [endpoint_item]
+
+    def _extract_search_source_types(self) -> None:
         search_source_types: typing.Dict[str, list] = {}
         for search_source_type in SearchType:
             if search_source_type.value not in search_source_types:
                 search_source_types[search_source_type.value] = []
-            for search_source in package_endpoints_json["search_source"]:
+            for search_source in self.package_endpoints_json["search_source"]:
                 if search_source_type.value in search_source["search_types"]:
                     search_source_types[search_source_type.value].append(search_source)
 
@@ -705,6 +715,30 @@ class PackageManager:
         packages = json.loads(filedata.decode("utf-8"))
         return packages
 
+    def _update_package_endpoints_json(self) -> None:
+        for key in self.package_endpoints_json.keys():
+            self.package_endpoints_json[key] = sorted(
+                self.package_endpoints_json[key],
+                key=lambda d: d["package_endpoint_identifier"],
+            )
+        package_endpoints_json_file = (
+            self._colrev_path / "colrev" / Path("packages/package_endpoints.json")
+        )
+        package_endpoints_json_file.unlink(missing_ok=True)
+        json_object = json.dumps(self.package_endpoints_json, indent=4)
+        with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
+
+    def _update_package_status(self) -> None:
+        json_object = json.dumps(self.package_status, indent=4)
+        package_status_json_file = (
+            self._colrev_path / "colrev" / Path("packages/package_status.json")
+        )
+        with open(package_status_json_file, "w", encoding="utf-8") as file:
+            file.write(json_object)
+            file.write("\n")  # to avoid pre-commit/eof-fix changes
+
     def update_package_list(self) -> None:
         """Generates the packages/package_endpoints.json
         based on the packages in packages/packages.json
@@ -712,12 +746,6 @@ class PackageManager:
 
         os.chdir(self._colrev_path)
         packages = self._load_packages_json()
-        package_status = self._load_package_status_json()
-
-        package_endpoints_json: typing.Dict[str, list] = {
-            x.name: [] for x in PACKAGE_TYPE_OVERVIEW
-        }
-        docs_for_index: typing.Dict[str, list] = {}
 
         for package in packages:
             try:
@@ -733,52 +761,25 @@ class PackageManager:
 
                 with open(endpoints_path, encoding="utf-8") as file:
                     package_endpoints = json.load(file)
+
                 self._add_package_endpoints(
                     selected_package=package["module"],
-                    package_endpoints_json=package_endpoints_json,
                     package_endpoints=package_endpoints,
-                    docs_for_index=docs_for_index,
-                    package_status=package_status,
                 )
-                self._extract_search_source_types(
-                    package_endpoints_json=package_endpoints_json
-                )
+                self._extract_search_source_types()
             except json.decoder.JSONDecodeError as exc:  # pragma: no cover
                 print(f"Invalid json {exc}")
                 continue
             except AttributeError as exc:
                 print(exc)
                 continue
-        # print(package_endpoints_json)
-        # raise Exception
 
-        for key in package_endpoints_json.keys():
-            package_endpoints_json[key] = sorted(
-                package_endpoints_json[key],
-                key=lambda d: d["package_endpoint_identifier"],
-            )
-
-        package_endpoints_json_file = (
-            self._colrev_path / "colrev" / Path("packages/package_endpoints.json")
-        )
-        package_endpoints_json_file.unlink(missing_ok=True)
-        json_object = json.dumps(package_endpoints_json, indent=4)
-        with open(package_endpoints_json_file, "w", encoding="utf-8") as file:
-            file.write(json_object)
-            file.write("\n")  # to avoid pre-commit/eof-fix changes
-
-        json_object = json.dumps(package_status, indent=4)
-        package_status_json_file = (
-            self._colrev_path / "colrev" / Path("packages/package_status.json")
-        )
-        with open(package_status_json_file, "w", encoding="utf-8") as file:
-            file.write(json_object)
-            file.write("\n")  # to avoid pre-commit/eof-fix changes
-
-        self._write_docs_for_index(docs_for_index)
+        self._update_package_endpoints_json()
+        self._update_package_status()
+        self._write_docs_for_index()
 
     # pylint: disable=too-many-locals
-    def add_endpoint_for_operation(
+    def add_package_to_settings(
         self,
         *,
         operation: colrev.process.operation.Operation,

@@ -536,7 +536,7 @@ def search(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        source_dict = package_manager.add_endpoint_for_operation(
+        source_dict = package_manager.add_package_to_settings(
             operation=search_operation, package_identifier=add, params=params
         )
         search_operation.main(selection_str=str(source_dict["filename"]), rerun=False)
@@ -741,7 +741,7 @@ def prep(
             return
         if add:
             package_manager = review_manager.get_package_manager()
-            package_manager.add_endpoint_for_operation(
+            package_manager.add_package_to_settings(
                 operation=prep_operation, package_identifier=add, params=params
             )
             return
@@ -832,7 +832,7 @@ def prep_man(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=prep_man_operation, package_identifier=add, params=params
         )
         return
@@ -948,7 +948,7 @@ def dedupe(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=dedupe_operation, package_identifier=add, params=params
         )
         return
@@ -1141,7 +1141,7 @@ def prescreen(
         print("Activated custom_prescreen_script.py.")
     elif add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=prescreen_operation, package_identifier=add, params=params
         )
     else:
@@ -1265,7 +1265,7 @@ def screen(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=screen_operation, package_identifier=add, params=params
         )
         return
@@ -1525,7 +1525,7 @@ def pdf_get(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=pdf_get_operation, package_identifier=add, params=params
         )
         return
@@ -1619,7 +1619,7 @@ def pdf_get_man(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=pdf_get_man_operation, package_identifier=add, params=params
         )
         return
@@ -1783,7 +1783,7 @@ def pdf_prep(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=pdf_prep_operation,
             package_identifier=add,
             params=params,
@@ -1922,7 +1922,7 @@ def pdf_prep_man(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=pdf_prep_man_operation, package_identifier=add, params=params
         )
     if delete_first_page:
@@ -2037,7 +2037,7 @@ def data(
 
     if add:
         package_manager = review_manager.get_package_manager()
-        package_manager.add_endpoint_for_operation(
+        package_manager.add_package_to_settings(
             operation=data_operation,
             package_identifier=add,
             params=params,
