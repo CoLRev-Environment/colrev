@@ -147,20 +147,21 @@ lxml = ["lxml"]
 
 [[package]]
 name = "bib-dedupe"
-version = "0.7.2"
+version = "0.7.3"
 description = "Identify and merge duplicates in bibliographic records"
 category = "main"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "bib_dedupe-0.7.2-py3-none-any.whl", hash = "sha256:f252cabceee70f2084d91a99434d038d531480a0f11ced57eaf418f26eb5f8cc"},
-    {file = "bib_dedupe-0.7.2.tar.gz", hash = "sha256:12b4f11aa03e792f462b3a7775bf48ab3718c70c5ff19e521fbdf942a297e4f3"},
+    {file = "bib_dedupe-0.7.3-py3-none-any.whl", hash = "sha256:14e922eb3b51b4337ad1714b0b4822667b1a4ef75567c7137ab1dd9fbbc508e7"},
+    {file = "bib_dedupe-0.7.3.tar.gz", hash = "sha256:69e826ad2f0a8052bad28397c540e265ea365047e9fa040030d229349a8e4d4f"},
 ]
 
 [package.dependencies]
 number-parser = ">=0.3.2,<0.4.0"
 numpy = ">=1.19.5,<2.0.0"
 rapidfuzz = ">=3.5.2,<4.0.0"
+requests = ">=2.31.0,<3.0.0"
 setuptools = ">=69.1.1,<70.0.0"
 tqdm = ">=4.66.1,<5.0.0"
 
@@ -2992,14 +2993,14 @@ tenacity = "*"
 
 [[package]]
 name = "setuptools"
-version = "69.3.0"
+version = "69.5.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-69.3.0-py3-none-any.whl", hash = "sha256:48c518e350470d98cfa2944a31edbfc897c9a7d8fa4847da66d89f0f5fb64b57"},
-    {file = "setuptools-69.3.tar.gz", hash = "sha256:e1fd0ca7ba442e4be8a415dcca867b8018777dd5f95f4492bb4dc7d77dbc8bd8"},
+    {file = "setuptools-69.5.1-py3-none-any.whl", hash = "sha256:c636ac361bc47580504644275c9ad802c50415c7522212252c033bd15f301f32"},
+    {file = "setuptools-69.5.1.tar.gz", hash = "sha256:6c1fccdac05a97e598fb0ae3bbed5904ccb317337a51139dcd51453611bbb987"},
 ]
 
 [package.extras]
@@ -3702,4 +3703,4 @@ docs = ["Sphinx", "repoze-sphinx-autointerface", "sphinx-autodoc-typehints", "sp
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "f310ca9f99344653ef5b5b9b2b4a3d0ae0186e6ec92fff0ba13501d53c4e6b3f"
+content-hash = "1306c1ce9fc7572d49e2ac517e444363ce39c8cef8c03ff51fd0230b2b98a708"
