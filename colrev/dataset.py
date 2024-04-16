@@ -30,6 +30,7 @@ from colrev.writer.write_utils import to_string
 
 # pylint: disable=too-many-public-methods
 
+
 class Dataset:
     """The CoLRev dataset (records and their history in git)"""
 
