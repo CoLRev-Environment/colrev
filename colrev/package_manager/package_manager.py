@@ -2,7 +2,6 @@
 """Discovering and using packages."""
 from __future__ import annotations
 
-import collections.abc
 import importlib.util
 import json
 import os
@@ -25,8 +24,6 @@ from colrev.constants import Fields
 from colrev.constants import OperationsType
 from colrev.constants import PackageEndpointType
 from colrev.constants import SearchType
-
-# pylint: disable=too-many-ancestors
 
 # Inspiration for package descriptions:
 # https://github.com/rstudio/reticulate/blob/
@@ -182,121 +179,6 @@ class PackageManager:
                             print(f"Error loading package {package_identifier}: {exc}")
 
                     package["installed"] = False
-
-    def _replace_path_by_str(self, *, orig_dict):  # type: ignore
-        for key, value in orig_dict.items():
-            if isinstance(value, collections.abc.Mapping):
-                orig_dict[key] = self._replace_path_by_str(orig_dict=value)
-            else:
-                if isinstance(value, Path):
-                    orig_dict[key] = str(value)
-                else:
-                    orig_dict[key] = value
-        return orig_dict
-
-    def _apply_package_details_fixes(
-        self, *, package_type: PackageEndpointType, package_details: dict
-    ) -> None:
-        # gh_issue https://github.com/CoLRev-Environment/colrev/issues/66
-        # apply validation when parsing settings during package init (based on _details)
-        # later : package version?
-
-        # Note : fix because Path is not (yet) supported.
-        if "paper_path" in package_details["properties"]:
-            package_details["properties"]["paper_path"]["type"] = "path"
-        if "word_template" in package_details["properties"]:
-            package_details["properties"]["word_template"]["type"] = "path"
-        if "paper_output" in package_details["properties"]:
-            package_details["properties"]["paper_output"]["type"] = "path"
-
-        if PackageEndpointType.search_source == package_type:
-            package_details["properties"]["filename"] = {"type": "path"}
-
-        package_details = self._replace_path_by_str(orig_dict=package_details)  # type: ignore
-
-    def get_package_details(
-        self, *, package_type: PackageEndpointType, package_identifier: str
-    ) -> dict:
-        """Get the package details"""
-
-        package_class = self.load_package_endpoint(
-            package_type=package_type, package_identifier=package_identifier.lower()
-        )
-        settings_class = getattr(package_class, "settings_class", None)
-        if settings_class is None:
-            msg = f"{package_identifier} could not be loaded"
-            raise colrev_exceptions.ServiceNotAvailableException(msg)
-        package_details = dict(settings_class.json_schema())  # type: ignore
-
-        # To address cases of inheritance, see:
-        # https://stackoverflow.com/questions/22689900/
-        # json-schema-allof-with-additionalproperties
-        if "allOf" in package_details:
-            selection = {}
-            for candidate in package_details["allOf"]:
-                selection = candidate
-                # prefer the one with properties
-                if "properties" in candidate:
-                    break
-            package_details = selection
-
-        for parameter in [
-            i for i in settings_class.__annotations__.keys() if i[:1] != "_"
-        ]:
-            # tooltip, min, max, options: determined from settings_class._details dict
-            # Note : tooltips are not in docstrings because
-            # attribute docstrings are not supported (https://peps.python.org/pep-0224/)
-            # pylint: disable=protected-access
-
-            if not hasattr(settings_class, "_details"):
-                continue
-            if parameter not in settings_class._details:
-                continue
-            if "tooltip" in settings_class._details[parameter]:
-                package_details["properties"][parameter]["tooltip"] = (
-                    settings_class._details[parameter]["tooltip"]
-                )
-
-            if "min" in settings_class._details[parameter]:
-                package_details["properties"][parameter]["min"] = (
-                    settings_class._details[parameter]["min"]
-                )
-
-            if "max" in settings_class._details[parameter]:
-                package_details["properties"][parameter]["max"] = (
-                    settings_class._details[parameter]["max"]
-                )
-
-            if "options" in settings_class._details[parameter]:
-                package_details["properties"][parameter]["options"] = (
-                    settings_class._details[parameter]["options"]
-                )
-
-        self._apply_package_details_fixes(
-            package_type=package_type, package_details=package_details
-        )
-
-        return package_details
-
-    def discover_packages(
-        self, *, package_type: PackageEndpointType, installed_only: bool = False
-    ) -> typing.Dict:
-        """Discover packages"""
-
-        discovered_packages = self.packages[package_type]
-        for package_identifier, package in discovered_packages.items():
-            if installed_only and not package["installed"]:
-                continue
-            package_class = self.load_package_endpoint(
-                package_type=package_type, package_identifier=package_identifier
-            )
-            discovered_packages[package_identifier] = package
-            discovered_packages[package_identifier][
-                "description"
-            ] = package_class.__doc__
-            discovered_packages[package_identifier]["installed"] = package["installed"]
-
-        return discovered_packages
 
     def load_package_endpoint(  # type: ignore
         self, *, package_type: PackageEndpointType, package_identifier: str
@@ -775,6 +657,28 @@ class PackageManager:
         self._update_package_status()
         self._write_docs_for_index()
 
+    def discover_packages(
+        self, *, package_type: PackageEndpointType, installed_only: bool = False
+    ) -> typing.Dict:
+        """Discover packages (for cli usage)
+
+        returns: Dictionary with package_identifier as key"""
+
+        discovered_packages = self.packages[package_type]
+        for package_identifier, package in discovered_packages.items():
+            if installed_only and not package["installed"]:
+                continue
+            package_class = self.load_package_endpoint(
+                package_type=package_type, package_identifier=package_identifier
+            )
+            discovered_packages[package_identifier] = package
+            discovered_packages[package_identifier][
+                "description"
+            ] = package_class.__doc__
+            discovered_packages[package_identifier]["installed"] = package["installed"]
+
+        return discovered_packages
+
     # pylint: disable=too-many-locals
     def add_package_to_settings(
         self,
@@ -784,7 +688,7 @@ class PackageManager:
         params: str,
         prompt_on_same_source: bool = True,
     ) -> dict:
-        """Add a package_endpoint"""
+        """Add a package_endpoint (for cli usage)"""
 
         settings = operation.review_manager.settings
         package_type_dict = {

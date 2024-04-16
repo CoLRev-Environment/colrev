@@ -370,27 +370,6 @@ def test_data_package_interfaces(
     )
 
 
-def test_get_package_details(
-    base_repo_review_manager: colrev.review_manager.ReviewManager,
-) -> None:
-    """Test get_package_details()"""
-
-    package_manager = base_repo_review_manager.get_package_manager()
-    expected = {
-        "type": "object",
-        "required": ["endpoint"],
-        "properties": {"endpoint": {"type": "string"}},
-        "description": "Endpoint settings",
-        "$schema": "http://json-schema.org/draft-06/schema#",
-    }
-    actual = package_manager.get_package_details(
-        package_type=PackageEndpointType.prep,
-        package_identifier="colrev.colrev_curation",
-    )
-    print(actual)
-    assert expected == actual
-
-
 def test_update_package_list(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
