@@ -3,21 +3,21 @@ colrev.packages.pdf\_get\_man
 
 .. automodule:: colrev.packages.pdf_get_man
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -27,4 +27,3 @@ colrev.packages.pdf\_get\_man
    :recursive:
 
    colrev.packages.pdf_get_man.pdf_get_man_cli
-

@@ -9,13 +9,13 @@ colrev.packages.search\_sources.ieee.IEEEXploreSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~IEEEXploreSearchSource.add_endpoint
       ~IEEEXploreSearchSource.all_json_schemas
       ~IEEEXploreSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.search
       ~IEEEXploreSearchSource.to_dict
       ~IEEEXploreSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~IEEEXploreSearchSource.API_FIELDS
       ~IEEEXploreSearchSource.FIELD_MAPPING
       ~IEEEXploreSearchSource.SETTINGS
@@ -52,5 +52,3 @@ colrev.packages.search\_sources.ieee.IEEEXploreSearchSource
       ~IEEEXploreSearchSource.search_types
       ~IEEEXploreSearchSource.short_name
       ~IEEEXploreSearchSource.source_identifier
-   
-   

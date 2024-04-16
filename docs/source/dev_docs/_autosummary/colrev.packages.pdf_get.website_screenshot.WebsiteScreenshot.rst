@@ -9,13 +9,13 @@ colrev.packages.pdf\_get.website\_screenshot.WebsiteScreenshot
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~WebsiteScreenshot.all_json_schemas
       ~WebsiteScreenshot.field_mapping
       ~WebsiteScreenshot.from_dict
@@ -27,16 +27,14 @@ colrev.packages.pdf\_get.website\_screenshot.WebsiteScreenshot
       ~WebsiteScreenshot.screenshot_service_available
       ~WebsiteScreenshot.to_dict
       ~WebsiteScreenshot.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~WebsiteScreenshot.CHROME_BROWSERLESS_IMAGE
       ~WebsiteScreenshot.ci_supported
-   
-   

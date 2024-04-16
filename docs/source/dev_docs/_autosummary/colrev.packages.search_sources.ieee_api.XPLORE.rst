@@ -9,13 +9,13 @@ colrev.packages.search\_sources.ieee\_api.XPLORE
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~XPLORE.abstractText
       ~XPLORE.addParameter
       ~XPLORE.affiliationText
@@ -51,16 +51,14 @@ colrev.packages.search\_sources.ieee\_api.XPLORE
       ~XPLORE.searchField
       ~XPLORE.startingResult
       ~XPLORE.thesaurusTerms
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~XPLORE.endPoint
       ~XPLORE.openAccessEndPoint
-   
-   

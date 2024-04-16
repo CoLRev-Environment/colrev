@@ -9,25 +9,23 @@ colrev.record.qm.checkers.name\_format\_titles.NameFormatTitleChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~NameFormatTitleChecker.run
-   
-   
 
-   
-   
+      ~NameFormatTitleChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~NameFormatTitleChecker.fields_to_check
       ~NameFormatTitleChecker.msg
       ~NameFormatTitleChecker.titles
-   
-   

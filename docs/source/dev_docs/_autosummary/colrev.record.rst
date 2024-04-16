@@ -3,21 +3,21 @@ colrev.record
 
 .. automodule:: colrev.record
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -34,4 +34,3 @@ colrev.record
    colrev.record.record_pdf
    colrev.record.record_prep
    colrev.record.record_similarity
-

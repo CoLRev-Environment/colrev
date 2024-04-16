@@ -9,23 +9,21 @@ colrev.constants.FileSets
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~FileSets.DEFAULT_GIT_IGNORE_ITEMS
       ~FileSets.DEPRECATED_GIT_IGNORE_ITEMS
-   
-   

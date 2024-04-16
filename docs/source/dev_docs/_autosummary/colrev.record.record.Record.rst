@@ -9,13 +9,13 @@ colrev.record.record.Record
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~Record.add_field_provenance
       ~Record.add_field_provenance_note
       ~Record.add_provenance_all
@@ -61,16 +61,14 @@ colrev.record.record.Record
       ~Record.set_status
       ~Record.update_by_record
       ~Record.update_field
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Record.pp
       ~Record.data
-   
-   

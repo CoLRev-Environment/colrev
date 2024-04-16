@@ -9,13 +9,13 @@ colrev.packages.search\_sources.trid.TransportResearchInternationalDocumentation
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~TransportResearchInternationalDocumentation.add_endpoint
       ~TransportResearchInternationalDocumentation.all_json_schemas
       ~TransportResearchInternationalDocumentation.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.trid.TransportResearchInternationalDocumentation
       ~TransportResearchInternationalDocumentation.search
       ~TransportResearchInternationalDocumentation.to_dict
       ~TransportResearchInternationalDocumentation.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~TransportResearchInternationalDocumentation.ci_supported
       ~TransportResearchInternationalDocumentation.db_url
       ~TransportResearchInternationalDocumentation.docs_link
@@ -48,5 +48,3 @@ colrev.packages.search\_sources.trid.TransportResearchInternationalDocumentation
       ~TransportResearchInternationalDocumentation.search_types
       ~TransportResearchInternationalDocumentation.short_name
       ~TransportResearchInternationalDocumentation.source_identifier
-   
-   

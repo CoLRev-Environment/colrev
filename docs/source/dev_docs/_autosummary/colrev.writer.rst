@@ -3,21 +3,21 @@ colrev.writer
 
 .. automodule:: colrev.writer
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -28,4 +28,3 @@ colrev.writer
 
    colrev.writer.bib
    colrev.writer.write_utils
-

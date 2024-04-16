@@ -9,13 +9,13 @@ colrev.packages.search\_sources.open\_alex.OpenAlexSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~OpenAlexSearchSource.add_endpoint
       ~OpenAlexSearchSource.all_json_schemas
       ~OpenAlexSearchSource.check_availability
@@ -32,15 +32,15 @@ colrev.packages.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.search
       ~OpenAlexSearchSource.to_dict
       ~OpenAlexSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~OpenAlexSearchSource.ci_supported
       ~OpenAlexSearchSource.docs_link
       ~OpenAlexSearchSource.endpoint
@@ -48,5 +48,3 @@ colrev.packages.search\_sources.open\_alex.OpenAlexSearchSource
       ~OpenAlexSearchSource.search_types
       ~OpenAlexSearchSource.short_name
       ~OpenAlexSearchSource.source_identifier
-   
-   

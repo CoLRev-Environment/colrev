@@ -9,13 +9,13 @@ colrev.packages.review\_types.conceptual\_review.ConceptualReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ConceptualReview.all_json_schemas
       ~ConceptualReview.field_mapping
       ~ConceptualReview.from_dict
@@ -26,15 +26,13 @@ colrev.packages.review\_types.conceptual\_review.ConceptualReview
       ~ConceptualReview.register_field_encoders
       ~ConceptualReview.to_dict
       ~ConceptualReview.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ConceptualReview.ci_supported
-   
-   

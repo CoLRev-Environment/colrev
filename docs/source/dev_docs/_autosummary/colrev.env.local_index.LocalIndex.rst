@@ -9,13 +9,13 @@ colrev.env.local\_index.LocalIndex
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_year_from_toc
       ~LocalIndex.index
@@ -28,15 +28,15 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.retrieve_from_toc
       ~LocalIndex.search
       ~LocalIndex.search_in_database
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~LocalIndex.RECORDS_INDEX_KEYS
       ~LocalIndex.RECORD_INDEX
       ~LocalIndex.SELECT_ALL_QUERIES
@@ -46,5 +46,3 @@ colrev.env.local\_index.LocalIndex
       ~LocalIndex.global_keys
       ~LocalIndex.request_timeout
       ~LocalIndex.sqlite_connection
-   
-   

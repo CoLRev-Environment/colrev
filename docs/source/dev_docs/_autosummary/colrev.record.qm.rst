@@ -3,21 +3,21 @@ colrev.record.qm
 
 .. automodule:: colrev.record.qm
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -29,4 +29,3 @@ colrev.record.qm
    colrev.record.qm.checkers
    colrev.record.qm.pdf_checkers
    colrev.record.qm.quality_model
-

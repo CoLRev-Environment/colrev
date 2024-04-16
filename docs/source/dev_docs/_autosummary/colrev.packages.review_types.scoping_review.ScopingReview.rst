@@ -9,13 +9,13 @@ colrev.packages.review\_types.scoping\_review.ScopingReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ScopingReview.all_json_schemas
       ~ScopingReview.field_mapping
       ~ScopingReview.from_dict
@@ -26,15 +26,13 @@ colrev.packages.review\_types.scoping\_review.ScopingReview
       ~ScopingReview.register_field_encoders
       ~ScopingReview.to_dict
       ~ScopingReview.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ScopingReview.ci_supported
-   
-   

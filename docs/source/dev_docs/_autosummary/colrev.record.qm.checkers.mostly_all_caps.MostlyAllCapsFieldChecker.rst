@@ -9,23 +9,21 @@ colrev.record.qm.checkers.mostly\_all\_caps.MostlyAllCapsFieldChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~MostlyAllCapsFieldChecker.run
-   
-   
 
-   
-   
+      ~MostlyAllCapsFieldChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~MostlyAllCapsFieldChecker.msg
-   
-   

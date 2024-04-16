@@ -9,13 +9,13 @@ colrev.packages.search\_sources.files\_dir.FilesSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~FilesSearchSource.add_endpoint
       ~FilesSearchSource.all_json_schemas
       ~FilesSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.files\_dir.FilesSearchSource
       ~FilesSearchSource.search
       ~FilesSearchSource.to_dict
       ~FilesSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~FilesSearchSource.ci_supported
       ~FilesSearchSource.docs_link
       ~FilesSearchSource.endpoint
@@ -47,5 +47,3 @@ colrev.packages.search\_sources.files\_dir.FilesSearchSource
       ~FilesSearchSource.search_types
       ~FilesSearchSource.short_name
       ~FilesSearchSource.source_identifier
-   
-   

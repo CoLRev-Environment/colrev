@@ -3,21 +3,21 @@ colrev.ui\_web
 
 .. automodule:: colrev.ui_web
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -27,4 +27,3 @@ colrev.ui\_web
    :recursive:
 
    colrev.ui_web.dashboard
-

@@ -9,13 +9,13 @@ colrev.packages.search\_sources.semanticscholar.SemanticScholarSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SemanticScholarSearchSource.add_endpoint
       ~SemanticScholarSearchSource.all_json_schemas
       ~SemanticScholarSearchSource.author_search
@@ -35,15 +35,15 @@ colrev.packages.search\_sources.semanticscholar.SemanticScholarSearchSource
       ~SemanticScholarSearchSource.search
       ~SemanticScholarSearchSource.to_dict
       ~SemanticScholarSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SemanticScholarSearchSource.SETTINGS
       ~SemanticScholarSearchSource.ci_supported
       ~SemanticScholarSearchSource.docs_link
@@ -52,5 +52,3 @@ colrev.packages.search\_sources.semanticscholar.SemanticScholarSearchSource
       ~SemanticScholarSearchSource.search_types
       ~SemanticScholarSearchSource.short_name
       ~SemanticScholarSearchSource.source_identifier
-   
-   

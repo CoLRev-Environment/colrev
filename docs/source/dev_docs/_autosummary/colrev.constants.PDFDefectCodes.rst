@@ -9,27 +9,25 @@ colrev.constants.PDFDefectCodes
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PDFDefectCodes.AUTHOR_NOT_IN_PDF
       ~PDFDefectCodes.COVERPAGE_INCLUDED
       ~PDFDefectCodes.LAST_PAGE_APPENDED
       ~PDFDefectCodes.NO_TEXT_IN_PDF
       ~PDFDefectCodes.PDF_INCOMPLETE
       ~PDFDefectCodes.TITLE_NOT_IN_PDF
-   
-   

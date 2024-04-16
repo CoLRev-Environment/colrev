@@ -3,21 +3,21 @@ colrev.packages.pdf\_prep
 
 .. automodule:: colrev.packages.pdf_prep
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -30,4 +30,3 @@ colrev.packages.pdf\_prep
    colrev.packages.pdf_prep.ocrmypdf
    colrev.packages.pdf_prep.remove_cover_page
    colrev.packages.pdf_prep.remove_last_page
-

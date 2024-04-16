@@ -9,22 +9,22 @@ colrev.constants.DefectCodes
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DefectCodes.CONTAINER_TITLE_ABBREVIATED
       ~DefectCodes.DOI_NOT_MATCHING_PATTERN
       ~DefectCodes.ERRONEOUS_SYMBOL_IN_FIELD
@@ -50,5 +50,3 @@ colrev.constants.DefectCodes
       ~DefectCodes.RECORD_NOT_IN_TOC
       ~DefectCodes.THESIS_WITH_MULTIPLE_AUTHORS
       ~DefectCodes.YEAR_FORMAT
-   
-   

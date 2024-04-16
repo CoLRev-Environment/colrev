@@ -9,13 +9,13 @@ colrev.packages.prep.source\_specific\_prep.SourceSpecificPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SourceSpecificPrep.all_json_schemas
       ~SourceSpecificPrep.field_mapping
       ~SourceSpecificPrep.from_dict
@@ -26,17 +26,15 @@ colrev.packages.prep.source\_specific\_prep.SourceSpecificPrep
       ~SourceSpecificPrep.register_field_encoders
       ~SourceSpecificPrep.to_dict
       ~SourceSpecificPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SourceSpecificPrep.always_apply_changes
       ~SourceSpecificPrep.ci_supported
       ~SourceSpecificPrep.source_correction_hint
-   
-   

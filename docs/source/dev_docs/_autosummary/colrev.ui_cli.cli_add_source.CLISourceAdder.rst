@@ -9,17 +9,11 @@ colrev.ui\_cli.cli\_add\_source.CLISourceAdder
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~CLISourceAdder.add_new_sources
-   
-   
 
-   
-   
-   
+      ~CLISourceAdder.add_new_sources

@@ -9,13 +9,13 @@ colrev.packages.review\_types.blank.BlankReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~BlankReview.all_json_schemas
       ~BlankReview.field_mapping
       ~BlankReview.from_dict
@@ -26,15 +26,13 @@ colrev.packages.review\_types.blank.BlankReview
       ~BlankReview.register_field_encoders
       ~BlankReview.to_dict
       ~BlankReview.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~BlankReview.ci_supported
-   
-   

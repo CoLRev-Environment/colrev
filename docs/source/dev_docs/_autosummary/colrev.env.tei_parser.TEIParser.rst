@@ -9,13 +9,13 @@ colrev.env.tei\_parser.TEIParser
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~TEIParser.get_abstract
       ~TEIParser.get_author_details
       ~TEIParser.get_citations_per_section
@@ -25,16 +25,14 @@ colrev.env.tei\_parser.TEIParser
       ~TEIParser.get_references
       ~TEIParser.get_tei_str
       ~TEIParser.mark_references
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~TEIParser.ns
       ~TEIParser.nsmap
-   
-   

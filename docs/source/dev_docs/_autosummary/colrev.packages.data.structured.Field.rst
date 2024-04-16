@@ -9,13 +9,13 @@ colrev.packages.data.structured.Field
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~Field.all_json_schemas
       ~Field.field_mapping
       ~Field.from_dict
@@ -25,17 +25,15 @@ colrev.packages.data.structured.Field
       ~Field.register_field_encoders
       ~Field.to_dict
       ~Field.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Field.name
       ~Field.explanation
       ~Field.data_type
-   
-   

@@ -9,13 +9,13 @@ colrev.packages.data.github\_pages.GithubPages
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~GithubPages.add_endpoint
       ~GithubPages.all_json_schemas
       ~GithubPages.field_mapping
@@ -29,17 +29,15 @@ colrev.packages.data.github\_pages.GithubPages
       ~GithubPages.to_json
       ~GithubPages.update_data
       ~GithubPages.update_record_status_matrix
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~GithubPages.GH_PAGES_BRANCH_NAME
       ~GithubPages.ci_supported
       ~GithubPages.settings
-   
-   

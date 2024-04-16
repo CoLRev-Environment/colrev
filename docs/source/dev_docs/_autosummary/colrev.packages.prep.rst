@@ -3,21 +3,21 @@ colrev.packages.prep
 
 .. automodule:: colrev.packages.prep
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -49,4 +49,3 @@ colrev.packages.prep
    colrev.packages.prep.source_specific_prep
    colrev.packages.prep.utils
    colrev.packages.prep.year_vol_iss_prep
-

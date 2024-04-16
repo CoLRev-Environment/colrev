@@ -9,13 +9,13 @@ colrev.packages.prep.europe\_pmc\_prep.EuropePMCMetadataPrep
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~EuropePMCMetadataPrep.all_json_schemas
       ~EuropePMCMetadataPrep.field_mapping
       ~EuropePMCMetadataPrep.from_dict
@@ -26,18 +26,16 @@ colrev.packages.prep.europe\_pmc\_prep.EuropePMCMetadataPrep
       ~EuropePMCMetadataPrep.register_field_encoders
       ~EuropePMCMetadataPrep.to_dict
       ~EuropePMCMetadataPrep.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~EuropePMCMetadataPrep.always_apply_changes
       ~EuropePMCMetadataPrep.ci_supported
       ~EuropePMCMetadataPrep.docs_link
       ~EuropePMCMetadataPrep.source_correction_hint
-   
-   

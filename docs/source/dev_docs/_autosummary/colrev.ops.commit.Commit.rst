@@ -9,24 +9,24 @@ colrev.ops.commit.Commit
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~Commit.create
       ~Commit.update_report
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Commit.ext_script_name
       ~Commit.ext_script_version
       ~Commit.python_version
@@ -36,5 +36,3 @@ colrev.ops.commit.Commit
       ~Commit.tree_hash
       ~Commit.records_committed
       ~Commit.completeness_condition
-   
-   

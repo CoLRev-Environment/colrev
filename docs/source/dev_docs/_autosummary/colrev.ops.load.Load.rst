@@ -9,13 +9,13 @@ colrev.ops.load.Load
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~Load.check_precondition
       ~Load.conclude
       ~Load.decorate
@@ -25,15 +25,13 @@ colrev.ops.load.Load
       ~Load.main
       ~Load.notify
       ~Load.setup_source_for_load
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Load.type
-   
-   

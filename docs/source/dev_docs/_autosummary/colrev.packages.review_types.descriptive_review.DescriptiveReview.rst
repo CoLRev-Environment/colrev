@@ -9,13 +9,13 @@ colrev.packages.review\_types.descriptive\_review.DescriptiveReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~DescriptiveReview.all_json_schemas
       ~DescriptiveReview.field_mapping
       ~DescriptiveReview.from_dict
@@ -26,15 +26,13 @@ colrev.packages.review\_types.descriptive\_review.DescriptiveReview
       ~DescriptiveReview.register_field_encoders
       ~DescriptiveReview.to_dict
       ~DescriptiveReview.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DescriptiveReview.ci_supported
-   
-   

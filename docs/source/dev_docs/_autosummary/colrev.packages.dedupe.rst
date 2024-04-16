@@ -3,21 +3,21 @@ colrev.packages.dedupe
 
 .. automodule:: colrev.packages.dedupe
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -29,4 +29,3 @@ colrev.packages.dedupe
    colrev.packages.dedupe.curation_dedupe
    colrev.packages.dedupe.curation_missing_dedupe
    colrev.packages.dedupe.dedupe
-

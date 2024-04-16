@@ -3,21 +3,21 @@ colrev.packages.review\_types
 
 .. automodule:: colrev.packages.review_types
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -39,4 +39,3 @@ colrev.packages.review\_types
    colrev.packages.review_types.scoping_review
    colrev.packages.review_types.theoretical_review
    colrev.packages.review_types.umbrella_review
-

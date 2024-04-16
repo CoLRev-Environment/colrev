@@ -9,13 +9,13 @@ colrev.packages.search\_sources.scopus.ScopusSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ScopusSearchSource.add_endpoint
       ~ScopusSearchSource.all_json_schemas
       ~ScopusSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.scopus.ScopusSearchSource
       ~ScopusSearchSource.search
       ~ScopusSearchSource.to_dict
       ~ScopusSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ScopusSearchSource.ci_supported
       ~ScopusSearchSource.db_url
       ~ScopusSearchSource.docs_link
@@ -48,5 +48,3 @@ colrev.packages.search\_sources.scopus.ScopusSearchSource
       ~ScopusSearchSource.search_types
       ~ScopusSearchSource.short_name
       ~ScopusSearchSource.source_identifier
-   
-   

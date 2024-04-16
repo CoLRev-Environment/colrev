@@ -9,22 +9,22 @@ colrev.constants.Fields
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Fields.ABSTRACT
       ~Fields.ADDRESS
       ~Fields.AUTHOR
@@ -80,5 +80,3 @@ colrev.constants.Fields
       ~Fields.VOLUME
       ~Fields.WEB_OF_SCIENCE_ID
       ~Fields.YEAR
-   
-   

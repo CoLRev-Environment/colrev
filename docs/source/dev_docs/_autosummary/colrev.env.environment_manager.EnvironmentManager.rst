@@ -9,13 +9,13 @@ colrev.env.environment\_manager.EnvironmentManager
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~EnvironmentManager.check_git_installed
       ~EnvironmentManager.get_curated_outlets
       ~EnvironmentManager.get_environment_details
@@ -27,15 +27,13 @@ colrev.env.environment\_manager.EnvironmentManager
       ~EnvironmentManager.register_repo
       ~EnvironmentManager.save_environment_registry
       ~EnvironmentManager.update_registry
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~EnvironmentManager.load_yaml
-   
-   

@@ -9,13 +9,13 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~DefaultSourceSettings.all_json_schemas
       ~DefaultSourceSettings.field_mapping
       ~DefaultSourceSettings.from_dict
@@ -32,19 +32,17 @@ colrev.package\_manager.package\_settings.DefaultSourceSettings
       ~DefaultSourceSettings.setup_for_load
       ~DefaultSourceSettings.to_dict
       ~DefaultSourceSettings.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~DefaultSourceSettings.endpoint
       ~DefaultSourceSettings.filename
       ~DefaultSourceSettings.search_type
       ~DefaultSourceSettings.search_parameters
       ~DefaultSourceSettings.comment
-   
-   

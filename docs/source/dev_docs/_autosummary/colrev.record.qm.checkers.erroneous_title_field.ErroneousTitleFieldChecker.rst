@@ -9,23 +9,21 @@ colrev.record.qm.checkers.erroneous\_title\_field.ErroneousTitleFieldChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~ErroneousTitleFieldChecker.run
-   
-   
 
-   
-   
+      ~ErroneousTitleFieldChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ErroneousTitleFieldChecker.msg
-   
-   

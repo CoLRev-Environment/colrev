@@ -3,21 +3,21 @@ colrev.packages.screen
 
 .. automodule:: colrev.packages.screen
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -29,4 +29,3 @@ colrev.packages.screen
    colrev.packages.screen.screen_cli
    colrev.packages.screen.screen_table
    colrev.packages.screen.utils
-

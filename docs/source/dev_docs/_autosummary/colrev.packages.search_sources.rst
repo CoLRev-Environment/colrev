@@ -3,21 +3,21 @@ colrev.packages.search\_sources
 
 .. automodule:: colrev.packages.search_sources
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -61,4 +61,3 @@ colrev.packages.search\_sources
    colrev.packages.search_sources.utils
    colrev.packages.search_sources.web_of_science
    colrev.packages.search_sources.wiley
-

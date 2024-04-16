@@ -3,21 +3,21 @@ colrev.env
 
 .. automodule:: colrev.env
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -34,4 +34,3 @@ colrev.env
    colrev.env.resources
    colrev.env.tei_parser
    colrev.env.utils
-

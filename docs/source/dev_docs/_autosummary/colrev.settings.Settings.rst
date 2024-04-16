@@ -9,13 +9,13 @@ colrev.settings.Settings
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~Settings.all_json_schemas
       ~Settings.field_mapping
       ~Settings.from_dict
@@ -27,15 +27,15 @@ colrev.settings.Settings
       ~Settings.register_field_encoders
       ~Settings.to_dict
       ~Settings.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Settings.project
       ~Settings.sources
       ~Settings.search
@@ -46,5 +46,3 @@ colrev.settings.Settings
       ~Settings.pdf_prep
       ~Settings.screen
       ~Settings.data
-   
-   

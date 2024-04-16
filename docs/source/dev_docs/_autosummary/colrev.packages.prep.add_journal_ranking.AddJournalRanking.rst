@@ -9,13 +9,13 @@ colrev.packages.prep.add\_journal\_ranking.AddJournalRanking
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~AddJournalRanking.all_json_schemas
       ~AddJournalRanking.field_mapping
       ~AddJournalRanking.from_dict
@@ -26,17 +26,15 @@ colrev.packages.prep.add\_journal\_ranking.AddJournalRanking
       ~AddJournalRanking.register_field_encoders
       ~AddJournalRanking.to_dict
       ~AddJournalRanking.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~AddJournalRanking.always_apply_changes
       ~AddJournalRanking.ci_supported
       ~AddJournalRanking.source_correction_hint
-   
-   

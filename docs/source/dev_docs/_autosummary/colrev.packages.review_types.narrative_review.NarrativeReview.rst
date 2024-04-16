@@ -9,13 +9,13 @@ colrev.packages.review\_types.narrative\_review.NarrativeReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~NarrativeReview.all_json_schemas
       ~NarrativeReview.field_mapping
       ~NarrativeReview.from_dict
@@ -26,15 +26,13 @@ colrev.packages.review\_types.narrative\_review.NarrativeReview
       ~NarrativeReview.register_field_encoders
       ~NarrativeReview.to_dict
       ~NarrativeReview.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~NarrativeReview.ci_supported
-   
-   

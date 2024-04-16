@@ -9,13 +9,13 @@ colrev.packages.search\_sources.europe\_pmc.EuropePMCSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~EuropePMCSearchSource.add_endpoint
       ~EuropePMCSearchSource.all_json_schemas
       ~EuropePMCSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.search
       ~EuropePMCSearchSource.to_dict
       ~EuropePMCSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~EuropePMCSearchSource.ci_supported
       ~EuropePMCSearchSource.docs_link
       ~EuropePMCSearchSource.endpoint
@@ -47,5 +47,3 @@ colrev.packages.search\_sources.europe\_pmc.EuropePMCSearchSource
       ~EuropePMCSearchSource.search_types
       ~EuropePMCSearchSource.short_name
       ~EuropePMCSearchSource.source_identifier
-   
-   

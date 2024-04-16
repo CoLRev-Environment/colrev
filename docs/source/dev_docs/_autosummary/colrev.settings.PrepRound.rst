@@ -9,13 +9,13 @@ colrev.settings.PrepRound
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~PrepRound.all_json_schemas
       ~PrepRound.field_mapping
       ~PrepRound.from_dict
@@ -25,16 +25,14 @@ colrev.settings.PrepRound
       ~PrepRound.register_field_encoders
       ~PrepRound.to_dict
       ~PrepRound.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~PrepRound.name
       ~PrepRound.prep_package_endpoints
-   
-   

@@ -3,21 +3,21 @@ colrev.packages.prescreen
 
 .. automodule:: colrev.packages.prescreen
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -30,4 +30,3 @@ colrev.packages.prescreen
    colrev.packages.prescreen.prescreen_cli
    colrev.packages.prescreen.prescreen_table
    colrev.packages.prescreen.scope_prescreen
-

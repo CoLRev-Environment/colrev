@@ -3,21 +3,21 @@ colrev.hooks
 
 .. automodule:: colrev.hooks
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
 
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -31,4 +31,3 @@ colrev.hooks
    colrev.hooks.report
    colrev.hooks.share
    colrev.hooks.update
-

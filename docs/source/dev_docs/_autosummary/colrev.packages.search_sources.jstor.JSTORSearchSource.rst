@@ -9,13 +9,13 @@ colrev.packages.search\_sources.jstor.JSTORSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~JSTORSearchSource.add_endpoint
       ~JSTORSearchSource.all_json_schemas
       ~JSTORSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.jstor.JSTORSearchSource
       ~JSTORSearchSource.search
       ~JSTORSearchSource.to_dict
       ~JSTORSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~JSTORSearchSource.ci_supported
       ~JSTORSearchSource.db_url
       ~JSTORSearchSource.docs_link
@@ -48,5 +48,3 @@ colrev.packages.search\_sources.jstor.JSTORSearchSource
       ~JSTORSearchSource.search_types
       ~JSTORSearchSource.short_name
       ~JSTORSearchSource.source_identifier
-   
-   

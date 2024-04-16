@@ -9,17 +9,11 @@ colrev.record.record\_id\_setter.IDSetter
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~IDSetter.set_ids
-   
-   
 
-   
-   
-   
+      ~IDSetter.set_ids

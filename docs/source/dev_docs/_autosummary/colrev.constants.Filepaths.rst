@@ -9,22 +9,22 @@ colrev.constants.Filepaths
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-   
-   
 
-   
-   
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~Filepaths.CORRECTIONS_DIR
       ~Filepaths.DATA_DIR
       ~Filepaths.DEDUPE_DIR
@@ -46,5 +46,3 @@ colrev.constants.Filepaths
       ~Filepaths.SETTINGS_FILE
       ~Filepaths.STATUS_FILE
       ~Filepaths.TEI_INDEX_DIR
-   
-   

@@ -9,23 +9,21 @@ colrev.record.qm.pdf\_checkers.author\_not\_in\_pdf.AuthorNotInPDFChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~AuthorNotInPDFChecker.run
-   
-   
 
-   
-   
+      ~AuthorNotInPDFChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~AuthorNotInPDFChecker.msg
-   
-   

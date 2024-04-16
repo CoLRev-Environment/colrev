@@ -9,23 +9,21 @@ colrev.record.qm.checkers.record\_not\_in\_toc.RecordNotInTOCChecker
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~RecordNotInTOCChecker.run
-   
-   
 
-   
-   
+      ~RecordNotInTOCChecker.run
+
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~RecordNotInTOCChecker.msg
-   
-   

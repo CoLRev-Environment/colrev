@@ -9,13 +9,13 @@ colrev.packages.screen.screen\_table.TableScreen
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~TableScreen.all_json_schemas
       ~TableScreen.export_table
       ~TableScreen.field_mapping
@@ -28,17 +28,15 @@ colrev.packages.screen.screen\_table.TableScreen
       ~TableScreen.run_screen
       ~TableScreen.to_dict
       ~TableScreen.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~TableScreen.ci_supported
       ~TableScreen.export_todos_only
       ~TableScreen.screen_table_path
-   
-   

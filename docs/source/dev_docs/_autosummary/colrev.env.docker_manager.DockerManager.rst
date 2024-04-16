@@ -9,18 +9,12 @@ colrev.env.docker\_manager.DockerManager
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~DockerManager.build_docker_image
       ~DockerManager.check_docker_installed
-   
-   
-
-   
-   
-   

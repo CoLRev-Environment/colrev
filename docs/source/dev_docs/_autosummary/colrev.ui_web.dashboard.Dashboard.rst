@@ -9,17 +9,11 @@ colrev.ui\_web.dashboard.Dashboard
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
-      ~Dashboard.make_dashboard
-   
-   
 
-   
-   
-   
+      ~Dashboard.make_dashboard

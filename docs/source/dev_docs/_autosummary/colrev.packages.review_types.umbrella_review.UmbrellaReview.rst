@@ -9,13 +9,13 @@ colrev.packages.review\_types.umbrella\_review.UmbrellaReview
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~UmbrellaReview.all_json_schemas
       ~UmbrellaReview.field_mapping
       ~UmbrellaReview.from_dict
@@ -26,15 +26,13 @@ colrev.packages.review\_types.umbrella\_review.UmbrellaReview
       ~UmbrellaReview.register_field_encoders
       ~UmbrellaReview.to_dict
       ~UmbrellaReview.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~UmbrellaReview.ci_supported
-   
-   

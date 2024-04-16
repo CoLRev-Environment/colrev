@@ -9,13 +9,13 @@ colrev.packages.search\_sources.arxiv.ArXivSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~ArXivSource.add_endpoint
       ~ArXivSource.check_availability
       ~ArXivSource.heuristic
@@ -25,15 +25,15 @@ colrev.packages.search\_sources.arxiv.ArXivSource
       ~ArXivSource.prepare
       ~ArXivSource.search
       ~ArXivSource.validate_source
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~ArXivSource.api_search_supported
       ~ArXivSource.ci_supported
       ~ArXivSource.db_url
@@ -43,5 +43,3 @@ colrev.packages.search\_sources.arxiv.ArXivSource
       ~ArXivSource.search_types
       ~ArXivSource.short_name
       ~ArXivSource.source_identifier
-   
-   

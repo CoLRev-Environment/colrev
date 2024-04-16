@@ -9,13 +9,13 @@ colrev.packages.search\_sources.web\_of\_science.WebOfScienceSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~WebOfScienceSearchSource.add_endpoint
       ~WebOfScienceSearchSource.all_json_schemas
       ~WebOfScienceSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.web\_of\_science.WebOfScienceSearchSource
       ~WebOfScienceSearchSource.search
       ~WebOfScienceSearchSource.to_dict
       ~WebOfScienceSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~WebOfScienceSearchSource.ci_supported
       ~WebOfScienceSearchSource.db_url
       ~WebOfScienceSearchSource.docs_link
@@ -48,5 +48,3 @@ colrev.packages.search\_sources.web\_of\_science.WebOfScienceSearchSource
       ~WebOfScienceSearchSource.search_types
       ~WebOfScienceSearchSource.short_name
       ~WebOfScienceSearchSource.source_identifier
-   
-   

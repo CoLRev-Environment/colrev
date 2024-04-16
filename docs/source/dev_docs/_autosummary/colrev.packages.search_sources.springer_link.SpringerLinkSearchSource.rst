@@ -9,13 +9,13 @@ colrev.packages.search\_sources.springer\_link.SpringerLinkSearchSource
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-   
-   
+
+
    .. rubric:: Methods
 
    .. autosummary::
       :nosignatures:
-   
+
       ~SpringerLinkSearchSource.add_endpoint
       ~SpringerLinkSearchSource.all_json_schemas
       ~SpringerLinkSearchSource.field_mapping
@@ -31,15 +31,15 @@ colrev.packages.search\_sources.springer\_link.SpringerLinkSearchSource
       ~SpringerLinkSearchSource.search
       ~SpringerLinkSearchSource.to_dict
       ~SpringerLinkSearchSource.to_json
-   
-   
 
-   
-   
+
+
+
+
    .. rubric:: Attributes
 
    .. autosummary::
-   
+
       ~SpringerLinkSearchSource.ci_supported
       ~SpringerLinkSearchSource.db_url
       ~SpringerLinkSearchSource.docs_link
@@ -48,5 +48,3 @@ colrev.packages.search\_sources.springer\_link.SpringerLinkSearchSource
       ~SpringerLinkSearchSource.search_types
       ~SpringerLinkSearchSource.short_name
       ~SpringerLinkSearchSource.source_identifier
-   
-   
