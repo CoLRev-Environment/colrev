@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import collections
 import hashlib
-import json
 import os
 import sqlite3
 import typing
@@ -71,7 +70,6 @@ class LocalIndex:
         "dblp_key",  # Note : no dots in key names
         "colrev_pdf_id",
         "bibtex",
-        "layered_fields",
         # Fields.CURATION_ID
     ]
 
@@ -89,12 +87,10 @@ class LocalIndex:
     # AUTHOR_RECORD_INDEX = "author_record_index"
     # CITATIONS_INDEX = "citations_index"
 
-    UPDATE_LAYERD_FIELDS_QUERY = """
+    UPDATE_RECORD_QUERY = """
             UPDATE record_index SET
-            layered_fields=?
+            bibtex=?
             WHERE id=?"""
-
-    SELECT_LAYERD_FIELDS_QUERY = "SELECT layered_fields FROM record_index WHERE id=?"
 
     SELECT_ALL_QUERIES = {
         TOC_INDEX: "SELECT * FROM toc_index WHERE",
@@ -247,34 +243,44 @@ class LocalIndex:
                 pass
 
     def _amend_record(
-        self, *, cur: sqlite3.Cursor, item: dict, curated_fields: list
+        self,
+        *,
+        cur: sqlite3.Cursor,
+        stored_record_dict: dict,
+        item_to_add: dict,
+        curated_fields: list,
     ) -> None:
         """Adds layered fields to amend existing records"""
 
-        record_dict = self._get_record_from_row(item)
+        item_record_dict = colrev.loader.load_utils.loads(
+            load_string=item_to_add["bibtex"],
+            implementation="bib",
+            unique_id_field="ID",
+        )
+        item_record = colrev.record.record.Record(list(item_record_dict.values())[0])
+        stored_record = colrev.record.record.Record(stored_record_dict)
 
-        layered_fields = []
-        cur.execute(self.SELECT_LAYERD_FIELDS_QUERY, (item["id"],))
-        row = cur.fetchone()
-        if row["layered_fields"]:
-            layered_fields = json.loads(row["layered_fields"])
         for curated_field in curated_fields:
-            if curated_field not in record_dict:
+            if curated_field in stored_record.data:
+                print(f"{curated_field} already in record")
                 continue
-            source = colrev.record.record.Record(
-                record_dict
-            ).get_field_provenance_source(curated_field)
-            layered_fields.append(
-                {
-                    "key": curated_field,
-                    "value": record_dict[curated_field],
-                    "source": source,
-                }
+
+            if curated_field not in item_record.data:
+                continue
+            stored_record.update_field(
+                key=curated_field,
+                value=item_record.data[curated_field],
+                source=item_record.get_field_provenance_source(curated_field),
             )
 
+        bibtex = to_string(
+            records_dict={stored_record.data[Fields.ID]: stored_record.data},
+            implementation="bib",
+        )
+
         cur.execute(
-            self.UPDATE_LAYERD_FIELDS_QUERY,
-            (json.dumps(layered_fields), item["id"]),
+            self.UPDATE_RECORD_QUERY,
+            (bibtex, item_to_add["id"]),
         )
 
     def get_fields_to_remove(self, record_dict: dict) -> list:
@@ -404,7 +410,10 @@ class LocalIndex:
                             raise NotImplementedError
 
                         self._amend_record(
-                            cur=cur, item=item, curated_fields=curated_fields
+                            cur=cur,
+                            stored_record_dict=stored_record,
+                            item_to_add=item,
+                            curated_fields=curated_fields,
                         )
                         break
                     except (
@@ -424,16 +433,6 @@ class LocalIndex:
         )
 
         retrieved_record = list(records_dict.values())[0]
-
-        # append layered fields
-        if row["layered_fields"]:
-            layered_fields = json.loads(row["layered_fields"])
-            for layered_field in layered_fields:
-                retrieved_record[layered_field["key"]] = layered_field["value"]
-                colrev.record.record.Record(retrieved_record).add_field_provenance(
-                    key=layered_field["key"],
-                    source=layered_field["source"],
-                )
         return retrieved_record
 
     def _retrieve_based_on_colrev_id(
@@ -530,7 +529,7 @@ class LocalIndex:
             Fields.GROBID_VERSION,
             Fields.SCREENING_CRITERIA,
             "local_curated_metadata",
-            "metadata_source_repository_paths",
+            Fields.METADATA_SOURCE_REPOSITORY_PATHS,
         )
 
         for key in keys_to_remove:
@@ -666,7 +665,7 @@ class LocalIndex:
         for key in list(record.data.keys()):
             if not record.masterdata_is_curated():
                 record.add_field_provenance(
-                    key=key, source=record_dict["metadata_source_repository_paths"]
+                    key=key, source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
                 )
             elif (
                 key
@@ -676,19 +675,23 @@ class LocalIndex:
                     Fields.ID,
                     Fields.ENTRYTYPE,
                     "local_curated_metadata",
-                    "metadata_source_repository_paths",
+                    Fields.METADATA_SOURCE_REPOSITORY_PATHS,
                 ]
             ):
                 record.add_field_provenance(
                     key=key,
-                    source=record_dict["metadata_source_repository_paths"],
+                    source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS],
                 )
 
+        record.remove_field(key=Fields.METADATA_SOURCE_REPOSITORY_PATHS)
         record_dict = record.get_data()
 
     def _prep_fields_for_indexing(self, record_dict: dict) -> None:
         # Note : this is the first run, no need to split/list
-        if "colrev/curated_metadata" in record_dict["metadata_source_repository_paths"]:
+        if (
+            "colrev/curated_metadata"
+            in record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
+        ):
             # Note : local_curated_metadata is important to identify non-duplicates
             # between curated_metadata_repositories
             record_dict[Fields.LOCAL_CURATED_METADATA] = "yes"
@@ -776,12 +779,9 @@ class LocalIndex:
         for record_dict in tqdm(records.values()):
             copy_for_toc_index = deepcopy(record_dict)
             try:
-                # Add metadata_source_repository_paths : list of repositories from which
-                # the record was integrated. Important for is_duplicate(...)
-                record_dict.update(
-                    metadata_source_repository_paths=str(repo_source_path)
+                record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS] = str(
+                    repo_source_path
                 )
-
                 if curated_fields:
                     for curated_field in curated_fields:
                         colrev.record.record.Record(record_dict).add_field_provenance(
@@ -903,7 +903,6 @@ class LocalIndex:
                 if (
                     not check_operation.review_manager.settings.is_curated_masterdata_repo()
                 ):
-                    # Curated fields/layered_fields only for non-masterdata-curated repos
                     # Add curation_url to curated fields (provenance)
                     curated_fields = curation_endpoint["curated_fields"]
 
@@ -919,7 +918,8 @@ class LocalIndex:
                 curated_masterdata=curated_masterdata,
             )
 
-        except colrev_exceptions.CoLRevException as exc:
+        # TypeErrors are thrown when a repo is in interactive rebase mode
+        except (colrev_exceptions.CoLRevException, TypeError) as exc:
             print(exc)
 
     def index(self) -> None:  # pragma: no cover
@@ -1243,98 +1243,3 @@ class LocalIndex:
             include_file=include_file,
             include_colrev_ids=include_colrev_ids,
         )
-
-    # def is_duplicate(self, *, record1_colrev_id: list, record2_colrev_id: list) -> str:
-    #     """Convenience function to check whether two records are a duplicate"""
-
-    #     try:
-    #         # Ensure that we receive actual lists
-    #         # otherwise, __retrieve_based_on_colrev_id iterates over a string and
-    #         # open_search_thread_instance.search returns random results
-    #         assert isinstance(record1_colrev_id, list)
-    #         assert isinstance(record2_colrev_id, list)
-
-    #         # Prevent errors caused by short colrev_ids/empty lists
-    #         if (
-    #             any(len(cid) < 20 for cid in record1_colrev_id)
-    #             or any(len(cid) < 20 for cid in record2_colrev_id)
-    #             or 0 == len(record1_colrev_id)
-    #             or 0 == len(record2_colrev_id)
-    #         ):
-    #             return "unknown"
-
-    #         # Easy case: the initial colrev_ids overlap => duplicate
-    #         initial_colrev_ids_overlap = not set(record1_colrev_id).isdisjoint(
-    #             list(record2_colrev_id)
-    #         )
-    #         if initial_colrev_ids_overlap:
-    #             return "yes"
-
-    #         # Retrieve records from LocalIndex and use that information
-    #         # to decide whether the records are duplicates
-
-    #         r1_index = self._retrieve_based_on_colrev_id(
-    #             cids_to_retrieve=record1_colrev_id
-    #         )
-    #         r2_index = self._retrieve_based_on_colrev_id(
-    #             cids_to_retrieve=record2_colrev_id
-    #         )
-    #         # Each record may originate from multiple repositories simultaneously
-    #         # see integration of records in __amend_record(...)
-    #         # This information is stored in metadata_source_repository_paths (list)
-
-    #         r1_metadata_source_repository_paths = r1_index.data[
-    #             "metadata_source_repository_paths"
-    #         ].split("\n")
-    #         r2_metadata_source_repository_paths = r2_index.data[
-    #             "metadata_source_repository_paths"
-    #         ].split("\n")
-
-    #         # There are no duplicates within repositories
-    #         # because we only index records that are md_processed or beyond
-    #         # see conditions of index_record(...)
-
-    #         # The condition that two records are in the same repository is True if
-    #         # their metadata_source_repository_paths overlap.
-    #         # This does not change if records are also in non-overlapping repositories
-
-    #         same_repository = not set(r1_metadata_source_repository_paths).isdisjoint(
-    #             set(r2_metadata_source_repository_paths)
-    #         )
-
-    #         # colrev_ids must be used instead of IDs
-    #         # because IDs of original repositories
-    #         # are not available in the integrated record
-
-    #         colrev_ids_overlap = not set(r1_index.get_colrev_id()).isdisjoint(
-    #             list(list(r2_index.get_colrev_id()))
-    #         )
-
-    #         if same_repository:
-    #             if colrev_ids_overlap:
-    #                 return "yes"
-    #             return "no"
-
-    #         # Curated metadata repositories do not curate outlets redundantly,
-    #         # i.e., there are no duplicates between curated repositories.
-    #         # see __outlets_duplicated(...)
-
-    #         different_curated_repositories = (
-    #             r1_index.masterdata_is_curated()
-    #             and r2_index.masterdata_is_curated()
-    #             and (
-    #                 r1_index.data.get(Fields.MD_PROV, "a")
-    #                 != r2_index.data.get(Fields.MD_PROV, "b")
-    #             )
-    #         )
-
-    #         if different_curated_repositories:
-    #             return "no"
-
-    #     except (
-    #         colrev_exceptions.RecordNotInIndexException,
-    #         colrev_exceptions.NotEnoughDataToIdentifyException,
-    #     ):
-    #         pass
-
-    #     return "unknown"

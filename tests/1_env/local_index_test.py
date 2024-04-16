@@ -12,34 +12,37 @@ from colrev.constants import RecordState
 # pylint: disable=line-too-long
 
 
-# def test_is_duplicate(local_index, local_index_test_records_dict) -> None:  # type: ignore
-#     """Test is_duplicate()"""
-#     record1_colrev_id = colrev.record.record.Record(
-#         local_index_test_records_dict[Path("misq.bib")]["AbbasZhouDengEtAl2018"]
-#     ).get_colrev_id()
-#     record2_colrev_id = colrev.record.record.Record(
-#         local_index_test_records_dict[Path("misq.bib")][
-#             "AbbasiAlbrechtVanceEtAl2012"
-#         ]
-#     ).get_colrev_id()
-#     expected = "no"
-#     actual = local_index.is_duplicate(
-#         record1_colrev_id=record1_colrev_id, record2_colrev_id=record2_colrev_id
-#     )
-#     assert expected == actual
+@pytest.mark.parametrize(
+    "record_dict, expected",
+    [
+        (
+            {
+                Fields.STATUS: RecordState.md_processed,
+                Fields.METADATA_SOURCE_REPOSITORY_PATHS: "/path/to/selected_repo",
+                Fields.YEAR: "2014",
+                "literature_review": "yes",
+            },
+            {
+                Fields.STATUS: RecordState.md_processed,
+                Fields.D_PROV: {
+                    "literature_review": {
+                        "note": "",
+                        "source": "/path/to/selected_repo",
+                    },
+                },
+                Fields.MD_PROV: {
+                    "year": {"note": "", "source": "/path/to/selected_repo"}
+                },
+                Fields.YEAR: 2014,
+                "literature_review": "yes",
+            },
+        ),
+    ],
+)
+def test_prepare_record_for_indexing(record_dict: dict, expected: dict, local_index) -> None:  # type: ignore
 
-#     expected = "yes"
-#     actual = local_index.is_duplicate(
-#         record1_colrev_id=record1_colrev_id, record2_colrev_id=record1_colrev_id
-#     )
-#     assert expected == actual
-
-#     expected = "unknown"
-#     actual = local_index.is_duplicate(
-#         record1_colrev_id=record1_colrev_id,
-#         record2_colrev_id=["colrev_id1:|a|mis-quarterly|45|1|2020|rai|editorial"],
-#     )
-#     assert expected == actual
+    local_index._prepare_record_for_indexing(record_dict)
+    assert record_dict == expected
 
 
 def test_get_year_from_toc(local_index) -> None:  # type: ignore
