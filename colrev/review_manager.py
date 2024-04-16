@@ -345,15 +345,13 @@ class ReviewManager:
 
     @classmethod
     def get_package_manager(
-        cls, *, verbose_mode: bool = True
+        cls,
     ) -> colrev.package_manager.package_manager.PackageManager:  # pragma: no cover
         """Get a package manager object"""
 
         import colrev.package_manager.package_manager
 
-        return colrev.package_manager.package_manager.PackageManager(
-            verbose=verbose_mode
-        )
+        return colrev.package_manager.package_manager.PackageManager()
 
     @classmethod
     def get_grobid_service(

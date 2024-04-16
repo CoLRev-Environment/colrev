@@ -26,6 +26,7 @@ colrev.package\_manager
    :template: custom-module-template.rst
    :recursive:
 
+   colrev.package_manager.doc_registry_manager
    colrev.package_manager.interfaces
    colrev.package_manager.package_manager
    colrev.package_manager.package_settings
