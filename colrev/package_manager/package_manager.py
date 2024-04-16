@@ -95,6 +95,26 @@ PACKAGE_TYPE_OVERVIEW = {
     },
 }
 
+# pylint: disable=too-few-public-methods
+
+
+class Package:
+    """A Python package for CoLRev"""
+
+    def __init__(self, *, module: str) -> None:
+        self.module = module
+        print(f"Loading package endpoints from {module}")
+        module_spec = importlib.util.find_spec(module)
+        endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
+            ".colrev_endpoints.json"
+        )
+        if not endpoints_path.is_file():  # pragma: no cover
+            print(f"File does not exist: {endpoints_path}")
+            raise AttributeError
+
+        with open(endpoints_path, encoding="utf-8") as file:
+            self.package_endpoints = json.load(file)
+
 
 class PackageManager:
     """The PackageManager provides functionality for package lookup and discovery"""
@@ -462,40 +482,9 @@ class PackageManager:
 
         return packages_dict
 
-    def _import_package_docs(self, docs_link: str, identifier: str) -> str:
-
-        packages_index_path = Path(__file__).parent.parent.parent / Path(
-            "docs/source/manual/packages"
-        )
-        local_built_in_path = Path(__file__).parent.parent / Path("packages")
-
-        if (
-            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/"
-            in docs_link
-        ):
-            docs_link = docs_link.replace(
-                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages",
-                str(local_built_in_path),
-            )
-            output = parse_from_file(docs_link)
-        else:
-            # to be retreived through requests for external packages
-            # output = convert('# Title\n\nSentence.')
-            print(f"Cannot retrieve docs-link for {identifier}")
-            return "NotImplemented"
-
-        file_path = Path(f"{identifier}.rst")
-        target = packages_index_path / file_path
-        if not target.is_file():
-            return ""
-        with open(target, "w", encoding="utf-8") as file:
-            # NOTE: at this point, we may add metadata
-            # (such as package status, authors, url etc.)
-            file.write(output)
-
-        return str(file_path)
-
     def _write_docs_for_index(self) -> None:
+        """Writes data from self.docs_for_index to the packages.rst file."""
+
         packages_index_path = Path(__file__).parent.parent.parent / Path(
             "docs/source/manual/packages.rst"
         )
@@ -544,35 +533,56 @@ class PackageManager:
                 file.write(line + "\n")
 
     def _iterate_package_endpoints(
-        self,
-        *,
-        selected_package: str,
-        package_endpoints: dict,
+        self, package: Package
     ) -> typing.Iterator[typing.Tuple[str, dict]]:
         for endpoint_type in self.package_endpoints_json:
-            if endpoint_type not in package_endpoints["endpoints"]:
+            if endpoint_type not in package.package_endpoints["endpoints"]:
                 continue
-            for endpoint_item in package_endpoints["endpoints"][endpoint_type]:
+            for endpoint_item in package.package_endpoints["endpoints"][endpoint_type]:
                 if (
                     not endpoint_item["package_endpoint_identifier"].split(".")[0]
-                    == selected_package
+                    == package.module
                 ):
                     continue
                 yield endpoint_type, endpoint_item
 
-    def _add_package_endpoints(
-        self,
-        *,
-        selected_package: str,
-        package_endpoints: dict,
-    ) -> None:
-        # selected_package = "colrev" or "colrev_asreview"
+    def _import_package_docs(self, docs_link: str, identifier: str) -> str:
+
+        packages_index_path = Path(__file__).parent.parent.parent / Path(
+            "docs/source/manual/packages"
+        )
+        local_built_in_path = Path(__file__).parent.parent / Path("packages")
+
+        if (
+            "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/"
+            in docs_link
+        ):
+            docs_link = docs_link.replace(
+                "https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages",
+                str(local_built_in_path),
+            )
+            output = parse_from_file(docs_link)
+        else:
+            # to be retreived through requests for external packages
+            # output = convert('# Title\n\nSentence.')
+            print(f"Cannot retrieve docs-link for {identifier}")
+            return "NotImplemented"
+
+        file_path = Path(f"{identifier}.rst")
+        target = packages_index_path / file_path
+        if not target.is_file():
+            return ""
+        with open(target, "w", encoding="utf-8") as file:
+            # NOTE: at this point, we may add metadata
+            # (such as package status, authors, url etc.)
+            file.write(output)
+
+        return str(file_path)
+
+    def _add_package_endpoints(self, package: Package) -> None:
         # package_endpoints_json: should be updated based on the package classes etc.
 
-        for endpoint_type, endpoint_item in self._iterate_package_endpoints(
-            selected_package=selected_package,
-            package_endpoints=package_endpoints,
-        ):
+        for endpoint_type, endpoint_item in self._iterate_package_endpoints(package):
             print(f"-  {endpoint_item['package_endpoint_identifier']}")
             self.packages[PackageEndpointType[endpoint_type]][
                 endpoint_item["package_endpoint_identifier"]
@@ -693,7 +703,7 @@ class PackageManager:
             file.write(json_object)
             file.write("\n")  # to avoid pre-commit/eof-fix changes
 
-    def _load_packages_json(self) -> list:
+    def _load_packages(self) -> list:
         filedata = colrev.env.utils.get_package_file_content(
             module="colrev.packages", filename=Path("packages.json")
         )
@@ -701,7 +711,18 @@ class PackageManager:
             raise colrev_exceptions.CoLRevException(
                 "Package index not available (colrev/packages/packages.json)"
             )
-        packages = json.loads(filedata.decode("utf-8"))
+        package_list = json.loads(filedata.decode("utf-8"))
+        packages = []
+        for package in package_list:
+            try:
+                packages.append(Package(module=package["module"]))
+            except json.decoder.JSONDecodeError as exc:  # pragma: no cover
+                print(f"Invalid json {exc}")
+                continue
+            except AttributeError as exc:
+                print(exc)
+                continue
+
         return packages
 
     def _load_package_status_json(self) -> dict:
@@ -745,35 +766,11 @@ class PackageManager:
         and the endpoints.json files in the top directory of each package."""
 
         os.chdir(self._colrev_path)
-        packages = self._load_packages_json()
 
-        for package in packages:
-            try:
-                print(f'Loading package endpoints from {package["module"]}')
-                module_spec = importlib.util.find_spec(package["module"])
+        for package in self._load_packages():
+            self._add_package_endpoints(package)
 
-                endpoints_path = Path(module_spec.origin).parent / Path(  # type:ignore
-                    ".colrev_endpoints.json"
-                )
-                if not endpoints_path.is_file():  # pragma: no cover
-                    print(f"File does not exist: {endpoints_path}")
-                    continue
-
-                with open(endpoints_path, encoding="utf-8") as file:
-                    package_endpoints = json.load(file)
-
-                self._add_package_endpoints(
-                    selected_package=package["module"],
-                    package_endpoints=package_endpoints,
-                )
-                self._extract_search_source_types()
-            except json.decoder.JSONDecodeError as exc:  # pragma: no cover
-                print(f"Invalid json {exc}")
-                continue
-            except AttributeError as exc:
-                print(exc)
-                continue
-
+        self._extract_search_source_types()
         self._update_package_endpoints_json()
         self._update_package_status()
         self._write_docs_for_index()
