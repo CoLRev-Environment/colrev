@@ -810,9 +810,8 @@ class CrossrefSearchSource(JsonSchemaMixin):
 
         if "query" in self.search_source.search_parameters:
             # Note: we may warn users when creating large queries and print (1/300) progress
-            print(
-                f"Overall: {self._get_len(self.search_source.search_parameters['query'])} records"
-            )
+            n_recs = self._get_len(self.search_source.search_parameters["query"])
+            self.review_manager.logger.info(f"Retrieve {n_recs} records overall")
         try:
             for item in self._get_crossref_query_return(rerun=rerun):
                 try:

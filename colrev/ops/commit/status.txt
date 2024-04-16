@@ -26,14 +26,14 @@ prescreen
 
 {% if status_stats.currently.md_processed > 0 %}{{ ORANGE }}      {{ status_stats.currently.md_processed }} to prescreen{{ END }}{% endif %}
 
-{% if status_stats.currently.rev_prescreen_excluded > 0 %}[
+{% if status_stats.currently.rev_prescreen_excluded > 0 %}      [
 {{ status_stats.currently.rev_prescreen_excluded }} prescreen excluded]{% endif %}
 <br>
 
     {% if status_stats.overall.rev_prescreen_included == 0 %}{% elif status_stats.overall.rev_prescreen_included > 0 and status_stats.currently.rev_prescreen_included == 0 and status_stats.currently.pdf_imported == 0 and status_stats.currently.pdf_needs_manual_retrieval == 0 and status_stats.currently.pdf_needs_manual_preparation == 0  %}{{ GREEN }}{% else %}{{ ORANGE }}{% endif %}
 pdfs     
 {% if status_stats.overall.rev_prescreen_included == 0 %}{% elif status_stats.overall.rev_prescreen_included > 0 and status_stats.currently.rev_prescreen_included == 0 and status_stats.currently.pdf_imported == 0 and status_stats.currently.pdf_needs_manual_retrieval == 0 and status_stats.currently.pdf_needs_manual_preparation == 0  %}{{ END }}{% else %}{{ END }}{% endif %}
-{{ "{:>10}".format(status_stats.overall.pdf_prepared) }} retrieved
+{{ "{:>10}".format(status_stats.overall.pdf_prepared) }} retrieved     
 
 {% if status_stats.get_active_pdf_operation_info() != "" %}{{ ORANGE }}{{ status_stats.get_active_pdf_operation_info() }}{{ END }} {% endif %}
 
@@ -55,7 +55,7 @@ screen
     {% if status_stats.currently.rev_included > 0 %}{{ ORANGE }}{% elif status_stats.overall.rev_included > 0 %}{{ GREEN }}{% endif %}
 data     
 {% if status_stats.currently.rev_included > 0 or status_stats.overall.rev_included > 0 %}{{ END }}{% endif %}
-{{ "{:>10}".format(status_stats.overall.rev_synthesized) }} synthesized
+{{ "{:>10}".format(status_stats.overall.rev_synthesized) }} synthesized   
 
 {% if status_stats.currently.rev_included > 0 %}{{ ORANGE }}{{ status_stats.currently.rev_included }} to synthesize{{ END }} {% endif %}
 {% if status_stats.completeness_condition %}[completed]{{ END }} {% endif %}

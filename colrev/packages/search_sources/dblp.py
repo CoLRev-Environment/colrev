@@ -455,8 +455,6 @@ class DBLPSearchSource(JsonSchemaMixin):
             if not retrieved:
                 break
 
-        dblp_feed.save()
-
     def _get_query(self, *, year: int) -> str:
         if "scope" in self.search_source.search_parameters:
             # Note : journal_abbreviated is the abbreviated venue_key
@@ -488,6 +486,7 @@ class DBLPSearchSource(JsonSchemaMixin):
                     query=self._get_query(year=year),
                     dblp_feed=dblp_feed,
                 )
+            dblp_feed.save()
 
         except (requests.exceptions.RequestException,):
             pass

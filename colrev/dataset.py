@@ -355,7 +355,6 @@ class Dataset:
         id_setter = colrev.record.record_id_setter.IDSetter(
             id_pattern=self.review_manager.settings.project.id_pattern,
             skip_local_index=self.review_manager.settings.is_curated_masterdata_repo(),
-            logger=self.review_manager.report_logger,
         )
         records = self.load_records_dict()
         updated_records = id_setter.set_ids(

@@ -258,10 +258,9 @@ def matches(
     record_b_dict[Fields.ID] = "b"
 
     records_df = pd.DataFrame([record_a_dict, record_b_dict])
-    records_df = prep(records_df, verbosity_level=1, cpu=1)
-    print(records_df)
-    blocked_df = block(records_df, verbosity_level=1, cpu=1)
-    matched_df = match(blocked_df, verbosity_level=1, cpu=1)
+    records_df = prep(records_df, verbosity_level=0, cpu=1)
+    blocked_df = block(records_df, verbosity_level=0, cpu=1)
+    matched_df = match(blocked_df, verbosity_level=0, cpu=1)
     duplicate_label = matched_df["duplicate_label"]
     if len(duplicate_label) == 0:  # pragma: no cover
         return False

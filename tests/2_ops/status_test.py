@@ -24,7 +24,7 @@ def test_get_analytics(  # type: ignore
         5: {
             "atomic_steps": 9,
             "completed_atomic_steps": 4,
-            "commit_author": "script: -s test_records.bib",
+            "commit_author": "script:",
             "commit_message": "Merge duplicate records",
             "search": 1,
             "included": 0,
@@ -32,7 +32,7 @@ def test_get_analytics(  # type: ignore
         4: {
             "atomic_steps": 9,
             "completed_atomic_steps": 3,
-            "commit_author": "script: -s test_records.bib",
+            "commit_author": "script:",
             "commit_message": "Prepare records (prep)",
             "search": 1,
             "included": 0,
@@ -40,7 +40,7 @@ def test_get_analytics(  # type: ignore
         3: {
             "atomic_steps": 9,
             "completed_atomic_steps": 2,
-            "commit_author": "script: -s test_records.bib",
+            "commit_author": "script:",
             "commit_message": "Load test_records.bib",
             "search": 1,
             "included": 0,

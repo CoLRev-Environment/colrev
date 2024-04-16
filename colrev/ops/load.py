@@ -415,10 +415,10 @@ class Load(colrev.process.operation.Operation):
         stashed = "No local changes to save" != git_repo.git.stash(
             "push", "--keep-index"
         )
-        part_exact_call = self.review_manager.exact_call
-        self.review_manager.exact_call = (
-            f"{part_exact_call} -s {source.search_source.filename.name}"
-        )
+        # part_exact_call = self.review_manager.exact_call
+        # self.review_manager.exact_call = (
+        #     f"{part_exact_call} -s {source.search_source.filename.name}"
+        # )
         self.review_manager.dataset.create_commit(
             msg=f"Load {source.search_source.filename.name}", skip_hooks=True
         )
