@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 -->
 
+## 0.12.1 - 2024-04-17
+
+- Refactor and test (dataset, records, provenance, local_index)
+- Extract package_manager into a separate internal package
+- Use bib-dedupe for matching (instead of simple similarities)
+- Update docs
+
 ## 0.12.0 - 2024-04-04
 
 ### Added

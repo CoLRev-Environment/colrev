@@ -24,7 +24,7 @@ Registered packages are public Python packages that can be installed via PyPI. A
 
 To *register a new package*:
 
-1. Create a pull request briefly describing the package and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/packages/packages.json>`_. If you add an endpoint to CoLRev (built-in), you can skip this step.
+1. Create a pull request briefly describing the package and adding it to the `packages.json <https://github.com/CoLRev-Environment/colrev/blob/main/colrev/colrev/packages/packages.json>`_. If you add an endpoint to CoLRev (built-in), you can skip this step.
 
 To create a new package endpoint:
 

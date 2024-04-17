@@ -57,7 +57,7 @@ def test_get_colrev_versions(
     base_repo_review_manager: colrev.review_manager.ReviewManager,
 ) -> None:
     colrev_versions = base_repo_review_manager.get_colrev_versions()
-    assert ["0.12.0", "0.12.0"] == colrev_versions
+    assert ["0.12.1", "0.12.1"] == colrev_versions
 
 
 def test_check_repository_setup(

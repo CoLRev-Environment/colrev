@@ -19,12 +19,12 @@ For all releases:
 - Update version in `SECURITY.md`.
 - Update the version in `pyproject.toml`. Check whether other parts of the `pyproject.toml` need to be updated. Check whether dependencies can be removed.
 - Check: `pyproject.toml` cannot have direct depdencies (Github)
+- Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Commit the changes (`release 0.10.0`).
+- Check whether the pre-commit hooks and tests pass locally (``pre-commit run --all``).
 - Push to Github. Check whether the installation, tests, and pre-commit hooks pass.
 - Run `git tag -s $VERSION` (format: "0.9.1").
-- Run `pip3 install -e .` locally (before testing upgrade in local repositories).
 - Run `git push` and wait for the GitHub actions to complete successfully.
-- Check whether the tests pass locally (``pytest tests``).
 - Test `colrev upgrade` in local repositories (see `COLREV-UPDATE_ALL.txt`).
 - Run `git push --atomic origin main $VERSION`.
 
