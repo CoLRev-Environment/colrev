@@ -6,13 +6,13 @@ Although we only support the systems listed in the table below, useful hints for
 
 **Supported operating systems and setup methods:**
 
- ============  ============ ====== ============
-  OS/Setup      Native       WSL2   VirtualBox
- ============  ============ ====== ============
+ ============  ============ ====== ===================
+  OS/Setup      Native       WSL2   GitHub Codespaces
+ ============  ============ ====== ===================
  Ubuntu 22.04    yes        no     yes
   Win 10/11      no         yes    yes
     macOS        no         no     yes
- ============  ============ ====== ============
+ ============  ============ ====== ===================
 
 **The setup also includes:**
 
@@ -25,18 +25,15 @@ Although we only support the systems listed in the table below, useful hints for
 
 For best performance and user experience, it is recommended to run CoLRev natively on a machine with Ubuntu 22.04 installed.
 
-Windows machines can run CoLRev via WSL2 with Ubuntu 22.04 installed.
-Using Ubuntu 22.04 via WSL2 does not provide the default GNOME Desktop Environment (GNOME DE).
-Applications with a GUI such as gitk or VSCode can be run via commands using the CLI provided.
-
-For testing purposes or macOS machines, using the pre-configured virtual machine on VirtualBox is feasible, but performance is highly dependent on powerful hardware.
-Windows and macOS do not (yet) support all dependencies required by CoLRev.
-
 CoLRev runs natively on **Linux** distributions and the step-by-step instructions apply to Linux systems.
 They are tested for `Ubuntu 22.04 “Jammy” <https://releases.ubuntu.com/jammy/>`__ and `Debian 11.7 “Bullseye” <https://www.debian.org/releases/bullseye/debian-installer/>`__.
 Please note that newer versions of Ubuntu (22.10, 23.04, 23.10, 24.04) and Debian 12 “Bookworm” are not supported due to a change in the handling of the `pip package manager <https://itsfoss.com/install-pipx-ubuntu/>`__.
 
-The last sections of the setup explain how to setup CoLRev on Windows using the WSL2 and on macOS using a Virtual Machine.
+Windows machines can run CoLRev via WSL2 with Ubuntu 22.04 installed.
+Using Ubuntu 22.04 via WSL2 does not provide the default GNOME Desktop Environment (GNOME DE).
+Applications with a GUI such as gitk or VSCode can be run via commands using the CLI provided.
+
+For MacOS, we recommend using GitHub Codespaces.
 
 .. toctree::
    :maxdepth: 3
@@ -46,5 +43,4 @@ The last sections of the setup explain how to setup CoLRev on Windows using the 
    setup/part_2_git_ssh
    setup/part_3_colrev
    setup/windows_wsl2
-   setup/macos_vm
    setup/github_codespaces
