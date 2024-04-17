@@ -387,3 +387,31 @@ def test_load_settings_not_supported() -> None:
         colrev.package_manager.package_settings.DefaultSettings.load_settings(
             data={"xyz": 123}
         )
+
+
+def test_add_package_to_settings(
+    base_repo_review_manager: colrev.review_manager.ReviewManager,
+) -> None:
+
+    dedupe_operation = base_repo_review_manager.get_dedupe_operation()
+    package_manager = base_repo_review_manager.get_package_manager()
+
+    with pytest.raises(colrev_exceptions.MissingDependencyError):
+        package_manager.add_package_to_settings(
+            operation=dedupe_operation,
+            package_identifier="colrev.curation_dedupe",
+            params="",
+        )
+
+    package_manager.add_package_to_settings(
+        operation=dedupe_operation,
+        package_identifier="colrev.curation_missing_dedupe",
+        params="",
+    )
+
+    assert (
+        "colrev.curation_missing_dedupe"
+        == base_repo_review_manager.settings.dedupe.dedupe_package_endpoints[-1][
+            "endpoint"
+        ]
+    )

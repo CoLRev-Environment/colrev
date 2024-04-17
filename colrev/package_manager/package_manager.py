@@ -275,7 +275,7 @@ class PackageManager:
         instantiate_objects: bool = True,
         only_ci_supported: bool = False,
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
-        """Load the packages for a particular package_type"""
+        """Load the packages for a particular package_type (called by operations)"""
         # selected_packages = [{'endpoint': 'colrev.literature_review'}]
 
         packages_dict = self._build_packages_dict(
@@ -382,17 +382,9 @@ class PackageManager:
 
         return discovered_packages
 
-    # pylint: disable=too-many-locals
-    def add_package_to_settings(
-        self,
-        *,
-        operation: colrev.process.operation.Operation,
-        package_identifier: str,
-        params: str,
-        prompt_on_same_source: bool = True,
-    ) -> dict:
-        """Add a package_endpoint (for cli usage)"""
-
+    def _get_endpoint_with_type(
+        self, operation: colrev.process.operation.Operation
+    ) -> tuple:
         settings = operation.review_manager.settings
         package_type_dict = {
             OperationsType.search: {
@@ -442,19 +434,20 @@ class PackageManager:
                 "endpoint_location": settings.data.data_package_endpoints,
             },
         }
-
+        endpoints_in_settings = package_type_dict[operation.type]["endpoint_location"]
         package_type = package_type_dict[operation.type]["package_type"]
-        endpoints = package_type_dict[operation.type]["endpoint_location"]
+        return endpoints_in_settings, package_type
 
-        registered_endpoints = [
-            e["endpoint"] if isinstance(e, dict) else e.endpoint for e in endpoints  # type: ignore
-        ]
-        if package_identifier in registered_endpoints and prompt_on_same_source:
-            operation.review_manager.logger.warning(
-                f"Package {package_identifier} already in {endpoints}"
-            )
-            if "y" != input("Continue [y/n]?"):
-                return {}
+    def add_package_to_settings(
+        self,
+        *,
+        operation: colrev.process.operation.Operation,
+        package_identifier: str,
+        params: str,
+    ) -> dict:
+        """Add a package_endpoint (for cli usage)"""
+
+        endpoints_in_settings, package_type = self._get_endpoint_with_type(operation)
 
         operation.review_manager.logger.info(
             f"{Colors.GREEN}Add {operation.type} "
@@ -470,16 +463,14 @@ class PackageManager:
 
         e_class = endpoint_dict[package_identifier]
         if hasattr(endpoint_dict[package_identifier], "add_endpoint"):
+            params_dict = {}
             if params:
                 if params.startswith("http"):
                     params_dict = {Fields.URL: params}
                 else:
-                    params_dict = {}
                     for item in params.split(";"):
                         key, value = item.split("=")
                         params_dict[key] = value
-            else:
-                params_dict = {}
             add_source = e_class.add_endpoint(  # type: ignore
                 operation=operation, params=params_dict
             )
@@ -492,7 +483,7 @@ class PackageManager:
 
         else:
             add_package = {"endpoint": package_identifier}
-            endpoints.append(add_package)  # type: ignore
+            endpoints_in_settings.append(add_package)  # type: ignore
 
         operation.review_manager.save_settings()
         operation.review_manager.dataset.create_commit(
