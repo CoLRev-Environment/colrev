@@ -37,12 +37,4 @@ colrev.env.local\_index.LocalIndex
 
    .. autosummary::
 
-      ~LocalIndex.RECORDS_INDEX_KEYS
-      ~LocalIndex.RECORD_INDEX
-      ~LocalIndex.SELECT_ALL_QUERIES
-      ~LocalIndex.SELECT_KEY_QUERIES
-      ~LocalIndex.TOC_INDEX
-      ~LocalIndex.UPDATE_RECORD_QUERY
-      ~LocalIndex.global_keys
-      ~LocalIndex.request_timeout
-      ~LocalIndex.sqlite_connection
+      ~LocalIndex.keys_to_remove

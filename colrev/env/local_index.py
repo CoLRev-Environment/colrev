@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import collections
-import hashlib
 import os
 import sqlite3
 import typing
@@ -19,13 +18,12 @@ import requests_cache
 from git.exc import GitCommandError
 from tqdm import tqdm
 
-import colrev.constants as c
 import colrev.env.environment_manager
+import colrev.env.local_index_sqlite
 import colrev.env.resources
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
-import colrev.process.operation
 import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Colors
@@ -33,85 +31,24 @@ from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import FieldValues
 from colrev.constants import Filepaths
+from colrev.constants import LocalIndexFields
 from colrev.constants import RecordState
+from colrev.env.local_index_prep import prepare_record_for_indexing
 from colrev.writer.write_utils import to_string
-
-# import binascii
-
-# pylint: disable=too-many-lines
 
 
 class LocalIndex:
     """The LocalIndex implements indexing and retrieval of records across projects"""
 
-    sqlite_connection: sqlite3.Connection
-    request_timeout = 90
-    _sqlite_available = True
-
-    global_keys = [
-        Fields.DOI,
-        Fields.DBLP_KEY,
-        "colrev_pdf_id",
-        Fields.URL,
-        "colrev_id",
-    ]
-
-    RECORDS_INDEX_KEYS = [
-        "id",
-        "colrev_id",
-        "citation_key",
-        Fields.TITLE,
-        Fields.ABSTRACT,
-        Fields.FILE,
-        "tei",
+    keys_to_remove = (
+        Fields.ORIGIN,
         Fields.FULLTEXT,
-        Fields.URL,
-        Fields.DOI,
-        "dblp_key",  # Note : no dots in key names
-        "colrev_pdf_id",
-        "bibtex",
-        # Fields.CURATION_ID
-    ]
-
-    # Note: we need the local_curated_metadata field for is_duplicate()
-
-    # Note : records are indexed by id = hash(colrev_id)
-    # to ensure that the indexing-ids do not exceed limits
-    # such as the opensearch limit of 512 bytes.
-    # This enables efficient retrieval based on id=hash(colrev_id)
-    # but also search-based retrieval using only colrev_ids
-
-    RECORD_INDEX = "record_index"
-    TOC_INDEX = "toc_index"
-    # AUTHOR_INDEX = "author_index"
-    # AUTHOR_RECORD_INDEX = "author_record_index"
-    # CITATIONS_INDEX = "citations_index"
-
-    UPDATE_RECORD_QUERY = """
-            UPDATE record_index SET
-            bibtex=?
-            WHERE id=?"""
-
-    SELECT_ALL_QUERIES = {
-        TOC_INDEX: "SELECT * FROM toc_index WHERE",
-        RECORD_INDEX: "SELECT * FROM record_index WHERE",
-    }
-
-    SELECT_KEY_QUERIES = {
-        (RECORD_INDEX, "id"): "SELECT * FROM record_index WHERE id=?",
-        (TOC_INDEX, "toc_key"): "SELECT * FROM toc_index WHERE toc_key=?",
-        (RECORD_INDEX, "colrev_id"): "SELECT * FROM record_index WHERE colrev_id=?",
-        (RECORD_INDEX, Fields.DOI): "SELECT * FROM record_index where doi=?",
-        (
-            RECORD_INDEX,
-            Fields.DBLP_KEY,
-        ): "SELECT * FROM record_index WHERE dblp_key=?",
-        (
-            RECORD_INDEX,
-            "colrev_pdf_id",
-        ): "SELECT * FROM record_index WHERE colrev_pdf_id=?",
-        (RECORD_INDEX, Fields.URL): "SELECT * FROM record_index WHERE url=?",
-    }
+        Fields.GROBID_VERSION,
+        Fields.SCREENING_CRITERIA,
+        Fields.LOCAL_CURATED_METADATA,
+        Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+        "tei_file",
+    )
 
     def __init__(
         self,
@@ -122,54 +59,25 @@ class LocalIndex:
         self.verbose_mode = verbose_mode
         self.environment_manager = colrev.env.environment_manager.EnvironmentManager()
         self._index_tei = index_tei
-
         self.thread_lock = Lock()
-
-    def _get_sqlite_cursor(self, *, init: bool = False) -> sqlite3.Cursor:
-        if init:
-            Filepaths.LOCAL_INDEX_SQLITE_FILE.unlink(missing_ok=True)
-
-        self.sqlite_connection = sqlite3.connect(
-            str(Filepaths.LOCAL_INDEX_SQLITE_FILE), timeout=90
-        )
-        self.sqlite_connection.row_factory = self._dict_factory
-        return self.sqlite_connection.cursor()
 
     def load_journal_rankings(self) -> None:
         """Loads journal rankings into sqlite database"""
 
         print("Index rankings")
-
         rankings_csv_path = str(Path(__file__).parents[1]) / Path(
             "env/journal_rankings.csv"
         )
-        conn = sqlite3.connect(str(Filepaths.LOCAL_INDEX_SQLITE_FILE))
         data_frame = pd.read_csv(rankings_csv_path, encoding="utf-8")
-        data_frame.to_sql("rankings", conn, if_exists="replace", index=False)
-        conn.commit()
-        conn.close()
+        sqlite_index_ranking = colrev.env.local_index_sqlite.SQLiteIndexRankings()
+        sqlite_index_ranking.insert(data_frame)
 
-    def search_in_database(self, journal: typing.Optional[typing.Any]) -> list:
-        """Searches for journalranking in database"""
-        cur = self._get_sqlite_cursor(init=False)
-        cur.execute(
-            "SELECT * FROM rankings WHERE journal_name = ?",
-            (journal,),
-        )
-        rankings = cur.fetchall()
-        return rankings
+    def search_in_database(self, journal: str) -> list:
+        """Searches for journal ranking in database"""
+        sqlite_index_ranking = colrev.env.local_index_sqlite.SQLiteIndexRankings()
+        return sqlite_index_ranking.select(journal=journal)
 
-    def _dict_factory(self, cursor: sqlite3.Cursor, row: dict) -> dict:
-        ret_dict = {}
-        for idx, col in enumerate(cursor.description):
-            ret_dict[col[0]] = row[idx]
-        return ret_dict
-
-    def _get_record_hash(self, *, record_dict: dict) -> str:
-        # Note : may raise NotEnoughDataToIdentifyException
-        string_to_hash = colrev.record.record.Record(record_dict).get_colrev_id()
-        return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
-
+    # # import binascii
     # def _increment_hash(self, *, paper_hash: str) -> str:
     #     plaintext = binascii.unhexlify(paper_hash)
     #     # also, we'll want to know our length later on
@@ -218,22 +126,19 @@ class LocalIndex:
                 continue
 
             try:
-                paper_hash = record_dict["id"]
+                paper_hash = record_dict[LocalIndexFields.ID]
                 tei_path = self._get_tei_index_file(paper_hash=paper_hash)
                 tei_path.parents[0].mkdir(exist_ok=True, parents=True)
                 if not tei_path.is_file():
-                    print(f"Create tei for {record_dict['file']}")
+                    print(f"Create tei for {record_dict[Fields.FILE]}")
                 tei = colrev.env.tei_parser.TEIParser(
                     environment_manager=self.environment_manager,
                     pdf_path=Path(record_dict[Fields.FILE]),
                     tei_path=tei_path,
                 )
-
-                record_dict["tei"] = str(tei_path)
+                record_dict[LocalIndexFields.TEI] = str(tei_path)
                 record_dict[Fields.FULLTEXT] = tei.get_tei_str()
-
                 # self._index_author(tei=tei, record_dict=record_dict)
-
             except (
                 colrev_exceptions.TEIException,
                 AttributeError,
@@ -245,7 +150,7 @@ class LocalIndex:
     def _amend_record(
         self,
         *,
-        cur: sqlite3.Cursor,
+        sqlite_index_record: colrev.env.local_index_sqlite.SQLiteIndexRecord,
         stored_record_dict: dict,
         item_to_add: dict,
         curated_fields: list,
@@ -253,7 +158,7 @@ class LocalIndex:
         """Adds layered fields to amend existing records"""
 
         item_record_dict = colrev.loader.load_utils.loads(
-            load_string=item_to_add["bibtex"],
+            load_string=item_to_add[LocalIndexFields.BIBTEX],
             implementation="bib",
             unique_id_field="ID",
         )
@@ -278,9 +183,8 @@ class LocalIndex:
             implementation="bib",
         )
 
-        cur.execute(
-            self.UPDATE_RECORD_QUERY,
-            (bibtex, item_to_add["id"]),
+        sqlite_index_record.update(
+            local_index_id=item_to_add[LocalIndexFields.ID], bibtex=bibtex
         )
 
     def get_fields_to_remove(self, record_dict: dict) -> list:
@@ -338,62 +242,50 @@ class LocalIndex:
 
         return fields_to_remove
 
-    def _add_index_toc(self, toc_to_index: dict) -> None:
-        list_to_add = list((k, v) for k, v in toc_to_index.items() if v != "DROPPED")
-        cur = self.sqlite_connection.cursor()
-        try:
-            cur.executemany(f"INSERT INTO {self.TOC_INDEX} VALUES(?, ?)", list_to_add)
-        except sqlite3.IntegrityError as exc:  # pragma: no cover
-            if self.verbose_mode:
-                print(exc)
-        finally:
-            if self.sqlite_connection:
-                self.sqlite_connection.commit()
-
     def _add_index_records(self, *, recs_to_index: list, curated_fields: list) -> None:
         list_to_add = [
-            {k: v for k, v in el.items() if k in self.RECORDS_INDEX_KEYS}
+            {
+                k: v
+                for k, v in el.items()
+                if k in colrev.env.local_index_sqlite.SQLiteIndexRecord.KEYS
+            }
             for el in recs_to_index
         ]
-
-        cur = self.sqlite_connection.cursor()
+        sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
         for item in list_to_add:
             while True:
-                for records_index_required_key in self.RECORDS_INDEX_KEYS:
+                for (
+                    records_index_required_key
+                ) in colrev.env.local_index_sqlite.SQLiteIndexRecord.KEYS:
                     if records_index_required_key not in item:
                         item[records_index_required_key] = ""
-                if item["id"] == "":
+                if item[LocalIndexFields.ID] == "":
                     print("NO ID IN RECORD")
                     break
                 try:
-                    cur.execute(
-                        f"INSERT INTO {self.RECORD_INDEX} "
-                        f"VALUES(:{', :'.join(self.RECORDS_INDEX_KEYS)})",
-                        item,
-                    )
+                    sqlite_index_record.insert(item)
                     break
                 except sqlite3.IntegrityError:
                     if not curated_fields:
                         break
                     try:
-                        stored_record = self._get_item_from_index(
-                            index_name=self.RECORD_INDEX,
-                            key=Fields.COLREV_ID,
-                            value=item["colrev_id"],
-                            cursor=cur,
+                        stored_record = sqlite_index_record.get(
+                            key=Fields.COLREV_ID, value=item[Fields.COLREV_ID]
                         )
                         stored_colrev_id = colrev.record.record.Record(
                             stored_record
                         ).get_colrev_id()
 
-                        if stored_colrev_id != item["colrev_id"]:  # pragma: no cover
+                        if (
+                            stored_colrev_id != item[Fields.COLREV_ID]
+                        ):  # pragma: no cover
                             print("Collisions (TODO):")
                             print(stored_colrev_id)
-                            print(item["colrev_id"])
+                            print(item[Fields.COLREV_ID])
 
                             # print(
                             #     [
-                            #         {k: v for k, v in x.items() if k != "bibtex"}
+                            #         {k: v for k, v in x.items() if k != LocalIndexFields.BIBTEX}
                             #         for x in stored_record
                             #     ]
                             # )
@@ -404,13 +296,13 @@ class LocalIndex:
                             # print(saved_record_cid)
                             # print(saved_record)
                             # paper_hash = self._increment_hash(paper_hash=paper_hash)
-                            # item["id"] = paper_hash
+                            # item[LocalIndexFields.ID] = paper_hash
                             # continue in while-loop/try to insert...
                             # pylint: disable=raise-missing-from
                             raise NotImplementedError
 
                         self._amend_record(
-                            cur=cur,
+                            sqlite_index_record=sqlite_index_record,
                             stored_record_dict=stored_record,
                             item_to_add=item,
                             curated_fields=curated_fields,
@@ -421,29 +313,26 @@ class LocalIndex:
                     ):  # pragma: no cover
                         break
 
-        if self.sqlite_connection:
-            self.sqlite_connection.commit()
+        sqlite_index_record.commit()
 
     def _get_record_from_row(self, row: dict) -> dict:
-
         records_dict = colrev.loader.load_utils.loads(
-            load_string=row["bibtex"],
+            load_string=row[LocalIndexFields.BIBTEX],
             implementation="bib",
             unique_id_field="ID",
         )
-
         retrieved_record = list(records_dict.values())[0]
         return retrieved_record
 
     def _retrieve_based_on_colrev_id(
-        self, *, cids_to_retrieve: list
+        self, cids_to_retrieve: list
     ) -> colrev.record.record.Record:
+
+        sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
         for cid_to_retrieve in cids_to_retrieve:
             try:
-                retrieved_record = self._get_item_from_index(
-                    index_name=self.RECORD_INDEX,
-                    key=Fields.COLREV_ID,
-                    value=cid_to_retrieve,
+                retrieved_record = sqlite_index_record.get(
+                    key=Fields.COLREV_ID, value=cid_to_retrieve
                 )
                 return colrev.record.record.Record(retrieved_record)
 
@@ -458,7 +347,6 @@ class LocalIndex:
         ret = {}
         try:
             gh_url, record_id = record_dict[Fields.CURATION_ID].split("#")
-
             temp_path = Path.home().joinpath("colrev").joinpath("test")
             temp_path.mkdir(exist_ok=True, parents=True)
             target_path = Path(temp_path) / Path(gh_url.split("/")[-1])
@@ -468,9 +356,8 @@ class LocalIndex:
                     str(target_path),
                     depth=1,
                 )
-
             ret = colrev.loader.load_utils.load(
-                filename=target_path / Path("data/records.bib"),
+                filename=target_path / Filepaths.RECORDS_FILE,
             )
 
         except GitCommandError:
@@ -487,24 +374,13 @@ class LocalIndex:
     ) -> colrev.record.record.Record:
 
         record = colrev.record.record.Record(record_dict)
-
-        if not self._sqlite_available:  # pragma: no cover
+        cids_to_retrieve = [record.get_colrev_id()]
+        retrieved_record = self._retrieve_based_on_colrev_id(cids_to_retrieve)
+        if retrieved_record.data[Fields.ENTRYTYPE] != record.data[Fields.ENTRYTYPE]:
             if record_dict.get(Fields.CURATION_ID, "NA").startswith(
                 "https://github.com/"
             ):
                 return self._retrieve_from_github_curation(record_dict=record_dict)
-            raise colrev_exceptions.RecordNotInIndexException
-
-        # if Fields.COLREV_ID in record.data:
-        #     cid_to_retrieve = record.get_colrev_id()
-        # else:
-        #     cid_to_retrieve = [record.get_colrev_id(assume_complete=True)]
-        cids_to_retrieve = [record.get_colrev_id()]
-
-        retrieved_record = self._retrieve_based_on_colrev_id(
-            cids_to_retrieve=cids_to_retrieve
-        )
-        if retrieved_record.data[Fields.ENTRYTYPE] != record.data[Fields.ENTRYTYPE]:
             raise colrev_exceptions.RecordNotInIndexException
         return retrieved_record
 
@@ -517,22 +393,10 @@ class LocalIndex:
     ) -> colrev.record.record.Record:
         """Prepare a record for return (from local index)"""
 
-        # pylint: disable=too-many-branches
-
         # Note : remove fulltext before parsing because it raises errors
         fulltext_backup = record_dict.get(Fields.FULLTEXT, "NA")
 
-        keys_to_remove = (
-            Fields.ORIGIN,
-            Fields.FULLTEXT,
-            "tei_file",
-            Fields.GROBID_VERSION,
-            Fields.SCREENING_CRITERIA,
-            "local_curated_metadata",
-            Fields.METADATA_SOURCE_REPOSITORY_PATHS,
-        )
-
-        for key in keys_to_remove:
+        for key in self.keys_to_remove:
             record_dict.pop(key, None)
 
         # Note: record['file'] should be an absolute path by definition
@@ -548,7 +412,7 @@ class LocalIndex:
                 record_dict[Fields.FULLTEXT] = fulltext_backup
         else:
             colrev.record.record.Record(record_dict).remove_field(key=Fields.FILE)
-            colrev.record.record.Record(record_dict).remove_field(key="colrev_pdf_id")
+            colrev.record.record.Record(record_dict).remove_field(key=Fields.PDF_ID)
 
         record = colrev.record.record.Record(record_dict)
         record.set_status(RecordState.md_prepared)
@@ -556,8 +420,7 @@ class LocalIndex:
         if record.masterdata_is_curated():
             identifier_string = (
                 record.get_field_provenance_source(FieldValues.CURATED)
-                + "#"
-                + record_dict[Fields.ID]
+                + f"#{record_dict[Fields.ID]}"
             )
             record_dict[Fields.CURATION_ID] = identifier_string
 
@@ -566,21 +429,16 @@ class LocalIndex:
     def search(self, query: str) -> list[colrev.record.record.Record]:
         """Run a search for records"""
 
-        records_to_return = []
         try:
             self.thread_lock.acquire(timeout=60)
-            cur = self._get_sqlite_cursor()
-            selected_row = None
-            print(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
-            cur.execute(f"{self.SELECT_ALL_QUERIES[self.RECORD_INDEX] } {query}")
-            for row in cur.fetchall():
-                selected_row = row
-                retrieved_record_dict = self._get_record_from_row(selected_row)
-                retrieved_record = self._prepare_record_for_return(
-                    retrieved_record_dict, include_file=False
+            sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
+            records_to_return = []
+            for record_dict in sqlite_index_record.search(query=query):
+                record = self._prepare_record_for_return(
+                    record_dict, include_file=False
                 )
-                retrieved_record.align_provenance()
-                records_to_return.append(retrieved_record)
+                records_to_return.append(record)
+
         except sqlite3.OperationalError as exc:  # pragma: no cover
             print(exc)
         finally:
@@ -593,7 +451,6 @@ class LocalIndex:
 
         try:
             curated_outlets = self.environment_manager.get_curated_outlets()
-
             if len(curated_outlets) != len(set(curated_outlets)):
                 duplicated = [
                     item
@@ -610,128 +467,7 @@ class LocalIndex:
             return True
         return False
 
-    def _apply_status_requirements(self, record_dict: dict) -> None:
-        if Fields.STATUS not in record_dict:
-            raise colrev_exceptions.RecordNotIndexableException()
-
-        # It is important to exclude md_prepared if the LocalIndex
-        # is used to dissociate duplicates
-        if record_dict[Fields.STATUS] in RecordState.get_non_processed_states():
-            raise colrev_exceptions.RecordNotIndexableException()
-
-        # Some prescreen_excluded records are not prepared
-        if record_dict[Fields.STATUS] == RecordState.rev_prescreen_excluded:
-            raise colrev_exceptions.RecordNotIndexableException()
-
-    def _remove_fields(self, record_dict: dict) -> None:
-        # Do not cover deprecated fields
-        for deprecated_field in ["pdf_hash"]:
-            if deprecated_field in record_dict:
-                print(f"Removing deprecated field: {deprecated_field}")
-                del record_dict[deprecated_field]
-
-        for field in ["note", "link"]:
-            record_dict.pop(field, None)
-
-        if Fields.SCREENING_CRITERIA in record_dict:
-            del record_dict[Fields.SCREENING_CRITERIA]
-        # Note: if the colrev_pdf_id has not been checked,
-        # we cannot use it for retrieval or preparation.
-        post_pdf_prepared_states = RecordState.get_post_x_states(
-            state=RecordState.pdf_prepared
-        )
-        if record_dict[Fields.STATUS] not in post_pdf_prepared_states:
-            record_dict.pop("colrev_pdf_id", None)
-
-        # Note : numbers of citations change regularly.
-        # They should be retrieved from sources like crossref/doi.org
-        record_dict.pop(Fields.CITED_BY, None)
-        if record_dict.get(Fields.YEAR, "NA").isdigit():
-            record_dict[Fields.YEAR] = int(record_dict[Fields.YEAR])
-        else:
-            raise colrev_exceptions.RecordNotIndexableException()
-
-        if Fields.LANGUAGE in record_dict and len(record_dict[Fields.LANGUAGE]) != 3:
-            print(f"Language not in ISO 639-3 format: {record_dict[Fields.LANGUAGE]}")
-            del record_dict[Fields.LANGUAGE]
-
-    def _adjust_provenance_for_indexing(self, record_dict: dict) -> None:
-        # Provenance should point to the original repository path.
-        # If the provenance/source was example.bib (and the record is amended during indexing)
-        # we wouldn't know where the example.bib belongs to.
-        record = colrev.record.record.Record(record_dict)
-        # Make sure that we don't add provenance information without corresponding fields
-        record.align_provenance()
-        for key in list(record.data.keys()):
-            if not record.masterdata_is_curated():
-                record.add_field_provenance(
-                    key=key, source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
-                )
-            elif (
-                key
-                not in c.FieldSet.IDENTIFYING_FIELD_KEYS
-                + c.FieldSet.PROVENANCE_KEYS
-                + [
-                    Fields.ID,
-                    Fields.ENTRYTYPE,
-                    "local_curated_metadata",
-                    Fields.METADATA_SOURCE_REPOSITORY_PATHS,
-                ]
-            ):
-                record.add_field_provenance(
-                    key=key,
-                    source=record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS],
-                )
-
-        record.remove_field(key=Fields.METADATA_SOURCE_REPOSITORY_PATHS)
-        record_dict = record.get_data()
-
-    def _prep_fields_for_indexing(self, record_dict: dict) -> None:
-        # Note : this is the first run, no need to split/list
-        if (
-            "colrev/curated_metadata"
-            in record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
-        ):
-            # Note : local_curated_metadata is important to identify non-duplicates
-            # between curated_metadata_repositories
-            record_dict[Fields.LOCAL_CURATED_METADATA] = "yes"
-
-        # Note : file paths should be absolute when added to the LocalIndex
-        if Fields.FILE in record_dict:
-            pdf_path = Path(record_dict[Fields.FILE])
-            if pdf_path.is_file():
-                record_dict[Fields.FILE] = str(pdf_path)
-            else:
-                del record_dict[Fields.FILE]
-
-        record_dict.pop(Fields.ORIGIN, None)
-
-    def _prepare_record_for_indexing(self, record_dict: dict) -> dict:
-        self._apply_status_requirements(record_dict)
-        self._remove_fields(record_dict)
-        self._prep_fields_for_indexing(record_dict)
-        self._adjust_provenance_for_indexing(record_dict)
-
-        return record_dict
-
-    def _get_index_record(self, record_dict: dict) -> dict:
-        try:
-            record_dict = self._prepare_record_for_indexing(record_dict)
-            cid_to_index = colrev.record.record.Record(record_dict).get_colrev_id()
-            record_dict[Fields.COLREV_ID] = cid_to_index
-            record_dict["citation_key"] = record_dict[Fields.ID]
-            record_dict["id"] = self._get_record_hash(record_dict=record_dict)
-        except colrev_exceptions.NotEnoughDataToIdentifyException as exc:
-            missing_key = ""
-            if exc.missing_fields is not None:
-                missing_key = ",".join(exc.missing_fields)
-            raise colrev_exceptions.RecordNotIndexableException(
-                missing_key=missing_key
-            ) from exc
-
-        return record_dict
-
-    def _update_toc_index(
+    def _drop_toc_item(
         self, *, toc_to_index: dict, copy_for_toc_index: dict, curated_masterdata: bool
     ) -> None:
         if not curated_masterdata or copy_for_toc_index.get(
@@ -797,11 +533,11 @@ class LocalIndex:
                     record_dict.update(
                         file=repo_source_path / Path(record_dict[Fields.FILE])
                     )
-                record_dict["bibtex"] = to_string(
+                record_dict[LocalIndexFields.BIBTEX] = to_string(
                     records_dict={record_dict[Fields.ID]: record_dict},
                     implementation="bib",
                 )
-                record_dict = self._get_index_record(record_dict)
+                record_dict = prepare_record_for_indexing(record_dict)
                 recs_to_index.append(record_dict)
 
             except (
@@ -813,18 +549,22 @@ class LocalIndex:
                     print(exc)
                     print(record_dict)
             finally:
-                self._update_toc_index(
+                self._drop_toc_item(
                     toc_to_index=toc_to_index,
                     copy_for_toc_index=copy_for_toc_index,
                     curated_masterdata=curated_masterdata,
                 )
         # Select fields and insert into index (sqlite)
+
         self._index_tei_document(recs_to_index)
+
         self._add_index_records(
             recs_to_index=recs_to_index, curated_fields=curated_fields
         )
+
         if curated_masterdata:
-            self._add_index_toc(toc_to_index)
+            sqlite_index_toc = colrev.env.local_index_sqlite.SQLiteIndexTOC()
+            sqlite_index_toc.add(toc_to_index)
 
     def _load_masterdata_curations(self) -> dict:  # pragma: no cover
         # Note : the following should be replaced by heuristics
@@ -841,25 +581,6 @@ class LocalIndex:
                 )
 
         return masterdata_curations
-
-    def reinitialize_sqlite_db(self) -> None:
-        """Reinitialize the SQLITE database ()"""
-        print(f"Reinitialize {self.RECORD_INDEX} and {self.TOC_INDEX}")
-        # Note : the tei-directory should be removed manually.
-
-        cur = self._get_sqlite_cursor(init=True)
-        cur.execute(f"drop table if exists {self.RECORD_INDEX}")
-        cur.execute(
-            f"CREATE TABLE {self.RECORD_INDEX}(id TEXT PRIMARY KEY, "
-            + ",".join(self.RECORDS_INDEX_KEYS[1:])
-            + ")"
-        )
-        cur.execute(f"drop table if exists {self.TOC_INDEX}")
-        cur.execute(
-            f"CREATE TABLE {self.TOC_INDEX}(toc_key TEXT PRIMARY KEY, colrev_ids)"
-        )
-        if self.sqlite_connection:
-            self.sqlite_connection.commit()
 
     def index_colrev_project(self, repo_source_path: Path) -> None:  # pragma: no cover
         """Index a CoLRev project"""
@@ -922,6 +643,13 @@ class LocalIndex:
         except (colrev_exceptions.CoLRevException, TypeError) as exc:
             print(exc)
 
+    def reinitialize_sqlite_db(self) -> None:
+        """Reinitialize the SQLITE database ()"""
+
+        Filepaths.LOCAL_INDEX_SQLITE_FILE.unlink(missing_ok=True)
+        colrev.env.local_index_sqlite.SQLiteIndexRecord(reinitialize=True)
+        colrev.env.local_index_sqlite.SQLiteIndexTOC(reinitialize=True)
+
     def index(self) -> None:  # pragma: no cover
         """Index all registered CoLRev projects"""
 
@@ -963,12 +691,11 @@ class LocalIndex:
         """Determine the year of a paper based on its table-of-content (journal-volume-number)"""
 
         try:
+            sqlite_index_toc = colrev.env.local_index_sqlite.SQLiteIndexTOC()
             toc_key = colrev.record.record.Record(record_dict).get_toc_key()
             toc_items = []
             if self._toc_exists(toc_key):
-                res = self._get_item_from_index(
-                    index_name=self.TOC_INDEX, key="toc_key", value=toc_key
-                )
+                res = sqlite_index_toc.get(key=LocalIndexFields.TOC_KEY, value=toc_key)
                 toc_items = res.get("colrev_ids", "").split(";")  # type: ignore
 
             if not toc_items:
@@ -976,10 +703,10 @@ class LocalIndex:
 
             toc_records_colrev_id = toc_items[0]
 
-            record_dict = self._get_item_from_index(
-                index_name=self.RECORD_INDEX,
-                key="colrev_id",
-                value=toc_records_colrev_id,
+            sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
+
+            record_dict = sqlite_index_record.get(
+                key=Fields.COLREV_ID, value=toc_records_colrev_id
             )
 
             year = record_dict.get(Fields.YEAR, "NA")
@@ -995,31 +722,22 @@ class LocalIndex:
     def _toc_exists(self, toc_item: str) -> bool:
         try:
             self.thread_lock.acquire(timeout=60)
-            cur = self._get_sqlite_cursor()
-            cur.execute(
-                self.SELECT_KEY_QUERIES[(self.TOC_INDEX, "toc_key")], (toc_item,)
-            )
-            selected_row = cur.fetchone()
-            self.thread_lock.release()
-            if not selected_row:
-                return False
-            return True
+            sqlite_index_toc = colrev.env.local_index_sqlite.SQLiteIndexTOC()
+            return sqlite_index_toc.exists(toc_item)
         except sqlite3.OperationalError:  # pragma: no cover
-            self.thread_lock.release()
+            pass  # return False
         except AttributeError:  # pragma: no cover
             # ie. no sqlite database available
-            return False
+            pass  # return False
+        finally:
+            self.thread_lock.release()
         return False
 
-    def _get_toc_items_for_toc_retrieval(
-        self, toc_key: str, *, search_across_tocs: bool
-    ) -> list:
+    def _get_toc_items(self, toc_key: str, *, search_across_tocs: bool) -> list:
+        sqlite_index_toc = colrev.env.local_index_sqlite.SQLiteIndexTOC()
         toc_items = []
-
         if self._toc_exists(toc_key):
-            res = self._get_item_from_index(
-                index_name=self.TOC_INDEX, key="toc_key", value=toc_key
-            )
+            res = sqlite_index_toc.get(key=LocalIndexFields.TOC_KEY, value=toc_key)
             toc_items = res.get("colrev_ids", "").split(";")  # type: ignore
         else:
             if not search_across_tocs:
@@ -1028,9 +746,8 @@ class LocalIndex:
         if not toc_items and search_across_tocs:
             try:
                 partial_toc_key = toc_key.replace("|-", "")
-                retrieved_tocs = self._get_items_from_index(
-                    ("toc_key LIKE ?", [f"{partial_toc_key}%"]),
-                    index_name=self.TOC_INDEX,
+                retrieved_tocs = sqlite_index_toc.get_toc_items(
+                    (f"{LocalIndexFields.TOC_KEY} LIKE ?", [f"{partial_toc_key}%"])
                 )
                 toc_items = [x["colrev_ids"].split(";") for x in retrieved_tocs]
                 toc_items = [item for sublist in toc_items for item in sublist]
@@ -1054,18 +771,17 @@ class LocalIndex:
     ) -> colrev.record.record.Record:
         """Retrieve a record from the toc (table-of-contents)"""
 
+        sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
         try:
             # Note: in NotTOCIdentifiableException cases, we still need a toc_key.
             # to accomplish this, the get_toc_key() may acced an "accept_incomplete" flag
             toc_key = record.get_toc_key()
-            toc_items = self._get_toc_items_for_toc_retrieval(
+            toc_items = self._get_toc_items(
                 toc_key, search_across_tocs=search_across_tocs
             )
             for toc_records_colrev_id in toc_items:
-                record_dict = self._get_item_from_index(
-                    index_name=self.RECORD_INDEX,
-                    key=Fields.COLREV_ID,
-                    value=toc_records_colrev_id,
+                record_dict = sqlite_index_record.get(
+                    key=Fields.COLREV_ID, value=toc_records_colrev_id
                 )
 
                 if not colrev.record.record_similarity.matches(
@@ -1088,78 +804,6 @@ class LocalIndex:
 
         raise colrev_exceptions.RecordNotInIndexException()
 
-    def _get_items_from_index(
-        self, query: typing.Tuple[str, list[str]], *, index_name: str
-    ) -> list:
-        try:
-            self.thread_lock.acquire(timeout=60)
-            cur = self._get_sqlite_cursor()
-            select_all_query = f"{self.SELECT_ALL_QUERIES[index_name]} {query[0]}"
-            cur.execute(select_all_query, query[1])
-            results = cur.fetchall()
-            self.thread_lock.release()
-            return results
-
-        except sqlite3.OperationalError as exc:  # pragma: no cover
-            self.thread_lock.release()
-            raise colrev_exceptions.RecordNotInIndexException() from exc
-        except AttributeError as exc:
-            raise colrev_exceptions.RecordNotInIndexException() from exc
-
-    def _get_item_from_index(
-        self,
-        *,
-        index_name: str,
-        key: str,
-        value: str,
-        cursor: typing.Optional[sqlite3.Cursor] = None,
-    ) -> dict:
-        try:
-            if cursor is None:
-                self.thread_lock.acquire(timeout=60)
-                cur = self._get_sqlite_cursor()
-            else:
-                cur = cursor
-
-            # in the following, collisions should be handled.
-            # paper_hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
-            # Collision
-            # paper_hash = self._increment_hash(paper_hash=paper_hash)
-
-            cur.execute(self.SELECT_KEY_QUERIES[(index_name, key)], (value,))
-
-            selected_row = cur.fetchone()
-            if cursor is None:
-                self.thread_lock.release()
-
-            if not selected_row:
-                raise colrev_exceptions.RecordNotInIndexException()
-
-            retrieved_record = {}
-            if self.RECORD_INDEX == index_name:
-                retrieved_record = self._get_record_from_row(selected_row)
-            else:
-                retrieved_record = selected_row
-
-            if (
-                key != Fields.COLREV_ID
-                and (key not in retrieved_record or value != retrieved_record[key])
-            ) or (
-                key == Fields.COLREV_ID
-                and (
-                    value
-                    != colrev.record.record.Record(retrieved_record).get_colrev_id()
-                )
-            ):
-                raise colrev_exceptions.RecordNotInIndexException()
-
-            return retrieved_record
-
-        except sqlite3.OperationalError as exc:  # pragma: no cover
-            if cursor is None:
-                self.thread_lock.release()
-            raise colrev_exceptions.RecordNotInIndexException() from exc
-
     def retrieve_based_on_colrev_pdf_id(
         self, *, colrev_pdf_id: str
     ) -> colrev.record.record.Record:
@@ -1168,12 +812,8 @@ class LocalIndex:
         based on a colrev_pdf_id
         """
 
-        record_dict = self._get_item_from_index(
-            index_name=self.RECORD_INDEX,
-            key="colrev_pdf_id",
-            value=colrev_pdf_id,
-        )
-
+        sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
+        record_dict = sqlite_index_record.get(key=Fields.PDF_ID, value=colrev_pdf_id)
         record_to_import = self._prepare_record_for_return(
             record_dict, include_file=True
         )
@@ -1205,33 +845,36 @@ class LocalIndex:
         ) as exc:
             if self.verbose_mode:
                 print(exc)
-                print(f"{record_dict['ID']} - no exact match")
+                print(f"{record_dict[Fields.ID]} - no exact match")
 
-            retrieved_record_dict = {}
             # 2. Try using global-ids
-            if self._sqlite_available:
-                remove_colrev_id = False
-                if Fields.COLREV_ID not in record_dict:
-                    try:
-                        record_dict[Fields.COLREV_ID] = colrev.record.record.Record(
-                            record_dict
-                        ).get_colrev_id()
-                        remove_colrev_id = True
-                    except colrev_exceptions.NotEnoughDataToIdentifyException:
-                        pass
-                for key, value in record_dict.items():
-                    if key not in self.global_keys or Fields.ID == key:
-                        continue
+            retrieved_record_dict = {}
+            sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
+            remove_colrev_id = False
+            if Fields.COLREV_ID not in record_dict:
+                try:
+                    record_dict[Fields.COLREV_ID] = colrev.record.record.Record(
+                        record_dict
+                    ).get_colrev_id()
+                    remove_colrev_id = True
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
+                    pass
+            for key, value in record_dict.items():
+                if (
+                    key
+                    not in colrev.env.local_index_sqlite.SQLiteIndexRecord.GLOBAL_KEYS
+                    or Fields.ID == key
+                ):
+                    continue
 
-                    retrieved_record_dict = self._get_item_from_index(
-                        index_name=self.RECORD_INDEX, key=key, value=value
-                    )
-                    if key in retrieved_record_dict:
-                        if retrieved_record_dict[key] == value:
-                            break
-                    retrieved_record_dict = {}
-                if remove_colrev_id:
-                    del record_dict[Fields.COLREV_ID]
+                retrieved_record_dict = sqlite_index_record.get(key=key, value=value)
+
+                if key in retrieved_record_dict:
+                    if retrieved_record_dict[key] == value:
+                        break
+                retrieved_record_dict = {}
+            if remove_colrev_id:
+                del record_dict[Fields.COLREV_ID]
 
             if not retrieved_record_dict:
                 raise colrev_exceptions.RecordNotInIndexException(

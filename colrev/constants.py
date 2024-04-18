@@ -197,6 +197,17 @@ class Fields:
     EUROPE_PMC_ID = "colrev.europe_pmc.europe_pmc_id"
 
 
+class LocalIndexFields:
+    """Fields used in the local index"""
+
+    ID = "id"
+    CITATION_KEY = "citation_key"
+    BIBTEX = "bibtex"
+    TEI = "tei"
+    DBLP_KEY = "dblp_key"
+    TOC_KEY = "toc_key"
+
+
 class FieldValues:
     """Constant field values"""
 

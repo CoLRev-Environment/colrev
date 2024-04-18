@@ -30,6 +30,7 @@ colrev.constants
       FileSets
       Filepaths
       IDPattern
+      LocalIndexFields
       OperationsType
       PDFDefectCodes
       PDFPathType

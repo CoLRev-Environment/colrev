@@ -7,7 +7,9 @@ import colrev.env.tei_parser
 import colrev.review_manager
 from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
+from colrev.constants import LocalIndexFields
 from colrev.constants import RecordState
+from colrev.env.local_index_prep import prepare_record_for_indexing
 
 # pylint: disable=line-too-long
 
@@ -17,13 +19,23 @@ from colrev.constants import RecordState
     [
         (
             {
+                Fields.ID: "AbbasZhouDengEtAl2018",
                 Fields.STATUS: RecordState.md_processed,
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.METADATA_SOURCE_REPOSITORY_PATHS: "/path/to/selected_repo",
                 Fields.YEAR: "2014",
                 "literature_review": "yes",
+                Fields.JOURNAL: "MIS Quarterly",
+                Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
+                Fields.TITLE: "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
             },
             {
+                LocalIndexFields.ID: "e44d8844c3d815a912040065ae5b9f051084b5633f110e88927094a1e331f79c",
+                LocalIndexFields.CITATION_KEY: "AbbasZhouDengEtAl2018",
+                Fields.COLREV_ID: "colrev_id1:|a|mis-quarterly|-|-|2014|abbas-zhou-deng-zhang|text-analytics-to-support-sense-making-in-social-media-a-language-action-perspective",
+                Fields.ID: "AbbasZhouDengEtAl2018",
                 Fields.STATUS: RecordState.md_processed,
+                Fields.ENTRYTYPE: ENTRYTYPES.ARTICLE,
                 Fields.D_PROV: {
                     "literature_review": {
                         "note": "",
@@ -31,17 +43,23 @@ from colrev.constants import RecordState
                     },
                 },
                 Fields.MD_PROV: {
-                    "year": {"note": "", "source": "/path/to/selected_repo"}
+                    Fields.YEAR: {"note": "", "source": "/path/to/selected_repo"},
+                    Fields.JOURNAL: {"note": "", "source": "/path/to/selected_repo"},
+                    Fields.AUTHOR: {"note": "", "source": "/path/to/selected_repo"},
+                    Fields.TITLE: {"note": "", "source": "/path/to/selected_repo"},
                 },
                 Fields.YEAR: 2014,
                 "literature_review": "yes",
+                Fields.JOURNAL: "MIS Quarterly",
+                Fields.AUTHOR: "Abbas, Ahmed and Zhou, Yilu and Deng, Shasha and Zhang, Pengzhu",
+                Fields.TITLE: "Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective",
             },
         ),
     ],
 )
 def test_prepare_record_for_indexing(record_dict: dict, expected: dict, local_index) -> None:  # type: ignore
 
-    local_index._prepare_record_for_indexing(record_dict)
+    prepare_record_for_indexing(record_dict)
     assert record_dict == expected
 
 
@@ -81,8 +99,6 @@ def test_search(local_index) -> None:  # type: ignore
                 Fields.D_PROV: {
                     Fields.DOI: {"note": "", "source": "pdfs.bib/0000000089"},
                     Fields.URL: {"note": "", "source": "DBLP.bib/001187"},
-                    Fields.LANGUAGE: {"note": "", "source": "manual"},
-                    Fields.CURATION_ID: {"note": "", "source": "manual"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
                 Fields.STATUS: RecordState.md_prepared,
@@ -111,9 +127,7 @@ def test_search(local_index) -> None:  # type: ignore
                 Fields.D_PROV: {
                     Fields.DOI: {"note": "", "source": "CROSSREF.bib/000516"},
                     Fields.URL: {"note": "", "source": "DBLP.bib/000528"},
-                    Fields.CURATION_ID: {"note": "", "source": "manual"},
                     "literature_review": {"note": "", "source": "CURATED:gh..."},
-                    Fields.LANGUAGE: {"note": "", "source": "manual"},
                 },
                 Fields.MD_PROV: {"CURATED": {"note": "", "source": "gh..."}},
                 Fields.STATUS: RecordState.md_prepared,

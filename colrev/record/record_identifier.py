@@ -58,14 +58,14 @@ def _get_container_title(record: colrev.record.record.Record) -> str:
     # Note: custom __get_container_title for the colrev_id
 
     # school as the container title for theses
-    if record.data["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
+    if record.data[Fields.ENTRYTYPE] in ["phdthesis", "masterthesis"]:
         container_title = record.data[Fields.SCHOOL]
     # for technical reports
-    elif record.data["ENTRYTYPE"] == "techreport":
+    elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.TECHREPORT:
         container_title = record.data["institution"]
-    elif record.data["ENTRYTYPE"] == "inproceedings":
+    elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.INPROCEEDINGS:
         container_title = record.data[Fields.BOOKTITLE]
-    elif record.data["ENTRYTYPE"] == "article":
+    elif record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
         container_title = record.data[Fields.JOURNAL]
     elif Fields.SERIES in record.data:
         container_title = record.data[Fields.SERIES]
@@ -129,19 +129,19 @@ def _get_colrev_id_from_record(record: colrev.record.record.Record) -> str:
         # when updating the identifier function function
         # (this may look like an anomaly and be hard to identify)
         srep = "colrev_id1:"
-        if record.data["ENTRYTYPE"].lower() == "article":
+        if record.data[Fields.ENTRYTYPE].lower() == ENTRYTYPES.ARTICLE:
             srep = _robust_append(srep, to_append="a")
-        elif record.data["ENTRYTYPE"].lower() == "inproceedings":
+        elif record.data[Fields.ENTRYTYPE].lower() == "inproceedings":
             srep = _robust_append(srep, to_append="p")
         else:
             srep = _robust_append(
-                input_string=srep, to_append=record.data["ENTRYTYPE"].lower()
+                input_string=srep, to_append=record.data[Fields.ENTRYTYPE].lower()
             )
         srep = _robust_append(
             input_string=srep,
             to_append=_get_container_title(record),
         )
-        if record.data["ENTRYTYPE"] == "article":
+        if record.data[Fields.ENTRYTYPE] == ENTRYTYPES.ARTICLE:
             # Note: volume/number may not be required.
             srep = _robust_append(
                 input_string=srep, to_append=record.data.get(Fields.VOLUME, "-")
@@ -163,21 +163,21 @@ def _get_colrev_id_from_record(record: colrev.record.record.Record) -> str:
         # pages = record_dict.get(Fields.PAGES, "")
         # srep = _robust_append(srep, pages)
     except KeyError as exc:
-        if "ENTRYTYPE" in str(exc):
-            print(f"Missing ENTRYTYPE in {record.data.get('ID', record.data)}")
+        if Fields.ENTRYTYPE in str(exc):
+            print(f"Missing ENTRYTYPE in {record.data.get(Fields.ID, record.data)}")
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
-            msg="Missing field:" + str(exc), missing_fields=["ENTRYTYPE"]
+            msg="Missing field:" + str(exc), missing_fields=[exc.args[0]]
         )
     return srep
 
 
 def get_colrev_id(record: colrev.record.record.Record, *, assume_complete: bool) -> str:
     """Create the colrev_id"""
+
     _check_colrev_id_preconditions(
         record,
         assume_complete=assume_complete,
     )
-
     srep = _get_colrev_id_from_record(record)
 
     # Safeguard against titles that are rarely distinct
@@ -266,7 +266,7 @@ def get_toc_key(record: colrev.record.record.Record) -> str:
         else:
             msg = (
                 f"ENTRYTYPE {record.data[Fields.ENTRYTYPE]} "
-                + f"({record.data['ID']}) not toc-identifiable"
+                + f"({record.data[Fields.ID]}) not toc-identifiable"
             )
             raise colrev_exceptions.NotTOCIdentifiableException(msg)
     except KeyError as exc:

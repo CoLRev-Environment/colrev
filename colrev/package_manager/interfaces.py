@@ -2,15 +2,18 @@
 """Package interfaces."""
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 
 import zope.interface
 
-import colrev.package_manager.package_settings
-import colrev.process.operation
-import colrev.record.record
-import colrev.settings
-from colrev.constants import SearchSourceHeuristicStatus
+from colrev.constants import PackageEndpointType
+
+if typing.TYPE_CHECKING:  # pragma: no cover
+    import colrev.process.operation
+    import colrev.record.record
+    import colrev.settings
+    from colrev.constants import SearchSourceHeuristicStatus
 
 # pylint: disable=too-many-ancestors
 
@@ -268,3 +271,67 @@ class DataPackageEndpointInterface(
     # pylint: disable=no-method-argument
     def get_advice() -> dict:  # type: ignore
         """Get advice on how to operate the data package endpoint"""
+
+
+PACKAGE_TYPE_OVERVIEW = {
+    PackageEndpointType.review_type: {
+        "import_name": ReviewTypePackageEndpointInterface,
+        "custom_class": "CustomReviewType",
+        "operation_name": "operation",
+    },
+    PackageEndpointType.search_source: {
+        "import_name": SearchSourcePackageEndpointInterface,
+        "custom_class": "CustomSearchSource",
+        "operation_name": "source_operation",
+    },
+    PackageEndpointType.prep: {
+        "import_name": PrepPackageEndpointInterface,
+        "custom_class": "CustomPrep",
+        "operation_name": "prep_operation",
+    },
+    PackageEndpointType.prep_man: {
+        "import_name": PrepManPackageEndpointInterface,
+        "custom_class": "CustomPrepMan",
+        "operation_name": "prep_man_operation",
+    },
+    PackageEndpointType.dedupe: {
+        "import_name": DedupePackageEndpointInterface,
+        "custom_class": "CustomDedupe",
+        "operation_name": "dedupe_operation",
+    },
+    PackageEndpointType.prescreen: {
+        "import_name": PrescreenPackageEndpointInterface,
+        "custom_class": "CustomPrescreen",
+        "operation_name": "prescreen_operation",
+    },
+    PackageEndpointType.pdf_get: {
+        "import_name": PDFGetPackageEndpointInterface,
+        "custom_class": "CustomPDFGet",
+        "operation_name": "pdf_get_operation",
+    },
+    PackageEndpointType.pdf_get_man: {
+        "import_name": PDFGetManPackageEndpointInterface,
+        "custom_class": "CustomPDFGetMan",
+        "operation_name": "pdf_get_man_operation",
+    },
+    PackageEndpointType.pdf_prep: {
+        "import_name": PDFPrepPackageEndpointInterface,
+        "custom_class": "CustomPDFPrep",
+        "operation_name": "pdf_prep_operation",
+    },
+    PackageEndpointType.pdf_prep_man: {
+        "import_name": PDFPrepManPackageEndpointInterface,
+        "custom_class": "CustomPDFPrepMan",
+        "operation_name": "pdf_prep_man_operation",
+    },
+    PackageEndpointType.screen: {
+        "import_name": ScreenPackageEndpointInterface,
+        "custom_class": "CustomScreen",
+        "operation_name": "screen_operation",
+    },
+    PackageEndpointType.data: {
+        "import_name": DataPackageEndpointInterface,
+        "custom_class": "CustomData",
+        "operation_name": "data_operation",
+    },
+}

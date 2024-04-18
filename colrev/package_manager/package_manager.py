@@ -27,69 +27,6 @@ from colrev.constants import PackageEndpointType
 # https://github.com/rstudio/reticulate/blob/
 # 9ebca7ecc028549dadb3d51d2184f9850f6f9f9d/DESCRIPTION
 
-PACKAGE_TYPE_OVERVIEW = {
-    PackageEndpointType.review_type: {
-        "import_name": colrev.package_manager.interfaces.ReviewTypePackageEndpointInterface,
-        "custom_class": "CustomReviewType",
-        "operation_name": "operation",
-    },
-    PackageEndpointType.search_source: {
-        "import_name": colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
-        "custom_class": "CustomSearchSource",
-        "operation_name": "source_operation",
-    },
-    PackageEndpointType.prep: {
-        "import_name": colrev.package_manager.interfaces.PrepPackageEndpointInterface,
-        "custom_class": "CustomPrep",
-        "operation_name": "prep_operation",
-    },
-    PackageEndpointType.prep_man: {
-        "import_name": colrev.package_manager.interfaces.PrepManPackageEndpointInterface,
-        "custom_class": "CustomPrepMan",
-        "operation_name": "prep_man_operation",
-    },
-    PackageEndpointType.dedupe: {
-        "import_name": colrev.package_manager.interfaces.DedupePackageEndpointInterface,
-        "custom_class": "CustomDedupe",
-        "operation_name": "dedupe_operation",
-    },
-    PackageEndpointType.prescreen: {
-        "import_name": colrev.package_manager.interfaces.PrescreenPackageEndpointInterface,
-        "custom_class": "CustomPrescreen",
-        "operation_name": "prescreen_operation",
-    },
-    PackageEndpointType.pdf_get: {
-        "import_name": colrev.package_manager.interfaces.PDFGetPackageEndpointInterface,
-        "custom_class": "CustomPDFGet",
-        "operation_name": "pdf_get_operation",
-    },
-    PackageEndpointType.pdf_get_man: {
-        "import_name": colrev.package_manager.interfaces.PDFGetManPackageEndpointInterface,
-        "custom_class": "CustomPDFGetMan",
-        "operation_name": "pdf_get_man_operation",
-    },
-    PackageEndpointType.pdf_prep: {
-        "import_name": colrev.package_manager.interfaces.PDFPrepPackageEndpointInterface,
-        "custom_class": "CustomPDFPrep",
-        "operation_name": "pdf_prep_operation",
-    },
-    PackageEndpointType.pdf_prep_man: {
-        "import_name": colrev.package_manager.interfaces.PDFPrepManPackageEndpointInterface,
-        "custom_class": "CustomPDFPrepMan",
-        "operation_name": "pdf_prep_man_operation",
-    },
-    PackageEndpointType.screen: {
-        "import_name": colrev.package_manager.interfaces.ScreenPackageEndpointInterface,
-        "custom_class": "CustomScreen",
-        "operation_name": "screen_operation",
-    },
-    PackageEndpointType.data: {
-        "import_name": colrev.package_manager.interfaces.DataPackageEndpointInterface,
-        "custom_class": "CustomData",
-        "operation_name": "data_operation",
-    },
-}
-
 # pylint: disable=too-few-public-methods
 
 
@@ -193,7 +130,9 @@ class PackageManager:
         # avoid changes in the config
         selected_packages = deepcopy(selected_packages)
 
-        custom_classes = PACKAGE_TYPE_OVERVIEW[package_type]
+        custom_classes = colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW[
+            package_type
+        ]
 
         packages_dict: typing.Dict = {}
         for selected_package in selected_packages:
@@ -284,7 +223,9 @@ class PackageManager:
             ignore_not_available=ignore_not_available,
         )
 
-        package_details = PACKAGE_TYPE_OVERVIEW[package_type]
+        package_details = colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW[
+            package_type
+        ]
         endpoint_class = package_details["import_name"]  # type: ignore
         to_remove = []
         for package_identifier, package_class in packages_dict.items():
