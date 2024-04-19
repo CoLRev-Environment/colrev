@@ -16,3 +16,4 @@ colrev.env.local\_index\_prep
       :nosignatures:
 
       prepare_record_for_indexing
+      prepare_record_for_return

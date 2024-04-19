@@ -17,6 +17,7 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRecord
       :nosignatures:
 
       ~SQLiteIndexRecord.commit
+      ~SQLiteIndexRecord.exists
       ~SQLiteIndexRecord.get
       ~SQLiteIndexRecord.insert
       ~SQLiteIndexRecord.search
@@ -33,6 +34,7 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRecord
       ~SQLiteIndexRecord.CREATE_TABLE_QUERY
       ~SQLiteIndexRecord.GLOBAL_KEYS
       ~SQLiteIndexRecord.INDEX_NAME
+      ~SQLiteIndexRecord.INSERT_QUERY
       ~SQLiteIndexRecord.KEYS
       ~SQLiteIndexRecord.SELECT_ALL_QUERY
       ~SQLiteIndexRecord.SELECT_KEY_QUERIES

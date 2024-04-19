@@ -12,7 +12,7 @@ colrev prep -a colrev.add_journal_ranking
 
 **Description**
 
-The add_journal_ranking package allows the user to add a ranking to the records metadata for additional automated prescreen options. While iterating through the records, this class calls the search_in_database method to access the sqlite_index.db to compare if a journal_name is in one or more of the saved rankings. These rankings are being saved in the records metadata.
+The add_journal_ranking package allows the user to add a ranking to the records metadata for additional automated prescreen options. While iterating through the records, this class calls the get_journal_rankings method to access the sqlite_index.db to compare if a journal_name is in one or more of the saved rankings. These rankings are being saved in the records metadata.
 
 Example:
 

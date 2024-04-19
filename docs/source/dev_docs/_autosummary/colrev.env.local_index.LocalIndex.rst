@@ -17,24 +17,9 @@ colrev.env.local\_index.LocalIndex
       :nosignatures:
 
       ~LocalIndex.get_fields_to_remove
+      ~LocalIndex.get_journal_rankings
       ~LocalIndex.get_year_from_toc
-      ~LocalIndex.index
-      ~LocalIndex.index_colrev_project
-      ~LocalIndex.index_records
-      ~LocalIndex.load_journal_rankings
-      ~LocalIndex.reinitialize_sqlite_db
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_based_on_colrev_pdf_id
       ~LocalIndex.retrieve_from_toc
       ~LocalIndex.search
-      ~LocalIndex.search_in_database
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~LocalIndex.keys_to_remove

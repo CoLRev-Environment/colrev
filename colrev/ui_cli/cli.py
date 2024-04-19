@@ -20,6 +20,7 @@ import pandas as pd
 from git.exc import GitCommandError
 
 import colrev.env.local_index
+import colrev.env.local_index_builder
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.check
 import colrev.package_manager.package_manager
@@ -2364,9 +2365,12 @@ def env(
         return
 
     if index:
-        local_index = colrev.env.local_index.LocalIndex(verbose_mode=verbose)
-        local_index.index()
-        local_index.load_journal_rankings()
+        print("Index rankings")
+        local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
+            verbose_mode=verbose
+        )
+        local_index_builder.index()
+        local_index_builder.index_journal_rankings()
         return
 
     # The following options may need a review_manager

@@ -135,7 +135,7 @@ class ScopePrescreen(JsonSchemaMixin):
         if Fields.JOURNAL not in record.data:
             return
 
-        rankings = self.local_index.search_in_database(record.data[Fields.JOURNAL])
+        rankings = self.local_index.get_journal_rankings(record.data[Fields.JOURNAL])
         if any(x["predatory"] == "yes" for x in rankings):
             record.prescreen_exclude(reason="predatory_journals_beal")
 

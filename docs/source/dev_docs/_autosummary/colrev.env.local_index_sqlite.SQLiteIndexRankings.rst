@@ -17,7 +17,7 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRankings
       :nosignatures:
 
       ~SQLiteIndexRankings.commit
-      ~SQLiteIndexRankings.insert
+      ~SQLiteIndexRankings.insert_df
       ~SQLiteIndexRankings.select
 
 
@@ -31,4 +31,5 @@ colrev.env.local\_index\_sqlite.SQLiteIndexRankings
       ~SQLiteIndexRankings.CREATE_TABLE_QUERY
       ~SQLiteIndexRankings.INDEX_NAME
       ~SQLiteIndexRankings.KEYS
+      ~SQLiteIndexRankings.SELECT_QUERY
       ~SQLiteIndexRankings.connection

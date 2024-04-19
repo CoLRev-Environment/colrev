@@ -19,7 +19,6 @@ colrev.env.local\_index\_sqlite.SQLiteIndexTOC
       ~SQLiteIndexTOC.add
       ~SQLiteIndexTOC.commit
       ~SQLiteIndexTOC.exists
-      ~SQLiteIndexTOC.get
       ~SQLiteIndexTOC.get_toc_items
 
 
@@ -32,6 +31,7 @@ colrev.env.local\_index\_sqlite.SQLiteIndexTOC
 
       ~SQLiteIndexTOC.CREATE_TABLE_QUERY
       ~SQLiteIndexTOC.INDEX_NAME
+      ~SQLiteIndexTOC.INSERT_MANY_QUERY
       ~SQLiteIndexTOC.KEYS
       ~SQLiteIndexTOC.SELECT_ALL_QUERY
       ~SQLiteIndexTOC.SELECT_KEY_QUERY

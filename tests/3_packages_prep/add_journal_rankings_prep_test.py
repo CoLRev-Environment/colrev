@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import colrev.env.local_index_builder
 import colrev.ops.prep
 import colrev.packages.prep.add_journal_ranking
 from colrev.constants import Fields
@@ -24,8 +25,10 @@ def elp(  # type: ignore
     with session_mocker.patch.object(
         colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     ):
-        local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
-    local_index.load_journal_rankings()
+        local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
+            verbose_mode=True
+        )
+    local_index_builder.index_journal_rankings()
 
     return ajr_instance
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from git import Repo
 
+import colrev.env.local_index_builder
 import colrev.exceptions as colrev_exceptions
 import colrev.review_manager
 
@@ -36,6 +37,6 @@ class Clone:
             return
         environment_manager = review_manager.get_environment_manager()
         environment_manager.register_repo(self.local_path)
-        local_index = colrev.env.local_index.LocalIndex()
+        local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder()
 
-        local_index.index_colrev_project(self.local_path)
+        local_index_builder.index_colrev_project(self.local_path)

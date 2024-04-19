@@ -15,8 +15,17 @@ import colrev.record.record
 import colrev.review_manager
 from colrev.constants import Fields
 from colrev.constants import FieldSet
+from colrev.constants import FieldValues
 from colrev.constants import LocalIndexFields
 from colrev.constants import RecordState
+
+KEYS_TO_REMOVE = (
+    Fields.ORIGIN,
+    Fields.FULLTEXT,
+    Fields.GROBID_VERSION,
+    Fields.SCREENING_CRITERIA,
+    Fields.METADATA_SOURCE_REPOSITORY_PATHS,
+)
 
 
 def _apply_status_requirements(record_dict: dict) -> None:
@@ -111,7 +120,7 @@ def _get_record_hash(record_dict: dict) -> str:
 
 
 def prepare_record_for_indexing(record_dict: dict) -> dict:
-    """Prepare record for LocalIndex."""
+    """Prepare record for indexing in LocalIndex."""
     try:
         _apply_status_requirements(record_dict)
         _remove_fields(record_dict)
@@ -133,3 +142,45 @@ def prepare_record_for_indexing(record_dict: dict) -> dict:
         ) from exc
 
     return record_dict
+
+
+def prepare_record_for_return(
+    record_dict: dict,
+    *,
+    include_file: bool = False,
+    include_colrev_ids: bool = False,
+) -> colrev.record.record.Record:
+    """Prepare record for return from LocalIndex."""
+
+    # Note : remove fulltext before parsing because it raises errors
+    fulltext_backup = record_dict.get(Fields.FULLTEXT, "NA")
+
+    for key in KEYS_TO_REMOVE:
+        record_dict.pop(key, None)
+
+    # Note: record['file'] should be an absolute path by definition
+    # when stored in the LocalIndex
+    if Fields.FILE in record_dict and not Path(record_dict[Fields.FILE]).is_file():
+        del record_dict[Fields.FILE]
+
+    if not include_colrev_ids and Fields.COLREV_ID in record_dict:
+        del record_dict[Fields.COLREV_ID]
+
+    if include_file:
+        if fulltext_backup != "NA":
+            record_dict[Fields.FULLTEXT] = fulltext_backup
+    else:
+        colrev.record.record.Record(record_dict).remove_field(key=Fields.FILE)
+        colrev.record.record.Record(record_dict).remove_field(key=Fields.PDF_ID)
+
+    record = colrev.record.record.Record(record_dict)
+    record.set_status(RecordState.md_prepared)
+
+    if record.masterdata_is_curated():
+        identifier_string = (
+            record.get_field_provenance_source(FieldValues.CURATED)
+            + f"#{record_dict[Fields.ID]}"
+        )
+        record_dict[Fields.CURATION_ID] = identifier_string
+
+    return record

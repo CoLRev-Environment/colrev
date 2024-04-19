@@ -52,7 +52,6 @@ colrev.constants.Fields
       ~Fields.JOURNAL
       ~Fields.KEYWORDS
       ~Fields.LANGUAGE
-      ~Fields.LOCAL_CURATED_METADATA
       ~Fields.MD_PROV
       ~Fields.METADATA_SOURCE_REPOSITORY_PATHS
       ~Fields.MONTH

@@ -46,7 +46,7 @@ class AddJournalRanking(JsonSchemaMixin):
         if record.data.get(Fields.JOURNAL, "") == "":
             return record
 
-        rankings = self.local_index.search_in_database(record.data[Fields.JOURNAL])
+        rankings = self.local_index.get_journal_rankings(record.data[Fields.JOURNAL])
         # extend: include journal-impact factor or ranking category
         if rankings:
             rankings_str = ",".join(r["ranking"] for r in rankings)

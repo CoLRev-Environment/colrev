@@ -267,8 +267,8 @@ class SQLiteIndexRankings(SQLiteIndex):
             reinitialize=reinitialize,
         )
 
-    def insert(self, data_frame: pd.DataFrame) -> None:
-        """Insert journal rankings into the index"""
+    def insert_df(self, data_frame: pd.DataFrame) -> None:
+        """Insert a dataframe of journal rankings into the index"""
         conn = sqlite3.connect(str(Filepaths.LOCAL_INDEX_SQLITE_FILE))
         data_frame.to_sql(self.INDEX_NAME, conn, if_exists="replace", index=False)
         conn.commit()
@@ -293,7 +293,7 @@ class SQLiteIndexTOC(SQLiteIndex):
         f"CREATE TABLE {INDEX_NAME} (toc_key TEXT PRIMARY KEY, colrev_ids)"
     )
 
-    SELECT_ALL_QUERY = {INDEX_NAME: f"SELECT * FROM {INDEX_NAME} WHERE"}
+    SELECT_ALL_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE "
 
     SELECT_KEY_QUERY = {
         LocalIndexFields.TOC_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?",
@@ -320,60 +320,37 @@ class SQLiteIndexTOC(SQLiteIndex):
             return False
         return True
 
-    def get(
-        self,
-        *,
-        key: str,
-        value: str,
-    ) -> dict:
+    def get_toc_items(self, toc_key: str = "", partial_toc_key: str = "") -> list:
         """Get TOC items from the index"""
+        if partial_toc_key != "":
+            query = f"{self.SELECT_ALL_QUERY} {LocalIndexFields.TOC_KEY} LIKE ?%"
+            argument = partial_toc_key
+        elif toc_key != "":
+            query = (
+                f"SELECT * FROM {self.INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?"
+            )
+            argument = toc_key
+        else:
+            raise NotImplementedError
+
         try:
             cur = self._get_cursor()
-
-            # in the following, collisions should be handled.
-            # paper_hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
-            # Collision
-            # paper_hash = self._increment_hash(paper_hash=paper_hash)
-
-            cur.execute(self.SELECT_KEY_QUERY[key], (value,))
-            selected_row = cur.fetchone()
-
-            if not selected_row:
-                raise colrev_exceptions.RecordNotInIndexException()
-
-            retrieved_record = {}
-            retrieved_record = selected_row
-
-            if (
-                key != Fields.COLREV_ID
-                and (key not in retrieved_record or value != retrieved_record[key])
-            ) or (
-                key == Fields.COLREV_ID
-                and (
-                    value
-                    != colrev.record.record.Record(retrieved_record).get_colrev_id()
-                )
-            ):
-                raise colrev_exceptions.RecordNotInIndexException()
-
-        except sqlite3.OperationalError as exc:  # pragma: no cover
-            raise colrev_exceptions.RecordNotInIndexException() from exc
-
-        return retrieved_record
-
-    def get_toc_items(self, query: typing.Tuple[str, list[str]]) -> list:
-        """Get TOC items from the index"""
-        try:
-            cur = self._get_cursor()
-            select_all_query = f"{self.SELECT_ALL_QUERY} {query[0]}"
-            cur.execute(select_all_query, query[1])
+            print(query)
+            cur.execute(query, (argument,))
             results = cur.fetchall()
-            return results
 
         except sqlite3.OperationalError as exc:  # pragma: no cover
+            print(exc)
             raise colrev_exceptions.RecordNotInIndexException() from exc
         except AttributeError as exc:
             raise colrev_exceptions.RecordNotInIndexException() from exc
+
+        # toc_items = results.get("colrev_ids", "").split(";")  # type: ignore
+
+        toc_items = [x["colrev_ids"].split(";") for x in results]
+        toc_items = [item for sublist in toc_items for item in sublist]
+
+        return toc_items
 
     def add(self, toc_to_index: dict) -> None:
         """Add TOC items to the index"""

@@ -165,8 +165,11 @@ def _get_colrev_id_from_record(record: colrev.record.record.Record) -> str:
     except KeyError as exc:
         if Fields.ENTRYTYPE in str(exc):
             print(f"Missing ENTRYTYPE in {record.data.get(Fields.ID, record.data)}")
+        key = "unknown"
+        if exc.args:
+            key = exc.args[0]
         raise colrev_exceptions.NotEnoughDataToIdentifyException(
-            msg="Missing field:" + str(exc), missing_fields=[exc.args[0]]
+            msg="Missing field:" + str(exc), missing_fields=[key]
         )
     return srep
 

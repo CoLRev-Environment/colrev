@@ -11,6 +11,7 @@ import git
 import pytest
 
 import colrev.env.local_index
+import colrev.env.local_index_builder
 import colrev.exceptions as colrev_exceptions
 import colrev.ops.init
 import colrev.record.record_pdf
@@ -157,13 +158,15 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     ):
         test_records_dict = load_test_records(helpers.test_data_path)
-        local_index = colrev.env.local_index.LocalIndex(verbose_mode=True)
-        local_index.reinitialize_sqlite_db()
+        local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
+            verbose_mode=True
+        )
+        local_index_builder.reinitialize_sqlite_db()
 
         for path, records in test_records_dict.items():
             if "cura" in str(path):
                 continue
-            local_index.index_records(
+            local_index_builder.index_records(
                 records=records,
                 repo_source_path=path,
                 curated_fields=[],
@@ -174,7 +177,7 @@ def fixture_base_repo_review_manager(session_mocker, tmp_path_factory, helpers):
         for path, records in test_records_dict.items():
             if "cura" not in str(path):
                 continue
-            local_index.index_records(
+            local_index_builder.index_records(
                 records=records,
                 repo_source_path=path,
                 curated_fields=["literature_review"],
@@ -382,15 +385,15 @@ def get_local_index(  # type: ignore
     session_mocker.patch.object(
         colrev.constants.Filepaths, "LOCAL_INDEX_SQLITE_FILE", temp_sqlite
     )
-    local_index_instance = colrev.env.local_index.LocalIndex(
+    local_index_builder = colrev.env.local_index_builder.LocalIndexBuilder(
         index_tei=True, verbose_mode=True
     )
-    local_index_instance.reinitialize_sqlite_db()
+    local_index_builder.reinitialize_sqlite_db()
 
     for path, records in local_index_test_records_dict.items():
         if "cura" in str(path):
             continue
-        local_index_instance.index_records(
+        local_index_builder.index_records(
             records=records,
             repo_source_path=path,
             curated_fields=[],
@@ -401,7 +404,7 @@ def get_local_index(  # type: ignore
     for path, records in local_index_test_records_dict.items():
         if "cura" not in str(path):
             continue
-        local_index_instance.index_records(
+        local_index_builder.index_records(
             records=records,
             repo_source_path=path,
             curated_fields=["literature_review"],
@@ -409,7 +412,9 @@ def get_local_index(  # type: ignore
             curated_masterdata=False,
         )
 
-    return local_index_instance
+    local_index = colrev.env.local_index.LocalIndex()
+
+    return local_index
 
 
 @pytest.fixture(scope="module")
