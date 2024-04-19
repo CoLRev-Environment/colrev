@@ -23,6 +23,7 @@ import colrev.env.local_index_sqlite
 import colrev.env.resources
 import colrev.env.tei_parser
 import colrev.exceptions as colrev_exceptions
+import colrev.loader.load_utils
 import colrev.ops.check
 import colrev.record.record
 import colrev.review_manager
@@ -77,46 +78,10 @@ class LocalIndex:
         sqlite_index_ranking = colrev.env.local_index_sqlite.SQLiteIndexRankings()
         return sqlite_index_ranking.select(journal=journal)
 
-    # # import binascii
-    # def _increment_hash(self, *, paper_hash: str) -> str:
-    #     plaintext = binascii.unhexlify(paper_hash)
-    #     # also, we'll want to know our length later on
-    #     plaintext_length = len(plaintext)
-    #     plaintext_number = int.from_bytes(plaintext, "big")
-
-    #     # recommendation: do not increment by 1
-    #     plaintext_number += 10
-    #     max_len_sha256 = 2**256
-    #     plaintext_number = plaintext_number % max_len_sha256
-
-    #     new_plaintext = plaintext_number.to_bytes(plaintext_length, "big")
-    #     new_hex = binascii.hexlify(new_plaintext)
-    #     # print(new_hex.decode("utf-8"))
-
-    #     return new_hex.decode("utf-8")
-
     def _get_tei_index_file(self, *, paper_hash: str) -> Path:
         return Filepaths.TEI_INDEX_DIR / Path(
             f"{paper_hash[:2]}/{paper_hash[2:]}.tei.xml"
         )
-
-    # def _index_author(
-    #     self, tei: colrev.env.tei_parser.TEIParser, record_dict: dict
-    # ) -> None:
-    #     print("index_author currently not implemented")
-    # author_details = tei.get_author_details()
-    # # Iterate over curated metadata and enrich it based on TEI (may vary in quality)
-    # for author in record_dict.get(Fields.AUTHOR, "").split(" and "):
-    #     if "," not in author:
-    #         continue
-    #     author_dict = {}
-    #     author_dict["surname"] = author.split(", ")[0]
-    #     author_dict["forename"] = author.split(", ")[1]
-    #     for author_detail in author_details:
-    #         if author_dict["surname"] == author_detail["surname"]:
-    #             # Add complementary details
-    #             author_dict = {**author_dict, **author_detail}
-    #     self.open_search.index(index=self.AUTHOR_INDEX, body=author_dict)
 
     def _index_tei_document(self, recs_to_index: list) -> None:
         if not self._index_tei:
@@ -138,7 +103,7 @@ class LocalIndex:
                 )
                 record_dict[LocalIndexFields.TEI] = str(tei_path)
                 record_dict[Fields.FULLTEXT] = tei.get_tei_str()
-                # self._index_author(tei=tei, record_dict=record_dict)
+
             except (
                 colrev_exceptions.TEIException,
                 AttributeError,
@@ -253,65 +218,34 @@ class LocalIndex:
         ]
         sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
         for item in list_to_add:
-            while True:
-                for (
-                    records_index_required_key
-                ) in colrev.env.local_index_sqlite.SQLiteIndexRecord.KEYS:
-                    if records_index_required_key not in item:
-                        item[records_index_required_key] = ""
-                if item[LocalIndexFields.ID] == "":
-                    print("NO ID IN RECORD")
-                    break
+            for (
+                records_index_required_key
+            ) in colrev.env.local_index_sqlite.SQLiteIndexRecord.KEYS:
+                if records_index_required_key not in item:
+                    item[records_index_required_key] = ""
+            if item[LocalIndexFields.ID] == "":
+                print("NO ID IN RECORD")
+                continue
+
+            if not sqlite_index_record.exists(local_index_id=item[LocalIndexFields.ID]):
+                sqlite_index_record.insert(item)
+            else:
+                if not curated_fields:
+                    continue
                 try:
-                    sqlite_index_record.insert(item)
-                    break
-                except sqlite3.IntegrityError:
-                    if not curated_fields:
-                        break
-                    try:
-                        stored_record = sqlite_index_record.get(
-                            key=Fields.COLREV_ID, value=item[Fields.COLREV_ID]
-                        )
-                        stored_colrev_id = colrev.record.record.Record(
-                            stored_record
-                        ).get_colrev_id()
+                    stored_record = sqlite_index_record.get(
+                        key=Fields.COLREV_ID,
+                        value=item[Fields.COLREV_ID],
+                    )
 
-                        if (
-                            stored_colrev_id != item[Fields.COLREV_ID]
-                        ):  # pragma: no cover
-                            print("Collisions (TODO):")
-                            print(stored_colrev_id)
-                            print(item[Fields.COLREV_ID])
-
-                            # print(
-                            #     [
-                            #         {k: v for k, v in x.items() if k != LocalIndexFields.BIBTEX}
-                            #         for x in stored_record
-                            #     ]
-                            # )
-                            # print(item)
-                            # to handle the collision:
-                            # print(f"Collision: {paper_hash}")
-                            # print(cid_to_index)
-                            # print(saved_record_cid)
-                            # print(saved_record)
-                            # paper_hash = self._increment_hash(paper_hash=paper_hash)
-                            # item[LocalIndexFields.ID] = paper_hash
-                            # continue in while-loop/try to insert...
-                            # pylint: disable=raise-missing-from
-                            raise NotImplementedError
-
-                        self._amend_record(
-                            sqlite_index_record=sqlite_index_record,
-                            stored_record_dict=stored_record,
-                            item_to_add=item,
-                            curated_fields=curated_fields,
-                        )
-                        break
-                    except (
-                        colrev_exceptions.RecordNotInIndexException
-                    ):  # pragma: no cover
-                        break
+                    self._amend_record(
+                        sqlite_index_record=sqlite_index_record,
+                        stored_record_dict=stored_record,
+                        item_to_add=item,
+                        curated_fields=curated_fields,
+                    )
+                except colrev_exceptions.RecordNotInIndexException:  # pragma: no cover
+                    pass
 
         sqlite_index_record.commit()
 
@@ -702,9 +636,7 @@ class LocalIndex:
                 raise colrev_exceptions.TOCNotAvailableException()
 
             toc_records_colrev_id = toc_items[0]
-
             sqlite_index_record = colrev.env.local_index_sqlite.SQLiteIndexRecord()
-
             record_dict = sqlite_index_record.get(
                 key=Fields.COLREV_ID, value=toc_records_colrev_id
             )

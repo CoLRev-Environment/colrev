@@ -25,6 +25,24 @@ from colrev.constants import LocalIndexFields
 # AUTHOR_RECORD_INDEX = "author_record_index"
 # CITATIONS_INDEX = "citations_index"
 
+# # import binascii
+# def _increment_hash(self, *, paper_hash: str) -> str:
+#     plaintext = binascii.unhexlify(paper_hash)
+#     # also, we'll want to know our length later on
+#     plaintext_length = len(plaintext)
+#     plaintext_number = int.from_bytes(plaintext, "big")
+
+#     # recommendation: do not increment by 1
+#     plaintext_number += 10
+#     max_len_sha256 = 2**256
+#     plaintext_number = plaintext_number % max_len_sha256
+
+#     new_plaintext = plaintext_number.to_bytes(plaintext_length, "big")
+#     new_hex = binascii.hexlify(new_plaintext)
+#     # print(new_hex.decode("utf-8"))
+
+#     return new_hex.decode("utf-8")
+
 
 # pylint: disable=too-few-public-methods
 class SQLiteIndex:
@@ -123,6 +141,8 @@ class SQLiteIndexRecord(SQLiteIndex):
         Fields.URL: f"SELECT * FROM {INDEX_NAME} WHERE {Fields.URL}=?",
     }
 
+    INSERT_QUERY = f"INSERT INTO {INDEX_NAME} VALUES(:{', :'.join(KEYS)})"
+
     UPDATE_RECORD_QUERY = f"""
             UPDATE {INDEX_NAME} SET
             {LocalIndexFields.BIBTEX}=?
@@ -135,13 +155,27 @@ class SQLiteIndexRecord(SQLiteIndex):
             reinitialize=reinitialize,
         )
 
-    def insert(self, item: dict) -> None:
-        """Insert a record into the index"""
+    def exists(
+        self,
+        *,
+        local_index_id: str,
+    ) -> bool:
+        """Check if a record exists in the index"""
         cur = self._get_cursor()
         cur.execute(
-            f"INSERT INTO {self.INDEX_NAME} " f"VALUES(:{', :'.join(self.KEYS)})",
-            item,
+            self.SELECT_KEY_QUERIES[LocalIndexFields.ID],
+            (local_index_id,),
         )
+        selected_row = cur.fetchone()
+        if not selected_row:
+            return False
+        return True
+
+    def insert(self, item: dict) -> None:
+        """Insert a record into the index"""
+        # May raise sqlite3.IntegrityError
+        cur = self._get_cursor()
+        cur.execute(self.INSERT_QUERY, item)
         self.commit()
 
     def get(
@@ -153,46 +187,55 @@ class SQLiteIndexRecord(SQLiteIndex):
         """Get a record from the index"""
         try:
             cur = self._get_cursor()
-
-            # in the following, collisions should be handled.
-            # paper_hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
-            # Collision
-            # paper_hash = self._increment_hash(paper_hash=paper_hash)
-
             cur.execute(self.SELECT_KEY_QUERIES[key], (value,))
-
             selected_row = cur.fetchone()
-
             if not selected_row:
                 raise colrev_exceptions.RecordNotInIndexException()
 
             retrieved_record = {}
             retrieved_record = self._get_record_from_row(selected_row)
-
-            if (
-                key != Fields.COLREV_ID
-                and (key not in retrieved_record or value != retrieved_record[key])
-            ) or (
-                key == Fields.COLREV_ID
-                and (
-                    value
-                    != colrev.record.record.Record(retrieved_record).get_colrev_id()
-                )
+            if key != Fields.COLREV_ID and (
+                key not in retrieved_record or value != retrieved_record[key]
             ):
+                # Note: colrev-id collisions are handled separately
                 raise colrev_exceptions.RecordNotInIndexException()
-
-            return retrieved_record
 
         except sqlite3.OperationalError as exc:  # pragma: no cover
             raise colrev_exceptions.RecordNotInIndexException() from exc
 
+        # Handling collisions in colrev-ids
+        if key == Fields.COLREV_ID:
+            stored_colrev_id = colrev.record.record.Record(
+                retrieved_record
+            ).get_colrev_id()
+            if value != stored_colrev_id:  # pragma: no cover
+                print("Collisions (TODO):")
+                print(stored_colrev_id)
+                print(value)
+
+                # print(
+                #     [
+                #         {k: v for k, v in x.items() if k != LocalIndexFields.BIBTEX}
+                #         for x in stored_record
+                #     ]
+                # )
+                # print(item)
+                # to handle the collision:
+                # print(f"Collision: {paper_hash}")
+                # print(cid_to_index)
+                # print(saved_record_cid)
+                # print(saved_record)
+                # paper_hash = self._increment_hash(paper_hash=paper_hash)
+                # item[LocalIndexFields.ID] = paper_hash
+                # continue in while-loop/try to insert...
+                # pylint: disable=raise-missing-from
+                raise NotImplementedError
+        return retrieved_record
+
     def update(self, local_index_id: str, bibtex: str) -> None:
         """Update a record in the index"""
         cur = self._get_cursor()
-        cur.execute(
-            self.UPDATE_RECORD_QUERY,
-            (bibtex, local_index_id),
-        )
+        cur.execute(self.UPDATE_RECORD_QUERY, (bibtex, local_index_id))
 
     def search(self, query: str) -> list:
         """Search for records in the index"""
@@ -217,6 +260,7 @@ class SQLiteIndexRankings(SQLiteIndex):
     KEYS: typing.List[str] = []
 
     CREATE_TABLE_QUERY = f"CREATE TABLE {INDEX_NAME} (id TEXT PRIMARY KEY)"
+    SELECT_QUERY = f"SELECT * FROM {INDEX_NAME} WHERE journal_name = ?"
 
     def __init__(self, *, reinitialize: bool = False) -> None:
         super().__init__(
@@ -236,10 +280,7 @@ class SQLiteIndexRankings(SQLiteIndex):
         """Select journal rankings from the index"""
 
         cur = self._get_cursor()
-        cur.execute(
-            "SELECT * FROM rankings WHERE journal_name = ?",
-            (journal,),
-        )
+        cur.execute(self.SELECT_QUERY, (journal,))
         rankings = cur.fetchall()
         return rankings
 
@@ -259,6 +300,8 @@ class SQLiteIndexTOC(SQLiteIndex):
     SELECT_KEY_QUERY = {
         LocalIndexFields.TOC_KEY: f"SELECT * FROM {INDEX_NAME} WHERE {LocalIndexFields.TOC_KEY}=?",
     }
+
+    INSERT_MANY_QUERY = f"INSERT INTO {INDEX_NAME} VALUES(?, ?)"
 
     def __init__(self, *, reinitialize: bool = False) -> None:
         super().__init__(
@@ -315,10 +358,10 @@ class SQLiteIndexTOC(SQLiteIndex):
             ):
                 raise colrev_exceptions.RecordNotInIndexException()
 
-            return retrieved_record
-
         except sqlite3.OperationalError as exc:  # pragma: no cover
             raise colrev_exceptions.RecordNotInIndexException() from exc
+
+        return retrieved_record
 
     def get_toc_items(self, query: typing.Tuple[str, list[str]]) -> list:
         """Get TOC items from the index"""
@@ -339,7 +382,7 @@ class SQLiteIndexTOC(SQLiteIndex):
         list_to_add = list((k, v) for k, v in toc_to_index.items() if v != "DROPPED")
         cur = self._get_cursor()
         try:
-            cur.executemany(f"INSERT INTO {self.INDEX_NAME} VALUES(?, ?)", list_to_add)
+            cur.executemany(self.INSERT_MANY_QUERY, list_to_add)
         except sqlite3.IntegrityError as exc:  # pragma: no cover
             print(exc)
         finally:
