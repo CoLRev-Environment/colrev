@@ -81,7 +81,6 @@ def _adjust_provenance_for_indexing(record_dict: dict) -> None:
         elif key not in FieldSet.IDENTIFYING_FIELD_KEYS + FieldSet.PROVENANCE_KEYS + [
             Fields.ID,
             Fields.ENTRYTYPE,
-            Fields.LOCAL_CURATED_METADATA,
             Fields.METADATA_SOURCE_REPOSITORY_PATHS,
         ]:
             record.add_field_provenance(
@@ -94,15 +93,6 @@ def _adjust_provenance_for_indexing(record_dict: dict) -> None:
 
 
 def _prep_fields_for_indexing(record_dict: dict) -> None:
-    # Note : this is the first run, no need to split/list
-    if (
-        "colrev/curated_metadata"
-        in record_dict[Fields.METADATA_SOURCE_REPOSITORY_PATHS]
-    ):
-        # Note : local_curated_metadata is important to identify non-duplicates
-        # between curated_metadata_repositories
-        record_dict[Fields.LOCAL_CURATED_METADATA] = "yes"
-
     # Note : file paths should be absolute when added to the LocalIndex
     if Fields.FILE in record_dict:
         pdf_path = Path(record_dict[Fields.FILE])

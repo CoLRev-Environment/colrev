@@ -185,7 +185,6 @@ class Fields:
     COLREV_ID = "colrev_id"
     CURATION_ID = "curation_ID"
     METADATA_SOURCE_REPOSITORY_PATHS = "metadata_source_repository_paths"
-    LOCAL_CURATED_METADATA = "local_curated_metadata"
     GROBID_VERSION = "grobid-version"
 
     DBLP_KEY = "colrev.dblp.dblp_key"
@@ -288,7 +287,6 @@ class FieldSet:
         Fields.ENTRYTYPE,
         Fields.COLREV_ID,
         Fields.METADATA_SOURCE_REPOSITORY_PATHS,
-        Fields.LOCAL_CURATED_METADATA,
     ]
 
 

@@ -13,8 +13,6 @@ from colrev.constants import Fields
 from colrev.constants import Filepaths
 from colrev.constants import LocalIndexFields
 
-# Note: we need the local_curated_metadata field for is_duplicate()
-
 # Note : records are indexed by id = hash(colrev_id)
 # to ensure that the indexing-ids do not exceed limits
 # such as the opensearch limit of 512 bytes.

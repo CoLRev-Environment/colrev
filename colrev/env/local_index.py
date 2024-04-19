@@ -46,7 +46,6 @@ class LocalIndex:
         Fields.FULLTEXT,
         Fields.GROBID_VERSION,
         Fields.SCREENING_CRITERIA,
-        Fields.LOCAL_CURATED_METADATA,
         Fields.METADATA_SOURCE_REPOSITORY_PATHS,
         "tei_file",
     )
