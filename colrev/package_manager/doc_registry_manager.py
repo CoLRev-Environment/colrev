@@ -34,8 +34,7 @@ class DocRegistryManager:
     ) -> None:
         self.package_manager = package_manager
         self.package_endpoints_json: typing.Dict[str, list] = {
-            x.name: []
-            for x in colrev.package_manager.package_manager.PACKAGE_TYPE_OVERVIEW
+            x.name: [] for x in colrev.package_manager.interfaces.PACKAGE_TYPE_OVERVIEW
         }
         self.docs_for_index: typing.Dict[str, list] = {}
         self.package_status = self._load_package_status_json()

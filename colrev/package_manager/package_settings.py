@@ -12,7 +12,6 @@ from dacite import from_dict
 from dataclasses_jsonschema import JsonSchemaMixin
 
 import colrev.exceptions as colrev_exceptions
-import colrev.package_manager.interfaces
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
