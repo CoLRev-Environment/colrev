@@ -1239,7 +1239,7 @@ def test_get_quality_defects_incomplete_field(
     v_t_record.data[Fields.MD_PROV][Fields.AUTHOR][
         "note"
     ] = f"IGNORE:{DefectCodes.INCOMPLETE_FIELD}"
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
 
     assert v_t_record.has_quality_defects()
 
@@ -1264,7 +1264,7 @@ def test_get_quality_defects_title(
     """Test record.get_quality_defects() - title field"""
     v_t_record.data[Fields.TITLE] = title_str
 
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -1295,7 +1295,7 @@ def test_get_quality_defects_journal(
     """Test record.get_quality_defects() - journal field"""
     v_t_record.data[Fields.JOURNAL] = journal_str
 
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -1316,7 +1316,7 @@ def test_get_quality_defects_testing_missing_field_year_forthcoming(
     v_t_record.data[Fields.YEAR] = "forthcoming"
     del v_t_record.data[Fields.VOLUME]
     del v_t_record.data[Fields.NUMBER]
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
     assert (
         v_t_record.data[Fields.MD_PROV][Fields.VOLUME]["note"]
         == f"IGNORE:{DefectCodes.MISSING}"
@@ -1347,7 +1347,7 @@ def test_get_quality_defects_book_title_abbr(
     v_t_record.data[Fields.CHAPTER] = 10
     v_t_record.data[Fields.PUBLISHER] = "nobody"
     del v_t_record.data[Fields.JOURNAL]
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
     if not defects:
         assert not v_t_record.has_quality_defects()
         return
@@ -1377,7 +1377,7 @@ def test_get_quality_defects_missing_fields(
     """Tests for missing and inconsistent data for ENTRYTYPE"""
 
     v_t_record.data[Fields.ENTRYTYPE] = entrytype
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
     if not missing:
         assert not v_t_record.has_quality_defects()
         return
@@ -1406,7 +1406,7 @@ def test_retracted(
     r1_mod = v_t_record.copy_prep_rec()
     r1_mod.data["crossmark"] = "True"
     r1_mod.data[Fields.LANGUAGE] = "eng"
-    r1_mod.run_quality_model(qm=quality_model)
+    r1_mod.run_quality_model(quality_model=quality_model)
     expected = v_t_record.copy_prep_rec()
     expected.data[Fields.PRESCREEN_EXCLUSION] = "retracted"
     expected.data[Fields.RETRACTED] = FieldValues.RETRACTED
@@ -1447,9 +1447,9 @@ def test_defect_ignore(
     quality_model: colrev.record.qm.quality_model.QualityModel,
 ) -> None:
     v_t_record.data["journal"] = "JOURNAL OF INFORMATION TECHNOLOGY"
-    v_t_record.run_quality_model(qm=quality_model)
+    v_t_record.run_quality_model(quality_model=quality_model)
     v_t_record.ignore_defect(key="journal", defect=DefectCodes.MOSTLY_ALL_CAPS)
-    v_t_record.run_quality_model(qm=quality_model, set_prepared=True)
+    v_t_record.run_quality_model(quality_model=quality_model, set_prepared=True)
     assert v_t_record.data[Fields.STATUS] == RecordState.md_prepared
     assert not v_t_record.has_quality_defects()
 
@@ -1463,6 +1463,6 @@ def test_run_quality_model_curated(  # type: ignore
         "colrev.record.record.Record.masterdata_is_curated",
         return_value=True,
     )
-    v_t_record.run_quality_model(qm=quality_model, set_prepared=True)
+    v_t_record.run_quality_model(quality_model=quality_model, set_prepared=True)
 
     assert v_t_record.data[Fields.STATUS] == RecordState.md_prepared

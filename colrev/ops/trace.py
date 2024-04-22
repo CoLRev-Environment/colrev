@@ -28,8 +28,8 @@ class Trace(colrev.process.operation.Operation):
         )
 
     def _print_diff(self, *, diff: dict, color: str, lpad: int = 5) -> None:
-        s = self.review_manager.p_printer.pformat(diff)
-        lines = s.splitlines()
+        formatted_diff = self.review_manager.p_printer.pformat(diff)
+        lines = formatted_diff.splitlines()
         print(
             color
             + "\n".join(["".join([" " * lpad]) + line for line in lines])

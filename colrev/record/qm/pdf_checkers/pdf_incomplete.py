@@ -68,8 +68,8 @@ class PDFIncompletenessChecker:
                     return True
             return False
 
-        def roman_to_int(s: str) -> int:
-            s = s.lower()
+        def roman_to_int(input_str: str) -> int:
+            input_str = input_str.lower()
             roman = {
                 "i": 1,
                 "v": 5,
@@ -87,12 +87,12 @@ class PDFIncompletenessChecker:
             }
             i = 0
             num = 0
-            while i < len(s):
-                if i + 1 < len(s) and s[i : i + 2] in roman:
-                    num += roman[s[i : i + 2]]
+            while i < len(input_str):
+                if i + 1 < len(input_str) and input_str[i : i + 2] in roman:
+                    num += roman[input_str[i : i + 2]]
                     i += 2
                 else:
-                    num += roman[s[i]]
+                    num += roman[input_str[i]]
                     i += 1
             return num
 
