@@ -632,5 +632,11 @@ class ReviewManager:
     ) -> bool:
         """Check whether CoLRev runs in a continuous-integration environment"""
 
-        identifier_list = ["GITHUB_ACTIONS", "CIRCLECI", "TRAVIS", "GITLAB_CI"]
+        identifier_list = [
+            "GITHUB_ACTIONS",
+            "CIRCLECI",
+            "TRAVIS",
+            "GITLAB_CI",
+            "CODESPACES",
+        ]
         return any("true" == os.getenv(x) for x in identifier_list)
