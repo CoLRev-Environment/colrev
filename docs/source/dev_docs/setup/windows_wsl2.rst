@@ -44,4 +44,6 @@ Now install Docker as a prerequisite to run CoLRev following the official instal
 
 Afterwards, follow the steps in :doc:`"Setup part 2: Git and SSH" </dev_docs/setup/part_2_git_ssh>`.
 
+**Important**: To use the WSL command line, you have to run `wsl` in the Windows command prompt or PowerShell (see `explanation <https://devblogs.microsoft.com/commandline/a-guide-to-invoking-wsl/>`__).
+
 Further guides and tutorials how to setup and configure WSL2 can be found directly in the `official Ubuntu WSL documentation at Canonical. <https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/>`__
