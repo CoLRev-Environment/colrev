@@ -152,9 +152,6 @@ def prepare_record_for_return(
 ) -> colrev.record.record.Record:
     """Prepare record for return from LocalIndex."""
 
-    # Note : remove fulltext before parsing because it raises errors
-    fulltext_backup = record_dict.get(Fields.FULLTEXT, "NA")
-
     for key in KEYS_TO_REMOVE:
         record_dict.pop(key, None)
 
@@ -166,10 +163,7 @@ def prepare_record_for_return(
     if not include_colrev_ids and Fields.COLREV_ID in record_dict:
         del record_dict[Fields.COLREV_ID]
 
-    if include_file:
-        if fulltext_backup != "NA":
-            record_dict[Fields.FULLTEXT] = fulltext_backup
-    else:
+    if not include_file:
         colrev.record.record.Record(record_dict).remove_field(key=Fields.FILE)
         colrev.record.record.Record(record_dict).remove_field(key=Fields.PDF_ID)
 
