@@ -13,12 +13,15 @@ from m2r import parse_from_file
 import colrev.env.utils
 import colrev.exceptions as colrev_exceptions
 import colrev.package_manager.interfaces
-import colrev.package_manager.package_manager
 import colrev.process.operation
 import colrev.record.record
 import colrev.settings
 from colrev.constants import PackageEndpointType
 from colrev.constants import SearchType
+
+if typing.TYPE_CHECKING:  # pragma: no cover
+
+    import colrev.package_manager.package_manager
 
 # pylint: disable=too-few-public-methods
 
