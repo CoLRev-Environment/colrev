@@ -18,14 +18,7 @@ Setup `Codespaces here <https://github.com/features/codespaces>`__:
 - Uncheck "Auto-delete codespace" in "..." menu
 - Let "GitHub Codespaces configuration" do some initial setup (happens automatically)
 
-While on "@username ➜ /workspaces/colrev (main) $" run the following commands to setup the CoLRev development environment:
-
-::
-
-   pip install -e .[dev,docs]
-   # if the command above terminates with a warning append "--break-system-packages" and rerun the command:
-   # pip install -e .[dev,docs] --break-system-packages
-   pre-commit run --all
+While on "@username ➜ /workspaces/colrev (main) $" the installation of CoLRev in editable mode and pre-commit hooks are started automatically. This may take several minutes to complete.
 
 [Optional, recommended] For local usage also required:
 
