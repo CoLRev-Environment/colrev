@@ -28,6 +28,7 @@ colrev.loader
 
    colrev.loader.bib
    colrev.loader.enl
+   colrev.loader.json
    colrev.loader.load_utils
    colrev.loader.load_utils_formatter
    colrev.loader.loader
