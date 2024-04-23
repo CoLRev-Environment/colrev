@@ -407,13 +407,6 @@ class ReviewManager:
 
         return colrev.env.resources.Resources()
 
-    @classmethod
-    def get_sync_operation(cls) -> colrev.ops.sync.Sync:  # pragma: no cover
-        """Get a sync operation object"""
-        import colrev.ops.sync
-
-        return colrev.ops.sync.Sync()
-
     def get_search_operation(
         self, *, notify_state_transition_operation: bool = True
     ) -> colrev.ops.search.Search:  # pragma: no cover

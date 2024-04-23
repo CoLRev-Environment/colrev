@@ -1,5 +1,7 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """Synchronize records into a non-CoLRev project."""
+from __future__ import annotations
+
 import logging
 import re
 import typing
@@ -9,8 +11,15 @@ import pybtex.errors
 
 import colrev.dataset
 import colrev.env.local_index
+import colrev.env.local_index_builder
 import colrev.loader.load_utils_formatter
+import colrev.ops.check
+import colrev.package_manager.package_manager
 import colrev.record.record
+import colrev.review_manager
+import colrev.ui_cli.cli_status_printer
+import colrev.ui_cli.cli_validation
+import colrev.ui_cli.dedupe_errors
 from colrev.constants import Colors
 from colrev.constants import Fields
 from colrev.constants import FieldSet
@@ -318,3 +327,74 @@ class Sync:
         records_dict = {r[Fields.ID]: r for r in records}
 
         write_file(records_dict=records_dict, filename=references_file)
+
+
+def main() -> None:
+    """Sync records from CoLRev environment to non-CoLRev repo"""
+
+    sync_operation = Sync()
+
+    sync_operation.get_cited_papers()
+
+    if len(sync_operation.non_unique_for_import) > 0:
+        print("Non-unique keys to resolve:")
+        # Resolve non-unique cases
+        for case in sync_operation.non_unique_for_import:
+            for val in case.values():
+                # later: there may be more collisions (v3, v4)
+                v_1 = val[0].format_bib_style()
+                v_2 = val[1].format_bib_style()
+
+                if v_1.lower() == v_2.lower():
+                    sync_operation.add_to_records_to_import(val[0])
+                    continue
+                print("\n")
+                print(f"1: {v_1}")
+                print("      " + val[0].data.get("source_url", ""))
+                print("")
+                print(f"2: {v_2}")
+                print("      " + val[1].data.get("source_url", ""))
+                user_selection = input("Import version 1 or 2 (or skip)?")
+                if user_selection == "1":
+                    sync_operation.add_to_records_to_import(val[0])
+                    continue
+                if user_selection == "2":
+                    sync_operation.add_to_records_to_import(val[1])
+                    continue
+
+    sync_operation.add_to_bib()
+
+
+# @click.option(
+#     "-a",
+#     "--add",
+#     help="Paper to add.",
+#     required=False,
+# )
+# @click.option(
+#     "--add_hook",
+#     is_flag=True,
+#     default=False,
+#     help="Add a sync pre-commit hook",
+# )
+# @click.option(
+#     "-src",
+#     type=click.Path(exists=True),
+#     help="Sync selected citations from source file.",
+# )
+
+# sync_operation = colrev.review_manager.ReviewManager.get_sync_operation()
+# if add_hook:
+#     sync_operation.add_hook()
+#     return
+
+# if src:
+#     sync_operation.get_cited_papers_from_source(src=Path(src))
+#     sync_operation.add_to_bib()
+#     return
+
+# if add:
+#     sync_operation.add_paper(add)
+#     sync_operation.add_to_bib()
+
+#     return
