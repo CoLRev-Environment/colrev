@@ -6,6 +6,8 @@
 
 Download search results and store in `data/search/` directory. No API-access available.
 
+To retrieve search results, Publish or Perish is recommended.
+
 ## Links
 
 - [GoogleScholar](https://scholar.google.de/)

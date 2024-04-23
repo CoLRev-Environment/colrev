@@ -13,6 +13,7 @@ import colrev.package_manager.interfaces
 import colrev.package_manager.package_manager
 import colrev.package_manager.package_settings
 import colrev.record.record
+from colrev.constants import ENTRYTYPES
 from colrev.constants import Fields
 from colrev.constants import SearchSourceHeuristicStatus
 from colrev.constants import SearchType
@@ -65,6 +66,14 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
             result["confidence"] = 1.0
             return result
 
+        if (
+            data.count("https://scholar.google.com/scholar?q=relat")
+            == data.count('"uid": "GS:')
+            and data.count('"uid": "GS:') > 0
+        ):
+            result["confidence"] = 1.0
+            return result
+
         return result
 
     @classmethod
@@ -107,7 +116,7 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
         if self.search_source.filename.suffix == ".bib":
 
-            def field_mapper(record_dict: dict) -> None:
+            def bib_field_mapper(record_dict: dict) -> None:
                 if "related" in record_dict:
                     record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
                 if "note" in record_dict:
@@ -117,9 +126,78 @@ class GoogleScholarSearchSource(JsonSchemaMixin):
 
             records = colrev.loader.load_utils.load(
                 filename=self.search_source.filename,
-                field_mapper=field_mapper,
+                field_mapper=bib_field_mapper,
                 logger=self.review_manager.logger,
             )
+            return records
+
+        if self.search_source.filename.suffix == ".json":
+            # pylint: disable=too-many-branches
+            def json_field_mapper(record_dict: dict) -> None:
+                if "related" in record_dict:
+                    record_dict[f"{self.endpoint}.related"] = record_dict.pop("related")
+                if "note" in record_dict:
+                    record_dict[f"{self.endpoint}.note"] = record_dict.pop("note")
+                if "type" in record_dict:
+                    record_dict[f"{self.endpoint}.type"] = record_dict.pop("type")
+                if "article_url" in record_dict:
+                    record_dict[f"{self.endpoint}.article_url"] = record_dict.pop(
+                        "article_url"
+                    )
+                if "cites_url" in record_dict:
+                    record_dict[f"{self.endpoint}.cites_url"] = record_dict.pop(
+                        "cites_url"
+                    )
+                if "related_url" in record_dict:
+                    record_dict[f"{self.endpoint}.related_url"] = record_dict.pop(
+                        "related_url"
+                    )
+                if "fulltext_url" in record_dict:
+                    record_dict[f"{self.endpoint}.fulltext_url"] = record_dict.pop(
+                        "fulltext_url"
+                    )
+
+                if "uid" in record_dict:
+                    record_dict[f"{self.endpoint}.uid"] = record_dict.pop("uid")
+                if "source" in record_dict:
+                    record_dict[Fields.JOURNAL] = record_dict.pop("source")
+                if "cites" in record_dict:
+                    record_dict[f"{self.endpoint}.cites"] = record_dict.pop("cites")
+
+                record_dict.pop("volume", None)
+                record_dict.pop("issue", None)
+                record_dict.pop("startpage", None)
+                record_dict.pop("endpage", None)
+                record_dict.pop("ecc", None)
+                record_dict.pop("use", None)
+                record_dict.pop("rank", None)
+                if "authors" in record_dict:
+                    authors = record_dict.pop("authors")
+                    for i, author in enumerate(authors):
+                        names = author.split(" ")
+                        if len(names) > 1:
+                            first_name, last_name = names[0], " ".join(names[1:])
+                            authors[i] = f"{last_name}, {first_name}"
+                        else:
+                            authors[i] = names[0]
+
+                    record_dict[Fields.AUTHOR] = " and ".join(authors)
+
+                for key, value in record_dict.items():
+                    record_dict[key] = str(value)
+
+            def json_entrytype_setter(record_dict: dict) -> None:
+                record_dict[Fields.ENTRYTYPE] = ENTRYTYPES.MISC
+
+            records = colrev.loader.load_utils.load(
+                filename=self.search_source.filename,
+                entrytype_setter=json_entrytype_setter,
+                field_mapper=json_field_mapper,
+                # Note: uid not always available.
+                unique_id_field="INCREMENTAL",
+                logger=self.review_manager.logger,
+            )
+
             return records
 
         raise NotImplementedError
