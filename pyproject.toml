@@ -26,6 +26,7 @@ include = ["CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py
 
 [tool.poetry.scripts]
 colrev = "colrev.ui_cli.cli:main"
+colrev-sync = "colrev.packages.sync:main"
 colrev-hooks-check = "colrev.hooks.check:main"
 colrev-hooks-format = "colrev.hooks.format:main"
 colrev-hooks-report = "colrev.hooks.report:main"
@@ -92,6 +93,8 @@ pytest-skip-slow = {version = "^0.0.5", optional = true }
 requests-mock = {version = "^1.10.0", optional = true }
 coverage = {extras = ["toml"], version = "^7.3.2", optional = true }
 types-click = {version = "^7.1.8", optional = true }
+# Can't do 0.21 with poetry because of https://github.com/python-poetry/poetry/issues/9293
+docutils = "!=0.21.post1"
 
 [tool.poetry.extras]
 docs = ["Sphinx", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-rtd-theme", "sphinxcontrib.datatemplates", "sphinx_collapse", "repoze-sphinx-autointerface"]
