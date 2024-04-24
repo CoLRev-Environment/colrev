@@ -65,6 +65,9 @@ class InconsistentWithEntrytypeChecker:
     def run(self, *, record: colrev.record.record.Record) -> None:
         """Run the completeness checks"""
 
+        if "ENTRYTYPE" not in record.data:
+            return
+
         if record.data["ENTRYTYPE"] not in self.record_field_inconsistencies:
             return
 
