@@ -218,13 +218,13 @@ class Initializer:
     def _fix_pre_commit_hooks_windows(self) -> None:
         # https://stackoverflow.com/questions/12410164/github-for-windows-pre-commit-hook
         if any(platform.win32_ver()):
-            with open(".git/hooks/pre-commit", encoding="utf-8") as f:
-                lines = f.readlines()
+            with open(".git/hooks/pre-commit", encoding="utf-8") as file:
+                lines = file.readlines()
 
             lines[0] = """#!C:/Program\\ Files/Git/usr/bin/sh.exe\n"""
 
-            with open(".git/hooks/pre-commit", "w", encoding="utf-8") as f:
-                f.writelines(lines)
+            with open(".git/hooks/pre-commit", "w", encoding="utf-8") as file:
+                file.writelines(lines)
 
     def _setup_files(self) -> None:
 

@@ -51,8 +51,8 @@ class Loader:
         assert len(unique_ids) == len(records_list), "ID is not unique in records"
 
     def _set_entrytypes(self, records_dict: dict) -> None:
-        for r in records_dict.values():
-            self.entrytype_setter(r)
+        for r_dict_val in records_dict.values():
+            self.entrytype_setter(r_dict_val)
         assert all(
             Fields.ENTRYTYPE in r for r in records_dict.values()
         ), "ENTRYTYPE not set in all records"

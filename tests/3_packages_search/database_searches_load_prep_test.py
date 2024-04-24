@@ -24,6 +24,12 @@ NO_CUSTOM_SOURCE = None
     "filenamepath, expected_source_identifier, custom_source, expected_file",
     [
         (
+            Path("google_scholar.json"),
+            "colrev.google_scholar",
+            NO_CUSTOM_SOURCE,
+            Path("google_scholar_result.bib"),
+        ),
+        (
             Path("eric_nbib.nbib"),
             "colrev.eric",
             NO_CUSTOM_SOURCE,

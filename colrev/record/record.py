@@ -647,7 +647,7 @@ class Record:
 
     def run_quality_model(
         self,
-        qm: colrev.record.qm.quality_model.QualityModel,
+        quality_model: colrev.record.qm.quality_model.QualityModel,
         *,
         set_prepared: bool = False,
     ) -> None:
@@ -662,7 +662,7 @@ class Record:
             return
 
         # Apply the checkers (including field key requirements etc.)
-        qm.run(record=self)
+        quality_model.run(record=self)
 
         if (
             Fields.STATUS in self.data

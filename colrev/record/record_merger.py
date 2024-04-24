@@ -172,7 +172,7 @@ def _fuse_fields(
     # Note : the assumption is that we need masterdata_provenance notes
     # only for authors
 
-    qm = colrev.record.qm.quality_model.QualityModel(
+    quality_model = colrev.record.qm.quality_model.QualityModel(
         defects_to_ignore=[
             DefectCodes.MISSING,
             DefectCodes.RECORD_NOT_IN_TOC,
@@ -181,8 +181,8 @@ def _fuse_fields(
             DefectCodes.INCONSISTENT_WITH_DOI_METADATA,
         ]
     )
-    qm.run(record=main_record)
-    qm.run(record=merging_record)
+    quality_model.run(record=main_record)
+    quality_model.run(record=merging_record)
 
     if key in CUSTOM_FIELD_SELECTORS:
         if key in main_record.data:
@@ -242,6 +242,8 @@ def _merging_record_preferred(
     *,
     preferred_masterdata_source_prefixes: list,
 ) -> bool:
+    if Fields.ORIGIN not in merging_record.data:
+        return False
     merging_record_preferred = False
     if any(
         any(ps in origin for ps in preferred_masterdata_source_prefixes)
