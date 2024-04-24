@@ -117,9 +117,9 @@ class ColrevCuration(JsonSchemaMixin):
 
             if Fields.JOURNAL in record_dict:
                 key = (
-                    f"{record_dict.get('year','-')}-"
-                    f"{record_dict.get('volume','-')}-"
-                    f"{record_dict.get('number','-')}"
+                    f"{record_dict.get('year', '-')}-"
+                    f"{record_dict.get('volume', '-')}-"
+                    f"{record_dict.get('number', '-')}"
                 )
             elif Fields.BOOKTITLE in record_dict:
                 key = record_dict.get(Fields.YEAR, "-")
