@@ -242,6 +242,8 @@ def _merging_record_preferred(
     *,
     preferred_masterdata_source_prefixes: list,
 ) -> bool:
+    if Fields.ORIGIN not in merging_record.data:
+        return False
     merging_record_preferred = False
     if any(
         any(ps in origin for ps in preferred_masterdata_source_prefixes)
