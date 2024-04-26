@@ -272,9 +272,16 @@ class Load(colrev.process.operation.Operation):
             source: The search source package endpoint interface from which records are loaded.
             keep_ids: A boolean flag indicating whether to keep the original IDs of the records.
         """
+        self.review_manager.logger.debug(
+            f"Load source records {source.search_source.filename}"
+        )
+
         self.setup_source_for_load(source)
         records = self.review_manager.dataset.load_records_dict()
 
+        self.review_manager.logger.debug(
+            f"Import individual source records {source.search_source.filename}"
+        )
         for source_record in source.search_source.source_records_list:
             source_record = self._import_record(record_dict=source_record)
 
@@ -299,6 +306,9 @@ class Load(colrev.process.operation.Operation):
                 + f"md_retrieved →  {source_record['colrev_status']}{Colors.END}"
             )
 
+        self.review_manager.logger.debug(
+            f"Save records {source.search_source.filename}"
+        )
         self.review_manager.dataset.save_records_dict(records)
         self._validate_load(source=source)
 
@@ -325,11 +335,16 @@ class Load(colrev.process.operation.Operation):
         self,
         source: colrev.package_manager.interfaces.SearchSourcePackageEndpointInterface,
     ) -> None:
+
         # Add to settings (if new filename)
         if source.search_source.filename in [
             s.filename for s in self.review_manager.settings.sources
         ]:
             return
+
+        self.review_manager.logger.debug(
+            f"Add source to settings {source.search_source.filename}"
+        )
         git_repo = self.review_manager.dataset.get_repo()
         self.review_manager.settings.sources.append(source.search_source)
         self.review_manager.save_settings()
