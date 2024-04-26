@@ -52,7 +52,7 @@ class MostlyAllCapsFieldChecker:
 
         # Online sources/software can be short/have caps
         if (
-            record.data["ENTRYTYPE"] == "online"
+            record.data.get(Fields.ENTRYTYPE, "") == "online"
             and key == Fields.TITLE
             and len(record.data[Fields.TITLE]) < 10
         ):

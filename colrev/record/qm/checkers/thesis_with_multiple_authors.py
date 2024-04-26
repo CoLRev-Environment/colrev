@@ -31,6 +31,8 @@ class ThesisWithMultipleAuthorsChecker:
             record.remove_field_provenance_note(key=Fields.AUTHOR, note=self.msg)
 
     def _multiple_authored_thesis(self, *, record: colrev.record.record.Record) -> bool:
+        if Fields.ENTRYTYPE not in record.data or Fields.AUTHOR not in record.data:
+            return False
         if record.data["ENTRYTYPE"] in [
             "thesis",
             "phdthesis",

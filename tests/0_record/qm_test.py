@@ -590,12 +590,20 @@ def test_missing_field(
 
     # Test case 3: Ignoring missing field defect
     v_t_record.data["ENTRYTYPE"] = "article"
-    del v_t_record.data[Fields.TITLE]
+    title = v_t_record.data.pop(Fields.TITLE)
     v_t_record.ignore_defect(key=Fields.TITLE, defect=DefectCodes.MISSING)
     missing_field_checker.run(record=v_t_record)
     assert v_t_record.get_field_provenance_notes(key=Fields.TITLE) == [
         f"IGNORE:{DefectCodes.MISSING}"
     ]
+    v_t_record.data[Fields.TITLE] = title
+    author = v_t_record.data.pop(Fields.AUTHOR)
+    v_t_record.ignore_defect(key=Fields.AUTHOR, defect=DefectCodes.MISSING)
+    missing_field_checker.run(record=v_t_record)
+    assert v_t_record.get_field_provenance_notes(key=Fields.AUTHOR) == [
+        f"IGNORE:{DefectCodes.MISSING}"
+    ]
+    v_t_record.data[Fields.AUTHOR] = author
 
 
 def test_mostly_all_caps(
