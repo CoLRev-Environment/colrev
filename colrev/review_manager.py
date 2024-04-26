@@ -54,7 +54,6 @@ class ReviewManager:
         path_str: typing.Optional[str] = None,
         force_mode: bool = False,
         verbose_mode: bool = False,
-        debug_mode: bool = False,
         high_level_operation: bool = False,
         navigate_to_home_dir: bool = True,
         exact_call: str = "",
@@ -64,7 +63,6 @@ class ReviewManager:
         """Force mode variable (bool)"""
         self.verbose_mode = verbose_mode
         """Verbose mode variable (bool)"""
-        self.debug_mode = debug_mode
         """Debug mode variable (bool)"""
         self.high_level_operation = high_level_operation
         """A high-level operation was called (bool)"""
@@ -109,8 +107,6 @@ class ReviewManager:
 
             if not force_mode:
                 raise exc
-            if debug_mode:
-                self.logger.debug(exc)  # pragma: no cover
 
     def get_path(self, filename: Path) -> Path:
         """Get the absolute path"""
@@ -122,14 +118,12 @@ class ReviewManager:
         *,
         force_mode: bool = False,
         verbose_mode: bool = False,
-        debug_mode: bool = False,
         high_level_operation: bool = False,
         exact_call: str = "",
     ) -> None:
         """Update review_manager's state"""
         self.force_mode = force_mode
         self.verbose_mode = verbose_mode
-        self.debug_mode = debug_mode
         self.high_level_operation = high_level_operation
         self.exact_call = exact_call
         report_logger, logger = self.get_loggers()
@@ -138,7 +132,7 @@ class ReviewManager:
 
     def get_loggers(self) -> typing.Tuple[logging.Logger, logging.Logger]:
         """return loggers"""
-        if self.debug_mode:
+        if self.verbose_mode:
             return colrev.logger.setup_report_logger(
                 review_manager=self, level=logging.DEBUG
             ), colrev.logger.setup_logger(review_manager=self, level=logging.DEBUG)
