@@ -11,11 +11,6 @@ import colrev.review_manager
 # flake8: noqa: E501
 
 
-def test_debug_mode() -> None:
-
-    colrev.review_manager.ReviewManager(debug_mode=True)
-
-
 def test_invalid_git_repository_error(
     tmp_path: pytest.TempPathFactory,
 ) -> None:
