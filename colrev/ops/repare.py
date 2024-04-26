@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import colrev.env.local_index
 import colrev.exceptions as colrev_exceptions
 import colrev.process.operation
 from colrev.constants import DefectCodes
